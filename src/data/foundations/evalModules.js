@@ -40,11 +40,49 @@ People often reach for **F1**, which blends precision and recall into one number
 
 But F1 makes a silent assumption: that precision and recall matter equally. If a missed fraud costs ten times more than a false alarm, they do not. **F-beta** lets you tilt the balance: $F_β = (1 + β^2) \\cdot P \\cdot R / (β^2 \\cdot P + R)$, where β > 1 weights recall more and β < 1 weights precision more. The right β comes from your costs, not from habit.
 
-So the real first step is not choosing a metric — it is writing down what each mistake costs. In fraud, a missed fraud (FN) usually dwarfs a false alarm (FP), so you lean toward recall. In spam filtering it flips: a real email lost to the spam folder (FP) destroys trust, so you lean toward precision. In cancer screening, a missed tumor (FN) is catastrophic, so recall rules. Translate TP, FP, FN, TN into money or risk first. Every metric choice follows from that.`,
+So the real first step is not choosing a metric — it is writing down what each mistake costs. In fraud, a missed fraud (FN) usually dwarfs a false alarm (FP), so you lean toward recall. In spam filtering it flips: a real email lost to the spam folder (FP) destroys trust, so you lean toward precision. In cancer screening, a missed tumor (FN) is catastrophic, so recall rules. Translate TP, FP, FN, TN into money or risk first. Every metric choice follows from that.
+
+---
+
+**The rest of the confusion-matrix vocabulary.**
+
+Precision and recall look at the *positive* column, but interviewers expect the full set. **Recall** is also called **sensitivity** or the **true-positive rate (TPR)**. Its mirror on the negative side is **specificity**, or the **true-negative rate (TNR)** = TN / (TN + FP) — of all the truly-legit transactions, how many did you correctly clear? One minus specificity is the **false-positive rate (FPR)**, sometimes called **fallout** — the share of legit transactions you wrongly flagged. And **false-negative rate (FNR)** = FN / (TP + FN) = 1 − recall. Two rules of thumb: recall/TPR and FPR are the axes of the ROC curve, and specificity is the metric to quote when *correctly clearing negatives* is what matters (e.g. a screening test you don't want firing on healthy people).
+
+---
+
+**More than two classes: macro, micro, weighted.**
+
+With several classes you compute precision/recall/F1 per class, then average them — and *how* you average changes the story. **Macro** averages the per-class scores equally, so a tiny class counts as much as a huge one — use it when rare classes matter. **Micro** pools all the TP/FP/FN across classes first and then computes one score, so it's dominated by the frequent classes and equals overall accuracy for single-label problems — use it when every *instance* matters equally. **Weighted** averages the per-class scores weighted by class size, a middle ground. A big macro-vs-micro gap is a signal: macro high, micro low means the model nails small classes but stumbles on the big one (or vice versa).
+
+---
+
+**Single numbers that survive imbalance.**
+
+F1 ignores true negatives entirely, which is why two better summaries exist for skewed data. **Balanced accuracy** is the average of recall across classes (equivalently, the mean of sensitivity and specificity) — it doesn't reward always-predict-majority. **Matthews correlation coefficient (MCC)** uses all four boxes of the confusion matrix in one correlation-style score from −1 to +1, and is widely regarded as the most honest single number under imbalance because a model can't fake it by ignoring a class. When you need one number and the classes are skewed, prefer balanced accuracy or MCC over raw accuracy or F1.
+
+---
+
+**When you can only act on the top K.**
+
+Often the real constraint is capacity, not a threshold: a fraud team reviews the top 500 alerts, a search page shows 10 results. Then the metric is **precision@K** (of the top K ranked by score, how many are truly positive) and **recall@K** (of all positives, how many landed in the top K). The model only has to get the worst cases to the *top of the list* — a global threshold is the wrong framing when the action budget is fixed.
+
+---
+
+**Curves beat single thresholds: ROC-AUC vs PR-AUC.**
+
+Precision and recall are measured *at one threshold*; to summarise a model across all thresholds you use an area-under-curve. **ROC-AUC** plots TPR against FPR — but on rare-positive problems it can look flatteringly high, because a huge TN count keeps FPR tiny even when the model floods you with false positives relative to the few real positives. **PR-AUC** (precision vs recall) ignores true negatives and so exposes that failure. Rough heuristic: when positives are scarce, PR-AUC is usually the more honest summary — though it's a heuristic, not a law (PR-AUC has its own quirks under shifting prevalence).
+
+---
+
+**Pick the threshold on validation, freeze it, then report on test.**
+
+One discipline ties it together. The decision threshold is a *parameter you tune*, so tune it on the **validation** set — sweep thresholds, pick the one matching your cost/precision/recall target — then **freeze** it and report final performance on the **test** set *once*. Tuning the threshold on the test set is the same sin as tuning weights on it: the reported number becomes optimistic and won't hold in production.`,
     keyPoints: [
       `**When to use it: always define your cost matrix before picking a metric.**\n\nIn fraud detection: a missed fraud (FN) costs the full transaction amount plus investigation time. A false alarm (FP) costs a customer service call and customer inconvenience. If FN costs 10x more than FP, optimize for recall ($F_\\beta$ with $\\beta = 2$ or higher). In spam filtering, FP (blocking a real email) is the catastrophic failure — optimize for precision ($\\beta < 1$). Accuracy is appropriate only when classes are roughly balanced and all errors cost the same, which is rarely true in production.`,
-      `**The most common production trap: reporting F1 without asking whether FP and FN cost the same.**\n\nF1 weights precision and recall equally. On a fraud model where missing fraud costs 50x more than a false alarm, optimizing F1 will under-weight recall and leave real money on the table. Before training, write down: what does a FP cost? What does a FN cost? If those numbers differ by more than 2x, F1 is the wrong metric. Use $F_\\beta$ with $\\beta$ set to the square root of the FN-to-FP cost ratio.`,
+      `**The most common production trap: reporting F1 without asking whether FP and FN cost the same.**\n\nF1 weights precision and recall equally. On a fraud model where missing fraud costs 50x more than a false alarm, optimizing F1 will under-weight recall and leave real money on the table. Before training, write down: what does a FP cost? What does a FN cost? If those numbers differ by more than 2x, F1 is the wrong metric. $F_\\beta$ (with $\\beta$ larger when recall matters more) tilts the balance, but treat it as a rough proxy — the cleaner tool when you have real costs is to minimise expected cost directly by choosing the threshold that minimises $FP \\cdot cost_{FP} + FN \\cdot cost_{FN}$, rather than encoding the ratio into a single $\\beta$.`,
       `**The diagnostic: when your model looks suspiciously good, check whether it is predicting the majority class.**\n\nThe tell: high accuracy, recall near 0. Compute recall separately. If recall ≈ 0 on a 1% fraud dataset, the model learned to predict "not fraud" for everything and achieved 99% accuracy by doing nothing. Also check: if F1 is decent but all FPs come from the same subgroup, you have a slice-level failure the aggregate metric is hiding. Disaggregate by segment before declaring the model ready.`,
+      `**Know the full vocabulary and the right single number under imbalance.**\n\nRecall = sensitivity = TPR; specificity = TNR = TN/(TN+FP); FPR (fallout) = 1 − specificity; FNR = 1 − recall — TPR and FPR are the ROC axes. For multiclass, macro averages classes equally (rare classes count), micro pools instances first (frequent classes dominate, equals accuracy for single-label), weighted sits between. And since F1 ignores true negatives, prefer balanced accuracy (mean of per-class recall) or MCC (uses all four cells, −1 to +1) as the honest single summary on skewed data.`,
+      `**Match the summary to how you'll act, and tune the threshold on validation only.**\n\nWhen action is capacity-limited (review top 500, show top 10), optimise precision@K / recall@K — the model just needs the worst cases at the top. To compare models across thresholds use an AUC, and prefer PR-AUC to ROC-AUC when positives are rare (ROC-AUC's huge TN count hides false-positive floods) — a heuristic, not a law. Critically, the decision threshold is a tuned parameter: sweep it on the validation set, freeze it, then report on test once. Tuning the threshold on test inflates the number exactly like tuning weights on test.`,
     ],
     interactivePrompt: `Before you touch the controls: if a model predicts "not fraud" for every single transaction in a 1%-fraud dataset, what is its accuracy, and what is its recall?`,
     checkQuestions: [
@@ -85,6 +123,26 @@ So the real first step is not choosing a metric — it is writing down what each
           `B) Switch to accuracy — AUC ignores the absolute number of errors which is what the operations team cares about`,
           `C) Switch to monitoring precision at a fixed recall target — AUC measures ranking quality across all thresholds and says nothing about where you operate; the operations team is experiencing a precision problem at the deployed threshold`,
           `D) Keep AUC but raise the threshold until FPs drop — the metric is fine, only the operating point needs adjustment`,
+        ],
+        answer: `C`
+      },
+      {
+        q: `On a 2%-positive dataset, two summary metrics disagree: ROC-AUC is 0.94 (looks great) but PR-AUC is 0.31 (looks poor). Which do you trust and why?`,
+        options: [
+          `A) Trust ROC-AUC — it is the standard metric and 0.94 means the model ranks positives above negatives well, so PR-AUC must be miscomputed.`,
+          `B) Trust PR-AUC here. With only 2% positives, the enormous true-negative count keeps FPR tiny, so ROC-AUC stays high even while the model produces many false positives per true positive. PR-AUC ignores true negatives and exposes that, making it the more honest summary for rare positives.`,
+          `C) Average the two into a single 0.63 score, since neither is reliable alone on imbalanced data and the mean cancels their biases.`,
+          `D) Neither — on imbalanced data only raw accuracy is trustworthy, so discard both AUC metrics and report accuracy instead.`,
+        ],
+        answer: `B`
+      },
+      {
+        q: `You sweep the decision threshold, find the value that maximises F1 on your test set, and report that F1 as the model's performance. What is wrong?`,
+        options: [
+          `A) Nothing — the threshold is a hyperparameter, and choosing it to maximise F1 on the test set is exactly how you should report best-case performance.`,
+          `B) You should have maximised accuracy instead of F1; the threshold choice is fine but the metric is wrong.`,
+          `C) The threshold is a tuned parameter, so choosing it on the test set makes the reported F1 optimistic — it won't hold in production. Tune the threshold on a validation set, freeze it, then report on the untouched test set once. It's the same leakage as tuning weights on test.`,
+          `D) F1 can't be used with a swept threshold at all; only fixed-threshold metrics like accuracy are valid after threshold selection.`,
         ],
         answer: `C`
       },
@@ -149,11 +207,53 @@ The fix is the **precision-recall (PR) curve**, which plots precision against re
 
 ---
 
-One last thing to hold onto: AUC of either kind is a *threshold-independent* summary, so it tells you nothing about the specific cutoff you will actually run. AUC is for *choosing the model*; setting the threshold is a separate business decision driven by your cost matrix. Pick the model with AUC; pick the operating point with costs.`,
+One last thing to hold onto: AUC of either kind is a *threshold-independent* summary, so it tells you nothing about the specific cutoff you will actually run. AUC is for *choosing the model*; setting the threshold is a separate business decision driven by your cost matrix. Pick the model with AUC; pick the operating point with costs.
+
+---
+
+**Partial AUC: sometimes only one corner matters.**
+
+Full AUC averages ranking quality over *every* threshold — including regions you'd never operate in. In fraud or medical screening you only ever run at very low FPR (you cannot flag 40% of legit traffic), so ranking performance in the high-FPR region is irrelevant, yet full AUC rewards it. **Partial AUC** restricts the area to the FPR range you actually care about (say FPR < 0.05), giving a score that reflects the operating region instead of a whole-curve average. When two models tie on full AUC, partial AUC in your real operating band often separates them.
+
+---
+
+**AUC says nothing about calibration.**
+
+A crucial blind spot: AUC is a *pure ranking* score, so a model can have a superb AUC and badly wrong probabilities. Multiply every predicted probability by 0.5 and the ranking — and therefore the AUC — is unchanged, but every probability is now a lie. So if you use the probability itself (pricing, expected value, a downstream model), AUC is not enough; check calibration separately with a reliability diagram and the Brier score. High AUC, good calibration is what "trustworthy probabilities" requires.
+
+---
+
+**When ROC curves cross, one AUC hides two stories.**
+
+AUC collapses a whole curve to one number, so two models with the *same* AUC can have **crossing** ROC curves — model A better in the low-FPR region, model B better in the high-recall region. The single AUC averages that away. If your operating point is low-FPR, you want model A even if its total AUC is slightly lower. Always look at the curves in your operating band, not just the scalar.
+
+---
+
+**Average precision is not exactly trapezoidal PR-AUC.**
+
+A subtle library gotcha: sklearn's \`average_precision_score\` and \`auc(recall, precision)\` are *not* the same number. **Average precision (AP)** is a weighted mean of precision values, weighted by the increase in recall at each threshold — a step-wise summary that avoids the optimistic interpolation that trapezoidal area under the PR curve can introduce. When someone reports "PR-AUC," check whether they mean AP (usually what sklearn gives) or trapezoidal area; the two can differ meaningfully on small data.
+
+---
+
+**Precision moves with prevalence — the formula.**
+
+This is why the same model can look fine offline and terrible in production. Precision is tied to the base rate: with prevalence π, TPR, and FPR,
+
+$\\text{precision} = \\dfrac{\\pi \\cdot TPR}{\\pi \\cdot TPR + (1-\\pi)\\cdot FPR}$
+
+The ROC curve (TPR vs FPR) doesn't change when prevalence shifts — but precision does, dropping as positives get rarer. So a model validated at 5% fraud can post far worse precision when live fraud falls to 1%, with identical ROC-AUC. Always recompute expected precision at the *production* base rate.
+
+---
+
+**Multiclass AUC.**
+
+AUC is binary by construction, so for K classes you extend it. **One-vs-rest (OvR)** computes each class's AUC against all others and averages (macro or weighted). **One-vs-one (OvO)** averages AUC over every pair of classes and is more robust to imbalance. sklearn's \`roc_auc_score\` supports both via \`multi_class='ovr'/'ovo'\`; name which one you used, since the averaging choice changes the number.`,
     keyPoints: [
       `**ROC-AUC or PR-AUC? It comes down to whether the negatives are rare or common.**\n\nUse ROC-AUC when the classes are roughly balanced, or when getting the negatives right genuinely matters (like credit scoring, where correctly approving good applicants counts, not just catching defaulters). Use PR-AUC when negatives massively outnumber positives — fraud, disease screening, anomaly detection — because there the ocean of true negatives inflates the FPR denominator and makes ROC-AUC look better than it really is. Rule of thumb: if your positive class is under about 10% of the data, reach for PR-AUC.`,
       `**The trap: shipping a model with a great AUC on rare-positive data, then watching the alert queue overflow.**\n\nAUC = 0.91 on a 1%-fraud dataset can sit right next to precision = 0.17 at the threshold you actually deploy — the ROC curve looked fine only because true negatives flooded the FPR denominator. Always check precision at your intended recall before calling a model ready. If you need 80% recall and precision there is 15%, the model is not production-ready no matter what AUC says.`,
       `**The habit: AUC picks the model, the cost matrix picks the threshold.**\n\nAfter comparing models by AUC or PR-AUC, choose your deployment threshold by plotting the precision-recall trade-off and finding the point your costs demand. A concrete check: at 80% recall, how many alerts per day does that produce? If your team can handle 200 and the model would fire 2,000, the threshold has to move regardless of AUC. AUC told you which model; the costs tell you where to run it.`,
+      `**AUC is a ranking score — blind to calibration, blind to your operating region, and blind to prevalence shift.**\n\nScaling every probability by 0.5 leaves AUC unchanged but makes the probabilities lies, so check calibration (reliability diagram, Brier) separately when you use the probability itself. Full AUC averages over thresholds you'd never run — use partial AUC in your real FPR band, and inspect the curves directly since two models with equal AUC can have crossing ROC curves (one wins at low FPR, the other at high recall). And precision = π·TPR / (π·TPR + (1−π)·FPR): the ROC doesn't move with prevalence but precision does, so recompute expected precision at the production base rate.`,
+      `**Mind the library and multiclass details.**\n\nsklearn's average precision (a recall-weighted mean of precision) is not identical to trapezoidal PR-AUC and avoids its optimistic interpolation — so confirm which "PR-AUC" someone means. For K classes, AUC extends via one-vs-rest (each class vs the rest, averaged) or one-vs-one (every pair, more robust to imbalance); state which averaging you used because it changes the number. Treat the "positives < 10% → use PR-AUC" rule as a helpful heuristic, not a law — PR-AUC has its own quirks under shifting prevalence and isn't universally superior.`,
     ],
     interactivePrompt: `Before you touch the controls: if a fraud model has AUC = 0.91 but generates 500 false alarms for every 100 real frauds it catches, is the model production-ready — and what does AUC not tell you about this?`,
     checkQuestions: [
@@ -196,6 +296,26 @@ One last thing to hold onto: AUC of either kind is a *threshold-independent* sum
           `D) They are unrelated — AUC is a geometric property of the ROC curve while Mann-Whitney U is a rank-based statistical test`,
         ],
         answer: `C`
+      },
+      {
+        q: `Your model validated at 5% fraud prevalence with ROC-AUC 0.95 and precision 0.60 at the deployed threshold. In production, live fraud has fallen to 1%. What happens to ROC-AUC and precision, and why?`,
+        options: [
+          `A) Both drop proportionally, because every metric scales with the base rate of the positive class.`,
+          `B) ROC-AUC stays about the same (TPR and FPR don't depend on prevalence), but precision falls — from precision = π·TPR/(π·TPR + (1−π)·FPR), a smaller π shrinks the numerator while the false positives from the large negative pool grow, so the same model produces a worse precision at 1% than at 5%. Recompute expected precision at the production base rate.`,
+          `C) ROC-AUC rises because rarer positives are easier to rank, and precision rises too since there are fewer positives to get wrong.`,
+          `D) Neither changes — ROC-AUC and precision are both threshold- and prevalence-independent summaries of the model.`,
+        ],
+        answer: `B`
+      },
+      {
+        q: `You're building a fraud screen that can only ever operate at FPR below 5% (you can't block more legit traffic than that). Two models tie on full ROC-AUC. What's the sharper way to compare them?`,
+        options: [
+          `A) Compare full ROC-AUC again with more decimal places — the tie will resolve at higher precision.`,
+          `B) Compare partial AUC restricted to the FPR < 0.05 region (or precision at your target low-FPR operating point). Full AUC averages over high-FPR thresholds you'll never use, so it can hide that one model is clearly better in the band you actually run — inspect the curves there, since equal-AUC models can cross.`,
+          `C) Pick whichever model has the higher accuracy at threshold 0.5, since that's the standard operating point.`,
+          `D) They're genuinely equivalent — identical full AUC means identical ranking everywhere, so choose either.`,
+        ],
+        answer: `B`
       },
     ],
     takeaway: `ROC-AUC denominates FPR with true negatives, so on imbalanced datasets it is structurally optimistic — switch to PR-AUC when your positive class is rare, and always set a concrete operating threshold from your cost matrix before shipping.`,
@@ -267,11 +387,49 @@ The simplest is **Mean Reciprocal Rank**. It cares about one thing: the position
 
 **Which one? Match the metric to what users do.**
 
-There is no single best ranking metric — the right one mirrors real behavior. If users scan a vertical list and stop at the first hit, use **MRR**. If they expect to find all the relevant results and would be annoyed to see any buried, use **MAP**. If you have graded labels and care about exact ordering, use **NDCG**. And if every shown slot is equally prominent regardless of order — a grid of products, a row of ad slots — plain **Precision@K** is fine. Pick by what the interface makes people do, not by which formula looks most impressive.`,
+There is no single best ranking metric — the right one mirrors real behavior. If users scan a vertical list and stop at the first hit, use **MRR**. If they expect to find all the relevant results and would be annoyed to see any buried, use **MAP**. If you have graded labels and care about exact ordering, use **NDCG**. And if every shown slot is equally prominent regardless of order — a grid of products, a row of ad slots — plain **Precision@K** is fine. Pick by what the interface makes people do, not by which formula looks most impressive.
+
+---
+
+**Retrieval's own metrics: recall@K and hit-rate@K.**
+
+Big systems rank in two stages — a cheap **candidate generator** pulls a few hundred items from millions, then an expensive **ranker** orders them. These stages need different metrics. For retrieval the question isn't "is the order perfect?" but "did we even *retrieve* the relevant items into the candidate set?" That's **recall@K** (of all relevant items, how many made it into the top K) and **hit-rate@K** (did at least one relevant item land in the top K). A ranker can't fix what retrieval never surfaced, so you measure recall@K on the generator and NDCG/MAP on the ranker — diagnosing the wrong stage is a classic mistake.
+
+---
+
+**Relevance isn't the only goal.**
+
+Pure relevance metrics miss things a real recommender must balance. **Coverage** — what fraction of the catalog ever gets shown (a system that only recommends the top 100 items starves the long tail). **Diversity** — are the top results varied, or ten near-duplicates? **Novelty / serendipity** — does it surface things the user wouldn't have found alone, not just the obvious? **Freshness** — new content shown before it goes stale. **Creator fairness** — is exposure spread across creators or concentrated? A model that maxes NDCG by always showing the same popular items can quietly wreck coverage and diversity, and the business notices even though the relevance metric looks great.
+
+---
+
+**The elephant: position bias in click labels.**
+
+If your relevance labels come from *clicks*, they're contaminated. The item at position 1 gets more clicks **because it was shown first**, not because it's more relevant — so training or evaluating on raw clicks teaches the model to reproduce the old ranking's position effects rather than true relevance, a self-reinforcing loop. The fixes are their own field: **inverse-propensity weighting** to down-weight clicks that only happened due to position, **interleaving** (blend two rankers' results and see which gets clicked, which cancels position bias), and **counterfactual evaluation**. Never treat click data as clean relevance.
+
+---
+
+**Metric@K: K is a product decision.**
+
+NDCG@1, @3, @10, @50 answer *different* questions, and K should match how the interface is actually used. NDCG@1 is for "I feel lucky" single-answer surfaces; NDCG@10 for a first page of ten; NDCG@50 for a scroll-heavy feed or a candidate pool feeding a downstream reranker. Set K to the viewport and session behaviour, not to a default — reporting NDCG@10 for a mobile screen that shows three results is measuring the wrong thing.
+
+---
+
+**Ties and unjudged documents.**
+
+Two practical hazards. **Ties** (items with equal score) make the metric depend on arbitrary tiebreak order — resolve them deterministically or you'll see phantom metric swings. And **unjudged ≠ irrelevant**: with millions of documents, only a pooled subset gets human labels, so a genuinely relevant document nobody judged is scored 0 by default, penalising a new system that surfaces it. This **pooling bias** is why a better retriever can look worse offline; judge the novel results before trusting the comparison.
+
+---
+
+**You can't optimise these metrics directly.**
+
+A final subtlety interviewers probe: NDCG, MAP, and MRR are based on *sorting*, which is not differentiable, so you can't gradient-descend on them directly. Ranking models therefore optimise a **surrogate loss** — pairwise (learn "A should rank above B," as in RankNet/LambdaRank) or listwise (score the whole list, as in ListNet) — that correlates with the target metric while being differentiable. LambdaMART's trick is to weight those pairwise gradients by their NDCG impact, getting a ranking-aware signal without needing NDCG to be differentiable.`,
     keyPoints: [
       `**Match the metric to the user's behavior, not to mathematical elegance.**\n\nGraded labels and position matters (commercial search)? Use NDCG. User wants one answer and stops at the first hit (question-answering, lookups)? Use MRR. Every shown slot equally prominent regardless of order (a product grid, an ad row)? Use Precision@K. Choose the wrong one and you optimise a proxy that does not track the real experience — NDCG@10 can even climb while MRR falls, if the model improves positions 4–10 while making position 1 worse.`,
       `**The trap: judging against an incomplete set of relevance labels.**\n\nRaters can only score a small pool of documents out of millions. If that pool was built from the old system's top results, a new system that surfaces genuinely relevant documents nobody ever judged will see them scored as "not relevant" by default — so it looks worse on NDCG even though it found better results. When a change is big (a new retrieval or ranking model), judge the new system's novel results before comparing scores.`,
       `**The diagnostic: look at NDCG@1 versus NDCG@10 separately.**\n\nIf NDCG@10 is healthy but NDCG@1 is much lower, the relevant results are in the top ten but the best one is not landing first — your re-ranking is the bottleneck, not retrieval. If NDCG@1 and NDCG@10 are both low and roughly equal, the relevant documents are not even in the candidate set — retrieval is the bottleneck. The split tells you which stage to go fix.`,
+      `**Measure the right stage with the right metric, and don't trust raw click labels.**\n\nCandidate generation is judged by recall@K / hit-rate@K (did the relevant items make it into the pool?), the ranker by NDCG/MAP — diagnosing the wrong stage wastes weeks. Set K to the actual viewport (NDCG@1/@3/@10/@50 answer different product questions). And clicks are position-biased: the top slot gets clicks because it was shown first, so debias with inverse-propensity weighting, interleaving, or counterfactual evaluation before treating clicks as relevance.`,
+      `**Relevance isn't the whole story, and you can't optimise these metrics directly.**\n\nBalance NDCG against coverage, diversity, novelty/serendipity, freshness, and creator fairness — a model that maxes relevance by always showing the same popular items wrecks the catalog and long tail. Handle ties deterministically and remember unjudged ≠ irrelevant (pooling bias makes a better retriever look worse offline). Since NDCG/MAP/MRR rely on non-differentiable sorting, ranking models train on pairwise (RankNet/LambdaRank) or listwise (ListNet) surrogate losses — LambdaMART weights pairwise gradients by NDCG impact to stay ranking-aware.`,
     ],
     interactivePrompt: `Before you touch the controls: if the only relevant result in a 10-result list moves from position 5 to position 1, which metric improves more — MRR or NDCG@10 — and why?`,
     checkQuestions: [
@@ -314,6 +472,26 @@ There is no single best ranking metric — the right one mirrors real behavior. 
           `D) Either is fine — MAP and NDCG are mathematically equivalent when applied to graded relevance labels`,
         ],
         answer: `A`
+      },
+      {
+        q: `A new retrieval model surfaces documents the old system never showed, and offline NDCG comes out lower than the old model. What is the likely explanation before you conclude the new model is worse?`,
+        options: [
+          `A) The new model is simply worse — a lower NDCG on the same labeled test set is definitive, so revert to the old model.`,
+          `B) Pooling bias: the relevance labels were pooled from the old system's results, so the new model's genuinely relevant but never-judged documents default to "not relevant" and are scored 0. That drags NDCG down unfairly. Judge the new system's novel results before comparing — unjudged is not the same as irrelevant.`,
+          `C) The new model has a bug in its tie-breaking, which is the only thing that can lower NDCG when better documents are retrieved.`,
+          `D) NDCG can't be compared across models at all, so the lower number is meaningless and you should use accuracy instead.`,
+        ],
+        answer: `B`
+      },
+      {
+        q: `An interviewer asks: "Why can't you train a ranking model by directly minimising 1 − NDCG with gradient descent?"`,
+        options: [
+          `A) You can — NDCG is smooth and differentiable, so 1 − NDCG is a perfectly standard loss and most rankers use it directly.`,
+          `B) Because NDCG is bounded in [0, 1], and gradient descent only works on unbounded losses; you'd have to rescale it first.`,
+          `C) NDCG depends on the sorted order of items, and sorting is a step function — a tiny change in scores either doesn't change the ranking (zero gradient) or flips two items (a discontinuous jump), so NDCG has no useful gradient. Rankers optimise a differentiable surrogate instead: pairwise losses (RankNet/LambdaRank) or listwise losses (ListNet), with LambdaMART weighting pairwise gradients by NDCG impact.`,
+          `D) NDCG can only be computed with human graded labels, which aren't available during training, so there's simply nothing to differentiate.`,
+        ],
+        answer: `C`
       },
     ],
     takeaway: `All ranking metrics embed a model of user attention — MRR says users stop after the first hit, MAP says they care about every relevant item equally, NDCG says attention decays with position and highly relevant results matter more — so choosing the metric is choosing which user behaviour you believe, not which formula is standard.`,
@@ -366,11 +544,43 @@ Nowhere near perfectly. For search and recommendation, the correlation between a
 
 **The habit that keeps you honest.**
 
-A strong offline result is a *hypothesis*, not a verdict. Models can overfit the evaluation set itself — lifting offline NDCG while making the real experience worse — for instance by memorising which items were in the historical judgment pool. So treat every offline win as "promising, let's test it," never as "done." Two guardrails make offline numbers trustworthy: split your data by *time* (train on the past, test on the most recent window, never a random shuffle across all dates), and shadow-deploy the new model on live traffic before the A/B test to catch distribution shift before it costs you anything.`,
+A strong offline result is a *hypothesis*, not a verdict. Models can overfit the evaluation set itself — lifting offline NDCG while making the real experience worse — for instance by memorising which items were in the historical judgment pool. So treat every offline win as "promising, let's test it," never as "done." Two guardrails make offline numbers trustworthy: split your data by *time* (train on the past, test on the most recent window, never a random shuffle across all dates), and shadow-deploy the new model on live traffic before the A/B test to catch distribution shift before it costs you anything.
+
+---
+
+**The deepest reason they diverge: causal vs observational.**
+
+Here's the framing that ties it together. An **A/B test randomises** users to treatment or control, so the difference in outcomes is a clean **causal** estimate of the model's effect — randomisation cancels out confounders. **Offline logs are observational**: they were generated by the *old* model's policy, so they're **policy-biased** — you only ever observed outcomes for the items the old system chose to show. Evaluating a new policy on data collected under a different policy is comparing apples to a biased sample of oranges. That's why offline evaluation of a policy that behaves differently from the logging policy is fundamentally hard, and why the A/B test is the gold standard: it's the only step that actually manipulates the variable and measures the effect.
+
+---
+
+**Primary metric versus guardrails.**
+
+Never judge an experiment on one number. Define a **primary metric** (the thing you're trying to move, e.g. CTR) plus a set of **guardrail metrics** you refuse to harm — retention, complaint rate, latency, diversity, revenue quality, unsubscribes. The classic failure: CTR goes up 3% (ship it!) while 90-day retention quietly drops and revenue-per-session falls because the model learned to bait clicks. A win on the primary metric that breaks a guardrail is not a win. List the guardrails *before* the test so you can't rationalise afterward.
+
+---
+
+**Experiment design: power, MDE, duration, peeking.**
+
+A test can mislead by being badly designed. **Statistical power** and **minimum detectable effect (MDE)** set how big a sample you need — underpowered tests exaggerate the effect size of the "wins" that happen to reach significance (winner's curse). **Duration** must cover full weekly cycles (weekday/weekend differ) and outlast **novelty effects** (users click a new thing just because it's new, then stop) and **seasonality**. **Peeking** — checking the p-value repeatedly and stopping when it crosses 0.05 — inflates false positives massively; use a fixed horizon or sequential-testing corrections. And running many metrics or many variants is **multiple testing**: correct for it or you'll "find" significance by chance.
+
+---
+
+**Fixing offline logs: IPS and its sharp edges.**
+
+You can partly de-bias offline log evaluation with **inverse propensity scoring** — weight each logged outcome by 1/P(the old policy showed this item), which corrects the exposure bias. But IPS is fragile: it has **high variance** (a tiny propensity makes 1/p explode), needs accurate **propensity estimates** (often unknown and hard to model), and requires **overlap/support** (the new policy can only be evaluated where the old policy had some chance of showing the same items). Variants like **self-normalised IPS (SNIPS)** and **doubly-robust** estimators reduce the variance, but none fully rescue you when propensities are extreme — which is exactly when you fall back to an actual A/B test.
+
+---
+
+**Interleaving and bandits: where each fits.**
+
+**Interleaving** blends two rankers' results into one list and sees which side gets the clicks — it cancels between-user variance and needs far fewer users, but it measures *relative ranking preference*, not absolute business impact, and gets tricky with personalisation, ads, hard constraints, or session-level outcomes. **Bandits** adaptively route more traffic to the better arm, minimising regret — but that adaptivity makes the allocation **endogenous**, so you can't read off a clean causal effect the way a fixed-split A/B test gives you, and delayed feedback further complicates them. Use interleaving for cheap ranking comparisons, bandits when minimising regret matters more than a clean estimate, and A/B tests when you need the rigorous causal number.`,
     keyPoints: [
       `**Shadow-deploy before A/B test — run the new model in parallel, log its predictions, evaluate on fresh offline data with matching timestamps. This catches distribution shift before it costs traffic.**\n\nFor the recommendation model: in shadow mode, the new model receives the same production requests as the live model and generates predictions, but only the live model's predictions are served. Log the new model's recommendations and the live outcomes. Evaluate the new model's offline NDCG on data from the past 2 weeks — not data from 6 months ago. If shadow-mode NDCG is lower than training-set NDCG, the model has distribution shift. Investigate before running any A/B test. Shadow mode also validates serving infrastructure under real load before any user is exposed to the new model.`,
       `**Trap: using past user interactions as ground truth for future predictions without temporal splitting. Users who clicked item X in January might have completely different preferences in April. Time-stamp your train/test split.**\n\nFor the recommendation model: train on months 1–9, evaluate on month 10. Evaluate on month 10 data only, using only items and users present in month 10. The alternative — a random 80/20 split across all months — lets the model train on August data to predict March clicks. August preferences contaminate the March predictions. Temporal splitting is non-negotiable for any system where item relevance changes over time, which is most recommendation and search systems.`,
       `**Diagnostic: measure the Spearman rank correlation between offline metric deltas and online metric deltas across your last 10 model launches. If the correlation is < 0.5, your offline metric is a poor proxy — redesign the offline evaluation before investing in further model development.**\n\nFor the recommendation team: collect the log of all model launches from the past year. For each launch, record the offline NDCG delta (new vs previous model) and the realized A/B CTR delta. Compute Spearman ρ. If ρ < 0.5, offline NDCG is not reliably predictive of CTR. Consider redesigning the offline evaluation: use more recent evaluation data, add temporal evaluation windows, add session-level signals beyond clicks, or use debiased click labels via Inverse Propensity Scoring.`,
+      `**An A/B test is causal; offline logs are observational and policy-biased — and one primary metric is never enough.**\n\nRandomisation makes the A/B difference a clean causal effect; offline logs only recorded outcomes for what the old policy chose to show, so evaluating a different policy on them is biased. Always pair a primary metric with guardrails (retention, complaints, latency, diversity, revenue quality) defined before the test — CTR up while retention drops is not a win. IPS can partly de-bias offline logs but has high variance under small propensities, needs accurate propensities and overlap, and even SNIPS/doubly-robust don't fully rescue extreme cases.`,
+      `**Design the experiment properly and pick the right online tool.**\n\nSet sample size from power and MDE (underpowered tests exaggerate winners), run across full weekly cycles past novelty and seasonality, and don't peek — repeated significance checks inflate false positives, so fix the horizon or use sequential corrections, and adjust for multiple metrics/variants. Interleaving is a cheap, low-variance ranking comparison but measures relative preference, not absolute impact; bandits minimise regret but their adaptive, endogenous allocation blocks a clean causal estimate. Use A/B tests when you need the rigorous causal number.`,
     ],
     interactivePrompt: `Before you touch the controls: if a recommendation model was trained and evaluated on data from January, and deployed in July when item catalog and user preferences have shifted, do you expect offline NDCG to overestimate or underestimate the true production performance?`,
     checkQuestions: [
@@ -414,6 +624,26 @@ A strong offline result is a *hypothesis*, not a verdict. Models can overfit the
         ],
         answer: `B`
       },
+      {
+        q: `You want to evaluate a new ranking policy offline using logged data from the current production model, applying inverse propensity scoring (IPS). What is the main risk and a partial fix?`,
+        options: [
+          `A) There is no real risk — IPS gives an unbiased estimate of the new policy from logged data, so it fully replaces the need for an A/B test.`,
+          `B) IPS has high variance: when the logging policy showed some item with very low probability, the 1/p weight explodes and a single record dominates the estimate. It also needs accurate propensities and overlap (the new policy can only be evaluated where the old one had some chance of showing the same items). Self-normalised IPS or doubly-robust estimators reduce the variance, but extreme propensities still force a real A/B test.`,
+          `C) The main risk is that IPS is too slow to compute on large logs; the fix is to subsample the data before applying it.`,
+          `D) IPS only works for classification, not ranking, so the fix is to convert the ranking problem into a binary click-prediction task first.`,
+        ],
+        answer: `B`
+      },
+      {
+        q: `A PM checks the A/B dashboard every morning and wants to call the test the moment CTR crosses p < 0.05. Why is this a problem, and what else should be in place?`,
+        options: [
+          `A) It's fine — stopping as soon as p < 0.05 is the fastest way to ship wins and wastes no traffic.`,
+          `B) Repeatedly checking and stopping at the first p < 0.05 is peeking: each look is another chance for noise to cross the line, so the false-positive rate is far above 5%. Fix the sample size in advance from a power/MDE calculation (or use a sequential-testing method), run across full weekly cycles to survive novelty and seasonality, and check guardrail metrics — not just the primary — before declaring a win.`,
+          `C) The only problem is the time of day; checking in the afternoon instead of the morning removes the bias.`,
+          `D) Peeking is harmless for CTR because click metrics have low variance; it only matters for revenue metrics.`,
+        ],
+        answer: `B`
+      },
     ],
     takeaway: `Offline metrics measure how well a model predicts past behavior under a past policy — so the offline-online gap is systematic, not random, and the right response is to measure the offline-online correlation empirically on your own system before trusting any offline improvement as evidence that the model improved.`,
   },
@@ -452,11 +682,49 @@ This one is subtle. The feature has a valid timestamp, but it is a *consequence*
 
 **The one question that catches almost everything.**
 
-For every feature, ask: *would this exact value exist at the moment of prediction in production, knowing nothing about future events?* If the answer is no, it is leakage — full stop. And a few red flags should trigger an immediate audit: validation AUC above 0.97 on a problem where even human experts disagree; one feature towering over all the others in importance; train and validation accuracy nearly identical with no gap; or a mediocre model suddenly looking brilliant right after you added one new feature group.`,
+For every feature, ask: *would this exact value exist at the moment of prediction in production, knowing nothing about future events?* If the answer is no, it is leakage — full stop. And a few red flags should trigger an immediate audit: validation AUC above 0.97 on a problem where even human experts disagree; one feature towering over all the others in importance; train and validation accuracy nearly identical with no gap; or a mediocre model suddenly looking brilliant right after you added one new feature group.
+
+---
+
+**Preprocessing leaks too — fit everything on the training fold only.**
+
+Leakage isn't just about features you engineer; it hides in *preprocessing*. Any step that *learns something from the data* — a StandardScaler's mean and variance, an imputer's fill values, a PCA's components, feature selection, SMOTE oversampling, target encoding — must be **fit on the training fold only**, then *applied* to validation/test. Fit your scaler on the whole dataset before splitting and the training rows already "know" the test set's statistics. The clean fix is a scikit-learn **Pipeline** that bundles every transform with the model, so cross-validation re-fits the whole chain inside each fold and leakage becomes structurally impossible.
+
+---
+
+**The fuller leakage taxonomy.**
+
+Beyond temporal, group, and label leakage, name the rest: **train-test contamination** (a preprocessing step or a duplicate bleeds test info into train); **duplicate / near-duplicate leakage** (the same row, or an augmented copy, in both splits); **proxy leakage** (a feature that's an innocent-looking stand-in for the label, like a customer-ID range that encodes signup cohort); **post-outcome features** (computed after the event you're predicting); **aggregation-window leakage** (a rolling average whose window reaches past the prediction time); and **survivorship bias** (training only on entities that survived — e.g. still-active accounts — so the model never sees the ones that churned/failed).
+
+---
+
+**Three timestamps, not one.**
+
+"When is this feature available?" is really three questions. The **event timestamp** (when the thing happened), the **feature-computation timestamp** (when your pipeline calculated it), and the **data-availability timestamp** (when the value was actually queryable in production). A value can *exist* historically but not have been *available* at decision time — a label confirmed a week later, a nightly-batch feature not ready until 2am. Point-in-time correctness means joining features as of their **availability** timestamp, not their event timestamp. Feature stores exist largely to get this join right.
+
+---
+
+**Real systems need group and time splits together.**
+
+The splits aren't mutually exclusive. A fraud or churn system usually needs **both**: hold out *future* data (temporal) *and* make sure a held-out user's rows never appear in training (group). A pure temporal split can still leak a user's identity across the cutoff; a pure group split can still let the model peek at the future. The split you choose should mirror the production question — new users, new sessions, new transactions, or future events — and often that's a combined group-plus-time holdout.
+
+---
+
+**Negative controls: sanity tests that catch leaks.**
+
+A few cheap experiments smoke out leakage. **Shuffle the labels** and retrain — a properly-built model should collapse to chance; if it still scores well, a feature is leaking the label. **Compare a random split against a temporal split** — a big gap means temporal leakage. **Drop the top suspicious feature** — if AUC craters from 0.97 to 0.75, that feature was carrying the leak. **Train on future-only features** as a deliberate check of what's genuinely available. These controls turn "I have a bad feeling" into evidence.
+
+---
+
+**How leakage shows up in production.**
+
+Leakage often isn't caught offline at all — it surfaces after deploy. The signatures: an **offline-online collapse** (0.97 validation, 0.64 live), a **null-rate spike** on a feature that turns out to be unavailable at serving time, **feature-freshness** violations (a value that was instant offline takes hours to compute live), or a top feature that simply *can't be computed* in the real-time path. Monitoring these in production is your last line of defence when the offline audit misses a leak.`,
     keyPoints: [
       `**When to audit for leakage: any time validation looks too good to be true.**\n\nRed flags: AUC above 0.95 on a problem where domain experts only manage 70–80%; a single feature with far higher importance than all the others (can it even be known at prediction time?); train and validation accuracy within a point or two of each other with no regularisation (the test set is probably contaminated); or AUC jumping ten-plus points right after you add one new feature group (check that group's causal link to the label).`,
       `**The most common trap: target encoding computed on the full dataset before the split.**\n\nTarget encoding replaces a category with the average outcome for that category. Compute those averages over the whole dataset (test rows included) and each test row's feature now carries information from its own label — a direct leak. Fix: compute the encodings out-of-fold (each row encoded using only the other folds), or wrap it in a scikit-learn Pipeline inside cross-validation. It is easy to miss because the code looks completely innocent.`,
       `**The diagnostic: for every feature, ask whether its value would exist at the exact moment of prediction.**\n\nFor each feature, write down what data it uses, when that data becomes available, and whether that is before or after the prediction time. Any feature whose data only arrives after the prediction moment is leakage. You can do this whole audit in a spreadsheet. Inheriting a model? Check its top five features by importance and confirm each one passes the timestamp test.`,
+      `**Preprocessing leaks too, and the taxonomy is bigger than three types.**\n\nAnything that learns from data — scaler, imputer, PCA, feature selection, SMOTE, target encoding — must be fit on the training fold only; wrap it in a scikit-learn Pipeline so CV re-fits it inside each fold. Beyond temporal/group/label, watch for duplicate/near-duplicate leakage, proxy features (an ID range encoding cohort), post-outcome features, aggregation-window leakage (a rolling window reaching past prediction time), and survivorship bias. And distinguish three timestamps — event, feature-computation, and data-availability — joining features as of *availability* (what point-in-time feature-store joins enforce).`,
+      `**Mirror production in the split, prove it with negative controls, and monitor after deploy.**\n\nReal systems often need a combined group-plus-time holdout (future data AND unseen users), matched to the production question (new user/session/transaction/event). Catch leaks with negative controls: shuffle labels (a clean model drops to chance), compare random vs temporal split (a gap = temporal leak), and drop the top suspicious feature (a crater = it carried the leak). Leakage frequently surfaces only in production — an offline-online collapse, a feature null-rate spike, a freshness violation, or a top feature that can't be computed in the serving path — so monitor these as the last line of defence.`,
     ],
     interactivePrompt: `Before you touch the controls: if a model achieves 95% validation accuracy on a stock return prediction task and the training features include "return over the next 7 days" — what exactly is the model learning, and what will happen at deployment?`,
     checkQuestions: [
@@ -497,6 +765,26 @@ For every feature, ask: *would this exact value exist at the moment of predictio
           `B) Check the train/test split method (random rows on time-series data is wrong), inspect top feature importances for any single dominating feature that may not be available at prediction time, and compare train vs test AUC for absence of generalization gap`,
           `C) Run a shadow deployment and compare production AUC — the only reliable leakage audit is live traffic comparison`,
           `D) Check if AUC=0.94 is above published benchmarks for similar problems — if so, leakage is confirmed`,
+        ],
+        answer: `B`
+      },
+      {
+        q: `You fit StandardScaler and SelectKBest on the full dataset, then run 5-fold cross-validation on the transformed data and get a great score. Why is the score optimistic, and what's the fix?`,
+        options: [
+          `A) It's not optimistic — scaling and feature selection are deterministic transforms, so fitting them before CV has no effect on the score.`,
+          `B) Both the scaler (mean/variance) and SelectKBest (which features to keep) learned from the entire dataset, including the rows that later act as validation folds — so every fold's "held-out" data already influenced the preprocessing. Wrap the scaler, selector, and model in a scikit-learn Pipeline and pass that to cross_val_score, so all transforms are re-fit on each fold's training portion only.`,
+          `C) The problem is only SelectKBest; scaling is safe to fit on the full dataset because it doesn't use the labels.`,
+          `D) The fix is to use 10 folds instead of 5, which dilutes the leakage enough to make the score trustworthy.`,
+        ],
+        answer: `B`
+      },
+      {
+        q: `You suspect a churn model with AUC 0.96 has a leak but can't spot the feature. Which negative control most directly confirms leakage?`,
+        options: [
+          `A) Retrain with a larger max_depth — if AUC rises further, there's no leak.`,
+          `B) Shuffle the labels randomly and retrain: a correctly-built model should collapse to ~0.5 AUC because there's no real signal left. If it still scores well above chance, a feature is carrying label information — a leak. Pair this with a random-vs-temporal split comparison and dropping the top feature to localise it.`,
+          `C) Add more training data — if AUC stays at 0.96, the model is fine and there's no leak.`,
+          `D) Switch from AUC to accuracy — if accuracy is also high, the 0.96 is validated and no leak exists.`,
         ],
         answer: `B`
       },
@@ -547,11 +835,49 @@ On time-ordered data plain k-fold is not just rough, it is *wrong*: it lets the 
 
 **One honest caveat.**
 
-Cross-validation estimates performance on *new data from the same distribution, drawn the same way.* It does not save you if the world shifts before deployment, and it cannot undo leakage baked in before the split. And if you tune hyperparameters on the very folds you then report, you have quietly cheated: trying 200 configurations and reporting the best fold score is biased upward by the search itself. The clean fix is **nested CV** — an outer loop estimates quality on data the tuning never touched, while the inner loop does the full hyperparameter search. Slower, but it is the only setup that honestly scores your whole pipeline.`,
+Cross-validation estimates performance on *new data from the same distribution, drawn the same way.* It does not save you if the world shifts before deployment, and it cannot undo leakage baked in before the split. And if you tune hyperparameters on the very folds you then report, you have quietly cheated: trying 200 configurations and reporting the best fold score is biased upward by the search itself. The clean fix is **nested CV** — an outer loop estimates quality on data the tuning never touched, while the inner loop does the full hyperparameter search. Slower, but it is the only setup that honestly scores your whole pipeline.
+
+---
+
+**When the folds themselves are noisy: repeated k-fold.**
+
+On small datasets a single 5-fold split is still one arbitrary partition — shuffle the rows differently and the estimate moves. **Repeated k-fold** runs the whole k-fold procedure several times with different random shuffles and averages, shrinking the variance of the estimate. It costs more compute but gives a steadier number when data is scarce or fold scores are unstable (like the [0.83, 0.84, 0.92, 0.85, 0.83] case where one fold is an outlier).
+
+---
+
+**When you need both balance and isolation: stratified group k-fold.**
+
+Stratified k-fold keeps the class ratio; group k-fold keeps entities together — but real problems often need *both*. Imbalanced medical data with multiple visits per patient wants every fold to hold the same rare-disease rate **and** never split a patient across folds. **Stratified group k-fold** does both at once. It's an approximation (you can't always satisfy both perfectly), but it's the right tool when you have imbalance and repeated subjects together — a very common combination.
+
+---
+
+**Rolling versus expanding windows.**
+
+Walk-forward comes in two flavours, and the choice is about drift. An **expanding window** always trains on *all* history up to time t — more data, better when the relationship is stable. A **rolling (sliding) window** trains only on the most *recent* fixed span, deliberately forgetting old data — better under strong concept drift, where ancient patterns actively mislead. Rule of thumb: expanding by default, rolling when the world changes fast enough that stale data hurts more than it helps.
+
+---
+
+**Nested CV estimates the pipeline, not the final model.**
+
+A subtlety people miss: nested CV gives you an unbiased estimate of your *model-selection procedure's* quality — but the model you actually ship is usually **retrained on all available training data** using the hyperparameters that procedure chose. Nested CV answers "how good is my process," not "here's the exact model." So report the nested-CV score as your honest performance estimate, then retrain on everything for deployment. Don't confuse the two.
+
+---
+
+**Fold scores aren't independent — mean ± std isn't a confidence interval.**
+
+Reporting mean ± std across folds is useful, but treat it carefully: the folds **overlap in training data** (each pair of 5-fold training sets shares most of their rows), so the fold scores are correlated, not independent draws. That means the naive standard error understates the true uncertainty, and the std across folds is *not* a valid 95% confidence interval. Use it as a rough spread and an instability flag, not as a rigorous statistical bound.
+
+---
+
+**Stratifying regression and multi-label targets.**
+
+Stratification isn't only for single-label classification. For **regression**, stratify on *binned* target values so each fold spans the full range (otherwise one fold can get all the cheap houses). For **multi-label** problems, use iterative/multi-label stratification that balances each label's distribution across folds. Naive random splitting can leave a rare label almost absent from some folds, making those folds unrepresentative.`,
     keyPoints: [
       `**Match the CV strategy to your deployment assumption — it is not a style choice.**\n\nPlain k-fold (k=5 or 10): rows are independent, no time order, no repeated subjects. Stratified k-fold: any imbalanced classification, so every fold keeps the same class mix. Group k-fold: the model will score entities (users, patients, stores) it has never seen, so all rows from one entity stay on one side. Walk-forward: any time-series data, always. Use the wrong one and you are measuring a deployment scenario that does not exist.`,
       `**The most common trap: plain k-fold on time-series data.**\n\nIt produces validation scores that look fine and mean nothing. The tell: CV says AUC 0.85, then it drops sharply the moment you run a proper time-ordered holdout. Always split by time for time-series, default to an expanding walk-forward window, and add a purge gap (say 7 days) between train and validation so rolling-window features cannot bleed across the boundary.`,
       `**The diagnostic: if you tuned hyperparameters and reported the best fold score, that number is inflated.**\n\nTrying 100 configurations and reporting the best one's validation score is selection bias — you implicitly fit to that partition, and the more you tried, the worse the inflation. Fix it with nested CV (search only in the inner fold) or a separate test set never touched during tuning. Quick check: retrain with the chosen settings and score on data the tuning never influenced — if it drops a lot, the bias was real.`,
+      `**Reach for the right variant, and read fold spread honestly.**\n\nRepeated k-fold shrinks estimate variance on small/unstable data; stratified group k-fold handles imbalance and repeated subjects together; expanding windows use all history (stable world) while rolling windows keep only recent data (strong drift). Stratify regression on binned targets and multi-label with iterative stratification so no fold misses a rare label. And every learned transform (scaler, imputer, selector, encoder, SMOTE) must be fit inside each fold via a Pipeline — fitting before CV leaks.`,
+      `**Know what nested CV estimates and that folds aren't independent.**\n\nNested CV gives an unbiased estimate of your model-selection *procedure*; the shipped model is then retrained on all training data with the chosen hyperparameters, so report the nested score but don't mistake it for the exact deployed model. And because k-fold training sets overlap heavily, fold scores are correlated — mean ± std is a useful spread and instability flag but not a valid confidence interval, so don't treat the std as a rigorous statistical bound.`,
     ],
     interactivePrompt: `Before you touch the controls: if you use standard 5-fold CV on 3 years of daily transaction data, what specific problem does this introduce — and would your reported AUC be too high or too low as a result?`,
     checkQuestions: [
@@ -582,6 +908,26 @@ Cross-validation estimates performance on *new data from the same distribution, 
           `B) This is the nested CV problem — running 200 Optuna trials and reporting the best trial's validation AUC is upward-biased by selection; unbiased evaluation requires either nested CV (hyperparameter search in inner fold only) or a completely separate test set never touched during optimization`,
           `C) The evaluation is correct if the validation set is large enough — selection bias from Optuna only matters with small datasets below 10,000 samples`,
           `D) Optuna handles this automatically through its pruning mechanism — trials that overfit to the validation set are pruned before they can inflate the reported score`,
+        ],
+        answer: `B`
+      },
+      {
+        q: `You have 3 years of daily sales data and strong seasonality/drift, and must forecast the next quarter. Between an expanding window and a rolling window for walk-forward CV, how do you choose?`,
+        options: [
+          `A) Always use an expanding window — more training data is strictly better, so rolling windows are never the right choice.`,
+          `B) It depends on drift: an expanding window trains on all history (best when the underlying relationship is stable and more data helps), while a rolling window keeps only the recent span and deliberately forgets old data (best under strong concept drift, where stale patterns actively mislead). With strong drift here, a rolling window is often the better fit — and validate both.`,
+          `C) Use whichever gives the higher validation score, since the window type is purely a performance knob with no assumptions attached.`,
+          `D) Neither — with seasonality you must use standard k-fold so every season appears in training, and window type is irrelevant.`,
+        ],
+        answer: `B`
+      },
+      {
+        q: `You run nested CV and get an outer-loop estimate of 0.86 AUC. What model do you actually deploy, and what does the 0.86 represent?`,
+        options: [
+          `A) Deploy the single best inner-fold model from the outer fold that scored highest, and 0.86 is that model's exact production performance.`,
+          `B) The 0.86 is an unbiased estimate of your whole model-selection procedure's quality, not of one specific model. For deployment you retrain on all available training data using the hyperparameters the procedure selects, and report 0.86 as the honest expected performance — the process is what was evaluated, the retrained-on-everything model is what ships.`,
+          `C) Deploy nothing — nested CV is only a diagnostic and cannot produce a deployable model.`,
+          `D) Average the weights of all outer-fold models into one ensemble and deploy that; 0.86 is that ensemble's guaranteed score.`,
         ],
         answer: `B`
       },
@@ -676,11 +1022,49 @@ That is what **error analysis** is for: turning "the model has 6% error" into "t
 
 Back to the classifier: two-thirds of the errors are short commands, because the model saw too few of them in training and its vocabulary came from longer queries. The fix is not a bigger model or a new architecture — it is collecting 200 labelled 3-word commands, retraining, and re-measuring that bucket's error rate. One cheap data effort clears the majority of the errors. That is the recurring lesson: systematic errors cluster by group or pattern and have targeted fixes, and collecting data for the worst bucket usually moves the metric more than any architecture change. (Errors that cluster by nothing are just irreducible noise — more data will not help those.)
 
-And never let a high headline number end the conversation. A model that is 96% accurate but fails 100% of the time on one demographic, or a 98% spam filter that misses every email in one language, is not acceptable. Break errors down by subgroup, confidence, input length, and any business-critical slice. The aggregate metric is the *last* thing you report, not the first.`,
+And never let a high headline number end the conversation. A model that is 96% accurate but fails 100% of the time on one demographic, or a 98% spam filter that misses every email in one language, is not acceptable. Break errors down by subgroup, confidence, input length, and any business-critical slice. The aggregate metric is the *last* thing you report, not the first.
+
+---
+
+**Small slices lie — check the support before you react.**
+
+The most common error-analysis mistake is over-reacting to a tiny slice. "Group X has 40% error!" means nothing if group X has 5 examples — that's 2 errors, pure noise. Always report the **slice size** alongside its error rate, put a **confidence interval** on the rate (a 40% error on n=5 might really be anywhere from 5% to 85%), and set a **minimum-support threshold** (say, ignore slices under 30–50 examples) before drawing conclusions. A large slice with a modestly elevated error rate usually matters more than a tiny slice with a scary-looking one.
+
+---
+
+**The sharper root-cause taxonomy.**
+
+"Data / feature / distribution" is a good start, but name the fuller set so you can match a fix to each: **label noise** (the ground truth is wrong), **data scarcity** (too few examples of this pattern), **distribution shift** (production differs from training), **feature blindness** (the inputs can't even represent the distinction), **annotation ambiguity** (humans genuinely disagree, so no model can be "right"), a **preprocessing bug** (a pipeline error corrupts this slice), or a **threshold/calibration issue** (the model ranks fine but the cutoff is wrong for this group). Each points to a different fix — collecting more data won't cure a calibration bug or annotation ambiguity.
+
+---
+
+**Slice false positives and false negatives separately.**
+
+Don't lump all errors together — **FPs and FNs usually have different causes and different costs.** In fraud, the FNs (missed fraud) might cluster in a new merchant category while the FPs (false alarms) cluster in high-velocity legitimate users — two unrelated problems needing two different fixes. And their business costs differ (a missed fraud vs an annoyed customer). Always build the error breakdown twice, once for each error type.
+
+---
+
+**From notebook to monitor.**
+
+Error analysis shouldn't be a one-time notebook exercise you do before launch and forget. The slices you discover — 3-word commands, code-switching, new merchant categories — should become **monitored production slices**, tracked continuously so you catch when a slice's error rate creeps up after deploy. A finding that lives only in a notebook decays; a finding wired into monitoring keeps paying off.
+
+---
+
+**The human side: labels and adjudication.**
+
+When errors trace to *annotation ambiguity*, the fix is a labeling process, not a model change. Measure **inter-annotator agreement** — if two humans disagree on a slice, the model can't be blamed for missing it. Set up an **adjudication** step for disputed cases, **update the labeling guidelines** to resolve the ambiguity, and accept that some errors are "**ambiguous but acceptable**" — genuinely reasonable answers the rigid label just didn't credit. Not every error is a bug.
+
+---
+
+**Prove the fix with a counterfactual check, and prioritise with the real formula.**
+
+Before claiming a fix works, run an **ablation**: remove the suspicious feature, or add the targeted data, or apply the augmentation — then compare the *slice* metric before and after, not just the aggregate. And prioritise slices with more than a raw error count: **impact = slice volume × error rate × cost per error × fix feasibility.** A big, expensive, easily-fixed slice beats a small, cheap, mysterious one — the count of total errors alone will point you at the wrong work.`,
     keyPoints: [
       `**Always stratify errors by confidence level first — high-confidence wrong predictions (model says 0.95 positive, it is negative) indicate systematic bias, not random noise. These are your priority.**\n\nFor the intent classifier: sample 100 errors. Group them into confidence buckets: errors where model confidence was 0.5–0.7, 0.7–0.9, and 0.9–1.0. High-confidence errors in the 0.9–1.0 bucket are the model doubling down on a wrong pattern — a systematic feature or data problem. Low-confidence errors near 0.5 are boundary cases where the model is appropriately uncertain. Fix the high-confidence bucket first. In sklearn: sort errors by abs(predicted_prob - 0.5) descending, inspect the top 30. They will cluster by a specific pattern almost every time.`,
       `**Trap: sampling errors uniformly and concluding that common categories matter most. A rare error category that happens to affect high-value users or safety-critical decisions matters more than a common category that does not. Weight by business impact, not frequency.**\n\nFor the intent classifier: 12% of errors are negation patterns ("don't turn on"). This seems small. But those are the errors where the assistant does the opposite of what was asked — a user explicitly said not to do something and the system did it anyway. The business impact of acting on a negation error is catastrophically higher than misclassifying a benign 3-word utterance. Prioritize by cost(error type) × frequency(error type), not frequency alone. The cost matrix is a business decision, not a modeling decision.`,
       `**Diagnostic: if error categories do not have obvious fixes, you have a data gap — collect 200 examples from the hardest category and retrain. This typically moves more metric than any architectural change.**\n\nFor the intent classifier: code-switching errors (Spanish phrases in English queries) represent 18% of all errors. The model has almost no Spanish-English mixed examples in training. The fix is not a larger model or a better architecture — it is 200 labeled code-switching examples added to the training set. Retrain. Measure the category error rate on a held-out slice of code-switching examples. If it drops from 60% to 20%, the data gap was the problem. If it stays high, there is a feature representation problem. Data collection is cheaper than architecture search and should come first.`,
+      `**Check slice support, name the real root cause, and slice FP/FN separately.**\n\nDon't react to a 40%-error slice of 5 examples — report slice size, a confidence interval on the rate, and a minimum-support threshold before concluding. Match the fix to the real cause: label noise, data scarcity, distribution shift, feature blindness, annotation ambiguity, preprocessing bug, or threshold/calibration issue — more data won't cure a calibration bug or genuine ambiguity. And build the breakdown twice, once for false positives and once for false negatives, since they usually have different causes and costs.`,
+      `**Wire findings into monitoring, handle the human side, and prove fixes counterfactually.**\n\nTurn discovered slices into continuously-monitored production slices rather than one-off notebook findings. When errors trace to annotation ambiguity, fix the labeling process — measure inter-annotator agreement, adjudicate disputes, update guidelines, accept "ambiguous but acceptable" errors. Before claiming a fix, ablate (remove feature / add data / augment) and compare the slice metric before vs after. Prioritise by impact = slice volume × error rate × cost per error × fix feasibility, not raw error count.`,
     ],
     interactivePrompt: `Before you touch the controls: if a model achieves 94% accuracy overall but all errors cluster in one specific subgroup, is that model better or worse than a model with 91% accuracy whose errors are uniformly distributed?`,
     checkQuestions: [
@@ -723,6 +1107,26 @@ And never let a high headline number end the conversation. A model that is 96% a
           `D) Error slicing is a debugging technique asking "where is the model wrong so I can fix it?"; fairness analysis is a normative assessment asking "is the model wrong more for certain protected groups in a way that causes harm?" — they become the same when your error slices are by protected attributes and significantly different error rates raise legal and ethical implications beyond just "collect more data"`,
         ],
         answer: `D`
+      },
+      {
+        q: `In your error slicing, one segment shows a 45% error rate versus 8% overall — but that segment has only 6 examples. What's the right move?`,
+        options: [
+          `A) Treat it as the top-priority failure immediately — a 45% error rate is nearly 6x the baseline, so it's clearly the biggest problem.`,
+          `B) With n=6, a 45% error rate is 2-3 errors and the confidence interval is enormous (roughly 12%–80%) — it may be pure noise. Report the slice size, put a CI on the rate, and apply a minimum-support threshold before acting; gather more examples from that segment before concluding anything. Prioritise larger slices with reliable elevated rates first.`,
+          `C) Delete those 6 examples from the dataset, since a segment that small can't be modeled reliably anyway.`,
+          `D) Immediately collect 200 examples for that segment and retrain — small-but-high-error slices always indicate a data gap.`,
+        ],
+        answer: `B`
+      },
+      {
+        q: `You've decided which error slice to fix first. Which prioritisation best reflects real-world impact?`,
+        options: [
+          `A) Rank slices purely by the raw count of errors in each — the slice with the most total errors is always the one to fix first.`,
+          `B) Rank by error rate alone — the slice where the model is most often wrong is the highest priority regardless of anything else.`,
+          `C) Prioritise by impact = slice volume × error rate × cost per error × fix feasibility. This weighs how many users hit the slice, how often it fails, how costly each failure is, and how tractable the fix is — so a large, expensive, easily-fixed slice outranks a small, cheap, mysterious one, which raw error count would get wrong.`,
+          `D) Always fix whichever slice the loudest stakeholder complains about, since business alignment matters more than any metric.`,
+        ],
+        answer: `C`
       },
     ],
     takeaway: `Aggregate metrics tell you that a problem exists — error slicing by confidence, subgroup, and input type tells you which specific subpopulation has the problem — and targeting 200 examples of the hardest error category almost always moves more metric than any architectural change.`,
@@ -773,11 +1177,49 @@ The **Brier score** goes further. It is simply the mean squared error of the pro
 
 **Fixing it — on a separate calibration set.**
 
-You do not usually retrain; you patch the probabilities afterward, using a held-out **calibration set** (never the training or test data). Three common tools, cheapest first. **Temperature scaling** (for neural nets): divide the logits by a single number T before the softmax — T > 1 softens overconfident outputs, and it never changes which class wins, only the probabilities. One parameter, impossible to overfit, and it fixes the most common kind of neural-net miscalibration, so try it first. **Platt scaling**: fit a small logistic curve on top of the scores — good for the smooth, one-directional miscalibration of SVMs and boosting, and it works with little data. **Isotonic regression**: fit a flexible staircase that can straighten any shape of miscalibration — more powerful, but it needs more data or it just memorises. And the rule you cannot break: fit the correction on a *separate* slice. Calibrate on training data and it is fooled by memorised outputs; calibrate on test data and you have spoiled your only honest score.`,
+You do not usually retrain; you patch the probabilities afterward, using a held-out **calibration set** (never the training or test data). Three common tools, cheapest first. **Temperature scaling** (for neural nets): divide the logits by a single number T before the softmax — T > 1 softens overconfident outputs, and it never changes which class wins, only the probabilities. One parameter, impossible to overfit, and it fixes the most common kind of neural-net miscalibration, so try it first. **Platt scaling**: fit a small logistic curve on top of the scores — good for the smooth, one-directional miscalibration of SVMs and boosting, and it works with little data. **Isotonic regression**: fit a flexible staircase that can straighten any shape of miscalibration — more powerful, but it needs more data or it just memorises. And the rule you cannot break: fit the correction on a *separate* slice. Calibrate on training data and it is fooled by memorised outputs; calibrate on test data and you have spoiled your only honest score.
+
+---
+
+**The Brier decomposition, by its actual terms.**
+
+We said Brier folds two things together — here they are precisely. The Murphy decomposition splits it into three: **Brier = reliability − resolution + uncertainty**. **Reliability** is the calibration error (how far predictions sit from the true rate in their bucket) — you want it *low*. **Resolution** is how much the predictions vary from the base rate and correctly separate outcomes (discrimination) — you want it *high*, and it's *subtracted*. **Uncertainty** is the irreducible difficulty set by the base rate, which no model controls. The critical consequence: a **lower Brier does not always mean better calibration** — it can drop purely because *resolution* improved (better discrimination) while calibration stayed the same or worsened. So don't read Brier as a pure calibration metric; it mixes calibration, discrimination, and base-rate difficulty. sklearn warns about exactly this.
+
+---
+
+**ECE's fine print.**
+
+ECE is more fragile than its single number suggests. It depends heavily on **bin count** (10 bins vs 20 gives different ECE) and bin placement; **empty or tiny bins** make the estimate noisy; **equal-width bins** waste resolution when predictions cluster (fixable with **adaptive/equal-count binning**). And in multiclass you must choose *what* to measure: **top-label ECE** (is the confidence in the predicted class honest?) versus **classwise ECE** (is every class's probability honest?) — they answer different questions and can disagree. Always pair ECE with the reliability diagram so a small number can't hide localised miscalibration.
+
+---
+
+**Calibrating more than two classes.**
+
+Multiclass calibration is genuinely harder. The one-vs-rest approach fits **one calibrator per class**, but then the per-class probabilities no longer sum to 1 and need **renormalising**. You also decide between calibrating the **top label** only versus **classwise** (every class), and you inspect **classwise reliability diagrams** rather than one curve. Temperature scaling is popular here precisely because scaling all logits by a single T keeps the softmax normalised and sidesteps the renormalisation headache.
+
+---
+
+**Model-specific miscalibration patterns.**
+
+Different models miscalibrate in characteristic directions. **Random forests** are pushed *away* from 0 and 1 by tree-averaging (a truly-positive case rarely gets every tree to vote yes), giving a **sigmoid**-shaped reliability curve — under-confident at the extremes. **Modern neural networks** are commonly **overconfident** (curve sags below the diagonal), though this is a tendency, not a universal law — it depends on architecture, loss, and regularisation. Knowing your model's usual distortion tells you which correction shape to expect.
+
+---
+
+**Calibration decays after deployment — monitor it.**
+
+Calibration measured at launch is not permanent. **Covariate shift** (the input mix moves) and **base-rate shift** (the positive rate changes) both break it even when the original test calibration looked perfect. So calibration is something to **monitor** in production — track ECE/reliability over time and, crucially, *by cohort*: time window, geography, device, and segment, since a model well-calibrated overall can be badly off for a subgroup whose prevalence shifted.
+
+---
+
+**Calibration is not thresholding.**
+
+Keep the two steps separate. **Calibration** makes the probability *truthful* (0.7 means 70%). **Thresholding** picks the *decision cutoff* that turns a probability into an action, chosen from costs and capacity. They're related — an honest probability makes the threshold meaningful and transferable across contexts — but distinct: you calibrate so the number can be trusted, *then* threshold so the decision is optimal. Fixing one does not fix the other.`,
     keyPoints: [
       `**Calibration and ranking are different things — a model can ace one and fail the other.**\n\nRanking (AUC) asks whether riskier cases score higher than safer ones. Calibration asks whether "0.9" actually happens 90% of the time. A model that always predicts the base rate is perfectly calibrated yet useless; a model with AUC 1.0 can be 30 points overconfident. You need both, and which matters more depends on whether a real decision reads the probability itself (medical risk, pricing, fraud thresholds, or feeding another model) or only the order (top-k ranking, where calibration barely matters).`,
       `**See miscalibration with a reliability diagram; summarise it with ECE or Brier.**\n\nBucket the predictions and plot predicted probability against the actual rate — points below the diagonal mean overconfidence. ECE is the average distance from that diagonal (simple, but it can hide trouble in one range, so look at the diagram too). The Brier score — mean squared error of the probabilities — is richer: it folds discrimination and calibration into one number, which is why a model with lower AUC can still post the better (lower) Brier score by being better calibrated.`,
       `**The fix is a post-hoc patch on a separate calibration set — start with the simplest.**\n\nTemperature scaling (divide neural-net logits by one number T) is the first thing to try: it fixes typical overconfidence, cannot overfit, and never changes which class wins. Platt scaling (a small logistic curve on the scores) suits the smooth miscalibration of SVMs and boosting. Isotonic regression can fix any shape but needs more data. Whichever you pick, fit it on a held-out calibration slice — never on training or test.`,
+      `**Read Brier and ECE carefully — neither is a pure calibration number.**\n\nBrier = reliability − resolution + uncertainty, so a lower Brier can come entirely from better discrimination (resolution) while calibration is flat or worse — check the reliability term or diagram directly. ECE is binning-sensitive (bin count, empty bins; use adaptive/equal-count bins) and in multiclass you must choose top-label vs classwise ECE, which can disagree. Random forests miscalibrate *away* from 0/1 (sigmoid curve, under-confident at extremes) while neural nets are commonly — not universally — overconfident.`,
+      `**Handle multiclass, monitor for drift, and keep calibration separate from thresholding.**\n\nOne-vs-rest multiclass calibration needs renormalising (per-class probabilities won't sum to 1); temperature scaling avoids this by scaling all logits together. Calibration decays under covariate and base-rate shift even when AUC is unchanged, so monitor ECE/reliability over time and by cohort (geography, device, segment) and re-fit on recent data. And calibration (making the probability truthful) is a different step from thresholding (choosing the decision cutoff from costs) — fixing one doesn't fix the other.`,
     ],
     checkQuestions: [
       {
@@ -809,6 +1251,26 @@ You do not usually retrain; you patch the probabilities afterward, using a held-
           `D) The models are equivalent — AUC and Brier score measure the same underlying property from different angles`,
         ],
         answer: `C`
+      },
+      {
+        q: `A colleague says "our Brier score dropped from 0.12 to 0.09 after the last change, so the model is better calibrated now." Why is that conclusion not guaranteed?`,
+        options: [
+          `A) It's fully guaranteed — Brier score is a pure calibration metric, so any drop means better calibration by definition.`,
+          `B) Brier decomposes as reliability − resolution + uncertainty: reliability is the calibration error (want low) and resolution is discrimination (want high, and it's subtracted). A lower Brier can come entirely from improved resolution (better discrimination) while calibration stayed the same or even worsened. To claim better calibration you must look at the reliability term (or the reliability diagram) directly, not the Brier total.`,
+          `C) The drop is meaningless because Brier score is not comparable across model versions on the same data.`,
+          `D) It's wrong because a lower Brier score always means worse calibration and better discrimination — the two always move in opposite directions.`,
+        ],
+        answer: `B`
+      },
+      {
+        q: `A binary model was well-calibrated at launch (ECE 0.02). Three months later the base rate of positives has shifted and users complain the probabilities feel off, though ranking is unchanged. What's happening and what should have been in place?`,
+        options: [
+          `A) Ranking unchanged means nothing is wrong — calibration can't drift if AUC is stable, so the complaints must be a UI issue.`,
+          `B) Calibration decays under covariate and base-rate shift even when ranking (AUC) is unchanged, because the mapping from score to true rate depends on the distribution. Calibration should be monitored in production over time and by cohort (geography, device, segment) — not treated as a one-time launch fix — and re-fit on recent data when ECE crosses a threshold.`,
+          `C) The model simply needs more training epochs; overconfidence always returns after a few months and retraining longer fixes it permanently.`,
+          `D) Nothing can be done — once a model is deployed its calibration is frozen, so the only option is a full model rebuild from scratch.`,
+        ],
+        answer: `B`
       },
     ],
     takeaway: `AUC measures whether a model ranks correctly and calibration measures whether its probability estimates are honest — these are independent, so for any application where the probability output drives a real-world decision, calibration must be evaluated and fixed separately from discrimination.`,
@@ -923,11 +1385,55 @@ Before any high-stakes launch, run the new model in **shadow mode**: it sees the
 
 **"Significant" is not the same as "worth it."**
 
-A small p-value only says the effect is unlikely to be pure noise. It does not tell you the effect will *last*, that it is *big enough to matter*, or that the experiment was *run properly*. At ten million daily users, a 0.01% CTR bump hits p < 0.0001 in a single day — and that is about a thousand extra clicks. Is a whole new model to retrain, deploy, and maintain worth a thousand clicks a day? "Is this effect real?" and "Is this effect worth acting on?" are different questions, and at scale the first is almost always yes. So a trustworthy test needs all of it: random assignment (a user always in the same arm), enough time, a pre-registered metric and sample size, and guardrails watched throughout.`,
+A small p-value only says the effect is unlikely to be pure noise. It does not tell you the effect will *last*, that it is *big enough to matter*, or that the experiment was *run properly*. At ten million daily users, a 0.01% CTR bump hits p < 0.0001 in a single day — and that is about a thousand extra clicks. Is a whole new model to retrain, deploy, and maintain worth a thousand clicks a day? "Is this effect real?" and "Is this effect worth acting on?" are different questions, and at scale the first is almost always yes. So a trustworthy test needs all of it: random assignment (a user always in the same arm), enough time, a pre-registered metric and sample size, and guardrails watched throughout.
+
+---
+
+**Check the split before you read any metric: SRM.**
+
+The very first sanity check on an A/B test is **sample ratio mismatch**. You assigned 50/50, so the two arms should have ~equal traffic — if you observe 55/45, something is broken (a bug in assignment, a crash that drops one arm's users, bot traffic hitting one side, a logging gap). And a broken split means every downstream metric is untrustworthy, because the arms are no longer comparable populations. Run a chi-squared test on the observed counts *before* looking at the treatment effect; if SRM fails (roughly, the split deviates more than chance allows), stop and debug the pipeline — do not interpret the result.
+
+---
+
+**Power, MDE, and the winner's curse.**
+
+Size the test *before* running it. **Statistical power** is the chance of detecting a real effect of a given size; the **minimum detectable effect (MDE)** is the smallest lift the test can reliably catch, and it's set by the baseline metric's **variance** and your sample size. An **underpowered** test isn't just "might miss a win" — worse, the wins it *does* report are **exaggerated** (the winner's curse): only unusually large noisy estimates cross the significance line, so significant effects from small samples are biased upward. Compute the required sample size from a target MDE and power (usually 80%) up front, and be skeptical of large effects from small tests.
+
+---
+
+**Faster tests with variance reduction: CUPED.**
+
+You can reach significance sooner without more traffic by *reducing variance*. **CUPED** (controlled experiment using pre-experiment data) subtracts off each user's pre-experiment behaviour — a heavy pre-period spender is expected to spend heavily regardless of treatment, so removing that predictable component shrinks the metric's variance and tightens the confidence interval. Same effect, smaller error bars, shorter test. Any strong pre-experiment covariate works; CUPED is the standard packaging.
+
+---
+
+**Don't jump straight to 50/50: staged ramp-up.**
+
+High-stakes launches roll out in stages, each a safety gate: **shadow** (no user impact) → **1% canary** (catch crashes and catastrophic regressions cheaply) → 5% → 10% → 25% → 50% → full, with **automated rollback** wired to guardrails at every step. The point is to limit blast radius: a bug that would harm 50% of users is caught at 1%. Never take a brand-new model straight to half of traffic.
+
+---
+
+**When one user's treatment leaks to another: interference.**
+
+Standard A/B analysis assumes **SUTVA** — one user's outcome depends only on their *own* assignment. Whole classes of systems violate this. In a **marketplace**, giving treatment sellers a boost takes impressions *away* from control sellers, so the control group is contaminated and the measured lift is inflated. **Social networks** (a treated user posts more, changing their control-group friends' feeds) and **shared-resource** systems (a treated user consumes limited inventory) have the same problem. The fixes are cluster-level randomisation (randomise by market/region/social-cluster instead of by user) or switchback designs — plain user-level A/B tests give biased answers under interference.
+
+---
+
+**Short-term wins, long-term harm: delayed metrics.**
+
+The metric that moves inside the test window is often not the one you care about. CTR responds in minutes; **retention, revenue quality, refunds, churn, and lifetime value** unfold over weeks or months. A model that boosts short-term clicks by pushing clickbait can simultaneously *reduce* long-term retention — and a two-week test may never see it. Guardrails plus a long-lived **holdout group** (a fraction of users permanently excluded from all changes) are how you catch effects that only appear after the experiment ends.
+
+---
+
+**Overlapping experiments: layers and mutual exclusion.**
+
+At scale dozens of tests run at once, and they can **interact** — test A changes the ranking that test B is also modifying, so the effects aren't additive. Two defenses: **mutual exclusion** (tests touching the same surface can't share users) and **experiment layers** (an orthogonalisation scheme where each user is in one experiment per layer, so tests in different layers are randomised independently). Use **factorial design** deliberately when you *want* to measure an interaction, but only after confirming independence. Document which tests ran simultaneously so surprising results can be traced.`,
     keyPoints: [
       `**Always run A/B tests for at least 2 full business cycles before making a decision — novelty effects typically last 3–7 days and can fully reverse a 15% positive signal.**\n\nFor the recommendation test: the +18% CTR was measured on days 1–2. On days 3–14, CTR in the treatment arm declines steadily as novelty fades. By day 14, CTR in treatment is 2% below control. If the test had run for 2 weeks, the team would have seen the reversal before shipping. The diagnostic: plot daily CTR for treatment vs control separately. If treatment CTR is declining toward control CTR over the first 7 days, novelty is explaining the effect. If treatment CTR is stable and above control at day 14, the effect is real.`,
       `**Trap: peeking at results before the planned end date inflates Type I error. Running a sequential test that checks significance daily at α = 0.05 gives a true false positive rate of ~30% by day 20. Use sequential testing methods (mSPRT, always-valid inference) if you need to peek.**\n\nFor the recommendation test: the team checks results every morning. On day 3, p = 0.03. They stop the test and ship. The problem: every day of peeking at α = 0.05 is an independent opportunity to cross the significance threshold by noise alone. With 20 days of peeking, the probability of at least one false positive reaches ~30%. The fix: use an always-valid sequential test framework (Spotify's SPRT, Microsoft's ExP). These frameworks compute valid p-values at any stopping point by construction, letting you stop early when the result is clear without inflating false positive rate.`,
       `**Diagnostic: if your positive A/B test result reverses after shipping, check novelty curves — plot daily CTR separately for users in their first 7 days of exposure vs later. If day-1 CTR is much higher than day-7, you measured novelty.**\n\nFor the recommendation model: after shipping and observing revenue decline, segment users by days since first exposure to the new model. New-to-model users (day 1–3): CTR 22% above baseline. Users 4–7 days in: CTR 8% above baseline. Users 8+ days in: CTR 3% below baseline. The novelty curve is unmistakable. The model was not better — it was new. The operational fix: run all future tests for at least 14 days and require that the treatment effect is stable (non-declining) in the last 7 days before shipping.`,
+      `**Sanity-check the split, size the test up front, and reduce variance to go faster.**\n\nBefore reading any metric, run a sample-ratio-mismatch (SRM) check — a 50/50 design that comes back 55/45 signals a broken pipeline and makes every downstream number untrustworthy. Compute required sample size from a target MDE and 80% power beforehand, since underpowered tests both miss real wins and exaggerate the ones they report (winner's curse). CUPED (subtracting pre-experiment behaviour) cuts metric variance and shortens tests without more traffic. Roll out in stages: shadow → 1% canary → 5/10/25/50% → full, with automated rollback on guardrails.`,
+      `**Mind interference, delayed metrics, and overlapping experiments.**\n\nUser-level A/B tests assume SUTVA (one user's outcome depends only on their own arm) — marketplaces, social networks, and shared-inventory systems violate it, so cluster-randomise or use switchbacks or the measured lift is biased. Short-window metrics (CTR) can move opposite to long-run ones (retention, LTV, refunds, churn); catch these with guardrails and a permanent holdout group. When many tests run at once, prevent contamination with mutual exclusion or experiment layers, and use factorial design only when you've confirmed independence and actually want the interaction.`,
     ],
     interactivePrompt: `Before you touch the controls: if you run an A/B test for 2 days and see +18% CTR with p = 0.001, is that sufficient evidence to ship — and what would you want to see before making the decision?`,
     checkQuestions: [
@@ -970,6 +1476,26 @@ A small p-value only says the effect is unlikely to be pure noise. It does not t
           `D) A holdout group is a permanently withheld user fraction that receives no model updates — it measures cumulative causal impact of all ML improvements over months vs A/B tests that only measure marginal gains; this catches cases where 12 individual +1% A/B wins sum to much less than +12% due to cannibalisation or seasonal confounding`,
         ],
         answer: `D`
+      },
+      {
+        q: `You designed a 50/50 experiment, but the logged data shows 52.5% in control and 47.5% in treatment across 2 million users. What should you do before analysing the CTR lift?`,
+        options: [
+          `A) Nothing — a 52.5/47.5 split is close enough to 50/50 that it won't affect the CTR comparison, so proceed to read the result.`,
+          `B) This is a sample ratio mismatch, and at 2M users a 5-point deviation is far beyond chance (a chi-squared test would reject decisively). It signals a broken assignment or logging pipeline — perhaps one arm crashes and drops users, or a redirect fails — which makes the two arms non-comparable populations. Stop, find and fix the root cause, and rerun; do not interpret the CTR lift until the split is clean.`,
+          `C) Reweight the treatment arm by 52.5/47.5 to correct the imbalance, then read the CTR lift normally.`,
+          `D) Add more users until the split naturally converges to 50/50, then analyse — SRM always resolves itself with more data.`,
+        ],
+        answer: `B`
+      },
+      {
+        q: `Your company runs a two-sided marketplace and wants to A/B test giving some sellers a ranking boost. Why is a standard user/seller-level A/B test misleading here, and what's the fix?`,
+        options: [
+          `A) It isn't misleading — as long as sellers are randomised 50/50, the measured lift for boosted sellers is an unbiased estimate of the boost's effect.`,
+          `B) It violates SUTVA (interference): boosting treatment sellers takes impressions away from control sellers competing for the same limited buyer attention, so the control group is harmed and the measured treatment-vs-control lift is inflated — you'd overstate the boost. Fix with cluster-level randomisation (randomise by market/region so treatment and control don't compete) or a switchback design; plain per-seller A/B gives a biased answer.`,
+          `C) The only issue is sample size — marketplaces need more sellers per arm, but the per-seller randomisation itself is fine.`,
+          `D) The fix is to run the test longer, since interference effects average out to zero over enough time.`,
+        ],
+        answer: `B`
       },
     ],
     takeaway: `Statistical significance confirms the effect is unlikely to be noise — it says nothing about whether it will persist, whether it is practically meaningful, or whether the experiment was valid; a 2-day test during a novelty window with daily peeking can produce p = 0.001 on an effect that reverses completely in two weeks.`,
