@@ -85,11 +85,56 @@ Even a high R² can fool you, and this final trick catches it. Suppose the real 
 
 To catch it, take your misses and plot them against your predictions. If the straight line is right, the misses should scatter randomly around zero — no pattern at all. But if the truth was a curve, the misses fall into a clear shape — often a U, too low in the middle and too high at the ends. That U is the model quietly telling you the straight line is the wrong shape. R² will never warn you. The plot of the misses always will.
 
-So before you trust any straight-line model: plot the misses and look. Gauss would have.`,
+So before you trust any straight-line model: plot the misses and look. Gauss would have.
+
+---
+
+**The fine print: what OLS quietly assumes.**
+
+That residual plot isn't just a nicety — it's how you check the promises OLS silently makes. There are five, and it helps to split them into two piles.
+
+The first pile is what you need just to *predict* well. One: the relationship really is a straight line (linearity). Two: no feature is a near-copy of another (no perfect multicollinearity) — the collinearity trap from earlier. If these hold, your predictions are trustworthy even if nothing else does.
+
+The second pile is what you additionally need to *trust the weights and their uncertainty* — the inference layer we're about to meet. Three: the errors have zero mean *given the features* (exogeneity) — the model isn't systematically wrong in any region. Four: the errors all have the same spread (homoscedasticity). Five: the errors are independent of each other (no autocorrelation). Break these and your *predictions* can still be fine, but every confidence interval and p-value you quote is off. That split — prediction assumptions versus inference assumptions — is the thing most people fumble in an interview.
+
+---
+
+**When the spread isn't even: heteroscedasticity.**
+
+Look again at a residual plot that fans out — tight on the left, wide on the right. That's **heteroscedasticity**: the errors are bigger for pricier houses. Here's the subtle part interviewers love. Your weights are *still unbiased* — on average they're centered on the truth. What breaks is the *uncertainty* around them: the standard errors, confidence intervals, and hypothesis tests all become unreliable, usually too optimistic. So you keep predicting fine but start *believing* things about your weights that aren't warranted. The fixes: robust ("sandwich") standard errors, or a transform like modeling log(price) instead of price.
+
+---
+
+**One weird house can move the whole line: leverage and influence.**
+
+"What if a single data point changes your slope?" is a classic. Two different things are going on. **Leverage** is a point with an extreme *feature* value — a 20-bedroom mansion sitting far out on the size axis. It has the *potential* to swing the line hard, just by being far out. **Influence** is when a point *actually* does swing it — high leverage *and* a price that fights the trend. **Cook's distance** measures exactly this: how much every weight would move if you deleted that one house. A point with big Cook's distance is one row quietly steering your whole model. You find these by looking, not by trusting the summary metrics — R² won't flinch.
+
+---
+
+**Reading the weights like a statistician: the inference layer.**
+
+So far we've used the weights to *predict*. But often the real question is "does size actually matter, or did we imagine it?" That needs the inference layer. Around each weight you compute a **standard error** — how much that weight would jitter across different samples. Divide the weight by its standard error and you get a **t-statistic**; feed that through and you get a **p-value** — the odds of seeing a weight this big if the true effect were zero. Wrap the weight in ±2 standard errors and you get a **confidence interval**. This is what lets you say "one more bedroom adds \\$12k, and we're 95% sure it's between \\$8k and \\$16k" instead of just "\\$12k."
+
+And why is OLS the natural tool for this? The **Gauss-Markov theorem**: when those assumptions hold, OLS is **BLUE** — the Best Linear Unbiased Estimator, meaning among all unbiased straight-line methods, none has smaller variance. That's the deep reason least squares earns its place, not just tradition. (Note: scikit-learn gives you the weights but not p-values or intervals — for those you reach for statsmodels.)
+
+---
+
+**How the computer actually solves it.**
+
+We wrote the one-step answer as $θ̂ = (XᵀX)⁻¹Xᵀy$, but no careful library computes it that literally. Forming XᵀX and inverting it *squares* how sensitive the math is to nearly-collinear features, so it can blow up numerically. Real solvers (scikit-learn included) instead use **QR** or **SVD** decompositions — same answer in exact arithmetic, far more stable when features are correlated or poorly scaled. Worth knowing that the textbook formula and the production code disagree on purpose.
+
+---
+
+**Picking the right yardstick.**
+
+R² tells you how much you beat the lazy mean-model, but for reporting error you'll usually quote one of a few. **MAE** is the plain average dollar miss — easy to read, shrugs off a few wild houses. **RMSE** squares before averaging, so it punishes big misses harder and stays in dollars — use it when large errors are especially costly. **MAPE** reports the miss as a *percentage* of each price, which travels across scales but explodes when true values are near zero and punishes over-prediction unevenly. And **R²** is the unitless "fraction of variance explained" for a quick sense of fit. Match the metric to the question: absolute dollars (MAE/RMSE), relative error (MAPE), or overall fit (R²).`,
     keyPoints: [
       `**In one line: OLS finds the weights that make the total squared miss as small as possible.**\n\nUse linear regression first whenever you are predicting a number and "add up the facts, each with its own weight" is a sensible guess. Its big advantage is that you can read the weights straight off — one more bedroom adds about so many dollars. It is fast, it is simple, and it is the baseline every fancier model has to beat. Move to something else when the residual plot curves (the real shape is not a straight line), when facts clearly work together, or when the answer has to stay inside fixed limits — like a probability between 0 and 1, which a straight line cannot respect.`,
       `**The trap that catches people: when two facts move together, their weights stop being trustworthy — but the predictions still look fine, so nothing warns you.**\n\nIf size and total rooms almost always rise together, OLS splits the credit between them however it likes, and a different batch of houses splits it differently. The two weights wobble, but their combined effect stays steady — so the predictions look healthy. That is why "this weight is near zero, let us drop the fact" is dangerous: the weight may be small only because its twin took the credit. Add Ridge (a small penalty) before you trust any list of which facts matter.`,
       `**The one check to run every time: plot the misses against the predictions.**\n\nIf the misses scatter evenly around zero, the straight line fits. If they form a U or any clear pattern, the shape is wrong — and a curved plot with R² = 0.95 is worse than a messy one with R² = 0.60, because now you are confidently wrong. If the misses fan out wider as predictions grow, the errors get bigger for pricier houses; the predictions can still be fine, but any confidence range you quote is off. R² hides all of this. The plot of the misses shows it.`,
+      `**Split the assumptions into two piles — predicting well needs less than trusting the weights.**\n\nTo *predict* you mainly need a genuinely linear relationship and no near-duplicate features. To also *trust the standard errors, p-values, and intervals*, you additionally need errors with zero mean given the features (exogeneity), equal spread (homoscedasticity), and independence (no autocorrelation). Heteroscedasticity is the classic gotcha: it leaves your weights unbiased but makes their uncertainty wrong, so predictions stay fine while every confidence interval quietly lies. Fix with robust standard errors or a log transform.`,
+      `**Know the difference between leverage and influence — and that one row can steer the whole model.**\n\nLeverage is a point with an extreme *feature* value (it has the potential to swing the line); influence is when it actually does (extreme feature value *and* a target that fights the trend). Cook's distance measures how much the weights move if you delete that one point — a big value means one row is running your model. And this is what the inference layer buys you: standard errors, t-stats, p-values, and confidence intervals turn "one bedroom adds \\$12k" into "\\$12k, 95% sure it's \\$8k–\\$16k." OLS is the natural tool because Gauss-Markov says it is BLUE — the minimum-variance unbiased linear estimator — when the assumptions hold. (scikit-learn gives weights only; use statsmodels for p-values and intervals.)`,
+      `**Match the error metric to the question, and don't compute the normal equation literally.**\n\nMAE = average dollar miss (robust, readable); RMSE = squares first, so it punishes big misses and is the one to quote when large errors are costly; MAPE = percentage error that travels across scales but explodes near zero; R² = unitless fraction of variance explained. On implementation: nobody careful inverts XᵀX directly — squaring the condition number is numerically dangerous — so real solvers (scikit-learn included) use QR or SVD for the same answer with far more stability on correlated or badly scaled features.`,
     ],
     interactivePrompt: `Before you touch the controls: if you add a feature that is almost a perfect copy of one you already have, do you expect the model's predictions to get worse, stay about the same, or get better?`,
     checkQuestions: [
@@ -130,6 +175,36 @@ So before you trust any straight-line model: plot the misses and look. Gauss wou
           `\`B) No — R² almost always creeps up when you add a feature, even a useless one, because the model can fit a little more training noise. Look at adjusted R² instead: it charges a fee per feature, so a noise feature makes it fall. If adjusted R² drops, leave the feature out.\``,
           `\`C) Yes — extra random features act like a mild regulariser, smoothing the model and helping it generalise to houses it has not seen.\``,
           `\`D) No — but the real fix is to standardise the noise feature so its scale matches the others, after which R² will correctly drop and tell you to remove it.\``,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `Your residual plot fans out — tight errors for cheap houses, wide errors for expensive ones (heteroscedasticity). What is the real consequence?`,
+        options: [
+          `\`A) The weights themselves become biased and point in the wrong direction, so the predictions are systematically too high or too low and cannot be trusted.\``,
+          `\`B) The weights stay unbiased and the predictions are still fine — but the standard errors, confidence intervals, and p-values become unreliable, so any statement about how sure you are of a weight is off. Fix with robust standard errors or a log transform.\``,
+          `\`C) Nothing meaningful — fanning residuals are a display artifact of plotting against predictions, and switching the x-axis to a single feature makes them disappear.\``,
+          `\`D) It proves the relationship is non-linear, so the only remedy is to add polynomial terms until the fan closes up.\``,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `An interviewer asks: "One data point has an extreme size value AND a price that fights the overall trend. What is it, and how would you catch it?"`,
+        options: [
+          `\`A) It is a leverage point but not an influential one, because leverage depends only on the target value, not the feature value.\``,
+          `\`B) It is simple label noise; the fix is to average it with its nearest neighbours before fitting so its effect is diluted.\``,
+          `\`C) It is an influential point — high leverage (extreme feature value) combined with a target that opposes the trend, so it actually swings the fitted line. Cook's distance flags it by measuring how much the weights move if you delete that single row.\``,
+          `\`D) It is a multicollinearity symptom, detected with the variance inflation factor, and removed by dropping one of the correlated features.\``,
+        ],
+        answer: `C`,
+      },
+      {
+        q: `Why is OLS considered special under its assumptions, and what does the textbook formula θ̂ = (XᵀX)⁻¹Xᵀy hide about real solvers?`,
+        options: [
+          `\`A) It is special because it minimises absolute error, which is why it resists outliers; real solvers compute the inverse of XᵀX directly because that is the fastest route.\``,
+          `\`B) The Gauss-Markov theorem says OLS is BLUE — the Best Linear Unbiased Estimator, minimum variance among unbiased linear methods — when the assumptions hold. Real solvers avoid forming and inverting XᵀX (which squares the numerical sensitivity) and use QR or SVD instead for the same answer with far better stability.\``,
+          `\`C) It is special only because it is fast to compute; there is no theoretical optimality result, and the formula is exactly what production code runs.\``,
+          `\`D) The theorem guaranteeing OLS optimality is the central limit theorem, and the formula is unstable only when the number of rows exceeds the number of columns.\``,
         ],
         answer: `B`,
       },
@@ -195,13 +270,52 @@ Because y is 0 or 1, only one of the two terms is ever active. For our patient (
 
 There is a cleaner reason log loss wins, and you can see it in the gradient. Work out how log loss changes as you nudge the logit z, and the messy sigmoid-slope term cancels out perfectly, leaving just $\\partial L/\\partial z = \\hat{y} - y$ — the plain prediction error. MSE-with-a-sigmoid instead leaves behind an extra $σ(z)(1-σ(z))$ factor that shrinks to almost nothing exactly when the model is most confident and most wrong — so it barely learns from its worst mistakes. Log loss keeps a full-strength gradient no matter how wrong the model is.
 
-Two failure modes are worth knowing. First, **perfect separation**: if some feature splits the two classes cleanly in the training data, the model can keep making its weights bigger to push every prediction toward a hard 0 or 1, and the weights run off toward infinity — training never settles (watch for exploding weights or a loss that turns into NaN). A small L2 penalty caps the weights and brings back a finite answer. Second, logistic regression comes out **calibrated by construction**: because it is trained to give high probability to what actually happened, a predicted 0.7 really does tend to mean about 70% in reality — something trees, SVMs, and boosting do not give you for free.
+Two failure modes are worth knowing. First, **perfect separation**: if some feature splits the two classes cleanly in the training data, the model can keep making its weights bigger to push every prediction toward a hard 0 or 1, and the weights run off toward infinity — training never settles (watch for exploding weights or a loss that turns into NaN). A small L2 penalty caps the weights and brings back a finite answer. Second, logistic regression tends to come out **well-calibrated when the model is correctly specified**: because it is trained to give high probability to what actually happened, a predicted 0.7 often really does mean about 70% in reality — something trees, SVMs, and boosting do not give you for free. But "well-calibrated" is a tendency, not a guarantee: heavy regularisation, class imbalance, a mis-specified model, or a shift between training and serving data can all break it, so you still verify calibration rather than assume it.
 
-And it stretches past two classes: swap the sigmoid for the **softmax**, which turns a whole set of logits into probabilities that add up to 1, and train it with the same log-loss idea. The boundary it draws stays straight — a line in 2D, a flat plane in higher dimensions — so to bend it you must add curved or interaction features yourself. One practical habit: because the L2 penalty judges weights by size, standardise your features first, or a feature measured in the millions gets penalised on a completely different scale from one measured in single digits.`,
+And it stretches past two classes: swap the sigmoid for the **softmax**, which turns a whole set of logits into probabilities that add up to 1, and train it with the same log-loss idea. The boundary it draws stays straight — a line in 2D, a flat plane in higher dimensions — so to bend it you must add curved or interaction features yourself. One practical habit: because the L2 penalty judges weights by size, standardise your features first, or a feature measured in the millions gets penalised on a completely different scale from one measured in single digits.
+
+---
+
+**Reading the weights the way a statistician does: odds ratios.**
+
+We said a one-unit bump in a feature multiplies the odds by $e^{w}$. That number, $e^{w}$, is the **odds ratio**, and it is how logistic regression coefficients get reported in medicine and credit — "smokers have 2.3× the odds." Just like linear regression, each coefficient carries a **standard error**, so you can put a **confidence interval** around the odds ratio and a **p-value** on whether it differs from 1 (an odds ratio of 1 means "no effect"). This is the inference layer for classification. And the same tooling split applies: scikit-learn hands you the coefficients but not p-values or intervals — for those you use statsmodels' Logit on an unpenalised fit.
+
+---
+
+**The threshold is a business decision, not 0.5.**
+
+Logistic regression's real output is a *probability*. Turning that probability into an action — flag this transaction, approve this loan — needs a **threshold**, and 0.5 is almost never the right one. The right threshold comes from the *cost of each mistake*. In fraud you can only review, say, 500 alerts a day, so you set the threshold to fill that queue with the highest-risk cases (a precision@K problem). In cancer screening a missed case (false negative) is far worse than a false alarm, so you drop the threshold to buy recall. In lending the costs are literally dollars. Separate the two steps cleanly: the model estimates probability, and *you* choose the decision threshold from the business costs.
+
+---
+
+**When one class is rare.**
+
+If only 1% of transactions are fraud, a model that predicts "not fraud" every time is 99% accurate and completely useless — which is why **accuracy is the wrong metric under imbalance.** Three fixes work together. Weight the rare class more heavily in the loss (\`class_weight='balanced'\` in scikit-learn), so each rare example counts for more. Move the threshold, as above. And judge the model with the right curve: **PR-AUC** (precision-recall) is far more informative than **ROC-AUC** when positives are scarce, because ROC-AUC can look flattering while the model still floods you with false positives.
+
+---
+
+**The practical knobs: C, penalties, and solvers.**
+
+Regularisation is not optional trivia here — it is how you control overfitting and tame perfect separation. One confusing detail trips people up: scikit-learn's \`C\` is the **inverse** of the penalty strength, so *smaller C means stronger* regularisation (C = 1/λ). You also choose the penalty type — **L2** (shrink weights), **L1** (drive some to exactly zero for feature selection), or **Elastic Net** (a blend) — and the penalty must match the solver: L1 and Elastic Net need a solver like \`saga\`, while the default \`lbfgs\` only does L2. Interview-ready summary: C = 1/λ, L1/L2/Elastic Net, and saga is the one solver that does them all.
+
+---
+
+**More than two classes.**
+
+Two ways to go past yes/no. **One-vs-rest** trains one binary logistic model per class ("this class or not") and picks the highest scorer — simple, and each model is independently interpretable. **Multinomial** (softmax) logistic regression trains a single model over all classes at once, with probabilities that sum to 1, and is usually better calibrated across classes. scikit-learn supports both; multinomial is the default for most solvers.
+
+---
+
+**Making the straight boundary bend.**
+
+The decision boundary logistic regression draws is *linear* in whatever feature space you give it — a line, a plane, a hyperplane. That is a real limit, but also a lever: you make the model as expressive as you like by *engineering the features*. Add interaction terms (age × blood_pressure) to let features combine, polynomial or spline terms to let a feature curve, and binning to let it jump in steps. Done well, this keeps the interpretability and calibration of logistic regression while letting it fit relationships a raw straight line never could — often you reach for a heavier model only after these run out.`,
     keyPoints: [
       `**What logistic regression really is: a linear equation that predicts the log-odds, and a sigmoid that turns that into a probability.**\n\nUse it as your first model for any yes/no question where you want a probability you can trust, not just a label — fraud, churn, default, click-through. Its coefficients read cleanly: a one-unit bump in a feature adds its weight to the log-odds and multiplies the odds by $e^{weight}$. It is fast, interpretable, and — uniquely among the common classifiers — calibrated out of the box. Reach for something heavier only when the boundary is clearly non-linear or the features interact in ways a straight line cannot capture.`,
       `**The trap that stops the model learning: training with MSE instead of log loss.**\n\nMSE caps the penalty for a confident wrong answer at around 1, so the model shrugs off its worst mistakes — and worse, its gradient shrinks to near zero exactly when the prediction is most confidently wrong, so it barely updates. Log loss (cross-entropy) makes the cost climb toward infinity as a confident prediction turns out wrong, and its gradient stays full-strength. Always train classification with cross-entropy. Watch too for perfect separation: a feature that splits the classes cleanly drives the weights toward infinity — a little L2 (in scikit-learn, a lower C) reins them back in.`,
       `**The diagnostic: read the reliability diagram — when the model says 0.7, is the real rate about 70%?**\n\nLogistic regression starts well-calibrated, but strong regularisation shrinks the logits and pulls probabilities toward the middle, and class imbalance can distort them. On a held-out set, bucket the predictions and compare each bucket's predicted probability against its actual positive rate. If the model says 0.8 where the truth is 0.55, it is overconfident — fix it with Platt scaling or isotonic regression fit on a *separate* calibration set, never the training set. And standardise features before fitting, since L2 is scale-sensitive.`,
+      `**The output is a probability; the threshold is a separate business decision — and under imbalance, 0.5 and accuracy both betray you.**\n\nLet the model estimate probability, then choose the action threshold from the cost of each error: fill a fixed review queue (precision@K) for fraud, buy recall for cancer screening, weigh dollars for lending. When the positive class is rare, accuracy is meaningless (predict-the-majority scores 99%), so weight the rare class (\`class_weight='balanced'\`), move the threshold, and judge with PR-AUC rather than ROC-AUC, which flatters models that still spew false positives.`,
+      `**Know the practical knobs cold: C is inverse regularisation, and the penalty must match the solver.**\n\nIn scikit-learn smaller \`C\` means *stronger* regularisation (C = 1/λ). Pick the penalty — L2 (shrink), L1 (sparse/select), or Elastic Net (blend) — and remember L1 and Elastic Net need a solver like \`saga\`; the default \`lbfgs\` only does L2. For more than two classes, one-vs-rest trains an independent binary model per class while multinomial (softmax) trains one joint model with probabilities summing to 1 and is usually better calibrated across classes.`,
+      `**The boundary is linear in your feature space — so engineer the features to make it bend, and read coefficients as odds ratios.**\n\nLogistic regression can only draw a straight boundary in whatever space you hand it, so add interactions, polynomial, spline, or binned features to fit curved and combined relationships while keeping its interpretability. And report coefficients as odds ratios ($e^{w}$) with confidence intervals and p-values — an odds ratio of 1 means no effect — using statsmodels when you need the inference layer scikit-learn omits.`,
     ],
     interactivePrompt: `Before you touch the controls: if you replaced cross-entropy loss with MSE while keeping the sigmoid output, what do you expect happens to training when the model makes a very confident wrong prediction?`,
     checkQuestions: [
@@ -244,6 +358,36 @@ And it stretches past two classes: swap the sigmoid for the **softmax**, which t
           `\`D) Perfect separation means the model has basically already solved the task, so the NaN is just a harmless display glitch that you can safely ignore and keep the model.\``,
         ],
         answer: `B`,
+      },
+      {
+        q: `Only 1% of your transactions are fraud. Your logistic model reports 99% accuracy and 0.95 ROC-AUC, but the fraud team says it is useless. What is going on and what do you change?`,
+        options: [
+          `\`A) The model is genuinely excellent — 99% accuracy and 0.95 ROC-AUC are both strong, so the fraud team is likely misreading the dashboards rather than the model failing.\``,
+          `\`B) Under 1% imbalance, accuracy is meaningless (predicting "not fraud" always scores 99%) and ROC-AUC can look high while precision is terrible. Judge with PR-AUC instead, weight the rare class (class_weight='balanced'), and set the decision threshold to fill the review queue with the highest-risk cases rather than leaving it at 0.5.\``,
+          `\`C) The problem is purely the loss function — swap cross-entropy for MSE so the rare class is weighted more heavily, and both metrics will start reflecting real fraud-catching ability.\``,
+          `\`D) ROC-AUC of 0.95 proves the ranking is fine, so nothing about the model needs to change; the only fix is to collect far more fraud examples before retraining.\``,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `You want L1-penalised logistic regression in scikit-learn and decide to make the penalty stronger. Which change is correct, and what must you check about the solver?`,
+        options: [
+          `\`A) Increase C to strengthen the penalty, and any default solver handles L1 since the penalty type is independent of the solver.\``,
+          `\`B) Decrease C to strengthen the penalty (C = 1/λ, so smaller C means more regularisation), and use a solver that supports L1 such as saga — the default lbfgs only handles L2.\``,
+          `\`C) Increase C to strengthen the penalty, but switch to lbfgs, which is the only solver that supports the L1 penalty and Elastic Net.\``,
+          `\`D) The C value has no effect on penalty strength — it only sets the number of iterations — so you strengthen the penalty by raising max_iter and the solver choice is irrelevant.\``,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `An interviewer says: "Logistic regression only draws a straight decision boundary. How would you get it to separate two classes that are split by a curve?"`,
+        options: [
+          `\`A) You can't — a curved boundary is fundamentally impossible for logistic regression, so you must abandon it and move straight to a neural network or kernel SVM.\``,
+          `\`B) Switch the loss from cross-entropy to hinge loss, which is what actually bends the boundary while leaving the features untouched.\``,
+          `\`C) The boundary is linear only in the feature space you provide, so engineer richer features — polynomial and spline terms to let a feature curve, interaction terms to let features combine, binning to let it step — and the same linear model then fits a curved boundary while keeping its interpretability.\``,
+          `\`D) Raise the classification threshold above 0.5, which reshapes the boundary from a straight line into a curve that follows the class split.\``,
+        ],
+        answer: `C`,
       },
     ],
     takeaway: `Logistic regression lets a linear equation predict the log-odds, then a sigmoid turns that into a probability — so one weight reads three ways: it adds to the log-odds, multiplies the odds by e^w, and moves the probability non-linearly. Train it with log loss, not MSE: log loss makes a confident wrong answer cost enormously and keeps the gradient alive, while MSE goes flat exactly when the model most needs to learn.`,
@@ -291,11 +435,56 @@ Why the difference? There is a lovely picture for it. Draw the region the penalt
 
 Use **Lasso (L1)** when you believe only a handful of features truly matter and you want the model to pick them out for you. Use **Ridge (L2)** when you think many features each add a little, or when features are correlated and you want to keep them together. (A blend called **elastic net** does a bit of both.)
 
-And one trap falls straight out of "we penalise weight size": a feature measured in dollars needs a tiny weight, while a yes/no feature needs a big one. The same penalty hits them completely unequally — the big-scale feature barely feels it, the small-scale one gets hammered. So **standardise your features first** (put them all on the same scale), or the penalty is quietly punishing features for their units instead of judging how useful they are.`,
+And one trap falls straight out of "we penalise weight size": a feature measured in dollars needs a tiny weight, while a yes/no feature needs a big one. The same penalty hits them completely unequally — the big-scale feature barely feels it, the small-scale one gets hammered. So **standardise your features first** (put them all on the same scale), or the penalty is quietly punishing features for their units instead of judging how useful they are.
+
+---
+
+**The real tradeoff underneath: bias for variance.**
+
+Why does shrinking weights help at all? Because it trades one kind of error for another. An unconstrained model has *low bias* (it can fit any shape) but *high variance* (it swings wildly from one training sample to the next — that's the overfitting). Adding a penalty deliberately introduces a little **bias** — the weights are pulled away from the perfect training fit — in exchange for a large drop in **variance**. The goal is never "small weights for their own sake"; it's *lower error on unseen data*. You accept some bias because the variance you kill is worth more. That framing — regularisation buys variance reduction at the price of bias — is the one interviewers want to hear.
+
+---
+
+**How you actually pick lambda.**
+
+Lambda isn't guessed; it's *tuned*. Sweep a range of values and, for each, measure error on held-out data with **cross-validation** — a **validation curve** of error versus lambda. Too little penalty and both train and validation error are the overfit gap; too much and the model underfits and both climb. The sweet spot is the lambda that minimises validation error. scikit-learn ships this as \`RidgeCV\` and \`LassoCV\` so the search is built in. Never pick lambda by looking at training error — it always prefers zero penalty.
+
+---
+
+**Ridge has a one-step formula too — and it explains why it helps.**
+
+Just like OLS, Ridge has a closed form: $θ̂ = (XᵀX + λI)⁻¹Xᵀy$. Notice the only change from OLS is the $+λI$ added to the diagonal before inverting. That's not cosmetic — when features are correlated, XᵀX is nearly singular and blows up on inversion (the exact source of those wild, unstable weights). Adding $λI$ lifts the diagonal and makes the matrix cleanly invertible again. So Ridge literally *stabilises the inversion*, which is why it tames collinearity.
+
+---
+
+**The naming mess across libraries.**
+
+This trips people up constantly, so nail it. In scikit-learn, \`Ridge\` and \`Lasso\` take **alpha** as the penalty strength (bigger alpha = more regularisation). But \`LogisticRegression\` and \`LinearSVC\` take **C**, which is the *inverse* (C = 1/λ, so *smaller* C = more regularisation). And \`ElasticNet\` takes **alpha** for overall strength plus **l1_ratio** to mix L1 and L2 (l1_ratio=1 is pure Lasso, 0 is pure Ridge). Same idea, three different dials.
+
+---
+
+**Don't penalise the intercept.**
+
+One subtlety: the intercept (bias term) is usually *not* regularised. Penalising it would drag your predictions toward zero for no good reason — the intercept just anchors the overall level, it isn't a feature whose influence you want to shrink. Libraries handle this for you, but it's why you *center* features (and why standardising matters): with centered features the intercept stays meaningful and the penalty only touches the actual feature weights.
+
+---
+
+**Lasso's sharper limits.**
+
+Beyond the "which correlated feature gets kept is unstable" issue, Lasso has a hard structural limit: in a wide problem with more features than samples (p > n), it can select **at most about n features** before it runs out — a real problem in genomics or text where p is huge. It can also over- or under-select depending on lambda. Elastic net was invented partly to fix exactly these Lasso failures: it keeps L1's sparsity while L2's presence lets it select more than n features and hold correlated groups together.
+
+---
+
+**Not just linear regression.**
+
+Finally, regularisation isn't a linear-regression trick — it's everywhere. It's the \`C\` in logistic regression and SVMs, the margin-softening in SVMs, and **weight decay** in neural networks (L2 on the network's weights). The penalty interacts differently with each loss and solver, but the core move is identical: add a cost on complexity so the optimiser stops chasing the training noise.`,
     keyPoints: [
       `**What regularisation does: it adds a penalty on weight size to the loss, so gradient descent keeps the weights small and the model simple.**\n\nReach for it any time you have many features relative to your data, or you see a big gap between training and test performance — the classic sign of overfitting. Use Ridge (L2) as your default; it shrinks everything gently and handles correlated features well. Use Lasso (L1) when you suspect most features are useless and you want the model to zero them out and hand you a short list. The dial is lambda (in scikit-learn often called alpha, or C = 1/lambda for logistic regression): more penalty means a simpler model.`,
       `**The trap: Lasso's feature picks get shaky when features are correlated.**\n\nIf two features carry nearly the same information, Lasso keeps one and zeros the other — but which one it keeps can flip from one training run to the next. So do not read Lasso's chosen features as gospel. If the selected set changes across cross-validation folds, switch to elastic net, which blends in a little Ridge and tends to keep correlated features together instead of picking one at random.`,
       `**The habit that is not optional: standardise your features before any regularised model.**\n\nBecause the penalty judges weights purely by size, a feature on a huge scale (income in dollars) needs a tiny weight and barely gets penalised, while a 0/1 flag needs a big weight and gets hammered — even if they are equally useful. Put every feature on the same scale first (subtract the mean, divide by the standard deviation). Skip this and the penalty punishes features for their units, not their usefulness, and the whole model tilts toward the large-scale ones.`,
+      `**The framing to state out loud: regularisation trades a little bias for a big drop in variance, and lambda is tuned, not guessed.**\n\nAn unconstrained model is low-bias but high-variance (it overfits); the penalty adds bias to kill variance, and the target is lower error on unseen data, not small weights for their own sake. Pick lambda by cross-validation — sweep values and take the one that minimises validation error (\`RidgeCV\`/\`LassoCV\`) — never by training error, which always wants zero penalty. Too little penalty overfits; too much underfits; both raise validation error.`,
+      `**Ridge has a closed form that shows why it works, and the library naming is a minefield.**\n\nRidge solves $θ̂ = (XᵀX + λI)⁻¹Xᵀy$: the $+λI$ lifts the diagonal so a near-singular XᵀX (from correlated features) becomes cleanly invertible — that's literally how Ridge stabilises collinearity. On naming: scikit-learn's \`Ridge\`/\`Lasso\` use \`alpha\` (bigger = more penalty), \`LogisticRegression\`/\`LinearSVC\` use \`C\` = 1/λ (smaller = more penalty), and \`ElasticNet\` uses \`alpha\` plus \`l1_ratio\` to blend L1 and L2. Also: don't regularise the intercept — center features so it stays meaningful.`,
+      `**Know Lasso's hard limits and that regularisation reaches far beyond linear regression.**\n\nWith more features than samples (p > n), Lasso can select at most about n features and its picks are unstable under correlation — elastic net was designed to fix both by keeping L1 sparsity while L2 lets it exceed n features and hold correlated groups together. And the same idea is everywhere: the \`C\` in logistic regression and SVMs, the soft margin in SVMs, and weight decay (L2) in neural networks — add a cost on complexity so the optimiser stops chasing training noise.`,
     ],
     interactivePrompt: `Before you touch the controls: with two features that are perfectly correlated, do you expect Lasso to zero out one of them, both of them, or neither — and does Ridge behave the same way?`,
     checkQuestions: [
@@ -326,6 +515,36 @@ And one trap falls straight out of "we penalise weight size": a feature measured
           `\`B) Drop the 0/1 flags, since binary features cannot be regularised on the same footing as continuous ones and will otherwise dominate the penalty term entirely.\``,
           `\`C) Standardise every feature to a common scale first. The penalty judges weights only by size, so a dollar feature needs a tiny weight and is barely penalised, while a 0/1 flag needs a big weight and gets hammered — even if they matter equally. Without scaling the penalty punishes units, not usefulness.\``,
           `\`D) Raise lambda until the dollar-scale feature's weight shrinks to match the flags' weights in size, which balances the penalty across the different units without any need to rescale the data.\``,
+        ],
+        answer: `C`,
+      },
+      {
+        q: `An interviewer asks: "What is regularisation doing in bias-variance terms, and how do you choose the penalty strength?"`,
+        options: [
+          `\`A) It reduces bias without touching variance, and you choose lambda by picking the value that gives the lowest training error.\``,
+          `\`B) It reduces both bias and variance simultaneously, and lambda is a fixed constant (usually 1.0) that rarely needs changing.\``,
+          `\`C) It deliberately adds a little bias to buy a large reduction in variance, aiming for lower error on unseen data — not smaller weights for their own sake. You choose lambda by cross-validation (a validation curve of error vs lambda), taking the value that minimises validation error, never training error.\``,
+          `\`D) It increases variance to reduce bias, which is why heavily regularised models overfit; lambda is chosen to be as large as possible to maximise that effect.\``,
+        ],
+        answer: `C`,
+      },
+      {
+        q: `Ridge regression's closed form is θ̂ = (XᵀX + λI)⁻¹Xᵀy. What does the +λI term accomplish beyond shrinking weights?`,
+        options: [
+          `\`A) It adds a bias column to the feature matrix so the intercept gets regularised along with the other weights, which is the main point of Ridge.\``,
+          `\`B) When features are correlated, XᵀX is nearly singular and explodes on inversion; adding λI lifts the diagonal so the matrix becomes cleanly invertible again — that is how Ridge stabilises collinearity, not just shrinks.\``,
+          `\`C) It converts the L2 penalty into an L1 penalty, which is what lets Ridge drive some weights to exactly zero for feature selection.\``,
+          `\`D) It rescales the features to unit variance inside the formula, removing the need to standardise the data before fitting a Ridge model.\``,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `You have 5,000 gene features but only 200 patients (p ≫ n) and want a sparse model. Why might plain Lasso disappoint, and what fixes it?`,
+        options: [
+          `\`A) Lasso cannot run when p > n at all; the only option is to reduce features by hand with PCA before any L1 model will fit.\``,
+          `\`B) Lasso overfits because L1 has no effect in high dimensions; switching to a larger training set is the only real remedy.\``,
+          `\`C) Lasso can select at most about n (~200) features before it saturates, and with correlated genes its picks are unstable across runs. Elastic net fixes both: L1 keeps sparsity while the added L2 lets it exceed n features and hold correlated groups together.\``,
+          `\`D) Lasso works perfectly here — p ≫ n is exactly the regime L1 was designed for — so nothing needs to change beyond raising alpha.\``,
         ],
         answer: `C`,
       },
@@ -427,11 +646,60 @@ And there is a modern twist that broke the old picture. The classic story says t
 
 **The one belief to drop.**
 
-"More data always helps." Not true — and knowing when it does not saves you months. More data reliably cuts *variance*: if the model is overfitting, more examples pin it down. But more data does almost nothing for *bias*. A straight line fit to a curve will miss that curve by about the same amount whether you feed it 100 houses or 100,000 — it will just be more confident about the wrong shape. More data fixes a model that is too twitchy. It cannot fix a model that is simply the wrong shape. For that, you fix the model.`,
+"More data always helps." Not true — and knowing when it does not saves you months. More data reliably cuts *variance*: if the model is overfitting, more examples pin it down. But more data does almost nothing for *bias*. A straight line fit to a curve will miss that curve by about the same amount whether you feed it 100 houses or 100,000 — it will just be more confident about the wrong shape. More data fixes a model that is too twitchy. It cannot fix a model that is simply the wrong shape. For that, you fix the model.
+
+---
+
+**Three sets, three jobs: train / validation / test.**
+
+None of this measurement works without disciplined splits. **Training** data fits the weights. **Validation** data tunes the knobs — lambda, tree depth, which model — and you can look at it as often as you like. **Test** data is touched *once*, at the very end, to get an honest final number. The cardinal sin is letting the test set influence any decision; peek at it while tuning and it stops being an honest estimate — you've overfit to it just as surely as to the training set. Watch too for **leakage**: any preprocessing (scaling, imputation, feature selection) must be fit on training folds only, or information about the test set sneaks into training and your numbers turn rosy and false. When data is scarce and a single split is too noisy, use **k-fold cross-validation** — rotate which fold is held out and average — to get a stable estimate.
+
+---
+
+**The decomposition, written down.**
+
+The three-part split has an exact form. For squared-error regression, the expected test error at a point is:
+
+$E[(y - \\hat{f})^2] = \\sigma^2 + \\text{Bias}^2 + \\text{Variance}$
+
+— irreducible **noise** ($\\sigma^2$), the squared **bias** (how far the average model is from the truth), and the **variance** (how much the model wiggles across training samples). You can't touch the noise; every knob you turn trades the other two. That's the tradeoff made precise.
+
+---
+
+**VC dimension, precisely: shattering.**
+
+We said VC dimension is "the most points you can label any way and still fit." The exact word is **shatter**: a model *shatters* a set of points if, for *every* possible labeling of them, it can fit them perfectly. The VC dimension is the size of the largest set it can shatter — a line in 2D shatters any 3 points but no set of 4, so its VC dimension is 3. Two cautions interviewers probe. First, VC dimension is *capacity*, and it is **not** the same as parameter count — some models with few parameters have huge capacity and vice versa. Second, the VC generalization bound (gap ∝ √(VC/n)) is *conceptually* central but *numerically loose* — it's a useful way to think, not a number you'd quote to predict real test error.
+
+---
+
+**PAC learning: what the letters actually mean.**
+
+The module title says PAC, so here's the real content. **PAC** = **Probably Approximately Correct.** "Approximately" is an accuracy tolerance **ε** — the model's error is within ε of the best possible. "Probably" is a confidence **δ** — it hits that accuracy with probability at least 1−δ. Why both, and why probabilistic? Because you learn from a *random* sample: with bad luck you could draw a misleading sample, so you can never promise correctness with certainty — only "approximately correct, probably." PAC theory then gives **sample complexity**: how many examples you need to guarantee (ε, δ) for a given **hypothesis class** (the set of models you're choosing from). Bigger, more expressive hypothesis classes need more samples — the formal echo of "more capacity needs more data."
+
+---
+
+**Capacity isn't just parameter count.**
+
+This is why "count the parameters" is too crude. What matters is *effective* capacity, and regularisation shrinks it without deleting parameters. L2/weight decay, dropout, early stopping, and data augmentation all reduce how much arbitrary structure the model can actually express, even though the parameter count is unchanged. A giant network trained with heavy augmentation and early stopping can have far less effective capacity than its raw size suggests — which is part of why over-parameterised models don't overfit the way naive capacity counting predicts.
+
+---
+
+**Double descent — with the caveats.**
+
+Double descent (test error falling again far past the interpolation point) is real, but it's *not* a license to blindly enlarge models. Whether it shows up depends on the optimiser and its implicit regularisation, the data quality and noise level, and the architecture. In many practical, noisy, well-tuned settings you never see a second descent, or the gains are marginal versus the compute. Treat it as "huge models can generalise better than the classic U-curve warns," not "bigger is always better."
+
+---
+
+**The assumption hiding under all of it: same distribution.**
+
+Every guarantee here — bias-variance, VC bounds, PAC, even the honest test set — quietly assumes train and deployment data come from the *same* distribution. Production breaks that constantly, which is why a model can look great in validation and fail live. **Covariate shift**: the inputs P(X) drift (new user demographics) while the true relationship holds. **Concept drift**: the relationship P(Y|X) itself changes (fraud tactics evolve). **Train-serving skew**: a feature is computed differently in training than in serving. When validation looked good but production didn't, this family — not bias or variance — is usually the culprit.`,
     keyPoints: [
       `**Use the bias-variance lens to read a train/test gap — and measure training error, not just test error.**\n\nBoth training and test error high and close together? That is high bias — the model is too simple, so give it more power (more features, a more flexible model, less regularisation). Training error low but test error much higher? That is high variance — the model memorised noise, so rein it in (more regularisation, a simpler model, or more data). The one move that tells you which you are facing is looking at training error. Diagnose first, because the two fixes are opposite and applying the wrong one makes things worse.`,
       `**The trap: reaching for "more data" as a cure-all.**\n\nMore data is the most reliable fix for high variance — it pins down a model that is overfitting. But it does almost nothing for bias. A model that is simply the wrong shape (a straight line on curved data, or missing a key feature) keeps making the same systematic miss no matter how many examples you feed it — just with more false confidence. Before you spend months collecting data, fit a more flexible model on what you already have; if its test error is also high, you have a feature or data-quality problem, not a sample-size one.`,
       `**The diagnostic: plot a learning curve — training and validation error as the dataset grows.**\n\nIf both curves sit high and hug each other, you are underfitting (high bias), and more data barely moves them — add capacity. If training error is low but validation stays well above it and the gap refuses to close, you are overfitting (high variance) — regularise, simplify, or gather more data, which slowly pulls the curves together. If they meet but at a stubbornly high error, you have hit the noise floor or a genuinely wrong model.`,
+      `**Guard the three-way split and know the decomposition it measures.**\n\nTrain fits weights, validation tunes knobs (look freely), test is touched once for an honest final number — peek at test while tuning and it's no longer honest. Fit all preprocessing on training folds only to avoid leakage, and use k-fold CV when data is scarce. What you're estimating has an exact form: $E[(y-\\hat f)^2] = \\sigma^2 + \\text{Bias}^2 + \\text{Variance}$ — irreducible noise plus squared bias plus variance, and every knob trades the last two.`,
+      `**State VC and PAC precisely — capacity is not parameter count.**\n\nA model *shatters* points if it can fit every possible labeling of them; VC dimension is the largest set it can shatter (a 2D line: 3). The VC bound (gap ∝ √(VC/n)) is conceptually central but numerically loose. PAC = Probably (confidence 1−δ) Approximately (error within ε) Correct — probabilistic because you learn from a random sample — and its sample complexity says bigger hypothesis classes need more data. Crucially, effective capacity is shrunk by L2, dropout, early stopping, and augmentation without changing the parameter count, which is why over-parameterised models needn't overfit.`,
+      `**Double descent has caveats, and every guarantee assumes a fixed distribution.**\n\nTest error falling again past the interpolation point is real but depends on the optimiser's implicit regularisation, noise level, and architecture — it's "huge models can beat the U-curve," not "bigger is always better." And all of this — bias-variance, VC, PAC, the honest test set — assumes train and serving data share a distribution. When validation looked fine but production failed, suspect covariate shift (P(X) moves), concept drift (P(Y|X) moves), or train-serving skew, not bias or variance.`,
     ],
     interactivePrompt: `Before you touch the controls: if you doubled the size of the training set without changing the model, do you expect the training error to go up, down, or stay the same?`,
     checkQuestions: [
@@ -464,6 +732,36 @@ And there is a modern twist that broke the old picture. The classic story says t
           `\`D) Adding features shrinks capacity, because each feature now explains a smaller share of the target, so the real problem is too little capacity — add even more features until the test accuracy recovers.\``,
         ],
         answer: `C`,
+      },
+      {
+        q: `Your model looks great in cross-validation but fails in production, and the failure isn't explained by bias or variance. What is the most likely cause?`,
+        options: [
+          `\`A) The model simply has high variance that cross-validation somehow missed; retraining on the same data with more folds will surface and fix it.\``,
+          `\`B) Distribution shift between training and production — covariate shift (the input distribution P(X) moved), concept drift (the relationship P(Y|X) changed), or train-serving skew (a feature computed differently at serving time). Every generalisation guarantee assumes train and serving share a distribution, and production routinely breaks that.\``,
+          `\`C) The test set was too small, so the production drop is just sampling noise and will disappear once more production data accumulates.\``,
+          `\`D) Cross-validation always overestimates production performance by a fixed margin, so the gap is expected and needs no investigation.\``,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `An interviewer asks you to define PAC learning and why it is "probably" and "approximately" rather than a hard guarantee.`,
+        options: [
+          `\`A) PAC means the model is Perfectly And Completely correct once it has seen enough data; the words "probably" and "approximately" refer only to the early phase before convergence.\``,
+          `\`B) PAC stands for Probably Approximately Correct: "approximately" is an accuracy tolerance ε (error within ε of the best possible), and "probably" is a confidence 1−δ. It cannot be a hard guarantee because you learn from a random sample — an unlucky draw could mislead any learner — so the best you can promise is approximately correct, with high probability. Sample complexity then says larger hypothesis classes need more data.\``,
+          `\`C) PAC learning is a specific algorithm (like SVM or k-NN) that trains models with probabilistic weights, and its accuracy is approximate because those weights are randomised at inference.\``,
+          `\`D) PAC guarantees exact correctness with probability 1, and the ε and δ terms are just tuning constants that control the learning rate during training.\``,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `You reduce a big network's overfitting using dropout and early stopping without removing any parameters. In capacity terms, what changed?`,
+        options: [
+          `\`A) Nothing changed — capacity is fixed by the parameter count, so dropout and early stopping only speed up training without affecting how much the model can overfit.\``,
+          `\`B) The parameter count is unchanged but the model's effective capacity dropped: dropout, early stopping, L2, and data augmentation all shrink how much arbitrary structure the model can actually express, which is why capacity is not the same as parameter count.\``,
+          `\`C) Dropout increased capacity by adding randomness, and it only appeared to help because the test set happened to match that noise.\``,
+          `\`D) Early stopping physically deletes the parameters that had not yet been trained, so the parameter count really did fall even though the architecture looks the same.\``,
+        ],
+        answer: `B`,
       },
     ],
     takeaway: `Test error splits into three parts: noise you cannot beat, bias (the model is too simple — underfitting), and variance (the model is too twitchy — overfitting). The two failures need opposite fixes, so measure training error to tell them apart. And remember: more data cures variance, not bias — a wrong-shaped model stays wrong no matter how much you feed it.`,
@@ -559,11 +857,49 @@ Hold onto that fact, because in the next lessons it flips from weakness into sup
 
 Trees cut one feature at a time, so every boundary they draw is a straight, **axis-aligned** line — a horizontal or vertical fence. If the real boundary runs on a diagonal ("income plus debt above some total"), a tree can only approximate it with a staircase of many little fences, while a linear model draws that diagonal in a single stroke. So trees are clumsy exactly where lines are graceful, and graceful (carving boxes) exactly where lines are clumsy.
 
-And left unchecked, a tree keeps splitting until nearly every leaf holds a single training point — 100% right on the training data, and badly overfit. The cure is **pruning**. You either stop early (cap the depth, or refuse splits that would leave too few samples in a leaf) or grow the full tree and then cut back the branches that do not earn their keep. Either way you give up a little training accuracy for a lot of test accuracy, and you choose how hard to prune by trying a few levels and keeping the one that generalises best.`,
+And left unchecked, a tree keeps splitting until nearly every leaf holds a single training point — 100% right on the training data, and badly overfit. The cure is **pruning**. You either stop early (cap the depth, or refuse splits that would leave too few samples in a leaf) or grow the full tree and then cut back the branches that do not earn their keep. Either way you give up a little training accuracy for a lot of test accuracy, and you choose how hard to prune by trying a few levels and keeping the one that generalises best.
+
+---
+
+**Gini's cousin: entropy and information gain.**
+
+Gini isn't the only way to measure mixedness. **Entropy** measures the same thing from information theory — the number of bits of surprise in the group's class mix — with formula $-\\sum_k p_k \\log_2 p_k$: 0 for a pure group, 1 bit for a 50/50 binary split. When a tree splits using entropy, the drop in entropy from parent to children is called **information gain** — literally "how many bits of uncertainty did this question remove." That's the quantity the classic ID3/C4.5 trees maximise, and it's why this topic is often titled "information gain." In practice Gini and entropy give very similar trees; Gini is slightly cheaper to compute (no logarithm) and is scikit-learn's default. The difference rarely matters — pick either.
+
+---
+
+**How regression trees actually choose splits.**
+
+For classification the tree purifies class mix. For regression there are no classes, so it purifies *spread*: it picks the split that most reduces the **variance** (equivalently, mean squared error) of the target within each child. A split that cleanly separates cheap houses from expensive ones drops the within-group variance a lot, so the tree takes it. If you care about robustness to outliers you can instead split on **MAE** (absolute error), and count-style targets have a **Poisson** criterion — but variance/MSE reduction is the default and the one to name.
+
+---
+
+**The knobs: a hyperparameter map and real pruning.**
+
+A single tree is controlled by a handful of parameters worth knowing by name. \`max_depth\` caps how deep it grows; \`min_samples_split\` and \`min_samples_leaf\` refuse splits that would leave too few examples; \`max_leaf_nodes\` caps total leaves; \`class_weight\` up-weights a rare class. Those are *pre-pruning* (stop early). The principled *post-pruning* is **cost-complexity pruning** (the CART method): grow the full tree, then minimise (impurity + \`ccp_alpha\` × number of leaves) — a penalty on tree size exactly analogous to regularisation. Bigger \`ccp_alpha\` means a smaller tree, and you pick it by cross-validation.
+
+---
+
+**Categoricals and missing values: mind the implementation.**
+
+"Trees handle mixed types" is true in principle but depends on the library. scikit-learn's classic trees actually need **numeric input** — you must encode categories yourself (and one-hot encoding a high-cardinality category can fragment the tree). True native categorical splits and native missing-value handling live in specific implementations (LightGBM, CatBoost, and newer histogram-based trees). So don't claim "trees just take categoricals" in an interview without naming which implementation.
+
+---
+
+**When one class is rare.**
+
+Under imbalance a tree happily chases the majority: it can make pure-looking leaves that are almost all the common class and score high accuracy while never catching the rare one. And its leaf probabilities become unreliable. Fixes are the usual family: \`class_weight='balanced'\` so rare examples count more at each split, threshold moving on the leaf probabilities, stratified CV so folds keep the rare class, and judging with PR-AUC rather than accuracy.
+
+---
+
+**Leaf probabilities lie a little.**
+
+A classification leaf reports the *frequency* of each class among its training points — "7 of 10 defaulted, so 70%." That's a raw estimate, and it's often poorly calibrated, especially for small leaves where 7/10 is really just noise. A single deep tree tends to give overconfident near-0/near-1 probabilities. If you need trustworthy probabilities from a tree, enforce a minimum leaf size and calibrate (Platt or isotonic) on a held-out set rather than trusting the raw leaf fractions.`,
     keyPoints: [
       `**What a decision tree is, and when to reach for it: a flowchart of yes/no questions you can actually read.**\n\nTrees are the model to use when you need to explain every prediction in plain words — "income below 42k and debt above 0.35, so we flagged it." They take mixed feature types (numbers and categories) as they come, need no scaling, and pick up feature interactions on their own, since splitting on income and then on debt is exactly an income-and-debt rule. The catch: a single tree is twitchy and overfits easily. So use one tree when you need a human-readable explanation, and an ensemble (random forest or boosting) when you need the accuracy in production.`,
       `**The trap that fools people: trusting the tree's built-in feature-importance scores.**\n\nA tree's default importance counts how much each feature cut down impurity across all its splits. But a fine-grained number like income has many possible cut points, so it gets far more chances to split than a plain yes/no flag — and it ends up looking more important than it really is, just from having more opportunities. Do not rank features by this. Use permutation importance instead: shuffle one feature's values, measure how much accuracy drops, and repeat. A feature that truly mattered will hurt when scrambled; a useless one will not.`,
       `**The check to run: sweep how hard you prune, and watch train versus test accuracy.**\n\nWith no pruning a tree scores nearly perfectly on training data and poorly on test — pure overfitting. As you prune harder, test accuracy climbs (noise removed), peaks, then falls again (now you are cutting real structure). That peak is the right amount of pruning, and you find it with cross-validation, not by eyeballing a single split. Also watch leaf sizes: a leaf built from only two or three examples gives a probability you should not trust, so require a minimum number of samples per leaf.`,
+      `**Know the split criteria and the hyperparameter map by name.**\n\nClassification splits maximise purity via Gini ($1-\\sum p_k^2$) or entropy/information gain ($-\\sum p_k\\log_2 p_k$) — near-identical results, Gini is cheaper and the default. Regression splits minimise variance/MSE within children (MAE or Poisson as alternatives). The knobs: \`max_depth\`, \`min_samples_split\`, \`min_samples_leaf\`, \`max_leaf_nodes\`, \`class_weight\` for pre-pruning, and \`ccp_alpha\` for cost-complexity post-pruning — minimise (impurity + ccp_alpha × #leaves), pick ccp_alpha by CV.`,
+      `**Mind implementation limits, imbalance, and leaf-probability calibration.**\n\nscikit-learn's classic trees need numeric-encoded inputs — native categorical and missing-value handling lives in LightGBM/CatBoost/histogram trees, so don't claim "trees just take categoricals" without naming the library. Under imbalance a tree chases the majority and its leaf probabilities get unreliable — use \`class_weight='balanced'\`, threshold moving, stratified CV, and PR-AUC. And a leaf reports raw training frequencies (7/10 = 70%), which are poorly calibrated for small leaves and overconfident overall, so enforce a minimum leaf size and calibrate on held-out data if you need trustworthy probabilities.`,
     ],
     interactivePrompt: `Before you touch the controls: if a decision tree perfectly memorises every training example (100% training accuracy), what do you expect its test accuracy to be relative to a shallower tree?`,
     checkQuestions: [
@@ -604,6 +940,26 @@ And left unchecked, a tree keeps splitting until nearly every leaf holds a singl
           `\`B) Exactly 0, because the 1.2M house matches none of the leaves the tree built, so it falls through to the tree's default empty-leaf prediction of zero.\``,
           `\`C) At most 800k. A regression leaf just averages the training prices that landed in it, so its output can never exceed the biggest price the tree ever saw — trees cannot extrapolate past their training range.\``,
           `\`D) Roughly 1.2M, but only if you set extrapolate=True; with the default setting the tree refuses to guess and returns a missing value for the out-of-range house instead.\``,
+        ],
+        answer: `C`,
+      },
+      {
+        q: `The topic is titled "information gain," but the module measures splits with Gini. How do entropy/information gain and Gini relate?`,
+        options: [
+          `\`A) They are unrelated: Gini measures class purity while information gain measures how many features a split uses, so a tree needs both to choose a question.\``,
+          `\`B) Both measure how mixed a group is; entropy ($-\\sum p_k\\log_2 p_k$) counts bits of uncertainty and the drop in entropy from a split is the information gain, while Gini ($1-\\sum p_k^2$) is a cheaper proxy for the same idea. In practice they yield very similar trees; Gini is scikit-learn's default because it avoids the logarithm.\``,
+          `\`C) Information gain is used only for regression trees and Gini only for classification trees, so the title implies this module should really be about predicting numbers.\``,
+          `\`D) Gini is an approximation that only matches information gain when every class is equally frequent; with any imbalance the two pick opposite splits, so you must always use entropy under imbalance.\``,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `You grow a full decision tree and want to prune it back in a principled way rather than just capping depth. What is cost-complexity pruning doing?`,
+        options: [
+          `\`A) It removes whichever leaves have the fewest training samples until the tree reaches a preset number of nodes, ignoring impurity entirely.\``,
+          `\`B) It re-grows the tree from scratch with a smaller max_depth each time and keeps the first one whose training accuracy drops below a threshold.\``,
+          `\`C) It minimises (impurity + ccp_alpha × number of leaves) — a penalty on tree size directly analogous to regularisation, so a larger ccp_alpha yields a smaller tree, and you select ccp_alpha by cross-validation.\``,
+          `\`D) It converts the tree into a linear model and applies an L1 penalty to the leaf values, zeroing out the least useful leaves the way Lasso zeroes weights.\``,
         ],
         answer: `C`,
       },
@@ -649,11 +1005,47 @@ Bagging hands you a bonus. Because each tree trains on a resample, about a third
 
 **The one trap to remember.**
 
-A random forest built for regression **cannot predict outside the range it has seen**. Every tree's answer is an average of training values in a leaf, and an average of a forest of averages is still boxed in by the training data. Train on house prices up to 800k and the forest will never output more than 800k, no matter how enormous the house. If your target drifts upward over time — prices rising year over year — the forest will quietly under-predict the future while looking perfectly healthy on past data. When the target trends, reach for a model that can extrapolate.`,
+A random forest built for regression **cannot predict outside the range it has seen**. Every tree's answer is an average of training values in a leaf, and an average of a forest of averages is still boxed in by the training data. Train on house prices up to 800k and the forest will never output more than 800k, no matter how enormous the house. If your target drifts upward over time — prices rising year over year — the forest will quietly under-predict the future while looking perfectly healthy on past data. When the target trends, reach for a model that can extrapolate.
+
+---
+
+**The hyperparameters worth knowing.**
+
+A forest has more knobs than "how many trees." \`n_estimators\` is the tree count (more never hurts accuracy, just compute — diminishing past a few hundred). \`max_features\` is the diversity dial — how many features each split may consider (√p is a common default; fewer means more diverse trees). \`max_depth\` and \`min_samples_leaf\` control how deep each tree grows. \`bootstrap\` and \`max_samples\` control the resampling (turn bootstrap off and you lose OOB). \`class_weight\` up-weights a rare class, and \`criterion\` picks Gini/entropy or the regression split rule. In an interview, name \`n_estimators\`, \`max_features\`, \`max_depth\`, \`min_samples_leaf\`, and \`class_weight\` as the ones you'd actually tune.
+
+---
+
+**What the forest fixes — and what it doesn't.**
+
+Be precise about the bias-variance story. Averaging many de-correlated trees mainly **reduces variance** — that's the whole wisdom-of-the-crowd effect. It does *not* reduce bias much: if the individual trees are systematically wrong because the signal is weak or a key feature is missing, averaging a thousand of them just gives you a very stable version of the same wrong answer. So a forest of deep trees can still be biased. Variance is what the crowd kills; bias you fix by adding signal, not trees.
+
+---
+
+**OOB is handy but not bulletproof.**
+
+Out-of-bag error is a free estimate, but it assumes rows are independent and identically distributed. It quietly *lies* when they're not. With time-series data, OOB lets a tree "see the future" (rows from later dates train a tree that scores earlier ones), so it's optimistic — you need a time-based split instead. With grouped data (many rows per customer), OOB leaks across the group. And under distribution shift or leakage, OOB reflects the training distribution, not production. So use OOB as a cheap sanity check, not as a replacement for a properly designed validation scheme.
+
+---
+
+**Reading importances, carefully.**
+
+Two importance traps. The built-in (impurity/Gini) importance is biased toward high-cardinality features — same issue as a single tree. Permutation importance is better but has its *own* correlated-feature trap: if two features carry the same information, shuffling one barely hurts accuracy because its twin still supplies the signal, so *both* look unimportant even though the information is vital. Don't read low permutation importance as "useless" when features are correlated. And a forest is far less interpretable than a single tree — for real explanation reach for permutation importance, partial-dependence/ICE plots, and SHAP, all read with the correlation caveat in mind.
+
+---
+
+**When the forest loses to boosting.**
+
+A random forest is a fantastic *baseline*, but on tabular-accuracy leaderboards **gradient boosting usually wins.** The reason ties back to bias-variance: forests reduce variance but leave bias on the table, while boosting attacks bias by building trees sequentially, each correcting the last. The trade: boosting needs more careful tuning and is more sensitive to noise, outliers, and leakage (it will happily fit a leak that a forest partly averages away). So: forest for a fast, robust baseline; boosting when you'll invest tuning effort to squeeze out the last few points.
+
+---
+
+**Under imbalance.** A forest inherits the single tree's problem — it chases the majority class and its vote proportions get unreliable. Use \`class_weight='balanced'\` (or \`balanced_subsample\`), stratified CV so folds keep the rare class, threshold moving on the predicted probabilities, and judge with PR-AUC, balanced accuracy, or recall@K rather than raw accuracy.`,
     keyPoints: [
       `**Use a random forest when you want a strong, low-effort baseline on tabular data.**\n\nIt takes mixed feature types as they come, needs no scaling, shrugs off irrelevant features, and hands you free out-of-bag validation. Its defaults work well with almost no tuning, which makes it the reliable first thing to try on classification or regression. Reach for gradient boosting instead when you need to squeeze out the last couple of accuracy points and are willing to tune carefully — but for a fast, trustworthy baseline, the forest is hard to beat.`,
       `**The trap: thinking more trees is the lever. Past a couple hundred, adding trees barely moves anything.**\n\nThe crowd stops getting wiser once the individual errors have already averaged out — a five-hundredth near-identical tree changes almost nothing. What actually lowers a forest's error is making the trees *more different* from each other, and the dial for that is how many features each split may look at (max_features): show each split fewer features and the trees disagree more, their errors cancel better, and the error floor drops. Tune diversity, not quantity.`,
       `**The check: compare the out-of-bag error to your held-out test error.**\n\nOut-of-bag error is a free, honest estimate of how the forest does on data like its training set. If OOB says 10% but your real test error is 25%, something is off — usually the test data comes from a different distribution than training, or a leak made training look too easy. When the two disagree, compare the feature distributions of train and test before trusting the model in production.`,
+      `**Be precise: the forest reduces variance, not bias — and OOB isn't bulletproof.**\n\nAveraging de-correlated trees kills variance (the wisdom-of-the-crowd effect) but barely touches bias, so a forest of weak or wrong trees is just a stable version of the same wrong answer — fix bias with signal, not more trees. And OOB assumes i.i.d. rows: it's optimistic on time-series (a tree sees the future), leaks across grouped data (many rows per customer), and reflects the training distribution under shift. Use OOB as a cheap check, not a substitute for a time- or group-aware validation split. Tune \`max_features\`, \`max_depth\`, \`min_samples_leaf\`, \`class_weight\` — not just \`n_estimators\`.`,
+      `**Read importances with the correlation caveat, and know when boosting wins.**\n\nBuilt-in impurity importance is biased toward high-cardinality features; permutation importance is better but has its own trap — with two correlated features, shuffling one barely hurts (the twin still carries the signal), so both look unimportant even when vital. For real interpretation use permutation importance, PDP/ICE, and SHAP, all read cautiously. And a forest is a strong baseline but gradient boosting usually wins on tabular accuracy: boosting attacks the bias a forest leaves behind, at the cost of more tuning and more sensitivity to noise, outliers, and leakage. Under imbalance, use \`class_weight='balanced'\`, stratified CV, threshold moving, and PR-AUC.`,
     ],
     interactivePrompt: `Before you touch the controls: if you increase the number of trees from 100 to 1000 while keeping max_features fixed, how much do you expect the test accuracy to change?`,
     checkQuestions: [
@@ -684,6 +1076,26 @@ A random forest built for regression **cannot predict outside the range it has s
           `\`B) It will start predicting wildly high values, because out-of-range inputs push the trees down into their deepest leaves, which then extrapolate the price trend aggressively.\``,
           `\`C) It will never predict above 800k, because every tree's answer is an average of training prices and the forest averages those — so as real prices climb past its training range it quietly under-predicts while still looking healthy on older data.\``,
           `\`D) It will refuse to predict on any house priced above 800k and return a missing value instead, which at least makes the failure loud and obvious rather than silent.\``,
+        ],
+        answer: `C`,
+      },
+      {
+        q: `Two of your forest's features are highly correlated. You compute permutation importance and both come out near zero, yet dropping both together tanks accuracy. What is going on?`,
+        options: [
+          `\`A) The features are genuinely useless; the accuracy drop from removing both is a coincidence of retraining noise, so trust the permutation scores and drop them.\``,
+          `\`B) Permutation importance shuffles one feature at a time, so when two features are correlated the shuffled one's information is still supplied by its untouched twin — accuracy barely moves and both look unimportant even though the information is vital. Don't read low permutation importance as "useless" under correlation; test the correlated group jointly.\``,
+          `\`C) The near-zero scores mean the forest never split on either feature, so they were dropped internally during training and the accuracy drop must come from a different feature entirely.\``,
+          `\`D) Correlated features always get inflated permutation importance, so near-zero scores prove they are truly irrelevant and the joint accuracy drop is a bug in the scoring code.\``,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `On a tabular problem your random forest baseline is good but a colleague says gradient boosting will likely beat it. In bias-variance terms, why — and what's the catch?`,
+        options: [
+          `\`A) Boosting wins because it reduces variance even more aggressively than bagging, and it does so with no downsides, so you should always prefer it over a forest.\``,
+          `\`B) Boosting wins because it uses deeper trees than a forest, and depth is the only thing that drives tabular accuracy; the catch is simply that it trains more slowly.\``,
+          `\`C) A forest mainly reduces variance but leaves bias on the table; boosting builds trees sequentially so each corrects the last, attacking that remaining bias — often winning on tabular accuracy. The catch: boosting needs more careful tuning and is more sensitive to noise, outliers, and leakage, which a forest partly averages away.\``,
+          `\`D) There is no real reason — forests and boosting are mathematically equivalent, so the colleague is mistaken and the two will always score identically given the same data.\``,
         ],
         answer: `C`,
       },
@@ -773,11 +1185,63 @@ Two dials keep boosting from wrecking itself. First, the trees are kept delibera
 
 Plain gradient boosting works, but XGBoost won by being smarter and faster in a few ways. It bakes **regularisation right into how it picks splits**: a split has to clear a minimum-benefit bar or XGBoost refuses to make it, so it does not sprout pointless leaves that only fit noise. It also looks not just at the *slope* of the loss but at its *curvature* — a second-order view that tells it how big a step it can safely take in each region, so it stays cautious in flat, uncertain areas. Add years of engineering (clever handling of missing values, and heavy use of every CPU core) and you get a model that is both more accurate and much faster than the textbook version. Its cousin **LightGBM** pushes speed further by growing trees one leaf at a time and bucketing feature values, which really pays off on very large datasets.
 
-So the map is simple. Reach for a **random forest** when you want a strong, hands-off baseline that shrugs off noise and needs almost no tuning. Reach for **gradient boosting (XGBoost or LightGBM)** when you want the last few points of accuracy and are willing to tune the learning rate, the tree depth, and the stopping carefully — because here each tree is a step, and steps can overshoot.`,
+So the map is simple. Reach for a **random forest** when you want a strong, hands-off baseline that shrugs off noise and needs almost no tuning. Reach for **gradient boosting (XGBoost or LightGBM)** when you want the last few points of accuracy and are willing to tune the learning rate, the tree depth, and the stopping carefully — because here each tree is a step, and steps can overshoot.
+
+---
+
+**Where AdaBoost fits in.**
+
+Boosting's first hit was **AdaBoost**, and its mechanism is worth contrasting. AdaBoost doesn't fit residuals — it **reweights rows**: after each weak tree, the examples it got wrong get *heavier*, so the next tree is forced to focus on them, and the trees are combined with weights based on their accuracy. **Gradient boosting** generalises this: instead of reweighting rows, it fits each tree to the *negative gradient* of any differentiable loss. AdaBoost turns out to be (approximately) gradient boosting with a specific exponential loss — so gradient boosting is the strictly more general framework, which is why it took over.
+
+---
+
+**How boosting does classification.**
+
+For regression the "miss" is the plain residual. For **binary classification** it's subtler and a favourite interview probe: the trees don't fit the raw 0/1 labels, they fit the gradient of **log loss in logit (log-odds) space**, which works out to (actual − predicted probability). So boosting accumulates trees that output **margins/logits**, and only at the end are those passed through a sigmoid to become probabilities — exactly like logistic regression's pipeline, but with a sum of trees producing the logit instead of a linear equation.
+
+---
+
+**XGBoost's objective, written down.**
+
+XGBoost's edge is an explicit objective: **training loss + a regularisation term over the trees**, roughly
+
+$\\text{Obj} = \\sum_i L(y_i, \\hat{y}_i) + \\sum_t \\big[\\,\\gamma T_t + \\tfrac{1}{2}\\lambda \\lVert w_t \\rVert^2\\,\\big]$
+
+where $T_t$ is the number of leaves in tree $t$, $w_t$ its leaf values, $\\gamma$ penalises adding leaves, and $\\lambda$ shrinks leaf values (L2). To decide each split it computes a **gain** using the first derivative (gradient, $g$) *and* the second derivative (Hessian, $h$) of the loss, minus $\\gamma$. A split is only made if its gain clears $\\gamma$ — that's the "minimum-benefit bar," made precise. This is why XGBoost resists overfitting where plain gradient boosting sprouts noisy leaves.
+
+---
+
+**The hyperparameters that matter.**
+
+Know these by name: \`learning_rate\` (eta) — step size; \`n_estimators\` — number of trees (let early stopping set it); \`max_depth\` — tree depth (shallow, 3–6); \`min_child_weight\` — minimum Hessian per leaf, a stronger overfitting guard than min-samples; \`gamma\` — the minimum split gain; \`subsample\` and \`colsample_bytree\` — row and column sampling for diversity; \`reg_lambda\` (L2) and \`reg_alpha\` (L1) on leaf weights; \`scale_pos_weight\` for imbalance; and \`eval_metric\` for the early-stopping signal. The high-leverage tuning trio is learning_rate × n_estimators (traded off) plus max_depth.
+
+---
+
+**Boosting is a leakage magnet.**
+
+Because boosting relentlessly hunts the residual, it will happily latch onto a leaky feature and inflate your validation score in a way a forest would partly average away. So validation discipline matters more here than anywhere: use **time-based splits** for temporal data and **group-based splits** when rows cluster (per user), and run **early stopping on a proper validation fold — never on the test set**, or you leak the test set into model selection. A boosting model that looks too good usually has a leak.
+
+---
+
+**Reading importances, and the three flavours.**
+
+XGBoost exposes three different importance types and they disagree: **weight** (how often a feature is split on), **cover** (how many samples its splits touch), and **gain** (how much its splits improved the loss — usually the most meaningful). Don't quote "feature importance" without saying which. And as with forests, all of them get distorted by correlated features, so cross-check with permutation importance or SHAP.
+
+---
+
+**XGBoost vs LightGBM vs CatBoost.**
+
+They're not interchangeable. **XGBoost** is the stable, general-purpose default. **LightGBM** grows trees leaf-wise and buckets feature values, so it's usually much faster on large data (at a slightly higher overfitting risk on small data). **CatBoost** handles categorical features natively with ordered target statistics and often wins on categorical-heavy datasets with less preprocessing. Rough guide: large data → LightGBM, lots of categoricals → CatBoost, safe default → XGBoost.
+
+---
+
+**Under imbalance.** Boosting handles rare classes better than most, but still tune \`scale_pos_weight\` (roughly negatives/positives) to up-weight the minority, move the decision threshold, and judge with PR-AUC or recall@K rather than accuracy. And check calibration — heavy imbalance plus regularisation can leave the predicted probabilities off even when ranking is good.`,
     keyPoints: [
       `**What gradient boosting is, and when to reach for it: trees trained in a line, each one fixing the team's leftover mistakes.**\n\nOnce it is tuned, gradient boosting is usually the most accurate thing you can run on tabular data — it chips away at both bias and variance, where a random forest only fights variance. That accuracy is why it wins most structured-data competitions. Use XGBoost or LightGBM instead of the basic scikit-learn version: both are faster, come with regularisation built in, and support early stopping out of the box. Lean on LightGBM for very large datasets (its leaf-by-leaf growth is quicker) and XGBoost for smaller ones, where the extra caution against overfitting helps.`,
       `**The trap: fixing the number of trees up front instead of letting early stopping choose it.**\n\nWith a learning rate of 0.1 and 1000 trees hard-coded, the held-out loss usually bottoms out somewhere around 200–400 trees and then starts climbing as the extra trees begin memorising noise. Hard-code the count and you sail right past the best point into an overfit model. Instead, always turn on early stopping (stop after about 50 rounds with no improvement) and let the model pick its own tree count. Then, to squeeze out a little more, lower the learning rate and re-run — smaller steps often reach a slightly better place.`,
       `**The check to run: plot the training loss and the held-out loss against the number of trees.**\n\nHeld-out loss still falling means you are underfitting — add trees or lower the learning rate. Held-out loss flat and close to the training loss means you are in good shape. Held-out loss creeping up while training loss keeps dropping means you are overfitting — stop earlier, use shallower trees, or let each tree see only a random subset of the rows. If the held-out loss never comes down at all, your learning rate is probably too high; start it around 0.05 to 0.1.`,
+      `**Place it in the family and know the objective: AdaBoost reweights rows, gradient boosting fits the gradient of any loss, and XGBoost regularises explicitly.**\n\nAdaBoost up-weights misclassified rows; gradient boosting generalises that to fitting each tree to the negative gradient of a differentiable loss (AdaBoost ≈ gradient boosting with exponential loss). For binary classification the trees fit the log-loss gradient (actual − predicted probability) in logit space and are squashed to probabilities only at the end. XGBoost's objective is loss + $\\gamma T + \\tfrac12\\lambda\\lVert w\\rVert^2$, and it scores splits with gradients *and* Hessians minus $\\gamma$ — a split must clear $\\gamma$ to be made.`,
+      `**Boosting is leakage-sensitive, so tune the right knobs and validate honestly.**\n\nBecause it hunts the residual, boosting will exploit a leaky feature that a forest averages away — so use time-based or group-based splits and run early stopping on a validation fold, never the test set. Key knobs: \`learning_rate\`×\`n_estimators\` (traded off), \`max_depth\`, \`min_child_weight\`, \`gamma\`, \`subsample\`/\`colsample_bytree\`, \`reg_lambda\`/\`reg_alpha\`, and \`scale_pos_weight\` for imbalance. Rough library map: large data → LightGBM (leaf-wise, fast), categorical-heavy → CatBoost (native handling), safe default → XGBoost. And name which importance you mean — weight, cover, or gain (gain is usually most meaningful) — since they disagree and correlated features distort all three.`,
     ],
     interactivePrompt: `Before you touch the controls: if you halve the learning rate, do you expect the optimal number of trees to increase, decrease, or stay the same?`,
     checkQuestions: [
@@ -820,6 +1284,26 @@ So the map is simple. Reach for a **random forest** when you want a strong, hand
           `\`D) Because the trees are secretly linear models sitting in a transformed feature space, and linear models can be trained under any loss, which is the property that carries over to classification and ranking.\``,
         ],
         answer: `A`,
+      },
+      {
+        q: `How does AdaBoost differ from gradient boosting, and how does gradient boosting do binary classification?`,
+        options: [
+          `\`A) AdaBoost and gradient boosting are the same algorithm under two names; both fit residuals, and for classification both fit the raw 0/1 labels directly with a squared-error loss.\``,
+          `\`B) AdaBoost reweights misclassified rows so the next tree focuses on them; gradient boosting instead fits each tree to the negative gradient of any differentiable loss (AdaBoost ≈ the exponential-loss special case). For binary classification the trees fit the log-loss gradient (actual − predicted probability) in logit space, and a sigmoid converts the accumulated logits to probabilities only at the end.\``,
+          `\`C) AdaBoost fits gradients of a general loss while gradient boosting only reweights rows, so gradient boosting is the older and less flexible of the two.\``,
+          `\`D) Gradient boosting cannot do classification at all — it is regression-only — which is why AdaBoost, a separate classification-only method, still has to be used for any yes/no task.\``,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `Your XGBoost model scores a suspiciously high 0.99 AUC on a random 80/20 split of time-ordered transaction data. What is the most likely problem?`,
+        options: [
+          `\`A) Nothing is wrong — XGBoost is simply that accurate on tabular data, so 0.99 AUC on the random split is a trustworthy estimate of production performance.\``,
+          `\`B) The learning rate is too low, which inflates AUC on the validation split; raise it and the 0.99 will settle to a realistic number.\``,
+          `\`C) A random split of time-ordered data lets the model train on future rows and predict past ones, and boosting aggressively exploits any resulting leakage — so the 0.99 is optimistic. Use a time-based (and group-based, if rows cluster) split, and run early stopping on a proper validation fold rather than the test set.\``,
+          `\`D) The AUC is high because XGBoost has too many trees; cap n_estimators at 50 and the leakage will disappear along with the inflated score.\``,
+        ],
+        answer: `C`,
       },
     ],
     takeaway: `Gradient boosting trains trees in a line, each one fitting the team's current misses — and those misses are literally the loss gradient, so every tree is one careful step of gradient descent on the prediction function. That is why it handles any goal you can write as a loss, why the trees stay shallow and the steps small, and why early stopping (not a fixed tree count) is how you size it. XGBoost won by baking regularisation and curvature into every split.`,
@@ -870,11 +1354,49 @@ The fix is **out-of-fold predictions**: split the data into folds, train each ba
 
 **The belief to drop.**
 
-"More models always help." No — *diversity* helps. Bolt a fifth copy of the same random forest onto your ensemble and you gain essentially nothing; it makes the same mistakes as the other four, so the vote does not budge. But add a model built on a *different* idea — a linear model beside your trees — and even if it is individually weaker, it can lift the whole ensemble, because it fails in places the others do not. When an ensemble stops improving, do not add more of the same. Add something different.`,
+"More models always help." No — *diversity* helps. Bolt a fifth copy of the same random forest onto your ensemble and you gain essentially nothing; it makes the same mistakes as the other four, so the vote does not budge. But add a model built on a *different* idea — a linear model beside your trees — and even if it is individually weaker, it can lift the whole ensemble, because it fails in places the others do not. When an ensemble stops improving, do not add more of the same. Add something different.
+
+---
+
+**Hard votes versus soft votes.**
+
+There are two ways to let classifiers vote. **Hard voting** counts labels — majority wins. **Soft voting** averages the predicted *probabilities* and then thresholds, which usually works better because a model that's 0.9 sure should outweigh one that's barely 0.51. But soft voting has a prerequisite that trips people up: it only makes sense if the base models are **calibrated**. If one model is systematically overconfident, its inflated probabilities dominate the average and drag the ensemble toward its mistakes. So calibrate the base models (or at least check them) before averaging probabilities — otherwise soft voting can underperform plain hard voting.
+
+---
+
+**Blending versus stacking.**
+
+Two ways to make the honest meta-features, and interviewers like the distinction. **Stacking** uses **K-fold out-of-fold** predictions: every row gets a prediction from a base model that didn't train on it, so you use all the data for both levels. **Blending** is the simpler cousin — hold out a single validation set, train base models on the rest, and let them predict once on that holdout to build meta-features. Blending is easier and has zero fold-leakage risk, but it "wastes" the holdout (base models never train on it) and gives the meta-learner less data. Stacking is more data-efficient but must handle folds carefully.
+
+---
+
+**Keep the meta-learner simple.**
+
+The meta-learner's input is just a handful of base-model predictions, so it needs almost no capacity. A **regularised logistic regression** (or plain linear model) is the standard choice, and for good reason: a complex meta-learner (another boosting model on top) easily *overfits* the base predictions, especially since those predictions are highly correlated. Simple meta-learner, honest out-of-fold features — that's the reliable recipe.
+
+---
+
+**Out-of-fold must respect time and groups.**
+
+The OOF trick assumes rows are independent — and it leaks exactly like OOB does when they aren't. For **time-series** data, a random fold lets a base model see the future when generating a "held-out" prediction for the past, so the meta-features are leaked; you need time-ordered folds. For **grouped** data (many rows per user), all of a user's rows must fall in the same fold, or a base model trained on some of a user's rows predicts the rest. Get this wrong and the stack looks brilliant offline and collapses in production — the ensemble version of the same leakage that haunts every model here.
+
+---
+
+**Ensembles aren't free.**
+
+The accuracy comes with real costs worth naming: every base model must run at inference, so **latency and memory multiply**; retraining and deployment get more complex; debugging a wrong prediction across five models is far harder than for one; and interpretability drops sharply. For a point or two of accuracy you may pay 5× the serving cost — sometimes worth it (a fraud model, a Kaggle prize), often not (a latency-bound real-time system). That's why production frequently ships a single boosted model or *distills* the ensemble into one smaller model.
+
+---
+
+**Where diversity actually comes from.**
+
+Diversity isn't only "different algorithms." You can manufacture it from different **feature subsets**, different **training samples** (bagging), different **loss functions**, different **random seeds**, different **hyperparameters**, different **time windows**, and even different **target definitions**. The most robust ensembles combine several of these axes at once — a tree and a linear model, on different feature sets, with different seeds — because the more *independent* the sources of disagreement, the better the errors cancel.`,
     keyPoints: [
       `**Reach for stacking when you already have several different models and enough data to make out-of-fold predictions.**\n\nIt almost always beats any single model by a point or two, because a small meta-learner can work out which base model to trust where — leaning on boosting for one kind of case and a linear model for another. The cost is training time and a bit of plumbing (the out-of-fold step). For a quick win without the plumbing, even a plain average of a few diverse models' probabilities usually edges out the best one on its own.`,
       `**The trap that quietly ruins a stack: feeding the meta-learner predictions the base models made on their own training rows.**\n\nA base model partly memorises the rows it trained on, so its predictions there look far better than they will be on new data. Train the meta-learner on those and it learns to trust a signal that disappears at test time. Always build the meta-features from out-of-fold predictions — each base model predicts only on rows it did not train on. In scikit-learn, cross_val_predict gives you these in a single call.`,
       `**The check: look at whether your models actually make different mistakes.**\n\nFor each model, mark which examples it got wrong on a held-out set, then compare those error patterns across models. If two models are wrong on almost exactly the same examples, they are effectively one model for ensemble purposes and combining them buys nothing. When errors are that correlated, do not add another similar model — add one built on a different idea (a different algorithm, or different features), which is the only thing that will actually move the ensemble.`,
+      `**Soft voting beats hard voting only if the base models are calibrated, and blending and stacking make honest meta-features differently.**\n\nHard voting counts labels; soft voting averages probabilities (usually better) but is dominated by an overconfident model unless the bases are calibrated first. Stacking builds meta-features from K-fold out-of-fold predictions (data-efficient); blending uses a single holdout (simpler, no fold-leakage, but wastes data). Keep the meta-learner simple — a regularised logistic/linear model — since a complex one overfits the correlated base predictions.`,
+      `**Respect time/group boundaries in OOF, and weigh the real cost of ensembling.**\n\nOut-of-fold prediction leaks exactly like OOB when rows aren't independent: use time-ordered folds for temporal data and keep each group (all of a user's rows) in one fold, or the stack looks great offline and dies in production. And ensembles aren't free — every base model runs at inference, so latency, memory, retraining complexity, debugging difficulty, and opacity all multiply for a point or two of accuracy, which is why production often ships one boosted model or distills the ensemble. Manufacture diversity from many axes: algorithms, feature subsets, samples, losses, seeds, hyperparameters, time windows, target definitions.`,
     ],
     interactivePrompt: `Before you touch the controls: if you replace one model in the ensemble with an identical copy of an existing model (same algorithm, same hyperparameters, same training data), do you expect the ensemble accuracy to go up, stay the same, or go down?`,
     checkQuestions: [
@@ -907,6 +1429,26 @@ The fix is **out-of-fold predictions**: split the data into folds, train each ba
           `\`D) Nothing — with identical errors there is nothing to cancel, so the ensemble scores the same as either model alone. It shows that diversity, not model count, is what makes ensembles work: unrelated errors cancel, identical ones do not.\``,
         ],
         answer: `D`,
+      },
+      {
+        q: `You switch a voting ensemble from hard voting to soft voting (averaging probabilities) and it gets worse. One base model is badly overconfident. Why did soft voting hurt?`,
+        options: [
+          `\`A) Soft voting is always worse than hard voting because averaging probabilities discards the majority signal; revert to hard voting as a rule.\``,
+          `\`B) Soft voting averages predicted probabilities, so an uncalibrated, overconfident model pushes extreme values (near 0 or 1) that dominate the average and drag the ensemble toward its mistakes. Calibrate the base models first (or check calibration) before averaging probabilities — otherwise hard voting can beat soft voting.\``,
+          `\`C) The overconfident model has too few trees, so its probabilities are noisy; adding more trees to just that model fixes soft voting without any calibration step.\``,
+          `\`D) Soft voting requires all base models to be the same algorithm; mixing a tree with a linear model is what actually broke it, not calibration.\``,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `You're stacking models on time-ordered transaction data and generate out-of-fold meta-features with a plain random K-fold split. What's the risk?`,
+        options: [
+          `\`A) No risk — out-of-fold predictions are leak-proof by construction, so a random split is always safe for stacking regardless of the data type.\``,
+          `\`B) The only risk is slower training; random folds are statistically fine for time-series stacking, just less efficient than time-ordered ones.\``,
+          `\`C) A random fold lets a base model train on future rows and produce a 'held-out' prediction for a past row, leaking the future into the meta-features. The stack looks excellent offline and collapses in production. Use time-ordered folds (and keep each user/group's rows in one fold) so the OOF predictions stay honest.\``,
+          `\`D) The risk is that the meta-learner overfits, which you fix by using a more powerful meta-learner such as a boosting model on top of the base predictions.\``,
+        ],
+        answer: `C`,
       },
     ],
     takeaway: `An ensemble combines several models and beats the best single one — but only because they make different mistakes, so voting cancels the errors. Diversity, not the number of models, is the lever: bagging builds it from different data, boosting from fixing mistakes in sequence, and stacking by training a meta-learner to combine genuinely different models — using out-of-fold predictions, or the whole thing leaks.`,
@@ -1181,7 +1723,7 @@ There is a simple picture that reveals miscalibration at a glance. Take all the 
 
 [FIGURE: reliability_diagram]
 
-Most models sag below. Random forests do it because averaging many trees pushes the vote toward 0 and 1; modern neural networks are famously overconfident. Miscalibration is the rule, not the exception.
+Miscalibration is the rule, not the exception — but the *shape* differs by model. Modern neural networks are famously **overconfident**: their reliability curves sag below the diagonal, saying 0.95 for things that happen 0.80 of the time. Random forests bend the *other* way: averaging many trees pushes probabilities *away* from 0 and 1 (a truly-positive case rarely gets every tree to vote yes, so the forest hesitates to say 0.99), giving a characteristic **sigmoid**-shaped curve — under-confident at the extremes, over-confident in the middle. Knowing your model's typical distortion tells you which correction to reach for.
 
 ---
 
@@ -1189,20 +1731,58 @@ Most models sag below. Random forests do it because averaging many trees pushes 
 
 You usually do not retrain to fix calibration — you patch it afterward. Hold out a separate slice of data (a **calibration set**), see how the model's scores line up with reality on it, and fit a small correcting function that bends the scores back onto the diagonal. Two common choices: **Platt scaling** fits a simple sigmoid — fast, needs little data, and works when the miscalibration is a smooth one-directional bend. **Isotonic regression** fits a more flexible staircase that can straighten out any shape, but it needs more data (roughly a thousand-plus points) or it just memorises the calibration set.
 
-And the one rule you cannot break: **the calibration set must be separate from both training and test.** Calibrate on the training data and you are correcting against numbers the model already memorised — the fix looks perfect and fails in the wild. Calibrate on the test data and you have spoiled your only honest measure of how good the model really is. Train, calibrate, and test on three different slices. To put a single number on how calibrated you are, people use the **expected calibration error (ECE)** — the average gap between the buckets and the diagonal, where zero is perfect.`,
+And the one rule you cannot break: **the calibration set must be separate from both training and test.** Calibrate on the training data and you are correcting against numbers the model already memorised — the fix looks perfect and fails in the wild. Calibrate on the test data and you have spoiled your only honest measure of how good the model really is. Train, calibrate, and test on three different slices. To put a single number on how calibrated you are, people use the **expected calibration error (ECE)** — the average gap between the buckets and the diagonal, where zero is perfect.
+
+---
+
+**ECE's blind spots.**
+
+ECE is convenient but genuinely fragile, and interviewers probe this. It depends heavily on your **binning**: change the number of bins or use equal-width versus equal-count bins and the ECE number moves, sometimes a lot. It's biased by **sample size** (few points per bin makes the estimate noisy). Worst, it can **hide local miscalibration** — a model badly overconfident in one region and underconfident in another can post a small overall ECE because the errors average out. So don't reduce calibration to a single ECE number; always look at the reliability diagram, and consider class-conditional views.
+
+---
+
+**The Brier score, and what it decomposes into.**
+
+A more complete single number is the **Brier score** — just the mean squared error between predicted probabilities and outcomes ($\\frac{1}{N}\\sum(\\hat{p}_i - y_i)^2$). Its value is that it splits into three meaningful parts (the Murphy decomposition): **reliability** (calibration — are the probabilities honest?), **resolution** (discrimination — do the predictions actually separate outcomes?), and **uncertainty** (the irreducible base-rate difficulty). This is why Brier is richer than ECE: a model can be perfectly calibrated (great reliability) but useless (zero resolution, it always predicts the base rate), and Brier catches that where ECE alone would look fine.
+
+---
+
+**Temperature scaling — the neural-network default.**
+
+For neural networks, the standard fix (from Guo et al., 2017) is **temperature scaling**: divide the logits by a single learned scalar T before the softmax. T > 1 softens overconfident probabilities toward the middle; T < 1 sharpens them. It's the simplest possible calibrator — *one* parameter fit on a validation set — and because it only rescales logits it **leaves the ranking (and accuracy) completely unchanged** while fixing the confidence. That single-parameter simplicity is exactly why it rarely overfits and became the go-to for deep models.
+
+---
+
+**Calibrating more than two classes.**
+
+Multiclass calibration is trickier and worth flagging. You can calibrate **one-vs-rest** (one calibrator per class) but then the per-class probabilities no longer sum to 1 and need renormalising. You also have to decide *what* you're calibrating: **top-label** calibration (is the model's confidence in its top prediction honest?) versus **classwise** calibration (is every class's probability honest?). Multiclass ECE has to pick one of these, which is why a single multiclass calibration number is even easier to misread than the binary one. Temperature scaling sidesteps some of this by scaling all logits together.
+
+---
+
+**Calibration is not thresholding.**
+
+Keep these two separate — they're often confused. **Calibration** fixes the *truthfulness* of the probability (0.7 should mean 70%). **Thresholding** picks the *decision cutoff* that turns a probability into an action, chosen from business costs. They're related — a well-calibrated probability makes threshold selection meaningful and transferable across contexts — but they're different steps. You calibrate so the number is honest, *then* threshold so the decision is optimal.
+
+---
+
+**Calibration decays under drift.**
+
+Finally, calibration is not permanent. A model calibrated on last year's data can drift out of calibration as the world changes — **covariate shift** (the input mix moves) or **concept drift** (the relationship changes) both break it, even though your original test-set calibration looked perfect. So calibration is something to *monitor* in production (track ECE or reliability over time), not a one-time fix at training. When a deployed model's probabilities start lying, drift is the usual cause.`,
     keyPoints: [
       `**Calibration is whether the model's probabilities are literally true: when it says 0.7, does the thing happen 70% of the time?**\n\nIt is separate from accuracy and from ranking (AUC) — a model can rank cases perfectly yet report probabilities that are badly off. Calibration only matters when you actually *use* the probability: pricing, risk scores, medical decisions, or feeding another model in a stack. If you only need the ranking (who is riskier than whom), you can often ignore it. The moment a real number matters, check it.`,
-      `**The trap: assuming a model's probabilities are trustworthy straight out of the box. Most are not.**\n\nRandom forests get pushed toward 0 and 1 because averaging many trees concentrates the vote; modern neural networks are famously overconfident; SVMs do not really output probabilities at all. So do not read a raw score as a probability without checking. The check is a reliability diagram: bucket the predictions and compare each bucket's predicted probability to the actual rate. If the curve sags below the diagonal, the model is overconfident and needs a fix before its numbers can be trusted.`,
+      `**The trap: assuming a model's probabilities are trustworthy straight out of the box. Most are not.**\n\nrandom forests are pushed *away* from 0 and 1 by tree-averaging (a sigmoid-shaped curve, under-confident at the extremes); modern neural networks are famously overconfident; SVMs do not really output probabilities at all. So do not read a raw score as a probability without checking. The check is a reliability diagram: bucket the predictions and compare each bucket's predicted probability to the actual rate. If the curve sags below the diagonal, the model is overconfident and needs a fix before its numbers can be trusted.`,
       `**The fix is a post-hoc patch on a separate calibration set — never the training or test set.**\n\nHold out a slice of data, see how the scores line up with reality on it, and fit a small correcting function: Platt scaling (a simple sigmoid, good when data is scarce and the bend is smooth) or isotonic regression (a flexible staircase, needs a thousand-plus points). Fit it on the calibration slice only. Calibrate on training data and the fix is fooled by memorised outputs; calibrate on test data and you have spoiled your honest score. Train, calibrate, and test on three different slices.`,
+      `**Don't trust ECE alone — use the reliability diagram and the Brier score.**\n\nECE depends on binning choice and bin count, is noisy with few samples, and can hide local miscalibration (overconfident in one region, underconfident in another, averaging to a small number). The Brier score (mean squared error of probabilities) is richer because it decomposes into reliability (calibration), resolution (discrimination), and uncertainty — so it catches a perfectly-calibrated-but-useless model that always predicts the base rate. Always read the reliability diagram, not just a single scalar.`,
+      `**Know temperature scaling, the multiclass subtleties, and that calibration ≠ thresholding — and decays under drift.**\n\nTemperature scaling (Guo et al.) divides logits by one learned scalar T — the neural-network default, since it fixes confidence without changing ranking or accuracy. Multiclass calibration must choose top-label vs classwise and renormalise one-vs-rest outputs. Keep calibration (making the probability truthful) separate from thresholding (choosing the decision cutoff from costs). And calibration isn't permanent — covariate shift and concept drift break it even when the original test calibration looked perfect, so monitor ECE/reliability in production rather than treating it as a one-time fix.`,
     ],
     interactivePrompt: `Before you touch the controls: a model has a great AUC of 0.95 but says "90% sure" for a group where the real rate is 60%. Is its ranking broken, its probabilities broken, or both?`,
     checkQuestions: [
       {
-        q: `A random forest stamps 0.9 on a batch of cases, but only 60% of them are actually positive. What is wrong, and how do you fix it?`,
+        q: `A neural network stamps 0.9 on a batch of cases, but only 60% of them are actually positive. What is wrong, and how do you fix it?`,
         options: [
-          `\`A) It is overconfident — its 0.9 means about 0.6 in reality. Patch it after training: on a separate calibration set, fit a correcting function (Platt scaling, or isotonic regression if you have enough data) that maps the raw scores back onto the true rates, then apply it at prediction time. Check the result on a different test set.\``,
+          `\`A) It is overconfident — its 0.9 means about 0.6 in reality. Patch it after training: on a separate calibration set, fit a correcting function (Platt or temperature scaling, or isotonic regression if you have enough data) that maps the raw scores back onto the true rates, then apply it at prediction time. Check the result on a different test set.\``,
           `\`B) It is underconfident — since most of the 0.9 cases really are positive, the model is basically right, and you only need to act if the calibration error climbs above 0.15 on the full validation set.\``,
-          `\`C) Nothing is wrong with the probabilities; the forest simply needs more trees so the averaged vote settles closer to 0.6, after which those 0.9 outputs will drift down on their own with no other change.\``,
+          `\`C) Nothing is wrong with the probabilities; the network simply needs more epochs so the outputs settle closer to 0.6, after which those 0.9 outputs will drift down on their own with no other change.\``,
           `\`D) The labels on those cases are noisy; relabel the batch so its positive rate matches 0.9, and the reported probability becomes correct again without touching the model itself.\``,
         ],
         answer: `A`,
@@ -1226,6 +1806,36 @@ And the one rule you cannot break: **the calibration set must be separate from b
           `\`D) The only issue is speed: calibrating on training data makes the correcting function converge slowly, so it is better to use fresh data purely because it fits the calibrator faster.\``,
         ],
         answer: `C`,
+      },
+      {
+        q: `Your model reports a low overall ECE, but a colleague says it might still be badly miscalibrated. How can both be true, and what is a richer single number?`,
+        options: [
+          `\`A) They can't both be true — a low ECE mathematically guarantees good calibration everywhere, so the colleague is simply wrong.\``,
+          `\`B) ECE depends on the binning and can hide local miscalibration: a model overconfident in one region and underconfident in another averages out to a small ECE. It's also binning- and sample-size-sensitive. The Brier score is richer — it decomposes into reliability (calibration), resolution (discrimination), and uncertainty — and you should always read the reliability diagram, not just a scalar.\``,
+          `\`C) The discrepancy means the ECE was computed on the training set; recomputing it on the test set will make it agree with the colleague's assessment and no other metric is needed.\``,
+          `\`D) Low ECE with hidden miscalibration only happens for regression models, so the fix is to switch from ECE to R², which measures calibration correctly for probabilities.\``,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `Your neural network is overconfident. You apply temperature scaling. What does it do, and what does it deliberately leave untouched?`,
+        options: [
+          `\`A) It retrains the final layer on a calibration set, which changes both the probabilities and the model's ranking so that accuracy improves along with calibration.\``,
+          `\`B) It divides the logits by a single learned scalar T before the softmax (T > 1 softens overconfident probabilities). Because it only rescales the logits, it leaves the ranking and accuracy completely unchanged while fixing the confidence — its one-parameter simplicity is why it rarely overfits.\``,
+          `\`C) It clips every predicted probability to the range [0.05, 0.95], which removes overconfidence by brute force but also flattens the ranking between the clipped cases.\``,
+          `\`D) It adds a temperature feature to the input and retrains the whole network, so both the decision boundary and the probabilities shift together.\``,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `An interviewer asks you to distinguish calibration from threshold tuning. What's the cleanest answer?`,
+        options: [
+          `\`A) They're the same operation — moving the decision threshold is exactly how you make probabilities honest, so calibrating a model just means picking the right cutoff.\``,
+          `\`B) Calibration makes the probability truthful (0.7 should mean 70%); thresholding picks the decision cutoff that turns a probability into an action, chosen from business costs. They're related — honest probabilities make the threshold meaningful and transferable — but separate steps: calibrate first so the number is trustworthy, then threshold so the decision is optimal.\``,
+          `\`C) Calibration sets the cutoff and thresholding fixes the probabilities — the two names are simply swapped in most textbooks, but they refer to one combined step done at training time.\``,
+          `\`D) Thresholding is only needed for calibrated models and calibration is only needed for uncalibrated thresholds, so you never actually perform both on the same model.\``,
+        ],
+        answer: `B`,
       },
     ],
     takeaway: `AUC tells you if a model ranks cases correctly; calibration tells you if its probabilities are actually true — when it says 0.7, does it happen 70% of the time? The two are separate, and most models (random forests, neural nets) come out overconfident. Whenever a decision uses the probability itself, plot the reliability diagram, and fix miscalibration with Platt scaling or isotonic regression on a separate calibration set — never on training or test.`,
@@ -1292,11 +1902,55 @@ Alternatively you can **rebalance the data itself**: **oversample** the rare cla
 
 **Step three: choose the threshold on purpose.**
 
-Here is the step almost everyone forgets. A classifier gives a *score*; turning it into a yes/no needs a **threshold**, and the default of 0.5 is almost never right for an imbalanced, unequal-cost problem. If missing a fraud is a thousand times worse than a false alarm, you want to flag on much weaker suspicion — a far lower threshold. So after training, pick the threshold *deliberately*: look at the precision and recall you get at each possible cutoff, and choose the one that matches what the problem actually costs. Train the model to rank well; then set the threshold to act well.`,
+Here is the step almost everyone forgets. A classifier gives a *score*; turning it into a yes/no needs a **threshold**, and the default of 0.5 is almost never right for an imbalanced, unequal-cost problem. If missing a fraud is a thousand times worse than a false alarm, you want to flag on much weaker suspicion — a far lower threshold. So after training, pick the threshold *deliberately*: look at the precision and recall you get at each possible cutoff, and choose the one that matches what the problem actually costs. Train the model to rank well; then set the threshold to act well.
+
+---
+
+**Precision@K: when you can only act on a few.**
+
+Often the real constraint isn't a threshold at all — it's *capacity*. A fraud team can investigate maybe 500 alerts a day; a doctor can review only so many flagged scans. In that world the question changes from "what's our recall?" to "of the **top 500** cases the model ranks as riskiest, how many are real fraud?" That's **precision@K** — precision measured on the top K by score. Its partners are **recall@K** (of all fraud, how much did the top K capture?) and **lift@K** (how much better than random is the top K?). When action is capacity-limited, optimise the ranking for precision@K, not a global threshold — the model just has to get the *worst* cases to the top of the list.
+
+---
+
+**The cost matrix, made explicit.**
+
+"Missing a fraud is worse than a false alarm" can be written down precisely as a **cost matrix**: a dollar cost for each cell of the confusion matrix (a false negative costs \\$2,000, a false positive costs \\$5, true predictions cost 0). Once you have that, the optimal decision isn't a guessed threshold — it's the one that **minimises expected cost**: flag whenever the expected cost of flagging is below the expected cost of not flagging, which for a calibrated probability gives an exact optimal threshold. This is the rigorous version of "pick the threshold from the costs," and it's why calibrated probabilities matter here.
+
+---
+
+**SMOTE has sharp edges.**
+
+SMOTE (synthesising in-between minority examples) is popular but easy to misuse. The cardinal rule: **apply it only inside cross-validation folds, after the split — never before.** Oversample first and copies of the same synthetic points land in both train and validation, leaking and inflating your score. Beyond that, SMOTE struggles in high-dimensional sparse data (its "in-between" points are meaningless), with noisy labels (it amplifies the noise), with overlapping classes (it synthesises into the other class's territory), and with time-series (it invents points that violate temporal order). It's a tool, not a default.
+
+---
+
+**Resampling distorts your probabilities.**
+
+A subtle consequence interviewers love: oversampling or undersampling **changes the class balance the model trains on**, so its predicted probabilities no longer reflect the true base rate — they come out systematically too high for the minority class. SMOTE in particular tends to over-estimate minority-class probabilities. So if you resample *and* you need real probabilities (for cost-based thresholds or downstream use), you must **recalibrate** afterward, or correct the prior back to the true rate. Class weights avoid this problem, which is another reason to prefer them when probabilities matter.
+
+---
+
+**Match the fix to the model.**
+
+The right lever depends on the algorithm. **Tree ensembles and boosting** usually do best with class weights / \`scale_pos_weight\` plus threshold tuning — resampling buys them little. **Linear and distance-based models** (logistic regression, k-NN, SVM) are more sensitive to the geometry, so sampling and careful feature scaling can help them more. Don't apply one imbalance recipe blindly across model families.
+
+---
+
+**The fuller metric menu.**
+
+Beyond precision/recall/PR-AUC, know the wider toolkit: **balanced accuracy** (average recall across classes), **F1** and its **macro/micro/weighted** variants (macro treats classes equally, weighted accounts for size), **MCC** (Matthews correlation, robust on imbalance and often the best single summary), **specificity** and the **false-positive/false-negative rates**, and — always — the **confusion matrix read at your chosen threshold** so you see the actual counts, not just a summary.
+
+---
+
+**When imbalance gets extreme.**
+
+At 1-in-100,000 (rare diseases, novel fraud), the classification framing itself starts to break, and you switch strategies. Frame it as **anomaly detection** (model "normal," flag deviations) rather than two-class classification. Use a **two-stage retrieval-then-rank** pipeline. Design explicitly around **human review capacity** (precision@K), **delayed labels** (the truth arrives weeks later), and **alert fatigue** (too many false positives and reviewers stop trusting the system). Extreme imbalance is a systems problem, not just a loss-function tweak.`,
     keyPoints: [
       `**On an imbalanced problem, accuracy is a trap — use precision, recall, and PR-AUC instead.**\n\nWhen 999 of 1000 cases are one class, a model that always guesses that class scores 99.9% and catches nothing. Recall (of the real positives, how many did you catch?) and precision (of your positive flags, how many were real?) actually track the rare class, and PR-AUC sums up their tradeoff in a single number. Prefer PR-AUC over the more common ROC-AUC when positives are rare, because ROC-AUC hands out easy credit for correctly ignoring the huge majority.`,
       `**The real problem is not the imbalance — it is that the two kinds of mistake cost different amounts.**\n\nMissing a fraud can cost thousands; a false alarm costs a moment. Accuracy pretends they are equal. The cheapest fix is class weights: tell the loss that a mistake on the rare class costs far more, and the same gradient descent that was ignoring it now focuses on it — no new data needed. Resampling the data (oversampling the rare class, SMOTE, or undersampling the majority) is an alternative, but for tree models class weights are usually cleaner and just as effective.`,
       `**The step everyone forgets: choose the decision threshold on purpose, not at the default 0.5.**\n\nA classifier gives a score; turning it into a yes/no needs a cutoff, and 0.5 almost never matches an imbalanced, unequal-cost problem. If missing a positive is far worse than a false alarm, flag on weaker suspicion — a lower threshold. After training, look at the precision and recall you get at each cutoff and pick the one that matches what the problem actually costs. Train the model to rank; then set the threshold to act.`,
+      `**When action is capacity-limited, optimise precision@K and derive the threshold from an explicit cost matrix.**\n\nIf a team can only review the top 500 alerts, the metric is precision@K (of the top K by score, how many are real) with recall@K and lift@K — the model just needs the worst cases at the top of the list. And "pick the threshold from costs" has a rigorous form: write a cost matrix (dollar cost per confusion-matrix cell) and choose the threshold that minimises expected cost, which for a calibrated probability is exact — another reason calibrated probabilities matter. Round out judging with balanced accuracy, macro/weighted F1, MCC, and the confusion matrix at your chosen threshold.`,
+      `**SMOTE has sharp edges, resampling distorts probabilities, and the right fix depends on the model.**\n\nApply SMOTE only inside CV folds after the split (before it leaks), and avoid it with high-dimensional sparse data, noisy or overlapping labels, and time-series. Resampling changes the training class balance, so predicted probabilities come out too high for the minority class — recalibrate afterward if you need real probabilities (class weights sidestep this). Match the lever to the family: tree/boosting → class weights + \`scale_pos_weight\` + threshold tuning; linear/distance models → sampling and scaling. And at extreme imbalance (1-in-100k), switch framing to anomaly detection, two-stage retrieval/ranking, and design around review capacity, delayed labels, and alert fatigue.`,
     ],
     interactivePrompt: `Before you touch the controls: on a dataset that is 99% one class, a model reports 99% accuracy. Does that tell you it is a good model, a useless one, or can you not tell yet?`,
     checkQuestions: [
@@ -1329,6 +1983,26 @@ Here is the step almost everyone forgets. A classifier gives a *score*; turning 
           `\`D) Lower the decision threshold to 0.1 and stop there; that single change fully captures a ten-to-one cost ratio on its own, with no need to touch the loss or the class weights.\``,
         ],
         answer: `A`,
+      },
+      {
+        q: `Your fraud team can investigate only 500 alerts per day out of millions of transactions. Which metric should you optimise, and why is a global threshold the wrong framing?`,
+        options: [
+          `\`A) Optimise overall accuracy — with only 500 reviews the model barely affects the accuracy number, so maximising it is the safest objective.\``,
+          `\`B) Optimise precision@K (here K=500): of the top 500 transactions the model ranks riskiest, how many are real fraud. When action is capacity-limited, the model only needs to get the worst cases to the top of the list — recall@K and lift@K round out the picture — rather than committing to a single global cutoff that ignores the 500-per-day limit.\``,
+          `\`C) Optimise recall across all thresholds, since catching every fraud is the only goal and the 500-alert limit can be raised later if needed.\``,
+          `\`D) Optimise ROC-AUC, because it already accounts for review capacity by weighting the top-ranked predictions more heavily than the rest.\``,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `You apply SMOTE to your whole dataset and then do cross-validation. Validation scores look great but production is poor. What went wrong?`,
+        options: [
+          `\`A) SMOTE simply doesn't work for fraud; remove it entirely and rely on accuracy, which will now reflect true production performance.\``,
+          `\`B) Oversampling before the split leaks: synthetic minority points (and near-duplicates of the same real points) land in both training and validation folds, so the model is partly evaluated on data related to what it trained on, inflating the scores. Apply SMOTE only inside each CV fold, after the split. Also note resampling distorts predicted probabilities, so recalibrate if you need them.\``,
+          `\`C) The validation set was too small; increasing it will make the SMOTE-inflated scores match production without changing where SMOTE is applied.\``,
+          `\`D) SMOTE needs more synthetic points; generating ten times as many minority examples before cross-validation will close the gap between validation and production.\``,
+        ],
+        answer: `B`,
       },
     ],
     takeaway: `On an imbalanced problem, accuracy is a trap — a model that always guesses the majority class scores high and does nothing. The real issue is that the two kinds of mistake cost different amounts. Measure with precision, recall, and PR-AUC instead; make the model care about the rare class with class weights (or resampling); and set the decision threshold deliberately to match what the problem actually costs, rather than leaving it at 0.5.`,
@@ -1383,11 +2057,56 @@ There is a cousin of feature selection worth separating out: **dimensionality re
 
 **The one trap that fakes good results.**
 
-Whatever method you use, there is a mistake that quietly inflates your numbers: **choosing features using the whole dataset, before you split off a test set.** If you pick features by how they relate to the label across *all* your data, you have let the test set's answers leak into the choice — the chosen features look more predictive than they really are, and your reported accuracy is a mirage. The fix is to do feature selection *inside* your cross-validation: choose features using only the training portion of each fold, and judge on the held-out portion. Select on the training data only. Always.`,
+Whatever method you use, there is a mistake that quietly inflates your numbers: **choosing features using the whole dataset, before you split off a test set.** If you pick features by how they relate to the label across *all* your data, you have let the test set's answers leak into the choice — the chosen features look more predictive than they really are, and your reported accuracy is a mirage. The fix is to do feature selection *inside* your cross-validation: choose features using only the training portion of each fold, and judge on the held-out portion. Select on the training data only. Always.
+
+---
+
+**SHAP is powerful but not gospel.**
+
+SHAP is the best-known importance tool, and it's genuinely good — it fairly attributes a prediction across features with solid theory behind it. But two caveats keep you honest. First, under **correlated features** SHAP can *split* or *shuffle* credit between the correlated group in ways that mislead — a truly important feature can look weak because its correlated twin absorbed the attribution. Second, SHAP explains what the *model* used, not what *causes* the outcome — high SHAP importance is **not** evidence of causality. Treat SHAP as "what is this model leaning on," never as "what drives the world."
+
+---
+
+**Permutation importance, and its blind spot.**
+
+A model-agnostic alternative worth naming: **permutation importance** shuffles one feature's values and measures how much accuracy drops — a big drop means the model really relied on it. It works on any fitted model and needs no retraining. Its blind spot is the same correlation trap that haunts forests: with two correlated features, shuffling one barely hurts because its twin still carries the signal, so both look unimportant. So read permutation importance with the correlation caveat, and consider dropping correlated groups together to test them jointly.
+
+---
+
+**Mutual information, read carefully.**
+
+Correlation only catches *linear* relationships; **mutual information** catches *any* dependence, linear or not, which is why it's a better filter score. But mind its limits: as usually applied it's **univariate** (scores each feature against the target alone, missing features that only matter in combination), and its estimate is **sensitive to binning, the estimator, and sample size** — noisy MI values with little data can rank features almost at random. Useful as a fast screen, not a final verdict.
+
+---
+
+**RFE in practice: use RFECV.**
+
+Recursive feature elimination is accurate but has practical costs: it's **expensive** (retrains repeatedly), **estimator-dependent** (the ranking changes with the model you wrap), and **unstable under correlated features**. And plain RFE makes you guess *how many* features to keep. The fix is **RFECV** — wrap RFE in cross-validation so it *selects the feature count* by held-out performance instead of you picking it by hand.
+
+---
+
+**PCA's fine print.**
+
+If you do reach for PCA, know its assumptions. It's **unsupervised** — it keeps the directions of largest *variance*, which are **not necessarily the directions that predict your target** (a high-variance feature can be pure noise). It's scale-sensitive, so you **must standardise first** or the largest-unit feature dominates the components. And the components are linear blends of everything, so they're **hard to explain**. PCA reduces dimensions and decorrelates, but it can throw away exactly the low-variance signal that mattered.
+
+---
+
+**When dimensions explode: special regimes.**
+
+The right strategy shifts sharply with the data type. For **text / sparse one-hot** features (tens of thousands of mostly-zero columns), L1/Lasso-style selection and sparse-aware methods fit naturally. For **genomics** (p ≫ n, thousands of genes, few samples), univariate screening plus stability selection is common. For **embeddings** (dense learned vectors), individual dimensions are meaningless, so you reduce or regularise rather than select individual columns. Don't apply a tabular feature-selection recipe blindly to text, genomic, or embedding data.
+
+---
+
+**Is the selection even stable?**
+
+One last discipline: a feature set chosen from a single run can be a fluke of that particular sample. **Stability selection** checks this — rerun the selection on many bootstrap resamples (or CV folds) and keep the features that get chosen *consistently*. If a feature appears in 90% of runs, trust it; if it flickers in and out across runs, it's likely noise dressed up as signal. Stable selections generalise; one-run selections often don't.`,
     keyPoints: [
-      `**More features is not always better — past a point they add noise and thin out your data (the curse of dimensionality).**\n\nIrrelevant features give the model more ways to trip; redundant ones add confusion; and every extra dimension spreads your data points further apart, which makes overfitting easier and real patterns harder to find. So be deliberate about which features you keep. A solid default recipe: train one gradient-boosted model on everything, rank the features by importance (SHAP gives the most reliable ranking), and keep the top ones.`,
+      `**More features is not always better — past a point they add noise and thin out your data (the curse of dimensionality).**\n\nIrrelevant features give the model more ways to trip; redundant ones add confusion; and every extra dimension spreads your data points further apart, which makes overfitting easier and real patterns harder to find. So be deliberate about which features you keep. A solid default recipe: train one gradient-boosted model on everything, rank the features by importance (SHAP is a strong choice, though read with care under correlated features), and keep the top ones.`,
+
       `**Know the three ways to choose, and their tradeoff of speed versus smartness.**\n\nFilter methods score each feature on its own — fast, but blind to features that only matter in combination. Wrapper methods train the model on different subsets and keep the best — accurate, but slow, and impractical with thousands of features. Embedded methods select while training: Lasso zeros out useless weights as it fits, and tree or SHAP importance ranks what a trained model actually used. For everyday tabular work, embedded methods give the best balance of the three.`,
       `**The trap that fakes good results: choosing features on the whole dataset before splitting off a test set.**\n\nIf you pick features by how they relate to the label across all your data, the test set's answers have leaked into the choice, and your reported accuracy is a mirage. Do feature selection inside cross-validation: choose features using only the training portion of each fold, then judge on the held-out portion. And keep selection (which preserves your original, explainable features) separate from dimensionality reduction like PCA (which blends them into compact but unexplainable new ones).`,
+      `**Read every importance method with the correlation caveat, and don't confuse importance with cause.**\n\nSHAP fairly attributes predictions but splits credit between correlated features and shows what the *model* used, not what *causes* the outcome — high SHAP ≠ causal. Permutation importance is model-agnostic but hits the same correlation trap (shuffling one of a correlated pair barely hurts). Mutual information catches non-linear dependence but is univariate and binning/sample-sensitive. RFE is accurate but expensive, estimator-dependent, and unstable — use RFECV to pick the feature count. And PCA keeps high-variance directions, which aren't necessarily predictive, needs standardising, and yields unexplainable components.`,
+      `**Confirm your selection is stable, and adapt to the data regime.**\n\nA feature set from one run can be a fluke — stability selection reruns the choice across bootstraps/folds and keeps features chosen consistently (appears in 90% of runs → trust it; flickers → noise). And the recipe shifts with the data: L1/sparse methods for text and one-hot, univariate screening plus stability selection for genomics (p ≫ n), and reduce/regularise rather than select individual columns for dense embeddings — a tabular recipe doesn't transfer blindly.`,
     ],
     interactivePrompt: `Before you touch the controls: you keep adding features and the model's training accuracy climbs, but its test accuracy starts to fall. What is most likely going on?`,
     checkQuestions: [
@@ -1418,6 +2137,26 @@ Whatever method you use, there is a mistake that quietly inflates your numbers: 
           `\`B) Feature selection — it keeps a subset of your original, named features, so each prediction can still be explained in plain terms. PCA blends features into new combined directions that are compact but no longer mean anything a person can point to.\``,
           `\`C) Either one works equally well for explanation, since a PCA component can always simply be relabelled with the name of whichever original feature it happens to resemble most closely.\``,
           `\`D) PCA — dimensionality reduction is strictly more powerful than selection, and its components stay just as interpretable as the original features once you rotate them back into place.\``,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `A stakeholder points to a feature's high SHAP importance and concludes it "causes" the outcome, so the business should intervene on it. Why is that reasoning unsafe?`,
+        options: [
+          `\`A) It's completely safe — SHAP is grounded in game theory, so high SHAP importance is a mathematical proof of causation and intervening on the feature will change the outcome.\``,
+          `\`B) SHAP explains what the trained model leaned on, not what causes the outcome in the world — high SHAP importance is associational, not causal. It can also mis-split credit among correlated features, so a truly important feature may look weak (or a proxy may look strong). Establishing causation needs an experiment or causal analysis, not a SHAP ranking.\``,
+          `\`C) The reasoning fails only because SHAP values are random noise; averaging them over more background samples would turn them into valid causal estimates.\``,
+          `\`D) SHAP is fine for causation but only for linear models, so the stakeholder is wrong purely because the model here is gradient-boosted rather than linear.\``,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `You want to be sure the features you selected aren't just an artifact of one particular training sample. What technique addresses this, and what does the mutual-information filter miss that it doesn't?`,
+        options: [
+          `\`A) Use leave-one-out cross-validation once; if accuracy is stable the feature set is automatically stable too, and mutual information already accounts for feature interactions so nothing is missed.\``,
+          `\`B) Stability selection: rerun the selection across many bootstrap resamples or CV folds and keep features chosen consistently (e.g. in 90% of runs) — flickering features are likely noise. Mutual information, by contrast, is usually univariate: it scores each feature against the target alone and misses features that only matter in combination (and it's sensitive to binning and sample size).\``,
+          `\`C) Use PCA to compress the features first, which guarantees stability because principal components never change across samples, and mutual information misses only linear relationships that PCA then recovers.\``,
+          `\`D) Increase the number of features until the selection stabilises; more candidates always makes the chosen subset more robust, and mutual information misses nothing since it is fully multivariate by construction.\``,
         ],
         answer: `B`,
       },
