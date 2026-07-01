@@ -7,80 +7,98 @@ export const CLASSICAL_ML_MODULES = [
     difficulty: 'foundational',
     estimatedMin: 22,
     tags: ['regression', 'OLS', 'linear models'],
-    summary: `You have last month's house sales — square footage, number of bedrooms, a neighborhood score, and the price each one sold for. A new house comes on the market. What should it sell for?
+    summary: `You sell houses. For every house that sold last month you jotted down a few facts about it — how big it is, how many bedrooms, how nice the area is — and the price it finally sold for. Now a new house comes up for sale and someone asks you: what should this one go for?
 
-The simplest honest guess is a weighted sum: price ≈ w₁·(sqft) + w₂·(bedrooms) + w₃·(score). Once you pick the weights, you have a prediction machine. The whole game is choosing good weights.
+Your first instinct is the right one. A bigger house costs more. More bedrooms cost more. A nicer area costs more. So take each fact about the house, give it a weight for how much it matters, and add them up:
 
-So what makes weights "good"? Run them on the houses you already know the price of, and look at the gap between your prediction and the real price. That gap, for one house, is the **residual**. Good weights make the residuals small across all the houses at once.
+price ≈ w₁ × size + w₂ × bedrooms + w₃ × area score
 
-Now you need a single number for "small overall." Just adding the residuals fails — positive and negative gaps cancel, so even terrible weights could score near zero. So square each residual first (that kills the sign), then add them up. Squaring has a bonus: missing one house by a full 100k hurts far more than missing four houses by 25k each, so the fit works hard to avoid big misses. And squared error is smooth, which means calculus can jump straight to the best weights instead of guessing.
+That is the whole model. Choose the three weights and you can put a price on any house. So everything now comes down to one question: how do we choose good weights?
 
-That jump is **ordinary least squares (OLS)**. Set the derivative of the total squared error to zero and out pops one formula for the best weights: $θ̂ = (XᵀX)⁻¹Xᵀy$. You don't search — you solve. That formula is the entire engine.
+Think about how you would check a set of weights. You already know what last month's houses actually sold for. So use your weights to predict those same houses, and compare each guess to the real price. How far off you were on one house is called the **residual** — just a fancier word for the miss. Good weights are the ones that keep the misses small across all the houses.
+
+But "small across all the houses" has to become one single number we can try to shrink. The obvious move — add up all the misses — quietly fails. Some guesses are too high and some too low, so the misses have opposite signs and cancel each other out. A bad model could add up to nearly zero just by luck.
+
+So we do one small thing first: square each miss before adding. Squaring throws away the plus and minus signs, so nothing cancels anymore. It also does something helpful — a big miss, once squared, becomes very big, so the model tries especially hard to avoid large misses. Add up all these squared misses and you finally have your single number. It has a name: the **loss**. The loss is just one number that says how wrong the current weights are, all together.
+
+Now the whole job fits in one sentence: find the weights that make the loss as small as possible.
+
+For a straight line, we get lucky. If you picture the loss drawn against the weights, it makes a smooth bowl — one lowest point and nothing else to get stuck in. And the bottom of a bowl is exactly the spot where the ground goes flat. So instead of hunting weight by weight, we can ask for the point where the slope is flat, and the math hands back a formula that gives the best weights straight away:
+
+$θ̂ = (XᵀX)⁻¹Xᵀy$
+
+You do not need to read the symbols yet. The one thing to take away is what it means: for a straight-line model, we never have to search for the best weights — we can solve for them in a single step. That single-step solution is called **ordinary least squares**, or OLS. That is the entire engine.
 
 ---
 
-**Where it gets interesting: when do the weights stop meaning anything?**
+**Now a warning about trusting those weights.**
 
-Suppose square footage and bedroom count rise together — bigger houses have more bedrooms. The model can't tell whether price comes from the space or the rooms, because they move as a pair. It will split the credit between w₁ and w₂ in any of a thousand ways that all predict about the same. Retrain on a slightly different set of sales and those two coefficients can swing wildly — even flip sign — while the *predictions* barely budge. This is **collinearity**, and it is the most misread failure in regression: the predictions are fine, the individual coefficients are noise. So "this feature's coefficient is near zero, let's drop it" can quietly wreck the model when that feature was correlated with another.
+Say two of your facts tend to move together. Bigger houses usually have more bedrooms, so size and bedroom count rise and fall as a pair. Here is the trouble that causes. The model wants to hand out credit for the price — some to size, some to bedrooms. But because the two always move together, it cannot tell which one is really doing the work. It could put most of the weight on size and a little on bedrooms, or the other way round, and both choices predict prices about equally well.
 
-The standard fix is **Ridge**: add a small penalty that nudges every weight toward zero. You trade a touch of bias for coefficients that stay stable and trustworthy even when the features are tangled together.
+So the weights turn shaky. Train on a slightly different batch of houses and those two weights can jump around, even swap from positive to negative — while the actual price predictions barely change. This is called **collinearity**. The predictions are still fine. It is only the individual weights that have gone unreliable.
+
+Why care? Because people read the weights to decide which fact matters. If you see a weight near zero and think "this one does nothing, drop it," you can be badly wrong — the weight may be small only because its partner grabbed the credit.
+
+The usual fix is called **Ridge**. It adds a small penalty that stops the weights from growing wild and shaky, so you can trust them again. How it does that is its own lesson.
 
 ---
 
-**One habit that saves you: plot the residuals.**
+**One last habit, and it is the most useful one.**
 
-A high R² feels like proof the model is good. It isn't. R² only tells you how much of the price variation you explained — it can't tell you the *shape* is wrong. Fit a straight line to data that actually curves and you can still read R² = 0.95 while the residuals, plotted against your predictions, trace a clear U — too low in the middle, too high at the edges. That U is the model telling you the straight-line assumption is broken. R² will never say it; the residual plot always will.
+There is a number called R² that is supposed to tell you how good the model is — closer to 1 is better, people say. It is not that simple. A high R² only means your line explains a lot of the ups and downs in price. It does not mean the line is the right shape.
 
-Plot them before you trust anything.`,
+Here is the trap. Suppose the real relationship actually curves, but you fit a straight line to it anyway. You can still get an impressive R² of 0.95 and still be wrong. To catch it, do this: take your misses and plot them against your predictions. If the straight line is right, the misses should scatter randomly around zero. But if the truth was a curve, the misses fall into a clear pattern — a U, too low in the middle and too high at the ends. That U is the model quietly telling you the straight line is the wrong shape. R² will never warn you. The residual plot always will.
+
+So before you trust any straight-line model: plot the misses and look.`,
     keyPoints: [
-      `**What OLS actually does, in one sentence: it finds the weights that make the total squared gap between predictions and reality as small as possible.**\n\nReach for linear regression first whenever the target is a number and a weighted sum of the features is a plausible story — each weight then reads in plain English ("one more bedroom adds about the same amount each time"). It is fast, interpretable, and the honest baseline every fancier model has to beat. Switch away when residual plots curve, when features clearly interact, or when the target has a hard floor or ceiling (like a probability between 0 and 1) that a straight line can't respect.`,
-      `**The trap that bites in production: correlated features make individual coefficients unstable while predictions stay accurate — and nothing warns you.**\n\nIf square footage and total rooms correlate at 0.95, OLS divides their shared predictive power arbitrarily, and a different training sample divides it differently. The individual weights become meaningless, but their combined effect ($w_1 \\cdot sqft + w_2 \\cdot rooms$) stays steady — so predictions look healthy. This is why dropping a feature because its coefficient is "near zero" can be dangerous: it may read near zero only because a correlated twin absorbed the credit. Add Ridge ($λ > 0$) before you trust any ranking of coefficients.`,
-      `**The one diagnostic to run every time: plot residuals against fitted values.**\n\nA flat, even band of scatter means the straight-line form fits. A U-shape or curve means the form is wrong — and a curved residual plot with R² = 0.95 is worse than a noisy one with R² = 0.60, because you are confidently wrong about the shape. A widening funnel means the error grows with the prediction (heteroscedasticity): predictions stay unbiased, but every confidence interval you report is off. R² hides all of this; the residual plot shows it.`,
+      `**In one line: OLS finds the weights that make the total squared miss as small as possible.**\n\nUse linear regression first whenever you are predicting a number and "add up the facts, each with its own weight" is a sensible guess. Its big advantage is that you can read the weights straight off — one more bedroom adds about so many dollars. It is fast, it is simple, and it is the baseline every fancier model has to beat. Move to something else when the residual plot curves (the real shape is not a straight line), when facts clearly work together, or when the answer has to stay inside fixed limits — like a probability between 0 and 1, which a straight line cannot respect.`,
+      `**The trap that catches people: when two facts move together, their weights stop being trustworthy — but the predictions still look fine, so nothing warns you.**\n\nIf size and total rooms almost always rise together, OLS splits the credit between them however it likes, and a different batch of houses splits it differently. The two weights wobble, but their combined effect stays steady — so the predictions look healthy. That is why "this weight is near zero, let us drop the fact" is dangerous: the weight may be small only because its twin took the credit. Add Ridge (a small penalty) before you trust any list of which facts matter.`,
+      `**The one check to run every time: plot the misses against the predictions.**\n\nIf the misses scatter evenly around zero, the straight line fits. If they form a U or any clear pattern, the shape is wrong — and a curved plot with R² = 0.95 is worse than a messy one with R² = 0.60, because now you are confidently wrong. If the misses fan out wider as predictions grow, the errors get bigger for pricier houses; the predictions can still be fine, but any confidence range you quote is off. R² hides all of this. The plot of the misses shows it.`,
     ],
     interactivePrompt: `Before you touch the controls: if you add a feature that is almost a perfect copy of one you already have, do you expect the model's predictions to get worse, stay about the same, or get better?`,
     checkQuestions: [
       {
-        q: `In ordinary least squares, why do we square each residual before adding them up, instead of just summing the raw gaps?`,
+        q: `In OLS, why do we square each miss before adding them up, instead of just adding the raw misses?`,
         options: [
-          `\`A) Three reasons at once: squaring removes the sign so positive and negative gaps can't cancel into a misleadingly low score, it punishes a few large misses more than many small ones, and — because the squared-error curve is smooth — it lets calculus solve for the single best set of weights in closed form instead of searching.\``,
-          `\`B) Squaring converts the model from linear to non-linear, which is what lets it fit curved data; without it, linear regression could only ever fit perfectly straight relationships.\``,
-          `\`C) It is purely convention — summing the absolute values of the residuals gives the exact same weights and the same solution, just with more arithmetic.\``,
-          `\`D) Squaring puts the error back into the original units of the target (dollars, not dollars-squared), so the loss is directly interpretable as an average price error.\``,
+          `\`A) Because raw misses cancel — a too-high guess and a too-low one add to near zero and hide bad weights. Squaring drops the signs so nothing cancels, and it makes big misses count for much more.\``,
+          `\`B) Because squaring turns the model non-linear, and that is what lets a straight-line model bend to fit curved data instead of only straight relationships.\``,
+          `\`C) Because it is only tradition — adding the absolute values of the misses gives the exact same weights, just with a little more arithmetic to do.\``,
+          `\`D) Because squaring puts the error back into the target's real units (dollars, not dollars squared), so the final loss reads as an average price error.\``,
         ],
         answer: `A`,
       },
       {
-        q: `You have two features with correlation 0.99. What happens to the OLS coefficients, and how do Ridge and Lasso respond differently?`,
+        q: `Two of your features have correlation 0.99. What happens to the OLS weights, and how do Ridge and Lasso differ here?`,
         options: [
-          `\`A) OLS coefficients are only mildly inflated and stay reliable — correlation only causes real trouble at exactly 1.0. Ridge and Lasso both shrink them, with Lasso shrinking more aggressively.\``,
-          `\`B) OLS refuses to run because XᵀX is singular; both Ridge and Lasso repair this and, for correlated features, return identical coefficient estimates.\``,
-          `\`C) OLS can still compute weights, but they become extremely unstable — a small change in the training data swings both coefficients and can flip their signs, while the predictions barely move. Ridge stabilises them by shrinking, and tends to give the two features similar, non-zero weights. Lasso instead keeps one and drives the other to exactly zero — and which one it keeps can change from sample to sample.\``,
-          `\`D) Both OLS and Ridge automatically zero out one of the two features to remove the redundancy; the only difference is the criterion they use to decide which one to drop.\``,
+          `\`A) The weights are only slightly inflated but still reliable — correlation causes real trouble only once it hits exactly 1.0. Ridge and Lasso both shrink them, Lasso just harder.\``,
+          `\`B) OLS cannot run at all because the math is singular; Ridge and Lasso both repair it and, for correlated features, hand back identical weights.\``,
+          `\`C) OLS still runs, but the two weights turn shaky — a small change in the data swings them and can flip their signs, while the predictions barely move. Ridge shrinks them to similar steady values; Lasso keeps one and zeros the other, and which it keeps can change each run.\``,
+          `\`D) Both OLS and Ridge quietly drop one of the two features to kill the redundancy; the only difference is the rule each uses to decide which feature to drop.\``,
         ],
         answer: `C`,
       },
       {
-        q: `Your model reports R² = 0.95, but the residuals form a clear U-shape when plotted against the fitted values. What does that tell you?`,
+        q: `Your model shows R² = 0.95, but the misses make a clear U-shape when plotted against the predictions. What does that tell you?`,
         options: [
-          `\`A) It is ordinary sampling noise — with R² this high the residuals are expected to wander a little, and no action is needed.\``,
-          `\`B) The straight-line form is wrong — the model systematically under-predicts at the low and high ends and over-predicts in the middle. High R² doesn't rescue this; R² measures variance explained, not whether the shape is right. Fix by adding curvature (polynomial or spline terms), transforming the target (e.g. log), or switching to a model that can bend — then re-check the residuals.\``,
-          `\`C) It signals a handful of outliers at the extremes inflating the error; winsorise the target and both R² and the residual shape will clean up.\``,
-          `\`D) It means the errors are correlated over time (autocorrelation); switch to a time-series model even though the data isn't time-ordered.\``,
+          `\`A) It is just random noise — with R² this high the misses are bound to wander a little, and there is nothing you need to do about it.\``,
+          `\`B) The straight line is the wrong shape — it comes in too low at the ends and too high in the middle. A high R² does not save you; it only measures variance explained, not shape. Fix by adding curve terms or a model that can bend, then re-check.\``,
+          `\`C) It points to a few outliers at the extremes stretching the error; clip the target at the top and bottom and both R² and the miss pattern will settle down.\``,
+          `\`D) It means the errors run in time order (autocorrelation), so switch to a time-series model even though the data is not ordered by time.\``,
         ],
         answer: `B`,
       },
       {
-        q: `For a large or highly correlated dataset, why do libraries like scikit-learn avoid literally computing (XᵀX)⁻¹ to solve for the weights?`,
+        q: `For a big or highly correlated dataset, why do libraries like scikit-learn avoid literally computing (XᵀX)⁻¹ to get the weights?`,
         options: [
-          `\`A) Forming XᵀX and inverting it amplifies numerical error when features are correlated — small rounding errors get magnified and the coefficients can come out as garbage. Libraries instead use more stable linear-algebra methods (QR or SVD decompositions) that work with the data matrix directly and still return a sensible answer even when features are perfectly collinear.\``,
-          `\`B) Because inverting XᵀX requires it to be non-symmetric, and correlated features break that symmetry; the decomposition methods restore it before inverting.\``,
-          `\`C) Because (XᵀX)⁻¹ needs O(n³) memory in the number of samples, which is impossible for large n; the decomposition methods need essentially none.\``,
-          `\`D) Because the inverse only exists when there are more samples than features; the decomposition methods remove that requirement entirely.\``,
+          `\`A) Because building and inverting that matrix blows up tiny rounding errors when features are correlated, so the weights can come out as junk. Libraries use steadier methods (QR or SVD) that work on the data directly and stay sensible even with correlated features.\``,
+          `\`B) Because inverting the matrix needs it to be non-symmetric, and correlated features break that symmetry, so the steadier methods rebuild the symmetry before inverting.\``,
+          `\`C) Because the inverse needs memory that grows with the number of samples cubed, which is impossible for large data, while the steadier methods need almost none.\``,
+          `\`D) Because the inverse only exists when there are more samples than features, and the steadier methods remove that requirement completely.\``,
         ],
         answer: `A`,
       },
     ],
-    takeaway: `OLS picks the weights that minimise the total squared error, and there's a formula for them. Correlated features scramble the individual coefficients while leaving predictions intact — so never read coefficients without checking for collinearity. And R² can't see a wrong model shape; only the residual plot can.`,
+    takeaway: `OLS just picks the weights that make the total squared miss smallest — and for a straight line, there is a formula that solves for them in one step. When two features move together, the individual weights turn shaky even though the predictions stay fine, so never trust a weight without checking for that. And R² cannot tell you the shape is wrong — only the plot of the misses can.`,
     interactiveId: 'linear_regression_viz',
   },
   {
