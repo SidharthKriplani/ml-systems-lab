@@ -362,21 +362,33 @@ NOT-this: "DBSCAN does not require K, so it is always better than K-means." DBSC
     difficulty: 'intermediate',
     estimatedMin: 38,
     tags: ['PCA', 'dimensionality reduction', 'eigenvectors', 'variance'],
-    summary: `You have gene expression data — 20,000 gene measurements for 500 patients. Training a classifier on 20,000 features with 500 examples is massively underdetermined, collinear, and computationally infeasible. PCA finds the directions of maximum variance in the 20,000-dimensional space, reducing to 20–50 components that capture > 90% of variance while being orthogonal (no multicollinearity) and reducing the feature space 400×.
+    summary: `Imagine photographing a chair so someone can recognise it. You would not shoot it dead-on, where it collapses into a flat rectangle — you would pick the angle that shows the most at once: legs, seat, back. You are choosing the *viewpoint that keeps the most information*. **Principal Component Analysis (PCA)** does exactly this for data: it finds the best angle to view your features from, so that when you flatten them down to just a few numbers you keep as much of the variation as possible.
 
-The covariance matrix C = XᵀX / (n-1) captures how features vary together. Its eigenvectors are the principal components — directions of maximum variance. Its eigenvalues λᵢ quantify variance captured: explained variance ratio = λᵢ / Σ λⱼ.
+Here is where you need it. Say you have gene-expression data: 20,000 gene readings for only 500 patients. Feeding 20,000 features into a model with 500 examples is hopeless — far too many knobs, the features overlap heavily, and it is painfully slow. PCA squeezes those 20,000 down to maybe 20–50 new features that still capture over 90% of the variation — and, crucially, the new features do not overlap with each other.
+
+---
+
+**The one idea: find the directions of most spread.**
+
+Picture your data as a cloud of points. In some directions the cloud is stretched out; in others it is thin. PCA finds the direction of *maximum spread* — that is the **first principal component**. Then the next direction of most spread that sits at a right angle to the first — the second component. And so on. Each point can then be described mostly by where it sits along these few directions, instead of by all 20,000 original numbers.
 
 [FIGURE: pca_variance]
 
-Projection: the k-component projection is X_pca = X Wₖ where Wₖ ∈ ℝᵈˣᵏ has the top-k eigenvectors as columns. This is the optimal linear projection minimizing reconstruction error (Eckart-Young theorem). Reconstruction: X_reconstructed = X_pca Wₖᵀ — you can go back to the original space approximately.
+Each component comes with a number, its **explained variance** — the share of the total spread it accounts for. Add them up and you can say "the first 30 components capture 92% of everything," which is how you decide how many to keep. (Under the hood these directions are the eigenvectors of the data's covariance matrix, and their explained-variance numbers are the eigenvalues; libraries compute them with the SVD, which is more numerically stable. You do not need the machinery to use PCA well — but that is what is happening.)
 
-Computing PCA: SVD is more numerically stable than eigendecomposing XᵀX. X = UΣVᵀ. The principal components are the columns of V; the scores are UΣ.
+You can also run PCA in reverse: from the few components, approximately rebuild the original features. In fact PCA is, provably, the *best possible* straight-line way to compress and rebuild — no linear method loses less information for the same number of components.
 
-NOT-this: "PCA removes noise." PCA keeps the highest-variance directions. High variance might be noise — batch effects in genomics data. Low variance might be signal — a rare but important pattern. PCA discards low-variance directions. If your signal has low variance relative to noise, PCA discards your signal. Always validate PCA-reduced models against full-feature models on a downstream task before committing.`,
+---
+
+**The trap: PCA keeps *variance*, not *signal*.**
+
+Here is the mistake almost everyone makes: "PCA removes noise." It does not. PCA keeps the *highest-variance* directions and throws away the low-variance ones — and it has no idea which of those is signal and which is noise. Sometimes the biggest source of variation in genomics data is a *batch effect* (which day the sample was processed), pure noise that PCA will lovingly preserve. And sometimes the thing you actually care about — a rare but important pattern — has *low* variance, so PCA quietly deletes it. So never assume PCA kept what matters: always compare a PCA-reduced model against the full-feature model on the real downstream task before you trust it.
+
+And one setup detail you cannot skip: **standardise your features first**. PCA chases variance, so if income is measured in dollars (variance in the billions) and another feature is a 0/1 flag, income will dominate every component for no good reason. Put everything on the same scale before running PCA, every single time.`,
     keyPoints: [
-      `**Use the cumulative explained variance ratio to choose the number of components — keep enough to explain 90–95% of variance as a starting rule, then tune on downstream task performance.**\n\nPlot the scree plot and look for the elbow. Explained variance ratio is a necessary but not sufficient criterion — the signal you care about might live in lower-variance components that the rule would discard.`,
-      `**Trap: forgetting to center and scale before PCA.**\n\nPCA maximizes variance — if features have different scales, the highest-variance feature (e.g., income in dollars) dominates every principal component regardless of relevance. StandardScale before PCA without exception. The only exception is when all features are already on the same scale and you deliberately want high-variance features to dominate.`,
-      `**Diagnostic: if PCA-reduced models perform significantly worse than full-feature models, either the signal is in low-variance directions (try keeping more components) or PCA's linear assumption is wrong.**\n\nFor nonlinear structure, try UMAP for visualization or kernel PCA for preprocessing. Performance degradation after PCA is telling you something about where the signal lives.`,
+      `**Choose the number of components from the cumulative explained-variance curve — but confirm it on the real task.**\n\nA good starting rule is to keep enough components to cover 90–95% of the variance; plot the curve and look for the elbow where extra components stop adding much. Treat that as a starting point, not gospel — the signal you actually care about might live in a lower-variance component the rule would drop, so always check downstream performance at a few different component counts.`,
+      `**The trap: forgetting to standardise before PCA.**\n\nPCA maximises variance, so if your features sit on wildly different scales, the biggest one (income in dollars, say) dominates every component regardless of how useful it is, and everything else gets crushed into components you later discard. Standardise every feature first (mean 0, unit variance) — no exceptions, unless the features are already on one scale and you genuinely want the big ones to dominate.`,
+      `**The diagnostic: if the PCA-reduced model does clearly worse than the full one, the signal was in a low-variance direction — or the structure is not linear.**\n\nFirst try keeping more components. If that does not help, PCA's straight-line assumption may be the problem: the important structure could be curved, which PCA cannot capture. For that, reach for a nonlinear method — UMAP for visualising, or kernel PCA for preprocessing. A drop in performance after PCA is telling you something real about where your signal lives.`,
     ],
     checkQuestions: [
       {
@@ -551,15 +563,29 @@ NOT-this: "t-SNE cluster distances are interpretable." The distances between clu
     difficulty: 'advanced',
     estimatedMin: 38,
     tags: ['autoencoder', 'VAE', 'dimensionality reduction', 'anomaly detection'],
-    summary: `You have 28×28 pixel MNIST digits — 784 dimensions. You want a compact representation for a downstream classifier. Autoencoder: encoder (784 → 256 → 64 → 32) compresses input to a 32-dimensional code. Decoder (32 → 64 → 256 → 784) reconstructs the original. Trained by minimizing reconstruction error ‖x - decoder(encoder(x))‖². The 32-dimensional bottleneck is forced to capture the essential structure of the input — anything it cannot reconstruct is discarded. The resulting representations cluster MNIST digits far better than PCA because non-linear compression captures curves and diagonals that linear projection misses.
+    summary: `Think about describing a friend's face to a sketch artist. You cannot list every pixel — you compress it into a handful of essentials ("round face, thick eyebrows, crooked smile"), and from those few words the artist rebuilds something recognisable. An **autoencoder** is a neural network that learns to do exactly this on its own: squeeze data through a narrow middle, then rebuild it from the squeezed version.
 
-Denoising autoencoders: corrupt the input (add Gaussian noise, randomly zero out pixels), train to reconstruct the clean original. Forces the encoder to learn robust representations that capture structure, not noise. Standard technique for self-supervised pretraining.
+Take 28×28 MNIST digit images — that is 784 numbers each. An autoencoder has two halves. The **encoder** funnels those 784 numbers down through shrinking layers (784 → 256 → 64 → 32) into a tiny 32-number **code**. The **decoder** takes those 32 numbers and expands them back out (32 → 64 → 256 → 784), trying to reproduce the original image. You train the whole thing on a single goal: make the rebuilt image match the original as closely as possible.
 
-Variational Autoencoder (VAE): instead of encoding to a fixed vector, encode to a distribution N(μ, σ²I). Sample from this distribution to get the code. The ELBO loss: reconstruction loss + KL divergence between the posterior q(z|x) and prior N(0, I). This regularizes the latent space to be continuous — allows interpolation and sampling. VAEs are generative models; standard autoencoders are not.
+[FIGURE: autoencoder]
 
-Contrasted with PCA: PCA finds the best linear subspace. Autoencoders can learn non-linear manifolds. For image data, autoencoders capture non-linear structure that linear PCA misses. For tabular data with approximately linear correlations, PCA and autoencoders give similar performance.
+The magic is in the squeeze. Because everything has to pass through that 32-number **bottleneck**, the network cannot just copy the input across — it is forced to keep only what matters for rebuilding, and throw the rest away. Those 32 numbers become a compact summary of the digit. And unlike PCA, which can only compress along straight lines, an autoencoder is a neural net, so it can learn *curved* structure — which is why its codes separate MNIST digits far better than PCA's do.
 
-NOT-this: "Autoencoders are generative models." Standard autoencoders are not generative — the latent space has no structure that allows meaningful random sampling. Only VAEs (with a probabilistic encoder and KL regularization) define a proper generative process. Sampling from a standard autoencoder's latent space produces garbage outputs unless the sampling point happens to be near a training encoding.`,
+---
+
+**Three flavours worth knowing.**
+
+A **denoising autoencoder** makes the job harder on purpose: it feeds in a *corrupted* input (add noise, or blank out some pixels) and asks the network to reconstruct the *clean* original. To pull that off, the encoder has to learn the real underlying structure rather than memorise surface detail — which makes it a popular way to pre-train representations when you have lots of unlabelled data.
+
+A **variational autoencoder (VAE)** changes what the encoder outputs. Instead of one fixed code per input, it encodes to a little *cloud* of possible codes (a distribution), and adds a term to the loss that keeps those clouds tidy and continuous. That continuity is what makes a VAE *generative*: you can sample a fresh point from the latent space and the decoder turns it into a brand-new, plausible image. A plain autoencoder cannot do this — sample a random point from its latent space and you usually get garbage, because it never learned to fill the gaps between training examples. That is the key difference: VAEs are generative, plain autoencoders are not.
+
+---
+
+**A bonus use: catching anomalies.**
+
+Here is a neat trick that falls out of the design. Train an autoencoder only on *normal* data — normal transactions, healthy sensor readings. It becomes very good at rebuilding normal things. Now feed it something weird: because it never learned to compress that pattern, the rebuild comes out badly and the **reconstruction error** spikes. So a high reconstruction error flags an anomaly, for free.
+
+But it only works if the bottleneck is sized right, and this is the whole game. Too *narrow* and the network cannot even rebuild normal data well, so everything looks anomalous. Too *wide* and the network has enough room to memorise *everything* — including the weird stuff — so nothing looks anomalous. The bottleneck has to be tight enough to force real compression, yet loose enough to reconstruct genuine normal data. Get that balance wrong and the anomaly detector fails silently.`,
     keyPoints: [
       `**Use a denoising autoencoder for pretraining feature representations when you have abundant unlabeled data and limited labeled data.**\n\nThe denoising objective forces robust representation learning, and fine-tuning on the labeled subset consistently outperforms training from scratch. The corruption level is a hyperparameter — start with 20–30% masking and tune on the labeled validation set.`,
       `**Trap: the reconstruction loss can be minimized by memorizing training examples rather than learning compact representations.**\n\nCheck that the latent space clusters by meaningful categories (not just by individual examples) using visualization before using the representations downstream. A latent space that looks like a random cloud when colored by class label has not learned useful structure.`,
@@ -609,6 +635,26 @@ NOT-this: "Autoencoders are generative models." Standard autoencoders are not ge
     ],
     interactivePrompt: `Before you touch the controls: if you make the bottleneck too large, what happens to the autoencoder's ability to flag anomalies, and why?`,
     takeaway: `Autoencoders compress input through a bottleneck and flag anything the decoder cannot reconstruct well — but only if the bottleneck is sized right: too wide and the model memorizes everything including anomalies, too narrow and normal samples also fail to reconstruct.`,
+    figures: {
+      autoencoder: `<svg viewBox="0 0 400 190" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:400px;font-family:var(--font-sans,sans-serif)">
+  <!-- input -->
+  <rect x="34" y="35" width="20" height="120" rx="3" fill="var(--ink-hi)" opacity="0.35"/>
+  <text x="44" y="172" text-anchor="middle" fill="var(--ink-low)" font-size="9">input 784</text>
+  <!-- encoder trapezoid -->
+  <polygon points="60,35 60,155 188,110 188,80" fill="var(--prime)" opacity="0.18" stroke="var(--prime)" stroke-width="1"/>
+  <text x="118" y="30" text-anchor="middle" fill="var(--prime)" font-size="10" font-weight="700">encoder</text>
+  <!-- bottleneck -->
+  <rect x="190" y="80" width="20" height="30" rx="3" fill="var(--amber)" opacity="0.85"/>
+  <text x="200" y="128" text-anchor="middle" fill="var(--amber)" font-size="9" font-weight="700">code 32</text>
+  <!-- decoder trapezoid -->
+  <polygon points="212,80 212,110 340,155 340,35" fill="var(--prime)" opacity="0.18" stroke="var(--prime)" stroke-width="1"/>
+  <text x="282" y="30" text-anchor="middle" fill="var(--prime)" font-size="10" font-weight="700">decoder</text>
+  <!-- output -->
+  <rect x="346" y="35" width="20" height="120" rx="3" fill="var(--ink-hi)" opacity="0.35"/>
+  <text x="356" y="172" text-anchor="middle" fill="var(--ink-low)" font-size="9">rebuild 784</text>
+  <text x="200" y="150" text-anchor="middle" fill="var(--ink-low)" font-size="9">squeeze through the middle, then rebuild</text>
+</svg>`,
+    },
   },
   {
     id: 'gmm',
@@ -686,15 +732,37 @@ NOT-this: "GMM is just soft K-means." Soft K-means is GMM with spherical covaria
     difficulty: 'intermediate',
     estimatedMin: 40,
     tags: ['anomaly detection', 'isolation forest', 'outlier', 'one-class'],
-    summary: `You have an e-commerce transaction stream. 99.9% of transactions are legitimate. 0.1% are fraud. You could train a classifier — but fraud labels are expensive to get, and novel fraud patterns have never been labeled. The challenge: detect the 0.1% that do not look like anything the model has seen before, using only the 99.9% normal transactions as training data.
+    summary: `Every day your e-commerce site processes a flood of transactions. **99.9%** are ordinary. **0.1%** are fraud — and the tricky part is that the newest fraud looks like nothing anyone has labelled before. You cannot just train a fraud classifier, because you have almost no fraud examples and the next attack will be one you have never seen. So you flip the problem: instead of learning what fraud looks like, learn what *normal* looks like, and flag anything that does not fit. That is **anomaly detection**.
 
-Three paradigms. Statistical methods: fit a distribution to normal data, flag points in the low-probability tail. Assumes you can model normality as Gaussian or Gaussian mixture. Isolation Forest works differently — randomly partition the feature space; anomalies are isolated with fewer splits. Reconstruction-based: autoencoder trained on normal data; at test time, anomalies have high reconstruction error (the model never learned to reconstruct anomalous patterns). Density-based: LOF (Local Outlier Factor) compares local density of a point to its neighbors; anomalies have lower density than neighbors.
+There are a few different ways to define "does not fit," and each one is a different algorithm.
 
-Isolation Forest: randomly select a feature, randomly select a split value between the min and max, split. Anomalies are isolated with very few splits (short path length). Normal points require many splits. Average path length over a forest of random trees is the anomaly score. O(n log n), scales to millions of points.
+---
 
-Threshold selection: anomaly scores are continuous, you need a threshold. Options: fixed percentile (flag top 1% as anomalous), business-rule calibrated (what fraction of your review budget can investigate?), precision-recall tradeoff against any available labels.
+**Statistical: live in the fat part of the distribution.**
 
-NOT-this: "Anomaly detection requires labeled anomalies." Unsupervised anomaly detection trains on normal data only and flags outliers without needing anomaly labels. This is the operational requirement in most cases — you want to detect novel attacks or failures that do not match any known pattern. Labels help evaluate methods but are not required to train them.`,
+Fit a distribution to your normal data (a bell curve, say) and flag any point that lands far out in the thin tail. Simple, and great when "normal" really does form a neat blob — but it struggles the moment normal has a lumpy, complicated shape.
+
+---
+
+**Isolation Forest: anomalies are easy to fence off.**
+
+This one has a genuinely clever insight. Pick a feature at random, pick a random value to split on, and cut the data in two. Keep cutting. A *normal* point is buried in a dense crowd, so it takes many random cuts to fence it off by itself. An *anomaly* sits out on its own, so just a couple of cuts isolate it. So the anomaly score is simply *how few cuts it took to isolate this point* — fewer cuts, more anomalous.
+
+[FIGURE: isolation]
+
+It is fast (scales to millions of points), makes no assumption about the shape of normal, and is the sensible default for tabular data.
+
+---
+
+**Reconstruction and density: two more lenses.**
+
+A **reconstruction** method (the autoencoder from the last lesson) learns to rebuild normal data, then flags anything it rebuilds badly. A **density** method like **LOF** (Local Outlier Factor) compares how crowded a point's neighbourhood is versus its neighbours' neighbourhoods — a point sitting in a sparse patch surrounded by dense ones stands out. The clever bit about LOF is that it judges density *locally*, so it can flag the odd point at the edge of a loose cluster without wrongly flagging an entire tight-but-small cluster.
+
+---
+
+**Turning a score into a decision (and checking it works).**
+
+All of these produce a continuous *score*, not a yes/no. To act on it you pick a threshold — flag the top 1%, or flag as many as your review team can actually investigate, or tune it against whatever few labels you have. And do not fool yourself into thinking you need labelled anomalies to *train* — you do not, and that is the whole point. But grab even a tiny labelled set to *check* the detector: if the precision at your threshold is not clearly better than the base rate, the method is barely beating random and you should try another. A common practical check is Precision@50 — have an expert eyeball the top 50 flagged items and count how many are real.`,
     keyPoints: [
       `**Use Isolation Forest as your default anomaly detector for tabular data — it is fast (O(n log n)), handles high dimensions, requires no distributional assumption, and has one tunable parameter (contamination rate = expected fraction of anomalies).**\n\nFor time-series data with contextual anomalies, switch to an LSTM or transformer autoencoder that reconstructs sequences — Isolation Forest treats each point independently and misses anomalies that only appear anomalous in context.`,
       `**Trap: using per-feature Z-scores to flag anomalies.**\n\nMultivariate anomalies — combinations that are individually normal but jointly unusual — are invisible to per-feature analysis. A transaction of $100 at 3pm in New York is normal on each dimension; together they might be anomalous for a user who has never used the card outside California. Always use multivariate methods.`,
@@ -745,6 +813,32 @@ NOT-this: "Anomaly detection requires labeled anomalies." Unsupervised anomaly d
     interactivePrompt: `Before you touch the controls: why does Isolation Forest give anomalies a shorter average path length, and what does that reveal about the assumption it is making about anomalies?`,
     takeaway: `Each anomaly detection algorithm encodes a different definition of "unusual" — Isolation Forest flags what is easy to isolate, LOF flags what is sparser than its neighbors, autoencoders flag what is hard to reconstruct — pick the definition that matches the anomalies you actually expect.`,
     interactiveId: 'anomaly_detection_viz',
+    figures: {
+      isolation: `<svg viewBox="0 0 400 190" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:400px;font-family:var(--font-sans,sans-serif)">
+  <text x="100" y="18" text-anchor="middle" fill="var(--ink-hi)" font-size="10" font-weight="700">normal point</text>
+  <text x="300" y="18" text-anchor="middle" fill="var(--ink-hi)" font-size="10" font-weight="700">anomaly</text>
+  <rect x="20" y="28" width="160" height="120" rx="4" fill="none" stroke="var(--rim)" stroke-width="1"/>
+  <rect x="220" y="28" width="160" height="120" rx="4" fill="none" stroke="var(--rim)" stroke-width="1"/>
+  <!-- left: dense cluster, many cuts -->
+  <g fill="var(--ink-low)" opacity="0.6">
+    <circle cx="70" cy="70" r="3"/><circle cx="90" cy="60" r="3"/><circle cx="110" cy="72" r="3"/><circle cx="80" cy="90" r="3"/><circle cx="105" cy="95" r="3"/><circle cx="125" cy="82" r="3"/><circle cx="95" cy="110" r="3"/><circle cx="118" cy="108" r="3"/><circle cx="72" cy="105" r="3"/>
+  </g>
+  <g stroke="var(--prime)" stroke-width="1" opacity="0.8">
+    <line x1="85" y1="28" x2="85" y2="148"/><line x1="120" y1="28" x2="120" y2="148"/><line x1="20" y1="78" x2="180" y2="78"/><line x1="20" y1="100" x2="180" y2="100"/>
+  </g>
+  <circle cx="100" cy="88" r="4.5" fill="var(--amber)"/>
+  <text x="100" y="164" text-anchor="middle" fill="var(--ink-low)" font-size="9">many cuts to isolate</text>
+  <!-- right: cluster + lone anomaly, 2 cuts -->
+  <g fill="var(--ink-low)" opacity="0.6">
+    <circle cx="260" cy="100" r="3"/><circle cx="278" cy="92" r="3"/><circle cx="295" cy="105" r="3"/><circle cx="270" cy="118" r="3"/><circle cx="290" cy="122" r="3"/><circle cx="255" cy="115" r="3"/>
+  </g>
+  <g stroke="var(--prime)" stroke-width="1" opacity="0.8">
+    <line x1="330" y1="28" x2="330" y2="148"/><line x1="220" y1="55" x2="380" y2="55"/>
+  </g>
+  <circle cx="352" cy="42" r="4.5" fill="var(--amber)"/>
+  <text x="300" y="164" text-anchor="middle" fill="var(--ink-low)" font-size="9">2 cuts to isolate</text>
+</svg>`,
+    },
   },
   {
     id: 'topic_modeling',
@@ -753,15 +847,31 @@ NOT-this: "Anomaly detection requires labeled anomalies." Unsupervised anomaly d
     difficulty: 'intermediate',
     estimatedMin: 38,
     tags: ['topic modeling', 'LDA', 'NMF', 'NLP'],
-    summary: `You have 100,000 customer support tickets. "App crashes when I tap checkout," "payment keeps declining," "can't log in after update," "no sound in video calls" — you need to discover recurring themes without labeling each ticket. You have no predefined categories. Topic modeling finds latent themes by analyzing word co-occurrence patterns across the corpus.
+    summary: `You have 100,000 customer-support tickets and no time to read them. "App crashes at checkout," "payment keeps declining," "can't log in after the update," "no sound on video calls" — somewhere in that pile are a handful of recurring themes, and you want to find them *without* labelling every ticket by hand. **Topic modeling** does exactly this: it reads the whole corpus and discovers the hidden themes automatically, just from which words tend to show up together.
 
-LDA (Latent Dirichlet Allocation): a generative model. Each document is a mixture of topics. Each topic is a distribution over words. Generative story: for each document, sample a topic mixture (from a Dirichlet prior). For each word in the document, sample a topic from the mixture, then sample a word from that topic's word distribution. Inference inverts this — given the observed words, infer the latent topic mixtures and word distributions.
+The core idea rests on one observation: words that belong to the same theme keep appearing together. "Payment," "declined," "card," and "refund" cluster in billing tickets; "crash," "freeze," "update," and "restart" cluster in bug reports. So a topic is really just *a group of words that travel together*, and a document is usually a *blend* of a few topics at once — a ticket might be 70% billing, 30% bug.
 
-LDA hyperparameters: K (number of topics — must be specified), α (document-topic concentration, lower α = documents use fewer topics), β (topic-word concentration, lower β = topics use fewer words). Coherence score (average PMI of top words per topic) measures topic quality — higher is better.
+[FIGURE: topic_mixture]
 
-Alternatives: NMF (Non-negative Matrix Factorization) — factorize the document-term matrix into W (document-topic) × H (topic-term), both non-negative. Faster and often better for short documents. BERTopic — cluster document embeddings (from BERT or Sentence Transformers), extract top words per cluster using TF-IDF. Best for short texts; captures semantic similarity that word co-occurrence misses.
+---
 
-NOT-this: "More topics always gives better results." More topics can give semantically coherent but overlapping or overly specific topics that are not actionable. Fewer topics give broad themes but miss detail. The right K is the largest K for which all topics are semantically distinct and interpretable by domain experts. Coherence scores help but require human validation.`,
+**LDA: the classic recipe.**
+
+**Latent Dirichlet Allocation (LDA)** is the workhorse. Its picture of the world: every topic is a bag of words with different weights (the "billing" topic leans heavily on "payment," "card," "declined"), and every document is a mixture of a few such topics. LDA starts from the finished documents and works *backwards* — given only the words it can actually see, it figures out what set of topics, and what per-document blend, most plausibly produced them. You tell it **K**, the number of topics to look for; it hands back the topics and each document's mix.
+
+---
+
+**The alternatives, and when they win.**
+
+**NMF** (non-negative matrix factorization) factors the word-count table into "documents × topics" and "topics × words," keeping everything positive so the pieces add up rather than cancel out — it is faster than LDA and often better on short documents. **BERTopic** takes a more modern route: it turns each document into a meaning-based embedding (from a model like BERT), clusters those, and reads off each cluster's characteristic words. Because it works on *meaning* rather than raw word matches, it shines on short, messy text — it knows "crash" and "freeze" are related, where LDA just sees two unrelated words.
+
+---
+
+**The one hard choice: how many topics?**
+
+There is no free lunch on picking K. Ask for too few topics and you get vague mega-themes that blur real distinctions; ask for too many and you get near-duplicate, hair-splitting topics nobody can act on. It is tempting to lean on **perplexity** (a statistical fit score), but that is a trap: perplexity almost always keeps "improving" as you add topics, so it will happily push you toward far too many. **Coherence** (do a topic's top words actually belong together?) is the better guide — it peaks at a sensible K and then falls as topics start to fragment. But no number settles it. The real test is human: can a domain expert put a clear one-word label on *every* topic without hedging? The right K is the largest one where that is still true.
+
+(One practical note: LDA lives or dies on preprocessing. Strip out stop words and ultra-common terms first, or every topic ends up dominated by "the," "data," and "please," no matter how you tune it.)`,
     keyPoints: [
       `**Use BERTopic over LDA for short texts (tweets, support tickets, product reviews) — BERT embeddings capture synonymy and semantic relationships that word co-occurrence statistics miss.**\n\nLDA sees "crash" and "fail" as different words. BERTopic knows they are semantically related. For short texts where individual words carry insufficient co-occurrence signal, embedding-based methods dominate word-count-based methods.`,
       `**Trap: not preprocessing aggressively before LDA.**\n\nRemove stop words, apply stemming or lemmatization, remove words appearing in fewer than 5 or more than 80% of documents. LDA without preprocessing produces incoherent topics dominated by frequent function words regardless of K or the number of training iterations.`,
@@ -811,5 +921,22 @@ NOT-this: "More topics always gives better results." More topics can give semant
     ],
     interactivePrompt: `Before you touch the controls: why does perplexity keep improving as you add more topics, and why does that make it a poor criterion for choosing K?`,
     takeaway: `Statistical fit (perplexity) and human interpretability (coherence) optimize different objectives and disagree about the optimal K — the only test that matters is whether domain experts can assign a meaningful label to every topic without hedging.`,
+    figures: {
+      topic_mixture: `<svg viewBox="0 0 380 180" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:380px;font-family:var(--font-sans,sans-serif)">
+  <text x="190" y="20" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">one ticket = a blend of topics</text>
+  <text x="30" y="52" fill="var(--ink-low)" font-size="9">ticket</text>
+  <rect x="70" y="38" width="186" height="20" rx="3" fill="var(--prime)" opacity="0.8"/>
+  <rect x="256" y="38" width="54" height="20" rx="3" fill="var(--amber)" opacity="0.85"/>
+  <text x="163" y="52" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">billing 70%</text>
+  <text x="283" y="52" text-anchor="middle" fill="#000" font-size="9" font-weight="700">bug 30%</text>
+  <!-- topic word lists -->
+  <rect x="40" y="86" width="14" height="14" rx="2" fill="var(--prime)" opacity="0.8"/>
+  <text x="62" y="97" fill="var(--ink-hi)" font-size="10" font-weight="700">billing topic:</text>
+  <text x="62" y="114" fill="var(--ink-low)" font-size="10">payment · card · declined · refund</text>
+  <rect x="40" y="132" width="14" height="14" rx="2" fill="var(--amber)" opacity="0.85"/>
+  <text x="62" y="143" fill="var(--ink-hi)" font-size="10" font-weight="700">bug topic:</text>
+  <text x="62" y="160" fill="var(--ink-low)" font-size="10">crash · freeze · update · restart</text>
+</svg>`,
+    },
   },
 ]
