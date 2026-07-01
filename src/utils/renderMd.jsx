@@ -1,10 +1,16 @@
 import React from 'react'
 
-// Convert common LaTeX macros to readable Unicode/text
-function tex(str) {
+// Convert LaTeX macros → Unicode symbols + HTML sup/sub tags
+// Returns an HTML string safe to use with dangerouslySetInnerHTML
+function texToHtml(str) {
   if (!str) return str
+  // Escape HTML special chars first (before we add our own <sup>/<sub> tags)
+  str = str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
   return str
-    // Greek letters
+    // ── Greek letters
     .replace(/\\partial/g, '∂')
     .replace(/\\nabla/g, '∇')
     .replace(/\\alpha/g, 'α')
@@ -36,7 +42,7 @@ function tex(str) {
     .replace(/\\psi/g, 'ψ')
     .replace(/\\omega/g, 'ω')
     .replace(/\\Omega/g, 'Ω')
-    // Operators & relations
+    // ── Operators & relations
     .replace(/\\cdot/g, '·')
     .replace(/\\times/g, '×')
     .replace(/\\div/g, '÷')
@@ -61,9 +67,9 @@ function tex(str) {
     .replace(/\\neg/g, '¬')
     .replace(/\\land/g, '∧')
     .replace(/\\lor/g, '∨')
-    // Functions & operations
-    .replace(/\\arg\\s*max/g, 'argmax')
-    .replace(/\\arg\\s*min/g, 'argmin')
+    // ── Functions
+    .replace(/\\arg\s*max/g, 'argmax')
+    .replace(/\\arg\s*min/g, 'argmin')
     .replace(/\\max/g, 'max')
     .replace(/\\min/g, 'min')
     .replace(/\\log/g, 'log')
@@ -77,7 +83,8 @@ function tex(str) {
     .replace(/\\sum/g, 'Σ')
     .replace(/\\prod/g, 'Π')
     .replace(/\\int/g, '∫')
-    // Structures — order matters: more specific first
+    // ── Structures — more specific first, before generic brace removal
+    .replace(/\\underbrace\{([^}]*)\}_\{[^}]*\}/g, '$1')
     .replace(/\\sqrt\{([^}]+)\}/g, '√($1)')
     .replace(/\\sqrt/g, '√')
     .replace(/\\frac\{([^}]*)\}\{([^}]*)\}/g, '($1)/($2)')
@@ -86,14 +93,18 @@ function tex(str) {
     .replace(/\\mathbb\{([^}]*)\}/g, '$1')
     .replace(/\\mathcal\{([^}]*)\}/g, '$1')
     .replace(/\\boldsymbol\{([^}]*)\}/g, '$1')
-    .replace(/\\hat\{([^}]*)\}/g, '$1̂')
-    .replace(/\\bar\{([^}]*)\}/g, '$1̄')
-    .replace(/\\tilde\{([^}]*)\}/g, '$1̃')
-    .replace(/\\vec\{([^}]*)\}/g, '$1⃗')
-    .replace(/\\overline\{([^}]*)\}/g, '$1̄')
-    .replace(/\\underbrace\{([^}]*)\}_\{[^}]*\}/g, '$1')
-    // Remove remaining braces (convert to parens if they look structural)
-    .replace(/\{/g, '(').replace(/\}/g, ')')
+    .replace(/\\hat\{([^}]*)\}/g, '$1&#x0302;')
+    .replace(/\\bar\{([^}]*)\}/g, '$1&#x0304;')
+    .replace(/\\tilde\{([^}]*)\}/g, '$1&#x0303;')
+    .replace(/\\vec\{([^}]*)\}/g, '$1&#x20D7;')
+    .replace(/\\overline\{([^}]*)\}/g, '$1&#x0304;')
+    // ── Superscripts and subscripts — BEFORE generic brace removal
+    .replace(/\^\{([^}]*)\}/g, '<sup>$1</sup>')
+    .replace(/\^([^{<\s])/g, '<sup>$1</sup>')
+    .replace(/_\{([^}]*)\}/g, '<sub>$1</sub>')
+    .replace(/_([^{<\s_,;:.])/g, '<sub>$1</sub>')
+    // ── Remove any remaining braces
+    .replace(/\{/g, '').replace(/\}/g, '')
 }
 
 export function renderMd(text, containerStyle = {}, figures = {}) {
@@ -146,10 +157,10 @@ export function renderMd(text, containerStyle = {}, figures = {}) {
               margin: '1rem 0',
               borderRadius: '0 4px 4px 0',
               overflowX: 'auto',
-              fontSize: '0.88rem',
-            }}>
-              {tex(eqMatch[1].trim())}
-            </div>
+              fontSize: '0.9rem',
+            }}
+              dangerouslySetInnerHTML={{ __html: texToHtml(eqMatch[1].trim()) }}
+            />
           )
         }
 
@@ -215,8 +226,20 @@ export function renderMd(text, containerStyle = {}, figures = {}) {
   )
 }
 
+// Inline math style — shared between block and inline equation renderers
+const mathStyle = {
+  fontFamily: 'var(--font-mono)',
+  color: 'var(--prime)',
+  background: 'var(--depth)',
+  padding: '0.1em 0.35em',
+  borderRadius: '3px',
+  fontSize: '0.88em',
+  whiteSpace: 'nowrap',
+  display: 'inline',
+}
+
 function renderInline(text) {
-  // Split on **bold**, `code`, and $equation$ — order matters: try longer patterns first
+  // Split on **bold**, `code`, and $equation$
   const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`|\$[^\$\n]+\$)/g)
   return parts.map((part, i) => {
     if (part.startsWith('**') && part.endsWith('**')) {
@@ -239,13 +262,11 @@ function renderInline(text) {
     }
     if (part.startsWith('$') && part.endsWith('$')) {
       return (
-        <code key={i} style={{
-          fontFamily: 'var(--font-mono)', color: 'var(--prime)',
-          background: 'var(--depth)', padding: '0.1em 0.35em',
-          borderRadius: '3px', fontSize: '0.88em', whiteSpace: 'nowrap',
-        }}>
-          {tex(part.slice(1, -1))}
-        </code>
+        <span
+          key={i}
+          style={mathStyle}
+          dangerouslySetInnerHTML={{ __html: texToHtml(part.slice(1, -1)) }}
+        />
       )
     }
     return part
