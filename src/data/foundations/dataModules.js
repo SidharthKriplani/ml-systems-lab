@@ -6,17 +6,35 @@ export const DATA_MODULES = [
     difficulty: 'foundational',
     estimatedMin: 35,
     tags: ['data quality', 'profiling', 'missing values', 'outliers'],
-    summary: `A vendor sends you a 2-million-row dataset with 47 features. Before writing a single line of modeling code, you run a data quality audit. Within 20 minutes you find: column \`income\` has type string — it should be float. Column \`date_of_birth\` has values ranging from 1800 to 2300, clearly corrupt. Column \`transaction_amount\` has 12% nulls with a structured pattern — large transactions are far more likely to be missing, meaning the missingness is itself a predictive signal. And 30,000 rows are exact duplicates. Without the audit, you would have trained on this noise for days, watched metrics look reasonable, deployed the model, and begun debugging in production where the cost of each correction is an order of magnitude higher.
+    summary: `A vendor hands you a shiny 2-million-row dataset with 47 columns. Before you write a single line of modeling code, you spend 20 minutes just *looking* at the data — a **data quality audit** — and here is what you find. The \`income\` column is stored as text, not numbers. \`date_of_birth\` has values from 1800 to 2300. \`transaction_amount\` is 12% missing, and the missing ones are suspiciously the *large* transactions. And 30,000 rows are exact duplicates. Twenty minutes of looking just saved you a week of chasing a broken model in production.
 
-The audit checklist covers seven axes. Schema: are column types correct, are expected columns present? Missing values: what is the null rate per column, and is missingness random or structured? Duplicates: exact row matches, near-duplicates on a key column? Distribution: outliers, unexpected skew, bimodal distributions that should be unimodal? Target: class balance, label noise, implausible label-feature combinations? Leakage: any feature that uses information unavailable at prediction time? Coverage: does the population in this dataset match the population the model will be deployed against?
+Here is why this step is non-negotiable, and it is subtler than "garbage in, garbage out." A powerful model does not choke on bad data — it *learns from it, confidently*. Feed a gradient-boosted tree rows where \`age = -3\` and it will happily decide that negative ages predict something. Your training metrics look fine. The model ships. It assigns high confidence to wrong answers and never once flags that anything is off. The real slogan is "garbage in, *confident* garbage out," and the bill arrives weeks later when the true labels do.
 
-The danger is not that errors exist — it is that powerful models learn from them confidently. A gradient-boosted tree trained on data where \`age = -3\` for some rows will learn that negative ages predict something. Training metrics will look fine. The model will be deployed before anyone notices. This is the correct framing: not "garbage in, garbage out" but "garbage in, confident garbage out." The model assigns high predicted probabilities to wrong outcomes and does not flag uncertainty. The error is invisible until ground-truth labels arrive.
+---
 
-Silent row loss is a specific failure mode that deserves its own mention. A referential integrity failure after a table join — foreign key values in one table that have no match in the other — causes rows to vanish. The pipeline reports success. 120,000 training examples disappear. Those missing rows are almost never a random sample; they are typically a specific cohort, older customers or a different region, that becomes unrepresented in training.
+**What to actually check.**
 
-Great Expectations lets you codify the entire checklist as executable assertions: "column income has type float64, range 0–10,000,000, null rate below 5%." Run these on every incoming data batch in CI/CD. A failed assertion is a loud pipeline error on day one. Without them, it is a mysterious production regression six weeks later.
+A good audit sweeps seven things:
 
-**NOT this.** "If the pipeline runs without errors, the data is good." Silent corruption is more dangerous than crashes. A date column typed as string processes without error but produces garbage features. A join that loses rows reports success. Duplicate rows are not errors. Data quality requires explicit assertions, not the absence of pipeline failures. Profiling is not a one-time setup step either — distributions shift as new cohorts are onboarded, upstream systems change, and business events occur. A column with 2% nulls in January that has 18% nulls in June is a data collection problem, not a model problem. You will not know the difference without running the audit again.`,
+- **Schema** — are the column types right, and are all the expected columns present?
+- **Missing values** — how much is null per column, and is the missingness random or *patterned*?
+- **Duplicates** — exact repeated rows, or near-duplicates on a key?
+- **Distribution** — outliers, strange skew, two humps where you expected one?
+- **Target** — is the label balanced, and are there noisy or impossible label/feature combos?
+- **Leakage** — does any feature secretly use information you would not have at prediction time?
+- **Coverage** — does this data actually resemble the population you will deploy against?
+
+---
+
+**The sneakiest failure: rows that silently vanish.**
+
+One failure deserves special mention because it hides so well. Join two tables on customer ID, and if some IDs in one table have no match in the other, those rows simply *disappear* — no error, the pipeline reports success, and 120,000 training examples are gone. And they are almost never a random 120,000: they tend to be a specific group (older customers, one region), which is now missing entirely from training. Your model quietly learns nothing about them.
+
+---
+
+**Make the checks automatic.**
+
+The fix is to turn the whole checklist into *executable assertions* that run on every new batch of data — "column income must be a float between 0 and 10 million with under 5% nulls." Tools like Great Expectations do exactly this. When an assertion fails you get a loud error on day one instead of a mysterious performance drop six weeks later. And re-run these at *every* retrain, not just once: a column that was 2% null in January and 18% null in June is a data-collection problem, and you will never notice it without looking again. A pipeline running without crashing is not the same thing as the data being good.`,
     keyPoints: [
       `**Run a data quality audit before any EDA or modeling — 30 minutes of auditing routinely saves days of debugging model failures caused by silent data issues.**\n\nThe 2-million-row vendor dataset example is representative: type mismatches, impossible values, structured missingness, and 30,000 duplicates all coexist quietly until you look for them explicitly. Powerful models do not flag dirty data — they learn from it confidently.`,
       `**Trap: auditing only the training set. Data quality gates must run on every new incoming batch in production — upstream systems change schemas, inject nulls, and shift distributions without notice.**\n\nA column with 2% nulls in January training data and 18% nulls in June production data is a structural change in data collection. The model trained on the low-null version will impute using training-fit parameters that no longer fit the incoming distribution, degrading silently on the most information-rich rows.`,
@@ -84,17 +102,31 @@ Great Expectations lets you codify the entire checklist as executable assertions
     difficulty: 'foundational',
     estimatedMin: 40,
     tags: ['missing data', 'imputation', 'MCAR', 'MAR', 'MNAR', 'MICE'],
-    summary: `You are building a hospital readmission prediction model. Column \`lab_result_creatinine\` is 32% null. The instinct is to ask "how do I fill in these values?" The correct question is "why are these values missing?" — because the answer determines everything about how you should treat them.
+    summary: `You are building a model to predict which hospital patients will be readmitted. One column — a creatinine lab result — is missing for 32% of patients. The natural instinct is to ask "how do I fill in these blanks?" But that is the wrong first question. The right one is: **why are they missing?** Because the reason completely changes what you should do.
 
-You check with the clinical team. Patients with mild conditions often skip this test because the clinician judged it unnecessary — the missingness depends on observed severity indicators. That is MAR: Missing At Random, where "at random" means conditional on observed variables. Separately, patients who are too critically ill to survive the blood draw also have nulls. That is MNAR: Missing Not At Random, where the missing value depends on the value itself — the sickest patients have the most missing creatinine readings.
+So you ask the clinical team, and you learn there are actually *two* different reasons. Some patients had mild symptoms, so the doctor never bothered ordering the test — here the missingness depends on things you *can* see (their other symptoms). Other patients were too critically ill to draw blood — here the missingness depends on the very thing you *cannot* see (how bad their creatinine would have been). These two look identical in the data — both just show up as "null" — but they demand completely different treatment.
 
-These require completely different treatments. For MAR, model-based imputation works: MICE trains a regression on all other observed columns and predicts the missing creatinine from patient age, comorbidities, and other labs. It exploits the correlation structure the clinical team told you about. For MNAR, any imputation fills in systematically wrong values for the highest-risk group. If the worst creatinine values are precisely the ones that are missing, imputing the column mean assigns a near-normal value to the sickest patients. The model trains on data where critical patients look average, learns low-risk predictions for them, and systematically misses the people who most need intervention. No statistical method can fix MNAR imputation without modeling the missingness mechanism directly.
+[FIGURE: missingness_types]
 
-The imputation ladder runs from simplest to most sophisticated: mean/median imputation is fast but distorts variance and destroys correlations among features. KNN imputation finds the k most similar rows by Euclidean distance on non-missing features and averages their values — it respects local distribution structure rather than global means, but it is O(n²) and requires feature scaling. MICE iterates: for each missing column, train a regression using all other columns as predictors, impute, then repeat until convergence. It produces the most accurate estimates for MAR data but requires managing fitted models as pipeline state at serving time.
+Statisticians name three cases. **MCAR** (missing completely at random): the blanks are pure chance, unrelated to anything — a lab machine randomly dropped some readings. **MAR** (missing at random): the blanks depend on things you *did* observe — mild patients skip the test. **MNAR** (missing not at random): the blanks depend on the missing value *itself* — the sickest patients, with the worst readings, are exactly the ones missing them.
 
-Across all mechanisms, one rule applies: always add a binary indicator column alongside the imputed value for any feature with more than 5% missingness. The indicator captures "this value was absent," which is itself predictive when missingness is informative. A model that sees both the imputed value and the indicator can learn from the pattern of absence. A model with only the imputed value permanently loses that signal.
+---
 
-**NOT this.** "Just fill with mean." Mean imputation shrinks variance and destroys correlations. If 30% of a key feature is missing, imputing the mean creates 600,000 data points all at the same value. The model learns that this value has near-zero variance, inflates confidence on imputed rows, and can create spurious patterns. For missingness above 5%, use MICE or at minimum an indicator variable. The cost of mean imputation is not just accuracy — it is the model systematically performing worst on the patients, customers, or users who most need correct predictions.`,
+**Why the mechanism decides everything.**
+
+For **MCAR** and **MAR**, you can fill the blanks intelligently. Since MAR missingness is explained by other columns, a model can *predict* the missing creatinine from a patient's age, comorbidities, and other labs. That is what **MICE** does: for each column with gaps, it trains a little regression on all the other columns and predicts what belongs in the blank, looping until the estimates settle.
+
+For **MNAR**, you are in trouble, and no clever statistics can rescue you. If the worst readings are precisely the ones missing, then filling in the *average* hands the sickest patients a reassuringly normal number. The model learns that these patients look fine, predicts low risk for them, and systematically fails exactly the people who most need help. You cannot impute your way out of MNAR without explicitly modeling *why* the data is missing.
+
+---
+
+**The imputation ladder, simplest to fanciest.**
+
+**Mean/median**: replace blanks with the column's average. Fast, but it crushes the column's variance and erases its relationships with other features. **KNN**: find the most similar complete rows and borrow their values — respects local structure, but slow and needs scaled features. **MICE**: the regression-based looping method above — most accurate for MAR data, but you have to carry the fitted models around at serving time.
+
+And one rule that holds no matter the mechanism: for any column more than about 5% missing, **add a little yes/no "was this missing?" column next to it.** The mere *fact* that a value was absent is often predictive (a skipped test says something), and a model given both the filled-in value and the was-missing flag can learn from the pattern of absence. Impute alone and you throw that signal away forever.
+
+(And the usual leakage warning: fit your imputer on the *training* data only. Compute the fill-in value using the test set too, and you have leaked the future into the past.)`,
     keyPoints: [
       `**Always add a binary indicator variable alongside imputation for any column with more than 5% missing — the fact that a value is missing is often more predictive than the imputed value itself.**\n\nFor the creatinine column: a model trained with only imputed values learns from the imputation. A model trained with imputed values plus a \`creatinine_was_null\` indicator can learn that absence itself is a clinical signal. Never throw away the missingness signal by imputing alone.`,
       `**Trap: fitting the imputer on the entire dataset before splitting. This leaks test-set statistics into training. Always fit imputers only on training data, then apply to validation and test.**\n\nFitting a mean imputer on train + test computes a mean influenced by test-set values. The training imputation now reflects the test distribution — a form of leakage that produces optimistic metrics which collapse in production. Use an sklearn Pipeline to enforce fit-on-train-only structurally, not through discipline.`,
@@ -144,6 +176,47 @@ Across all mechanisms, one rule applies: always add a binary indicator column al
         answer: `B`,
       },
     ],
+    figures: {
+      missingness_types: `<svg viewBox="0 0 390 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:390px;font-family:var(--font-sans,sans-serif)">
+  <text x="65" y="20" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">MCAR</text>
+  <text x="195" y="20" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">MAR</text>
+  <text x="325" y="20" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">MNAR</text>
+  <!-- MCAR: random blanks -->
+  <g>
+    <rect x="40" y="30" width="50" height="18" rx="2" fill="var(--prime)" opacity="0.7"/>
+    <rect x="40" y="52" width="50" height="18" rx="2" fill="var(--amber)"/><text x="65" y="65" text-anchor="middle" fill="#000" font-size="11" font-weight="700">?</text>
+    <rect x="40" y="74" width="50" height="18" rx="2" fill="var(--prime)" opacity="0.7"/>
+    <rect x="40" y="96" width="50" height="18" rx="2" fill="var(--prime)" opacity="0.7"/>
+    <rect x="40" y="118" width="50" height="18" rx="2" fill="var(--amber)"/><text x="65" y="131" text-anchor="middle" fill="#000" font-size="11" font-weight="700">?</text>
+  </g>
+  <text x="65" y="158" text-anchor="middle" fill="var(--ink-low)" font-size="8">blanks fall</text>
+  <text x="65" y="169" text-anchor="middle" fill="var(--ink-low)" font-size="8">at random</text>
+  <!-- MAR: blanks where a visible trait = mild (top) -->
+  <g>
+    <rect x="170" y="30" width="50" height="18" rx="2" fill="var(--amber)"/><text x="195" y="43" text-anchor="middle" fill="#000" font-size="11" font-weight="700">?</text>
+    <rect x="170" y="52" width="50" height="18" rx="2" fill="var(--amber)"/><text x="195" y="65" text-anchor="middle" fill="#000" font-size="11" font-weight="700">?</text>
+    <rect x="170" y="74" width="50" height="18" rx="2" fill="var(--prime)" opacity="0.7"/>
+    <rect x="170" y="96" width="50" height="18" rx="2" fill="var(--prime)" opacity="0.7"/>
+    <rect x="170" y="118" width="50" height="18" rx="2" fill="var(--prime)" opacity="0.7"/>
+  </g>
+  <text x="228" y="43" fill="var(--ink-low)" font-size="8">mild</text>
+  <text x="228" y="127" fill="var(--ink-low)" font-size="8">sick</text>
+  <text x="195" y="158" text-anchor="middle" fill="var(--ink-low)" font-size="8">blanks track a</text>
+  <text x="195" y="169" text-anchor="middle" fill="var(--ink-low)" font-size="8">visible trait</text>
+  <!-- MNAR: sorted by true value, blanks at the extreme -->
+  <g>
+    <rect x="300" y="30" width="50" height="18" rx="2" fill="var(--prime)" opacity="0.7"/>
+    <rect x="300" y="52" width="50" height="18" rx="2" fill="var(--prime)" opacity="0.7"/>
+    <rect x="300" y="74" width="50" height="18" rx="2" fill="var(--prime)" opacity="0.7"/>
+    <rect x="300" y="96" width="50" height="18" rx="2" fill="var(--amber)"/><text x="325" y="109" text-anchor="middle" fill="#000" font-size="11" font-weight="700">?</text>
+    <rect x="300" y="118" width="50" height="18" rx="2" fill="var(--amber)"/><text x="325" y="131" text-anchor="middle" fill="#000" font-size="11" font-weight="700">?</text>
+  </g>
+  <text x="358" y="39" fill="var(--ink-low)" font-size="8">low</text>
+  <text x="358" y="131" fill="var(--ink-low)" font-size="8">high</text>
+  <text x="325" y="158" text-anchor="middle" fill="var(--ink-low)" font-size="8">blanks are the</text>
+  <text x="325" y="169" text-anchor="middle" fill="var(--ink-low)" font-size="8">worst values</text>
+</svg>`,
+    },
   },
   {
     id: 'feature_engineering',
@@ -152,24 +225,44 @@ Across all mechanisms, one rule applies: always add a binary indicator column al
     difficulty: 'foundational',
     estimatedMin: 45,
     tags: ['feature engineering', 'transformations', 'cyclical encoding', 'interaction terms', 'log transform'],
-    interactivePrompt: `Before you touch the controls: if you gave a model three raw numbers — someone\`s annual income in dollars, the number of days since they opened their account, and the date of their last transaction — could it learn to predict credit default without you doing anything to those columns first?`,
-    summary: `You are trying to predict credit default. You have three raw features: income in dollars, account age in days, and last transaction date. You feed them directly into a logistic regression and the model underperforms. The instinct is to add more data or switch to a fancier model. That instinct is wrong — the problem is that the raw features do not have the geometry the model needs to learn from.
+    interactivePrompt: `Before you touch the controls: if you gave a model three raw numbers — someone's annual income in dollars, the number of days since they opened their account, and the date of their last transaction — could it learn to predict credit default without you doing anything to those columns first?`,
+    summary: `You want to predict credit default, and you have three raw columns: income in dollars, account age in days, and the date of the last transaction. You feed them straight into a model and it does poorly. The tempting move is to grab more data or a fancier model. Both are wrong. The problem is that the raw columns do not present the information in a shape the model can use — and reshaping them is called **feature engineering**.
 
-Consider income first. The gap between $50,000 and $51,000 annual income is financially irrelevant for credit risk. The gap between $50,000 and $100,000 matters a great deal. But in raw dollar form, both gaps measure as 1,000 or 50,000 units — the model assigns them equal geometric distance. A log transform fixes this: log($50K) to log($100K) is a meaningful step; log($900K) to log($950K) is nearly nothing. The transformation compresses the upper tail and stretches the lower range where the real variation is. The model is not smarter after the transform — the geometry of the problem is finally correct for it to find the relationship.
+The key thing to internalise: a model sees *nothing but numbers*. It has no idea that income is measured in dollars, that an account opened last week is a different animal from a decade-old one, or that income only means something *relative* to debt. Your job is to bake that knowledge into the numbers themselves. Let us do it column by column.
 
-Account age has a different problem. A person who opened an account last week behaves nothing like someone with a ten-year history, but the raw number 7 versus 3,650 days does not encode this in a useful way. Converting to buckets — "new account," "established," "long-term" — or computing a derived ratio like "transactions per account year" tells the model what domain knowledge already knows: the first year of account behavior is categorically different from year ten.
+---
 
-Last transaction date is even trickier. The raw date is meaningless without a reference point. But "days since last transaction" is a direct recency signal. "Number of transactions in the last 30 days" captures velocity. Neither of these is in the original data — they require computing against a reference timestamp. This is the temporal feature: earned by knowing that what the model actually needs is a time delta, not a calendar date.
+**Income: fix the scale.**
 
-The income-to-debt ratio matters more than income alone. Neither feature alone captures whether someone is overextended; their combination does. This is the interaction feature: a joint signal that neither parent feature carries on its own. Tree models can discover this split. Linear models cannot unless you compute it explicitly.
+To a raw model, the jump from 50,000 to 51,000 and the jump from 50,000 to 100,000 are just "1,000" and "50,000" apart — so it treats the second as fifty times more important. But for credit risk, doubling someone's income matters enormously while a 1,000 bump is noise. A **log transform** fixes this: on a log scale, 50K → 100K is a big step while 900K → 950K is almost nothing. It stretches out the low range where the real variation lives and squashes the giant tail. The model is not smarter afterward — the *shape* of the feature is finally right.
 
-**NOT this.** Most people think neural networks automatically learn the right features, making feature engineering obsolete. Actually, for tabular data this is wrong. Deep learning on images and text works because spatial and semantic structure is preserved in the raw input. For tabular credit data, the model sees nothing but numbers — it does not know that income is denominated in dollars, that accounts opened last week are different from decade-old ones, or that the income-debt ratio has meaning. Even gradient boosting, which handles non-linearities better than linear models, improves by 5–20% when given ratio features, log transforms, and temporal lags. Garbage representation in, garbage predictions out, regardless of model sophistication.
+---
 
-Feature engineering is the formal discipline of encoding domain knowledge into the geometry of the input space. You are not making the model smarter — you are making the problem solvable.`,
+**Account age: hand it the domain knowledge.**
+
+The raw numbers 7 days versus 3,650 days do not capture that a brand-new account behaves nothing like a ten-year one. Bucketing into "new / established / long-term," or building a ratio like "transactions per account-year," gives the model the thing an expert already knows: the first year is a different world from year ten.
+
+---
+
+**Last transaction date: turn a calendar into a signal.**
+
+A raw date means nothing on its own. But "days since last transaction" is a direct *recency* signal, and "transactions in the last 30 days" is a *velocity* signal. Neither exists in the original data — you compute them against a reference time. These are **temporal features**, earned by realising the model wants a time gap, not a calendar entry.
+
+---
+
+**Income and debt together: the interaction.**
+
+Income alone does not tell you whether someone is overextended, and neither does debt alone — but the **income-to-debt ratio** does. This is an **interaction feature**: a joint signal that neither parent carries by itself. A tree model can sometimes discover it on its own; a linear model never will unless you hand it the ratio explicitly.
+
+---
+
+**Doesn't deep learning make this obsolete?**
+
+For images and text, largely yes — raw pixels and words already carry rich structure a network can exploit. But for *tabular* data like this, no. The model just sees bare numbers with no idea what they mean, so even gradient boosting — which handles non-linearities well — routinely gains 5–20% from good ratios, log transforms, and time lags. Feature engineering is not busywork; it is the craft of encoding what you know into the geometry of the input, so that a solvable problem actually becomes solvable.`,
     keyPoints: [
       `**Use log and sqrt transforms when a continuous feature is right-skewed and your model is not a tree.** Income, transaction counts, prices, and time durations almost always need this. The rule of thumb: if the 95th percentile is more than 10× the median, the raw scale is hurting you. Apply log(x + 1) to handle zeros. For tree-based models, skip it — the relative ordering is all that matters and log transforms change nothing about optimal split thresholds.`,
       `**The most common production trap: computing temporal features without a strict temporal join.** A "7-day rolling transaction count" sounds clean until you realize it was computed using the label day itself. The feature includes the day you are trying to predict. In training this inflates performance; in production the feature is computed before the outcome is known. Every lag feature, rolling mean, or "days since" feature must be computed using only data available strictly before the label timestamp. Validate this by running your feature pipeline on a single row and verifying the computation cutoff date.`,
-      `**Diagnose which features are earning their place with permutation importance, not training loss.** Shuffle a feature\`s values across the validation set and measure the drop in performance. A genuinely useful feature causes a large drop when shuffled. A spurious feature or a duplicate of another feature causes no drop. Features that do not move permutation importance are adding noise and overfitting risk — remove them. Run this check after any batch of new features before shipping to production.`,
+      `**Diagnose which features are earning their place with permutation importance, not training loss.** Shuffle a feature's values across the validation set and measure the drop in performance. A genuinely useful feature causes a large drop when shuffled. A spurious feature or a duplicate of another feature causes no drop. Features that do not move permutation importance are adding noise and overfitting risk — remove them. Run this check after any batch of new features before shipping to production.`,
     ],
     takeaway: `Raw features encode what was recorded; engineered features encode what the model needs to find the pattern. The right representation can replace millions of additional training rows — the wrong one makes the signal invisible regardless of model complexity.`,
     checkQuestions: [
@@ -222,19 +315,32 @@ Feature engineering is the formal discipline of encoding domain knowledge into t
     difficulty: 'intermediate',
     estimatedMin: 45,
     tags: ['encoding', 'one-hot', 'target encoding', 'ordinal', 'cardinality', 'embeddings'],
-    summary: `You are predicting customer churn and the dataset includes a \`city\` feature with 5,000 unique values. This is where encoding choices stop being theoretical and start costing performance.
+    summary: `You are predicting customer churn, and one of your columns is \`city\` — with 5,000 different values. Models only eat numbers, so you have to turn those city names into numbers somehow. And *how* you do it turns out to matter a lot, because every method quietly makes a *claim* about the categories, and the wrong claim hurts you.
 
-One-hot encoding: 5,000 binary columns, almost all zeros. For a tree model, this adds 5,000 candidate split points. For a linear model, it adds 5,000 weights to fit. With 100,000 training rows, many cities have fewer than 5 examples — their one-hot column is noise, not signal. The model may "memorize" San Francisco simply because San Francisco users happened to churn more in the training window.
+---
 
-Target encoding replaces each city with the mean churn rate in that city, computed on training data only, with k-fold isolation to prevent leakage. San Francisco has enough training examples for a stable estimate. "Smalltown, OH" with 3 examples gets shrunk toward the global mean through additive smoothing. The result: one dense, informative column instead of 5,000 sparse binary ones. For tree models especially, target encoding routinely outperforms one-hot at high cardinality.
+**The obvious way, and why it strains at scale.**
 
-The leakage trap in target encoding is specific and severe. If you compute city-level mean churn across the full dataset and then use that encoding during training, each row's encoded value was influenced by its own label. A city with a single row gets encoded with that row's exact target value — the model receives the answer as an input. Fix: compute encoding statistics within folds, never including the row being encoded. The \`category_encoders\` library in Python handles this correctly with one parameter.
+The default is **one-hot encoding**: make one yes/no column per city (is it San Francisco? is it Austin? …). For a handful of categories this is perfect. But 5,000 cities means 5,000 near-empty columns, and with 100,000 rows many cities have only a few examples each — so their column is basically noise. The model can "memorise" that San Francisco churned a lot in your training window without learning anything that generalises.
 
-Low cardinality (under 15 categories) still favors one-hot: payment method, device type, subscription tier. These have so few categories that sparsity is not a problem and no leakage risk exists. Medium cardinality (15–50) depends on whether there is a genuine ordering — education level warrants ordinal encoding; product category does not. High cardinality (above 50) requires target encoding, frequency encoding, or embeddings.
+---
 
-Embeddings deserve a mention for neural networks and very high cardinality features like user IDs or product IDs. An embedding layer learns a dense vector for each category from gradient updates — categories that behave similarly in training data end up geometrically close in embedding space. Entity embeddings (Guo & Berkhahn 2016) regularly outperform target encoding on these features.
+**Target encoding: one dense, informative column.**
 
-**NOT this.** "LightGBM handles categoricals natively so you can skip encoding." LightGBM's native categorical support uses a greedy split algorithm that works adequately for moderate cardinality but degrades above roughly 200 unique values. For a 5,000-city feature, explicit target encoding with fold isolation reliably beats native handling and takes a single line with category-encoders. Native handling is a reasonable default for low-cardinality features only.`,
+A better move at high cardinality is **target encoding**: replace each city with the average churn rate *of that city*. San Francisco, with plenty of examples, gets a stable estimate; "Smalltown, OH" with three examples gets nudged toward the overall average so its tiny sample cannot run wild. Instead of 5,000 sparse columns you get *one* meaningful number per row — and for tree models this often beats one-hot outright.
+
+But target encoding has a sharp, specific trap: **leakage**. If you compute a city's average churn using the whole dataset and then feed it back as a feature, each row's encoded value was partly computed from *its own label* — you have handed the model the answer. A city with a single row gets encoded with that row's exact outcome. The fix is to compute the averages *out-of-fold* — each row encoded using only *other* rows — which the \`category_encoders\` library does for you with one setting.
+
+---
+
+**A quick decision guide.**
+
+- **Low cardinality** (under ~15: payment method, device type): **one-hot** is fine — few columns, no leakage worry.
+- **Medium** (15–50): one-hot, unless there is a *real* order (education: high-school < college < grad), in which case **ordinal** encoding respects it. Do not impose an order where none exists.
+- **High** (50+: cities, merchants): **target encoding** (out-of-fold), or frequency encoding.
+- **Very high, with a neural network** (user IDs, product IDs): **embeddings** — the network learns a small dense vector per category, and categories that behave alike end up close together in that space.
+
+One myth to retire: "LightGBM handles categoricals natively, so I can skip all this." Its built-in handling is fine for modest cardinality but degrades past a couple hundred values — for a 5,000-city column, explicit out-of-fold target encoding still wins, and it is one line of code.`,
     keyPoints: [
       `**Use target encoding with 5-fold isolation for any categorical feature with cardinality above 50 — it is the highest-signal encoding for tree models and takes one line of code with the category-encoders library.**\n\nFor the 5,000-city feature: target encoding produces a single dense column where each city's value reflects actual churn signal from training data. One-hot produces 5,000 sparse columns where most cities have fewer than 20 training examples — a regime that guarantees memorization rather than generalization.`,
       `**Trap: computing target encoding statistics before the train/test split. This leaks test-set label information into training features and is one of the most common sources of inflated offline metrics.**\n\nThe mechanism: mean churn rate per city is computed across the full dataset. Each row's city feature is now a function of that row's own label (plus its neighbors'). For cities with few rows, the encoded value is nearly the target itself. Fix: compute within folds using category-encoders' cross-val encoding or TargetEncoder with cv parameter.`,
@@ -292,17 +398,37 @@ Embeddings deserve a mention for neural networks and very high cardinality featu
     difficulty: 'foundational',
     estimatedMin: 35,
     tags: ['scaling', 'standardization', 'normalization', 'robust scaling', 'data leakage'],
-    summary: `You are building a kNN model with two features: age (range 0–100) and annual income (range 0–500,000). When kNN computes the Euclidean distance between two customers, it calculates √((age₁−age₂)² + (income₁−income₂)²). The income term can contribute up to 500,000² = 2.5×10¹¹ to the squared distance. The age term contributes at most 100² = 10,000. The model literally cannot see the age feature. "Nearest neighbor" means the person with the most similar income. Every classification decision ignores age entirely — not because age is unimportant, but because of a unit mismatch that has nothing to do with predictive value.
+    summary: `You are building a k-nearest-neighbours model with two features: **age** (0 to 100) and **annual income** (0 to 500,000). To decide who is "nearest," kNN adds up the squared differences on each feature. But look at the numbers: two people can differ by at most 100 in age, and by up to 500,000 in income. Income's differences are thousands of times larger, so they utterly dominate the sum — the age feature becomes effectively invisible. "Nearest neighbour" quietly comes to mean "most similar income," and age is ignored — not because age does not matter, but purely because it is measured in smaller units.
 
-Three scalers, each appropriate for a different situation. StandardScaler computes z = (x − μ) / σ, producing mean 0, standard deviation 1. Works well for roughly Gaussian distributions. It is sensitive to outliers: a single customer with income $10M shifts the mean and inflates σ, compressing every other value toward zero. MinMaxScaler maps to [0, 1], which preserves the zero point — useful when sparsity matters, as in word counts or binary indicators. Maximally sensitive to outliers: the outlier becomes exactly 1.0 and every other value compresses to near-zero. RobustScaler uses median and IQR instead of mean and standard deviation. One outlier at $10M does not affect the median or the IQR. Best for skewed distributions or data with known extreme values that are real rather than erroneous.
+[FIGURE: scaling]
 
-When must you scale: kNN, SVM with RBF kernel, PCA, logistic regression with regularization, and neural networks. For neural networks the reason is mechanistic — gradient steps are proportional to feature magnitude, so unscaled inputs with disparate ranges cause unstable gradients in early layers and slow convergence or divergence. For regularized linear models the reason is fairness — L2 penalizes coefficient magnitude, but the coefficient for income is naturally 10,000 times smaller than for age (same effect, different unit), so regularization shrinks the income coefficient 10,000 times less aggressively per unit of actual importance.
+That is the whole problem **feature scaling** solves: put every feature on a comparable scale so none of them dominates just because of its units. The fix is to rescale each column, and there are three common ways to do it.
 
-When to skip scaling: tree-based models (split thresholds are ordinal comparisons, scale-invariant), binary indicators (standardizing a 0/1 column to mean 0, std 1 is numerically meaningless), and any feature you have log-transformed (log-transforming after standardizing produces a different result than the reverse — always decide the order deliberately).
+---
 
-**NOT this.** "Always standardize all features before modeling." Standardizing a binary indicator is nonsensical — it destroys the zero-mass meaning. Standardizing log-normally distributed data before log-transforming is worse than log-transforming first. Applying StandardScaler when the feature contains outliers that are real data (large but valid transactions, extreme but correct measurements) compresses your most informative values toward zero. Understand the distribution, then choose the scaler.`,
+**Three scalers.**
+
+**StandardScaler** subtracts the mean and divides by the standard deviation, so each feature ends up centred at 0 with a spread of 1. Great for roughly bell-shaped data — but sensitive to outliers: one customer earning 10 million yanks the mean and inflates the spread, squashing everyone else toward zero.
+
+**MinMaxScaler** squeezes each feature into the range 0 to 1. Handy when the zero point matters (word counts, on/off flags), but *even more* outlier-sensitive: the one giant value becomes exactly 1.0 and everyone else is crushed near 0.
+
+**RobustScaler** uses the *median* and the middle-50% spread instead of the mean and standard deviation. A lone 10-million earner does not budge the median, so the other 99,999 people get scaled sensibly. It is the safe default when real-but-extreme values are present.
+
+---
+
+**When it matters, and when to skip it.**
+
+Scaling is essential whenever a model measures *distances* or is sensitive to feature *magnitude*: kNN, SVMs, PCA, regularised linear models, and neural networks. (For a regularised linear model the reason is fairness — the penalty judges coefficients by size, and an income coefficient is naturally tiny next to an age coefficient, so without scaling the penalty hits them unequally. For neural nets, wildly different input scales make the gradients lurch and training unstable.)
+
+You can **skip** scaling for tree-based models — they only compare thresholds ("is income above 40,000?"), which does not care about units at all. Skip it for plain 0/1 flags too (standardising a yes/no column is meaningless).
+
+---
+
+**The one rule you cannot break: fit the scaler on training data only.**
+
+Compute the mean, median, and spread from the *training* rows, then apply that same transformation to the test rows. Fit the scaler on everything at once and the test set's statistics leak into training, and your offline numbers come out flatteringly wrong. Wrap it in a pipeline so this happens automatically, every time.`,
     keyPoints: [
-      `**Apply RobustScaler as your default for tabular data — it handles the outliers that are almost always present in real datasets better than StandardScaler, with identical code.**\n\nFor the age/income kNN example: a single $10M income observation makes StandardScaler compress every other customer's income toward zero. RobustScaler uses the median and IQR, so that one outlier has no effect on how the other 99,999 customers are scaled. The median and IQR are computed from training data only, never from test.`,
+      `**Apply RobustScaler as your default for tabular data — it handles the outliers that are almost always present in real datasets better than StandardScaler, with identical code.**\n\nFor the age/income kNN example: a single 10-million income observation makes StandardScaler compress every other customer's income toward zero. RobustScaler uses the median and IQR, so that one outlier has no effect on how the other 99,999 customers are scaled. The median and IQR are computed from training data only, never from test.`,
       `**Trap: fitting the scaler on train plus test data before splitting. The scaler learns the test set's mean and standard deviation, leaking distributional information into training. Fit only on training data, transform both. Use an sklearn Pipeline to enforce this automatically.**\n\nThe failure mode: μ and σ are computed over all rows including test. Training rows are then transformed using statistics derived partly from test. The model indirectly sees the test distribution's central tendency and spread during training. Evaluation metrics are optimistically biased — the gap between offline metrics and production performance traces to this leak.`,
       `**Diagnostic: after scaling, check that all features have similar variance — near 1 for StandardScaler. If one feature still shows variance 100× the others, it contains extreme outliers that should be winsorized or log-transformed before scaling.**\n\nFor StandardScaler specifically, variance should be 1 by construction — if it is not, there are outliers so extreme that the scaler's μ and σ estimates are distorted. Switch to RobustScaler or apply a monotone transform (log, sqrt) before scaling.`,
     ],
@@ -350,6 +476,23 @@ When to skip scaling: tree-based models (split thresholds are ordinal comparison
         answer: `B`,
       },
     ],
+    figures: {
+      scaling: `<svg viewBox="0 0 380 190" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:380px;font-family:var(--font-sans,sans-serif)">
+  <text x="20" y="20" fill="var(--ink-hi)" font-size="10" font-weight="700">before scaling</text>
+  <text x="30" y="45" fill="var(--ink-low)" font-size="9">age</text>
+  <rect x="90" y="36" width="16" height="12" rx="2" fill="var(--prime)" opacity="0.7"/>
+  <text x="30" y="67" fill="var(--ink-low)" font-size="9">income</text>
+  <rect x="90" y="58" width="270" height="12" rx="2" fill="var(--prime)"/>
+  <text x="20" y="88" fill="var(--ink-low)" font-size="8">distance is basically all income — age is invisible</text>
+  <line x1="20" y1="100" x2="360" y2="100" stroke="var(--rim)" stroke-width="1"/>
+  <text x="20" y="122" fill="var(--ink-hi)" font-size="10" font-weight="700">after scaling</text>
+  <text x="30" y="147" fill="var(--ink-low)" font-size="9">age</text>
+  <rect x="90" y="138" width="150" height="12" rx="2" fill="var(--prime)" opacity="0.85"/>
+  <text x="30" y="169" fill="var(--ink-low)" font-size="9">income</text>
+  <rect x="90" y="160" width="150" height="12" rx="2" fill="var(--prime)" opacity="0.85"/>
+  <text x="252" y="162" fill="var(--ink-low)" font-size="8">both count equally</text>
+</svg>`,
+    },
   },
   {
     id: 'class_imbalance',
@@ -360,21 +503,33 @@ When to skip scaling: tree-based models (split thresholds are ordinal comparison
     estimatedMin: 50,
     tags: ['imbalance', 'SMOTE', 'class weights', 'oversampling', 'undersampling', 'threshold moving'],
     interactivePrompt: `Before you touch the controls: if you trained a model on 999 legitimate transactions and 1 fraud, and it achieved 99.9% accuracy — would you ship it?`,
-    summary: `You are building a fraud detection system. Your dataset has 999 legitimate transactions for every 1 fraudulent one. You train a model and it achieves 99.9% accuracy. Your stakeholder is satisfied. You should not be.
+    summary: `You are building a fraud detector. In your data there are 999 legitimate transactions for every 1 fraud. You train a model, it scores **99.9% accuracy**, and your stakeholder is thrilled. You should not be — because a "model" that simply labels *everything* legitimate, learning nothing and looking at no features at all, *also* scores 99.9%. Accuracy is measuring the wrong thing: how often you agree with the majority class, which you can ace by ignoring the rare class entirely.
 
-A classifier that predicts "legitimate" for every single transaction — no learning, no computation, just a constant output — also achieves 99.9% accuracy on this dataset. The model never needed to look at a single feature. Accuracy is measuring the wrong thing: how often the model matches the majority class, which it can do by ignoring the minority class entirely.
+The rare class is not a flaw in your data — fraud genuinely *is* rare. The trouble is how ordinary training reacts to it. The loss adds up mistakes across all examples, and with 999 legit transactions per fraud, getting the legit ones right dominates the total 999-to-1. The gradient points almost entirely away from fraud, so the model learns to shrug it off. There are three places to fix this, at three points in the pipeline.
 
-The problem is not in the data. Fraud is rare; that is a fact about the world, not a flaw in the dataset. The problem is in how a standard cross-entropy loss responds to this reality. It sums the loss across all examples. With 999 legitimate transactions per fraud, the loss is driven 999 times harder by getting legitimate transactions right than by catching fraud. The gradient points almost entirely away from fraud. The model learns to ignore it.
+---
 
-Three interventions operate at different points in the pipeline. Cost-sensitive training with class_weight='balanced' adjusts the loss itself: each minority example is weighted by its inverse frequency, so a fraud example contributes as much to the gradient as 999 legitimate examples combined. No data is added or removed — the adjustment is purely in how the loss is computed. This is the cleanest first move.
+**Fix 1 — reweight the loss (start here).**
 
-SMOTE (Synthetic Minority Oversampling Technique) takes a different approach: generate new minority examples by interpolating between existing ones in feature space. Two real fraud transactions are neighbors in feature space; SMOTE creates a synthetic fraud between them. The model trains on a denser minority region and has more decision boundary information to learn from. But SMOTE has a failure mode: when fraud and legitimate transactions heavily overlap in feature space, interpolating between minority examples generates synthetic points that land inside the majority region. The synthetic fraud looks like a legitimate transaction. The training signal is contradictory.
+The cleanest first move is **class weights**: tell the loss that a mistake on a fraud example counts as much as roughly 999 mistakes on legit ones (set \`class_weight='balanced'\`, or \`scale_pos_weight\` in XGBoost). Now the rare class pulls on the gradient as hard as the common one. No data added or removed — just a reweighted loss.
 
-Threshold moving does not touch the training process at all. It asks: given the model\`s probability output, what threshold should trigger a fraud flag? The default is 0.5. But if each missed fraud costs $10,000 and each false positive costs $50 in manual review time, the optimal threshold is far lower — you should flag anything above 0.2 or 0.15. The threshold is not a modeling decision; it is a business cost decision.
+---
 
-**NOT this.** Most people reach for SMOTE as the default answer to class imbalance. Actually, SMOTE is one tool with specific failure modes. For severe imbalance at 1:10,000, cost-sensitive training typically outperforms synthetic sampling because fraud examples are heterogeneous — synthesizing between them produces unrealistic points. For fraud detection specifically, calibrated threshold tuning typically outperforms resampling because the cost asymmetry is extreme and well-defined.
+**Fix 2 — manufacture more minority examples (SMOTE), carefully.**
 
-The evaluation metric is the deeper issue. F1 score, precision-recall AUC, and Matthew\`s Correlation Coefficient measure minority class performance directly. AUC-ROC can reach 0.97 on a dataset where the model catches almost no fraud, because the massive true negative count dominates the denominator. Never report accuracy on an imbalanced dataset. It is not a partial truth — it is actively misleading.`,
+**SMOTE** takes a different tack: it invents new fraud examples by interpolating *between* real ones in feature space — pick two nearby frauds and drop a synthetic fraud on the line between them. This gives the model a denser minority region to learn a boundary from. But it has a real failure mode: when fraud and legit heavily *overlap*, interpolating between two frauds can plant a synthetic "fraud" right in the middle of legit territory — a contradictory, misleading training point. So SMOTE is not a default; it shines mainly when the minority class is genuinely sparse (a few hundred examples), and it needs care when the classes mix.
+
+---
+
+**Fix 3 — move the decision threshold.**
+
+This one does not touch training at all. A classifier outputs a *probability*; turning it into a yes/no needs a **threshold**, and the default 0.5 is almost never right here. If a missed fraud costs 10,000 and a false alarm costs 50 in review time, you should flag on much weaker suspicion — a threshold of 0.15 or 0.2, not 0.5. The threshold is a *business-cost* decision, not a modeling one: plot precision against recall across thresholds and pick the point that minimises your expected cost.
+
+---
+
+**And above all: stop reporting accuracy.**
+
+The deepest fix is the metric itself. On imbalanced data, use **precision, recall, and PR-AUC**, which actually measure how you do on the rare class. Even ROC-AUC can read a flattering 0.97 while the model catches almost no fraud, because the huge pile of true negatives swamps its denominator. Accuracy on an imbalanced problem is not a partial truth — it is actively misleading.`,
     keyPoints: [
       `**Use cost-sensitive training as your first move on any imbalanced tabular problem.** Set class_weight='balanced' in sklearn or scale_pos_weight in XGBoost. This requires no data modification, carries no SMOTE-before-split leakage risk, and integrates cleanly into cross-validation. Reserve SMOTE for cases where the minority class is so sparse that the model literally cannot learn its decision boundary — roughly, fewer than a few hundred minority examples in training.`,
       `**The most common production trap: applying SMOTE to the full dataset before the train-test split.** Synthetic minority samples are generated by interpolating between real minority examples. If those real examples are in both train and test, the synthetic samples are geometrically close to test-set points. The test set is contaminated with structure derived from training data. Evaluation looks strong; production collapses. Always split on real data first, then apply SMOTE only inside the training fold.`,
@@ -442,23 +597,43 @@ The evaluation metric is the deeper issue. F1 score, precision-recall AUC, and M
     estimatedMin: 50,
     tags: ['train-test split', 'cross-validation', 'data leakage', 'temporal leakage', 'overfitting'],
     interactivePrompt: `Before you touch the controls: you split patient records 80/20 at random, trained a readmission model, and got 91% validation accuracy — what would you check before trusting that number?`,
-    summary: `You are predicting hospital readmission. You have records for 5,000 patients, some of whom have been admitted multiple times. You do a standard random 80/20 split, train a model, and get 91% validation accuracy. You feel good. You deploy. Production accuracy is 73%. Nothing in your training pipeline threw an error.
+    summary: `You are predicting hospital readmission from records of 5,000 patients — and some patients appear many times, once per visit. You do a normal random 80/20 split, train, and get **91% validation accuracy**. You ship it. Production accuracy: **73%.** Nothing errored. Where did 18 points go?
 
-Here is what happened. Patient 147 has twelve hospital visits in the dataset. Your random split put ten of those visits in training and two in validation. The model learned patient 147\`s specific patterns — their particular lab values, their age, their comorbidities — during training. When it saw the remaining two visits in validation, it was not generalizing to new patients; it was recognizing a patient it had already studied. Eighteen percentage points of your "validation accuracy" was measuring memorization, not generalization. This is group leakage: related examples split across train and test, so the test set is not independent of the training set.
+Here is the leak. Patient 147 has twelve visits in your data. The random split scattered ten of them into training and two into validation. So during training the model memorised patient 147 — their exact labs, age, history — and when it "predicted" their two validation visits, it was not generalising to a new patient at all; it was recognising someone it had already studied. Your validation score was partly measuring *memorisation*, and memorisation does not exist in production, where every patient is new. This is **leakage**: information from the evaluation set sneaking into training. It fires no error, the metrics look great, and the model fails on real data. It comes in four flavours.
 
-Group leakage is one of four leakage types, each requiring a different structural fix. Temporal leakage occurs in time-ordered data when you use a random split: the model trains on records from March to predict records from January, which is the reverse of every real deployment. In production, January always comes before March — you never have future information at prediction time. The fix is a strict temporal cutoff: all training examples before a date, all validation examples after it.
+[FIGURE: leakage_types]
 
-Preprocessing leakage is quieter and extremely common. You fit a StandardScaler on all 5,000 patient records, then split. The scaler\`s mean and standard deviation were computed using validation-set values. The training transformation is colored by the data you are supposedly evaluating on. Every imputer, encoder, and scaler must be fit exclusively on training data and then applied to validation — not the other way around. A sklearn Pipeline enforces this structurally; without one, you rely on discipline, which fails.
+---
 
-Feature leakage hides inside individual columns. A feature called "rehospitalization_within_30_days" on a row labeled for readmission prediction is the answer masquerading as an input. Any feature requiring knowledge of the outcome is a label-derived feature, and it is unavailable at prediction time. A sudden 15-point accuracy jump after adding a single new feature is the canonical signal — genuine features do not produce that kind of gain.
+**Group leakage — the same entity on both sides.**
 
-**NOT this.** Most people think that having a held-out test set means their evaluation is valid. Actually, a held-out test set prevents evaluation overfitting but does not prevent feature leakage. If your features were computed using future data — even on rows that ended up in your training set — the model learned a pattern that does not exist at deployment time. The test set was never touched during training, but the features already carry information that will be absent in production. Separation of the dataset means nothing if the feature engineering did not honor the temporal boundary.
+That was patient 147: related rows (same patient, user, or household) split across train and test, so the test set is not truly independent. The fix is a **group split** — every row from a given patient goes entirely to one side, so validation always contains patients the model has never seen.
 
-Data leakage is formally defined as any mechanism by which information from evaluation examples reaches the training process. It fires no error. Validation metrics look excellent. The model ships. It fails on real data. The only protection is structural: split before fitting any transformer, validate on data the model has never touched, and audit every feature for whether it was available before the prediction timestamp.`,
+---
+
+**Temporal leakage — training on the future.**
+
+With time-ordered data, a random split lets the model train on March to predict January — the reverse of reality, where you never have tomorrow's data today. The fix is a **time cutoff**: train on everything before a date, validate on everything after.
+
+---
+
+**Preprocessing leakage — the quiet one.**
+
+Fit a scaler (or imputer, or encoder) on all 5,000 records *before* splitting, and its mean and spread were computed partly from the validation rows — so the training transform is tainted by the data you are supposed to be judging on. Fit every transformer on the *training* data only, then apply it to validation. A pipeline enforces this so you do not have to remember.
+
+---
+
+**Feature leakage — the answer hiding in a column.**
+
+A feature like "rehospitalised_within_30_days" on a readmission-prediction row *is the label wearing a disguise* — it could only be known after the outcome. Any feature that needs knowledge of the future is unavailable at prediction time. The classic tell: a single new feature makes accuracy jump 15 points. Real features never do that.
+
+---
+
+The through-line: a held-out test set alone does not save you. If a feature was built using future information — even for rows that ended up in *training* — the model learned a pattern that will not exist once it is deployed. Real protection is structural: split *before* fitting anything, judge only on data the model never touched, and check every feature for whether you would actually have it at prediction time.`,
     keyPoints: [
-      `**Use group-based splits whenever examples share an entity — patient, user, household, time series.** A random split on a medical dataset with ten records per patient puts the same patient in both train and test; validation measures how well the model memorizes patients, not how well it generalizes to new ones. Group k-fold assigns all of a given patient\`s records to a single fold. This is non-negotiable if entity-level generalization is what you are deploying for.`,
-      `**The most common production trap: fitting preprocessing transformers outside the cross-validation loop.** Fitting a StandardScaler or SimpleImputer before the loop means its statistics were computed on data that includes every validation fold. Each fold\`s validation data contaminated the scaler. The correct order: inside each fold, fit all transformers on the training portion, apply fitted transformers to validation. Use sklearn Pipeline to make this structurally impossible to get wrong.`,
-      `**Diagnose leakage with a feature correlation audit and a single-feature accuracy test.** Before training on a new feature: (1) check its correlation with the target — above 0.8 on a complex real-world problem is suspicious; (2) train a model using only that single feature and check accuracy — suspiciously high single-feature performance often indicates label derivation; (3) verify the feature\`s computation timestamp is strictly before the label timestamp in your data pipeline. A feature that causes a 15+ point accuracy jump in isolation is almost certainly leaking.`,
+      `**Use group-based splits whenever examples share an entity — patient, user, household, time series.** A random split on a medical dataset with ten records per patient puts the same patient in both train and test; validation measures how well the model memorizes patients, not how well it generalizes to new ones. Group k-fold assigns all of a given patient's records to a single fold. This is non-negotiable if entity-level generalization is what you are deploying for.`,
+      `**The most common production trap: fitting preprocessing transformers outside the cross-validation loop.** Fitting a StandardScaler or SimpleImputer before the loop means its statistics were computed on data that includes every validation fold. Each fold's validation data contaminated the scaler. The correct order: inside each fold, fit all transformers on the training portion, apply fitted transformers to validation. Use sklearn Pipeline to make this structurally impossible to get wrong.`,
+      `**Diagnose leakage with a feature correlation audit and a single-feature accuracy test.** Before training on a new feature: (1) check its correlation with the target — above 0.8 on a complex real-world problem is suspicious; (2) train a model using only that single feature and check accuracy — suspiciously high single-feature performance often indicates label derivation; (3) verify the feature's computation timestamp is strictly before the label timestamp in your data pipeline. A feature that causes a 15+ point accuracy jump in isolation is almost certainly leaking.`,
     ],
     takeaway: `Leakage fires no error and produces no warning — the model trains cleanly, metrics are excellent, and the system ships. It fails when real data arrives. The only protection is structural: enforce the split before any transformer is fit, audit every feature for temporal validity, and never reuse the test set.`,
     checkQuestions: [
@@ -513,6 +688,23 @@ Data leakage is formally defined as any mechanism by which information from eval
         answer: `A`,
       },
     ],
+    figures: {
+      leakage_types: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="18" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">group leakage: the same patient on both sides</text>
+  <rect x="20" y="34" width="150" height="80" rx="6" fill="none" stroke="var(--prime)" stroke-width="1.5"/>
+  <text x="95" y="52" text-anchor="middle" fill="var(--ink-hi)" font-size="10" font-weight="700">train</text>
+  <rect x="190" y="34" width="150" height="80" rx="6" fill="none" stroke="var(--prime)" stroke-width="1.5"/>
+  <text x="265" y="52" text-anchor="middle" fill="var(--ink-hi)" font-size="10" font-weight="700">test</text>
+  <g fill="var(--ink-low)" opacity="0.6">
+    <circle cx="45" cy="75" r="6"/><circle cx="70" cy="90" r="6"/><circle cx="120" cy="72" r="6"/><circle cx="145" cy="95" r="6"/><circle cx="95" cy="100" r="6"/>
+    <circle cx="215" cy="80" r="6"/><circle cx="290" cy="92" r="6"/><circle cx="315" cy="72" r="6"/>
+  </g>
+  <circle cx="95" cy="75" r="7" fill="var(--amber)"/><text x="95" y="79" text-anchor="middle" fill="#000" font-size="8" font-weight="700">147</text>
+  <circle cx="255" cy="80" r="7" fill="var(--amber)"/><text x="255" y="84" text-anchor="middle" fill="#000" font-size="8" font-weight="700">147</text>
+  <path d="M102,72 C 150,55 210,60 248,76" fill="none" stroke="var(--amber)" stroke-width="1.3" stroke-dasharray="4,3"/>
+  <text x="180" y="140" text-anchor="middle" fill="var(--ink-low)" font-size="9">the model recognises patient 147 — it does not generalise</text>
+</svg>`,
+    },
   },
   {
     id: 'feature_selection',
@@ -521,19 +713,39 @@ Data leakage is formally defined as any mechanism by which information from eval
     difficulty: 'intermediate',
     estimatedMin: 45,
     tags: ['feature selection', 'curse of dimensionality', 'LASSO', 'RFE', 'mutual information', 'multicollinearity'],
-    summary: `A data warehouse exports 500 features for your fraud detection model: transaction metadata, user behavior, device fingerprints, merchant info, and hundreds of derived aggregates. Training with all 500: 4 hours, 900ms inference latency (feature computation plus forward pass), and an OOM crash on the serving cluster. You need to cut to fewer than 50 features.
+    summary: `A data warehouse dumps **500 features** into your fraud model — transaction details, user behaviour, device fingerprints, merchant info, and hundreds of derived aggregates. Training on all 500 takes four hours, inference crawls at 900ms per request, and the serving box runs out of memory. You need to get under 50 features. But *which* 50?
 
-Four approaches, each at a different level of sophistication. Filter methods score each feature independently using mutual information with the target, Spearman correlation, or chi-squared for categoricals. Fast — O(n·d) — and completely parallelizable. The structural limitation: a feature with near-zero marginal correlation to fraud might be essential in combination with a second feature. Filter methods cannot detect this. They discard interactions by design.
+There are four families of ways to choose, trading speed for smartness — and one trap that snares all of them.
 
-Wrapper methods iteratively add or remove features and train a model at each step. Recursive Feature Elimination starts with all 500 features, trains once, drops the lowest-importance feature, trains again, and repeats until reaching the target count. This costs roughly 450 model fits to go from 500 to 50 features, but each elimination decision is model-aware: RFE knows which features are redundant when others are present, which filter methods cannot know.
+---
 
-Embedded methods perform selection during training and cost only one training run. L1 regularization drives some coefficients exactly to zero by the geometry of the L1 constraint region — the optimization landscape intersects the L1 "diamond" at corners where coordinates are zero. Ridge (L2) shrinks toward zero but almost never reaches it. This is feature selection wired into the training objective, no separate pipeline stage needed.
+**Filter methods — score each feature alone.**
 
-Permutation importance is model-agnostic and post-hoc. Train any model, randomly shuffle one feature at a time, measure the performance drop. A feature that causes a large drop when shuffled is genuinely useful. A feature that causes no drop is either redundant with another feature or carrying no signal. This catches features that tree importance misses because tree importance is biased toward high-cardinality columns — a unique identifier scores high on impurity reduction during training but drops to zero on a validation permutation test.
+The fastest approach ranks each feature on its own — how strongly does it relate to fraud, by correlation or mutual information — and keeps the top ones. Cheap and parallel. The catch is baked in: it judges features *one at a time*, so it will happily throw away two features that are useless alone but powerful *together*. Interactions are invisible to it.
 
-The trap that affects all four methods: correlation is not importance. Features X and Y might have Spearman correlation 0.95, but both can be important if X is in-sample-stable while Y has a different distribution at serving time. Removing one based on correlation can degrade production performance. Measure importance directly — permutation importance on held-out validation data — not via pairwise correlation.
+---
 
-**NOT this.** "Remove highly correlated features to reduce redundancy." Correlation between features tells you about the input space, not about predictive contribution. Two correlated features can have uncorrelated residual errors — keeping both makes the model more robust to distribution shift in one of them. The correct procedure is permutation importance on validation data, not correlation filtering.`,
+**Wrapper methods — let the model judge.**
+
+These actually train the model on different feature subsets and keep whichever scores best. **Recursive feature elimination** trains on all 500, drops the single weakest, retrains, and repeats down to 50 — around 450 model fits, but every decision is *model-aware*, so it can tell when two features are redundant given the others.
+
+---
+
+**Embedded methods — select while training.**
+
+**L1 (Lasso)** regularisation drives useless features' weights to exactly zero *during* fitting, so selection and training happen in one run — no separate step. (Ridge/L2 shrinks weights toward zero but almost never all the way, so it does not select.)
+
+---
+
+**Permutation importance — the honest referee.**
+
+Train any model, then *shuffle* one feature's values and see how much performance drops on held-out data. A big drop means the feature was pulling its weight; no drop means it was redundant or noise. This is the method to trust, because it measures real, out-of-sample usefulness — and it catches a nasty trap that tree-based importance falls into. That trap: a tree's built-in importance is biased toward *high-cardinality* columns. Feed it a \`customer_id\` and it will "split" on individual IDs to memorise the training set, scoring the ID as hugely important — while on new customers it is worth exactly nothing. Permutation importance on validation data exposes this instantly (shuffling the ID changes nothing), where the tree's own numbers are fooled.
+
+---
+
+**The trap that snares all four: correlation is not importance.**
+
+It is tempting to say "these two features are 95% correlated, drop one." Resist it. Two correlated features can still both help — keeping both can make the model steadier when one of them drifts at serving time. Correlation describes the *inputs*; it does not tell you the *predictive contribution*. So decide what to keep by measuring importance directly — permutation importance on validation data — not by eyeballing a correlation matrix.`,
     keyPoints: [
       `**Use L1 regularization as your default feature selector for linear models — it zeros vestigial weights during training, giving you feature selection for free without a separate selection step.**\n\nFor the 500-feature fraud dataset: L1 on a logistic regression will drive most of the 450+ redundant or noisy features to exactly zero during a single training run. You get a sparse model with a built-in audit trail of which features are nonzero. No separate RFE pipeline needed.`,
       `**Trap: computing feature importance on the training set. Training-set importance reflects memorization; use a held-out validation set or permutation importance on the same evaluation data used for model selection.**\n\nA tree trained on 500 features will assign high importance to features it memorized in training — including unique identifiers and near-duplicate features. Permutation importance on validation data measures whether shuffling the feature actually hurts predictive performance on unseen examples. These two rankings regularly disagree by large margins.`,
@@ -592,24 +804,40 @@ The trap that affects all four methods: correlation is not importance. Features 
     estimatedMin: 55,
     tags: ['distribution shift', 'covariate shift', 'concept drift', 'label shift', 'model monitoring', 'KS test'],
     interactivePrompt: `Before you touch the controls: a recommendation model trained in January is deployed in March — if it starts failing, what would you check first to figure out whether you need to retrain?`,
-    summary: `You trained a recommendation model on user behavior data from January and deployed it in March. By May, engagement has dropped 30%. No error was thrown. The API is responding. The model is outputting predictions. They are just wrong.
+    summary: `You trained a recommendation model on January user data and shipped it in March. By May, engagement is down **30%**. No error, the API responds, the model happily returns predictions. They are just *wrong*. Welcome to **distribution shift** — the quiet killer of production models, and the reason "it worked in testing" is never the end of the story.
 
-Here is the mechanism. In January, users engaged primarily with certain content types. A product change in February shifted behavior — new content formats, new interface patterns, different session lengths. The features the model was trained on now represent a different kind of user than they did at training time. This is covariate shift: the distribution of inputs P(X) has changed. The patterns that connected features to engagement outcomes may still hold for the users who behave like January users, but there are fewer and fewer of those in production every week.
+Here is the trap that makes it so dangerous: **the model never tells you it is lost.** A confidence score measures how far an input sits from the model's decision boundary — *not* how far that input sits from anything the model was trained on. So a user unlike anyone in training can still get a *high-confidence* prediction that happens to be completely wrong. You do not find out from the model. You find out weeks later, when the real engagement numbers arrive.
 
-Notice what does not happen: the model does not flag uncertainty. It does not return lower confidence scores. Model confidence is a function of learned weights applied to input features — it measures how far the input is from a decision boundary, not how representative the input is of the training distribution. A user who has never been seen by the model can still produce a high-confidence prediction. The prediction is wrong. The confidence score does not know that. You find out when ground-truth engagement labels arrive, weeks later.
+The world can shift in three different ways, and telling them apart decides whether you need a five-minute fix or a two-week data effort.
 
-The three types of shift require different responses, and confusing them is expensive. Covariate shift — P(X) changes, P(Y|X) stable — means the input distribution moved but the underlying relationship between features and outcomes did not change. The old labels are still correct; you just have fewer training examples that look like current production inputs. This can sometimes be corrected without retraining by importance weighting: upweight training examples that resemble current production, downweight examples that do not.
+[FIGURE: shift_types]
 
-Concept drift — P(Y|X) changes — is different and worse. The same feature values now correspond to different outcomes. Fraudsters in 2024 have adapted their behavior to mimic legitimate transactions. A transaction that looked fraudulent in your training data now looks legitimate in production — not because the features changed, but because the meaning of those features for prediction has changed. Importance weighting your old training data does not help; the old labels are simply wrong. You need new labeled data and a retrain.
+---
 
-Prior shift — P(Y) changes, P(X|Y) stable — is the simplest case. The fraud rate increased from 0.1% to 0.3% but fraudulent transactions still look the same. The model\`s prediction distribution can be adjusted without retraining by estimating the new class prior.
+**Covariate shift — the inputs move.**
 
-**NOT this.** Most people respond to distribution shift with "the model needs retraining." Actually, the question is what changed and why, because the answer determines how urgently to act and what to retrain on. Covariate shift with stable P(Y|X) can be corrected by reweighting, buying time before a full retrain. Concept drift requires new labels immediately — there is no shortcut. Understanding which type you are facing is not a theoretical distinction; it is the difference between a hotfix and a two-week data collection effort.
+The *kinds of users* changed (a February product change brought new behaviour), but the underlying rule linking behaviour to engagement still holds. Your old labels are still correct; you just have fewer training examples that look like today's users. This one you can sometimes patch *without* retraining, by **importance weighting** — lean harder on the training examples that resemble current traffic and less on the ones that do not.
 
-Detection comes before diagnosis. PSI (Population Stability Index) monitors individual feature distributions against the training baseline. PSI < 0.1 is stable; PSI > 0.2 is a trigger for investigation. KS test on continuous features, Jensen-Shannon divergence on the prediction distribution. Track the prediction distribution as well — if P($\\hat{y}$) shifts, something upstream changed, even if you cannot immediately identify which feature. This infrastructure is not optional for any production ML system. Without it, the business discovers the shift before you do.`,
+---
+
+**Concept drift — the rule itself moves (the bad one).**
+
+Now the *meaning* of the features changed. Fraudsters in 2024 have learned to make fraudulent transactions look legitimate, so a pattern that screamed "fraud" in your training data now looks perfectly innocent. Reweighting old data cannot save you — the old labels are simply *wrong* about today's world. There is no shortcut: you need **fresh labelled data and a retrain.**
+
+---
+
+**Prior shift — just the mix changes (the easy one).**
+
+The fraud *rate* rose from 0.1% to 0.3%, but fraud itself still looks the same. Here you can adjust the model's outputs by re-estimating the new class balance — no retrain required.
+
+---
+
+**You cannot fix what you cannot see.**
+
+All of this is invisible without monitoring, so detection has to come *before* diagnosis. Watch each important feature's distribution against its training baseline — a common gauge is **PSI** (population stability index): under 0.1 is calm, over 0.2 says "go investigate." Watch the *prediction* distribution too; if it drifts while the inputs look stable, that is a fingerprint of concept drift. And a neat trick to confirm covariate shift: train a quick classifier to tell "training row" from "production row" — if it succeeds easily, the two worlds really have diverged. Build this monitoring in from day one, or the business will discover the shift before you do.`,
     keyPoints: [
-      `**Use PSI per feature as your first production monitoring signal, not aggregate accuracy.** PSI buckets a feature\`s distribution into deciles and computes weighted divergence from the training baseline. PSI < 0.1 is stable; 0.1–0.2 warrants investigation; > 0.2 is a retraining trigger. Track per-feature, not aggregate — a single important feature shifting while others are stable will be invisible in any aggregate metric. Also monitor the prediction distribution: if P($\\hat{y}$) shifts without any feature shift, you have concept drift.`,
-      `**The most common production trap: scheduled retraining (weekly, monthly) in a domain where shift happens in days.** Fraudsters observe your model\`s behavior and adapt within weeks of a new deployment. A fixed monthly retraining schedule is already two to four weeks behind by the time it fires. Build trigger-based retraining: fire when PSI exceeds 0.2 on a key feature, or when performance on a labeled validation window drops beyond a threshold. Scheduled retraining is acceptable in stable domains; in adversarial or fast-moving domains, it guarantees you are always working with stale assumptions.`,
+      `**Use PSI per feature as your first production monitoring signal, not aggregate accuracy.** PSI buckets a feature's distribution into deciles and computes weighted divergence from the training baseline. PSI < 0.1 is stable; 0.1–0.2 warrants investigation; > 0.2 is a retraining trigger. Track per-feature, not aggregate — a single important feature shifting while others are stable will be invisible in any aggregate metric. Also monitor the prediction distribution: if P($\\hat{y}$) shifts without any feature shift, you have concept drift.`,
+      `**The most common production trap: scheduled retraining (weekly, monthly) in a domain where shift happens in days.** Fraudsters observe your model's behaviour and adapt within weeks of a new deployment. A fixed monthly retraining schedule is already two to four weeks behind by the time it fires. Build trigger-based retraining: fire when PSI exceeds 0.2 on a key feature, or when performance on a labeled validation window drops beyond a threshold. Scheduled retraining is acceptable in stable domains; in adversarial or fast-moving domains, it guarantees you are always working with stale assumptions.`,
       `**Diagnose shift type before choosing a response.** Stable feature PSI but degraded performance = concept drift signature (P(X) unchanged, P(Y|X) changed) — requires new labeled data and retraining, no shortcut. Shifted feature PSI but degraded performance = covariate shift candidate — try importance weighting first, which can buy weeks before a full retrain. To confirm covariate shift, train a logistic regression to classify "is this example from training or production?" If it classifies with high accuracy, the distributions are meaningfully different and importance weighting is appropriate.`,
     ],
     takeaway: `A model outputs confident predictions on shifted data — no error fires, no uncertainty is signaled, and performance degrades silently until ground-truth labels arrive. Whether you can fix it without new labels depends on what type of shift occurred. Only monitoring catches it before the business does.`,
@@ -665,6 +893,33 @@ Detection comes before diagnosis. PSI (Population Stability Index) monitors indi
         answer: `C`,
       },
     ],
+    figures: {
+      shift_types: `<svg viewBox="0 0 390 160" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:390px;font-family:var(--font-sans,sans-serif)">
+  <!-- covariate: input curve slides -->
+  <text x="65" y="18" text-anchor="middle" fill="var(--ink-hi)" font-size="10" font-weight="700">covariate</text>
+  <text x="65" y="30" text-anchor="middle" fill="var(--ink-low)" font-size="8">inputs move</text>
+  <path d="M15,110 Q45,45 75,110" fill="none" stroke="var(--prime)" stroke-width="1.8"/>
+  <path d="M55,110 Q85,45 115,110" fill="none" stroke="var(--amber)" stroke-width="1.8" stroke-dasharray="4,3"/>
+  <line x1="12" y1="110" x2="120" y2="110" stroke="var(--ink-low)" stroke-width="1"/>
+  <!-- concept: same X, label flips -->
+  <text x="195" y="18" text-anchor="middle" fill="var(--ink-hi)" font-size="10" font-weight="700">concept</text>
+  <text x="195" y="30" text-anchor="middle" fill="var(--ink-low)" font-size="8">the rule moves</text>
+  <circle cx="175" cy="75" r="10" fill="var(--teal)" opacity="0.7"/><text x="175" y="79" text-anchor="middle" fill="#000" font-size="8" font-weight="700">ok</text>
+  <path d="M192,75 H 210" stroke="var(--ink-low)" stroke-width="1.3" marker-end="url(#sa)"/>
+  <circle cx="225" cy="75" r="10" fill="var(--prime)"/><text x="225" y="79" text-anchor="middle" fill="#fff" font-size="8" font-weight="700">bad</text>
+  <text x="195" y="108" text-anchor="middle" fill="var(--ink-low)" font-size="8">same features,</text>
+  <text x="195" y="119" text-anchor="middle" fill="var(--ink-low)" font-size="8">new label</text>
+  <!-- prior: class mix grows -->
+  <text x="325" y="18" text-anchor="middle" fill="var(--ink-hi)" font-size="10" font-weight="700">prior</text>
+  <text x="325" y="30" text-anchor="middle" fill="var(--ink-low)" font-size="8">the mix moves</text>
+  <rect x="290" y="45" width="30" height="60" rx="2" fill="var(--ink-low)" opacity="0.5"/><rect x="290" y="99" width="30" height="6" rx="1" fill="var(--prime)"/>
+  <rect x="330" y="45" width="30" height="60" rx="2" fill="var(--ink-low)" opacity="0.5"/><rect x="330" y="87" width="30" height="18" rx="1" fill="var(--prime)"/>
+  <text x="305" y="118" text-anchor="middle" fill="var(--ink-low)" font-size="8">1%</text>
+  <text x="345" y="118" text-anchor="middle" fill="var(--ink-low)" font-size="8">3%</text>
+  <text x="195" y="150" text-anchor="middle" fill="var(--ink-low)" font-size="9">tell them apart: reweight, retrain, or just re-estimate the balance</text>
+  <defs><marker id="sa" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="var(--ink-low)"/></marker></defs>
+</svg>`,
+    },
   },
   {
     id: 'data_augmentation',
@@ -673,15 +928,31 @@ Detection comes before diagnosis. PSI (Population Stability Index) monitors indi
     difficulty: 'intermediate',
     estimatedMin: 40,
     tags: ['augmentation', 'SMOTE', 'image augmentation', 'mixup', 'text augmentation', 'back-translation'],
-    summary: `A dog-versus-cat image classifier with 500 examples per class: training accuracy 95%, validation accuracy 72%, test accuracy 68%. The model is memorizing pixel arrangements. Training on raw data, it has never seen a cat from the right side, a dog in dim light, or a photo with a green tint instead of a blue one. Augment: random horizontal flip, random crop (224→192, then pad back to 224), color jitter (±0.2 brightness and contrast). Effective training set across 20 epochs: 500 × 8 augmentations × 20 = 80,000 training passes per class instead of 10,000. Validation accuracy: 84%. Test accuracy: 83%. The model learns that a horizontally flipped dog is still a dog.
+    summary: `Your dog-versus-cat classifier has 500 images per class and is stuck: **95% on training, 72% on validation.** It has *memorised* the exact pixels of your 500 dogs — but it has never seen a cat from the right, a dog in dim light, or a photo with a greenish tint. **Data augmentation** fixes this by showing the model cheap, realistic *variations* of the images it already has: randomly flip them left-right, crop and zoom a little, nudge the brightness and colour. Now, across 20 training passes, the model effectively sees tens of thousands of slightly-different images instead of the same 500, and it learns the thing that actually matters — that a flipped dog is still a dog. Validation jumps to **84%**.
 
-The principle that makes augmentation work is invariance encoding. An augmentation is valid if and only if the transformation preserves the label. Horizontal flip is valid for animals — a flipped dog is still a dog. Horizontal flip is not valid for reading direction — a flipped "b" becomes "d." Color jitter is valid for natural photographs but not for retinal fundus images, where color is clinically diagnostic. Heavy time warping is valid for some audio tasks but destroys heartbeat morphology in ECG signals. The augmentation policy is a statement about which transformations the model should be invariant to. Only domain knowledge can verify this for a given class — the algorithm cannot.
+---
 
-Domain-specific augmentation matters. For text: back-translation (English → French → English via a different model) produces natural paraphrases with the same semantic content but different vocabulary. EDA (Easy Data Augmentation) — synonym replacement, random insertion, random deletion — is faster but less natural. For tabular data: Gaussian noise on continuous features, SMOTE for class imbalance specifically. For time series: window slicing, magnitude warping, time warping. For audio: pitch shift, time stretch, additive background noise.
+**The one rule: the transformation must not change the label.**
 
-Apply augmentations on-the-fly during training, not pre-computed. Pre-computed augmentations mean the model sees the same rotated version at every epoch and memorizes it in a few thousand steps. On-the-fly randomization applies a different random transformation each pass — across many epochs the model trains on a near-infinite variety and must learn the invariance.
+This is the whole game, and it is easy to get wrong. An augmentation is valid *only* if it leaves the correct answer unchanged. Flipping a photo left-right is fine for animals (a mirrored dog is a dog) — but fatal for letters (a flipped "b" becomes "d"). Jittering colours is fine for holiday snaps — but ruinous for retinal medical scans, where colour *is* the diagnosis. Warping the timing is fine for some audio — but it destroys the shape of a heartbeat in an ECG. Every augmentation is really a claim: "the model should treat *this* kind of change as meaningless." Only someone who knows the domain can say whether that claim is true; the algorithm cannot. Push it too far and you are simply training on mislabelled data.
 
-**NOT this.** "More augmentation always helps." Aggressive augmentation that violates task invariances trains the model on mislabeled examples. Heavy color jitter on medical images can destroy the diagnostic signal. Excessive time warping on ECG signals can destroy heartbeat morphology. If augmented training improves training loss but not validation loss, the augmentations have added noise rather than invariance — they are too aggressive, not too weak. Test the augmented distribution against domain ground truth before training at scale.`,
+[FIGURE: augmentation_rule]
+
+---
+
+**Different data, different tricks.**
+
+Each data type has its own safe transformations. **Images**: flip, crop, colour jitter. **Text**: back-translation (translate to another language and back to get a natural paraphrase), or swapping in synonyms. **Tabular**: a little random noise on numeric columns, or SMOTE for a rare class. **Time series and audio**: shift the pitch, stretch the time, add background noise. In every case, the same rule applies — does the change keep the label true?
+
+---
+
+**Two habits that matter.**
+
+First, **augment on the fly, not once up front.** If you pre-compute a fixed set of rotated images and save them, the model just memorises *those* specific rotations after a few epochs — no gain. Applying a fresh random transformation every pass means it never sees the exact same image twice, so it is forced to learn the invariance instead.
+
+Second, **only augment the training set — never validation or test.** Augmentation is a training-time regulariser; your validation numbers must come from clean, untouched images, or your score becomes a lottery that depends on which random transforms happened to fire.
+
+And a useful tell for when you have overdone it: if augmentation lowers your *training* loss but does nothing for *validation*, the transforms are too aggressive — they have added noise, not invariance. Dial them back before concluding augmentation "does not work."`,
     keyPoints: [
       `**Start with horizontal flip plus random crop for any image task — these two augmentations alone capture most of the regularization gain and are valid for nearly all image classification tasks.**\n\nFor the dog/cat classifier: horizontal flip is valid (a flipped dog is still a dog), random crop forces the model to recognize the animal from partial views. Together they drive validation accuracy from 72% to ~83%. More exotic augmentations — CutMix, MixUp, RandAugment — give diminishing returns beyond this baseline. Start with the cheap wins before adding complexity.`,
       `**Trap: applying augmentation to both training and validation sets. Augmentation is a training regularizer — validation must see clean, unaugmented examples to give a reliable performance estimate.**\n\nIf you augment validation, your performance metric becomes a function of which random transformations happened to be applied during that evaluation run. The estimate is noisy and not comparable across runs. Augmentation lives exclusively in the training data loader. Validation and test loaders apply no random transforms.`,
@@ -731,6 +1002,21 @@ Apply augmentations on-the-fly during training, not pre-computed. Pre-computed a
         answer: `C`,
       },
     ],
+    figures: {
+      augmentation_rule: `<svg viewBox="0 0 360 140" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="18" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">an augmentation is valid only if the label survives</text>
+  <!-- valid row -->
+  <rect x="20" y="34" width="56" height="26" rx="4" fill="var(--teal)" opacity="0.2" stroke="var(--teal)" stroke-width="1.2"/><text x="48" y="51" text-anchor="middle" fill="var(--ink-hi)" font-size="11">dog</text>
+  <text x="98" y="51" text-anchor="middle" fill="var(--ink-low)" font-size="8">— flip →</text>
+  <rect x="126" y="34" width="56" height="26" rx="4" fill="var(--teal)" opacity="0.2" stroke="var(--teal)" stroke-width="1.2"/><text x="154" y="51" text-anchor="middle" fill="var(--ink-hi)" font-size="11">dog</text>
+  <text x="200" y="51" fill="var(--teal)" font-size="10" font-weight="700">✓ still a dog</text>
+  <!-- invalid row -->
+  <rect x="20" y="86" width="56" height="26" rx="4" fill="var(--prime)" opacity="0.12" stroke="var(--prime)" stroke-width="1.2"/><text x="48" y="103" text-anchor="middle" fill="var(--ink-hi)" font-size="11">b</text>
+  <text x="98" y="103" text-anchor="middle" fill="var(--ink-low)" font-size="8">— flip →</text>
+  <rect x="126" y="86" width="56" height="26" rx="4" fill="var(--amber)" opacity="0.2" stroke="var(--amber)" stroke-width="1.2"/><text x="154" y="103" text-anchor="middle" fill="var(--ink-hi)" font-size="11">d</text>
+  <text x="200" y="103" fill="var(--amber)" font-size="10" font-weight="700">✗ label changed</text>
+</svg>`,
+    },
   },
   {
     id: 'data_versioning_and_pipelines',
@@ -739,15 +1025,23 @@ Apply augmentations on-the-fly during training, not pre-computed. Pre-computed a
     difficulty: 'advanced',
     estimatedMin: 40,
     tags: ['DVC', 'feature store', 'data versioning', 'training-serving skew', 'pipeline orchestration', 'reproducibility'],
-    summary: `A production model was deployed six months ago. A bug report arrives: model performance on iOS users degraded sharply since October. You check. A data pipeline change happened in September. But you have no record of what data the current model was trained on, what the pipeline code looked like before September, or which features changed in that deployment. Debugging this will take weeks of archaeology. With data versioning: git log the pipeline code, \`dvc checkout\` the training dataset used for that model, reproduce the training run. The bug is found in 2 hours.
+    summary: `A model you shipped six months ago starts misbehaving: performance on iOS users has fallen off a cliff since October. You go to investigate — and hit a wall. You have *no record* of what data that model was trained on, what the pipeline looked like before a September change, or which features that change touched. So begins two weeks of archaeology. Now imagine the alternative: you \`git log\` the pipeline, run one command to check out the *exact* dataset the model trained on, re-run training, and find the bug in two hours. That is what **data versioning** buys you.
 
-A model is a function of three inputs: training data, code, and hyperparameters. All three must be versioned and reproducible. DVC handles the data half: it stores a \`.dvc\` pointer file — a content hash of the dataset — committed alongside the training code in Git. Reverting to any past commit recovers both the code and the exact dataset at that commit. Running \`dvc repro\` re-executes only the pipeline stages whose dependencies changed. Every model in production becomes traceable to the exact dataset it was trained on.
+The core idea is simple: **a model is a function of three things — its training data, its code, and its hyperparameters — and to reproduce a model you must be able to recover all three.** Code versioning (Git) is second nature. The piece teams forget is the *data*. Tools like **DVC** fix this by storing a tiny pointer file — essentially a fingerprint of the dataset — right next to your code in Git, so checking out any past commit gives you back both the code *and* the exact data as it was then. A tool like **MLflow** captures the third leg, logging each run's code version, data fingerprint, hyperparameters, and results, so any past experiment can be rebuilt from its run ID instead of from memory.
 
-Training-serving skew is the other failure mode, and it is more common than people expect. Feature computation is implemented twice — once in Python for the training pipeline, once in SQL or Java for the serving layer. The two implementations accumulate subtle differences: timezone handling, null treatment, rounding in aggregations, edge cases in window functions. The model receives inputs at serving time that it was never trained on. Offline AUC is 91%. Production AUC is 77%. No error fires. The only fix is structural: a single canonical feature computation implementation shared by both pipelines. Feature stores (Feast, Tecton, Hopsworks) implement this by maintaining one offline store for training and one online store for low-latency serving, both computed by identical logic.
+---
 
-MLflow tracks the third input: each experiment logs the code commit hash, dataset DVC pointer, hyperparameters, evaluation metrics, and model artifact. Given any run ID, you recover everything. Without this, reproducing any past state requires reconstructing conditions from memory, which nobody can do reliably six weeks later.
+**The other silent killer: training-serving skew.**
 
-**NOT this.** "Data versioning is overhead for small teams." The first time a silent data bug causes a production incident, you will spend 2–10 days debugging something that would have taken 2 hours with versioning. The cost of adding DVC to a repo is 2 hours. The cost of not having it when you need it is measured in incident response, stakeholder trust, and model rollbacks you cannot confidently execute. That is the entire ROI calculation.`,
+Here is a failure that bites far more teams than expect it. The logic that computes your features usually gets written *twice* — once in Python for training, once in SQL or Java for the live serving system. Over time the two quietly drift apart: a timezone handled differently, a null treated differently, a rounding difference in an aggregate. Now the model is fed inputs at serving time that are subtly different from anything it trained on. Offline it scores **91%**; in production it scores **77%** — and *nothing errors*.
+
+There is only one real fix, and it is structural: compute each feature in *one* canonical place that both training and serving use. This is exactly what a **feature store** (Feast, Tecton, Hopsworks) does — it keeps a single definition of each feature and serves it to both the training pipeline and the live system, so the two can never drift apart.
+
+---
+
+**Is this overkill for a small team?**
+
+It is tempting to skip all this as heavyweight process. But the maths is stark. Adding DVC to a repo costs a couple of hours, once. The *first* time a silent data bug causes a production incident without it, you lose days digging — and you may not be able to confidently roll back at all, because you cannot reproduce the good state. A good test of whether you are actually versioned: *could a teammate who was never on the project reproduce this exact model from scratch in half an hour, given only the commit hash?* If not, you do not really have a versioned pipeline yet.`,
     keyPoints: [
       `**Add DVC to any project the moment you have a second training run — tracking data versions retroactively is harder than starting upfront. DVC adds fewer than 5 lines to your Makefile and zero overhead to training.**\n\nFor the iOS debugging scenario: \`dvc checkout\` restores the exact dataset used six months ago. Without DVC, the training table has been updated, overwritten, or partitioned differently since then. Reproducing the model state is impossible, not just hard.`,
       `**Trap: versioning model artifacts but not data. If you can reproduce the model checkpoint but not the training data, you cannot audit why the model behaves the way it does. Data versioning is more important than model versioning.**\n\nMLflow saves the trained model weights. DVC saves the dataset hash. You need both. Model weights tell you what the model learned; the dataset hash tells you what it learned from. Without the dataset, you cannot audit for label errors, investigate training distribution, or reproduce a retraining run.`,
