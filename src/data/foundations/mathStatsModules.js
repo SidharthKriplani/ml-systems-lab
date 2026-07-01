@@ -6,13 +6,20 @@ export const MATH_STATS_MODULES = [
     difficulty: 'foundational',
     estimatedMin: 28,
     tags: ['probability', 'bayes', 'foundations'],
-    summary: `Every model you build makes claims about the world under uncertainty — so you need a principled language for uncertainty. Probability gives you that: a sample space Ω of all possible outcomes, events as subsets of Ω, and a measure P that assigns numbers in [0,1] satisfying three axioms. The naive approach to updating beliefs when new evidence arrives is to just count frequencies in the data — but this throws away everything you knew before the data arrived and breaks completely when data is scarce. Conditional probability P(A|B) = P(A∩B)/P(B) formalises belief update from a single piece of evidence. Bayes' theorem P(A|B) = P(B|A)P(A)/P(B) solves the direction-reversal problem: you know P(data|hypothesis) from your model, but you want P(hypothesis|data). The prior P(A) is what makes this different from simply looking at frequencies — and ignoring it is the single most common probabilistic error in applied ML. A 99%-accurate test on a rare disease (prevalence 0.1%) still has only a 9% posterior probability of true positive, because the prior is overwhelmingly against disease.`,
+    summary: `An email arrives. Is it spam? You know before opening it that 30% of all email is spam — that is your prior. You open it and find the word "FREE" five times. Words like "FREE" appear five times more often in spam than in legitimate email. How do you combine what you already knew with this new evidence?
+
+The naive move is to just count: look at all emails containing "FREE" in your dataset and compute the fraction that were spam. This ignores the prior and breaks when your dataset is small or skewed. What you actually want is a principled update: start from P(spam) = 0.3, observe the word "FREE," and revise. The mechanism for this is conditional probability. P(spam|FREE) asks: among emails that contain "FREE," what fraction are spam? This is not the same as P(FREE|spam), which asks: among spam emails, what fraction contain "FREE?" Those two quantities are different, and confusing them is the base rate fallacy.
+
+To go from the latter to the former, you need Bayes' theorem: $P(spam|FREE) = P(FREE|spam) \cdot P(spam) / P(FREE)$. The numerator multiplies the likelihood — how often "FREE" appears in spam — by the prior probability of spam. The denominator, $P(FREE)$, normalises so everything sums to 1. It equals $P(FREE|spam) \cdot P(spam) + P(FREE|ham) \cdot P(ham)$: the law of total probability.
+
+This is the mechanism behind every probabilistic ML system. The prior $P(spam) = 0.3$ encodes what you knew before. The likelihood $P(FREE|spam)$ is what your model learns from data. The posterior $P(spam|FREE)$ is what you actually want — your updated belief after seeing evidence.
+
+**NOT this.** Most people think $P(A|B) = P(B|A)$. They do not. A test that correctly identifies 99% of sick patients — $P(positive|disease) = 0.99$ — does not mean a positive result means you are 99% likely to have the disease. If the disease affects only 1 in 1000 people, then $P(disease|positive) \approx 9\%$. The false positive rate, applied to the large healthy population, swamps the true positives. Dropping the prior — treating $P(positive|disease)$ as $P(disease|positive)$ — is the error. The formal rules: conditional probability $P(A|B) = P(A \cap B)/P(B)$. Independence: $P(A \cap B) = P(A)P(B)$. Chain rule: $P(A,B,C) = P(A)P(B|A)P(C|A,B)$.`,
+    interactivePrompt: `Before you touch the controls: if a test is 99% accurate and the disease has 1% prevalence, what do you think the probability of actually having the disease is after a positive result — 99%, 50%, or something surprisingly low?`,
     keyPoints: [
-      `**You almost never have P(hypothesis|data) directly.** You have P(data|hypothesis) from your model. Bayes' theorem is the exact rule for reversing that: posterior = likelihood × prior / evidence. The prior is not optional noise — it is half the calculation. Drop it and you get the prosecutor's fallacy: treating P(evidence|innocent) as P(innocent|evidence).`,
-      `**The law of total probability P(B) = Σ P(B|Aᵢ)P(Aᵢ) is how you compute the denominator in Bayes — it marginalises out the unknown hypothesis.** When the hypothesis space is continuous, this integral is usually intractable, which is the core computational problem of Bayesian inference.`,
-      `**Conditional independence A ⊥ B | C is a fundamentally different statement from marginal independence A ⊥ B.** Cough and fever are correlated in the general population — but given the diagnosis "flu," they are conditionally independent: the disease explains both symptoms, so knowing one gives no extra signal about the other. Naïve Bayes exploits this: it assumes conditional independence given the class label, which can hold even when features are marginally correlated.`,
-      `**Mutually exclusive events are always dependent when both have positive probability: P(A∩B) = 0, but P(A)P(B) > 0.** Knowing A occurred means B definitely did not. Exclusivity and independence are opposites — not related concepts.`,
-      `**Laplace smoothing prevents any unseen word from zeroing out the entire posterior in a Naïve Bayes classifier.** Without it, P(new_word|class) = 0, and the product over all words collapses to zero regardless of other evidence. Smoothing adds a pseudo-count to every word — it is MAP estimation with a Dirichlet prior.`,
+      `**Use it when you know the likelihood but want the posterior.** Any time your model gives you $P(data|hypothesis)$ but you need $P(hypothesis|data)$, Bayes' theorem is the exact conversion. In spam filtering: your trained model gives you $P(word|spam)$; Bayes gives you $P(spam|word)$. Without the prior, you cannot make this conversion.`,
+      `**The production trap: ignoring the base rate.** A fraud detection model with 99% precision sounds great. But if only 0.1% of transactions are fraudulent, then among 10,000 flagged alerts, roughly 9,900 are false positives. The prior probability of fraud determines whether a high-precision model is operationally useful. Always report precision *at the operating base rate*, not just on a balanced test set.`,
+      `**The diagnostic: check whether your prior and likelihood are on the same scale.** If $P(spam) = 0.3$ but your spam filter was trained on a 50/50 balanced dataset, the likelihood ratios are calibrated for a different prior. Recalibrate with Platt scaling or isotonic regression before multiplying priors by likelihoods. Symptoms of miscalibration: model confidence of 90% but actual accuracy of 60% on live traffic.`,
     ],
     checkQuestions: [
       {
@@ -46,7 +53,7 @@ export const MATH_STATS_MODULES = [
         answer: `D`,
       },
     ],
-    takeaway: `Posterior probability is likelihood times prior divided by evidence. A 99%-accurate test can still be wrong 91% of the time when the base rate is 0.1%. The prior is not a philosophical add-on — it is the number that determines whether a model output is actually meaningful.`,
+    takeaway: `Posterior = likelihood × prior / evidence. The prior is not optional — it determines whether a model output is meaningful or misleading.`,
     interactiveId: 'bayes_calculator',
   },
   {
@@ -157,19 +164,20 @@ export const MATH_STATS_MODULES = [
     difficulty: 'intermediate',
     estimatedMin: 30,
     tags: ['entropy', 'KL divergence', 'cross-entropy', 'mutual information'],
-    summary: `Training a classifier requires a loss function — a number that says how wrong the model is. The naive choice is squared error, but squared error treats all wrong predictions equally regardless of the model's stated confidence. What you actually want is a loss that penalises confident wrong answers far more than uncertain ones.
+    summary: `You are building a compression system for text messages. The word "the" appears in 7% of positions; the word "zymurgy" appears in 0.0001% of positions. If you give both words the same-length code, you waste bits every time you encode "the." Efficient encoding gives short codes to common words and long codes to rare ones. But how short and how long, exactly?
 
-Cross-entropy H(p, q) = −Σ p(x) log q(x) does exactly this: it measures the average surprise your model q assigns to samples drawn from the true distribution p.
+The answer falls out of a simple observation: the minimum number of bits needed to encode an event with probability $p$ is $-\log_2(p)$. A word appearing with probability 0.07 needs $-\log_2(0.07) \approx 3.8$ bits. A word at probability 0.000001 needs about 20 bits. If all events were equally probable, the average bits needed would be $\log_2(N)$ where $N$ is the number of possible events. In general, the average bits over the whole distribution is the entropy: $H = -\sum p(x) \log p(x)$. Entropy measures how uncertain the distribution is — how many bits you need on average to describe a draw from it.
 
-A model that predicts 0.99 probability for the wrong class gets catastrophically punished.
+Now suppose your compression algorithm was designed for the wrong distribution. You built it assuming word frequencies $q$, but the true frequencies are $p$. The average bits you actually spend is $H(p, q) = -\sum p(x) \log q(x)$ — cross-entropy. The extra bits you waste compared to an optimal encoder is $KL(p \| q) = H(p, q) - H(p)$. Since $H(p)$ is fixed by the true distribution, minimising cross-entropy is identical to minimising KL divergence — the extra waste from using the wrong distribution.
 
-Minimising cross-entropy over training data is identical to maximum likelihood estimation — the loss function is not an arbitrary design choice, it follows from the probabilistic model you assumed. KL divergence KL(p‖q) measures the excess surprise from using q instead of p: it is always non-negative and zero only when p = q exactly. The direction of KL matters profoundly: forward KL (used in maximum likelihood) forces q to cover all modes of p; reverse KL (used in VAEs) causes q to collapse to one mode. These produce qualitatively different learned distributions — blurry vs. sharp, inclusive vs. exclusive.`,
+This is where ML enters. Your model produces a predicted distribution $\hat{y}$. The true label is a one-hot distribution $y$. Cross-entropy loss $= -\log(\hat{y}_{correct})$ measures how many bits your model\`s encoding wastes relative to optimal. Minimising cross-entropy is fitting your model\`s distribution to the true data distribution.
+
+**NOT this.** Most people think cross-entropy is just a loss function that happens to work well. Cross-entropy is an information-theoretic quantity measuring encoding efficiency. When the model is perfectly calibrated, cross-entropy equals entropy — no wasted bits. The loss function framing hides why cross-entropy is the *right* choice, not merely a convenient one. It also hides the direction of KL: forward KL ($KL(p \| q)$, used in training) forces the model to cover all modes of the true distribution. Reverse KL ($KL(q \| p)$, used in VAEs) lets the model collapse to one mode. These produce qualitatively different learned distributions — mode-covering versus mode-seeking.`,
+    interactivePrompt: `Before you touch the controls: if a fair coin has entropy of 1 bit, what do you think the entropy of a coin that lands heads 99% of the time would be — close to 1 bit, close to 0 bits, or somewhere in between?`,
     keyPoints: [
-      `**Entropy H(X) = −Σ p log p is the minimum average bits needed to encode samples from X.** It is maximised by the uniform distribution (maximum uncertainty) and zero for a deterministic outcome. A classifier cannot achieve expected log-loss below H(p) on data from distribution p — entropy is the Bayes error rate in bits.`,
-      `**Cross-entropy H(p, q) = H(p) + KL(p‖q).** Since H(p) is constant with respect to model parameters, minimising cross-entropy is exactly minimising KL divergence from the model to the true distribution. Every classification network you train is doing approximate KL minimisation whether you think of it that way or not.`,
-      `**KL divergence is asymmetric: KL(p‖q) ≠ KL(q‖p).** Forward KL (KL(p‖q)) forces q to be non-zero wherever p is non-zero — q spreads to cover all modes, producing blurry samples when the target is multimodal. Reverse KL (KL(q‖p)) lets q ignore regions where p is small — q collapses to a single sharp mode. VAE encoders use reverse KL, which is why they tend to produce blurry reconstructions.`,
-      `**Mutual information I(X; Y) = H(X) − H(X|Y) = KL(p(x,y) ‖ p(x)p(y)).** It is the right score for feature selection: it measures how much knowing Y reduces uncertainty about X, regardless of whether the relationship is linear, quadratic, or any other shape. Pearson correlation misses nonlinear relationships; mutual information does not.`,
-      `**Binary cross-entropy gradient: ∂L/∂z = ŷ − y where z is the pre-sigmoid logit.** The gradient is simply prediction error — this elegant form is why logistic regression and neural network output layers are so tractable to train and why sigmoid + cross-entropy is the canonical output layer, not sigmoid + MSE.`,
+      `**Use cross-entropy loss for classification, not MSE.** Cross-entropy penalises confident wrong predictions exponentially: predicting 0.99 probability for the wrong class gets $-\log(0.01) \approx 6.6$ bits of punishment. MSE penalises it with $(1 - 0.99)^2 = 0.0001$ — nearly nothing. Any classifier trained with MSE on softmax outputs will be underpenalised for overconfident errors.`,
+      `**The production trap: KL direction determines whether your model covers all modes or collapses to one.** Maximum likelihood training minimises forward KL — the model must assign non-zero probability everywhere the data has density. VAE training minimises reverse KL — the model can ignore modes it finds inconvenient, collapsing to a single sharp mode. If your generative model produces only one type of output despite diverse training data, reverse KL mode collapse is the culprit.`,
+      `**The diagnostic: use mutual information $I(X;Y) = H(X) - H(X|Y)$ for feature selection, not Pearson correlation.** Correlation only detects linear relationships. A feature where $Y = X^2$ has zero correlation with $X$ but high mutual information — the feature is perfectly predictive but nonlinearly so. Any feature with $I(X;Y) = 0$ is truly independent of the label. Estimators like MINE make this tractable even for high-dimensional continuous features.`,
     ],
     checkQuestions: [
       {
@@ -203,7 +211,7 @@ Minimising cross-entropy over training data is identical to maximum likelihood e
         answer: `C`,
       },
     ],
-    takeaway: `Minimising cross-entropy is minimising KL divergence from your model to the true data distribution. The direction of KL matters: forward KL produces mode-covering distributions, reverse KL produces mode-collapsing ones. The choice of which direction to minimise is a design decision with large qualitative consequences for the learned model.`,
+    takeaway: `Minimising cross-entropy is minimising KL divergence from your model to the true distribution. Cross-entropy is not an arbitrary loss — it is the exact measure of encoding waste, and that framing tells you why the KL direction matters.`,
     interactiveId: 'information_theory_viz',
   },
   {
@@ -316,17 +324,22 @@ ML because the eigenvectors of the covariance matrix are the directions of maxim
     difficulty: 'intermediate',
     estimatedMin: 26,
     tags: ['SVD', 'low-rank', 'matrix factorisation'],
-    summary: `High-dimensional data is almost never truly high-dimensional — it lives on a low-dimensional structure embedded in a high-dimensional space. The problem is: how do you find that structure efficiently? Eigendecomposition finds it for square symmetric matrices, but data matrices are rarely square or symmetric. SVD extends this to any matrix: A = UΣVᵀ, where the columns of V are the input directions of maximum variance (right singular vectors), the columns of U are the corresponding output directions, and the diagonal values σ₁ ≥ σ₂ ≥ ... are how much each direction contributes. Crucially, the Eckart-Young theorem proves that keeping only the top-k singular vectors gives the best possible rank-k approximation — no other rank-k matrix is closer in either Frobenius or spectral norm. This is the mathematical foundation of dimensionality reduction, recommendation systems, and latent semantic analysis. PCA is SVD on the centred data matrix — they are the same algorithm at different levels of abstraction. The pseudoinverse A⁺ = VΣ⁺Uᵀ solves least-squares without ever forming XᵀX, keeping the condition number at κ(X) rather than κ(X)².`,
+    summary: `You work at a streaming service. Your rating matrix is 1 million users by 10,000 movies. Most entries are missing — users have rated a tiny fraction of the catalog. Your job is to predict the missing entries so you can recommend movies users have not seen yet.
+
+The naive approach: fill in missing entries with the average rating. This ignores everything you know about which users are similar and which movies are similar. What you want is to find latent structure — users who like action movies, comedies, prestige dramas — and represent both users and movies in that latent space.
+
+SVD gives you this. Factor the matrix $M \approx U \Sigma V^T$. $U$ is a 1M × k matrix — each user represented as a $k$-dimensional latent preference vector. $V$ is a 10,000 × k matrix — each movie as a $k$-dimensional latent attribute vector. $\Sigma$ is $k \times k$ diagonal — the importance of each latent factor. To predict user $i$\`s rating of movie $j$: compute $u_i^T \Sigma v_j$. The dot product measures how well user $i$\`s preferences align with movie $j$\`s attributes across all $k$ latent dimensions. This was the foundation of most Netflix Prize solutions.
+
+Why not eigendecomposition instead? Eigendecomposition requires a square symmetric matrix. Your rating matrix is 1M × 10,000 — rectangular. SVD works on any matrix. The singular values $\sigma_i = \sqrt{\lambda_i(M^T M)}$ — they are the square roots of the eigenvalues of $M^T M$. Left singular vectors $U$ are eigenvectors of $MM^T$; right singular vectors $V$ are eigenvectors of $M^T M$. SVD is strictly more general.
+
+The Eckart-Young theorem proves that keeping only the top-$k$ singular vectors gives the best possible rank-$k$ approximation: $M_k = \sum_{i=1}^k \sigma_i u_i v_i^T$. No other rank-$k$ matrix is closer to $M$ in either Frobenius or spectral norm. This is the mathematical guarantee behind every truncated SVD application — compression, denoising, dimensionality reduction.
+
+**NOT this.** Most people treat SVD and PCA as synonyms. They are not. SVD is a matrix factorization — a numerical decomposition that works on any matrix. PCA is a statistical method for finding directions of maximum variance in a dataset. PCA uses SVD as its computational engine: on mean-centered data, the right singular vectors of the data matrix equal the eigenvectors of the covariance matrix, and the two methods produce the same result. But SVD is more general (works on rectangular matrices, handles non-statistical applications like pseudo-inverses), and numerically more stable than computing the covariance matrix $X^T X$ explicitly, which squares the condition number.`,
+    interactivePrompt: `Before you touch the controls: if you truncate a matrix to rank 10 and it still captures 95% of the variance, what do you think happens to reconstruction quality if you increase to rank 50 — dramatic improvement, modest improvement, or nearly no change?`,
     keyPoints: [
-      `**A = UΣVᵀ: any linear map decomposes into three operations — rotate by Vᵀ, scale by Σ, rotate by U.** The right singular vectors V are the directions in input space that the matrix stretches along. The singular values σᵢ tell you how much. SVD reveals what a linear transformation actually does geometrically.`,
-      `**Eckart-Young theorem:
-
-$A_k = Σᵢ₌₁ᵏ σᵢ uᵢvᵢᵀ is the best rank-k approximation in Fro$
-
-benius and spectral norm.** This is provably optimal — no other rank-k matrix is closer to A. It is the mathematical guarantee that justifies truncated SVD as a compression and denoising tool.`,
-      `**PCA is SVD on the centred data matrix.** The right singular vectors of X equal the eigenvectors of XᵀX (the covariance matrix). The k-th explained variance is σₖ²/(n−1). Computing PCA via SVD of X avoids forming XᵀX and therefore avoids squaring the condition number — it is always numerically superior.`,
-      `**Pseudoinverse A⁺ = VΣ⁺Uᵀ solves least squares without forming XᵀX.** When singular values are near zero, it zeros them rather than inverting them — automatically handling multicollinearity. sklearn's LinearRegression uses this by default, which is why it never crashes on near-singular data.`,
-      `**Plotting the singular value spectrum is a diagnostic for intrinsic dimensionality.** A sharp drop from large to near-zero singular values indicates the data lives on a low-dimensional manifold. Values below the gap are noise — keeping them adds variance without signal to any downstream model.`,
+      `**Use SVD when you need a low-rank approximation, a pseudo-inverse, or intrinsic dimensionality.** Call \`np.linalg.svd(X, full_matrices=False)\` and inspect the singular value spectrum. A sharp elbow in the scree plot tells you the effective rank of your data. Singular values below the elbow are noise — including them adds variance without signal to any downstream model.`,
+      `**The production trap: computing PCA via eigendecomposition of the covariance matrix $X^T X$.** This squares the condition number: if $\kappa(X) = 100$, then $\kappa(X^T X) = 10,000$. Numerical errors get amplified by $\kappa^2$. Always compute PCA via SVD of the data matrix directly. sklearn\`s \`PCA\` does this by default. If you wrote your own PCA from scratch using \`np.linalg.eig\` on $X^T X$, replace it.`,
+      `**The diagnostic: plot the singular value spectrum and check the condition number $\kappa = \sigma_{max}/\sigma_{min}$.** A condition number above $10^6$ means the matrix is nearly singular and any computation involving its inverse (least squares, linear regression) will be numerically unstable. The pseudoinverse $A^+ = V \Sigma^+ U^T$ handles this by zeroing near-zero singular values rather than inverting them — sklearn\`s LinearRegression uses this by default.`,
     ],
     checkQuestions: [
       {
@@ -360,7 +373,7 @@ benius and spectral norm.** This is provably optimal — no other rank-k matrix 
         answer: `C`,
       },
     ],
-    takeaway: `SVD reveals both the intrinsic dimensionality of your data (read the singular value spectrum for the gap between signal and noise) and the numerical stability of any computation on that matrix (the condition number is σ_max/σ_min). Both are free diagnostics that come with every SVD call.`,
+    takeaway: `SVD reveals intrinsic dimensionality (the singular value spectrum) and numerical stability (the condition number) in a single call — read both before trusting any computation on that matrix.`,
   },
   {
     id: 'pca_theory',
@@ -369,15 +382,20 @@ benius and spectral norm.** This is provably optimal — no other rank-k matrix 
     difficulty: 'intermediate',
     estimatedMin: 26,
     tags: ['PCA', 'dimensionality reduction', 'covariance'],
-    summary: `High-dimensional data slows down downstream models, causes overfitting, and makes visualisation impossible. The obvious fix is to drop features — but which ones? Dropping features by hand throws away information arbitrarily. PCA finds a principled answer: project the data onto the directions where it varies most. Maximum variance is the proxy for maximum information. Compressing in low-variance directions loses little — those directions may be noise.
+    summary: `You are building a face recognition system. Each image is 100×100 pixels — 10,000 numbers per image. Training a model on raw 10,000-dimensional inputs is slow and prone to overfitting. But most of those dimensions carry redundant information: neighboring pixels are highly correlated, and faces share common structure — eyes roughly here, nose here, mouth here.
 
-The algorithm: centre the data, compute the covariance matrix, find its top eigenvectors. Crucially, maximising projected variance is mathematically equivalent to minimising reconstruction error — the two objectives produce the same answer. But PCA has two critical failure modes that must be understood before applying it. First, it is scale-sensitive: a feature measured in dollars will dominate one measured in cents, making the "directions of maximum variance" reflect measurement units rather than signal. Always standardise first. Second, PCA is unsupervised: it keeps directions of maximum variance, not directions useful for the downstream task. The discriminative signal for a classifier may live precisely in the low-variance subspace PCA discards.`,
+The naive fix is to drop some features. But which ones? Dropping pixel 4,512 and keeping pixel 4,513 is arbitrary — both carry similar information. What you want is to find the *directions* where faces actually vary, and represent each face as its coordinates along those directions.
+
+PCA does exactly this. Centre the data (subtract the mean face). Compute the covariance matrix $\Sigma = X^T X / (n-1)$ — a 10,000 × 10,000 matrix encoding how every pixel correlates with every other pixel. Find the eigenvectors of this matrix. The eigenvector with the largest eigenvalue is the direction along which face images vary most. Project every image onto the top $k$ eigenvectors. You have compressed 10,000 dimensions down to $k$ — say 50 — while retaining whatever fraction of variance those 50 directions explain. A scree plot of eigenvalues sorted in descending order shows the "elbow" where additional components stop explaining much variance.
+
+Two things make PCA fail. First, scale: a feature measured in dollars has 10,000× the variance of one measured in cents. PCA will identify "dollars direction" as the first principal component — not because it contains more signal, but because it has a larger unit. Always standardise (z-score) before running PCA unless features share a natural common scale.
+
+**NOT this.** Most people think "PCA removes correlated features." PCA does not select a subset of original features. It creates entirely new features that are linear combinations of *all* original features. The new features — principal components — are uncorrelated with each other by construction. But each PC mixes every original feature together. You cannot look at a principal component and say "this is pixel 4,512." The confusion matters because PCA cannot be used for feature selection if you need interpretability in the original feature space.`,
+    interactivePrompt: `Before you touch the controls: if the first two principal components explain 95% of variance in a face recognition dataset, do you think using only those two components would give good classification accuracy — or is there a reason the remaining 5% might matter more than it sounds?`,
     keyPoints: [
-      `**PCA maximises projected variance: the first PC is the direction w (‖w‖ = 1) that maximises Var(Xw).** This is the top eigenvector of the covariance matrix C = XᵀX/(n−1). Compressing in low-variance directions loses the least information — but only if low variance means noise, not signal.`,
-      `**PCA is scale-sensitive: a feature with range [0, 1000] has variance ~10⁶× higher than one with range [0, 1].** It will dominate every principal component. Standardise (z-score) before PCA unless features share a natural common scale. The alternative — whitening — divides PCA scores by √λₖ to give unit variance in every direction.`,
-      `**Whitening is required before algorithms that assume spherical data: k-means, Gaussian Mixture Models with tied covariance, ICA.** Applying k-means to raw PCA scores is incorrect when eigenvalues differ by orders of magnitude — the algorithm will cluster almost entirely along the first PC.`,
-      `**PCA fails when discriminative information is in low-variance directions.** If two classes differ only in a feature with small variance, PCA discards exactly the useful signal. This is the fundamental mismatch: PCA maximises reconstruction quality for the data distribution, not classification performance for the task. Use LDA or supervised autoencoders when label information should guide the reduction.`,
-      `**Kernel PCA replaces the dot products xᵢᵀxⱼ with k(xᵢ, xⱼ), performing PCA implicitly in a high-dimensional feature space.** It discovers non-linear manifold structure that linear PCA cannot. The cost is O(n²) memory for the kernel matrix, making it impractical for large n.`,
+      `**Use PCA to reduce compute and overfitting, not to select features.** When downstream models are slow or overfit on high-dimensional inputs, project to the top $k$ PCs first. Choose $k$ to retain 95% of variance, or use the scree plot elbow. Computing PCA via SVD of the data matrix $X$ is numerically superior to eigendecomposition of $X^T X$ — it avoids squaring the condition number.`,
+      `**The production trap: scale sensitivity.** A pixel value in [0, 255] has 65,000× the variance of a binary indicator in [0, 1]. PCA will identify the pixel direction as the first principal component — not because it is more informative, but because it is numerically larger. Always z-score before PCA unless all features share a natural common unit. After PCA, whitening (dividing each PC score by $\sqrt{\lambda_k}$) gives unit variance in every direction and is required before k-means or GMMs.`,
+      `**The diagnostic: compare PCA-compressed model accuracy against label-supervised baselines.** If 95% of variance explains only 70% of classification accuracy, the remaining 5% likely contains the discriminative signal. Try LDA (Linear Discriminant Analysis) — it maximises between-class variance rather than total variance, and will find directions PCA discards when classes differ in low-variance directions. If PCA\`s reconstruction quality is high but downstream task quality is poor, switch to a supervised reduction method.`,
     ],
     checkQuestions: [
       {
@@ -411,7 +429,7 @@ The algorithm: centre the data, compute the covariance matrix, find its top eige
         answer: `A`,
       },
     ],
-    takeaway: `PCA keeps high-variance directions and discards low-variance ones. Before using it as a preprocessing step, verify that the discarded directions do not contain task-relevant signal — the information your model needs most may live exactly in the low-variance subspace PCA eliminates.`,
+    takeaway: `PCA keeps high-variance directions and discards low-variance ones. Always verify that the discarded variance does not contain the label signal — the information your classifier needs most may live exactly in the directions PCA throws away.`,
   },
   {
     id: 'calculus_ml',
@@ -581,19 +599,20 @@ dient and the input activation. ∂L/∂x = Wᵀ · (∂L/∂z) — the transpos
     difficulty: 'intermediate',
     estimatedMin: 26,
     tags: ['statistics', 'hypothesis testing', 'p-values', 'A/B testing'],
-    summary: `A business needs to grow, so it tests new features. The status quo is always the null hypothesis — you do not change what is working without evidence. A new feature might perform better by pure chance. You need to quantify: is this result explainable by luck alone? The p-value answers exactly this: it is the probability of observing a result at least as extreme as the one measured, if the null hypothesis were true.
+    summary: `Your team builds a new checkout button — different color, slightly repositioned. You run it for two weeks. 10,000 users see the new version; 10,000 see the old one. Conversion: 3.2% versus 3.0%. The difference is 0.2 percentage points. Is this real, or did you just get lucky?
 
-A small p-value means the data is hard to explain by luck alone — grounds to reject the null. It does not prove the alternative is true, and it is not the probability that the null hypothesis is true. Confusing p-value with posterior probability of a hypothesis is the most consequential statistical misunderstanding in applied science. Type I error (false positive) is rejecting the null when it is true; Type II error (false negative) is failing to reject the null when it is false. With large samples, even a 0.001% difference achieves p < 0.001 — statistically significant but practically worthless. Effect size must always accompany p-values. Running 100 tests at α = 0.05 gives 5 expected false positives — multiple comparisons inflate the false discovery rate and require correction.`,
+The question you need to answer: if the button had no effect whatsoever — if both groups were drawn from the same underlying population — how often would random sampling produce a gap of at least 0.2 percentage points just by chance? That probability is the p-value. A p-value of 0.03 means: if the null hypothesis were true, you would see a difference this large or larger about 3% of the time by chance alone.
+
+If p falls below your threshold α (commonly 0.05), you reject the null. Type I error (false positive): you rejected when the null was true — happens with probability α. Type II error (false negative): you failed to reject when there was a real effect. The probability of *detecting* a real effect is power $= 1 - \beta$. Power is not determined by p-values — it is determined before the experiment by choosing your sample size.
+
+Now suppose your product manager runs 20 A/B tests simultaneously, each at α = 0.05. Under the null, each test has a 5% chance of a false positive. With 20 tests, you expect $20 \times 0.05 = 1$ false positive. Finding three "significant" results is entirely consistent with all null hypotheses being true. The Bonferroni correction divides α by the number of tests: test each at $\alpha/20 = 0.0025$. The Benjamini-Hochberg procedure controls the false discovery rate — the fraction of significant results that are false — and is less conservative.
+
+**NOT this.** Most people read p < 0.05 as "there is a 95% probability the effect is real." Wrong. The p-value is a property of the *data* under the null hypothesis, not a probability about the hypothesis. It says nothing about P(null is true). To compute that, you need a prior — Bayesian territory. A p-value of 0.001 on a 10-million-user dataset can come from a conversion difference of 0.001%, which is statistically real but commercially irrelevant. Statistical significance is not practical significance. Always pair p-values with effect sizes and confidence intervals.`,
+    interactivePrompt: `Before you touch the controls: if you run 20 A/B tests and 1 comes back significant at p = 0.05, how confident are you that the winning variant actually works — very confident, moderately confident, or do you think there is a good chance it is a false positive?`,
     keyPoints: [
-      `**A p-value is not the probability that the null hypothesis is true.** It is P(observing data this extreme | null is true). The failure mode — treating p = 0.03 as "97% confident the alternative is true" — is the prosecutor's fallacy applied to statistics. The correct statement is: "if the null were true, results this extreme would occur 3% of the time."`,
-      `**Effect size matters more than statistical significance at large n.** With n = 1,000,000, a 0.001% conversion difference achieves p < 0.001 — statistically significant but practically irrelevant. Always report Cohen's d, odds ratio, or percent lift alongside p-values. Statistical significance answers "is this effect non-zero?"; effect size answers "is this effect worth caring about?"`,
-      `**Power = 1 − β = probability of correctly detecting a real effect.** Power is determined before running the test by choosing sample size. Low power means you will miss real effects and incorrectly conclude no effect exists. The sample size formula
-
-$n = 2(z_{α/2} + z_β)²σ²/δ² requires specifying the minimum detecta$
-
-ble effect δ before collecting data — not after seeing results.`,
-      `**Multiple comparisons: running k tests each at α = 0.05 gives expected 0.05k false positives.** Bonferroni corrects by using α/k per test — conservative, controls family-wise error rate. Benjamini-Hochberg controls false discovery rate at α and is less conservative, preferred for exploratory feature selection where some false positives are acceptable.`,
-      `**Peeking bias: stopping an A/B test as soon as p < 0.05 inflates Type I error far above the nominal α.** The p-value is only valid at the pre-specified stopping time. Sequential testing methods — always-valid p-values, spending functions — allow continuous monitoring without inflating the false positive rate.`,
+      `**Use hypothesis testing when you need to decide whether an observed difference exceeds what chance alone can explain.** Pre-commit to your α and the minimum detectable effect size before collecting data. The sample size formula $n = 2(z_{\alpha/2} + z_\beta)^2 \sigma^2 / \delta^2$ requires specifying $\delta$ (the smallest effect you care about) and $\beta$ (acceptable miss rate) before a single observation. Post-hoc power calculations — done after seeing the results — are not valid.`,
+      `**The production trap: peeking.** Checking p-values as data accumulates and stopping when p < 0.05 inflates Type I error far above α. If you check after every 100 users, the effective false positive rate can reach 20–30% even at a nominal α = 0.05. Use sequential testing methods (always-valid p-values or alpha-spending functions) if you need continuous monitoring, or commit to a fixed sample size and look once.`,
+      `**The diagnostic: separate statistical significance from practical significance.** With n = 1,000,000, a 0.001% conversion lift achieves p < 0.001 — statistically significant, practically irrelevant. Report Cohen\`s d, percent lift, or absolute conversion change alongside every p-value. If the effect size is smaller than the minimum you pre-specified as meaningful, the result does not justify a ship decision regardless of the p-value.`,
     ],
     checkQuestions: [
       {
@@ -627,7 +646,7 @@ ble effect δ before collecting data — not after seeing results.`,
         answer: `A`,
       },
     ],
-    takeaway: `A p-value measures how surprising the data would be if the null were true — not the probability that any hypothesis is true. Never ship or kill a feature on a p-value alone. You need effect size to know if the difference matters, power to know if a null result means anything, and correction for multiplicity if you ran more than one test.`,
+    takeaway: `A p-value measures how often chance produces this result, not how probable the hypothesis is. Effect size tells you whether the result matters. You need both before making a decision.`,
     interactiveId: 'hypothesis_testing_viz',
   },
   {
@@ -637,27 +656,22 @@ ble effect δ before collecting data — not after seeing results.`,
     difficulty: 'intermediate',
     estimatedMin: 26,
     tags: ['MLE', 'MAP', 'regularisation', 'Bayesian'],
-    summary: `You have data and you need to fit a model. The naive approach is to find the parameters that best explain the data — maximum likelihood estimation (MLE). But with limited data, MLE overfits: it finds parameters that explain the training data perfectly while making wild predictions on new data.
+    summary: `You flip a coin 10 times and get 7 heads. What is your best estimate for the probability of heads? The most obvious approach: count. $\hat{p} = 7/10 = 0.7$. This is maximum likelihood estimation — find the parameter $\theta$ that makes the observed data most probable. Formally: $\hat{\theta}_{MLE} = \arg\max_\theta P(data|\theta) = \arg\max_\theta \theta^7(1-\theta)^3$. Take the log, differentiate, set to zero: $\hat{\theta}_{MLE} = 0.7$.
 
-The fix is regularisation: penalise the loss for parameter values that seem implausible. But where do the regularisation terms come from, and how should you choose them? Maximum A Posteriori (MAP) estimation gives a principled answer. MAP finds the parameters most probable given the data:
+Now flip the same coin only 3 times and get 3 heads. MLE gives $\hat{p} = 3/3 = 1.0$ — the coin always lands heads. Obviously wrong. MLE with tiny data is overconfident. The problem is that MLE has no memory of what coins are usually like. It treats every dataset as if the parameters could be anything.
 
-$θ̂_MAP = argmax P(θ|data) ∝ P(data|θ) × P(θ). The prior P(θ) encodes your belief about parameters b$
+MAP (Maximum A Posteriori) fixes this by adding a prior. Put a $\text{Beta}(2, 2)$ prior over $\theta$ — this encodes "probably close to 0.5, but I am not certain." The posterior is $P(\theta | data) \propto P(data|\theta) \cdot P(\theta)$. MAP finds the mode of this posterior. With 3 heads out of 3 flips, MAP gives $\hat{\theta}_{MAP} \approx 0.8$ rather than 1.0. The prior pulled the estimate toward sanity.
 
-efore seeing data. Adding the log prior to the log-likelihood is identical to adding a regularisation term. A Gaussian prior on θ gives L2 regularisation (Ridge); a Laplace prior gives L1 regularisation (Lasso). This reveals that regularisation is not an ad hoc trick — it is a statement about what you believe the model should look like before seeing data. As n → ∞, the data overwhelms the prior and MAP converges to MLE — regularisation should be reduced as sample size grows.`,
+The prior is not just a Bayesian abstraction. Adding $\log P(\theta)$ to the log-likelihood is identical to adding a regularisation term to your loss function. A Gaussian prior $\theta \sim N(0, \tau^2 I)$ produces L2 regularisation (Ridge) with $\lambda = 1/(2\tau^2)$. A Laplace prior produces L1 regularisation (Lasso). Every time you tuned a regularisation coefficient, you were implicitly choosing a prior distribution over weights.
+
+**NOT this.** Most people think "MLE is just fitting the data." MLE assumes a specific probabilistic model — a particular likelihood function — and finds the parameters that make the observed data most probable under that model. If your model is wrong (fitting a Gaussian to bimodal data), MLE finds the "best" wrong answer with complete confidence. The model is always right in MLE\`s eyes; MLE has no mechanism to doubt the model family. MAP at least has a prior that can pull estimates back from absurdity when data is scarce.
+
+As $n \to \infty$, the likelihood dominates and MAP converges to MLE — the data eventually overwhelms any reasonable prior. This means regularisation should shrink as your dataset grows.`,
+    interactivePrompt: `Before you touch the controls: if you flip a coin 3 times and get 3 heads, what do you actually believe the true probability of heads is — 1.0, something high like 0.8, or about 0.5?`,
     keyPoints: [
-      `**MLE:
-
-$θ̂_MLE = argmax_θ Σᵢ log p(xᵢ|θ).** Log-likelihood converts products to$
-
-sums and avoids underflow. For Gaussian data, MLE gives the sample mean (unbiased) and divides by n rather than n−1 for variance (biased). MLE is not always unbiased — it is consistent (converges to the truth as n → ∞) but can be biased in finite samples.`,
-      `**MAP = MLE + log prior.** Every regularised ML algorithm has a Bayesian MAP interpretation. You were already encoding prior beliefs through your regularisation choices — MAP just makes those beliefs explicit. The prior is not a Bayesian add-on; it is the thing you were doing all along, unnamed.`,
-      `**Gaussian prior N(0, τ²I) on weights produces L2 regularisation: the log prior is −(1/2τ²)‖θ‖², which adds λ‖θ‖² to the loss with
-
-$λ = 1/(2τ²).** The regularisation strength encodes confidence in the prior — large λ means you are confident weights should$
-
-be near zero, small λ means a diffuse prior.`,
-      `**Laplace prior on weights produces L1 regularisation: the Laplace distribution has a sharp peak at zero and heavier tails than Gaussian.** It encodes the belief that most weights should be exactly zero with a few allowed to be large — the right prior for genuinely sparse problems like genomics or text feature selection.`,
-      `**As n → ∞, the likelihood dominates and MAP → MLE.** This means regularisation should shrink as training data grows — tuning λ via cross-validation on a large dataset naturally selects smaller values. A fixed large λ applied to a large dataset underfits unnecessarily.`,
+      `**Use MLE when you have enough data that the prior does not matter, and MAP (with regularisation) when data is scarce.** The crossover point depends on the prior strength and the number of parameters. A rule of thumb: if your training set has fewer than ~10 observations per parameter, the prior matters substantially. Cross-validate $\lambda$ to find the data-implied prior strength.`,
+      `**The production trap: treating regularisation strength as a pure hyperparameter with no semantic content.** L2 regularisation says weights are Gaussian around zero. L1 says most weights are exactly zero. If you use L1 on a problem where you do not believe most features are irrelevant, you are encoding a false prior and likely underfitting. Match your regulariser to your belief about the solution structure.`,
+      `**The diagnostic: watch regularisation strength versus dataset size.** If cross-validation selects larger $\lambda$ as you add more data, something is wrong — the data should overwhelm the prior and push $\lambda$ toward zero as $n$ grows. A regularisation coefficient that stays large on a big dataset often indicates a model family mismatch, not a genuine sparsity signal.`,
     ],
     checkQuestions: [
       {
@@ -691,7 +705,7 @@ be near zero, small λ means a diffuse prior.`,
         answer: `B`,
       },
     ],
-    takeaway: `Every regularised ML model is a MAP estimate with an implicit prior. L2 says weights are probably small and Gaussian. L1 says most weights are probably exactly zero. Choosing your regulariser is not a numerical trick — it is a statement about what you believe the model should look like before seeing any data.`,
+    takeaway: `Every regularised model is a MAP estimate. Choosing L2 or L1 is not a numerical trick — it is a statement about what you believe the solution looks like before seeing any data.`,
   },
   {
     id: 'bayesian_inference',
