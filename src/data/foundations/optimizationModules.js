@@ -115,11 +115,49 @@ The gold-standard fix would be **Newton's method**, which looks at the *curvatur
 
 ---
 
-One last honest note: on the simple, bowl-shaped losses of something like logistic regression, gradient descent is guaranteed to reach the bottom. On the wildly bumpy landscapes of deep networks there is no such guarantee — the best you can promise is that it will roll to *some* flat spot. In practice that turns out to be fine, because in very high dimensions the truly bad traps (points that curve upward in every direction at once) become vanishingly rare; the real enemies are the ravines and the long flat plateaus, not getting stuck in a little pit.`,
+One last honest note: on the simple, bowl-shaped losses of something like logistic regression, gradient descent is guaranteed to reach the bottom. On the wildly bumpy landscapes of deep networks there is no such guarantee — the best you can promise is that it will roll to *some* flat spot. In practice that turns out to be fine, because in very high dimensions the truly bad traps (points that curve upward in every direction at once) become vanishingly rare; the real enemies are the ravines and the long flat plateaus, not getting stuck in a little pit.
+
+---
+
+**How much data per step: full-batch, stochastic, mini-batch.**
+
+We glossed over *what* the gradient is computed on. **Full-batch** gradient descent uses the entire dataset for every step — the gradient is exact but each step is expensive, and for millions of examples you take painfully few steps. **Stochastic gradient descent (SGD)** goes to the other extreme: one example per step — cheap and fast, but the gradient is a noisy estimate that jitters around the true direction. **Mini-batch** SGD is the practical middle (batches of 32–512): enough examples to average out most of the noise, few enough to take many steps per pass. One full pass over the data is an **epoch**; each mini-batch update is a **step**. And the noise isn't purely bad — the jitter of small batches helps the model skip past sharp, brittle minima toward flatter, better-generalising ones. Batch size is a real knob, not just a memory setting.
+
+---
+
+**Where the gradient actually comes from: backprop.**
+
+Gradient descent *uses* a gradient; **backpropagation** is how you *get* it efficiently. Backprop is just the chain rule applied layer by layer, computing the gradient of the loss with respect to every weight in a single backward pass — turning what would be a separate derivative computation per parameter into one sweep. Keep the two ideas distinct: backprop computes the gradients, the optimizer decides how to step with them. They're partners, not the same thing.
+
+---
+
+**The optimizer family, in one map.**
+
+Plain gradient descent's one-step-size weakness spawned a family, each borrowing a little of Newton's curvature wisdom cheaply (each has its own lesson). **Momentum** keeps a running average (velocity) of past gradients, so consistent directions build speed while oscillations across a ravine cancel out — it damps the zig-zag. **AdaGrad/RMSProp** give each parameter its *own* effective learning rate based on how large its recent gradients have been, taking bigger steps in flat directions and smaller in steep ones. **Adam** combines both: a momentum term (first moment, m, controlled by β₁) and a per-parameter scaling (second moment, v, controlled by β₂), plus bias correction for the early steps and an ε for numerical safety — and **AdamW** fixes how weight decay interacts with that scaling. Adam is the default for most deep learning; SGD-with-momentum still wins in some vision settings.
+
+---
+
+**Learning-rate schedules.**
+
+One fixed rate is rarely best across a whole run, so you *schedule* it. **Warmup** starts tiny and ramps up over the first few hundred steps (a big early step on a fresh, unstable model can blow up). Then you **decay** — **step decay** (drop by a factor at milestones), **cosine decay** (smoothly anneal to near zero), or **reduce-on-plateau** (cut the rate whenever validation loss stalls). The point: take large steps early to cover ground, small steps late to settle precisely. Schedules interact with **early stopping** (halt when validation stops improving) — together they're how modern training both moves fast and lands cleanly.
+
+---
+
+**When do you actually stop?**
+
+"Until the loss stops dropping" needs to be made concrete. Common **convergence criteria**: validation loss stops improving for *N* checks (**early stopping** with a **patience** window — the most common in deep learning), the **gradient norm** falls below a threshold (you're at a flat spot), the **loss improvement** per step drops under a tolerance, or you simply hit a **max epochs / compute budget**. In practice validation-based early stopping is what you use, because it stops at best *generalisation*, not just lowest training loss.
+
+---
+
+**The gradient pathologies to recognise.**
+
+A few characteristic failure modes, each with a tell and a fix. **Vanishing gradients**: gradients shrink toward zero in early layers, which barely learn (fix: ReLU-family activations, residual connections, normalisation, good init). **Exploding gradients**: gradients blow up, loss goes NaN (fix: gradient clipping, better init). **Saddle points and plateaus**: large flat regions where the gradient is near zero but you're not at a minimum — momentum and adaptive methods power through them. **Poor initialisation**: weights scaled wrong make activations saturate or explode from step one. Normalisation layers (BatchNorm/LayerNorm) smooth the landscape and make all of this more forgiving. Most of these have dedicated lessons — the point here is to recognise the symptom from the loss curve.`,
     keyPoints: [
       `**Use gradient descent when you have a differentiable loss and many parameters — but not when a closed-form answer exists.**\n\nFor plain linear regression, the exact formula (XᵀX)⁻¹Xᵀy is cheaper and more accurate — do not iterate when you can just solve. Gradient descent earns its keep once there are too many parameters or no closed form: logistic regression on 10,000 features, or any neural network. Rough rule: if solving the exact equations would cost more than running enough gradient steps to converge, iterate.`,
       `**The trap: treating the learning rate as one fixed number when the landscape needs different step sizes in different directions.**\n\nIf your loss drops fast for a while and then crawls along a long plateau, that is usually not a data problem — it is the ravine problem: the flat directions are starving while the steep ones already converged. Quick diagnosis: plot the loss on a log scale. A straight line means steady fractional progress (the learning rate is fine); a curve that flattens out means you have hit a high-mismatch region, where momentum or an adaptive optimizer will help.`,
       `**The diagnostic: healthy training shows the loss falling steadily — roughly a straight line on a log scale.**\n\nOscillating loss means the learning rate is too big. A fast drop then an early plateau means it is too small, or you are in a ravine. A loss that never moves at all usually means a bug — check your gradient against a numerical estimate: nudge one weight up and down by a tiny amount, see how the loss changes, and compare. If that finite-difference slope disagrees with your computed gradient, the gradient code is wrong.`,
+      `**Know the batch spectrum and that backprop supplies the gradients the optimizer steps with.**\n\nFull-batch gives an exact but expensive gradient; SGD (one example) is cheap and noisy; mini-batch (32–512) is the practical middle, and its noise actually helps escape sharp minima toward flatter ones — one pass is an epoch, one batch update a step. Backprop (the chain rule, one backward pass) computes those gradients efficiently; the optimizer decides how to use them. The optimizer family — momentum (velocity of past gradients), RMSProp/AdaGrad (per-parameter rates), Adam/AdamW (both, with bias correction and β₁/β₂) — each cheaply borrows curvature to fix plain GD's single-step-size weakness.`,
+      `**Schedule the learning rate, stop on validation, and recognise the pathologies.**\n\nUse warmup (ramp up to avoid early blow-ups) then decay (step, cosine, or reduce-on-plateau) — big steps early, small steps late. Stop via validation-based early stopping with a patience window (best generalisation), or gradient-norm/loss-tolerance/max-budget criteria. Read pathologies off the loss curve: vanishing gradients (early layers stall → ReLU/residuals/normalisation/init), exploding gradients (NaN → clipping/init), saddle points and plateaus (flat, near-zero gradient → momentum/adaptive methods power through), poor initialisation (saturated activations from step one).`,
     ],
     interactivePrompt: `Before you touch the controls: if the learning rate is 10x too large, will the loss increase monotonically, oscillate, or explode to infinity — and does the answer change for convex vs non-convex loss landscapes?`,
     takeaway: `Gradient descent replaces an impossible search over $10^{500000}$ parameter combinations with iterative local steps — each step costs one forward and backward pass, moves downhill by one gradient step, and repeats until convergence or budget exhaustion.`,
@@ -164,6 +202,26 @@ One last honest note: on the simple, bowl-shaped losses of something like logist
           `\`D) It is the ratio of the steepest curvature to the gentlest (the largest over the smallest Hessian eigenvalue). A high one means a long, narrow ravine — steep one way, nearly flat another. A single learning rate has to stay small enough not to diverge on the steep direction, which leaves it far too small for the flat one, so progress along the floor crawls. That mismatch is exactly what adaptive methods fix.\``,
         ],
         answer: `D`,
+      },
+      {
+        q: `An interviewer asks: "You have 10 million training examples. Contrast full-batch, stochastic, and mini-batch gradient descent, and say why mini-batch is the practical default."`,
+        options: [
+          `\`A) Full-batch is always best because its gradient is exact; the only reason to use anything else is if the data doesn't fit in memory, in which case you use single-example SGD.\``,
+          `\`B) Full-batch uses all 10M examples per step — an exact gradient but very few, very expensive steps. Pure SGD uses one example per step — cheap and fast but a noisy gradient that jitters around the true direction. Mini-batch (say 32–512) averages out most of the noise while still taking many steps per epoch, giving the best speed/stability trade-off; its remaining noise even helps escape sharp minima toward flatter, better-generalising ones.\``,
+          `\`C) They differ only in speed, not in the path taken — all three follow the identical trajectory to the identical minimum, so the choice is purely about wall-clock time.\``,
+          `\`D) Mini-batch is preferred because it computes an exact gradient like full-batch but using less memory; the batch size has no effect on the noise or the quality of the minimum reached.\``,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `A colleague says "gradient descent and backpropagation are the same thing." How do you correct them?`,
+        options: [
+          `\`A) They're right — backpropagation is just another name for gradient descent, since both are about moving the weights downhill.\``,
+          `\`B) They're different: backpropagation is the training loss function, while gradient descent is the neural network architecture that minimises it.\``,
+          `\`C) They're distinct but partnered. Backpropagation is the chain rule applied layer by layer to compute the gradient of the loss with respect to every weight in a single efficient backward pass. Gradient descent is the optimisation step that then uses that gradient to update the weights. Backprop gets the gradient; the optimizer decides how to step with it.\``,
+          `\`D) They're different because backpropagation only works for convex losses while gradient descent works for any loss, so the two are used on entirely different problems.\``,
+        ],
+        answer: `C`,
       },
     ],
     figures: {
@@ -248,11 +306,55 @@ Most people pick batch size by "whatever fits in GPU memory." But because the ba
 
 **One rule you cannot skip: shuffle.**
 
-Finally, a practical trap that quietly ruins training: **shuffle your data before every pass**. The whole "noisy but right on average" guarantee assumes each mini-batch is a random sample. If your data happens to be sorted by class — all the cats, then all the dogs — an unshuffled batch contains *only cats*, and its gradient screams "get better at cats" while forgetting dogs entirely. Consecutive batches then yank the model in wildly different directions. Shuffle before each epoch and every batch becomes a fair little snapshot of the whole dataset, which is what makes the estimate honest.`,
+Finally, a practical trap that quietly ruins training: **shuffle your data before every pass**. The whole "noisy but right on average" guarantee assumes each mini-batch is a random sample. If your data happens to be sorted by class — all the cats, then all the dogs — an unshuffled batch contains *only cats*, and its gradient screams "get better at cats" while forgetting dogs entirely. Consecutive batches then yank the model in wildly different directions. Shuffle before each epoch and every batch becomes a fair little snapshot of the whole dataset, which is what makes the estimate honest.
+
+---
+
+**Epoch, step, iteration — pin down the vocabulary.**
+
+These get muddled constantly, so be exact. One **epoch** is one full pass through the entire dataset. One **step** (also called one **iteration**) is a single mini-batch update. The relationship: **updates per epoch = ceil(N / batch_size)**. So 1,000,000 examples at batch size 256 is ⌈1,000,000 / 256⌉ = 3,907 steps per epoch. When a paper says "trained for 100k steps" versus "100 epochs," these mean different amounts of compute unless you also know N and the batch size — always convert to one consistent unit before comparing runs.
+
+---
+
+**"Small batch generalises better" is a tendency, not a law.**
+
+The flat-minima story is real but *not universal*. Whether small batches actually generalise better depends on the **learning rate**, the **dataset size**, the **architecture**, whether you use **normalisation**, the **schedule**, and the **training budget**. With careful warmup, LR scaling, and enough steps, large-batch training can close much of the gap (this is how models train on thousands of GPUs). So don't state "small batch = better generalisation" as a rule — state it as a default tendency that a well-tuned large-batch setup can partly overcome.
+
+---
+
+**Scaling the learning rate to the batch has limits.**
+
+The **linear scaling rule** (multiply LR by k when you multiply batch size by k) works — but only up to a regime. Past a few thousand examples per batch it breaks down: the implied LR gets so large that early training destabilises, which is exactly why **warmup** (ramping the LR up over the first epochs) becomes essential at large batch. Some setups find **square-root scaling** (LR ∝ √k) safer than linear at scale. The takeaway: LR-vs-batch scaling is an approximation with a ceiling, not a guaranteed equivalence.
+
+---
+
+**BatchNorm couples training to the batch size.**
+
+If your network uses **BatchNorm**, batch size stops being just a noise/speed knob because BatchNorm computes its normalisation *statistics from the current batch*. **Very small batches** give noisy mean/variance estimates that destabilise training (a batch of 2 has almost meaningless statistics). **Very large batches** give near-exact statistics, which changes BatchNorm's own regularisation behaviour. This is a big reason transformers favour **LayerNorm** (which normalises per-example and doesn't depend on batch size). When you change batch size on a BatchNorm model, you're changing more than the gradient noise.
+
+---
+
+**SGD versus Adam, fairly.**
+
+"SGD generalises better than Adam" is too blunt. **Adam/AdamW** often *wins* — it's the standard for transformers and shines on sparse gradients and NLP. **SGD-with-momentum** can generalise better in some classic vision/CNN settings when well-tuned. The honest summary: AdamW is the default for modern deep learning; SGD+momentum remains competitive or better in specific well-studied regimes. Pick based on the domain and tune both before declaring a winner.
+
+---
+
+**Big batches live across many GPUs: distributed training.**
+
+At scale the batch is split across devices, which adds vocabulary. **Global batch size** is the total across all GPUs; **per-device batch size** is what each one processes. **Gradient accumulation** simulates a large batch on limited memory by summing gradients over several forward/backward passes before one update. **Data parallelism** replicates the model on each GPU and all-reduces the gradients — which costs **communication** bandwidth, often the real bottleneck at scale. So "batch size 8,192" usually means a global batch spread over many devices, not one machine's memory.
+
+---
+
+**Rare classes can get squeezed out of batches.**
+
+Random mini-batching assumes every batch is a fair sample — but under heavy imbalance a batch of 32 from a 0.1%-positive dataset frequently contains *zero* positives, so many steps carry no signal about the rare class. Fixes: **stratified batches** (force a minimum number of rare-class examples per batch), **weighted sampling** (oversample the rare class into batches), and **hard-example mining** (bias batches toward the examples the model currently gets wrong). Under imbalance, how you *build* the batch matters as much as its size.`,
     keyPoints: [
       `**Default to modest batch sizes (32–256); go bigger only when speed forces it, and pay for it with extra regularization.**\n\nSmall batches supply the noise that finds flat, well-generalizing minima. If your GPU is sitting mostly idle, the batch is too small and you are wasting throughput; if test accuracy is a point or more below published numbers for the same architecture, the batch may be too large. When you do scale the batch up by k, scale the learning rate up by about k too (the "linear scaling rule") — but know that this only fixes step size, not the lost noise, so generalization still slips once batches get very large.`,
       `**The trap: cranking the batch size for speed without realising you switched off the free regularization.**\n\nThe symptom is sneaky: training loss matches the benchmarks, but test accuracy sits 1–3% low, so you blame the data or the architecture. The real culprit is a batch of 4,096 where the benchmark used 256. Fix it by shrinking the batch, or by adding explicit regularization (weight decay, dropout) to replace the noise you removed — and always report batch size alongside the generalization gap.`,
       `**The diagnostic: watch training and validation loss, and how the loss moves per step versus per epoch.**\n\nValidation loss much higher than training loss points to too large a batch (a sharp minimum, overfitting). A loss that is jittery step-to-step but steadily falling epoch-to-epoch is healthy mini-batch behaviour. A loss that is perfectly smooth every single step means you are effectively doing full-batch descent — worth asking whether you actually want that, and what it is costing you in generalization.`,
+      `**Pin the vocabulary and qualify the small-batch claim.**\n\nOne epoch = one full pass; one step/iteration = one mini-batch update; updates per epoch = ceil(N / batch_size), so "100k steps" and "100 epochs" differ unless you know N and batch size. "Small batch generalises better" is a tendency, not a law — it depends on LR, dataset size, architecture, normalisation, schedule, and budget, and well-tuned large-batch training (with warmup) closes much of the gap. The linear LR-scaling rule holds only up to a regime; beyond a few thousand it needs warmup and sometimes √-scaling is safer.`,
+      `**Watch BatchNorm coupling, judge SGD-vs-Adam fairly, and handle scale and imbalance.**\n\nWith BatchNorm, batch size changes the normalisation statistics themselves — very small batches destabilise, very large ones alter its regularisation (a reason transformers use batch-independent LayerNorm). Don't blanket-claim SGD beats Adam: AdamW is the modern default and wins for transformers/sparse gradients, while SGD+momentum can win in some tuned vision settings. At scale, distinguish global vs per-device batch, use gradient accumulation for limited memory, and mind all-reduce communication cost. Under heavy imbalance, random batches can contain zero rare-class examples — use stratified batches, weighted sampling, or hard-example mining.`,
     ],
     interactivePrompt: `Before you touch the controls: if you increase batch size from 32 to 256 while keeping learning rate fixed, predict whether training loss will converge faster or slower — and whether the model that finishes training will generalize better or worse.`,
     takeaway: `Mini-batch SGD was invented for computational feasibility; its gradient noise turned out to be the mechanism that finds flat, generalizing minima — making batch size a generalization hyperparameter, not just a throughput setting.`,
@@ -296,6 +398,26 @@ Finally, a practical trap that quietly ruins training: **shuffle your data befor
           `\`D) Full-batch is exact with 1 update per epoch; mini-batch has 3,906 updates but non-monotone convergence. For a million examples full-batch is always better, because at that scale the landscape is effectively convex and the noise buys nothing.\``,
         ],
         answer: `C`,
+      },
+      {
+        q: `Your model uses BatchNorm and trained well at batch size 128. You drop to batch size 4 (memory limit) and training becomes unstable, with worse accuracy even holding everything else fixed. Why, and what's a fix?`,
+        options: [
+          `\`A) Batch size never affects BatchNorm, so the instability must be an unrelated bug in the data loader.\``,
+          `\`B) BatchNorm computes its normalisation mean and variance from the current batch, so a batch of 4 gives extremely noisy statistics that shift every step and destabilise training. Fixes: use GroupNorm or LayerNorm (batch-independent), use gradient accumulation to keep an effective batch of 128, or switch to a normalisation that doesn't rely on batch statistics.\``,
+          `\`C) Small batches always improve generalisation, so the accuracy drop is impossible — recheck your metric rather than the batch size.\``,
+          `\`D) The only issue is the learning rate; halving it whenever you halve the batch fully fixes any BatchNorm instability.\``,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `You're training a fraud classifier where 0.1% of examples are positive, using random mini-batches of 32. Training is unstable and the model barely learns fraud. What's a likely cause tied to batching, and how do you fix it?`,
+        options: [
+          `\`A) The batch size is too large; drop to 8 so each positive example has more influence.\``,
+          `\`B) At 0.1% positives, a random batch of 32 usually contains zero fraud examples, so most steps carry no gradient signal about the positive class and the rare-class updates are swamped by noise. Fix by shaping the batches: stratified batches that guarantee a minimum number of positives, weighted/oversampled sampling of the rare class into batches, or hard-example mining — how you build the batch matters as much as its size under heavy imbalance.\``,
+          `\`C) Random mini-batches are always fine for imbalance; the real fix is switching from SGD to Adam, which handles rare classes automatically.\``,
+          `\`D) Shuffle more aggressively — reshuffling within each batch several times will introduce the missing positive examples.\``,
+        ],
+        answer: `B`,
       },
     ],
     figures: {
@@ -606,12 +728,50 @@ Clipping and ReLU helped, but the breakthroughs were changes to the architecture
 
 **Layer normalization** helps too, by rescaling each layer's activations so they stay in the healthy middle range of the activation function, where the local sensitivity is largest and the signal does not get crushed.
 
-The through-line: ReLU, clipping, residual connections, LSTM gates, and layer norm are not fancy representational upgrades. They are all *plumbing* — machinery whose entire job is to make sure the learning signal survives the trip backward through a deep network.`,
+The through-line: ReLU, clipping, residual connections, LSTM gates, and layer norm are not fancy representational upgrades. They are all *plumbing* — machinery whose entire job is to make sure the learning signal survives the trip backward through a deep network.
+
+---
+
+**Initialisation: the first line of defence.**
+
+Before any of those fixes, the *starting* weights already decide whether the signal survives. If they're too large the activations explode; too small and they vanish — from step one. The principled fix is to scale the initial weights so the *variance* of the signal is preserved as it passes through each layer, in both the forward and backward directions. **Xavier/Glorot** initialisation does this for tanh/sigmoid (variance ≈ 1/fan_in, or 2/(fan_in+fan_out) to balance forward and backward). **He/Kaiming** initialisation is the ReLU version (variance ≈ 2/fan_in), the extra factor of 2 compensating for ReLU zeroing out half its inputs. Use He with ReLU, Xavier with tanh/sigmoid — the wrong one on a deep plain network reintroduces vanishing/exploding at initialisation.
+
+---
+
+**BatchNorm versus LayerNorm.**
+
+Both stabilise the signal by normalising activations, but along *different axes*. **BatchNorm** normalises each feature *across the batch* — it depends on batch statistics, which makes it powerful for CNNs but batch-size-sensitive and awkward for variable-length sequences. **LayerNorm** normalises *across the features within a single example*, so it's independent of batch size and of other examples — which is exactly why it's the norm of choice in **transformers and RNN-like** models where sequences vary and batch statistics are unreliable. The axis is the whole distinction: BatchNorm across the batch, LayerNorm across the features.
+
+---
+
+**Fixing dead ReLUs.**
+
+ReLU's "dead neuron" catch (input stuck negative → output zero forever → no gradient) has a family of fixes. **Leaky ReLU** gives a small negative slope so the neuron always passes *some* gradient. **ELU** and **GELU** (the transformer default) are smooth variants that keep a non-zero gradient for negative inputs. Beyond activations, **better initialisation** (He) and a **lower learning rate** reduce the chance a neuron gets pushed into the dead zone in the first place. If a large fraction of your ReLUs are dead (check activation histograms), that's the lever.
+
+---
+
+**Transformers: residuals + norm, and where the norm goes.**
+
+Everything above is *why* transformers are built the way they are. Each transformer block wraps attention and the feed-forward network in **residual connections** and **layer normalisation** — that combination is what keeps gradients flowing through dozens of blocks. And *where* you put the norm matters: **post-norm** (the original, norm after the residual add) is harder to train deep and needs careful warmup; **pre-norm** (norm inside the residual branch, before attention/FFN) gives a cleaner gradient path and trains stably at great depth, which is why modern large models use it. "Pre-norm vs post-norm" is a real interview question about gradient stability, not a detail.
+
+---
+
+**Reading gradient flow: the diagnostics.**
+
+You don't have to guess whether gradients are healthy — measure. **Per-layer gradient norms**: log the gradient magnitude at each layer; a healthy net keeps them within ~10× across layers, and a steep decay toward the input means vanishing. **Activation histograms**: watch for saturation (piling at the extremes) or lots of dead zeros. **NaN/Inf checks**: catch explosions the moment they appear. **Weight-update ratios**: the size of each step relative to the weight it updates should sit around 1e-3; far smaller means a layer is barely learning. These turn "training is off" into "layer 2 is vanishing."
+
+---
+
+**Symptom map, and what clipping can't fix.**
+
+Tell the two failures apart by their signatures. **Vanishing**: early-layer gradients near zero, those layers barely update, loss falls painfully slowly or stalls, and the network behaves shallow. **Exploding**: gradient norms blow up, loss oscillates wildly or goes NaN, weights leap to extremes. And be clear about clipping's limits: it's a **seatbelt against catastrophic single steps**, but it does *not* fix poor conditioning, a bad learning rate, bad initialisation, or slow long-term vanishing — if you're clipping on most steps, the real problem is upstream (LR too high, init wrong), and clipping is just masking it.`,
     keyPoints: [
       `**The core mechanism: the backward signal is multiplied by each layer's sensitivity, so small factors vanish it and large ones explode it — exponentially with depth.**\n\nBackpropagation sends the error from the output to the input one layer at a time, scaling it by each layer's local sensitivity as it goes. A chain of factors below 1 shrinks the signal toward zero (vanishing); a chain above 1 blows it up (exploding). The deeper the network, the more extreme it gets — which is why depth was so hard to train before the fixes below.`,
       `**Activations matter: sigmoid caused vanishing, ReLU mostly cured it.**\n\nSigmoid's sensitivity peaks at just 0.25, so ten layers can shrink the signal by a factor of a million and the early layers never learn. ReLU passes the signal through at full strength (sensitivity 1) for any active neuron, removing that per-layer shrink. ReLU's own catch is "dead" neurons — ones whose input stays negative and so output zero forever — but it was still the change that made deeper networks trainable.`,
       `**Exploding gradients hit RNNs hardest, and clipping is the seatbelt.**\n\nAn RNN applies the same weights at every step, so over a long sequence the signal is multiplied by that matrix again and again; if it is even slightly amplifying, the signal explodes and the weights blow up to NaN. Gradient clipping caps the overall size of the update while keeping its direction, so no single step is catastrophic. Clip by the whole-vector norm (rescale everything together), not per-component, or you distort the direction — norm clipping at 1.0 is the transformer default.`,
       `**The durable cures are architectural: give the signal a clean path home.**\n\nResidual connections add a shortcut around each block, so the signal has a direct route back that skips the multiplying — which is why 100-plus-layer networks train. LSTMs carry a memory that is mostly *added* to rather than multiplied through, so when the forget gate says "keep this," the signal flows back across hundreds of time steps almost intact. Layer normalization keeps activations in the healthy middle range where sensitivity is highest. All of it is plumbing to keep the backward signal alive.`,
+      `**Initialisation comes first, and the normalisation axis matters.**\n\nScale initial weights to preserve signal variance forward and backward: He/Kaiming (variance 2/fan_in) for ReLU, Xavier/Glorot (1/fan_in) for tanh/sigmoid — the wrong one reintroduces vanishing/exploding at step one. BatchNorm normalises each feature across the batch (batch-size-sensitive, great for CNNs); LayerNorm normalises across features within one example (batch-independent, the transformer/RNN choice). Fix dead ReLUs with Leaky ReLU / ELU / GELU, better init, or a lower learning rate.`,
+      `**Diagnose gradient flow directly, and know clipping's limits.**\n\nTransformers stack residual connections + layer norm, and pre-norm (norm inside the residual branch) trains deeper and more stably than the original post-norm. Measure health with per-layer gradient norms (a steep decay toward the input = vanishing), activation histograms (saturation/dead zeros), NaN checks, and weight-update ratios (~1e-3). Read the symptoms: vanishing = early layers stall, loss crawls; exploding = NaN, oscillating loss, huge norms. Clipping is a seatbelt against catastrophic steps — it does not fix bad conditioning, LR, or init, so clipping on most steps means the real problem is upstream.`,
     ],
     takeaway: `Gradient flow is the reason deep networks were impractical before 2010. Sigmoid saturates, vanishing the gradient. RNNs multiply the same matrix T times, exploding it. The solutions — ReLU, gradient clipping, residual connections, LSTM gates, layer norm — are all gradient infrastructure, not representational improvements. The network architectures we use today were designed around the constraint that gradients must survive the backward pass.`,
     checkQuestions: [
@@ -654,6 +814,26 @@ The through-line: ReLU, clipping, residual connections, LSTM gates, and layer no
           `\`D) It is a learning-rate problem unique to RNNs — touching 200 time steps at once effectively multiplies the learning rate by 200, so dividing the learning rate by 200 removes the instability entirely.\``,
         ],
         answer: `C`,
+      },
+      {
+        q: `You initialise a deep ReLU network with weights drawn from N(0, 1) and it fails to train — activations either explode or collapse across layers. What initialisation should you use and why?`,
+        options: [
+          `\`A) Xavier/Glorot initialisation (variance 1/fan_in), because it is the universal best choice for every activation function including ReLU.\``,
+          `\`B) He/Kaiming initialisation (variance 2/fan_in). Weights must be scaled to preserve the signal's variance as it passes through each layer, forward and backward; the factor of 2 specifically compensates for ReLU zeroing out roughly half its inputs. Xavier (1/fan_in) is calibrated for tanh/sigmoid and under-scales for ReLU, so on a deep ReLU net you use He.\``,
+          `\`C) Just make all initial weights very small (e.g. 0.001), which guarantees the signal never explodes regardless of activation.\``,
+          `\`D) Initialisation doesn't matter for ReLU networks because BatchNorm fixes any scaling issue, so keep N(0,1) and add BatchNorm.\``,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `Why do transformers use LayerNorm rather than BatchNorm, and what does pre-norm (vs post-norm) placement change?`,
+        options: [
+          `\`A) LayerNorm is just a faster approximation of BatchNorm, and pre-norm vs post-norm only changes memory usage, not training stability.\``,
+          `\`B) BatchNorm normalises each feature across the batch, so it depends on batch statistics that are unreliable for variable-length sequences and small batches; LayerNorm normalises across the features within a single example, making it batch-independent — the right fit for transformers. Placement matters for gradient flow: post-norm (original) is harder to train deep and needs careful warmup, while pre-norm (norm inside the residual branch, before attention/FFN) gives a cleaner gradient path and trains stably at great depth, which is why modern large models use it.\``,
+          `\`C) Transformers use LayerNorm only because BatchNorm hadn't been invented yet; pre-norm and post-norm are mathematically identical.\``,
+          `\`D) LayerNorm normalises across the batch and BatchNorm across features — the opposite of the usual definitions — and pre-norm simply means normalising the inputs before training starts.\``,
+        ],
+        answer: `B`,
       },
     ],
     figures: {
@@ -709,12 +889,50 @@ Happily, the right size can be worked out exactly, and it depends on how many in
 
 ---
 
-One small but famous exception: **biases** can safely start at zero (the random weights already break symmetry), *except* the LSTM's "forget gate" bias, which is usually set to 1. That nudges the gate to *remember* by default at the start, keeping the memory highway open long enough for the network to learn when it actually should forget.`,
+One small but famous exception: **biases** can safely start at zero (the random weights already break symmetry), *except* the LSTM's "forget gate" bias, which is usually set to 1. That nudges the gate to *remember* by default at the start, keeping the memory highway open long enough for the network to learn when it actually should forget.
+
+---
+
+**The actual formulas, and fan-in vs fan-out.**
+
+Worth carrying the numbers. Let **fan_in** be the number of inputs to a layer and **fan_out** the number of outputs. **He/Kaiming** (for ReLU) uses variance **2/fan_in**. **Xavier/Glorot** (for tanh/sigmoid) uses either **1/fan_in** or the symmetric **2/(fan_in + fan_out)**. Why the two versions of Xavier? Preserving the signal's variance on the **forward** pass wants 1/fan_in; preserving the **gradient's** variance on the **backward** pass wants 1/fan_out; averaging the two (2/(fan_in+fan_out)) is the compromise that keeps both roughly stable. He fixes on fan_in because for ReLU the forward-pass halving is the dominant effect to correct.
+
+---
+
+**Uniform or normal?**
+
+Both Xavier and He come in a **normal** and a **uniform** flavour, and they're near-equivalent in practice. The normal version draws from N(0, variance). The uniform version draws from U(−limit, +limit) with the limit chosen to give the *same* variance (for Xavier uniform, limit = √(6/(fan_in+fan_out))). Frameworks default to one or the other; the difference rarely matters, but know that "Xavier uniform" and "Xavier normal" are the same idea with different sampling shapes.
+
+---
+
+**Orthogonal initialisation for recurrence.**
+
+For **RNNs** and very deep near-linear stacks, there's a better choice than random Gaussian: **orthogonal** initialisation, where the weight matrix is initialised to be orthogonal (its rows/columns are unit vectors at right angles). An orthogonal matrix has the property that it **preserves vector norms** under multiplication — so applying it repeatedly (as an RNN does across time steps) neither grows nor shrinks the signal. That's exactly the property you want when the *same* matrix is multiplied hundreds of times, which is why orthogonal init helps recurrent and deep-linear networks specifically.
+
+---
+
+**Modern architectures soften the sensitivity — but don't remove it.**
+
+Here's the honest caveat: "use the wrong init and the network silently fails" is true for a **deep plain network**, but much less so once you add **residual connections** and **BatchNorm/LayerNorm**. Normalisation re-centres and re-scales activations at every layer, which repairs a lot of a bad initial scale, and residual shortcuts keep gradients flowing regardless. So a ResNet or a normalised transformer is far more *forgiving* of initialisation than an old-style plain net. Init still matters — it affects early-training stability and final quality — but it's a smaller cliff than the unqualified claim suggests.
+
+---
+
+**Transformer-specific initialisation.**
+
+Very deep transformers need extra care beyond He/Xavier. Because each layer adds to the residual stream, naive init lets the residual-stream variance **grow with depth**, destabilising training — so large models **scale the residual-branch weights down** by a factor related to depth (e.g. 1/√(2N) schemes) to keep the stream stable. The **embedding** and **output** layers often get their own scaling, and the **LayerNorm** gain/bias start at 1/0. This is why deep transformers historically needed careful warmup — and why good residual-scaling schemes let them train more stably.
+
+---
+
+**Diagnosing an init problem.**
+
+You can catch a bad initialisation before wasting a training run. Check the **loss at step zero**: for a K-class classifier it should be ≈ ln(K) (e.g. ~2.3 for 10 classes) — a wildly different value means the output scale is off. Log the **activation variance per layer** on the first forward pass: healthy init keeps it roughly constant across layers; a steady decay or explosion means the scale is wrong. Also check **per-layer gradient norms**, the **dead-ReLU count**, and run **NaN/Inf checks**. These five-minute checks tell you the init is sane before you commit GPU hours.`,
     keyPoints: [
       `**First rule: never initialise all weights to zero — break symmetry with randomness.**\n\nIf every neuron in a layer starts identical, they compute the same output, get the same gradient, and update in lockstep, so they stay identical forever — a whole layer collapses to the behaviour of one neuron. Random initial weights make neurons different from the start, which is the only way they can specialise into different features. Biases can safely start at zero, since the random weights already do the symmetry-breaking.`,
       `**Second rule: get the scale right, because it decides whether the signal survives.**\n\nToo-small weights shrink the signal a little at each layer until, several layers deep, it has faded to zero and nothing learns. Too-large weights either blow the signal up or push tanh and sigmoid into their flat saturated zones where the gradient dies. The right scale keeps the signal about the same size from layer to layer — and it can be computed exactly from how many inputs each layer has.`,
       `**Match the recipe to the activation: Xavier for tanh, He for ReLU.**\n\nXavier (Glorot) picks the scale that preserves signal size through symmetric activations like tanh. He (Kaiming) adjusts it for ReLU: since ReLU discards the negative half of the signal, halving it each layer, He doubles the variance to compensate. Use the wrong one on a deep network — Xavier with ReLU, say — and the signal quietly decays layer by layer, and the network fails to train even though nothing looks obviously broken.`,
       `**One famous exception: the LSTM forget-gate bias starts at 1, not 0.**\n\nA forget gate initialised at zero passes only about half the memory forward each step, so long-range information is erased before the model ever learns when to keep it. Setting the bias to 1 makes the gate lean toward "remember" by default, keeping the memory highway open at the start of training. Everywhere else, zero is a perfectly good default for biases.`,
+      `**Carry the formulas and the specialised variants.**\n\nHe (ReLU): variance 2/fan_in. Xavier (tanh/sigmoid): 1/fan_in (preserves forward variance) or 2/(fan_in+fan_out) (compromise between forward and backward — fan_out preserves the gradient's variance). Uniform and normal flavours are equivalent (same variance, different sampling shape). For RNNs and deep near-linear stacks, orthogonal initialisation preserves vector norms under repeated multiplication, which is exactly what you want when the same matrix is applied many times.`,
+      `**Modern architectures forgive init more, transformers need residual scaling, and you can diagnose it fast.**\n\n"Wrong init = silent failure" holds for deep plain nets but is softened a lot by residual connections and BatchNorm/LayerNorm, which repair bad scale at every layer — init still matters for stability and final quality, just less of a cliff. Deep transformers scale residual-branch weights down with depth (so the residual stream doesn't grow) and this is why they needed warmup. Sanity-check init before a full run: loss at step 0 ≈ ln(K), roughly constant activation variance across layers, healthy per-layer gradient norms, low dead-ReLU count, and no NaN/Inf.`,
     ],
     takeaway: `Initialization is gradient flow at step zero. Before the optimizer runs, the parameters must already be at a scale where signals neither vanish nor explode in the forward pass — because if they vanish in the forward pass, they also vanish in the backward pass. The correct variance formula depends on the activation function, and using the wrong formula (Xavier for ReLU, or He for tanh) produces a deep network that silently fails to learn.`,
     checkQuestions: [
@@ -748,6 +966,26 @@ One small but famous exception: **biases** can safely start at zero (the random 
         ],
         answer: `A`,
       },
+      {
+        q: `Xavier initialisation has two common variance formulas: 1/fan_in and 2/(fan_in + fan_out). Why do both exist?`,
+        options: [
+          `\`A) 1/fan_in is for classification and 2/(fan_in+fan_out) is for regression — you pick based on the task type.\``,
+          `\`B) Preserving the signal's variance on the forward pass calls for 1/fan_in, while preserving the gradient's variance on the backward pass calls for 1/fan_out. Since a single scale can't satisfy both exactly when fan_in ≠ fan_out, 2/(fan_in+fan_out) averages them as a compromise that keeps both roughly stable. He fixes on fan_in because for ReLU the forward-pass halving is the dominant effect to correct.\``,
+          `\`C) 2/(fan_in+fan_out) is simply the newer, strictly better formula; 1/fan_in is legacy and should never be used.\``,
+          `\`D) They give identical values in all cases, so the two formulas are just notational variants with no practical difference.\``,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `You're training a plain (non-normalised) RNN and want the recurrent weight matrix to neither vanish nor explode the signal as it's applied across hundreds of time steps. Which initialisation is especially suited, and why?`,
+        options: [
+          `\`A) He initialisation, because the RNN uses ReLU-like gates and He is always the right choice for any recurrent network.\``,
+          `\`B) Orthogonal initialisation: an orthogonal matrix preserves vector norms under multiplication, so applying the same recurrent matrix repeatedly across time steps neither grows nor shrinks the signal — exactly the stability property you need when one matrix is multiplied hundreds of times. Random Gaussian init lacks this and tends to vanish or explode over long sequences.\``,
+          `\`C) Zero initialisation, so the recurrent matrix starts as the identity and never changes the signal magnitude.\``,
+          `\`D) Very large Gaussian weights, because a bigger recurrent matrix guarantees the signal survives across many time steps.\``,
+        ],
+        answer: `B`,
+      },
     ],
     figures: {
       init_scale: `<svg viewBox="0 0 380 210" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:380px;font-family:var(--font-sans,sans-serif)">
@@ -773,7 +1011,43 @@ One small but famous exception: **biases** can safely start at zero (the random 
     tags: ['newton', 'hessian', 'l-bfgs', 'curvature', 'quasi-newton'],
     summary: `Gradient descent uses only the first derivative of the loss: which direction is downhill from here. It does not know how steep that downhill is or how quickly it levels off — it cannot see curvature.
 
-This is why the learning rate must be tuned so carefully: it is a proxy for curvature information the optimizer does not have. Newton's method has that information. The Hessian H is the matrix of second derivatives — it encodes the curvature in every parameter direction simultaneously. Newton's step θ ← θ − H^{-1}·∇L is the exact minimizer of the local quadratic approximation of the loss. For a perfectly quadratic loss, one Newton step lands at the minimum. For smooth strongly convex functions, convergence is quadratic — the error roughly halves the number of its decimal places at each step. The fundamental problem is scale: the Hessian of a network with n parameters is n×n. For n=10^6, the Hessian has 10^12 entries requiring 4 TB of memory, and inverting it requires 10^18 floating-point operations. At the compute capacity of a modern GPU, one Newton step takes over a day — before any training has occurred. Quasi-Newton methods approximate the inverse Hessian from gradient information across recent steps rather than computing it exactly. L-BFGS builds a low-rank approximation using the last m gradient pairs at O(mn) cost. It is the right tool when n is small enough (below roughly 10^5 parameters) and full-batch gradient evaluation is affordable — scientific computing, physics simulations, hyperparameter optimization inner loops. At the scale of deep learning, it is not used in production because the cost of even an approximate Hessian exceeds the cost of many gradient steps.`,
+This is why the learning rate must be tuned so carefully: it is a proxy for curvature information the optimizer does not have. Newton's method has that information. The Hessian H is the matrix of second derivatives — it encodes the curvature in every parameter direction simultaneously. Newton's step θ ← θ − H^{-1}·∇L is the exact minimizer of the local quadratic approximation of the loss. For a perfectly quadratic loss, one Newton step lands at the minimum. For smooth strongly convex functions, convergence is quadratic — the error roughly halves the number of its decimal places at each step. The fundamental problem is scale: the Hessian of a network with n parameters is n×n. For n=10^6, the Hessian has 10^12 entries requiring 4 TB of memory, and inverting it requires 10^18 floating-point operations. At the compute capacity of a modern GPU, one Newton step takes over a day — before any training has occurred. Quasi-Newton methods approximate the inverse Hessian from gradient information across recent steps rather than computing it exactly. L-BFGS builds a low-rank approximation using the last m gradient pairs at O(mn) cost. It is the right tool when n is small enough (below roughly 10^5 parameters) and full-batch gradient evaluation is affordable — scientific computing, physics simulations, hyperparameter optimization inner loops. At the scale of deep learning, it is not used in production because the cost of even an approximate Hessian exceeds the cost of many gradient steps.
+
+---
+
+**Raw Newton overshoots: line search and trust regions.**
+
+The clean "one step to the minimum" story only holds for a *truly quadratic* loss. Real losses aren't quadratic, so the full Newton step H⁻¹∇L can badly **overshoot** — the local quadratic model is only accurate near the current point. So practical second-order methods never take the raw step. They add a **line search** (compute the Newton *direction*, then search along it for a step length that actually decreases the loss) or a **trust region** (only trust the quadratic model within a bounded radius, and cap the step to that region, shrinking it when the model proves inaccurate). Newton without damping or line search is a good way to diverge.
+
+---
+
+**The Hessian can point the wrong way.**
+
+Newton's method assumes the Hessian is **positive definite** (the loss curves *up* in every direction, a bowl). In the non-convex landscapes of deep nets that's often false: at a **saddle point** the Hessian is **indefinite** (curves up some ways, down others). Then H⁻¹∇L can point *toward* the saddle or even a local *maximum* rather than a minimum — the raw Newton step actively moves the wrong way. This is why non-convex second-order methods must **modify** the Hessian (add damping λI to make it positive definite, or flip negative curvature) before inverting. Raw Newton is a convex-optimisation tool.
+
+---
+
+**What ML actually uses: Gauss-Newton and the Fisher.**
+
+Because the true Hessian is expensive *and* can be indefinite, ML rarely uses it directly. Two better-behaved substitutes dominate. The **Gauss-Newton** matrix approximates the Hessian using only first-derivative (Jacobian) information and is **guaranteed positive semi-definite** — no wrong-way steps. The closely-related **Fisher information matrix** underlies **natural gradient** methods (and K-FAC), which precondition the gradient by the Fisher instead of the Hessian. Both give curvature-aware steps without the true Hessian's indefiniteness — which is why "second-order in ML" almost always means Gauss-Newton / Fisher / natural-gradient, not literal Newton.
+
+---
+
+**Where L-BFGS shines — and where it doesn't.**
+
+Sharpen the use-map. L-BFGS is excellent for **small, deterministic, full-batch** objectives: classical ML models (logistic regression, CRFs), scientific/physics optimisation, style-transfer-style problems, and small full-batch fine-tuning where you can afford exact gradients. It is a **poor** fit for **noisy, large-scale mini-batch** deep learning, because batch noise corrupts the gradient-difference curvature estimates (they can go indefinite and point uphill), and full-batch gradients over millions of examples cost as much as many SGD steps. Rule of thumb: L-BFGS when the gradient is exact and parameters are modest; SGD/Adam when the gradient is a noisy mini-batch estimate.
+
+---
+
+**Adam is not literally diagonal Newton.**
+
+A common over-statement: "Adam is a diagonal approximation to the Hessian." Be precise — Adam divides by the running **second moment of the *gradients*** (E[g²]), which is *not* the diagonal of the Hessian (that would be second *derivatives*). It's better described as **curvature-*like* adaptive preconditioning**: dividing by the gradient's recent magnitude gives each parameter its own effective step, which *behaves* somewhat like inverse-curvature scaling but isn't derived from the Hessian. Useful intuition, imprecise identity — worth stating correctly in an interview.
+
+---
+
+**The optimizer decision tree (and a precision note).**
+
+Choosing among them comes down to a few axes: dataset/parameter size, gradient noise (batch vs full-batch), and objective stability. **AdamW** — the default for large, noisy, mini-batch deep learning (transformers, most nets). **SGD+momentum** — competitive/better in well-tuned vision/CNN settings. **L-BFGS** — small-to-medium, full-batch, deterministic objectives and classical ML. **Newton / IRLS** — very small, convex, well-conditioned problems (IRLS is Newton's method for logistic-regression-style GLMs). **K-FAC / natural gradient** — when the per-step second-order gain outweighs 2–5× overhead, mostly research. (One precision footnote: the "4 TB Hessian" figure assumes float32; in float64 it's 8 TB — the exact number depends on precision, but the point that it's hopeless stands either way.)`,
     keyPoints: [
       `**Gradient descent's learning rate problem exists because the optimizer has no curvature information.** The optimal step size in any direction is 1/(curvature in that direction). Without the Hessian, you must guess this — which is why the learning rate is the most sensitive hyperparameter. Newton's method eliminates this problem by computing the step directly from curvature: θ ← θ − H^{-1}∇L.`,
       `**Newton's step solves the local quadratic approximation exactly.** If the loss were truly quadratic (a bowl), one Newton step would land at the minimum regardless of starting point. For non-quadratic losses, Newton's method requires iteration but converges quadratically: after reaching the basin of the minimum, each step roughly doubles the number of correct digits. Gradient descent converges linearly — it takes a fixed fraction off the remaining error at each step, never accelerating.`,
@@ -781,7 +1055,9 @@ This is why the learning rate must be tuned so carefully: it is a proxy for curv
       `**L-BFGS circumvents full Hessian storage by approximating H^{-1} from the last m gradient difference pairs.** At each step it records δ_t = θ_t − θ_{t-1} and γ_t = ∇L_t − ∇L_{t-1}. The two-loop recursion computes H^{-1}·∇L using only these pairs, at O(mn) cost per step. With m=10–30, this is a 1000–100,000x reduction in cost over exact Newton. The catch: L-BFGS requires full-batch gradients to build a reliable curvature model. Mini-batch gradient differences are corrupted by batch noise, making the approximation unreliable.`,
       `**L-BFGS requiring full-batch gradients is the barrier to large-scale deep learning use.** At N=1M training examples, one L-BFGS step requires evaluating the gradient over all 1M examples — as expensive as many SGD steps. Additionally, the curvature model is only valid for a region around the current parameters; for large networks navigating a complex loss landscape, the approximation degrades quickly. L-BFGS is used in deep learning only for small fine-tuning tasks, some meta-learning inner loops, and classical ML models with few parameters.`,
       `**K-FAC approximates the Fisher information matrix using the Kronecker product structure of neural network layers.** Each layer's curvature block is approximated as a Kronecker product of two much smaller matrices, reducing memory from O(n²) to O(n). K-FAC has achieved faster convergence per step than SGD on ResNets, but each step costs 2–5x more in wall-clock time — and the benefit does not reliably outweigh the overhead in production training pipelines.`,
-      `**Deep learning uses first-order methods not because they are theoretically superior but because they are the only methods that scale.** Second-order information would improve every training step. The problem is that gathering and using that information costs more than taking many first-order steps in its place. Adam is a cheap diagonal approximation to curvature — using per-parameter gradient variance history as a proxy for the diagonal Hessian — and that is the best practical approximation available at million-parameter scale.`,
+      `**Deep learning uses first-order methods not because they are theoretically superior but because they are the only methods that scale.** Second-order information would improve every training step. The problem is that gathering and using that information costs more than taking many first-order steps in its place. Adam is a cheap *curvature-like* adaptive preconditioner — dividing by the running second moment of the *gradients* (not the Hessian's diagonal, which would be second derivatives) — and that is the best practical approximation available at million-parameter scale.`,
+      `**Raw Newton is unsafe on real losses — it needs damping, and ML prefers PSD substitutes.** The full step H⁻¹∇L overshoots on non-quadratic losses (fix with line search or a trust region) and, at a saddle point where the Hessian is indefinite, can point toward a saddle or maximum (fix by adding λI to make it positive definite). This is why ML rarely uses the true Hessian: Gauss-Newton and the Fisher information matrix are positive-semi-definite by construction, so natural-gradient / K-FAC methods get curvature-aware steps without the wrong-way risk.`,
+      `**Pick the optimizer by scale, noise, and stability.** AdamW for large noisy mini-batch deep learning; SGD+momentum for well-tuned vision/CNNs; L-BFGS for small-to-medium full-batch deterministic objectives and classical ML (it fails on noisy mini-batches because gradient-difference curvature goes indefinite); Newton/IRLS for tiny convex problems (IRLS is Newton for GLMs); K-FAC/natural gradient only when the per-step gain beats the 2–5× overhead. The "4 TB Hessian" figure is float32 — float64 doubles it, but either way it's infeasible.`,
     ],
     takeaway: `Second-order methods would give optimal steps if you could afford them. Newton's method converges in a handful of steps for well-conditioned problems. The Hessian for a million-parameter network requires 4 TB of memory and 10^18 operations to invert — which is why we use gradient descent. Every adaptive optimizer from AdaGrad to Adam is a practical approximation to diagonal Newton steps, not a theoretical preference for first-order methods.`,
     checkQuestions: [
@@ -814,6 +1090,26 @@ This is why the learning rate must be tuned so carefully: it is a proxy for curv
           `\`D) K-FAC requires computing and inverting per-layer Fisher information matrices at each step. Even with the Kronecker factorization trick, this adds 2-5x computational cost per step compared to SGD. If K-FAC converges in 2x fewer steps but each step costs 4x more, total wall-clock time is 2x longer. Additionally: (1) K-FAC has more hyperparameters (damping coefficient, update frequency of Fisher factors, inversion frequency) that are sensitive and dataset-dependent — practitioners have decades of intuition for SGD hyperparameters, not for K-FAC. (2) K-FAC's Fisher matrix is re-estimated periodically but drifts as parameters change between updates — this approximation error accumulates. (3) The flat minima argument: SGD's noise finds better-generalizing solutions; K-FAC's more accurate updates may find sharper minima. The generalization gap may be worse even at matched training loss.\``,
         ],
         answer: `D`,
+      },
+      {
+        q: `You implement raw Newton's method (θ ← θ − H⁻¹∇L) on a non-convex neural-net loss and it sometimes moves the loss *up* or diverges. What are the two core reasons, and how are they addressed?`,
+        options: [
+          `\`A) Newton's method is simply buggy on GPUs due to floating-point error in the matrix inverse; use float64 and it will always descend.\``,
+          `\`B) Two reasons. (1) On a non-quadratic loss the local quadratic model is only accurate nearby, so the full step overshoots — addressed with a line search along the Newton direction or a trust region that caps the step. (2) At a saddle point the Hessian is indefinite (not positive definite), so H⁻¹∇L can point toward the saddle or a maximum — addressed by modifying the Hessian (add λI / damping to make it positive definite, or use the positive-semi-definite Gauss-Newton or Fisher matrix instead). Raw undamped Newton is a convex-optimisation tool.\``,
+          `\`C) It diverges only because the learning rate is missing; multiply the Newton step by a small α like 0.001 and it behaves exactly like gradient descent, which never moves the loss up.\``,
+          `\`D) The problem is that the Hessian is too large to invert, so the inverse is approximate and points randomly; the fix is to use the exact inverse, after which Newton always descends on any loss.\``,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `An interviewer says "Adam is basically a diagonal approximation to Newton's method." How would you make that statement more precise?`,
+        options: [
+          `\`A) It's exactly right — Adam computes the diagonal of the Hessian (the second derivatives) and divides the gradient by it, which is literally diagonal Newton.\``,
+          `\`B) It's a useful intuition but imprecise. Adam divides by the running second moment of the *gradients* (E[g²]), which is not the diagonal of the Hessian — that would require actual second derivatives. It's better called curvature-*like* adaptive preconditioning: scaling each parameter's step by its recent gradient magnitude behaves somewhat like inverse-curvature scaling, but it isn't derived from the Hessian. True second-order info in ML comes from Gauss-Newton or the Fisher matrix.\``,
+          `\`C) It's completely wrong — Adam has nothing to do with curvature; it only implements momentum, and any resemblance to second-order methods is coincidental.\``,
+          `\`D) It's precise as stated because the Fisher information matrix equals the Hessian for all losses, and Adam's second moment estimates the Fisher diagonal exactly.\``,
+        ],
+        answer: `B`,
       },
     ],
   },
