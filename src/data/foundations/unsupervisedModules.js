@@ -384,11 +384,55 @@ You can also run PCA in reverse: from the few components, approximately rebuild 
 
 Here is the mistake almost everyone makes: "PCA removes noise." It does not. PCA keeps the *highest-variance* directions and throws away the low-variance ones — and it has no idea which of those is signal and which is noise. Sometimes the biggest source of variation in genomics data is a *batch effect* (which day the sample was processed), pure noise that PCA will lovingly preserve. And sometimes the thing you actually care about — a rare but important pattern — has *low* variance, so PCA quietly deletes it. So never assume PCA kept what matters: always compare a PCA-reduced model against the full-feature model on the real downstream task before you trust it.
 
-And one setup detail you cannot skip: **standardise your features first**. PCA chases variance, so if income is measured in dollars (variance in the billions) and another feature is a 0/1 flag, income will dominate every component for no good reason. Put everything on the same scale before running PCA, every single time.`,
+And one setup detail you cannot skip: **standardise your features first**. PCA chases variance, so if income is measured in dollars (variance in the billions) and another feature is a 0/1 flag, income will dominate every component for no good reason. Put everything on the same scale before running PCA, every single time.
+
+---
+
+**PCA leaks too — fit it on the training fold only.**
+
+PCA looks unsupervised and therefore safe, but it *learns from the data* (the components come from the covariance of the whole set). Fit PCA on all your data before splitting and the training rows already "know" the directions defined partly by the test rows — a genuine leak that inflates your score. The rule is the same as for scalers and imputers: **fit PCA on the training fold, then transform validation/test with those fixed components**. Wrap it in a scikit-learn Pipeline so cross-validation re-fits it inside every fold. And remember standardisation is part of this — fit the scaler on train too, not the full set.
+
+---
+
+**Whitening: decorrelate and equalise.**
+
+By default PCA gives you decorrelated components with *different* variances (PC1 has the most). **Whitening** additionally rescales every component to unit variance, so the output is fully decorrelated *and* isotropic — sometimes what a downstream model wants. But there's a catch: whitening blows the low-variance components (which are often mostly noise) up to the same scale as the high-variance ones, so it can **amplify noise**. Use it when the downstream method assumes equal-variance inputs; skip it when the low-variance directions are junk you'd rather keep small.
+
+---
+
+**The assumptions, stated plainly.**
+
+PCA rests on a few things worth naming: it's **linear** (it can only find straight-line directions — curved structure is invisible to it), it's **variance-based** (it equates "important" with "high spread," which isn't always true), and it's **sensitive to outliers** (a few extreme points can swing a component, since variance squares distances). If your structure is nonlinear, your signal is low-variance, or your data has heavy outliers, PCA's assumptions are working against you.
+
+---
+
+**Interpretability: loadings, but not business-readable.**
+
+Each component is a **linear mixture of all your original features** (its **loadings** are the weights). You *can* inspect loadings — "PC1 is mostly income and home value" — but a component like "0.4·income − 0.2·age + 0.31·tenure − …" rarely maps to something you can explain to a stakeholder. So PCA trades away the plain interpretability that feature *selection* keeps. When explanations matter (regulated lending, medicine), prefer selection over reduction.
+
+---
+
+**Big or sparse data: randomized and truncated SVD.**
+
+Classic PCA forms the full covariance matrix, which is expensive or impossible for very high-dimensional data (text with tens of thousands of terms). Two variants fix this: **randomized PCA** approximates the top components far faster, and **TruncatedSVD** works *directly on sparse matrices* without centering (so it doesn't destroy sparsity) — this is the standard "LSA" move for TF-IDF text. For high-dimensional or sparse inputs, reach for these rather than vanilla covariance PCA.
+
+---
+
+**Visualisation is not proof.**
+
+A 2D PCA scatter (PC1 vs PC2) is great for a *rough* look — spotting gross structure or obvious outliers. But it captures only the top two directions, so it is **not proof of separability or cluster quality**: classes that overlap in the PCA plot may separate cleanly in the full space, and apparent clusters may be artefacts. Use the plot to generate hypotheses, then validate on the real task — never conclude "the classes aren't separable" from a PCA picture.
+
+---
+
+**The alternatives map.**
+
+Match the tool to the goal. For **visualisation** of nonlinear structure, **t-SNE** or **UMAP** (they preserve local neighbourhoods far better than PCA's two axes). For **nonlinear preprocessing**, **kernel PCA** or an **autoencoder** (nonlinear compression). For keeping **explainable** original variables, **feature selection** instead of PCA. PCA remains the fast, stable default for *linear* compression and decorrelation — just don't force it onto jobs its assumptions don't fit.`,
     keyPoints: [
       `**Choose the number of components from the cumulative explained-variance curve — but confirm it on the real task.**\n\nA good starting rule is to keep enough components to cover 90–95% of the variance; plot the curve and look for the elbow where extra components stop adding much. Treat that as a starting point, not gospel — the signal you actually care about might live in a lower-variance component the rule would drop, so always check downstream performance at a few different component counts.`,
       `**The trap: forgetting to standardise before PCA.**\n\nPCA maximises variance, so if your features sit on wildly different scales, the biggest one (income in dollars, say) dominates every component regardless of how useful it is, and everything else gets crushed into components you later discard. Standardise every feature first (mean 0, unit variance) — no exceptions, unless the features are already on one scale and you genuinely want the big ones to dominate.`,
       `**The diagnostic: if the PCA-reduced model does clearly worse than the full one, the signal was in a low-variance direction — or the structure is not linear.**\n\nFirst try keeping more components. If that does not help, PCA's straight-line assumption may be the problem: the important structure could be curved, which PCA cannot capture. For that, reach for a nonlinear method — UMAP for visualising, or kernel PCA for preprocessing. A drop in performance after PCA is telling you something real about where your signal lives.`,
+      `**Fit PCA inside the split, know whitening, and match the variant to the data.**\n\nPCA learns from data, so fit it (and the scaler) on the training fold only — inside a Pipeline within CV — or the components leak test information. Whitening rescales all components to unit variance (decorrelated and isotropic) but amplifies the low-variance noise directions, so use it only when the downstream model wants equal-variance inputs. For high-dimensional or sparse data (TF-IDF text), use randomized PCA or TruncatedSVD (works on sparse matrices without centering) rather than covariance PCA.`,
+      `**Respect PCA's assumptions and reach for the right alternative.**\n\nPCA is linear, variance-based, and outlier-sensitive, and its components are linear mixtures whose loadings you can inspect but rarely explain to a stakeholder — so prefer feature selection when explainability matters. A 2D PC1-vs-PC2 plot is for rough structure and outlier spotting, not proof of separability or cluster quality (validate on the real task). For nonlinear structure use t-SNE/UMAP (visualisation) or kernel PCA / autoencoders (nonlinear compression).`,
     ],
     checkQuestions: [
       {
@@ -402,7 +446,7 @@ And one setup detail you cannot skip: **standardise your features first**. PCA c
         answer: `B`,
       },
       {
-        q: `A colleague skips standardisation before PCA on a dataset with features including income (range $20k-$500k), age (18-80), and binary flags (0 or 1). What goes wrong?`,
+        q: `A colleague skips standardisation before PCA on a dataset with features including income (range 20k-500k dollars), age (18-80), and binary flags (0 or 1). What goes wrong?`,
         options: [
           `A) PCA will fail to converge because the covariance matrix becomes singular when features have different scales`,
           `B) The binary flags will dominate all principal components because their values are bounded between 0 and 1`,
@@ -428,6 +472,26 @@ And one setup detail you cannot skip: **standardise your features first**. PCA c
           `B) No — check PCA loadings (which features drive each component), scatterplots of PC1 vs PC2, reconstruction error distribution, and correlations between features and components`,
           `C) Compare only the first two components — if PC1 and PC2 loadings match, the datasets are structurally equivalent`,
           `D) Identical explained-variance ratios are sufficient to confirm similarity — no additional checks are needed`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `You fit PCA on your entire dataset, then split into train/test and cross-validate a classifier on the PCA features. Your scores look great but production underperforms. What's the subtle error?`,
+        options: [
+          `A) There's no error — PCA is unsupervised, so fitting it on all the data before splitting can't leak anything.`,
+          `B) PCA learned its components from the covariance of the whole dataset, including the test rows, so the "held-out" data helped define the feature space the model trains on — a genuine leak that inflates CV scores. Fit PCA (and the scaler) on each fold's training portion only, e.g. inside a scikit-learn Pipeline, so the components never see validation/test data.`,
+          `C) The problem is that PCA reduced too many dimensions; keeping more components would remove the train/production gap.`,
+          `D) PCA should have been fit on the test set instead of the training set, which is what causes the underperformance.`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `You need to reduce 40,000-dimensional sparse TF-IDF text vectors to 300 dimensions. Why is standard covariance-based PCA a poor choice, and what fits better?`,
+        options: [
+          `A) Standard PCA is ideal here — sparse high-dimensional text is exactly what covariance PCA was designed for, so use it directly.`,
+          `B) Standard PCA mean-centers the data, which destroys sparsity (turning a sparse 40k-dim matrix dense and blowing up memory), and forming the full covariance is expensive. TruncatedSVD works directly on the sparse matrix without centering (the classic LSA approach), and randomized SVD approximates the top components far faster — either is the right tool for high-dimensional sparse text.`,
+          `C) PCA can't handle more than 1,000 dimensions at all, so the only option is to hash the features down first.`,
+          `D) Neither works — text embeddings must be reduced with t-SNE, which is the only method valid for sparse data.`,
         ],
         answer: `B`,
       },
@@ -585,11 +649,55 @@ A **variational autoencoder (VAE)** changes what the encoder outputs. Instead of
 
 Here is a neat trick that falls out of the design. Train an autoencoder only on *normal* data — normal transactions, healthy sensor readings. It becomes very good at rebuilding normal things. Now feed it something weird: because it never learned to compress that pattern, the rebuild comes out badly and the **reconstruction error** spikes. So a high reconstruction error flags an anomaly, for free.
 
-But it only works if the bottleneck is sized right, and this is the whole game. Too *narrow* and the network cannot even rebuild normal data well, so everything looks anomalous. Too *wide* and the network has enough room to memorise *everything* — including the weird stuff — so nothing looks anomalous. The bottleneck has to be tight enough to force real compression, yet loose enough to reconstruct genuine normal data. Get that balance wrong and the anomaly detector fails silently.`,
+But it only works if the bottleneck is sized right, and this is the whole game. Too *narrow* and the network cannot even rebuild normal data well, so everything looks anomalous. Too *wide* and the network has enough room to memorise *everything* — including the weird stuff — so nothing looks anomalous. The bottleneck has to be tight enough to force real compression, yet loose enough to reconstruct genuine normal data. Get that balance wrong and the anomaly detector fails silently.
+
+---
+
+**The reconstruction loss must match the data.**
+
+"Make the rebuild match the original" needs a *specific* loss, and the choice depends on the data. **MSE** (squared error) fits continuous real-valued data — sensor readings, standardised features. **Binary cross-entropy (BCE)** fits data in [0,1] like normalised pixel intensities or binary features. For images where pixel-perfect error misses perceptual quality, a **perceptual loss** (distance in a pretrained network's feature space) matches human judgement better. Use MSE on a [0,1] pixel target and it under-penalises blur; use BCE on unbounded sensor values and it's meaningless. Match the loss to the data type first.
+
+---
+
+**The reparameterisation trick, properly.**
+
+The VAE encodes to a distribution and then *samples* a code z ~ N(μ, σ²) — but sampling is random, and you can't backpropagate gradients through a random draw. The **reparameterisation trick** rewrites the sample as **z = μ + σ·ε**, with ε ~ N(0,1) drawn *outside* the computation graph. Now the randomness sits in ε (a constant for that step), while μ and σ are ordinary differentiable outputs, so gradients flow back to the encoder. This one rewrite is what makes VAEs trainable by gradient descent — worth being able to state, not just recognise.
+
+---
+
+**The VAE loss, and where it breaks.**
+
+A VAE's loss has **two terms**: a **reconstruction loss** (rebuild the input) plus a **KL-divergence** term that pulls each input's latent cloud toward a standard normal, keeping the latent space continuous and sampleable. The failure mode to name is **posterior collapse**: if the decoder is powerful enough to reconstruct without using the latent code, the KL term wins and the encoder outputs the prior for everything — the latent variables carry no information. **β-VAE** exposes a knob β on the KL term: β > 1 pushes toward more disentangled (but blurrier) codes, β < 1 toward sharper reconstruction with a messier latent space. Tuning β trades reconstruction against latent structure.
+
+---
+
+**Setting the anomaly threshold.**
+
+A reconstruction-error detector is useless without a cutoff, and you don't get one for free. The standard approach: after training on normal data, compute the reconstruction-error distribution on a **held-out normal** set and set the threshold at a high **percentile** (say the 95th or 99th) — accepting that percentage as your expected false-positive rate. If you have even a few **labeled anomalies**, tune the threshold on the precision/recall trade-off they give you instead. Either way, the cutoff is a deliberate business choice about false-positive rate versus miss rate, not a default.
+
+---
+
+**The silent killer: contaminated training data.**
+
+The whole method assumes training data is *pure normal*. If real anomalies hide in your "normal" training set, the autoencoder learns to reconstruct **them too** — so at inference they produce low error and slip through, and the detector fails without any warning. This is the most common reason a reconstruction detector misses known defects. Guard against it: clean the training set as best you can, or use robust training that down-weights high-error examples during training.
+
+---
+
+**Low error isn't proof of normal (and high error isn't proof of anomaly).**
+
+Reconstruction error is a noisy signal in both directions. **Low** error can occur for a genuine anomaly the model happened to memorise, or one that's small relative to MSE dominated by other dimensions. **High** error can come from plain input noise, a scaling/preprocessing mismatch, a sensor dropout, or a rare-but-perfectly-valid sample — none of which are true anomalies. So treat reconstruction error as evidence to investigate, not a verdict, and always sanity-check flagged cases.
+
+---
+
+**Architecture choices.**
+
+The encoder/decoder shape should match the data. **Dense** (fully-connected) autoencoders suit tabular data; **convolutional** autoencoders suit images (they respect spatial locality); **sequence** autoencoders (LSTM or Transformer encoder-decoder) suit time series and text. Beyond the **bottleneck size** (the main knob), you regularise with **dropout**, **weight decay**, or an explicit **sparsity penalty** on the code (a sparse autoencoder). Reaching for a dense AE on images, or an oversized bottleneck with no regularisation, is a common way to get a detector that quietly memorises everything.`,
     keyPoints: [
-      `**Use a denoising autoencoder for pretraining feature representations when you have abundant unlabeled data and limited labeled data.**\n\nThe denoising objective forces robust representation learning, and fine-tuning on the labeled subset consistently outperforms training from scratch. The corruption level is a hyperparameter — start with 20–30% masking and tune on the labeled validation set.`,
+      `**A denoising autoencoder can pretrain representations when unlabeled data is abundant and labels are scarce — but it's not automatically the winner.**\n\nThe denoising objective forces more robust representations, and fine-tuning on the labeled subset *can* beat training from scratch when unlabeled data is plentiful — but "consistently outperforms" is too strong: modern contrastive/self-supervised methods (SimCLR-style, masked modeling) often produce better representations than a vanilla autoencoder. Treat AE pretraining as one option to benchmark, not a guaranteed win. The corruption level is a hyperparameter — start with 20–30% masking and tune on the labeled validation set.`,
       `**Trap: the reconstruction loss can be minimized by memorizing training examples rather than learning compact representations.**\n\nCheck that the latent space clusters by meaningful categories (not just by individual examples) using visualization before using the representations downstream. A latent space that looks like a random cloud when colored by class label has not learned useful structure.`,
       `**Diagnostic: if reconstruction loss is low but downstream task performance is poor, the autoencoder is encoding reconstruction-irrelevant information.**\n\nAdd a classification loss or explicit invariance (contrastive learning) to align the representation with the downstream task. Low reconstruction loss is a necessary but not sufficient condition for useful representations.`,
+      `**Match the loss and architecture to the data, and know the VAE's two terms and its failure mode.**\n\nUse MSE for continuous data, BCE for [0,1] data, perceptual loss for image quality; use dense AEs for tabular, convolutional for images, sequence (LSTM/Transformer) for time series/text, and regularise with dropout, weight decay, or a sparsity penalty. A VAE's loss is reconstruction + KL-to-prior, trained via the reparameterisation trick z = μ + σ·ε; watch for posterior collapse (decoder ignores the code) and use β-VAE's β to trade disentanglement against reconstruction.`,
+      `**For anomaly detection, set the threshold deliberately and distrust contaminated data and raw error.**\n\nSet the cutoff from the held-out normal error distribution (a high percentile = your false-positive budget), or tune on precision/recall if you have labeled anomalies. The method assumes pure-normal training data — real anomalies hiding in it get learned and reconstructed well, so they slip through silently; clean the data or down-weight high-error examples. And low error isn't proof of normal (memorised or MSE-swamped anomalies) nor is high error proof of anomaly (noise, scaling bugs, rare-but-valid samples) — investigate flagged cases, don't trust the score blindly.`,
     ],
     checkQuestions: [
       {
@@ -632,6 +740,26 @@ But it only works if the bottleneck is sized right, and this is the whole game. 
         ],
         answer: `C`,
       },
+      {
+        q: `Your reconstruction-error anomaly detector was trained on a "normal" dataset, but a small fraction of those training samples were actually undetected anomalies. How does this hurt the detector, and what's the fix?`,
+        options: [
+          `A) It doesn't hurt — a few anomalies in training are averaged out and have no effect on the learned normal manifold.`,
+          `B) The autoencoder learns to reconstruct the contaminating anomalies too, so at inference those (and similar) anomalies produce low reconstruction error and slip through undetected — the detector fails silently. Fix by cleaning the training set as much as possible, or using robust training that down-weights high-error examples so the model doesn't fit the contaminants.`,
+          `C) The contamination makes reconstruction error high for everything, so the detector flags all samples as anomalies and the fix is a larger bottleneck.`,
+          `D) It only affects the KL term in a VAE, so switching from a VAE to a plain autoencoder removes the problem entirely.`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `You're building a VAE for anomaly detection on multivariate time-series sensor data. What reconstruction loss and encoder/decoder architecture fit best, and what VAE-specific failure should you watch for?`,
+        options: [
+          `A) Use binary cross-entropy with a dense (fully-connected) autoencoder, and don't worry about any VAE-specific issues since VAEs always train cleanly.`,
+          `B) Use MSE (the readings are continuous real values) with a sequence architecture (LSTM or Transformer encoder-decoder that respects temporal order rather than a dense net), and watch for posterior collapse — if the decoder is strong enough to reconstruct without the latent code, the KL term drives the encoder to the prior and the latent variables become uninformative; β-VAE's β knob helps balance it.`,
+          `C) Use a convolutional autoencoder with perceptual loss, since sensor time series are essentially images, and posterior collapse can't happen in anomaly-detection VAEs.`,
+          `D) Any loss and architecture work identically for time series, and the only concern is making the bottleneck as small as possible.`,
+        ],
+        answer: `B`,
+      },
     ],
     interactivePrompt: `Before you touch the controls: if you make the bottleneck too large, what happens to the autoencoder's ability to flag anomalies, and why?`,
     takeaway: `Autoencoders compress input through a bottleneck and flag anything the decoder cannot reconstruct well — but only if the bottleneck is sized right: too wide and the model memorizes everything including anomalies, too narrow and normal samples also fail to reconstruct.`,
@@ -664,7 +792,7 @@ But it only works if the bottleneck is sized right, and this is the whole game. 
     difficulty: 'advanced',
     estimatedMin: 38,
     tags: ['GMM', 'EM algorithm', 'probabilistic clustering', 'soft assignment'],
-    summary: `You have customer purchase amounts. Some customers buy once for $5 (app purchases), some buy regularly for $50 (subscription), some buy occasionally for $500 (enterprise). The distribution of purchase amounts is trimodal — three distinct subpopulations. K-means would split them by which of 3 centroids is nearest. But a customer who buys for $25 sometimes and $80 sometimes — do they belong to the $5-cluster or the $50-cluster? GMM assigns soft probabilities: 70% probability they are in the $50-cluster, 30% in the $5-cluster. Both models apply.
+    summary: `You have customer purchase amounts. Some customers buy once for 5 dollars (app purchases), some buy regularly for 50 dollars (subscription), some buy occasionally for 500 dollars (enterprise). The distribution of purchase amounts is trimodal — three distinct subpopulations. K-means would split them by which of 3 centroids is nearest. But a customer who buys for 25 dollars sometimes and 80 dollars sometimes — do they belong to the 5-dollar cluster or the 50-dollar cluster? GMM assigns soft probabilities: 70% probability they are in the 50-dollar cluster, 30% in the 5-dollar cluster. Both models apply.
 
 Gaussian Mixture Model: P(x) = Σₖ πₖ N(x | μₖ, Σₖ) where πₖ is the mixing weight (Σπₖ = 1), N(x | μₖ, Σₖ) is the k-th Gaussian component. Fitted via EM.
 
@@ -762,11 +890,55 @@ A **reconstruction** method (the autoencoder from the last lesson) learns to reb
 
 **Turning a score into a decision (and checking it works).**
 
-All of these produce a continuous *score*, not a yes/no. To act on it you pick a threshold — flag the top 1%, or flag as many as your review team can actually investigate, or tune it against whatever few labels you have. And do not fool yourself into thinking you need labelled anomalies to *train* — you do not, and that is the whole point. But grab even a tiny labelled set to *check* the detector: if the precision at your threshold is not clearly better than the base rate, the method is barely beating random and you should try another. A common practical check is Precision@50 — have an expert eyeball the top 50 flagged items and count how many are real.`,
+All of these produce a continuous *score*, not a yes/no. To act on it you pick a threshold — flag the top 1%, or flag as many as your review team can actually investigate, or tune it against whatever few labels you have. And do not fool yourself into thinking you need labelled anomalies to *train* — you do not, and that is the whole point. But grab even a tiny labelled set to *check* the detector: if the precision at your threshold is not clearly better than the base rate, the method is barely beating random and you should try another. A common practical check is Precision@50 — have an expert eyeball the top 50 flagged items and count how many are real.
+
+---
+
+**One-class SVM: draw a boundary around normal.**
+
+The method in the title deserves its own paragraph. A **one-class SVM** learns a boundary (in a kernel-lifted space) that *tightly encircles* the normal data; anything falling outside is an anomaly. With an RBF kernel it can wrap a **nonlinear** normal region, which makes it a good fit for **small-to-medium, clean** datasets where normal has a complex shape. The costs: it's very **sensitive to scaling and to its hyperparameters** — \`nu\` (roughly the expected fraction of outliers / margin softness) and \`gamma\` (kernel width) — and it **scales poorly** (roughly O(n²)–O(n³)), so it's the wrong tool for millions of points. Reach for it on modest, well-cleaned data; reach for Isolation Forest when volume or dimensionality is high.
+
+---
+
+**Novelty detection vs outlier detection.**
+
+A distinction that trips people up. **Novelty detection** assumes your training data is *clean normal* and you want to flag *new, unseen* anomalies at inference (one-class SVM and autoencoders are natural here). **Outlier detection** assumes the training data is *already contaminated* with anomalies and you want to find them *within* it (Isolation Forest and LOF are typically used this way). The difference decides both which method fits and how you must treat the training set — a novelty method fed contaminated "normal" data learns the contaminants and misses them later.
+
+---
+
+**Time-series anomalies come in three kinds.**
+
+Point-in-time methods miss a whole class of anomalies in sequences. **Point anomalies** are single wildly-off values (a sensor spikes to 1000). **Contextual anomalies** are values that are normal in general but abnormal *in context* (30°C is fine in summer, anomalous in December). **Collective / sequence anomalies** are a run of individually-normal values that together form an abnormal *pattern* (a heartbeat rhythm that's wrong as a shape). Isolation Forest and other per-point methods catch point anomalies but **miss contextual and collective ones** — those need sequence models (LSTM/Transformer autoencoders) that see the temporal context.
+
+---
+
+**Scaling matters — mostly.**
+
+Feature scale changes what "far" means. **Distance-, kernel-, and reconstruction-based** methods (LOF, one-class SVM, autoencoders) are **scale-sensitive** — an unscaled large-range feature dominates the distance and drowns the others, so standardise first. **Isolation Forest** is *less* scale-sensitive (it splits on random thresholds per feature), but it's still affected by feature quality and irrelevant noise features. Standardising is the safe default across the board; it's only truly optional for tree-based isolation.
+
+---
+
+**The method-selection map.**
+
+Match the tool to the situation. **Isolation Forest** — the scalable default for tabular data, no distributional assumption. **LOF** — when anomalies are *local* (sparse relative to a nearby dense cluster), but avoid it on very large datasets (O(n²)). **One-class SVM** — a clean, nonlinear boundary around normal on smaller data. **Autoencoders** — images, sequences, and nonlinear structure where reconstruction error is meaningful. Pick by data size, structure, and the *kind* of anomaly you expect.
+
+---
+
+**Evaluating without labels, expanded.**
+
+Since you usually can't label anomalies, evaluation is a craft. **Synthetic anomaly injection** (add known-weird points and check they're caught) is useful but caveated — synthetic anomalies may not resemble real ones, so a detector that aces synthetic can still miss real fraud. **Precision@K expert audit** (have a human review the top-K flags) gives a real precision estimate. Track the **alert acceptance rate** (what fraction of alerts investigators confirm), the **incident-confirmation lag** (truth arrives weeks later), and set up **post-deployment label collection** so confirmed incidents become a labeled set for retraining. No single label-free metric is trustworthy alone — triangulate.
+
+---
+
+**The operational layer: alerts, not just scores.**
+
+A production detector isn't a score, it's an alerting system, and that layer is where most of them fail. **Deduplicate** so one incident doesn't fire fifty alerts. Manage **alert fatigue** — too many false positives and investigators stop trusting the system, so a technically-good detector becomes useless. Add **severity scoring** and **investigation queues** so the worst cases surface first, wire a **false-positive feedback loop** back into tuning, and **monitor for drift** — "normal" shifts over time, so a detector calibrated last quarter silently degrades. The model produces scores; the operational layer decides whether anyone acts on them.`,
     keyPoints: [
       `**Use Isolation Forest as your default anomaly detector for tabular data — it is fast (O(n log n)), handles high dimensions, requires no distributional assumption, and has one tunable parameter (contamination rate = expected fraction of anomalies).**\n\nFor time-series data with contextual anomalies, switch to an LSTM or transformer autoencoder that reconstructs sequences — Isolation Forest treats each point independently and misses anomalies that only appear anomalous in context.`,
-      `**Trap: using per-feature Z-scores to flag anomalies.**\n\nMultivariate anomalies — combinations that are individually normal but jointly unusual — are invisible to per-feature analysis. A transaction of $100 at 3pm in New York is normal on each dimension; together they might be anomalous for a user who has never used the card outside California. Always use multivariate methods.`,
+      `**Trap: using per-feature Z-scores to flag anomalies.**\n\nMultivariate anomalies — combinations that are individually normal but jointly unusual — are invisible to per-feature analysis. A transaction of 100 dollars at 3pm in New York is normal on each dimension; together they might be anomalous for a user who has never used the card outside California. Always use multivariate methods.`,
       `**Diagnostic: always test your anomaly detector on a small labeled holdout set, even if you cannot label everything.**\n\nIf precision at threshold is less than 2× the base rate, the method is barely better than random — try a different method or transform the feature space. Precision@50 (expert review of the top 50 flagged samples) is a practical operating metric when full labeled sets are unavailable.`,
+      `**Know one-class SVM, the novelty/outlier split, and the time-series anomaly taxonomy.**\n\nOne-class SVM wraps a nonlinear boundary around clean normal data — good on small/medium sets, but scaling- and (nu, gamma)-sensitive and O(n²)–O(n³), so not for millions of points. Novelty detection assumes clean training data and flags new anomalies (one-class SVM, autoencoders); outlier detection assumes contaminated training data and finds anomalies within it (Isolation Forest, LOF). For time series, distinguish point, contextual (abnormal-in-context), and collective/sequence anomalies — per-point methods miss the latter two, which need sequence models. Standardise for distance/kernel/reconstruction methods (Isolation Forest is less scale-sensitive but still affected).`,
+      `**Evaluate by triangulation and build the operational alerting layer.**\n\nWithout labels, combine synthetic anomaly injection (caveat: synthetics may not match real anomalies), Precision@K expert audits, alert acceptance rate, and post-deployment label collection for retraining — no single label-free metric is trustworthy alone. And a detector is an alerting system, not just a score: deduplicate alerts, manage alert fatigue (too many false positives and investigators stop trusting it), add severity scoring and investigation queues, feed false positives back into tuning, and monitor for drift since "normal" shifts over time.`,
     ],
     checkQuestions: [
       {
@@ -808,6 +980,26 @@ All of these produce a continuous *score*, not a yes/no. To act on it you pick a
           `D) Train Isolation Forest or autoencoder exclusively on normal samples; evaluate via synthetic anomaly injection (uniform samples from feature bounding box), expert review of top-k flagged samples (Precision@50), and collect confirmed incidents in the first month of production to build a labelled set for retraining`,
         ],
         answer: `D`,
+      },
+      {
+        q: `You must detect anomalies in ECG time series where a run of individually-normal beats forms an abnormal rhythm. Why might Isolation Forest miss this, and what fits better?`,
+        options: [
+          `A) Isolation Forest is ideal for this — it isolates rare points quickly, and abnormal rhythms are always made of rare individual values.`,
+          `B) This is a collective/sequence anomaly: each beat is normal on its own, so a per-point method like Isolation Forest (which scores points independently) sees nothing unusual — it catches point anomalies, not patterns. A sequence model that sees temporal context (an LSTM or Transformer autoencoder reconstructing the sequence) is needed to flag the abnormal rhythm.`,
+          `C) Isolation Forest misses it only because ECG data is high-dimensional; running PCA first would let it catch the rhythm.`,
+          `D) The rhythm is a contextual anomaly that any scaling fix would resolve, so just standardise the features and Isolation Forest will catch it.`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `Your training data for a fraud detector is genuinely clean normal transactions, and you want to flag new, never-before-seen fraud at inference. Which framing and method family fit, versus finding anomalies hidden inside a contaminated dataset?`,
+        options: [
+          `A) Both are the same problem, so any anomaly method works identically regardless of whether the training data is clean or contaminated.`,
+          `B) This is novelty detection (train on clean normal, flag new anomalies) — one-class SVM or an autoencoder fit naturally. Outlier detection is the different case where training data is already contaminated and you find anomalies within it, typically with Isolation Forest or LOF. The distinction matters because a novelty method fed contaminated 'normal' data learns the contaminants and then misses them at inference.`,
+          `C) It's outlier detection because all fraud detection is outlier detection, so use LOF and assume the training data is contaminated regardless.`,
+          `D) Neither framing applies to fraud; you must have labeled fraud examples and train a supervised classifier, so anomaly detection can't be used here.`,
+        ],
+        answer: `B`,
       },
     ],
     interactivePrompt: `Before you touch the controls: why does Isolation Forest give anomalies a shorter average path length, and what does that reveal about the assumption it is making about anomalies?`,
@@ -871,11 +1063,49 @@ The core idea rests on one observation: words that belong to the same theme keep
 
 There is no free lunch on picking K. Ask for too few topics and you get vague mega-themes that blur real distinctions; ask for too many and you get near-duplicate, hair-splitting topics nobody can act on. It is tempting to lean on **perplexity** (a statistical fit score), but that is a trap: perplexity almost always keeps "improving" as you add topics, so it will happily push you toward far too many. **Coherence** (do a topic's top words actually belong together?) is the better guide — it peaks at a sensible K and then falls as topics start to fragment. But no number settles it. The real test is human: can a domain expert put a clear one-word label on *every* topic without hedging? The right K is the largest one where that is still true.
 
-(One practical note: LDA lives or dies on preprocessing. Strip out stop words and ultra-common terms first, or every topic ends up dominated by "the," "data," and "please," no matter how you tune it.)`,
+(One practical note: LDA lives or dies on preprocessing. Strip out stop words and ultra-common terms first, or every topic ends up dominated by "the," "data," and "please," no matter how you tune it.)
+
+---
+
+**Inside LDA: the priors and how it's fit.**
+
+LDA is a *generative* story with two knobs worth naming. Each document draws a **document-topic distribution** and each topic a **topic-word distribution**, both from **Dirichlet** priors controlled by **α** and **β**. **α** controls how many topics a document typically mixes: small α → each document is dominated by one or two topics; large α → documents spread across many. **β** controls topic sparsity in words: small β → each topic concentrated on a few words. Because you only observe the words, LDA *infers* the hidden distributions backward, using either **collapsed Gibbs sampling** (repeatedly reassign each word to a topic based on the current assignments of all others until it stabilises) or **variational inference** (optimise a tractable approximation to the true posterior). You don't need the math to use LDA, but knowing α/β and "it's Bayesian inference over hidden topic assignments" is standard interview fare.
+
+---
+
+**NMF, mechanically.**
+
+NMF is the linear-algebra cousin. Take the document-term matrix **V** (usually TF-IDF weighted) and factor it into two non-negative matrices: **V ≈ W × H**, where **W** is documents×topics and **H** is topics×words. The **non-negativity** is the whole point — because nothing can subtract, topics combine *additively*, giving a **parts-based** representation (a document is a sum of topics, not a cancellation of them) that tends to be more interpretable. It's **faster and more stable than LDA and often better on short text**, where LDA's sparse word co-occurrence starves its statistics.
+
+---
+
+**BERTopic's fine print.**
+
+BERTopic is powerful but has real knobs and caveats. It depends heavily on the **embedding model** you choose (and its language/domain — a general English model does poorly on medical or non-English text). Its **clustering step** (usually HDBSCAN) is sensitive to parameters and produces an explicit **outlier topic (-1)** for documents it can't cluster — which can swallow a large fraction of your corpus if tuned wrong. And because clustering is stochastic, **topics can shift between runs** (instability), so pin seeds and check reproducibility. It's often the best on short messy text — but "often," not "always."
+
+---
+
+**Choosing K, more fully.**
+
+Coherence is the headline metric, but round it out. Plot the **coherence curve** over K and take a peak, then cross-check with **topic diversity** (are the top words across topics distinct, or do topics overlap?), the **duplicate-topic rate** (how many near-identical topics did you get?), and the **domain-labelability** test (can an expert name every topic?). The final filter is **business actionability** — a mathematically-fine K that produces topics nobody can *do anything with* is the wrong K. The best K is the largest one that's still coherent, diverse, and actionable.
+
+---
+
+**Evaluating topics beyond one number.**
+
+Topic quality is multi-dimensional. **Topic coherence** (top words belong together) and **topic diversity** (topics don't repeat) are the automated pair. The **word-intruder task** is the human gold standard: insert one random word into a topic's top words and see if a person can spot it — if they can, the topic is coherent. Also weigh **downstream usefulness** (do the topics improve a task you care about?) and **stability** (do you get similar topics across different seeds and data samples?). A topic model that changes completely on a re-run isn't trustworthy no matter its coherence.
+
+---
+
+**In production, topics drift.**
+
+Topic models aren't fit-once artifacts. Real corpora **drift** — new products, new slang, new issues appear, so a model trained last quarter slowly stops matching today's tickets. Plan a **retraining cadence**, and build **new-topic detection** (a rising share of outlier/-1 documents or a spike in low-coherence assignments signals an emerging theme). The topics also need **human naming** and a **taxonomy governance** process so labels stay consistent as the model is retrained, plus **monitoring of topic volume over time** (a topic suddenly surging is often the real business signal you wanted). The model finds themes; keeping them meaningful over months is an operational job.`,
     keyPoints: [
       `**Use BERTopic over LDA for short texts (tweets, support tickets, product reviews) — BERT embeddings capture synonymy and semantic relationships that word co-occurrence statistics miss.**\n\nLDA sees "crash" and "fail" as different words. BERTopic knows they are semantically related. For short texts where individual words carry insufficient co-occurrence signal, embedding-based methods dominate word-count-based methods.`,
       `**Trap: not preprocessing aggressively before LDA.**\n\nRemove stop words, apply stemming or lemmatization, remove words appearing in fewer than 5 or more than 80% of documents. LDA without preprocessing produces incoherent topics dominated by frequent function words regardless of K or the number of training iterations.`,
       `**Diagnostic: for each topic, look at the top 10 words and ask "can I give this topic a one-word label?"**\n\nIf you cannot, the topic is incoherent — reduce K or improve preprocessing. If all topics look similar (sharing words like "data," "result," "method"), add those high-frequency terms to the stop list and reduce K, because the model has carved one broad topic into near-duplicate components.`,
+      `**Know LDA's priors and inference, NMF's factorisation, and BERTopic's caveats.**\n\nLDA draws document-topic and topic-word distributions from Dirichlet priors: α controls how many topics per document, β controls topic word-sparsity, and it's fit by collapsed Gibbs sampling or variational inference. NMF factors the (TF-IDF) matrix V ≈ W×H with non-negativity, giving a fast, stable, parts-based representation that often beats LDA on short text (sparse co-occurrence starves LDA). BERTopic depends on the embedding model and language/domain, produces an explicit outlier topic (-1) that can swallow the corpus if mis-tuned, and is unstable across runs — pin seeds.`,
+      `**Pick K with multiple signals, evaluate topics multi-dimensionally, and plan for drift.**\n\nChoose K from the coherence curve plus topic diversity, duplicate-topic rate, expert labelability, and business actionability — perplexity keeps improving with K and misleads. Evaluate with coherence, diversity, the human word-intruder task, downstream usefulness, and stability across seeds/samples (a model that changes on re-run isn't trustworthy). In production, topics drift, so set a retraining cadence, build new-topic detection (rising outlier/-1 share), maintain human naming and taxonomy governance, and monitor topic volume over time — a surging topic is often the real signal.`,
     ],
     checkQuestions: [
       {
@@ -917,6 +1147,26 @@ There is no free lunch on picking K. Ask for too few topics and you get vague me
           `D) Perplexity is a generative fit metric that always improves with more topics; coherence is a human-interpretability proxy that peaks at moderate K then degrades as topics fragment — they optimise different objectives and coherence is the right metric for topic modeling's primary use case`,
         ],
         answer: `D`,
+      },
+      {
+        q: `In LDA, you notice each support ticket is being modeled as a blend of many topics at once, making the per-document mixtures vague. Which hyperparameter controls this, and which way do you move it?`,
+        options: [
+          `A) Increase K — more topics automatically make each document's mixture sparser.`,
+          `B) The document-topic Dirichlet prior α controls how many topics a document spreads across: a large α spreads documents over many topics (vague mixtures), a small α concentrates each document on a few. Lower α to get sparser, sharper per-document topic mixtures. (β, the topic-word prior, separately controls word sparsity within topics.)`,
+          `C) Increase the number of Gibbs sampling iterations — vague mixtures just mean the sampler hasn't converged.`,
+          `D) Switch from Gibbs sampling to variational inference, which is the only thing that controls per-document sparsity.`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `You run BERTopic on short product reviews and find 45% of documents assigned to topic -1, plus the topics change noticeably each time you re-run. What's happening and how do you address it?`,
+        options: [
+          `A) Topic -1 is your most important topic, so keep it and ignore the run-to-run changes as random noise.`,
+          `B) Topic -1 is BERTopic's outlier bucket for documents its HDBSCAN clustering couldn't confidently assign — 45% means the clustering is too conservative or the embedding model fits the domain poorly. Tune the clustering parameters (or reduce outliers via reassignment), consider a domain-appropriate embedding model, and pin random seeds since BERTopic's clustering is stochastic and topics shift across runs — then verify stability before trusting the topics.`,
+          `C) 45% outliers means the reviews have no topics at all; switch to perplexity-optimised LDA, which never produces outliers.`,
+          `D) The instability proves BERTopic is broken; only LDA gives reproducible topics, so abandon embedding-based methods entirely.`,
+        ],
+        answer: `B`,
       },
     ],
     interactivePrompt: `Before you touch the controls: why does perplexity keep improving as you add more topics, and why does that make it a poor criterion for choosing K?`,
