@@ -334,6 +334,17 @@ const INTERVIEW_TOOLS = [
 // KNOW (foundations + library) → DO → BUILD → JUDGE → PREP & ASSESS → EXTRAS
 const NAV_SECTIONS = [
   {
+    id: 'you',
+    label: 'YOU',
+    icon: 'user',
+    items: [
+      { id: 'home',        label: 'Home',         desc: 'Your dashboard — readiness snapshot, streak, and what to do next.' },
+      { id: 'progress',    label: 'My Progress',  desc: 'Readiness score, heatmap, room progress bars, and study plan.' },
+      { id: 'my_tracks',   label: 'My Tracks',    desc: 'Custom study tracks — group modules and items for focused review.' },
+      { id: 'leaderboard', label: 'Leaderboard',  desc: 'Ranked by total problems and modules solved across every room.' },
+    ],
+  },
+  {
     id: 'know',
     label: 'KNOW',
     icon: 'layers',
@@ -463,17 +474,6 @@ const NAV_SECTIONS = [
           { id: 'defense',        label: 'Defense Plan',    desc: 'Paste a JD → gap map → study plan; defend your projects under pressure.' },
         ],
       },
-    ],
-  },
-  {
-    id: 'extras',
-    label: 'EXTRAS',
-    icon: 'grid',
-    items: [
-      { id: 'landscape',   label: 'ML Landscape',  desc: 'ML tools & infrastructure landscape map.' },
-      { id: 'leaderboard', label: 'Leaderboard',   desc: 'Ranked by total problems and modules solved across every room.' },
-      { id: 'progress',    label: 'My Progress',   desc: 'Readiness score, heatmap, room progress bars, and study plan.' },
-      { id: 'my_tracks',   label: 'My Tracks',     desc: 'Custom study tracks — group foundation modules for focused review.' },
     ],
   },
 ]
