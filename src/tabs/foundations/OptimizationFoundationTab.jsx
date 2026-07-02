@@ -8,7 +8,7 @@ import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '..
 
 const MODULES = OPTIMIZATION_MODULES
 
-const TAB_ID = \'optimization_foundation\'
+const TAB_ID = 'optimization_foundation'
 
 function difficultyBadge(d) {
   const map = {

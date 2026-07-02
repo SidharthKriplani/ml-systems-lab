@@ -8,7 +8,7 @@ import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '..
 
 const MODULES = SELF_SUPERVISED_MODULES
 
-const TAB_ID = \'self_supervised_foundation\'
+const TAB_ID = 'self_supervised_foundation'
 
 function difficultyBadge(d) {
   const map = {

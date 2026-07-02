@@ -8,7 +8,7 @@ import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '..
 
 const MODULES = GRAPH_ML_MODULES
 
-const TAB_ID = \'graph_ml_foundation\'
+const TAB_ID = 'graph_ml_foundation'
 
 function difficultyBadge(d) {
   const map = {

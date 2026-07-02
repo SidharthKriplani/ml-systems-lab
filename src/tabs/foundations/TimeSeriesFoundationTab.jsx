@@ -8,7 +8,7 @@ import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '..
 
 const MODULES = TIME_SERIES_MODULES
 
-const TAB_ID = \'time_series_foundation\'
+const TAB_ID = 'time_series_foundation'
 
 function difficultyBadge(d) {
   const map = {

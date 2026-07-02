@@ -11,7 +11,7 @@ const COLOR = 'var(--prime)'
 
 const MODULES = UNSUPERVISED_MODULES
 
-const TAB_ID = \'unsupervised_foundation\'
+const TAB_ID = 'unsupervised_foundation'
 
 function difficultyBadge(d) {
   const map = {

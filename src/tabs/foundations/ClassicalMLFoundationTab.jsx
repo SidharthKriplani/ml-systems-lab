@@ -11,7 +11,7 @@ const COLOR = 'var(--prime)'
 
 const MODULES = CLASSICAL_ML_MODULES
 
-const TAB_ID = \'classical_ml_foundation\'
+const TAB_ID = 'classical_ml_foundation'
 
 function difficultyBadge(d) {
   const map = {

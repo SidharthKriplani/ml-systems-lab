@@ -8,7 +8,7 @@ import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '..
 
 const MODULES = DEEP_LEARNING_MODULES
 
-const TAB_ID = \'dl_foundation\'
+const TAB_ID = 'dl_foundation'
 
 function difficultyBadge(d) {
   const map = {

@@ -11,7 +11,7 @@ const COLOR = 'var(--prime)'
 
 const MODULES = MATH_STATS_MODULES
 
-const TAB_ID = \'math_stats_foundation\'
+const TAB_ID = 'math_stats_foundation'
 
 function difficultyBadge(d) {
   const map = {
