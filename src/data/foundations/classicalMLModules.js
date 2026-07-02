@@ -31,6 +31,8 @@ That is the whole model. Pick the three weights and you can price any house. So 
 
 To find good weights, we first have to measure bad ones. You already know what last month's houses actually sold for, so use your weights to predict those same houses and compare each guess to the truth. How far off you were on one house is called the **residual** — a fancier word for the miss.
 
+[FIGURE: least_squares]
+
 One miss is easy. But we want a single score for how wrong the weights are across *all* the houses. The most natural idea is to average the misses. Careful though — some guesses are too high and some too low, so the misses have opposite signs and cancel out. A terrible model could average to nearly zero just by luck.
 
 The fix is to throw away the signs. Take the size of each miss, ignore whether it was over or under, and average those. That gives you the **mean absolute error**, or **MAE** — plainly, "on average, how many dollars off are we?" It is honest, easy to read, and a couple of wild houses barely move it.
@@ -220,6 +222,28 @@ R² tells you how much you beat the lazy mean-model, but for reporting error you
       "**Real solvers use QR/SVD, not literal (XᵀX)⁻¹** — inverting squares the numerical sensitivity.",
     ],
     interactiveId: 'linear_regression_viz',
+    figures: {
+      least_squares: `<svg viewBox="0 0 360 210" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="18" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">Least squares: minimise the total squared miss</text>
+  <line x1="42" y1="175" x2="330" y2="175" stroke="var(--rim)" stroke-width="1"/>
+  <line x1="42" y1="40" x2="42" y2="175" stroke="var(--rim)" stroke-width="1"/>
+  <text x="186" y="200" text-anchor="middle" fill="var(--ink-low)" font-size="9">size of house</text>
+  <text x="18" y="110" text-anchor="middle" fill="var(--ink-low)" font-size="9" transform="rotate(-90 18 110)">price</text>
+  <line x1="52" y1="160" x2="322" y2="58" stroke="var(--prime)" stroke-width="2.5"/>
+  <text x="300" y="52" text-anchor="middle" fill="var(--prime)" font-size="9" font-weight="700">best-fit line</text>
+  <g stroke="var(--amber)" stroke-width="1.5" stroke-dasharray="3 2">
+    <line x1="82" y1="120" x2="82" y2="148"/>
+    <line x1="140" y1="118" x2="140" y2="100"/>
+    <line x1="200" y1="98" x2="200" y2="126"/>
+    <line x1="258" y1="90" x2="258" y2="72"/>
+  </g>
+  <g fill="var(--ink-hi)">
+    <circle cx="82" cy="148" r="4"/><circle cx="140" cy="100" r="4"/><circle cx="200" cy="126" r="4"/><circle cx="258" cy="72" r="4"/>
+  </g>
+  <text x="200" y="150" text-anchor="middle" fill="var(--amber)" font-size="9" font-weight="700">residual = vertical gap (dot − line)</text>
+  <text x="180" y="169" text-anchor="middle" fill="var(--ink-low)" font-size="8.5">loss = sum of these gaps, each squared</text>
+</svg>`,
+    },
   },
   {
     id: 'logistic_regression',
@@ -246,6 +270,8 @@ Start with what we already know how to build: a plain linear equation, w·x + b.
 The trick uses a pair of functions that undo each other. You already know one such pair: eˣ and its inverse, the natural log. eˣ takes any number and gives back a positive one — its output lives in (0, ∞). The natural log runs it backwards: hand it a positive number, it gives back any number at all. From that pair we build a second pair — the **logit** and the **sigmoid** — which also undo each other. The logit takes a probability in (0, 1) and stretches it out across the whole number line. The sigmoid, $σ(z) = 1/(1 + e^{-z})$, does the reverse: it takes any number and squashes it into (0, 1). That squash is exactly the bend we were hunting for — and yes, the sigmoid is the same S-curve Verhulst drew.
 
 Now the move that makes everything click. A linear equation outputs a number on the whole line. A logit is also a number on the whole line. So instead of forcing the linear equation to spit out a probability directly, we let it predict the **logit**, then run that through the sigmoid to land on a clean probability. The linear part does what it is naturally good at; the sigmoid handles the bending.
+
+[FIGURE: sigmoid_squash]
 
 ---
 
@@ -409,6 +435,23 @@ The decision boundary logistic regression draws is *linear* in whatever feature 
       "**Boundary is linear in feature space** — engineer features to bend it; read coefficients as odds ratios.",
     ],
     interactiveId: 'logistic_regression_viz',
+    figures: {
+      sigmoid_squash: `<svg viewBox="0 0 360 210" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="18" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">The sigmoid squashes the whole line into (0, 1)</text>
+  <line x1="30" y1="120" x2="330" y2="120" stroke="var(--rim)" stroke-width="1"/>
+  <line x1="180" y1="42" x2="180" y2="185" stroke="var(--rim)" stroke-width="1"/>
+  <line x1="30" y1="60" x2="330" y2="60" stroke="var(--rim)" stroke-width="0.75" stroke-dasharray="3 3"/>
+  <line x1="30" y1="180" x2="330" y2="180" stroke="var(--rim)" stroke-width="0.75" stroke-dasharray="3 3"/>
+  <text x="24" y="63" text-anchor="end" fill="var(--ink-low)" font-size="8.5">1</text>
+  <text x="24" y="123" text-anchor="end" fill="var(--ink-low)" font-size="8.5">0.5</text>
+  <text x="24" y="183" text-anchor="end" fill="var(--ink-low)" font-size="8.5">0</text>
+  <path d="M30 179 C 120 178, 155 172, 180 120 C 205 68, 240 62, 330 61" fill="none" stroke="var(--prime)" stroke-width="2.5"/>
+  <circle cx="180" cy="120" r="4" fill="var(--amber)"/>
+  <text x="205" y="42" fill="var(--amber)" font-size="8.5" font-weight="700">σ(z)=1/(1+e⁻ᶻ)</text>
+  <text x="315" y="200" text-anchor="end" fill="var(--ink-low)" font-size="8.5">z = w·x + b (any real number →)</text>
+  <text x="45" y="200" text-anchor="start" fill="var(--ink-low)" font-size="8.5">← large negative z</text>
+</svg>`,
+    },
   },
   {
     id: 'regularization',
@@ -849,6 +892,8 @@ Every guarantee here — bias-variance, VC bounds, PAC, even the honest test set
 
 Here is a job where it shines and a straight-line model struggles. Say you want to flag loan applicants likely to default, using their income, their debt-to-income ratio, and their age. The real pattern is a set of rules: "if income is low *and* debt is high, risky — but a big income excuses a fair bit of debt." That is not a smooth weighted sum. It is the space of applicants carved into regions, each with its own answer. A linear model draws one line and gives up. A tree carves.
 
+[FIGURE: tree_partition]
+
 ---
 
 **One question at a time.**
@@ -1008,6 +1053,26 @@ A classification leaf reports the *frequency* of each class among its training p
       "**Prune to control depth:** sweep pruning strength and watch train vs test accuracy.",
     ],
     interactiveId: 'decision_tree_viz',
+    figures: {
+      tree_partition: `<svg viewBox="0 0 360 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="16" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">A tree carves feature space into rectangles</text>
+  <line x1="42" y1="170" x2="330" y2="170" stroke="var(--rim)" stroke-width="1"/>
+  <line x1="42" y1="38" x2="42" y2="170" stroke="var(--rim)" stroke-width="1"/>
+  <text x="186" y="192" text-anchor="middle" fill="var(--ink-low)" font-size="9">income →</text>
+  <text x="16" y="104" text-anchor="middle" fill="var(--ink-low)" font-size="9" transform="rotate(-90 16 104)">debt ratio →</text>
+  <rect x="42" y="38" width="288" height="132" fill="none"/>
+  <line x1="150" y1="38" x2="150" y2="170" stroke="var(--ink-mid)" stroke-width="1.5"/>
+  <line x1="42" y1="104" x2="150" y2="104" stroke="var(--ink-mid)" stroke-width="1.5"/>
+  <line x1="240" y1="38" x2="240" y2="170" stroke="var(--ink-mid)" stroke-width="1.5"/>
+  <rect x="43" y="105" width="106" height="64" fill="var(--prime)" opacity="0.22"/>
+  <text x="96" y="142" text-anchor="middle" fill="var(--prime)" font-size="8.5" font-weight="700">RISKY</text>
+  <rect x="43" y="39" width="106" height="64" fill="var(--amber)" opacity="0.18"/>
+  <rect x="151" y="39" width="88" height="130" fill="var(--amber)" opacity="0.18"/>
+  <rect x="241" y="39" width="88" height="130" fill="var(--amber)" opacity="0.18"/>
+  <text x="240" y="108" text-anchor="middle" fill="var(--amber)" font-size="8.5" font-weight="700">SAFE</text>
+  <text x="180" y="187" text-anchor="middle" fill="var(--ink-low)" font-size="8">each split is one yes/no question → axis-aligned cut</text>
+</svg>`,
+    },
   },
   {
     id: 'random_forest',
@@ -1730,7 +1795,9 @@ The formal statement: exact kNN is O(nd) per query where n is the number of inde
     tags: ['Naive Bayes', 'independence', 'text classification'],
     summary: `An email arrives: "Claim your FREE prize NOW." You need to classify it as spam or ham in milliseconds. You have word frequency statistics from training: P(FREE|spam) = 0.45, P(FREE|ham) = 0.01, P(prize|spam) = 0.32, P(prize|ham) = 0.002, P(Claim|spam) = 0.18, P(Claim|ham) = 0.04. Bayes' theorem gives the posterior: P(spam|words) ∝ P(spam) × P(FREE|spam) × P(prize|spam) × P(Claim|spam) × .... You multiply across all words in the email. Whichever class — spam or ham — gives the larger product wins.
 
-The "naive" assumption is that words are conditionally independent given the class. This is obviously false. "Stock" and "market" co-occur constantly. "Credit" and "card" cluster together. The joint P(stock, market|spam) is nothing like P(stock|spam) × P(market|spam). The model is provably wrong about the joint distribution. Yet it works. The reason: you do not need the correct probability, only the correct ranking. Is P(spam|words) > P(ham|words)? Naive Bayes gets the ordering right even when the individual probabilities are wrong, because the errors in the independence assumption tend to be symmetric — both classes' probabilities are over-estimated by roughly the same factor.
+The "naive" assumption is that words are conditionally independent given the class. This is obviously false. "Stock" and "market" co-occur constantly. "Credit" and "card" cluster together. The joint P(stock, market|spam) is nothing like P(stock|spam) × P(market|spam). The model is provably wrong about the joint distribution. Yet it works.
+
+[FIGURE: naive_independence] The reason: you do not need the correct probability, only the correct ranking. Is P(spam|words) > P(ham|words)? Naive Bayes gets the ordering right even when the individual probabilities are wrong, because the errors in the independence assumption tend to be symmetric — both classes' probabilities are over-estimated by roughly the same factor.
 
 One failure mode is deterministic. A word not seen in any training spam email has P(word|spam) = 0. One unseen word → the entire product P(x|spam) = 0 → P(spam|x) = 0 → the model can never classify any email containing that word as spam, regardless of all other evidence. A single "zarflax" in the email makes it immune to spam classification. Laplace smoothing fixes this: add 1 to all word counts before computing probabilities, making P(new_word|spam) = 1/(n_spam + vocab_size). Never exactly zero.
 
@@ -1786,6 +1853,26 @@ The formal statement: ŷ = argmax_k [log P(y=k) + Σⱼ log P(xⱼ|y=k)]. Always
       "**Gaussian NB for continuous features** — fast O(nd) baseline.",
       "**If it predicts near 0/1 with high confidence,** independence is badly violated — use for ranking only, not as probabilities.",
     ],
+    figures: {
+      naive_independence: `<svg viewBox="0 0 360 190" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="18" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">The "naive" assumption: the joint factorises</text>
+  <rect x="90" y="34" width="180" height="30" rx="5" fill="var(--rim)" opacity="0.4"/>
+  <text x="180" y="53" text-anchor="middle" fill="var(--ink-hi)" font-size="10" font-weight="700">P(FREE, prize, Claim | spam)</text>
+  <text x="180" y="84" text-anchor="middle" fill="var(--amber)" font-size="10" font-weight="700">assume independence given class ↓</text>
+  <line x1="60" y1="98" x2="300" y2="98" stroke="var(--rim)" stroke-width="0.75"/>
+  <g>
+    <rect x="34" y="112" width="88" height="34" rx="5" fill="var(--prime)" opacity="0.2"/>
+    <text x="78" y="133" text-anchor="middle" fill="var(--prime)" font-size="9" font-weight="700">P(FREE|spam)</text>
+    <text x="130" y="134" text-anchor="middle" fill="var(--ink-mid)" font-size="14" font-weight="700">×</text>
+    <rect x="140" y="112" width="82" height="34" rx="5" fill="var(--prime)" opacity="0.2"/>
+    <text x="181" y="133" text-anchor="middle" fill="var(--prime)" font-size="9" font-weight="700">P(prize|spam)</text>
+    <text x="230" y="134" text-anchor="middle" fill="var(--ink-mid)" font-size="14" font-weight="700">×</text>
+    <rect x="240" y="112" width="86" height="34" rx="5" fill="var(--prime)" opacity="0.2"/>
+    <text x="283" y="133" text-anchor="middle" fill="var(--prime)" font-size="9" font-weight="700">P(Claim|spam)</text>
+  </g>
+  <text x="180" y="172" text-anchor="middle" fill="var(--ink-low)" font-size="8.5">wrong about the joint — but the ranking survives, so it still classifies</text>
+</svg>`,
+    },
   },
   {
     id: 'calibration',

@@ -476,6 +476,8 @@ Random mini-batching assumes every batch is a fair sample — but under heavy im
 
 The gradient alternates direction across the ravine at every step, so the optimizer zigzags instead of running forward.
 
+[FIGURE: momentum_path]
+
 The solution is to give the optimizer memory. Momentum maintains a velocity vector that accumulates the history of past gradients: v ← βv + ∇L(θ), then θ ← θ − αv. Gradients that consistently point the same direction accumulate into large velocity in that direction. Gradients that alternate direction — the oscillation across the ravine — partially cancel each other in the velocity and die out. The optimizer now runs along the valley floor rather than bouncing off the walls. A further refinement, Nesterov momentum, computes the gradient not at the current position but at the position you will be after applying the current velocity. This look-ahead avoids applying a correction that is already about to be corrected — it removes a systematic lag between where the optimizer is and where the gradient says to go.`,
     keyPoints: [
       `**Gradient descent without momentum fails in ravine-shaped landscapes because it discards all trajectory information.** Each step is computed fresh from the local gradient. In a ravine with high curvature across the width and low curvature along the length, the across-ravine gradient is large and the along-ravine gradient is small — so each step takes a large oscillating step across the ravine and a tiny step forward. The optimizer zigzags.`,
@@ -538,9 +540,26 @@ The solution is to give the optimizer memory. Momentum maintains a velocity vect
         answer: `D`,
       },
     ],
+    figures: {
+      momentum_path: `<svg viewBox="0 0 360 210" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="15" text-anchor="middle" fill="var(--ink-low)" font-size="9">a narrow ravine: steep across, gentle along the floor</text>
+  <ellipse cx="200" cy="112" rx="150" ry="30" fill="none" stroke="var(--rim)" stroke-width="1"/>
+  <ellipse cx="200" cy="112" rx="110" ry="20" fill="none" stroke="var(--rim)" stroke-width="1"/>
+  <ellipse cx="200" cy="112" rx="70" ry="11" fill="none" stroke="var(--rim)" stroke-width="1"/>
+  <circle cx="335" cy="112" r="3" fill="var(--ink-low)"/>
+  <text x="333" y="150" text-anchor="middle" fill="var(--ink-low)" font-size="8">minimum</text>
+  <polyline points="55,80 78,144 101,80 124,144 147,84 170,140 193,88 216,136" fill="none" stroke="var(--amber)" stroke-width="1.6"/>
+  <circle cx="55" cy="80" r="3" fill="var(--amber)"/>
+  <text x="60" y="72" fill="var(--amber)" font-size="9" font-weight="700">plain SGD: zig-zags, crawls forward</text>
+  <polyline points="55,112 95,112 140,112 190,112 245,112 300,112 330,112" fill="none" stroke="var(--prime)" stroke-width="1.8"/>
+  <circle cx="55" cy="112" r="3" fill="var(--prime)"/>
+  <text x="60" y="182" fill="var(--prime)" font-size="9" font-weight="700">momentum: cross-ravine steps cancel, velocity builds along the floor</text>
+</svg>`,
+    },
   },
   {
     id: 'adagrad_rmsprop',
+    interactiveId: 'adagrad_rmsprop_viz',
     title: 'AdaGrad and RMSProp',
     subtitle: `Per-parameter learning rates, why AdaGrad dies on dense problems, and RMSProp's fix.`,
     difficulty: 'intermediate',
@@ -552,7 +571,9 @@ $G_i = Σ g_{i,t}² per parameter, then scale each step by α/√G_i. Parameters
 
 adients get smaller steps; parameters with sparse or small gradients get larger steps. For sparse NLP embeddings, this is exactly right — rare words finally get appropriately large updates when they appear. The fatal flaw: G_i only ever grows. For a dense convolutional layer that receives a gradient on every example, G_i grows without bound, and the effective learning rate collapses toward zero.
 
-Training stalls long before convergence. RMSProp fixes this with one change: replace the cumulative sum with an exponential moving average. G_i now reflects recent gradient magnitude rather than all-time total, so it can stabilize or decrease. Dense parameters stop dying.`,
+Training stalls long before convergence. RMSProp fixes this with one change: replace the cumulative sum with an exponential moving average. G_i now reflects recent gradient magnitude rather than all-time total, so it can stabilize or decrease. Dense parameters stop dying.
+
+[FIGURE: adagrad_decay]`,
     keyPoints: [
       `**The problem AdaGrad solved was sparse gradients at wildly different scales.** SGD with a fixed learning rate was applying the same update size to frequently-updated parameters (which had already converged) and rarely-updated parameters (which needed large updates when they finally appeared). Per-parameter learning rates proportional to gradient history were the solution.`,
       `**AdaGrad update: G_i ← G_i + g_i²; θ_i ← θ_i − (α/√(G_i + ε))·g_i.** The running sum G_i records how much gradient has flowed through parameter i in total. Parameters with large cumulative gradient history get smaller steps; parameters with small history get larger ones. For word embeddings, this automatically assigns large effective learning rates to rare words and small ones to common words — exactly what manual tuning would have done.`,
@@ -604,6 +625,19 @@ Training stalls long before convergence. RMSProp fixes this with one change: rep
         answer: `A`,
       },
     ],
+    figures: {
+      adagrad_decay: `<svg viewBox="0 0 360 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="15" text-anchor="middle" fill="var(--ink-low)" font-size="9">effective learning rate on a dense layer, over training steps</text>
+  <line x1="40" y1="30" x2="40" y2="165" stroke="var(--ink-low)" stroke-width="1"/>
+  <line x1="40" y1="165" x2="340" y2="165" stroke="var(--ink-low)" stroke-width="1"/>
+  <text x="14" y="40" fill="var(--ink-low)" font-size="8">eff. LR</text>
+  <text x="330" y="180" fill="var(--ink-low)" font-size="8">steps</text>
+  <path d="M40,60 L110,62 L180,61 L250,62 L340,61" fill="none" stroke="var(--prime)" stroke-width="1.8"/>
+  <text x="240" y="54" fill="var(--prime)" font-size="9" font-weight="700">RMSProp: EMA stabilises</text>
+  <path d="M40,45 Q70,120 130,145 T250,160 T340,163" fill="none" stroke="var(--amber)" stroke-width="1.8"/>
+  <text x="150" y="140" fill="var(--amber)" font-size="9" font-weight="700">AdaGrad: alpha/sqrt(T), training stalls</text>
+</svg>`,
+    },
   },
   {
     id: 'adam_adamw',
@@ -701,6 +735,8 @@ Before we even get to decay strategies, there is a problem at the very start. Ea
 
 After the stable phase, cosine annealing replaces step decay's abrupt drop with a smooth curve: $α(t) = α_{min} + 0.5(α_{max} - α_{min})(1 + \cos(πt/T))$. The gradual decrease means the optimizer keeps exploring broadly early and narrows its search gradually rather than stopping abruptly. Empirically, cosine annealing finds flatter basins than step decay, delivering 0.5%–2% better test accuracy on standard benchmarks. The mechanism: in the high-$α$ phase, the optimizer can still occasionally escape mediocre basins. As $α$ decreases continuously, exploration narrows and the optimizer settles into the flattest basin it has found.
 
+[FIGURE: lr_schedule_shapes]
+
 OneCycleLR (Smith, 2018) goes further: ramp $α$ up from $α_{min}$ to a peak 5–10x higher than a typical constant rate over 30% of steps, then cosine decay down over the remaining 70%. The high-$α$ peak phase is aggressive exploration. The long decay phase is fine-grained convergence. This "super-convergence" has achieved matching accuracy in 10–20x fewer epochs on some tasks. The canonical transformer schedule — linear warmup, cosine decay to near zero — is structurally identical: aggressive early phase, extended fine-grained final phase.`,
     keyPoints: [
       `**Use linear warmup for 1%–5% of total steps, then cosine decay to near zero — this is the production-proven schedule for most deep learning.**\n\nFor ResNets: warmup over 5 epochs, then cosine decay. For transformers: warmup over 4% of training tokens, then cosine or linear decay. Peak learning rate: $1e$-$4$ to $3e$-$4$ for transformers, $0.1$ for ResNet+SGD. Getting the warmup length wrong by 2x costs less than getting it completely absent — absent warmup on transformers causes divergence in the first few hundred steps with near-certainty.`,
@@ -751,6 +787,21 @@ OneCycleLR (Smith, 2018) goes further: ramp $α$ up from $α_{min}$ to a peak 5�
         answer: `D`,
       },
     ],
+    figures: {
+      lr_schedule_shapes: `<svg viewBox="0 0 360 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="15" text-anchor="middle" fill="var(--ink-low)" font-size="9">learning rate over a training run</text>
+  <line x1="38" y1="28" x2="38" y2="165" stroke="var(--ink-low)" stroke-width="1"/>
+  <line x1="38" y1="165" x2="342" y2="165" stroke="var(--ink-low)" stroke-width="1"/>
+  <text x="12" y="40" fill="var(--ink-low)" font-size="8">LR</text>
+  <text x="330" y="180" fill="var(--ink-low)" font-size="8">steps</text>
+  <path d="M38,160 L78,50" fill="none" stroke="var(--ink-hi)" stroke-width="1.6"/>
+  <text x="40" y="150" fill="var(--ink-hi)" font-size="8" font-weight="700">warmup</text>
+  <path d="M78,50 L170,50 L170,90 L250,90 L250,125 L342,125" fill="none" stroke="var(--amber)" stroke-width="1.6"/>
+  <text x="180" y="84" fill="var(--amber)" font-size="8" font-weight="700">step decay</text>
+  <path d="M78,50 Q210,55 342,150" fill="none" stroke="var(--prime)" stroke-width="1.8"/>
+  <text x="250" y="118" fill="var(--prime)" font-size="8" font-weight="700">cosine anneal</text>
+</svg>`,
+    },
   },
   {
     id: 'gradient_flow',
@@ -1092,7 +1143,9 @@ You can catch a bad initialisation before wasting a training run. Check the **lo
     tags: ['newton', 'hessian', 'l-bfgs', 'curvature', 'quasi-newton'],
     summary: `Gradient descent uses only the first derivative of the loss: which direction is downhill from here. It does not know how steep that downhill is or how quickly it levels off — it cannot see curvature.
 
-This is why the learning rate must be tuned so carefully: it is a proxy for curvature information the optimizer does not have. Newton's method has that information. The Hessian H is the matrix of second derivatives — it encodes the curvature in every parameter direction simultaneously. Newton's step θ ← θ − H^{-1}·∇L is the exact minimizer of the local quadratic approximation of the loss. For a perfectly quadratic loss, one Newton step lands at the minimum. For smooth strongly convex functions, convergence is quadratic — the error roughly halves the number of its decimal places at each step. The fundamental problem is scale: the Hessian of a network with n parameters is n×n. For n=10^6, the Hessian has 10^12 entries requiring 4 TB of memory, and inverting it requires 10^18 floating-point operations. At the compute capacity of a modern GPU, one Newton step takes over a day — before any training has occurred. Quasi-Newton methods approximate the inverse Hessian from gradient information across recent steps rather than computing it exactly. L-BFGS builds a low-rank approximation using the last m gradient pairs at O(mn) cost. It is the right tool when n is small enough (below roughly 10^5 parameters) and full-batch gradient evaluation is affordable — scientific computing, physics simulations, hyperparameter optimization inner loops. At the scale of deep learning, it is not used in production because the cost of even an approximate Hessian exceeds the cost of many gradient steps.
+This is why the learning rate must be tuned so carefully: it is a proxy for curvature information the optimizer does not have. Newton's method has that information. The Hessian H is the matrix of second derivatives — it encodes the curvature in every parameter direction simultaneously. Newton's step θ ← θ − H^{-1}·∇L is the exact minimizer of the local quadratic approximation of the loss. For a perfectly quadratic loss, one Newton step lands at the minimum. For smooth strongly convex functions, convergence is quadratic — the error roughly halves the number of its decimal places at each step.
+
+[FIGURE: newton_convergence] The fundamental problem is scale: the Hessian of a network with n parameters is n×n. For n=10^6, the Hessian has 10^12 entries requiring 4 TB of memory, and inverting it requires 10^18 floating-point operations. At the compute capacity of a modern GPU, one Newton step takes over a day — before any training has occurred. Quasi-Newton methods approximate the inverse Hessian from gradient information across recent steps rather than computing it exactly. L-BFGS builds a low-rank approximation using the last m gradient pairs at O(mn) cost. It is the right tool when n is small enough (below roughly 10^5 parameters) and full-batch gradient evaluation is affordable — scientific computing, physics simulations, hyperparameter optimization inner loops. At the scale of deep learning, it is not used in production because the cost of even an approximate Hessian exceeds the cost of many gradient steps.
 
 ---
 
@@ -1202,6 +1255,19 @@ Choosing among them comes down to a few axes: dataset/parameter size, gradient n
         answer: `B`,
       },
     ],
+    figures: {
+      newton_convergence: `<svg viewBox="0 0 360 190" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="15" text-anchor="middle" fill="var(--ink-low)" font-size="9">error vs step (log scale): how fast the gap to the minimum shrinks</text>
+  <line x1="40" y1="28" x2="40" y2="160" stroke="var(--ink-low)" stroke-width="1"/>
+  <line x1="40" y1="160" x2="340" y2="160" stroke="var(--ink-low)" stroke-width="1"/>
+  <text x="12" y="38" fill="var(--ink-low)" font-size="8">log err</text>
+  <text x="330" y="176" fill="var(--ink-low)" font-size="8">steps</text>
+  <path d="M40,42 L340,120" fill="none" stroke="var(--amber)" stroke-width="1.8"/>
+  <text x="150" y="92" fill="var(--amber)" font-size="9" font-weight="700">GD: linear, fixed fraction off each step</text>
+  <path d="M40,42 Q70,70 95,120 T150,158" fill="none" stroke="var(--prime)" stroke-width="1.8"/>
+  <text x="120" y="150" fill="var(--prime)" font-size="9" font-weight="700">Newton: quadratic, digits double</text>
+</svg>`,
+    },
   },
   {
     id: 'loss_landscape_geometry',
@@ -1213,7 +1279,9 @@ Choosing among them comes down to a few axes: dataset/parameter size, gradient n
     tags: ['saddle-points', 'flat-minima', 'sharp-minima', 'SAM', 'double-descent', 'generalization'],
     summary: `Classical optimization theory built its intuitions on low-dimensional problems with well-behaved loss surfaces.
 
-Deep network loss landscapes violate essentially every assumption. The first assumption to fall was that local minima are the main obstacle. In n dimensions, a true local minimum requires all n eigenvalues of the Hessian to be positive — meaning the loss rises in every possible direction. If each eigenvalue is independently positive with probability 0.5, the chance that all n are positive is (0.5)^n. For n=10^6 parameters, this is astronomically improbable. Saddle points — where some directions go up and others go down — dominate the landscape. The second assumption to fall was that all minima are equivalent. Hochreiter & Schmidhuber (1997) proposed, and Keskar et al. (2017) confirmed, that sharp minima (narrow basins, high curvature) generalize poorly while flat minima (wide basins, low curvature) generalize well. A sharp minimum sits at the bottom of a narrow valley — shift the parameters slightly and the loss spikes. A flat minimum sits in a broad bowl — the loss stays low across a wide region of parameter space. Test data is not identical to training data, so test-time parameters are always slightly shifted from training-time parameters. Flat minima survive this shift; sharp minima do not. The third assumption to fall was the classical bias-variance tradeoff: that overfitting necessarily worsens past the interpolation threshold. Double descent showed the opposite — overparameterized models generalize better than models at the interpolation boundary, because gradient descent finds the simplest interpolating solution, which happens to generalize well.`,
+Deep network loss landscapes violate essentially every assumption. The first assumption to fall was that local minima are the main obstacle. In n dimensions, a true local minimum requires all n eigenvalues of the Hessian to be positive — meaning the loss rises in every possible direction. If each eigenvalue is independently positive with probability 0.5, the chance that all n are positive is (0.5)^n. For n=10^6 parameters, this is astronomically improbable. Saddle points — where some directions go up and others go down — dominate the landscape.
+
+[FIGURE: saddle_geometry] The second assumption to fall was that all minima are equivalent. Hochreiter & Schmidhuber (1997) proposed, and Keskar et al. (2017) confirmed, that sharp minima (narrow basins, high curvature) generalize poorly while flat minima (wide basins, low curvature) generalize well. A sharp minimum sits at the bottom of a narrow valley — shift the parameters slightly and the loss spikes. A flat minimum sits in a broad bowl — the loss stays low across a wide region of parameter space. Test data is not identical to training data, so test-time parameters are always slightly shifted from training-time parameters. Flat minima survive this shift; sharp minima do not. The third assumption to fall was the classical bias-variance tradeoff: that overfitting necessarily worsens past the interpolation threshold. Double descent showed the opposite — overparameterized models generalize better than models at the interpolation boundary, because gradient descent finds the simplest interpolating solution, which happens to generalize well.`,
     keyPoints: [
       `**Local minima are not the dominant obstacle in high-dimensional deep learning.** A local minimum requires every Hessian eigenvalue to be positive. For n=10^6 parameters, the probability of this is (0.5)^10^6 — essentially zero. In practice, almost every critical point in high dimensions is a saddle point. The training failures attributed to "getting stuck in local minima" are almost always saddle points, plateaus, or learning rate problems.`,
       `**Saddle points slow training but do not trap optimizers permanently.** At a saddle point, the gradient is zero in all directions — but the loss is low in some directions and high in others. The optimizer needs to find the downhill direction, not escape from the point. SGD's gradient noise provides perturbations that steer the optimizer toward negative-curvature directions; momentum provides accumulated velocity to carry through the zero-gradient region. Saddle points are a speed problem, not a terminal failure.`,
@@ -1275,6 +1343,28 @@ Deep network loss landscapes violate essentially every assumption. The first ass
         answer: `C`,
       },
     ],
+    figures: {
+      saddle_geometry: `<svg viewBox="0 0 360 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="15" text-anchor="middle" fill="var(--ink-low)" font-size="9">a saddle: loss rises one way, falls the other</text>
+  <g stroke="var(--rim)" stroke-width="1" fill="none">
+    <path d="M60,60 Q180,110 300,60"/>
+    <path d="M60,160 Q180,110 300,160"/>
+    <path d="M70,50 Q120,110 70,170"/>
+    <path d="M290,50 Q240,110 290,170"/>
+  </g>
+  <circle cx="180" cy="110" r="4" fill="var(--ink-low)"/>
+  <text x="180" y="128" text-anchor="middle" fill="var(--ink-low)" font-size="8">gradient = 0 here</text>
+  <line x1="180" y1="110" x2="180" y2="60" stroke="var(--amber)" stroke-width="1.6" marker-end="url(#sup)"/>
+  <text x="186" y="66" fill="var(--amber)" font-size="9" font-weight="700">loss up</text>
+  <line x1="180" y1="110" x2="300" y2="110" stroke="var(--prime)" stroke-width="1.6" marker-end="url(#sdn)"/>
+  <text x="230" y="103" fill="var(--prime)" font-size="9" font-weight="700">escape: loss down</text>
+  <text x="180" y="190" text-anchor="middle" fill="var(--ink-low)" font-size="8">in high dim almost every zero-gradient point is a saddle, not a minimum</text>
+  <defs>
+    <marker id="sup" markerWidth="7" markerHeight="7" refX="3" refY="1" orient="auto"><path d="M0,6 L3,0 L6,6" fill="none" stroke="var(--amber)" stroke-width="1.2"/></marker>
+    <marker id="sdn" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="none" stroke="var(--prime)" stroke-width="1.2"/></marker>
+  </defs>
+</svg>`,
+    },
   },
   {
     id: 'gradient_clipping_regularization',
@@ -1290,6 +1380,8 @@ Deep network loss landscapes violate essentially every assumption. The first ass
 **The safety valve: gradient clipping.**
 
 First, the odd one out. **Gradient clipping** is not really about memorisation — it is a seatbelt. As we saw with exploding gradients, sequence models can occasionally produce a gradient thousands of times bigger than usual, and a single such step can wreck the whole model. Clipping simply says: if the gradient's overall size exceeds a cap, shrink it back to the cap while keeping its *direction*. It prevents catastrophe; it does nothing for generalisation. (Clip by the whole-vector size, not each component separately, or you bend the direction — norm-clip at 1.0 is standard for language models.)
+
+[FIGURE: grad_clip]
 
 ---
 
@@ -1370,5 +1462,21 @@ The catch is that these tools interact — with each other and with the optimize
         answer: `C`,
       },
     ],
+    figures: {
+      grad_clip: `<svg viewBox="0 0 360 190" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="15" text-anchor="middle" fill="var(--ink-low)" font-size="9">norm clipping: cap the size, keep the direction</text>
+  <circle cx="90" cy="105" r="55" fill="none" stroke="var(--rim)" stroke-width="1" stroke-dasharray="3 3"/>
+  <text x="90" y="172" text-anchor="middle" fill="var(--ink-low)" font-size="8">radius = clip threshold</text>
+  <circle cx="90" cy="105" r="2.5" fill="var(--ink-low)"/>
+  <line x1="90" y1="105" x2="235" y2="45" stroke="var(--amber)" stroke-width="1.8" marker-end="url(#ce)"/>
+  <text x="150" y="40" fill="var(--amber)" font-size="9" font-weight="700">raw gradient (huge)</text>
+  <line x1="90" y1="105" x2="141" y2="84" stroke="var(--prime)" stroke-width="2.4" marker-end="url(#cc)"/>
+  <text x="118" y="118" fill="var(--prime)" font-size="9" font-weight="700">clipped: capped, same direction</text>
+  <defs>
+    <marker id="ce" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="none" stroke="var(--amber)" stroke-width="1.2"/></marker>
+    <marker id="cc" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="none" stroke="var(--prime)" stroke-width="1.2"/></marker>
+  </defs>
+</svg>`,
+    },
   },
 ]

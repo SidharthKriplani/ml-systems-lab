@@ -8,6 +8,8 @@ export const MONITORING_MODULES = [
     tags: ['monitoring', 'drift', 'model decay', 'MLOps'],
     summary: `Your fraud model is suddenly catching 30% fewer frauds. Something changed — but what? Four very different causes could produce this exact drop. The \`income\` feature distribution shifted, so the model is seeing a different population than it trained on. Or fraud tactics evolved, so the same transaction profile now carries a different fraud probability. Or the overall fraud rate went up while the model's per-transaction accuracy is unchanged. Or the feature pipeline broke and is quietly sending nulls downstream. Each demands a completely different fix. Without a way to tell them apart, you are debugging blind.
 
+[FIGURE: taxonomy]
+
 ---
 
 **Four causes, four precise questions.**
@@ -44,6 +46,26 @@ And that's why "just watch the output score distribution" isn't enough. Output m
         ],
         answer: `B`,
       },
+      {
+        q: `Recall dropped 30% overnight. Feature PSI is clean, prediction score distribution is unchanged, but the endpoint error rate jumped to 6%. Which layer is the cause?`,
+        options: [
+          `A) Concept drift — the input-output relationship P(Y|X) shifted and only labels will confirm the true magnitude of the change`,
+          `B) Data drift — P(X) moved enough that the model is now scoring an unfamiliar population it never trained on`,
+          `C) Infrastructure drift — clean features plus a 6% error rate points to a broken pipeline, an engineering fix not a model fix`,
+          `D) Prior shift — the base rate P(Y) rose, so the fixed threshold now sits in the wrong place for the new class balance`,
+        ],
+        answer: `C`,
+      },
+      {
+        q: `Why is reflexively retraining on every drift alert the "single most expensive habit" the taxonomy warns against?`,
+        options: [
+          `A) Retraining is computationally cheap, so the real cost is the delay before the new model reaches production and starts serving traffic`,
+          `B) A feature can drift with no performance impact, so retraining burns compute and risks regressions on stable segments for a problem that may not exist`,
+          `C) Drift alerts are almost always caused by infrastructure, so retraining is the correct fix but should wait for the on-call engineer`,
+          `D) Retraining always improves accuracy, so the only downside is the pipeline cost, which is negligible relative to a missed fraud`,
+        ],
+        answer: `B`,
+      },
     ],
     takeaway: `A drop in model performance has four possible causes — data drift, concept drift, prior shift, and infrastructure drift — and applying the wrong remedy to any of them wastes time while the problem compounds.`,
     recap: [
@@ -55,9 +77,36 @@ And that's why "just watch the output score distribution" isn't enough. Output m
       "**Four layers in order:** infrastructure → data → predictions → performance. The combination that fires is the diagnosis.",
       "**Wrong remedy = wasted week.** Retraining a broken pipeline lands you exactly where you started.",
     ],
+    figures: {
+      taxonomy: `<svg viewBox="0 0 360 150" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="12" text-anchor="middle" fill="var(--ink-low)" font-size="7.5">What moved? Each cell = a different fix</text>
+  <rect x="8" y="20" width="168" height="54" rx="5" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="16" y="34" fill="var(--ink-hi)" font-size="8.5" font-weight="700">Data drift</text>
+  <text x="16" y="46" fill="var(--ink-mid)" font-size="7.5">P(X) moved</text>
+  <text x="16" y="58" fill="var(--ink-low)" font-size="7">detect: PSI / KS / chi-sq</text>
+  <text x="16" y="69" fill="var(--ink-low)" font-size="7">may not hurt — investigate</text>
+  <rect x="184" y="20" width="168" height="54" rx="5" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="192" y="34" fill="var(--ink-hi)" font-size="8.5" font-weight="700">Concept drift</text>
+  <text x="192" y="46" fill="var(--ink-mid)" font-size="7.5">P(Y|X) moved</text>
+  <text x="192" y="58" fill="var(--ink-low)" font-size="7">detect: label accuracy</text>
+  <text x="192" y="69" fill="var(--ink-low)" font-size="7">needs retraining</text>
+  <rect x="8" y="80" width="168" height="54" rx="5" fill="var(--depth)" stroke="var(--rim)"/>
+  <text x="16" y="94" fill="var(--ink-hi)" font-size="8.5" font-weight="700">Prior shift</text>
+  <text x="16" y="106" fill="var(--ink-mid)" font-size="7.5">P(Y) moved</text>
+  <text x="16" y="118" fill="var(--ink-low)" font-size="7">more fraud, not different</text>
+  <text x="16" y="129" fill="var(--ink-low)" font-size="7">fix: threshold adjust</text>
+  <rect x="184" y="80" width="168" height="54" rx="5" fill="var(--depth)" stroke="var(--rim)"/>
+  <text x="192" y="94" fill="var(--ink-hi)" font-size="8.5" font-weight="700">Infra drift</text>
+  <text x="192" y="106" fill="var(--ink-mid)" font-size="7.5">pipeline broke</text>
+  <text x="192" y="118" fill="var(--ink-low)" font-size="7">schema / latency / nulls</text>
+  <text x="192" y="129" fill="var(--ink-low)" font-size="7">fix: engineering, not model</text>
+  <text x="180" y="146" text-anchor="middle" fill="var(--ink-low)" font-size="7">Same recall drop, four remedies — the layer that fires is the diagnosis</text>
+</svg>`,
+    },
   },
   {
     id: 'data_drift_detection',
+    interactiveId: 'psi_calculator_viz',
     title: 'Data Drift Detection',
     subtitle: 'PSI, KS test, chi-squared, Jensen-Shannon divergence, choosing thresholds',
     difficulty: 'intermediate',
@@ -81,6 +130,8 @@ Population Stability Index sums, across bins of a feature, how much probability 
 $PSI = \\sum (p_{train} - p_{new}) \ln(p_{train}/p_{new})$
 
 Below 0.1 the population is stable; 0.1–0.2 is mild drift worth a look; above 0.2 is real drift that needs action. For income moving from 55K to 70K, PSI will likely clear 0.2 — an actionable signal *months* before any label confirms the harm.
+
+[FIGURE: psibands]
 
 ---
 
@@ -112,7 +163,46 @@ It's distribution-free and notices shifts anywhere, not just in the mean. The tr
         ],
         answer: `D`,
       },
+      {
+        q: `Why does PSI use 10 equal-frequency bins from the training distribution rather than equal-width bins?`,
+        options: [
+          `A) Equal-width bins are slower to compute, so equal-frequency binning is chosen purely to reduce monitoring latency at scale`,
+          `B) Equal-frequency bins guarantee the PSI score falls in [0, 1], which equal-width bins cannot promise for skewed features`,
+          `C) On a skewed feature, equal-width bins pile most of the mass into a few dense center buckets, hiding the shift; equal-frequency spreads resolution where the data actually is`,
+          `D) Regulators mandate equal-frequency binning for lending models, so it is a compliance requirement rather than a statistical one`,
+        ],
+        answer: `C`,
+      },
+      {
+        q: `A loan model's prediction score distribution shifts from mean 0.35 to mean 0.28 over two months. What is the fastest path to the root-cause feature?`,
+        options: [
+          `A) Run PSI on all 50 features and page whichever one has the single highest raw PSI value regardless of that feature's importance`,
+          `B) Run PSI on each feature ordered by training-time importance; the first high-PSI, high-importance feature is the likely root cause`,
+          `C) Wait for delayed labels to arrive, then retrain on the most recent window since score drift alone cannot localize a cause`,
+          `D) Increase the number of PSI bins to 50 for finer resolution, then re-scan every feature to find the smallest detectable shift`,
+        ],
+        answer: `B`,
+      },
     ],
+    figures: {
+      psibands: `<svg viewBox="0 0 360 118" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="8" y="12" fill="var(--ink-low)" font-size="7.5">PSI action bands — same axis, three verdicts</text>
+  <rect x="8" y="20" width="110" height="40" rx="4" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <rect x="122" y="20" width="90" height="40" rx="4" fill="var(--depth)" stroke="var(--rim)"/>
+  <rect x="216" y="20" width="136" height="40" rx="4" fill="#ef444422" stroke="#ef4444"/>
+  <text x="63" y="38" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">&lt; 0.1</text>
+  <text x="63" y="52" text-anchor="middle" fill="var(--ink-mid)" font-size="7.5">stable</text>
+  <text x="167" y="38" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">0.1 – 0.2</text>
+  <text x="167" y="52" text-anchor="middle" fill="var(--ink-mid)" font-size="7.5">investigate</text>
+  <text x="284" y="38" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">&gt; 0.2</text>
+  <text x="284" y="52" text-anchor="middle" fill="var(--ink-mid)" font-size="7.5">act</text>
+  <line x1="8" y1="78" x2="352" y2="78" stroke="var(--rim)" stroke-width="1"/>
+  <path d="M20,102 q40,-2 70,-6 q40,-4 90,4 q40,8 90,-2 q35,-8 62,-4" fill="none" stroke="var(--prime)" stroke-width="1.5"/>
+  <path d="M20,104 q40,4 70,10 q40,6 90,-6 q40,-14 90,2 q35,10 62,4" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3 2"/>
+  <text x="24" y="94" fill="var(--prime)" font-size="7">train dist</text>
+  <text x="24" y="115" fill="#ef4444" font-size="7">new dist (income 55K→70K → PSI &gt; 0.2)</text>
+</svg>`,
+    },
     recap: [
       "**Watch inputs, don't wait for labels:** silent decay is the default when nobody monitors.",
       "**PSI = default drift metric:** $PSI = \\sum (p_{train} - p_{new}) \\ln(p_{train}/p_{new})$; <0.1 stable, 0.1–0.2 investigate, >0.2 act.",
@@ -125,6 +215,7 @@ It's distribution-free and notices shifts anywhere, not just in the mean. The tr
   },
   {
     id: 'concept_drift',
+    interactiveId: 'drift_lag_viz',
     title: 'Concept Drift Detection',
     subtitle: 'DDM, EDDM, ADWIN, sudden/gradual/recurring drift in batch vs streaming',
     difficulty: 'advanced',
@@ -135,6 +226,8 @@ It's distribution-free and notices shifts anywhere, not just in the mean. The tr
 ---
 
 **Three shapes of concept drift, three ways to catch them.**
+
+[FIGURE: shapes]
 
 *Sudden* drift is an abrupt regime change from a specific event — COVID, a new regulation, a competitor launch. It happens at a point in time. Catch it with the Page-Hinkley test (a running sum of errors crossing a threshold) or ADWIN, which compares a recent window to a historical one and collapses the window when they diverge — visible within days.
 
@@ -168,7 +261,44 @@ Concept drift is defined against *labels* — you can only truly confirm it once
         ],
         answer: `A`,
       },
+      {
+        q: `A credit model has a 30-day label delay. Feature PSI reads 0.35 today, but no label-based accuracy drop has been confirmed yet. What is the correct reading of this signal?`,
+        options: [
+          `A) The 0.35 PSI confirms concept drift, so retrain immediately on post-shift data before the label delay lets the damage compound further`,
+          `B) PSI is a leading signal on distribution change, not confirmed outcome change — treat it as a prompt to investigate, since only labels prove the drift matters`,
+          `C) PSI at 0.35 is within normal range for a credit feature, so no action is warranted until the 30-day labels arrive and confirm degradation`,
+          `D) Feature PSI cannot detect concept drift at all because concept drift is defined on P(Y|X), so this alert is a false positive to be suppressed`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `You retrain a post-COVID credit model on only the most recent 30 days and accuracy on the newest cohort recovers — but overall accuracy falls. Why?`,
+        options: [
+          `A) Thirty days is too little data volume, so the new model overfit; the fix is simply to widen the window to 90 days of the same recent period`,
+          `B) Recalibration should have been tried first; retraining on recent data always regresses because it discards the original learned weights entirely`,
+          `C) Customers unaffected by the regime change still follow pre-drift patterns; a model trained only on post-drift data regresses on them — use a sliding window that keeps pre-drift history`,
+          `D) The label delay corrupted the training set with stale outcomes, so the recent-30-day labels were themselves wrong at training time`,
+        ],
+        answer: `C`,
+      },
     ],
+    figures: {
+      shapes: `<svg viewBox="0 0 360 118" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="8" y="12" fill="var(--ink-low)" font-size="7.5">Error rate over time — three shapes, three detectors</text>
+  <text x="8" y="26" fill="var(--ink-hi)" font-size="8" font-weight="700">Sudden</text>
+  <path d="M8,60 L52,60 L52,34 L112,34" fill="none" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="8" y="72" fill="var(--ink-low)" font-size="6.5">Page-Hinkley / ADWIN · days</text>
+  <text x="128" y="26" fill="var(--ink-hi)" font-size="8" font-weight="700">Gradual</text>
+  <path d="M128,60 Q170,58 200,46 T248,34" fill="none" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="128" y="72" fill="var(--ink-low)" font-size="6.5">EMA vs control limit · months</text>
+  <text x="256" y="26" fill="var(--ink-hi)" font-size="8" font-weight="700">Recurrent</text>
+  <path d="M256,50 Q272,34 288,50 T320,50 T352,50" fill="none" stroke="var(--prime)" stroke-width="1.5"/>
+  <text x="256" y="72" fill="var(--ink-low)" font-size="6.5">TS decomposition · switch models</text>
+  <line x1="8" y1="86" x2="352" y2="86" stroke="var(--rim)"/>
+  <text x="8" y="100" fill="var(--ink-mid)" font-size="7.5">Detection lag = label delay: 30-day credit, 7-day chargebacks.</text>
+  <text x="8" y="112" fill="var(--ink-low)" font-size="7">PSI &amp; score shift lead; labels confirm. Retrain is the last, costliest lever.</text>
+</svg>`,
+    },
     takeaway: `Concept drift means the world changed and the model didn't — detect it with label-based accuracy on delayed ground truth, distinguish sudden from gradual from recurrent to pick the right response, and exhaust recalibration before committing to full retraining.`,
     recap: [
       "**Concept drift = world changed, model didn't:** same features now mean something different.",
@@ -192,6 +322,8 @@ Concept drift is defined against *labels* — you can only truly confirm it once
 ---
 
 **Three signals you have before any label.**
+
+[FIGURE: signals]
 
 *The mean score fell.* Last month the average predicted fraud probability was 3.1%; this month, 2.7%. The model is scoring this week's transactions as less risky. Right or wrong, that's worth a look.
 
@@ -227,7 +359,48 @@ You measure all of this with the same tools as feature drift: PSI on the score d
         ],
         answer: `C`,
       },
+      {
+        q: `The share of predictions above 0.8 confidence dropped from 12% to 4% while the mean score barely moved. What does the collapsing high-confidence rate most directly signal?`,
+        options: [
+          `A) The base rate P(Y) rose, so more borderline cases are genuinely appearing and the model is correctly hesitating on them`,
+          `B) The inputs have moved outside the model's training range — it is now seeing unfamiliar data it cannot score decisively`,
+          `C) A discriminative feature is fully corrupted, which is why the histogram collapsed into a single lump near 0.5`,
+          `D) The decision threshold was raised upstream, mechanically pushing predictions out of the high-confidence band`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `Prediction monitoring fires, so you want to separate a pipeline bug from a genuine data change. What is the sharpest diagnostic?`,
+        options: [
+          `A) Retrain on the last 30 days and see whether the score distribution snaps back to its reference shape after redeploy`,
+          `B) Wait for the 7-day labels and compute precision/recall, since only confirmed accuracy can distinguish a bug from real change`,
+          `C) Check feature distributions of the high-confidence positive predictions: a shifted key feature there points to the pipeline; clean features with shifted scores point to the data`,
+          `D) Compare P99 latency and endpoint error rate before and after the shift, because a pipeline bug always co-occurs with an infrastructure alert`,
+        ],
+        answer: `C`,
+      },
     ],
+    figures: {
+      signals: `<svg viewBox="0 0 360 108" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="8" y="12" fill="var(--ink-low)" font-size="7.5">Three signals visible before any label arrives</text>
+  <text x="8" y="26" fill="var(--ink-hi)" font-size="8" font-weight="700">Mean fell</text>
+  <line x1="8" y1="72" x2="112" y2="72" stroke="var(--rim)"/>
+  <path d="M14,66 q22,-18 44,0 q22,18 44,0" fill="none" stroke="var(--prime)" stroke-width="1.4"/>
+  <path d="M8,68 q22,-14 44,0 q22,14 44,0" fill="none" stroke="#ef4444" stroke-width="1.4" stroke-dasharray="3 2"/>
+  <text x="8" y="86" fill="var(--ink-low)" font-size="6.5">3.1% → 2.7%</text>
+  <text x="128" y="26" fill="var(--ink-hi)" font-size="8" font-weight="700">Confidence↓</text>
+  <line x1="128" y1="72" x2="232" y2="72" stroke="var(--rim)"/>
+  <rect x="196" y="52" width="12" height="20" fill="var(--prime)"/>
+  <rect x="196" y="62" width="12" height="10" fill="#ef4444"/>
+  <text x="128" y="86" fill="var(--ink-low)" font-size="6.5">&gt;0.8: 12% → 4%</text>
+  <text x="248" y="26" fill="var(--ink-hi)" font-size="8" font-weight="700">Histogram flat</text>
+  <line x1="248" y1="72" x2="352" y2="72" stroke="var(--rim)"/>
+  <path d="M252,72 q14,-24 28,0 q14,24 28,0 q14,-24 28,0" fill="none" stroke="var(--prime)" stroke-width="1.3"/>
+  <path d="M252,70 q50,-8 100,0" fill="none" stroke="#ef4444" stroke-width="1.3" stroke-dasharray="3 2"/>
+  <text x="248" y="86" fill="var(--ink-low)" font-size="6.5">bimodal → one lump</text>
+  <text x="8" y="102" fill="var(--ink-mid)" font-size="7.5">Same toolkit as feature drift: PSI on scores, JS divergence, z-test on the mean.</text>
+</svg>`,
+    },
     takeaway: `Prediction distribution monitoring is your earliest warning — it fires days before delayed labels arrive — but a changed score distribution tells you behavior changed, not whether the change is correct or wrong.`,
     recap: [
       "**See predictions now, labels in 7 days:** three signals fire before any label.",
@@ -247,6 +420,8 @@ You measure all of this with the same tools as feature drift: PSI on the score d
     estimatedMin: 20,
     tags: ['feature importance', 'SHAP drift', 'model interpretation', 'monitoring'],
     summary: `A fraud model went live six months ago. On day one its top features were \`transaction_velocity\` (0.32), \`device_age\` (0.21), \`ip_reputation\` (0.18). Six months later the order has flipped: \`ip_reputation\` (0.38), \`transaction_velocity\` (0.12), \`device_age\` (0.09). IP reputation has quietly become the model's dominant signal. Why?
+
+[FIGURE: rankflip]
 
 ---
 
@@ -282,7 +457,41 @@ To watch it, compute SHAP or permutation importance on a rolling sample of ~1,00
         ],
         answer: `B`,
       },
+      {
+        q: `\`ip_reputation\` climbs from rank 3 to rank 1 over three months while its own input distribution stays stable. What does the stable distribution most directly imply?`,
+        options: [
+          `A) The target-feature relationship changed — importance shifted without distribution drift, which points to concept drift rather than a pipeline issue`,
+          `B) The feature pipeline for \`ip_reputation\` broke, since importance only ever moves when a feature's distribution drifts underneath it`,
+          `C) Nothing actionable — a stable distribution means the rank change is SHAP sampling noise that will revert next week`,
+          `D) The base rate P(Y) rose, mechanically inflating every feature's importance equally, so the rank order is unchanged in reality`,
+        ],
+        answer: `A`,
+      },
+      {
+        q: `Why must production feature importance be baselined against the deployment-day reference rather than training-time importance?`,
+        options: [
+          `A) Training importance is computed with a different algorithm than SHAP, so the two numbers are on incomparable scales entirely`,
+          `B) Training importance reflects the training distribution; the deployment-day baseline captures the live feature distribution, which is the correct "healthy production" reference`,
+          `C) Deployment-day importance is cheaper to compute, so it is preferred purely to reduce the weekly monitoring cost on a rolling sample`,
+          `D) Training importance is unavailable after deployment because the training set is discarded once the model ships to production`,
+        ],
+        answer: `B`,
+      },
     ],
+    figures: {
+      rankflip: `<svg viewBox="0 0 360 118" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="8" y="12" fill="var(--ink-low)" font-size="7.5">SHAP importance: day 1 vs month 6 — the order flipped</text>
+  <text x="70" y="26" text-anchor="middle" fill="var(--ink-mid)" font-size="7.5" font-weight="700">Day 1</text>
+  <text x="290" y="26" text-anchor="middle" fill="var(--ink-mid)" font-size="7.5" font-weight="700">Month 6</text>
+  ${[['transaction_velocity',0.32,0.12],['ip_reputation',0.18,0.38],['device_age',0.21,0.09]].map((r,i)=>`
+  <text x="8" y="${44+i*24}" fill="var(--ink-mid)" font-size="7">${r[1].toFixed(2)}</text>
+  <rect x="32" y="${37+i*24}" width="${r[1]*220}" height="10" rx="2" fill="var(--prime)" opacity="0.75"/>
+  <text x="180" y="${45+i*24}" text-anchor="middle" fill="var(--ink-hi)" font-size="6.5">${r[0]}</text>
+  <rect x="${328-r[2]*220}" y="${37+i*24}" width="${r[2]*220}" height="10" rx="2" fill="${i===1?'#ef4444':'var(--prime)'}" opacity="0.75"/>
+  <text x="332" y="${44+i*24}" fill="var(--ink-mid)" font-size="7">${r[2].toFixed(2)}</text>`).join('')}
+  <text x="8" y="112" fill="var(--ink-low)" font-size="7">Blocking bad IPs left only low-reputation fraud → the model leaned on ip_reputation.</text>
+</svg>`,
+    },
     takeaway: `Feature importance drift reveals how the world changed relative to the model's assumptions — a rank drop before accuracy moves means you have a week to fix a pipeline bug instead of a week after the damage is done.`,
     recap: [
       "**Importance is joint, not fixed:** a property of model AND input distribution, so it shifts when inputs shift.",
@@ -304,6 +513,8 @@ To watch it, compute SHAP or permutation importance on a rolling sample of ~1,00
     summary: `An insurance pricing model outputs a claim probability. On launch day it's beautifully calibrated: a prediction of 0.15 really does mean a 15% claim rate — dead on the reliability diagram's diagonal. Three months later, the same 0.15 predictions are actually claiming at 22%. The model is now *underestimating* risk by 7 points in that bucket. And the pricing team feeds its output straight into premiums, so for three months it has been silently undercharging exactly the high-risk customers. No alert fired. AUC is a steady 0.82.
 
 ---
+
+[FIGURE: reliability]
 
 **AUC will never catch this, because AUC measures a different thing.**
 
@@ -343,7 +554,43 @@ And kill the assumption that "stable AUC means calibration is fine." A model can
         ],
         answer: `D`,
       },
+      {
+        q: `A pricing model holds AUC steady at 0.90 for three months, yet its 0.15 predictions now claim at 22%. Why can ranking be perfect while probabilities are wrong?`,
+        options: [
+          `A) AUC and calibration measure independent things — AUC scores whether risky customers rank above safe ones, calibration scores whether 0.15 truly means 15%`,
+          `B) AUC of 0.90 is not high enough to guarantee calibration; only an AUC above 0.95 makes probability estimates reliable in production`,
+          `C) The AUC computation lags the calibration computation by one label batch, so the steady AUC is simply stale and will drop next month`,
+          `D) Calibration drift always drags AUC down with it, so a steady AUC means the reliability diagram was actually mismeasured`,
+        ],
+        answer: `A`,
+      },
+      {
+        q: `You apply temperature scaling and ECE improves by only 0.008. What does this small improvement tell you?`,
+        options: [
+          `A) The recalibration was applied to stale labels, so refit temperature scaling on the last 30–60 days and the ECE will drop as expected`,
+          `B) Temperature scaling is never sufficient alone, so full retraining on recent data is the only remaining option for this model`,
+          `C) A uniform single-parameter rescale barely helped, so the miscalibration is per-bucket conditional and isotonic regression is needed instead`,
+          `D) An improvement under 0.01 confirms the model was already well calibrated, so no further recalibration is warranted at all`,
+        ],
+        answer: `C`,
+      },
     ],
+    figures: {
+      reliability: `<svg viewBox="0 0 360 128" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="8" y="12" fill="var(--ink-low)" font-size="7.5">Reliability diagram — predicted vs actual claim rate</text>
+  <line x1="40" y1="20" x2="40" y2="108" stroke="var(--rim)"/>
+  <line x1="40" y1="108" x2="340" y2="108" stroke="var(--rim)"/>
+  <line x1="40" y1="108" x2="340" y2="20" stroke="var(--ink-low)" stroke-width="1" stroke-dasharray="3 2"/>
+  <text x="150" y="34" fill="var(--ink-low)" font-size="6.5">perfect calibration</text>
+  <path d="M40,108 L100,96 L160,78 L220,70 L280,66 L340,60" fill="none" stroke="#ef4444" stroke-width="1.6"/>
+  <circle cx="220" cy="70" r="2.5" fill="#ef4444"/>
+  <line x1="220" y1="70" x2="220" y2="43" stroke="#ef4444" stroke-width="0.8" stroke-dasharray="2 2"/>
+  <text x="200" y="88" fill="#ef4444" font-size="6.5">0.15 → 22% actual</text>
+  <text x="6" y="24" fill="var(--ink-low)" font-size="6.5">actual</text>
+  <text x="312" y="120" fill="var(--ink-low)" font-size="6.5">predicted</text>
+  <text x="8" y="124" fill="var(--ink-mid)" font-size="7">ECE 0.03 → 0.09 = mispricing at scale; AUC stayed 0.82 and never flinched.</text>
+</svg>`,
+    },
     takeaway: `Calibration drift is invisible to AUC — monitor ECE on every label batch, recalibrate with Platt or temperature scaling on recent data when ECE crosses threshold, and never wait for a business stakeholder to notice the mispricing.`,
     recap: [
       "**AUC ≠ calibration:** ranking (who is riskier) is independent of probability accuracy (does 0.15 mean 15%).",
@@ -374,6 +621,8 @@ Staleness needs no failure event and makes no announcement. It just accumulates 
 
 **No one signal catches it — you need several, overlapping.**
 
+[FIGURE: cofiring]
+
 *Feature drift:* PSI over 0.2 on any tier-1 feature. *Prediction drift:* score mean or variance outside 3σ of the launch baseline. *Business divergence:* the KPI the model influences trending the wrong way for 5+ straight days. *Delayed accuracy:* once labels land, rolling 30-day accuracy more than 3 points below launch. Any one of these can stay silent on its own — a 0.19 PSI that never quite hits 0.2, a KPI dip that hides in the noise. The staleness signal is when *two or three fire together, in the same direction.*
 
 ---
@@ -400,7 +649,39 @@ And retire the belief that "if it's running, it's working." A model can serve ev
         ],
         answer: `A`,
       },
+      {
+        q: `Every individual metric sits just below its threshold — PSI at 0.19, prediction drift inside 3σ — yet the business KPI has slid 6% over 10 days. What is the staleness signal here?`,
+        options: [
+          `A) A single sub-threshold PSI of 0.19 is the real alarm; nudge the PSI threshold down to 0.15 and the incident would have paged`,
+          `B) The KPI slide alone is decisive, so business divergence should be the only monitored signal and the drift metrics can be retired`,
+          `C) The signal is co-firing: several indicators moving the same direction together, each individually silent, is the pattern a composite health score is built to surface`,
+          `D) Nothing is wrong yet — until at least one metric crosses its threshold the model is healthy, and the KPI move is unrelated noise`,
+        ],
+        answer: `C`,
+      },
+      {
+        q: `Why is a time-based retraining SLA described as the strongest defense against silent staleness rather than better alert thresholds?`,
+        options: [
+          `A) Alert thresholds are expensive to compute, whereas a retraining SLA runs offline and therefore costs the serving path nothing`,
+          `B) A monthly retrain caps how stale the model can get regardless of what monitoring missed, so it does not depend on any threshold firing correctly`,
+          `C) Time-based SLAs are mandated by MLOps compliance frameworks, so they take precedence over threshold-based detection by policy`,
+          `D) Retraining monthly eliminates concept drift permanently, removing the need for any leading-indicator monitoring going forward`,
+        ],
+        answer: `B`,
+      },
     ],
+    figures: {
+      cofiring: `<svg viewBox="0 0 360 120" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="8" y="12" fill="var(--ink-low)" font-size="7.5">Each signal stays under its line — together they spell staleness</text>
+  ${[['Feature PSI','0.19 / 0.20',0.95],['Prediction drift','2.7σ / 3σ',0.90],['Business KPI','−6% / −(5d)',0.82],['30-day accuracy','−2.6 / −3 pts',0.87]].map((r,i)=>`
+  <text x="8" y="${30+i*20}" fill="var(--ink-mid)" font-size="7">${r[0]}</text>
+  <rect x="120" y="${22+i*20}" width="200" height="9" rx="2" fill="var(--depth)" stroke="var(--rim)"/>
+  <rect x="120" y="${22+i*20}" width="${r[2]*200}" height="9" rx="2" fill="#f59e0b" opacity="0.8"/>
+  <line x1="320" y1="${20+i*20}" x2="320" y2="${33+i*20}" stroke="#ef4444" stroke-width="1"/>
+  <text x="324" y="${30+i*20}" fill="var(--ink-low)" font-size="6.5">${r[1]}</text>`).join('')}
+  <text x="8" y="114" fill="var(--ink-mid)" font-size="7.5">The composite health score aggregates all four into one pane of glass.</text>
+</svg>`,
+    },
     takeaway: `Silent staleness is the default state of any unmonitored model — detect it with overlapping leading indicators, build a composite health score to surface the "everything drifting a little" pattern, and set time-based retraining SLAs so no model ages past its empirically calibrated staleness limit.`,
     recap: [
       "**Silent staleness is the default**, not a rare failure — no event, no announcement, widening every day.",
@@ -414,6 +695,7 @@ And retire the belief that "if it's running, it's working." A model can serve ev
   },
   {
     id: 'alerting_runbooks',
+    interactiveId: 'alert_threshold_viz',
     title: 'Alerting & Runbooks',
     subtitle: 'Alert thresholds, alert fatigue, P1/P2/P3 classification, runbook structure',
     difficulty: 'intermediate',
@@ -437,6 +719,8 @@ A runbook is the procedure stapled to an alert type: what triggered it (the exac
 
 **Four rules that keep false positives down.**
 
+[FIGURE: routing]
+
 *Actionable* — if there's no clear action when it fires, it's a metric to watch, not an alert to page on. *Low false-positive rate* — past ~20%, people start ignoring it. *Severity routing* — P0 (model down / financial risk: page now), P1 (significant drift: ticket for tomorrow), P2 (early warning: weekly queue). *Deduplication* — collapse 15 cascading alerts from one upstream failure into a single alert with a root-cause hypothesis.
 
 And the myth to bury: "more alerts = better monitoring." More alerts means more noise means ignored alerts means *worse* monitoring than having fewer. The target is zero false positives, every alert actionable, every alert backed by a runbook. Start with five high-signal alerts and add another only when it has a written runbook and a measured false-positive rate under 20%. Never enable an alert you haven't written the runbook for.`,
@@ -457,7 +741,49 @@ And the myth to bury: "more alerts = better monitoring." More alerts means more 
         ],
         answer: `C`,
       },
+      {
+        q: `Why does the module insist you write the runbook before you enable the alert?`,
+        options: [
+          `A) The runbook is a compliance artifact auditors require, so it must exist on file before any alert can legally page an on-call engineer`,
+          `B) If you cannot write down what the on-call engineer does when it fires, you do not understand the alert well enough to act on it — the alert is not ready`,
+          `C) Writing the runbook first lets you disable the alert faster later, since the deprecation steps are already documented in advance`,
+          `D) Runbooks take longer to write than alerts to configure, so front-loading them balances the on-call team's workload across the sprint`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `A single upstream feature-store outage triggers 15 cascading alerts at once. Which of the four rules addresses this directly?`,
+        options: [
+          `A) Actionability — since none of the 15 alerts has a clear action, they should all be downgraded to dashboard metrics rather than pages`,
+          `B) Severity routing — route all 15 to the P0 lane so the on-call engineer sees the outage immediately and can begin triage`,
+          `C) Deduplication — collapse the 15 cascading alerts into one alert carrying the root-cause hypothesis instead of paging 15 times`,
+          `D) The false-positive rule — because cascading alerts are false positives by definition, raise every threshold until only one survives`,
+        ],
+        answer: `C`,
+      },
     ],
+    figures: {
+      routing: `<svg viewBox="0 0 360 130" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="8" y="12" fill="var(--ink-low)" font-size="7.5">Alert decision flow — actionable? then route by severity</text>
+  <rect x="120" y="18" width="120" height="22" rx="4" fill="var(--depth)" stroke="var(--rim)"/>
+  <text x="180" y="32" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5" font-weight="700">Clear action on fire?</text>
+  <path d="M180,40 L180,50" stroke="var(--ink-low)" stroke-width="1"/>
+  <text x="150" y="49" fill="var(--ink-low)" font-size="6.5">no →</text>
+  <text x="196" y="49" fill="var(--ink-low)" font-size="6.5">dashboard metric, not a page</text>
+  <path d="M180,52 L180,60" stroke="var(--ink-low)" stroke-width="1"/>
+  <rect x="8" y="62" width="108" height="34" rx="4" fill="#ef444422" stroke="#ef4444"/>
+  <text x="62" y="76" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">P0</text>
+  <text x="62" y="88" text-anchor="middle" fill="var(--ink-mid)" font-size="6.5">model down / $ risk · page now</text>
+  <rect x="126" y="62" width="108" height="34" rx="4" fill="#f59e0b22" stroke="#f59e0b"/>
+  <text x="180" y="76" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">P1</text>
+  <text x="180" y="88" text-anchor="middle" fill="var(--ink-mid)" font-size="6.5">significant drift · ticket tmrw</text>
+  <rect x="244" y="62" width="108" height="34" rx="4" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="298" y="76" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">P2</text>
+  <text x="298" y="88" text-anchor="middle" fill="var(--ink-mid)" font-size="6.5">early warning · weekly queue</text>
+  <text x="8" y="112" fill="var(--ink-mid)" font-size="7.5">Dedup 15 cascading alerts into 1 root-cause alert. Keep FP rate under 20%.</text>
+  <text x="8" y="124" fill="var(--ink-low)" font-size="7">Never enable an alert you have not written the runbook for.</text>
+</svg>`,
+    },
     takeaway: `Alert fatigue is a calibration problem, not a personnel problem — write the runbook before enabling the alert, calibrate thresholds per feature from observed production variation, and track alert-to-action conversion rate monthly to catch alert debt before it degrades incident response.`,
     recap: [
       "**Alert fatigue is calibration, not people:** ignoring noisy alerts is rational expected-value math.",

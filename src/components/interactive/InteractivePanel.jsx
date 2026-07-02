@@ -58,6 +58,42 @@ const registry = {
   retrieval_funnel_viz:        lazy(() => import('./RetrievalFunnelViz').then(m => ({ default: m.RetrievalFunnelViz }))),
   latency_budget_viz:          lazy(() => import('./LatencyBudgetViz').then(m => ({ default: m.LatencyBudgetViz }))),
   value_model_mixer_viz:       lazy(() => import('./ValueModelMixerViz').then(m => ({ default: m.ValueModelMixerViz }))),
+  // Causal
+  confounding_bias_viz:        lazy(() => import('./ConfoundingBiasViz').then(m => ({ default: m.ConfoundingBiasViz }))),
+  parallel_trends_viz:         lazy(() => import('./ParallelTrendsViz').then(m => ({ default: m.ParallelTrendsViz }))),
+  uplift_targeting_viz:        lazy(() => import('./UpliftTargetingViz').then(m => ({ default: m.UpliftTargetingViz }))),
+  // Production
+  train_serve_skew_viz:        lazy(() => import('./TrainServeSkewViz').then(m => ({ default: m.TrainServeSkewViz }))),
+  point_in_time_join_viz:      lazy(() => import('./PointInTimeJoinViz').then(m => ({ default: m.PointInTimeJoinViz }))),
+  label_delay_viz:             lazy(() => import('./LabelDelayViz').then(m => ({ default: m.LabelDelayViz }))),
+  // Monitoring
+  psi_calculator_viz:          lazy(() => import('./PSICalculatorViz').then(m => ({ default: m.PSICalculatorViz }))),
+  drift_lag_viz:               lazy(() => import('./DriftLagViz').then(m => ({ default: m.DriftLagViz }))),
+  alert_threshold_viz:         lazy(() => import('./AlertThresholdViz').then(m => ({ default: m.AlertThresholdViz }))),
+  // Math & Stats
+  mle_map_viz:                 lazy(() => import('./MleMapViz').then(m => ({ default: m.MleMapViz }))),
+  // Probabilistic ML
+  bayesian_updating_viz:       lazy(() => import('./BayesianUpdatingViz').then(m => ({ default: m.BayesianUpdatingViz }))),
+  temperature_scaling_viz:     lazy(() => import('./TemperatureScalingViz').then(m => ({ default: m.TemperatureScalingViz }))),
+  // Self-Supervised
+  mask_ratio_viz:              lazy(() => import('./MaskRatioViz').then(m => ({ default: m.MaskRatioViz }))),
+  // RL
+  discount_horizon_viz:        lazy(() => import('./DiscountHorizonViz').then(m => ({ default: m.DiscountHorizonViz }))),
+  ppo_clip_viz:                lazy(() => import('./PPOClipViz').then(m => ({ default: m.PPOClipViz }))),
+  // Time Series
+  walk_forward_viz:            lazy(() => import('./WalkForwardViz').then(m => ({ default: m.WalkForwardViz }))),
+  // Graph ML
+  neighbor_explosion_viz:      lazy(() => import('./NeighborExplosionViz').then(m => ({ default: m.NeighborExplosionViz }))),
+  // Bandits
+  non_stationary_window_viz:   lazy(() => import('./NonStationaryWindowViz').then(m => ({ default: m.NonStationaryWindowViz }))),
+  ope_estimator_viz:           lazy(() => import('./OPEEstimatorViz').then(m => ({ default: m.OPEEstimatorViz }))),
+  // Eval
+  ablation_viz:                lazy(() => import('./AblationViz').then(m => ({ default: m.AblationViz }))),
+  // Optimization
+  adagrad_rmsprop_viz:         lazy(() => import('./AdaGradRMSPropViz').then(m => ({ default: m.AdaGradRMSPropViz }))),
+  // Data & Features
+  feature_scaling_viz:         lazy(() => import('./FeatureScalingViz').then(m => ({ default: m.FeatureScalingViz }))),
+  leakage_split_viz:           lazy(() => import('./LeakageSplitViz').then(m => ({ default: m.LeakageSplitViz }))),
 }
 
 export function InteractivePanel({ interactiveId }) {

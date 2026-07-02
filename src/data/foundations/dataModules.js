@@ -30,6 +30,8 @@ A good audit sweeps seven things:
 
 One failure deserves special mention because it hides so well. Join two tables on customer ID, and if some IDs in one table have no match in the other, those rows simply *disappear* — no error, the pipeline reports success, and 120,000 training examples are gone. And they are almost never a random 120,000: they tend to be a specific group (older customers, one region), which is now missing entirely from training. Your model quietly learns nothing about them.
 
+[FIGURE: silent_row_loss]
+
 ---
 
 **Make the checks automatic.**
@@ -161,6 +163,34 @@ Finally, check *who* is in the data. A dataset can be clean on every column yet 
         answer: `B`,
       },
     ],
+    figures: {
+      silent_row_loss: `<svg viewBox="0 0 360 180" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="16" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">a join on customer_id silently drops the unmatched rows</text>
+  <text x="55" y="40" text-anchor="middle" fill="var(--ink-low)" font-size="9">table A (500k)</text>
+  <rect x="20" y="48" width="70" height="96" rx="4" fill="none" stroke="var(--prime)" stroke-width="1.4"/>
+  <rect x="26" y="54" width="58" height="12" rx="2" fill="var(--prime)" opacity="0.7"/>
+  <rect x="26" y="70" width="58" height="12" rx="2" fill="var(--prime)" opacity="0.7"/>
+  <rect x="26" y="86" width="58" height="12" rx="2" fill="var(--amber)"/>
+  <rect x="26" y="102" width="58" height="12" rx="2" fill="var(--amber)"/>
+  <rect x="26" y="118" width="58" height="12" rx="2" fill="var(--amber)"/>
+  <text x="180" y="40" text-anchor="middle" fill="var(--ink-low)" font-size="9">table B (has only some IDs)</text>
+  <rect x="150" y="48" width="60" height="96" rx="4" fill="none" stroke="var(--ink-low)" stroke-width="1.2" opacity="0.6"/>
+  <rect x="156" y="54" width="48" height="12" rx="2" fill="var(--prime)" opacity="0.5"/>
+  <rect x="156" y="70" width="48" height="12" rx="2" fill="var(--prime)" opacity="0.5"/>
+  <path d="M92,60 H 148" stroke="var(--prime)" stroke-width="1.2"/>
+  <path d="M92,76 H 148" stroke="var(--prime)" stroke-width="1.2"/>
+  <path d="M92,92 H 130" stroke="var(--amber)" stroke-width="1.2" stroke-dasharray="3,3"/>
+  <path d="M92,108 H 130" stroke="var(--amber)" stroke-width="1.2" stroke-dasharray="3,3"/>
+  <path d="M92,124 H 130" stroke="var(--amber)" stroke-width="1.2" stroke-dasharray="3,3"/>
+  <text x="290" y="40" text-anchor="middle" fill="var(--ink-low)" font-size="9">result (380k)</text>
+  <rect x="260" y="48" width="60" height="46" rx="4" fill="none" stroke="var(--prime)" stroke-width="1.4"/>
+  <rect x="266" y="54" width="48" height="12" rx="2" fill="var(--prime)" opacity="0.7"/>
+  <rect x="266" y="70" width="48" height="12" rx="2" fill="var(--prime)" opacity="0.7"/>
+  <text x="290" y="112" text-anchor="middle" fill="var(--amber)" font-size="9" font-weight="700">120k gone</text>
+  <text x="290" y="124" text-anchor="middle" fill="var(--ink-low)" font-size="8">no error</text>
+  <text x="180" y="164" text-anchor="middle" fill="var(--ink-low)" font-size="9">the dropped rows are a group (a region, a cohort) — never a random sample</text>
+</svg>`,
+    },
   },
   {
     id: 'missing_value_handling',
@@ -374,7 +404,9 @@ The raw numbers 7 days versus 3,650 days do not capture that a brand-new account
 
 **Last transaction date: turn a calendar into a signal.**
 
-A raw date means nothing on its own. But "days since last transaction" is a direct *recency* signal, and "transactions in the last 30 days" is a *velocity* signal. Neither exists in the original data — you compute them against a reference time. These are **temporal features**, earned by realising the model wants a time gap, not a calendar entry.
+A raw date means nothing on its own. But "days since last transaction" is a direct *recency* signal, and "transactions in the last 30 days" is a *velocity* signal. Neither exists in the original data — you compute them against a reference time. These are **temporal features**, earned by realising the model wants a time gap, not a calendar entry. And when a time field is *cyclical* — hour of day, day of week — encoding it as a plain integer is a trap: hour 23 and hour 0 are one hour apart in reality but 23 apart as integers, so a sin/cos pair placing each hour on a circle is what keeps midnight next to 11pm.
+
+[FIGURE: cyclical_encoding]
 
 ---
 
@@ -502,6 +534,28 @@ Don't trust "accuracy went up after I added 40 features." Validate the way you'd
         answer: `B`,
       },
     ],
+    figures: {
+      cyclical_encoding: `<svg viewBox="0 0 360 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="90" y="18" text-anchor="middle" fill="var(--ink-hi)" font-size="10" font-weight="700">integer hour</text>
+  <text x="270" y="18" text-anchor="middle" fill="var(--ink-hi)" font-size="10" font-weight="700">sin / cos on a circle</text>
+  <line x1="20" y1="150" x2="160" y2="150" stroke="var(--ink-low)" stroke-width="1"/>
+  <line x1="20" y1="40" x2="20" y2="150" stroke="var(--ink-low)" stroke-width="1"/>
+  <text x="14" y="150" text-anchor="end" fill="var(--ink-low)" font-size="8">0</text>
+  <text x="14" y="46" text-anchor="end" fill="var(--ink-low)" font-size="8">23</text>
+  <circle cx="150" cy="46" r="4" fill="var(--prime)"/>
+  <circle cx="26" cy="150" r="4" fill="var(--amber)"/>
+  <path d="M150,46 L 26,150" stroke="var(--amber)" stroke-width="1.3" stroke-dasharray="4,3"/>
+  <text x="90" y="175" text-anchor="middle" fill="var(--amber)" font-size="8">23 and 0 look 23 apart</text>
+  <text x="90" y="187" text-anchor="middle" fill="var(--ink-low)" font-size="8">- a huge, false gap</text>
+  <circle cx="270" cy="95" r="55" fill="none" stroke="var(--rim)" stroke-width="1.2"/>
+  <line x1="270" y1="95" x2="270" y2="40" stroke="var(--ink-low)" stroke-width="0.8" opacity="0.5"/>
+  <circle cx="270" cy="40" r="4" fill="var(--prime)"/><text x="270" y="33" text-anchor="middle" fill="var(--ink-low)" font-size="8">0</text>
+  <circle cx="284" cy="42" r="4" fill="var(--amber)"/><text x="298" y="40" fill="var(--ink-low)" font-size="8">23</text>
+  <circle cx="325" cy="95" r="3" fill="var(--ink-low)" opacity="0.6"/><text x="332" y="98" fill="var(--ink-low)" font-size="8">6</text>
+  <circle cx="270" cy="150" r="3" fill="var(--ink-low)" opacity="0.6"/><text x="270" y="166" text-anchor="middle" fill="var(--ink-low)" font-size="8">12</text>
+  <text x="270" y="188" text-anchor="middle" fill="var(--teal)" font-size="8" font-weight="700">23 sits right beside 0</text>
+</svg>`,
+    },
   },
   {
     id: 'categorical_encoding',
@@ -534,6 +588,8 @@ But target encoding has a sharp, specific trap: **leakage**. If you compute a ci
 - **Medium** (15–50): one-hot, unless there is a *real* order (education: high-school < college < grad), in which case **ordinal** encoding respects it. Do not impose an order where none exists.
 - **High** (50+: cities, merchants): **target encoding** (out-of-fold), or frequency encoding.
 - **Very high, with a neural network** (user IDs, product IDs): **embeddings** — the network learns a small dense vector per category, and categories that behave alike end up close together in that space.
+
+[FIGURE: encoding_schemes]
 
 One myth to retire: "LightGBM handles categoricals natively, so I can skip all this." Its built-in handling is fine for modest cardinality but degrades past a couple hundred values — for a 5,000-city column, explicit out-of-fold target encoding still wins, and it is one line of code.
 
@@ -662,9 +718,33 @@ Two operational rules. **Rare-category policy**: fold categories below a minimum
         answer: `B`,
       },
     ],
+    figures: {
+      encoding_schemes: `<svg viewBox="0 0 360 210" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="16" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">three ways to turn "city" into numbers</text>
+  <text x="20" y="42" fill="var(--ink-hi)" font-size="9" font-weight="700">one-hot</text>
+  <text x="20" y="54" fill="var(--ink-low)" font-size="8">one column per value - sparse at scale</text>
+  <rect x="150" y="34" width="20" height="16" rx="2" fill="var(--prime)" opacity="0.85"/><text x="160" y="46" text-anchor="middle" fill="#fff" font-size="9">1</text>
+  <rect x="174" y="34" width="20" height="16" rx="2" fill="var(--depth)" stroke="var(--rim)"/><text x="184" y="46" text-anchor="middle" fill="var(--ink-low)" font-size="9">0</text>
+  <rect x="198" y="34" width="20" height="16" rx="2" fill="var(--depth)" stroke="var(--rim)"/><text x="208" y="46" text-anchor="middle" fill="var(--ink-low)" font-size="9">0</text>
+  <text x="228" y="46" fill="var(--ink-low)" font-size="8">... x 5000</text>
+  <line x1="20" y1="66" x2="340" y2="66" stroke="var(--rim)" stroke-width="0.8"/>
+  <text x="20" y="90" fill="var(--ink-hi)" font-size="9" font-weight="700">ordinal</text>
+  <text x="20" y="102" fill="var(--ink-low)" font-size="8">one integer - implies a false order</text>
+  <rect x="150" y="82" width="60" height="16" rx="2" fill="var(--amber)" opacity="0.85"/><text x="180" y="94" text-anchor="middle" fill="#000" font-size="9" font-weight="700">SF = 37</text>
+  <text x="218" y="94" fill="var(--amber)" font-size="8">37x city #1?</text>
+  <line x1="20" y1="114" x2="340" y2="114" stroke="var(--rim)" stroke-width="0.8"/>
+  <text x="20" y="138" fill="var(--ink-hi)" font-size="9" font-weight="700">target</text>
+  <text x="20" y="150" fill="var(--ink-low)" font-size="8">one dense signal-bearing number</text>
+  <rect x="150" y="130" width="80" height="16" rx="2" fill="var(--teal)" opacity="0.85"/><text x="190" y="142" text-anchor="middle" fill="#000" font-size="9" font-weight="700">SF churn = .28</text>
+  <text x="238" y="142" fill="var(--teal)" font-size="8">out-of-fold!</text>
+  <text x="180" y="176" text-anchor="middle" fill="var(--ink-low)" font-size="9">every encoding makes a claim; the wrong claim is learned as true</text>
+  <text x="180" y="194" text-anchor="middle" fill="var(--ink-low)" font-size="8">low card -> one-hot | real order -> ordinal | high card -> target (OOF)</text>
+</svg>`,
+    },
   },
   {
     id: 'feature_scaling',
+    interactiveId: 'feature_scaling_viz',
     title: 'Feature Scaling',
     subtitle: `Ensure features are on comparable scales so that gradient descent, distance metrics, and regularization work correctly.`,
     difficulty: 'foundational',
@@ -892,6 +972,8 @@ With few positives, careless validation is noise. Use **stratified** splits so e
 
 **Sampling alternatives, and losses built for imbalance.**
 
+[FIGURE: resampling]
+
 Beyond plain class weights and vanilla SMOTE, know the toolkit: **random undersampling** (drop majority examples — fast, throws away data), **random oversampling** (duplicate minority — risks overfitting), the **SMOTE + cleaning** hybrids **SMOTE-Tomek** and **SMOTE-ENN** (oversample then remove the confusing points near the boundary), **focal loss** (down-weights easy majority examples so training focuses on the hard minority — popular in detection), and **balanced random forests** (each tree trained on a balanced bootstrap). Match the tool to the model and the imbalance severity rather than reaching for SMOTE reflexively.
 
 ---
@@ -994,9 +1076,40 @@ Rare-event models need specific monitoring. Track **alert volume** (a spike mean
         answer: `B`,
       },
     ],
+    figures: {
+      resampling: `<svg viewBox="0 0 360 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="16" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">three ways to rebalance 999 : 1</text>
+  <text x="60" y="40" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">undersample</text>
+  <text x="60" y="52" text-anchor="middle" fill="var(--ink-low)" font-size="8">drop majority</text>
+  <g fill="var(--prime)" opacity="0.35"><circle cx="35" cy="70" r="5"/><circle cx="50" cy="70" r="5"/><circle cx="65" cy="70" r="5"/><circle cx="80" cy="70" r="5"/></g>
+  <g fill="var(--prime)"><circle cx="42" cy="88" r="5"/><circle cx="72" cy="88" r="5"/></g>
+  <circle cx="57" cy="106" r="6" fill="var(--amber)"/>
+  <text x="60" y="132" text-anchor="middle" fill="var(--ink-low)" font-size="8">fast, throws</text>
+  <text x="60" y="143" text-anchor="middle" fill="var(--ink-low)" font-size="8">data away</text>
+  <text x="180" y="40" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">oversample</text>
+  <text x="180" y="52" text-anchor="middle" fill="var(--ink-low)" font-size="8">duplicate minority</text>
+  <g fill="var(--prime)"><circle cx="155" cy="70" r="5"/><circle cx="170" cy="70" r="5"/><circle cx="185" cy="70" r="5"/><circle cx="200" cy="70" r="5"/></g>
+  <circle cx="170" cy="90" r="6" fill="var(--amber)"/>
+  <circle cx="190" cy="90" r="6" fill="var(--amber)" stroke="var(--amber)" stroke-dasharray="2,2"/>
+  <circle cx="180" cy="108" r="6" fill="var(--amber)" stroke="var(--amber)" stroke-dasharray="2,2"/>
+  <text x="180" y="132" text-anchor="middle" fill="var(--ink-low)" font-size="8">exact copies -></text>
+  <text x="180" y="143" text-anchor="middle" fill="var(--ink-low)" font-size="8">overfit risk</text>
+  <text x="300" y="40" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">SMOTE</text>
+  <text x="300" y="52" text-anchor="middle" fill="var(--ink-low)" font-size="8">interpolate new</text>
+  <circle cx="278" cy="88" r="6" fill="var(--amber)"/>
+  <circle cx="322" cy="104" r="6" fill="var(--amber)"/>
+  <line x1="284" y1="90" x2="316" y2="102" stroke="var(--teal)" stroke-width="1.2" stroke-dasharray="3,2"/>
+  <circle cx="300" cy="96" r="6" fill="var(--teal)"/>
+  <text x="300" y="132" text-anchor="middle" fill="var(--ink-low)" font-size="8">synthetic on the</text>
+  <text x="300" y="143" text-anchor="middle" fill="var(--ink-low)" font-size="8">line between two</text>
+  <text x="180" y="178" text-anchor="middle" fill="var(--ink-low)" font-size="9">all of this happens inside the training fold - never before the split</text>
+  <text x="180" y="192" text-anchor="middle" fill="var(--amber)" font-size="8">try class weights first; SMOTE only when the minority is truly sparse</text>
+</svg>`,
+    },
   },
   {
     id: 'data_splits_and_leakage',
+    interactiveId: 'leakage_split_viz',
     title: 'Data Splits and Leakage',
     subtitle: `Understand why models that look great in development fail in production — and the exact mistakes that cause it.`,
     difficulty: 'intermediate',
@@ -1216,6 +1329,8 @@ Train any model, then *shuffle* one feature's values and see how much performanc
 
 ---
 
+[FIGURE: selection_families]
+
 **The trap that snares all four: correlation is not importance.**
 
 It is tempting to say "these two features are 95% correlated, drop one." Resist it. Two correlated features can still both help — keeping both can make the model steadier when one of them drifts at serving time. Correlation describes the *inputs*; it does not tell you the *predictive contribution*. So decide what to keep by measuring importance directly — permutation importance on validation data — not by eyeballing a correlation matrix.
@@ -1323,6 +1438,24 @@ Keep **feature selection** (keeps a subset of your *original, explainable* featu
         answer: `B`,
       },
     ],
+    figures: {
+      selection_families: `<svg viewBox="0 0 360 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="16" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">four families: 500 features down to 50</text>
+  <text x="20" y="42" fill="var(--ink-hi)" font-size="9" font-weight="700">filter</text>
+  <text x="90" y="42" fill="var(--ink-low)" font-size="8">score each feature alone - fast, misses interactions</text>
+  <rect x="20" y="48" width="320" height="8" rx="2" fill="var(--depth)"/><rect x="20" y="48" width="60" height="8" rx="2" fill="var(--prime)" opacity="0.8"/>
+  <text x="20" y="78" fill="var(--ink-hi)" font-size="9" font-weight="700">wrapper</text>
+  <text x="90" y="78" fill="var(--ink-low)" font-size="8">RFE: retrain, drop weakest, repeat - model-aware, slow</text>
+  <rect x="20" y="84" width="320" height="8" rx="2" fill="var(--depth)"/><rect x="20" y="84" width="200" height="8" rx="2" fill="var(--prime)" opacity="0.8"/>
+  <text x="20" y="114" fill="var(--ink-hi)" font-size="9" font-weight="700">embedded</text>
+  <text x="90" y="114" fill="var(--ink-low)" font-size="8">L1/Lasso zeroes weak weights during fitting</text>
+  <rect x="20" y="120" width="320" height="8" rx="2" fill="var(--depth)"/><rect x="20" y="120" width="120" height="8" rx="2" fill="var(--prime)" opacity="0.8"/>
+  <text x="20" y="150" fill="var(--teal)" font-size="9" font-weight="700">permutation</text>
+  <text x="105" y="150" fill="var(--ink-low)" font-size="8">shuffle on held-out data - the honest referee</text>
+  <rect x="20" y="156" width="320" height="8" rx="2" fill="var(--depth)"/><rect x="20" y="156" width="160" height="8" rx="2" fill="var(--teal)"/>
+  <text x="180" y="188" text-anchor="middle" fill="var(--amber)" font-size="8" font-weight="700">all four leak if run on full data before the split - do it inside CV folds</text>
+</svg>`,
+    },
   },
   {
     id: 'distribution_shift',
@@ -1659,6 +1792,8 @@ The core idea is simple: **a model is a function of three things — its trainin
 
 Here is a failure that bites far more teams than expect it. The logic that computes your features usually gets written *twice* — once in Python for training, once in SQL or Java for the live serving system. Over time the two quietly drift apart: a timezone handled differently, a null treated differently, a rounding difference in an aggregate. Now the model is fed inputs at serving time that are subtly different from anything it trained on. Offline it scores **91%**; in production it scores **77%** — and *nothing errors*.
 
+[FIGURE: train_serving_skew]
+
 There is only one real fix, and it is structural: compute each feature in *one* canonical place that both training and serving use. This is exactly what a **feature store** (Feast, Tecton, Hopsworks) does — it keeps a single definition of each feature and serves it to both the training pipeline and the live system, so the two can never drift apart.
 
 ---
@@ -1782,5 +1917,24 @@ ML needs its own **CI/CD**: **unit tests** for feature logic, **data-validation 
         answer: `B`,
       },
     ],
+    figures: {
+      train_serving_skew: `<svg viewBox="0 0 360 190" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="16" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">feature logic written twice, drifts apart</text>
+  <rect x="20" y="34" width="140" height="40" rx="6" fill="none" stroke="var(--prime)" stroke-width="1.4"/>
+  <text x="90" y="52" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">training path</text>
+  <text x="90" y="66" text-anchor="middle" fill="var(--ink-low)" font-size="8">Python, batch SQL</text>
+  <rect x="200" y="34" width="140" height="40" rx="6" fill="none" stroke="var(--amber)" stroke-width="1.4"/>
+  <text x="270" y="52" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">serving path</text>
+  <text x="270" y="66" text-anchor="middle" fill="var(--ink-low)" font-size="8">Java, live DB</text>
+  <path d="M90,74 V 104" stroke="var(--prime)" stroke-width="1.3"/>
+  <path d="M270,74 V 104" stroke="var(--amber)" stroke-width="1.3"/>
+  <text x="90" y="120" text-anchor="middle" fill="var(--prime)" font-size="9" font-weight="700">avg = 41.0</text>
+  <text x="270" y="120" text-anchor="middle" fill="var(--amber)" font-size="9" font-weight="700">avg = 41.7</text>
+  <text x="180" y="120" text-anchor="middle" fill="var(--ink-low)" font-size="12" font-weight="700">≠</text>
+  <text x="180" y="140" text-anchor="middle" fill="var(--ink-low)" font-size="8">timezone / null / rounding handled differently</text>
+  <rect x="70" y="150" width="220" height="26" rx="6" fill="var(--teal)" opacity="0.15" stroke="var(--teal)" stroke-width="1.2"/>
+  <text x="180" y="167" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">fix: one canonical definition (feature store) feeds both</text>
+</svg>`,
+    },
   },
 ]

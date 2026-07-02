@@ -6,7 +6,11 @@ export const BANDITS_MODULES = [
     difficulty: 'foundational',
     estimatedMin: 35,
     tags: ['bandit', 'exploration', 'regret', 'exploration-exploitation', 'stochastic'],
-    summary: `A/B testing commits samples to both arms for the full experiment duration, even if one arm is clearly losing early. In online settings — recommending ads, articles, treatments — every suboptimal recommendation has a real cost. Multi-armed bandits formalise the exploration-exploitation tradeoff: you must try options to learn their value (explore), but you want to choose the best option as often as possible (exploit). Doing both simultaneously is the core challenge. Regret — the accumulated cost of not always choosing the best arm — is the right metric for this problem, not reward prediction accuracy: a perfect reward model with a greedy policy still incurs linear regret if it never explores and fails to discover a better arm. The Lai-Robbins lower bound (Ω(log T)) is the key theoretical anchor: any consistent algorithm must pull suboptimal arms at a rate proportional to log T divided by the KL divergence between arm distributions. You cannot beat log T; you can only match it.`,
+    summary: `A/B testing commits samples to both arms for the full experiment duration, even if one arm is clearly losing early. In online settings — recommending ads, articles, treatments — every suboptimal recommendation has a real cost. Multi-armed bandits formalise the exploration-exploitation tradeoff: you must try options to learn their value (explore), but you want to choose the best option as often as possible (exploit). Doing both simultaneously is the core challenge.
+
+[FIGURE: regret]
+
+Regret — the accumulated cost of not always choosing the best arm — is the right metric for this problem, not reward prediction accuracy: a perfect reward model with a greedy policy still incurs linear regret if it never explores and fails to discover a better arm. The Lai-Robbins lower bound (Ω(log T)) is the key theoretical anchor: any consistent algorithm must pull suboptimal arms at a rate proportional to log T divided by the KL divergence between arm distributions. You cannot beat log T; you can only match it.`,
     keyPoints: [
       `**Regret is the right metric, not reward accuracy.** Pseudo-regret
 
@@ -77,6 +81,21 @@ d N_a(T) is the number of times you pull it.** Minimising regret means minimisin
       `**Stochastic vs adversarial:** i.i.d. fixed distributions (UCB/TS, O(log T)) vs no assumptions (EXP3, O(√(KT ln K))).`,
       `**Finite horizon matters:** theory is asymptotic; at T=1000, K=20, priors and warm-starts dominate the constant.`,
     ],
+    figures: {
+      regret: `<svg viewBox="0 0 360 170" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <line x1="40" y1="140" x2="345" y2="140" stroke="var(--ink-low)" stroke-width="1"/>
+  <line x1="40" y1="18" x2="40" y2="140" stroke="var(--ink-low)" stroke-width="1"/>
+  <text x="192" y="162" text-anchor="middle" fill="var(--ink-low)" font-size="8">rounds T &#8594;</text>
+  <text x="14" y="80" text-anchor="middle" fill="var(--ink-low)" font-size="8" transform="rotate(-90 14 80)">cumulative regret</text>
+  <line x1="40" y1="140" x2="345" y2="28" stroke="#ef4444" stroke-width="2"/>
+  <text x="300" y="40" fill="#ef4444" font-size="8.5" font-weight="700">greedy: linear O(T)</text>
+  <path d="M40,140 C120,66 220,52 345,44" fill="none" stroke="var(--prime)" stroke-width="2"/>
+  <text x="196" y="70" fill="var(--prime)" font-size="8.5" font-weight="700">UCB / TS: O(log T)</text>
+  <path d="M40,140 C130,118 240,110 345,106" fill="none" stroke="var(--ink-low)" stroke-width="1.3" stroke-dasharray="3 3"/>
+  <text x="250" y="122" fill="var(--ink-low)" font-size="7.5">Lai-Robbins &#937;(log T) floor</text>
+  <text x="42" y="14" fill="var(--ink-low)" font-size="7.5">Fixed &#949; never bends &#8212; regret grows without bound; log-T is the best any consistent algorithm can do.</text>
+</svg>`,
+    },
   },
   {
     id: 'epsilon_greedy',
@@ -91,6 +110,8 @@ d N_a(T) is the number of times you pull it.** Minimising regret means minimisin
 The mechanism is straightforward but hides a critical flaw: it explores uniformly. Headline A with estimated CTR 3.1%, headline C with 4.2%, and headline D with 2.1% all get the same ε/K share of exploration traffic. Headline D is clearly worse — spending exploration budget there wastes capacity that could go toward distinguishing A from C. There is no mechanism to focus exploration where it matters.
 
 The second flaw is deeper. With ε=0.1, every round has a 10% chance of random arm selection. In every such round, the expected per-step regret is ε·Δ̄ where Δ̄ is the average gap to the best arm. Over T rounds, total exploration regret ≥ ε·T·Δ̄ — linear in T. No matter how small ε is, as long as it is fixed and positive, regret grows without bound. Annealing ε to zero is not optional — it is mathematically necessary for sub-linear regret.
+
+[FIGURE: epsdecay]
 
 **NOT this.** "Smaller ε is always better after initial exploration." If the arm rewards are non-stationary — headline CTR changes as the news cycle evolves — a decaying ε that goes to 0 stops adapting. The algorithm freezes on whatever was best when exploration stopped, even as the world changes. For non-stationary settings, maintain a minimum ε floor or switch to a method that tracks changing rewards explicitly.`,
     keyPoints: [
@@ -141,6 +162,21 @@ The second flaw is deeper. With ε=0.1, every round has a 10% chance of random a
       `**Stale means:** old data barely moves the mean after a 30% CTR drop from creative fatigue.`,
       `**NOT this:** decaying ε→0 freezes under non-stationarity — keep an ε floor or track changing rewards.`,
     ],
+    figures: {
+      epsdecay: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <line x1="34" y1="128" x2="345" y2="128" stroke="var(--ink-low)" stroke-width="1"/>
+  <line x1="34" y1="18" x2="34" y2="128" stroke="var(--ink-low)" stroke-width="1"/>
+  <text x="190" y="150" text-anchor="middle" fill="var(--ink-low)" font-size="8">round t &#8594;</text>
+  <text x="12" y="74" text-anchor="middle" fill="var(--ink-low)" font-size="8" transform="rotate(-90 12 74)">&#949;(t)</text>
+  <line x1="34" y1="52" x2="345" y2="52" stroke="#ef4444" stroke-width="2"/>
+  <text x="150" y="46" fill="#ef4444" font-size="8.5" font-weight="700">fixed &#949;=0.1 &#8594; regret &#949;&#183;T (linear)</text>
+  <path d="M34,20 C90,96 200,122 345,126" fill="none" stroke="var(--prime)" stroke-width="2"/>
+  <text x="150" y="112" fill="var(--prime)" font-size="8.5" font-weight="700">&#949;&#7511;=c/t &#8594; regret O(log T)</text>
+  <line x1="34" y1="118" x2="345" y2="118" stroke="var(--ink-low)" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <text x="250" y="115" fill="var(--ink-low)" font-size="7.5">&#949; floor (non-stationary)</text>
+  <text x="36" y="14" fill="var(--ink-low)" font-size="7.5">Anneal &#949; to 0 for O(log T); keep a floor if rewards drift, or exploration freezes on a stale winner.</text>
+</svg>`,
+    },
   },
   {
     id: 'ucb_algorithms',
@@ -150,7 +186,11 @@ The second flaw is deeper. With ε=0.1, every round has a 10% chance of random a
     difficulty: 'intermediate',
     estimatedMin: 45,
     tags: ['UCB', 'UCB1', 'confidence bound', 'optimism', 'KL-UCB', 'MOSS'],
-    summary: `Epsilon-greedy's fundamental problem is that it allocates exploration uniformly — it has no mechanism for deciding which arms deserve more exploration. UCB solves this with a principled principle: always pull the arm whose true mean could plausibly be highest given what has been observed. The UCB index is μ̂_a + confidence_bonus, where the bonus shrinks as an arm accumulates data and grows as t increases. An arm that is either genuinely high-reward or under-explored will win the argmax — and if it wins because it was over-estimated, the next observation corrects that, shrinking its UCB. Over-optimism is self-correcting. UCB1 achieves O(log T) regret matching the Lai-Robbins lower bound. In production, UCB's determinism (fully reproducible, no random coin flips) makes it auditable — but naive UCB scales poorly to millions of arms because maintaining per-arm confidence intervals becomes expensive.`,
+    summary: `Epsilon-greedy's fundamental problem is that it allocates exploration uniformly — it has no mechanism for deciding which arms deserve more exploration. UCB solves this with a principled principle: always pull the arm whose true mean could plausibly be highest given what has been observed. The UCB index is μ̂_a + confidence_bonus, where the bonus shrinks as an arm accumulates data and grows as t increases.
+
+[FIGURE: ucbpick]
+
+An arm that is either genuinely high-reward or under-explored will win the argmax — and if it wins because it was over-estimated, the next observation corrects that, shrinking its UCB. Over-optimism is self-correcting. UCB1 achieves O(log T) regret matching the Lai-Robbins lower bound. In production, UCB's determinism (fully reproducible, no random coin flips) makes it auditable — but naive UCB scales poorly to millions of arms because maintaining per-arm confidence intervals becomes expensive.`,
     keyPoints: [
       `**UCB1:
 
@@ -226,6 +266,30 @@ instance-optimal (low regret when gaps are large) but not minimax-optimal. Use U
       `**Web scale K=10M:** naive argmax O(K) infeasible — use two-stage ANN retrieval, batched Redis scores, or hierarchical UCB.`,
       `**Heavy tails break Hoeffding bounds:** use robust mean estimators (trimmed mean, median of means).`,
     ],
+    figures: {
+      ucbpick: `<svg viewBox="0 0 360 180" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <line x1="20" y1="150" x2="345" y2="150" stroke="var(--ink-low)" stroke-width="1"/>
+  <text x="182" y="170" text-anchor="middle" fill="var(--ink-low)" font-size="8">UCB = &#956;&#770; + &#8730;(2 ln t / N) &#8212; pick the tallest bar</text>
+  <line x1="55" y1="90" x2="55" y2="150" stroke="var(--ink-low)" stroke-width="1" stroke-dasharray="2 2"/>
+  <rect x="43" y="60" width="24" height="30" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <rect x="43" y="88" width="24" height="4" fill="var(--ink-hi)"/>
+  <text x="55" y="163" text-anchor="middle" fill="var(--ink-mid)" font-size="8">A</text>
+  <text x="55" y="52" text-anchor="middle" fill="var(--ink-low)" font-size="7">N=800</text>
+  <rect x="123" y="34" width="24" height="76" fill="var(--prime)" stroke="var(--prime)" opacity="0.85"/>
+  <rect x="123" y="105" width="24" height="4" fill="var(--ink-hi)"/>
+  <text x="135" y="163" text-anchor="middle" fill="var(--ink-mid)" font-size="8" font-weight="700">B &#9733;</text>
+  <text x="135" y="26" text-anchor="middle" fill="var(--prime)" font-size="7" font-weight="700">N=12 (wins)</text>
+  <rect x="203" y="118" width="24" height="24" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <rect x="203" y="135" width="24" height="4" fill="var(--ink-hi)"/>
+  <text x="215" y="163" text-anchor="middle" fill="var(--ink-mid)" font-size="8">C</text>
+  <text x="215" y="110" text-anchor="middle" fill="var(--ink-low)" font-size="7">N=900</text>
+  <rect x="283" y="24" width="24" height="118" fill="none" stroke="var(--prime)" stroke-dasharray="3 2"/>
+  <text x="295" y="163" text-anchor="middle" fill="var(--ink-mid)" font-size="8">D</text>
+  <text x="295" y="18" text-anchor="middle" fill="var(--ink-low)" font-size="7">N=0 &#8734;</text>
+  <text x="20" y="16" fill="var(--ink-low)" font-size="7.5">Solid = &#956;&#770; estimate; open box = confidence bonus. Under-explored B (small N, wide bonus) wins over</text>
+  <text x="20" y="26" fill="var(--ink-low)" font-size="7.5">higher-mean-but-certain A. Never-pulled D has an infinite bonus &#8212; the natural cold-start rule.</text>
+</svg>`,
+    },
   },
   {
     id: 'thompson_sampling',
@@ -236,6 +300,8 @@ instance-optimal (low regret when gaps are large) but not minimax-optimal. Use U
     estimatedMin: 50,
     tags: ['Thompson Sampling', 'Bayesian', 'posterior', 'Beta-Binomial', 'conjugate'],
     summary: `You have 5 news headlines, each with a Beta prior over its true CTR. Headline A has Beta(10, 90) — 100 impressions, about 10% estimated CTR. Headline E has Beta(1, 1) — never shown, prior is Uniform[0,1]. Thompson Sampling asks a simple question each round: given what you know, which headline is most likely to be the best? Sample one θ from each arm's posterior. Show the headline with the highest sampled θ.
+
+[FIGURE: posterior]
 
 The mechanism is elegant. Headline E's Beta(1,1) posterior is wide — it samples uniformly across 0 to 1. Its sampled value frequently exceeds the 10% concentrations of A through D. So TS explores headline E aggressively — not because it randomly picks an arm with probability ε, but because uncertainty genuinely warrants it. After 50 more impressions of E, its posterior narrows around whatever its true CTR turns out to be. If E is bad (true CTR 2%), its posterior concentrates near 0.02 and almost never samples above the other headlines. Exploration of E drops to near zero automatically. This is exploration proportional to P(arm is optimal) — not uniform, not confidence-bound-based, but posterior-sampling.
 
@@ -290,6 +356,25 @@ The update rule is trivially simple. On each impression: if click, α += 1; if n
       `**Adaptive allocation breaks frequentist stopping:** peeking inflates Type-I error — use Bayesian stopping (P(best)>0.95) or always-valid p-values.`,
       `**NOT this:** conjugate priors are a computational convenience, not required — Normal-Normal for Gaussian, Laplace/neural for non-conjugate.`,
     ],
+    figures: {
+      posterior: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <line x1="20" y1="128" x2="345" y2="128" stroke="var(--ink-low)" stroke-width="1"/>
+  <text x="182" y="148" text-anchor="middle" fill="var(--ink-low)" font-size="8">&#952; (estimated CTR) &#8594;</text>
+  <path d="M40,128 C90,128 100,34 118,34 C136,34 146,128 196,128" fill="var(--prime-faint)" stroke="var(--prime)" stroke-width="1.5"/>
+  <text x="118" y="26" text-anchor="middle" fill="var(--prime)" font-size="7.5" font-weight="700">A: Beta(10,90) tight</text>
+  <path d="M20,128 C120,128 120,104 182,104 C244,104 244,128 344,128" fill="none" stroke="var(--ink-mid)" stroke-width="1.5" stroke-dasharray="3 2"/>
+  <text x="300" y="100" text-anchor="middle" fill="var(--ink-mid)" font-size="7.5" font-weight="700">E: Beta(1,1) wide</text>
+  <line x1="122" y1="34" x2="122" y2="128" stroke="var(--prime)" stroke-width="1"/>
+  <circle cx="122" cy="34" r="3" fill="var(--prime)"/>
+  <text x="126" y="46" fill="var(--prime)" font-size="7">sample A &#8776; 0.10</text>
+  <line x1="300" y1="60" x2="300" y2="128" stroke="#ef4444" stroke-width="1.4"/>
+  <circle cx="300" cy="60" r="3.5" fill="#ef4444"/>
+  <text x="230" y="58" fill="#ef4444" font-size="7.5" font-weight="700">sample E = 0.42 &#8594; E wins this round</text>
+  <text x="20" y="14" fill="var(--ink-low)" font-size="7.5">Each round: draw one &#952; per arm, show the max. Wide (uncertain) posteriors sample high often &#8212;</text>
+  <text x="20" y="152" text-anchor="middle" fill="var(--ink-low)" font-size="0"></text>
+  <text x="20" y="24" fill="var(--ink-low)" font-size="7.5">exploration &#8733; P(arm optimal). As E's posterior narrows, its pull rate collapses automatically.</text>
+</svg>`,
+    },
   },
   {
     id: 'contextual_bandits',
@@ -298,7 +383,11 @@ The update rule is trivially simple. On each impression: if click, α += 1; if n
     difficulty: 'intermediate',
     estimatedMin: 55,
     tags: ['contextual bandit', 'LinUCB', 'LinTS', 'exploration', 'function approximation'],
-    summary: `Standard A/B testing treats all users identically — it asks "which variant is better on average?" But users are different, and the best variant for one user segment may be the worst for another. Contextual bandits extend MAB by observing a feature vector at each round and learning which arm is best as a function of that context, not on average. This is the difference between finding the best treatment on average and finding the best treatment for each patient. The naive alternative — train a supervised reward model and select greedily — fails because arms underrepresented in the logging policy have poorly calibrated reward estimates and are either permanently avoided or over-trusted. LinUCB's uncertainty bonus √(x^T A^{-1} x) is the key mechanism: it is largest exactly when the current context is far from previously observed data, targeting exploration where knowledge is genuinely lacking.`,
+    summary: `Standard A/B testing treats all users identically — it asks "which variant is better on average?" But users are different, and the best variant for one user segment may be the worst for another. Contextual bandits extend MAB by observing a feature vector at each round and learning which arm is best as a function of that context, not on average. This is the difference between finding the best treatment on average and finding the best treatment for each patient.
+
+[FIGURE: context]
+
+The naive alternative — train a supervised reward model and select greedily — fails because arms underrepresented in the logging policy have poorly calibrated reward estimates and are either permanently avoided or over-trusted. LinUCB's uncertainty bonus √(x^T A^{-1} x) is the key mechanism: it is largest exactly when the current context is far from previously observed data, targeting exploration where knowledge is genuinely lacking.`,
     keyPoints: [
       `**Contextual bandit formulation: at round t, observe context x_t ∈ R^d, choose arm a_t ∈ {1,...,K}, observe reward r_t = f(x_t, a_t) + noise.** Goal: minimise Σ_t [f(x_t, a*_t) − f(x_t, a_t)] where a*_t = argmax_a f(x_t, a). Every round is potentially different because the context changes — the same arm may be optimal for one user and suboptimal for another.`,
       `**Contextual bandits subsume classical A/B testing.** A standard A/B test has context (user features) but ignores it during allocation — both variants are shown randomly regardless of user. A contextual bandit learns which variant is better for which user, discovering heterogeneous treatment effects while running the experiment. The allocation becomes personalised and the learnt policy is more valuable.`,
@@ -355,6 +444,29 @@ eward) pairs. UCB for arm a at context x = θ̂_a^T x + α√(x^T A_a^{-1} x) wh
       `**OPE estimators:** DM (low variance, biased), IS (unbiased, high variance), DR (consistent if either model is right).`,
       `**Regret O(d√T ln K):** context adds √d over pure MAB — richer reward functions need more exploration.`,
     ],
+    figures: {
+      context: `<svg viewBox="0 0 360 170" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="10" y="14" fill="var(--ink-low)" font-size="8">Best arm depends on context x &#8212; not one winner on average:</text>
+  <rect x="14" y="24" width="150" height="60" rx="6" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="89" y="40" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">context A (young)</text>
+  <text x="89" y="56" text-anchor="middle" fill="var(--prime)" font-size="8">arm 1 best (CTR 6%)</text>
+  <text x="89" y="70" text-anchor="middle" fill="var(--ink-low)" font-size="7.5">arm 2 worst (2%)</text>
+  <rect x="196" y="24" width="150" height="60" rx="6" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="271" y="40" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">context B (senior)</text>
+  <text x="271" y="56" text-anchor="middle" fill="var(--prime)" font-size="8">arm 2 best (7%)</text>
+  <text x="271" y="70" text-anchor="middle" fill="var(--ink-low)" font-size="7.5">arm 1 worst (1%)</text>
+  <text x="10" y="106" fill="var(--ink-low)" font-size="8">LinUCB bonus &#8730;(x&#7488; A&#8315;&#185; x) targets exploration where x is novel:</text>
+  <line x1="30" y1="150" x2="230" y2="150" stroke="var(--ink-low)" stroke-width="1"/>
+  <line x1="30" y1="120" x2="30" y2="150" stroke="var(--ink-low)" stroke-width="1"/>
+  <circle cx="60" cy="144" r="2.5" fill="var(--prime)"/><circle cx="75" cy="140" r="2.5" fill="var(--prime)"/>
+  <circle cx="70" cy="146" r="2.5" fill="var(--prime)"/><circle cx="88" cy="142" r="2.5" fill="var(--prime)"/>
+  <text x="72" y="164" text-anchor="middle" fill="var(--ink-low)" font-size="7">observed x (small bonus)</text>
+  <circle cx="205" cy="128" r="4" fill="none" stroke="#ef4444" stroke-width="1.4"/>
+  <text x="205" y="122" text-anchor="middle" fill="#ef4444" font-size="7" font-weight="700">novel x</text>
+  <text x="255" y="134" fill="#ef4444" font-size="7.5" font-weight="700">&#8593; large bonus</text>
+  <text x="255" y="146" fill="var(--ink-low)" font-size="7">&#8594; explore here</text>
+</svg>`,
+    },
   },
   {
     id: 'linucb',
@@ -364,6 +476,8 @@ eward) pairs. UCB for arm a at context x = θ̂_a^T x + α√(x^T A_a^{-1} x) wh
     estimatedMin: 60,
     tags: ['LinUCB', 'ridge regression', 'confidence ellipsoid', 'Sherman-Morrison', 'disjoint', 'hybrid'],
     summary: `LinUCB is contextual bandit theory turned into a deployable algorithm. The core insight is geometric: to know how uncertain you are about the reward at a given context x, you need to know how far x is from the contexts you have actually observed. If x is in a direction where you have abundant observations (span of historical contexts), your estimate is confident. If x is in an under-observed direction, your estimate is uncertain and you should explore. The term x^T A^{-1} x captures exactly this: A = X^T X + λI accumulates the information you have observed, and x^T A^{-1} x is large for contexts in the null space of observed data.
+
+[FIGURE: ellipsoid]
 
 This gives exact O(d√T) regret guarantees with efficient O(d²) online updates via Sherman-Morrison. The Yahoo! news paper found the theory-suggested α was 25× too large — always tune α empirically, never use the theoretical constant.`,
     keyPoints: [
@@ -441,15 +555,37 @@ e.g., user features) and x_t are arm-specific features (e.g., ad content feature
       `**Sherman-Morrison:** O(d²) online update instead of O(d³) inversion — feasible at 10K QPS on one core.`,
       `**Watch failures:** nonlinear reward breaks the ellipsoid (monitor residuals); covariate shift under-calibrates the bonus (forgetting factor).`,
     ],
+    figures: {
+      ellipsoid: `<svg viewBox="0 0 360 175" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="10" y="14" fill="var(--ink-low)" font-size="8">Confidence ellipsoid around &#952;&#770;: narrow in well-observed directions, wide in under-observed ones.</text>
+  <line x1="30" y1="150" x2="330" y2="150" stroke="var(--ink-low)" stroke-width="1"/>
+  <line x1="180" y1="30" x2="180" y2="150" stroke="var(--ink-low)" stroke-width="1"/>
+  <text x="326" y="146" fill="var(--ink-low)" font-size="7">&#952;&#8321;</text>
+  <text x="184" y="36" fill="var(--ink-low)" font-size="7">&#952;&#8322;</text>
+  <ellipse cx="180" cy="92" rx="110" ry="34" fill="var(--prime-faint)" stroke="var(--prime)" stroke-width="1.4" transform="rotate(-24 180 92)"/>
+  <circle cx="180" cy="92" r="3.5" fill="var(--prime)"/>
+  <text x="186" y="88" fill="var(--prime)" font-size="8" font-weight="700">&#952;&#770;</text>
+  <line x1="180" y1="92" x2="290" y2="66" stroke="var(--ink-hi)" stroke-width="1.2" marker-end="url(#ar)"/>
+  <text x="250" y="60" fill="var(--ink-hi)" font-size="7.5" font-weight="700">wide dir &#8594; big bonus</text>
+  <line x1="180" y1="92" x2="212" y2="128" stroke="var(--ink-mid)" stroke-width="1.2" marker-end="url(#ar)"/>
+  <text x="214" y="140" fill="var(--ink-mid)" font-size="7.5" font-weight="700">narrow dir &#8594; small bonus</text>
+  <text x="10" y="170" fill="var(--ink-low)" font-size="7.5">UCB(x) = &#952;&#770;&#7488;x + &#945;&#8730;(x&#7488; A&#8315;&#185; x): the &#8730;-term is the ellipsoid half-width projected onto direction x.</text>
+  <defs><marker id="ar" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="var(--ink-mid)"/></marker></defs>
+</svg>`,
+    },
   },
   {
     id: 'off_policy_evaluation',
+    interactiveId: 'ope_estimator_viz',
     title: 'Off-Policy Evaluation for Bandits',
     subtitle: 'Importance sampling, doubly robust estimator, SNIPS, variance control, distribution shift',
     difficulty: 'advanced',
     estimatedMin: 65,
     tags: ['OPE', 'importance sampling', 'doubly robust', 'SNIPS', 'IPW', 'policy evaluation'],
-    summary: `Online A/B testing every candidate policy is expensive and risky — you need weeks of traffic and accept all the costs of deploying a suboptimal policy. Off-Policy Evaluation (OPE) addresses this: given logged data from a behaviour policy, estimate how well a new policy would perform without deploying it. The fundamental problem is that logged data reflects the behaviour policy's choices — the new policy may want to take very different actions in contexts the behaviour policy rarely encountered. Importance weighting corrects for this mismatch but variance explodes when the policies diverge significantly: a small propensity denominator drives importance weights arbitrarily large, and a few high-weight observations dominate the estimate. The doubly robust estimator is the production standard because it is consistent if either the reward model or the propensity model is correctly specified — two independent chances to be right.`,
+    summary: `Online A/B testing every candidate policy is expensive and risky — you need weeks of traffic and accept all the costs of deploying a suboptimal policy. Off-Policy Evaluation (OPE) addresses this: given logged data from a behaviour policy, estimate how well a new policy would perform without deploying it. The fundamental problem is that logged data reflects the behaviour policy's choices — the new policy may want to take very different actions in contexts the behaviour policy rarely encountered. Importance weighting corrects for this mismatch but variance explodes when the policies diverge significantly: a small propensity denominator drives importance weights arbitrarily large, and a few high-weight observations dominate the estimate. The doubly robust estimator is the production standard because it is consistent if either the reward model or the propensity model is correctly specified — two independent chances to be right.
+
+[FIGURE: opebv]`,
+    interactivePrompt: `Before you touch the controls: as the evaluation policy diverges from the logging policy, importance weights blow up. Which estimator's error explodes first — the Direct Method, plain IS, or Doubly Robust — and which stays usable longest?`,
     keyPoints: [
       `**Direct method (DM): train a reward model r̂(x, a) on logged data, evaluate as V̂_DM(π_e) = Σ_t Σ_a π_e(a|x_t) · r̂(x_t, a).** Low variance — the reward model is smooth and the estimate is deterministic. Biased whenever r̂ is wrong in contexts where π_e takes actions the behaviour policy rarely took — and those are exactly the interesting contexts where a better policy diverges from the baseline.`,
       `**Importance Sampling (IS): V̂_IS(π_e) = (1/T) Σ_t w_t · r_t where w_t = π_e(a_t | x_t) / π_b(a_t | x_t).** Unbiased — in expectation it equals V(π_e). Variance can be enormous when π_e concentrates on actions π_b rarely took: if π_b assigned probability 0.01 to action a but π_e assigns 0.9, the weight is 90. That single observation contributes reward × 90 to the estimate.`,
@@ -515,6 +651,24 @@ of sample size, a handful of high-weight observations dominate the estimate and 
       `**Log propensities at serve time:** reconstructing later breaks every IS estimator.`,
       `**Partial feedback:** you only see the reward of the action taken — counterfactual estimation is what makes OPE hard.`,
     ],
+    figures: {
+      opebv: `<svg viewBox="0 0 360 150" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="10" y="14" fill="var(--ink-low)" font-size="8">Three OPE estimators &#8212; each trades bias against variance:</text>
+  <line x1="180" y1="118" x2="180" y2="30" stroke="var(--ink-low)" stroke-width="0.8" stroke-dasharray="3 3"/>
+  <text x="180" y="128" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5">true V(&#960;&#7497;)</text>
+  <circle cx="112" cy="46" r="4" fill="var(--ink-mid)"/>
+  <line x1="96" y1="46" x2="128" y2="46" stroke="var(--ink-mid)" stroke-width="1.4"/>
+  <text x="196" y="49" fill="var(--ink-mid)" font-size="8" font-weight="700">DM &#8212; biased, tight (low var)</text>
+  <text x="60" y="49" text-anchor="end" fill="var(--ink-low)" font-size="7">off &#8595;</text>
+  <circle cx="180" cy="76" r="4" fill="#ef4444"/>
+  <line x1="70" y1="76" x2="290" y2="76" stroke="#ef4444" stroke-width="1.4"/>
+  <text x="196" y="70" fill="#ef4444" font-size="8" font-weight="700">IS &#8212; unbiased, huge variance</text>
+  <circle cx="176" cy="106" r="4" fill="var(--prime)"/>
+  <line x1="150" y1="106" x2="206" y2="106" stroke="var(--prime)" stroke-width="1.6"/>
+  <text x="214" y="109" fill="var(--prime)" font-size="8" font-weight="700">DR &#8212; centered + tight &#9733;</text>
+  <text x="10" y="144" fill="var(--ink-low)" font-size="7.5">DR = DM + IS correction: consistent if either the reward model or propensities is right. Watch N&#8331;.</text>
+</svg>`,
+    },
   },
   {
     id: 'bandits_in_recsys',
@@ -523,7 +677,9 @@ of sample size, a handful of high-weight observations dominate the estimate and 
     difficulty: 'advanced',
     estimatedMin: 65,
     tags: ['recommendation', 'cold start', 'exploration', 'delayed feedback', 'batched bandits', 'ranking'],
-    summary: `Pure exploitation recommendation systems have a fundamental self-fulfilling problem: items that were never shown cannot accumulate the impressions needed to estimate their quality, so they are never shown. Popular items stay popular not because they are always the best choice but because they received the most data. New items, niche items, and items that would suit specific user segments never get discovered. This is the filter bubble — not a philosophical concern but a measurable system failure: catalog coverage collapses, long-tail content atrophies, and users see an increasingly narrow slice of what is available. Bandit exploration in recommendation systems must confront engineering realities that pure bandit theory ignores: batched updates (not per-interaction), delayed feedback (clicks arrive seconds to days after impressions), and cascade position bias (users scan top-to-bottom, so items at higher positions get more examination regardless of quality). The practical answer is to dedicate a fixed exploration budget and use content-based priors to warm-start new items rather than starting from scratch.`,
+    summary: `Pure exploitation recommendation systems have a fundamental self-fulfilling problem: items that were never shown cannot accumulate the impressions needed to estimate their quality, so they are never shown. Popular items stay popular not because they are always the best choice but because they received the most data. New items, niche items, and items that would suit specific user segments never get discovered. This is the filter bubble — not a philosophical concern but a measurable system failure: catalog coverage collapses, long-tail content atrophies, and users see an increasingly narrow slice of what is available.
+
+[FIGURE: filterbubble] Bandit exploration in recommendation systems must confront engineering realities that pure bandit theory ignores: batched updates (not per-interaction), delayed feedback (clicks arrive seconds to days after impressions), and cascade position bias (users scan top-to-bottom, so items at higher positions get more examination regardless of quality). The practical answer is to dedicate a fixed exploration budget and use content-based priors to warm-start new items rather than starting from scratch.`,
     keyPoints: [
       `**Cold start is a bandit exploration problem.** New items score near zero in collaborative filtering because they have no interaction history — so they are not shown — so they accumulate no history. This circular dependency is broken by assigning new items a forced exploration budget (e.g., 1000 impressions) with a UCB-style uncertainty bonus that decays as impressions accumulate. Without this, new items never escape the cold start.`,
       `**Exploration bonus in ranking: score(item) = predicted_reward(item) + α · uncertainty(item).** Uncertainty can be content-based (new item → high uncertainty regardless of user), user-item (item rarely shown to this user type → high uncertainty for this user), or model-based (variance of ensemble predictions). α is tuned to balance short-term CTR against long-term catalog coverage and user satisfaction.`,
@@ -577,9 +733,33 @@ of sample size, a handful of high-weight observations dominate the estimate and 
       `**Cascade position bias:** users scan top-down; raw CTR conflates quality with position — use position-debiased rewards.`,
       `**Measure exploration separately:** catalog discovery rate and impression entropy, not just short-term CTR.`,
     ],
+    figures: {
+      filterbubble: `<svg viewBox="0 0 360 155" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="90" y="14" text-anchor="middle" fill="var(--ink-low)" font-size="8" font-weight="700">Pure exploitation</text>
+  <text x="270" y="14" text-anchor="middle" fill="var(--ink-low)" font-size="8" font-weight="700">+ 5% exploration budget</text>
+  <line x1="20" y1="120" x2="170" y2="120" stroke="var(--ink-low)" stroke-width="1"/>
+  <rect x="28" y="40" width="16" height="80" fill="var(--prime)"/>
+  <rect x="50" y="70" width="16" height="50" fill="var(--prime)" opacity="0.7"/>
+  <rect x="72" y="104" width="16" height="16" fill="var(--ink-low)"/>
+  <rect x="94" y="112" width="16" height="8" fill="var(--ink-low)"/>
+  <rect x="116" y="116" width="16" height="4" fill="var(--ink-low)"/>
+  <rect x="138" y="118" width="16" height="2" fill="var(--ink-low)"/>
+  <text x="95" y="136" text-anchor="middle" fill="#ef4444" font-size="7.5" font-weight="700">long tail starves &#8594; coverage collapses</text>
+  <line x1="200" y1="120" x2="350" y2="120" stroke="var(--ink-low)" stroke-width="1"/>
+  <rect x="208" y="52" width="16" height="68" fill="var(--prime)"/>
+  <rect x="230" y="74" width="16" height="46" fill="var(--prime)" opacity="0.7"/>
+  <rect x="252" y="88" width="16" height="32" fill="var(--prime)" opacity="0.6"/>
+  <rect x="274" y="96" width="16" height="24" fill="var(--prime)" opacity="0.5"/>
+  <rect x="296" y="102" width="16" height="18" fill="var(--prime)" opacity="0.45"/>
+  <rect x="318" y="106" width="16" height="14" fill="var(--prime)" opacity="0.4"/>
+  <text x="275" y="136" text-anchor="middle" fill="var(--prime)" font-size="7.5" font-weight="700">tail keeps getting signal</text>
+  <text x="20" y="150" fill="var(--ink-low)" font-size="7.5">A forced budget + content priors warm-start new items so they escape the never-shown &#8594; no-data trap.</text>
+</svg>`,
+    },
   },
   {
     id: 'non_stationary_bandits',
+    interactiveId: 'non_stationary_window_viz',
     title: 'Non-Stationary Bandits',
     subtitle: 'Sliding window UCB, discounted UCB, change-point detection, EXP3, REXP3',
     difficulty: 'advanced',
@@ -587,7 +767,10 @@ of sample size, a handful of high-weight observations dominate the estimate and 
     tags: ['non-stationary', 'sliding window', 'discounted UCB', 'EXP3', 'adversarial', 'change point'],
     summary: `Standard UCB and Thompson Sampling are built for stationary reward distributions. They accumulate observations indefinitely — N_a(t) grows monotonically. An arm with millions of accumulated observations has a confidence interval so tight it never loses the argmax, even after its reward has collapsed.
 
+[FIGURE: changepoint]
+
 The algorithm stays frozen on a historically dominant arm long after its true mean has dropped. The failure mode is slow: it takes O(N_a) new observations to substantially move the empirical mean — that is months of data for a heavily exploited arm. The right production strategy combines two mechanisms: CUSUM-based change detection for abrupt shifts (triggers an immediate statistics reset when a change is detected) and sliding window or discounted UCB for gradual drift (continuously forgets stale observations so the mean tracks recent reality). Predictable seasonality is not non-stationarity — weekly cycles belong in contextual features, not in a forgetting mechanism.`,
+    interactivePrompt: `Before you touch the controls: an arm collapses at the change point. A tiny window W tracks the drop fast but is noisy; a huge W is stable but stays frozen for a long time. Which window minimises total regret — the smallest, the largest, or something in between — and why?`,
     keyPoints: [
       `**Standard UCB/TS failure after a change point: UCB1 and standard TS accumulate all historical observations monotonically.** For a previously dominant arm whose reward drops, N_a is large (tight confidence interval), the UCB stays high (empirical mean barely moves), and the algorithm continues exploiting it. The empirical mean only shifts substantially after O(N_a) new observations — for an arm with 50,000 observations, it takes thousands of post-change pulls to notice. Regret grows linearly after the change.`,
       `**Sliding window UCB (SW-UCB): maintain only the last W observations per arm.** UCB
@@ -659,5 +842,23 @@ mory length ≈ 1/(1−γ) rounds. Smoother than SW-UCB — old observations don
       `**EXP3 / REXP3:** adversarial O(√(KT ln K)) via importance-weighted rewards; restart in epochs for Υ change points.`,
       `**NOT this:** predictable seasonality isn't drift — put day_of_week / hour_of_day in context features, don't forget the data.`,
     ],
+    figures: {
+      changepoint: `<svg viewBox="0 0 360 165" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <line x1="30" y1="130" x2="345" y2="130" stroke="var(--ink-low)" stroke-width="1"/>
+  <line x1="30" y1="20" x2="30" y2="130" stroke="var(--ink-low)" stroke-width="1"/>
+  <text x="188" y="152" text-anchor="middle" fill="var(--ink-low)" font-size="8">rounds &#8594;</text>
+  <text x="14" y="75" text-anchor="middle" fill="var(--ink-low)" font-size="8" transform="rotate(-90 14 75)">reward</text>
+  <line x1="30" y1="42" x2="180" y2="42" stroke="var(--ink-hi)" stroke-width="1.6"/>
+  <line x1="180" y1="98" x2="345" y2="98" stroke="var(--ink-hi)" stroke-width="1.6"/>
+  <text x="90" y="36" fill="var(--ink-hi)" font-size="7">true mean (arm collapses)</text>
+  <line x1="180" y1="20" x2="180" y2="130" stroke="#ef4444" stroke-width="1" stroke-dasharray="3 3"/>
+  <text x="184" y="28" fill="#ef4444" font-size="7.5" font-weight="700">change point</text>
+  <path d="M30,44 C120,44 170,44 260,50 C320,54 340,55 345,55" fill="none" stroke="var(--ink-mid)" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="270" y="46" fill="var(--ink-mid)" font-size="7.5" font-weight="700">standard UCB: frozen, barely moves</text>
+  <path d="M30,44 C120,44 175,44 200,90 C230,98 300,98 345,98" fill="none" stroke="var(--prime)" stroke-width="1.8"/>
+  <text x="250" y="114" fill="var(--prime)" font-size="7.5" font-weight="700">sliding-window UCB: tracks in W rounds</text>
+  <text x="30" y="14" fill="var(--ink-low)" font-size="7.5">Large N&#7488; makes the mean rigid &#8212; forget stale data (window W or discount &#947;) so it re-tracks reality.</text>
+</svg>`,
+    },
   },
 ]

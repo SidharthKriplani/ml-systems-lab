@@ -14,6 +14,8 @@ Evaluation without labels uses three internal metrics. Silhouette score: (b - a)
 
 The metric that matters is business validity: pull 20 random examples from each cluster and ask "does this make sense?" Can your recommendation team write a distinct strategy for each segment? If not, the clustering has not solved the problem regardless of what any internal metric says.
 
+[FIGURE: cluster_shapes]
+
 NOT-this: "Clustering finds the true segments in your data." Clustering finds segments consistent with the algorithm's assumptions. The "true segments" only exist if your domain actually has discrete groups, not a continuous distribution. Most behavioral data is continuous — clustering imposes discretization. Use clustering to generate hypotheses, not to discover ground truth.`,
     keyPoints: [
       `**Always evaluate clusters qualitatively — look at 20 random examples from each cluster and ask whether the segment makes business sense.**\n\nInternal metrics (silhouette, Davies-Bouldin) measure geometric quality, not business utility. A cluster with silhouette score 0.8 that mixes bargain hunters with power users is useless. Geometric quality and business utility are independent — you need both.`,
@@ -73,6 +75,47 @@ NOT-this: "Clustering finds the true segments in your data." Clustering finds se
       "**K is a business decision,** not a metric to optimize.",
       "**Near-zero silhouette across all K = no cluster structure** under that geometry.",
     ],
+    figures: {
+      cluster_shapes: `<svg viewBox="0 0 360 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="16" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">each algorithm assumes a different cluster shape</text>
+  <!-- Panel 1: spherical (K-means) -->
+  <g transform="translate(0,30)">
+    <text x="60" y="12" text-anchor="middle" fill="var(--prime)" font-size="10" font-weight="700">spherical</text>
+    <text x="60" y="150" text-anchor="middle" fill="var(--ink-low)" font-size="8">K-means</text>
+    <circle cx="45" cy="60" r="24" fill="var(--prime)" opacity="0.12" stroke="var(--prime)" stroke-width="1"/>
+    <circle cx="82" cy="95" r="24" fill="var(--amber)" opacity="0.14" stroke="var(--amber)" stroke-width="1"/>
+    <g fill="var(--prime)" opacity="0.9">
+      <circle cx="40" cy="55" r="2.5"/><circle cx="52" cy="62" r="2.5"/><circle cx="45" cy="70" r="2.5"/><circle cx="38" cy="66" r="2.5"/><circle cx="50" cy="52" r="2.5"/>
+    </g>
+    <g fill="var(--amber)" opacity="0.9">
+      <circle cx="78" cy="90" r="2.5"/><circle cx="88" cy="98" r="2.5"/><circle cx="82" cy="104" r="2.5"/><circle cx="90" cy="88" r="2.5"/><circle cx="76" cy="100" r="2.5"/>
+    </g>
+  </g>
+  <line x1="120" y1="34" x2="120" y2="180" stroke="var(--rim)" stroke-width="1"/>
+  <!-- Panel 2: density / crescent (DBSCAN) -->
+  <g transform="translate(120,30)">
+    <text x="60" y="12" text-anchor="middle" fill="var(--prime)" font-size="10" font-weight="700">density</text>
+    <text x="60" y="150" text-anchor="middle" fill="var(--ink-low)" font-size="8">DBSCAN</text>
+    <!-- two interleaved crescents -->
+    <path d="M 30 110 A 34 34 0 0 1 96 70" fill="none" stroke="var(--prime)" stroke-width="8" stroke-linecap="round" opacity="0.75"/>
+    <path d="M 96 118 A 34 34 0 0 1 30 78" fill="none" stroke="var(--amber)" stroke-width="8" stroke-linecap="round" opacity="0.75"/>
+    <!-- lone noise point -->
+    <circle cx="100" cy="45" r="3" fill="var(--ink-low)"/>
+    <text x="108" y="43" fill="var(--ink-low)" font-size="7">noise</text>
+  </g>
+  <line x1="240" y1="34" x2="240" y2="180" stroke="var(--rim)" stroke-width="1"/>
+  <!-- Panel 3: nested (hierarchical) -->
+  <g transform="translate(240,30)">
+    <text x="60" y="12" text-anchor="middle" fill="var(--prime)" font-size="10" font-weight="700">nested</text>
+    <text x="60" y="150" text-anchor="middle" fill="var(--ink-low)" font-size="8">hierarchical</text>
+    <circle cx="60" cy="88" r="46" fill="none" stroke="var(--ink-low)" stroke-width="1" stroke-dasharray="4,3" opacity="0.7"/>
+    <circle cx="44" cy="80" r="20" fill="var(--prime)" opacity="0.12" stroke="var(--prime)" stroke-width="1"/>
+    <circle cx="80" cy="98" r="20" fill="var(--amber)" opacity="0.14" stroke="var(--amber)" stroke-width="1"/>
+    <g fill="var(--prime)" opacity="0.9"><circle cx="40" cy="76" r="2.5"/><circle cx="50" cy="84" r="2.5"/><circle cx="44" cy="88" r="2.5"/></g>
+    <g fill="var(--amber)" opacity="0.9"><circle cx="76" cy="94" r="2.5"/><circle cx="86" cy="102" r="2.5"/><circle cx="80" cy="106" r="2.5"/></g>
+  </g>
+</svg>`,
+    },
   },
   {
     id: 'kmeans',
@@ -250,6 +293,8 @@ The linkage criterion determines what "distance between clusters" means. Single 
 
 Reading the dendrogram: long vertical segments mark natural cluster boundaries — a large jump in merge distance means the two groups being merged were genuinely far apart. Draw a horizontal cut line; each branch it crosses is one cluster. If there are no long segments, the data probably does not have discrete structure.
 
+[FIGURE: dendrogram]
+
 Complexity: O(n²) space for the distance matrix, O(n³) time for the naive merge sequence. Infeasible for n > 10,000. For large datasets use HDBSCAN or approximate methods.
 
 NOT-this: "You need to specify K before running hierarchical clustering." The whole point is you do not. You run once, get the full dendrogram, inspect it, and decide where to cut based on the structure. You can cut at different heights for different analysis needs without rerunning — that is the main advantage over K-means.`,
@@ -312,6 +357,45 @@ NOT-this: "You need to specify K before running hierarchical clustering." The wh
       "**Reduce to 20–50 PCA dims first** — raw high-D distances measure noise.",
     ],
     interactiveId: 'hierarchical_clustering_viz',
+    figures: {
+      dendrogram: `<svg viewBox="0 0 360 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="16" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">read the tree: long segments = real boundaries</text>
+  <!-- y-axis (merge distance) -->
+  <line x1="34" y1="30" x2="34" y2="180" stroke="var(--rim)" stroke-width="1"/>
+  <text x="20" y="110" text-anchor="middle" fill="var(--ink-low)" font-size="8" transform="rotate(-90 20 110)">merge distance</text>
+  <!-- leaves at bottom: 6 points at x = 60,90,120,180,210,240 ; y=180 -->
+  <!-- Left group: (A,B) merge low, then join C -->
+  <line x1="60" y1="180" x2="60" y2="150" stroke="var(--prime)" stroke-width="1.5"/>
+  <line x1="90" y1="180" x2="90" y2="150" stroke="var(--prime)" stroke-width="1.5"/>
+  <line x1="60" y1="150" x2="90" y2="150" stroke="var(--prime)" stroke-width="1.5"/>
+  <line x1="75" y1="150" x2="75" y2="128" stroke="var(--prime)" stroke-width="1.5"/>
+  <line x1="120" y1="180" x2="120" y2="128" stroke="var(--prime)" stroke-width="1.5"/>
+  <line x1="75" y1="128" x2="120" y2="128" stroke="var(--prime)" stroke-width="1.5"/>
+  <line x1="97" y1="128" x2="97" y2="70" stroke="var(--prime)" stroke-width="1.5"/>
+  <!-- Right group: (D,E) then join F -->
+  <line x1="180" y1="180" x2="180" y2="152" stroke="var(--amber)" stroke-width="1.5"/>
+  <line x1="210" y1="180" x2="210" y2="152" stroke="var(--amber)" stroke-width="1.5"/>
+  <line x1="180" y1="152" x2="210" y2="152" stroke="var(--amber)" stroke-width="1.5"/>
+  <line x1="195" y1="152" x2="195" y2="132" stroke="var(--amber)" stroke-width="1.5"/>
+  <line x1="240" y1="180" x2="240" y2="132" stroke="var(--amber)" stroke-width="1.5"/>
+  <line x1="195" y1="132" x2="240" y2="132" stroke="var(--amber)" stroke-width="1.5"/>
+  <line x1="217" y1="132" x2="217" y2="70" stroke="var(--amber)" stroke-width="1.5"/>
+  <!-- final merge (the long jump) -->
+  <line x1="97" y1="70" x2="217" y2="70" stroke="var(--ink-mid)" stroke-width="1.5"/>
+  <!-- long-segment annotation: the tall vertical up to the final merge -->
+  <rect x="93" y="72" width="8" height="54" fill="var(--prime)" opacity="0.12"/>
+  <text x="150" y="60" text-anchor="middle" fill="var(--ink-mid)" font-size="8">long jump = groups far apart</text>
+  <!-- cut line -->
+  <line x1="40" y1="100" x2="300" y2="100" stroke="var(--green)" stroke-width="1.4" stroke-dasharray="5,3"/>
+  <text x="316" y="103" fill="var(--green)" font-size="8" font-weight="700">cut → 2</text>
+  <!-- leaf labels -->
+  <g fill="var(--ink-low)" font-size="8" text-anchor="middle">
+    <text x="60" y="192">A</text><text x="90" y="192">B</text><text x="120" y="192">C</text>
+    <text x="180" y="192">D</text><text x="210" y="192">E</text><text x="240" y="192">F</text>
+  </g>
+  <text x="180" y="210" text-anchor="middle" fill="var(--ink-low)" font-size="8">each branch the cut crosses = one cluster</text>
+</svg>`,
+    },
   },
   {
     id: 'dbscan',
@@ -324,6 +408,8 @@ NOT-this: "You need to specify K before running hierarchical clustering." The wh
     summary: `You have geographic data — customer addresses mapped to (lat, lon). You want to find city clusters of any shape. K-means would fit circles; cities are not circles. DBSCAN finds density-connected regions of arbitrary shape and labels sparse areas as noise. A city center is a dense region; a rural highway stop is noise. No K to specify — the number of clusters emerges from the data's density structure.
 
 DBSCAN parameters: ε (epsilon) — the radius defining "neighborhood." minPts — the minimum number of points in the ε-neighborhood to be a core point. Core point: has ≥ minPts points within distance ε. Border point: within ε of a core point but not itself a core point. Noise point: not within ε of any core point — explicitly labeled -1.
+
+[FIGURE: core_border_noise]
 
 Density reachability: point A is directly density-reachable from core point B if A is in B's ε-neighborhood. A cluster is the connected component of core points plus their border points. The chain-following is what lets clusters take any shape — crescents, rings, L-shapes.
 
@@ -389,6 +475,34 @@ NOT-this: "DBSCAN does not require K, so it is always better than K-means." DBSC
       "**Fails on varying density** — single ε breaks; HDBSCAN fixes it.",
     ],
     interactiveId: 'dbscan_viz',
+    figures: {
+      core_border_noise: `<svg viewBox="0 0 360 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="16" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">core / border / noise (minPts = 4)</text>
+  <!-- core point: dense neighborhood -->
+  <circle cx="110" cy="100" r="38" fill="var(--prime)" opacity="0.08" stroke="var(--prime)" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="110" y1="100" x2="138" y2="100" stroke="var(--prime)" stroke-width="1" opacity="0.7"/>
+  <text x="124" y="94" fill="var(--prime)" font-size="8">ε</text>
+  <!-- neighbors of core (>= minPts) -->
+  <g fill="var(--prime)" opacity="0.85">
+    <circle cx="90" cy="85" r="3.5"/><circle cx="130" cy="88" r="3.5"/><circle cx="95" cy="120" r="3.5"/><circle cx="128" cy="118" r="3.5"/><circle cx="112" cy="130" r="3.5"/>
+  </g>
+  <!-- the core point itself -->
+  <circle cx="110" cy="100" r="5.5" fill="var(--prime)"/>
+  <text x="110" y="160" text-anchor="middle" fill="var(--prime)" font-size="9" font-weight="700">core</text>
+  <text x="110" y="172" text-anchor="middle" fill="var(--ink-low)" font-size="7">≥ minPts in ε</text>
+  <!-- border point: on the edge, within ε of core's neighbor but < minPts itself -->
+  <circle cx="185" cy="112" r="30" fill="var(--amber)" opacity="0.07" stroke="var(--amber)" stroke-width="1" stroke-dasharray="4,3"/>
+  <circle cx="185" cy="112" r="5.5" fill="var(--amber)"/>
+  <line x1="150" y1="105" x2="185" y2="112" stroke="var(--amber)" stroke-width="1" opacity="0.6" stroke-dasharray="2,2"/>
+  <text x="200" y="160" text-anchor="middle" fill="var(--amber)" font-size="9" font-weight="700">border</text>
+  <text x="200" y="172" text-anchor="middle" fill="var(--ink-low)" font-size="7">near a core, sparse itself</text>
+  <!-- noise point: isolated -->
+  <circle cx="300" cy="60" r="5.5" fill="none" stroke="var(--ink-low)" stroke-width="2"/>
+  <text x="300" y="88" text-anchor="middle" fill="var(--ink-low)" font-size="9" font-weight="700">noise (-1)</text>
+  <text x="300" y="100" text-anchor="middle" fill="var(--ink-low)" font-size="7">near no core</text>
+  <text x="180" y="205" text-anchor="middle" fill="var(--ink-low)" font-size="8">clusters = chains of cores + their borders; the rest is noise</text>
+</svg>`,
+    },
   },
   {
     id: 'pca',
@@ -613,6 +727,8 @@ t-SNE: computes pairwise similarities in high dimensions (Gaussian distribution 
 
 UMAP (Uniform Manifold Approximation and Projection): grounded in Riemannian geometry and topological data analysis. Preserves more global structure than t-SNE, faster (O(n log n) vs O(n²)), supports out-of-sample transformation (new points can be projected without refitting). Default choice over t-SNE for most use cases.
 
+[FIGURE: distance_distortion]
+
 NOT-this: "t-SNE cluster distances are interpretable." The distances between clusters in a t-SNE plot are meaningless — a cell type that appears far from another in t-SNE might be close in the actual high-dimensional space. t-SNE preserves local neighborhoods but distorts global distances. Never interpret inter-cluster distances in a t-SNE plot. UMAP preserves more global structure but still warps distances.`,
     keyPoints: [
       `**Use UMAP over t-SNE for nearly all visualization tasks — it is faster, supports out-of-sample projection, and preserves more global structure while producing equally clear local cluster separation.**\n\nThe only reason to use t-SNE over UMAP is when existing analyses were done with t-SNE for direct comparison. For new work, UMAP is the default.`,
@@ -673,6 +789,39 @@ NOT-this: "t-SNE cluster distances are interpretable." The distances between clu
       "**Perplexity / n_neighbors are knobs:** trust structure that persists across settings.",
     ],
     interactiveId: 'tsne_viz',
+    figures: {
+      distance_distortion: `<svg viewBox="0 0 360 210" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="16" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">inter-cluster distance is not preserved</text>
+  <!-- left: high-D (schematic) -->
+  <text x="88" y="38" text-anchor="middle" fill="var(--ink-low)" font-size="9" font-weight="700">high-D space</text>
+  <rect x="24" y="46" width="128" height="130" rx="4" fill="none" stroke="var(--rim)" stroke-width="1"/>
+  <!-- A and B genuinely close; C far -->
+  <g fill="var(--prime)" opacity="0.85"><circle cx="55" cy="90" r="3"/><circle cx="66" cy="82" r="3"/><circle cx="60" cy="100" r="3"/></g>
+  <g fill="var(--amber)" opacity="0.85"><circle cx="92" cy="96" r="3"/><circle cx="100" cy="88" r="3"/><circle cx="95" cy="106" r="3"/></g>
+  <g fill="var(--ink-mid)" opacity="0.85"><circle cx="120" cy="150" r="3"/><circle cx="130" cy="158" r="3"/><circle cx="124" cy="164" r="3"/></g>
+  <text x="60" y="76" fill="var(--prime)" font-size="8" font-weight="700">A</text>
+  <text x="97" y="80" fill="var(--amber)" font-size="8" font-weight="700">B</text>
+  <text x="127" y="146" fill="var(--ink-mid)" font-size="8" font-weight="700">C</text>
+  <line x1="63" y1="94" x2="96" y2="98" stroke="var(--ink-low)" stroke-width="0.9" stroke-dasharray="2,2"/>
+  <text x="70" y="118" fill="var(--ink-low)" font-size="7">A–B close</text>
+  <line x1="98" y1="106" x2="125" y2="150" stroke="var(--ink-low)" stroke-width="0.9" stroke-dasharray="2,2"/>
+  <text x="120" y="128" fill="var(--ink-low)" font-size="7">B–C far</text>
+  <!-- arrow -->
+  <text x="180" y="112" text-anchor="middle" fill="var(--ink-low)" font-size="16">→</text>
+  <text x="180" y="128" text-anchor="middle" fill="var(--ink-low)" font-size="7">t-SNE</text>
+  <!-- right: 2D t-SNE (distorted) -->
+  <text x="272" y="38" text-anchor="middle" fill="var(--ink-low)" font-size="9" font-weight="700">2D t-SNE plot</text>
+  <rect x="208" y="46" width="128" height="130" rx="4" fill="none" stroke="var(--rim)" stroke-width="1"/>
+  <!-- all three pushed to well-separated islands, gaps look equal -->
+  <g fill="var(--prime)" opacity="0.85"><circle cx="232" cy="80" r="3"/><circle cx="242" cy="72" r="3"/><circle cx="236" cy="90" r="3"/></g>
+  <g fill="var(--amber)" opacity="0.85"><circle cx="300" cy="78" r="3"/><circle cx="310" cy="70" r="3"/><circle cx="304" cy="88" r="3"/></g>
+  <g fill="var(--ink-mid)" opacity="0.85"><circle cx="266" cy="150" r="3"/><circle cx="276" cy="158" r="3"/><circle cx="270" cy="164" r="3"/></g>
+  <text x="236" y="66" fill="var(--prime)" font-size="8" font-weight="700">A</text>
+  <text x="305" y="64" fill="var(--amber)" font-size="8" font-weight="700">B</text>
+  <text x="272" y="146" fill="var(--ink-mid)" font-size="8" font-weight="700">C</text>
+  <text x="272" y="195" text-anchor="middle" fill="var(--ink-low)" font-size="7.5">gaps look equal — but A–B were close, B–C far</text>
+</svg>`,
+    },
   },
   {
     id: 'autoencoders_dim_reduction',
@@ -859,6 +1008,8 @@ The encoder/decoder shape should match the data. **Dense** (fully-connected) aut
 
 Gaussian Mixture Model: P(x) = Σₖ πₖ N(x | μₖ, Σₖ) where πₖ is the mixing weight (Σπₖ = 1), N(x | μₖ, Σₖ) is the k-th Gaussian component. Fitted via EM.
 
+[FIGURE: soft_assignment]
+
 Covariance types control cluster shape: full (each component has a different Σₖ — arbitrary ellipsoids), tied (all components share one Σ), diag (Σₖ is diagonal — axis-aligned ellipsoids, fewer parameters), spherical (Σₖ = σₖ²I — each component is K-means-like). Full covariance is most expressive but requires the most parameters. Spherical is equivalent to soft K-means.
 
 Bayesian Information Criterion for model selection: BIC = k·log(n) - 2·log(L̂). Lower is better. Penalizes model complexity. Fit GMMs with K=1 to 20, plot BIC, take the minimum.
@@ -923,6 +1074,34 @@ NOT-this: "GMM is just soft K-means." Soft K-means is GMM with spherical covaria
       "**Overlapping ellipses = K too large;** points between centers = K too small.",
     ],
     interactiveId: 'gmm_viz',
+    figures: {
+      soft_assignment: `<svg viewBox="0 0 360 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="16" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">GMM gives a probability, not a hard label</text>
+  <!-- component 1 ellipse -->
+  <ellipse cx="105" cy="110" rx="58" ry="34" fill="var(--prime)" opacity="0.10" stroke="var(--prime)" stroke-width="1"/>
+  <ellipse cx="105" cy="110" rx="34" ry="20" fill="var(--prime)" opacity="0.12" stroke="var(--prime)" stroke-width="0.8"/>
+  <circle cx="105" cy="110" r="3" fill="var(--prime)"/>
+  <text x="105" y="60" text-anchor="middle" fill="var(--prime)" font-size="9" font-weight="700">$50 cluster</text>
+  <!-- component 2 ellipse -->
+  <ellipse cx="255" cy="110" rx="52" ry="30" fill="var(--amber)" opacity="0.12" stroke="var(--amber)" stroke-width="1"/>
+  <ellipse cx="255" cy="110" rx="30" ry="17" fill="var(--amber)" opacity="0.14" stroke="var(--amber)" stroke-width="0.8"/>
+  <circle cx="255" cy="110" r="3" fill="var(--amber)"/>
+  <text x="255" y="64" text-anchor="middle" fill="var(--amber)" font-size="9" font-weight="700">$5 cluster</text>
+  <!-- the ambiguous point sitting between -->
+  <circle cx="172" cy="110" r="6" fill="none" stroke="var(--ink-hi)" stroke-width="2"/>
+  <circle cx="172" cy="110" r="2" fill="var(--ink-hi)"/>
+  <!-- membership lines -->
+  <line x1="166" y1="110" x2="112" y2="110" stroke="var(--prime)" stroke-width="1.4" stroke-dasharray="4,2"/>
+  <line x1="178" y1="110" x2="248" y2="110" stroke="var(--amber)" stroke-width="1.4" stroke-dasharray="4,2"/>
+  <text x="172" y="95" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">this customer</text>
+  <!-- probability bars -->
+  <text x="180" y="160" text-anchor="middle" fill="var(--ink-low)" font-size="8">soft assignment</text>
+  <rect x="70" y="168" width="150" height="16" rx="3" fill="var(--prime)" opacity="0.8"/>
+  <rect x="220" y="168" width="70" height="16" rx="3" fill="var(--amber)" opacity="0.85"/>
+  <text x="145" y="180" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">70% $50</text>
+  <text x="255" y="180" text-anchor="middle" fill="#000" font-size="9" font-weight="700">30% $5</text>
+</svg>`,
+    },
   },
   {
     id: 'anomaly_detection',

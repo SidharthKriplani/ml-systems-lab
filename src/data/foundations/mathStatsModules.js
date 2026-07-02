@@ -147,7 +147,9 @@ Independence: X and Y are independent if and only if P(X, Y) = P(X) × P(Y) for 
 
 Covariance: Cov(X, Y) = E[(X - μ_X)(Y - μ_Y)] = E[XY] - E[X]E[Y]. Positive covariance means the variables tend to move together. Negative means they move oppositely. Zero means no linear relationship — NOT the same as independence. Correlation: ρ = Cov(X, Y) / (σ_X · σ_Y). Bounded in [-1, 1]. For jointly Gaussian variables, zero correlation implies independence. For any other distribution, zero correlation is compatible with strong nonlinear dependence.
 
-**NOT this.** Correlation = 0 does not mean the variables are independent. This is only true for jointly Gaussian random variables. For any other distribution, zero linear correlation is compatible with strong nonlinear dependence. Let X ~ Uniform(-1, 1) and Y = X². Then Cov(X, Y) = 0 by symmetry, but Y is completely determined by X — perfect deterministic dependence. Mutual information captures any dependence; correlation captures only linear dependence.`,
+**NOT this.** Correlation = 0 does not mean the variables are independent. This is only true for jointly Gaussian random variables. For any other distribution, zero linear correlation is compatible with strong nonlinear dependence. Let X ~ Uniform(-1, 1) and Y = X². Then Cov(X, Y) = 0 by symmetry, but Y is completely determined by X — perfect deterministic dependence. Mutual information captures any dependence; correlation captures only linear dependence.
+
+[FIGURE:joint]`,
     keyPoints: [
       `**Always compute the joint distribution (or its sample estimate) before assuming independence.** A quick scatter plot or correlation matrix catches 80% of dependent feature pairs. Ignoring dependence leads to probability estimates that are systematically wrong — the Naive Bayes independence violation is not a theoretical concern, it produces miscalibrated probabilities that cannot be used for risk-sensitive decisions.`,
       `**Trap: treating conditional probabilities as symmetric.** P(fraud | transaction > $10K) ≠ P(transaction > $10K | fraud). Getting the conditioning direction wrong produces confident wrong answers. The base rate of each event determines which direction of conditioning gives useful information. Draw the causal structure first, then condition.`,
@@ -187,6 +189,19 @@ Covariance: Cov(X, Y) = E[(X - μ_X)(Y - μ_Y)] = E[XY] - E[X]E[Y]. Positive cov
       },
     ],
     takeaway: `Zero correlation rules out linear dependence only. Two variables can have ρ = 0 while one is a deterministic function of the other. If you need to test actual independence — not just linear independence — use mutual information or a rank-based test.`,
+    figures: {
+      joint: `<svg viewBox="0 0 360 118" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="90" y="12" text-anchor="middle" fill="var(--ink-hi)" font-size="8.5" font-weight="700">Y = X² : rho = 0</text>
+  <text x="270" y="12" text-anchor="middle" fill="var(--ink-hi)" font-size="8.5" font-weight="700">linear : rho = 0.85</text>
+  <line x1="20" y1="100" x2="160" y2="100" stroke="var(--rim)"/><line x1="20" y1="20" x2="20" y2="100" stroke="var(--rim)"/>
+  <path d="M20,30 Q90,120 160,30" fill="none" stroke="var(--prime)" stroke-width="1" stroke-dasharray="2 2"/>
+  <circle cx="30" cy="88" r="2" fill="var(--prime)"/><circle cx="50" cy="62" r="2" fill="var(--prime)"/><circle cx="70" cy="44" r="2" fill="var(--prime)"/><circle cx="90" cy="36" r="2" fill="var(--prime)"/><circle cx="110" cy="44" r="2" fill="var(--prime)"/><circle cx="130" cy="62" r="2" fill="var(--prime)"/><circle cx="150" cy="88" r="2" fill="var(--prime)"/>
+  <line x1="200" y1="100" x2="340" y2="100" stroke="var(--rim)"/><line x1="200" y1="20" x2="200" y2="100" stroke="var(--rim)"/>
+  <line x1="205" y1="92" x2="335" y2="30" stroke="var(--amber)" stroke-width="1" stroke-dasharray="2 2"/>
+  <circle cx="215" cy="90" r="2" fill="var(--amber)"/><circle cx="240" cy="80" r="2" fill="var(--amber)"/><circle cx="255" cy="70" r="2" fill="var(--amber)"/><circle cx="280" cy="62" r="2" fill="var(--amber)"/><circle cx="300" cy="48" r="2" fill="var(--amber)"/><circle cx="325" cy="38" r="2" fill="var(--amber)"/>
+  <text x="180" y="115" text-anchor="middle" fill="var(--ink-low)" font-size="7.5">left: perfect dependence, zero covariance — rho misses nonlinear structure</text>
+</svg>`,
+    },
     recap: [
       "**Joint P(X,Y) is required when features are dependent** — can't multiply P(X)×P(Y) unless independent.",
       "**Marginal = sum/integrate out the other variable;** conditional $P(Y|X)=P(X,Y)/P(X)$ is the Bayes denominator.",
@@ -279,7 +294,9 @@ Matrix multiplication AB = C means C[i,j] = row i of A dotted with column j of B
 
 Column space of A: all vectors reachable as Ax for some x. Rank: the dimension of the column space — the number of linearly independent directions A can produce. Rank deficiency means X^T X is singular, meaning the normal equations have no unique solution. You need regularization to fix this.
 
-**NOT this.** Linear algebra is not just matrix arithmetic for solving linear systems. Every gradient descent step in a neural network is a matrix-vector multiplication. Every embedding lookup is a dot product. PCA is eigenvector decomposition of the covariance matrix. Attention is softmax(QK^T / √d)V — three matrix products. The Gram matrix X^T X appears in every regularized linear model. Linear algebra is the operational language of every ML computation, and understanding it geometrically — as transformations of space — is what lets you reason about what information your model is processing.`,
+**NOT this.** Linear algebra is not just matrix arithmetic for solving linear systems. Every gradient descent step in a neural network is a matrix-vector multiplication. Every embedding lookup is a dot product. PCA is eigenvector decomposition of the covariance matrix. Attention is softmax(QK^T / √d)V — three matrix products. The Gram matrix X^T X appears in every regularized linear model. Linear algebra is the operational language of every ML computation, and understanding it geometrically — as transformations of space — is what lets you reason about what information your model is processing.
+
+[FIGURE:rank]`,
     keyPoints: [
       `**When a matrix operation fails or gives unexpected results, check dimensions first.** Almost all linear algebra bugs are shape mismatches. Write out the expected shape of every tensor before the operation and verify them in code. In numpy, \`.shape\` before every new operation is not paranoia — it is the cheapest debugging step you have.`,
       `**Trap: computing the matrix inverse to solve Ax = b.** The inverse A⁻¹ is numerically unstable for ill-conditioned matrices and costs O(n³) to compute. Use scipy.linalg.solve(A, b) instead — it uses LU decomposition, is faster, and is more numerically stable. The only reason to compute A⁻¹ explicitly is if you need to multiply by the same inverse many times.`,
@@ -319,6 +336,23 @@ Column space of A: all vectors reachable as Ax for some x. Rank: the dimension o
       },
     ],
     takeaway: `Every ML forward pass is matrix multiplication and nonlinearities. Rank tells you where information is irreversibly lost. Norms tell you what geometry an algorithm assumes. Both predict failure modes before you run a single experiment.`,
+    figures: {
+      rank: `<svg viewBox="0 0 360 96" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="55" y="12" text-anchor="middle" fill="var(--ink-hi)" font-size="8.5" font-weight="700">full rank (r=2)</text>
+  <rect x="20" y="24" width="70" height="50" rx="3" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="55" y="52" text-anchor="middle" fill="var(--ink-mid)" font-size="7.5">invertible · fills plane</text>
+  <path d="M100,49 l24,0" stroke="var(--ink-low)" stroke-width="1.5" marker-end="url(#m1)"/>
+  <text x="200" y="12" text-anchor="middle" fill="var(--ink-hi)" font-size="8.5" font-weight="700">rank-deficient (r=1)</text>
+  <rect x="150" y="24" width="70" height="50" rx="3" fill="var(--prime-faint)" stroke="var(--prime)" stroke-dasharray="3 2"/>
+  <line x1="150" y1="70" x2="220" y2="30" stroke="var(--amber)" stroke-width="2.5"/>
+  <text x="185" y="52" text-anchor="middle" fill="var(--ink-mid)" font-size="7">collapses to a line</text>
+  <path d="M230,49 l24,0" stroke="var(--ink-low)" stroke-width="1.5" marker-end="url(#m1)"/>
+  <text x="305" y="45" text-anchor="middle" fill="var(--ink-hi)" font-size="8">det = 0</text>
+  <text x="305" y="58" text-anchor="middle" fill="var(--ink-mid)" font-size="7">not invertible</text>
+  <text x="180" y="90" text-anchor="middle" fill="var(--ink-low)" font-size="7.5">rank = output dimensions the matrix can reach; a drop in rank is information lost forever</text>
+  <defs><marker id="m1" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="var(--ink-low)"/></marker></defs>
+</svg>`,
+    },
     recap: [
       "**Every ML op is a matrix op:** normalise, covariance, regression, PCA, forward pass — all linear algebra.",
       "**Dot product $a\\cdot b=\\|a\\|\\|b\\|\\cos\\theta$** measures alignment; 0 = orthogonal. Basis of cosine similarity.",
@@ -344,7 +378,9 @@ The covariance matrix C = X^T X / (n-1). Its eigenvectors are the principal dire
 
 Spectral theorem: any real symmetric matrix A decomposes as A = Q Λ Q^T where Q is orthogonal (columns are eigenvectors) and Λ is diagonal (eigenvalues on diagonal). This decomposition separates the rotating part (Q) from the scaling part (Λ). For PCA, Q gives you the rotation into principal component space, and Λ tells you how much each direction matters.
 
-**NOT this.** Eigenvalues are not a mathematical abstraction with limited practical use. The eigenvalues of a neural network's Hessian determine optimization dynamics — a flat loss landscape has many near-zero eigenvalues, which is why overparameterized networks trained with Adam and good initialization converge faster than vanilla SGD. The eigenvalues of the attention matrix determine how information diffuses through a transformer layer. The eigenvalue spectrum of X^T X tells you the effective dimensionality of your data before you fit any model. Eigenvalues are the fingerprint of every matrix that matters in ML.`,
+**NOT this.** Eigenvalues are not a mathematical abstraction with limited practical use. The eigenvalues of a neural network's Hessian determine optimization dynamics — a flat loss landscape has many near-zero eigenvalues, which is why overparameterized networks trained with Adam and good initialization converge faster than vanilla SGD. The eigenvalues of the attention matrix determine how information diffuses through a transformer layer. The eigenvalue spectrum of X^T X tells you the effective dimensionality of your data before you fit any model. Eigenvalues are the fingerprint of every matrix that matters in ML.
+
+[FIGURE:eigen]`,
     keyPoints: [
       `**When features are correlated, eigendecompose the covariance matrix before modeling.** The eigenvalue spectrum tells you how many truly independent directions of variation exist in your data. If 5 of 50 eigenvalues contain 90% of the variance, you can reduce to 5 components with negligible information loss — the remaining 45 components are dominated by noise and correlations, not signal.`,
       `**Trap: forgetting to center data before computing the covariance matrix.** If the mean is nonzero, the first eigenvector points toward the mean rather than toward the direction of maximum variance. Always subtract the column means from X before computing X^T X / (n-1). sklearn's PCA does this by default. If you compute the covariance matrix manually, centering is mandatory.`,
@@ -384,6 +420,23 @@ Spectral theorem: any real symmetric matrix A decomposes as A = Q Λ Q^T where Q
       },
     ],
     takeaway: `The eigenvalue spectrum of your covariance matrix is a complete picture of your data's intrinsic dimensionality. Check it before choosing a model — it tells you whether you have 50 independent features or 5 directions of variation dressed up as 50.`,
+    figures: {
+      eigen: `<svg viewBox="0 0 360 108" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="12" text-anchor="middle" fill="var(--ink-hi)" font-size="8.5" font-weight="700">Av = λv — direction preserved, length scaled</text>
+  <ellipse cx="180" cy="62" rx="120" ry="34" fill="var(--prime-faint)" stroke="var(--prime)" transform="rotate(-20 180 62)"/>
+  <line x1="70" y1="102" x2="290" y2="22" stroke="var(--rim)" stroke-dasharray="2 2"/>
+  <line x1="180" y1="62" x2="255" y2="35" stroke="var(--prime)" stroke-width="2.5" marker-end="url(#e1)"/>
+  <text x="262" y="30" fill="var(--prime)" font-size="8" font-weight="700">λ₁ v₁</text>
+  <line x1="180" y1="62" x2="205" y2="90" stroke="var(--amber)" stroke-width="2.5" marker-end="url(#e2)"/>
+  <text x="208" y="100" fill="var(--amber)" font-size="8" font-weight="700">λ₂ v₂</text>
+  <circle cx="180" cy="62" r="2.5" fill="var(--ink-hi)"/>
+  <text x="10" y="104" fill="var(--ink-low)" font-size="7.5">covariance ellipse: axes = eigenvectors, spread = √λ. Large λ₁ ≫ λ₂ ⟹ ~1D data</text>
+  <defs>
+    <marker id="e1" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="var(--prime)"/></marker>
+    <marker id="e2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="var(--amber)"/></marker>
+  </defs>
+</svg>`,
+    },
     recap: [
       "**Av = λv:** the matrix scales v without rotating it. Eigenvectors are the invariant directions.",
       "**Covariance C = XᵀX/(n−1):** its eigenvectors are principal directions, eigenvalues the variance along each.",
@@ -543,7 +596,9 @@ Key derivatives in ML: for MSE loss L = (y - Wx)²/2, the gradient is -(y - Wx)x
 
 Taylor expansion: f(x + ε) ≈ f(x) + f'(x)ε + f''(x)ε²/2. Gradient descent uses the first-order approximation — it assumes the loss surface is locally linear at each step. Second-order methods (Newton's method) use the quadratic term via the Hessian. They take more accurate steps but require O(n²) memory to store the Hessian — infeasible for large models.
 
-**NOT this.** Calculus in ML is not just gradient descent. Calculus is why certain loss and activation combinations work together and others do not. Using MSE loss with a sigmoid output produces gradient saturation — in the saturated region where σ(z) ≈ 0 or 1, the derivative σ(z)(1-σ(z)) ≈ 0, and the gradient of the MSE loss through this near-zero value nearly vanishes. The network cannot learn from these examples. Cross-entropy with sigmoid was chosen specifically because the saturating term cancels algebraically, leaving a non-saturating gradient. Every loss-activation combination is a calculus decision.`,
+**NOT this.** Calculus in ML is not just gradient descent. Calculus is why certain loss and activation combinations work together and others do not. Using MSE loss with a sigmoid output produces gradient saturation — in the saturated region where σ(z) ≈ 0 or 1, the derivative σ(z)(1-σ(z)) ≈ 0, and the gradient of the MSE loss through this near-zero value nearly vanishes. The network cannot learn from these examples. Cross-entropy with sigmoid was chosen specifically because the saturating term cancels algebraically, leaving a non-saturating gradient. Every loss-activation combination is a calculus decision.
+
+[FIGURE:chain]`,
     keyPoints: [
       `**When designing a new loss function or output layer, compute the gradient analytically first.** If the gradient saturates — approaches 0 — in regions of the output space, the model cannot learn from examples that fall there. This is why ReLU replaced sigmoid in hidden layers: ReLU's gradient is 1 for all positive inputs, never saturates. Sigmoid's gradient σ(z)(1-σ(z)) peaks at 0.25 and goes to 0 for large |z|.`,
       `**Trap: using finite-difference gradient checking as a routine verification step on large models.** Computing (f(x+ε) - f(x-ε)) / 2ε requires 2 forward passes per parameter. For a network with 10 million parameters, that is 20 million forward passes. Use gradient checking only for debugging specific custom layers, not the full network — use automatic differentiation for everything else.`,
@@ -583,6 +638,17 @@ Taylor expansion: f(x + ε) ≈ f(x) + f'(x)ε + f''(x)ε²/2. Gradient descent 
       },
     ],
     takeaway: `The choice of loss function and activation is a calculus decision, not an aesthetic one. The clean gradient (ŷ - y)x that makes logistic regression easy to train exists because cross-entropy and sigmoid were chosen together precisely to cancel the saturation term.`,
+    figures: {
+      chain: `<svg viewBox="0 0 360 92" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="12" text-anchor="middle" fill="var(--ink-hi)" font-size="8.5" font-weight="700">chain rule = multiply derivatives along the graph</text>
+  <circle cx="35" cy="42" r="16" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="35" y="46" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">W</text><circle cx="130" cy="42" r="16" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="130" y="46" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">z</text><circle cx="225" cy="42" r="16" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="225" y="46" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">ŷ</text><circle cx="320" cy="42" r="16" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="320" y="46" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">L</text>
+  <path d="M53,42 l24,0" stroke="var(--ink-low)" stroke-width="1.5" marker-end="url(#c1)"/><text x="65" y="34" text-anchor="middle" fill="var(--ink-mid)" font-size="7">∂z/∂W</text>
+  <path d="M148,42 l24,0" stroke="var(--ink-low)" stroke-width="1.5" marker-end="url(#c1)"/><text x="160" y="34" text-anchor="middle" fill="var(--ink-mid)" font-size="7">∂ŷ/∂z</text>
+  <path d="M243,42 l24,0" stroke="var(--ink-low)" stroke-width="1.5" marker-end="url(#c1)"/><text x="255" y="34" text-anchor="middle" fill="var(--ink-mid)" font-size="7">∂L/∂ŷ</text>
+  <text x="180" y="82" text-anchor="middle" fill="var(--ink-low)" font-size="7.5">∂L/∂W = (∂L/∂ŷ)(∂ŷ/∂z)(∂z/∂W) — one factor per arrow</text>
+  <defs><marker id="c1" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="var(--ink-low)"/></marker></defs>
+</svg>`,
+    },
     recap: [
       "**Gradient ∇L = direction of steepest ascent;** gradient descent steps the opposite way.",
       "**Chain rule makes deep nets tractable:** ∂L/∂W = (∂L/∂ŷ)(∂ŷ/∂z)(∂z/∂W) — one derivative per graph edge.",
@@ -608,7 +674,9 @@ Jacobian: the derivative of a vector-valued function. If f: ℝⁿ → ℝᵐ, t
 
 Chain rule in matrix form: ∂L/∂X = ∂L/∂Y · ∂Y/∂X. The dimensions must work out: if Y = f(X), the Jacobian ∂Y/∂X has shape (dim Y × dim X). For a neural network linear layer z = Wx + b, the gradient with respect to W is ∂L/∂W = (∂L/∂z) · x^T — the outer product of the upstream gradient and the input. This one identity covers every fully-connected layer.
 
-**NOT this.** You do not need matrix calculus if you use autograd — this is false. Autograd computes gradients correctly, but you need matrix calculus to debug shape errors in custom operations, to verify that backpropagation through a novel layer is correct, and to understand why certain operations are expensive to differentiate. Every custom PyTorch layer that implements a backward() method is matrix calculus. If you cannot derive the gradient manually, you cannot verify that your custom backward pass is correct.`,
+**NOT this.** You do not need matrix calculus if you use autograd — this is false. Autograd computes gradients correctly, but you need matrix calculus to debug shape errors in custom operations, to verify that backpropagation through a novel layer is correct, and to understand why certain operations are expensive to differentiate. Every custom PyTorch layer that implements a backward() method is matrix calculus. If you cannot derive the gradient manually, you cannot verify that your custom backward pass is correct.
+
+[FIGURE:outer]`,
     keyPoints: [
       `**Memorize the identity ∇_w (Aw)^T B(Aw) = 2A^T BA w for symmetric B.** This is the gradient of a quadratic form and appears in every regularized linear model, least-squares problem, and Kalman filter update. Setting it to zero gives the normal equations. Deriving it from scratch each time is error-prone and slow.`,
       `**Trap: layout convention inconsistency.** Numerator layout and denominator layout conventions differ between textbooks — the Matrix Cookbook (Petersen & Pedersen) uses denominator layout; most ML papers use numerator layout. Mixing conventions within a derivation produces a Jacobian that is transposed relative to what you need, giving a gradient update applied in the wrong direction. Pick one convention and never mix.`,
@@ -648,6 +716,20 @@ Chain rule in matrix form: ∂L/∂X = ∂L/∂Y · ∂Y/∂X. The dimensions mu
       },
     ],
     takeaway: `The gradient of a scalar loss with respect to any weight matrix is the outer product of the upstream gradient and the input activation. That one pattern covers every fully-connected layer. Layout convention errors are the most common silent bug in custom backpropagation.`,
+    figures: {
+      outer: `<svg viewBox="0 0 360 96" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="12" text-anchor="middle" fill="var(--ink-hi)" font-size="8.5" font-weight="700">∂L/∂W = δ · xᵀ  (outer product)</text>
+  <text x="30" y="55" fill="var(--prime)" font-size="8" font-weight="700">δ (upstream)</text>
+  <rect x="30" y="60" width="16" height="16" fill="var(--prime-faint)" stroke="var(--prime)"/><rect x="30" y="76" width="16" height="16" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="60" y="80" fill="var(--ink-mid)" font-size="10">⊗</text>
+  <text x="78" y="55" fill="var(--amber)" font-size="8" font-weight="700">xᵀ (input)</text>
+  <rect x="78" y="60" width="16" height="16" fill="var(--amber)" opacity="0.25" stroke="var(--amber)"/><rect x="94" y="60" width="16" height="16" fill="var(--amber)" opacity="0.25" stroke="var(--amber)"/><rect x="110" y="60" width="16" height="16" fill="var(--amber)" opacity="0.25" stroke="var(--amber)"/>
+  <text x="140" y="80" fill="var(--ink-mid)" font-size="10">=</text>
+  <text x="200" y="30" fill="var(--ink-hi)" font-size="8" font-weight="700">∂L/∂W  (2×3)</text>
+  <rect x="200" y="40" width="20" height="20" fill="var(--prime-faint)" stroke="var(--rim)"/><rect x="222" y="40" width="20" height="20" fill="var(--prime-faint)" stroke="var(--rim)"/><rect x="244" y="40" width="20" height="20" fill="var(--prime-faint)" stroke="var(--rim)"/><rect x="200" y="62" width="20" height="20" fill="var(--prime-faint)" stroke="var(--rim)"/><rect x="222" y="62" width="20" height="20" fill="var(--prime-faint)" stroke="var(--rim)"/><rect x="244" y="62" width="20" height="20" fill="var(--prime-faint)" stroke="var(--rim)"/>
+  <text x="8" y="94" fill="var(--ink-low)" font-size="7.5">shape of gradient always matches shape of W — the layout check that catches silent bugs</text>
+</svg>`,
+    },
     recap: [
       "**Normal equations from matrix calculus:** ∇_w‖Xw−y‖² = 2XᵀXw − 2Xᵀy = 0 ⟹ XᵀXw = Xᵀy.",
       "**Key identities:** ∂(xᵀa)/∂x = a; ∂(xᵀAx)/∂x = (A+Aᵀ)x; for symmetric A, 2Ax.",
@@ -793,6 +875,7 @@ Now suppose your product manager runs 20 A/B tests simultaneously, each at α = 
   },
   {
     id: 'mle_map',
+    interactiveId: 'mle_map_viz',
     title: 'MLE vs MAP Estimation',
     subtitle: 'Likelihood, log-likelihood, MAP as regularised MLE',
     difficulty: 'intermediate',
@@ -808,7 +891,9 @@ The prior is not just a Bayesian abstraction. Adding $\\log P(θ)$ to the log-li
 
 **NOT this.** Most people think "MLE is just fitting the data." MLE assumes a specific probabilistic model — a particular likelihood function — and finds the parameters that make the observed data most probable under that model. If your model is wrong (fitting a Gaussian to bimodal data), MLE finds the "best" wrong answer with complete confidence. The model is always right in MLE\`s eyes; MLE has no mechanism to doubt the model family. MAP at least has a prior that can pull estimates back from absurdity when data is scarce.
 
-As $n → ∞$, the likelihood dominates and MAP converges to MLE — the data eventually overwhelms any reasonable prior. This means regularisation should shrink as your dataset grows.`,
+As $n → ∞$, the likelihood dominates and MAP converges to MLE — the data eventually overwhelms any reasonable prior. This means regularisation should shrink as your dataset grows.
+
+[FIGURE:map]`,
     interactivePrompt: `Before you touch the controls: if you flip a coin 3 times and get 3 heads, what do you actually believe the true probability of heads is — 1.0, something high like 0.8, or about 0.5?`,
     keyPoints: [
       `**Use MLE when you have enough data that the prior does not matter, and MAP (with regularisation) when data is scarce.** The crossover point depends on the prior strength and the number of parameters. A rule of thumb: if your training set has fewer than ~10 observations per parameter, the prior matters substantially. Cross-validate $λ$ to find the data-implied prior strength.`,
@@ -848,6 +933,20 @@ As $n → ∞$, the likelihood dominates and MAP converges to MLE — the data e
       },
     ],
     takeaway: `Every regularised model is a MAP estimate. Choosing L2 or L1 is not a numerical trick — it is a statement about what you believe the solution looks like before seeing any data.`,
+    figures: {
+      map: `<svg viewBox="0 0 360 104" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="12" text-anchor="middle" fill="var(--ink-hi)" font-size="8.5" font-weight="700">MAP = prior × likelihood → shrinks the estimate</text>
+  <line x1="20" y1="82" x2="340" y2="82" stroke="var(--rim)"/>
+  <path d="M20,80 C120,80 130,30 180,30 C230,30 240,80 340,80" fill="none" stroke="var(--rim)" stroke-width="1.2"/>
+  <text x="150" y="26" fill="var(--ink-mid)" font-size="7">prior (peak 0.5)</text>
+  <path d="M20,82 C200,82 250,20 300,20 C320,20 330,60 340,72" fill="none" stroke="var(--amber)" stroke-width="1.4"/>
+  <text x="300" y="16" text-anchor="middle" fill="var(--amber)" font-size="7">likelihood (MLE 0.7)</text>
+  <path d="M20,82 C160,82 200,34 245,34 C285,34 300,74 340,80" fill="none" stroke="var(--prime)" stroke-width="1.8"/>
+  <text x="245" y="30" text-anchor="middle" fill="var(--prime)" font-size="7" font-weight="700">posterior (MAP 0.63)</text>
+  <line x1="300" y1="20" x2="300" y2="82" stroke="var(--amber)" stroke-dasharray="2 2"/><line x1="245" y1="34" x2="245" y2="82" stroke="var(--prime)" stroke-dasharray="2 2"/>
+  <text x="10" y="100" fill="var(--ink-low)" font-size="7.5">prior pulls MLE toward 0.5 — exactly L2 regularisation. More data ⟹ likelihood dominates.</text>
+</svg>`,
+    },
     recap: [
       "**MLE = params that make observed data most likely:** $\\hat{\\theta}_{MLE}=\\arg\\max_\\theta P(data|\\theta)$; coin 7/10 → 0.7.",
       "**MLE is overconfident on tiny data:** 3/3 heads → $\\hat{p}=1.0$, obviously wrong — it has no memory of priors.",
@@ -865,7 +964,9 @@ As $n → ∞$, the likelihood dominates and MAP converges to MLE — the data e
     difficulty: 'advanced',
     estimatedMin: 34,
     tags: ['Bayesian', 'posterior', 'MCMC', 'conjugate priors'],
-    summary: `MLE and MAP give you a single best-guess set of parameters. But a single point estimate throws away everything you know about parameter uncertainty — and uncertainty is precisely what matters when data is scarce, when you need calibrated predictions, or when you are making sequential decisions. Bayesian inference maintains a full probability distribution over parameters: the posterior P(θ|data) ∝ P(data|θ)P(θ). This distribution captures what you know and what you do not know. The problem is the denominator: P(data) = ∫ P(data|θ)P(θ)dθ. This integral marginalises over all possible parameters — and in high dimensions it is almost never tractable. Conjugate priors are special cases where the posterior is in the same family as the prior, giving closed-form updates without any integration. When conjugacy fails, you have two options: MCMC samples from the posterior without computing the denominator by exploiting the fact that acceptance ratios cancel it out; variational inference approximates the posterior with a tractable family by minimising KL divergence. Both approaches trade exactness for tractability in different ways.`,
+    summary: `MLE and MAP give you a single best-guess set of parameters. But a single point estimate throws away everything you know about parameter uncertainty — and uncertainty is precisely what matters when data is scarce, when you need calibrated predictions, or when you are making sequential decisions. Bayesian inference maintains a full probability distribution over parameters: the posterior P(θ|data) ∝ P(data|θ)P(θ). This distribution captures what you know and what you do not know. The problem is the denominator: P(data) = ∫ P(data|θ)P(θ)dθ. This integral marginalises over all possible parameters — and in high dimensions it is almost never tractable. Conjugate priors are special cases where the posterior is in the same family as the prior, giving closed-form updates without any integration. When conjugacy fails, you have two options: MCMC samples from the posterior without computing the denominator by exploiting the fact that acceptance ratios cancel it out; variational inference approximates the posterior with a tractable family by minimising KL divergence. Both approaches trade exactness for tractability in different ways.
+
+[FIGURE:posterior]`,
     keyPoints: [
       `**Posterior ∝ likelihood × prior.** The normalising constant P(data) = ∫ P(data|θ)P(θ)dθ is the marginal likelihood — rarely tractable because the integral is over all possible parameter values. MCMC exploits the fact that acceptance ratios in Metropolis-Hastings cancel this constant, making exact posterior sampling possible without computing it.`,
       `**Conjugate prior: Beta-Binomial, Dirichlet-Multinomial, Normal-Normal, Gamma-Poisson.** Conjugacy gives closed-form sequential updates: observe data, update the hyperparameters algebraically. Beta(α, β) updated with k successes from n trials gives Beta(α+k, β+n−k). α and β act as pseudo-counts. Conjugate updates are the only Bayesian inference that scales to real-time streaming.`,
@@ -906,6 +1007,20 @@ As $n → ∞$, the likelihood dominates and MAP converges to MLE — the data e
       },
     ],
     takeaway: `Bayesian inference gives you a distribution over parameters, not a point. That distribution is the right answer when calibrated uncertainty matters — for small data, sequential updating, or uncertainty-aware decisions. The cost is that the posterior is almost never tractable in closed form, which is the entire reason MCMC and variational inference exist.`,
+    figures: {
+      posterior: `<svg viewBox="0 0 360 100" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="90" y="12" text-anchor="middle" fill="var(--ink-hi)" font-size="8.5" font-weight="700">MLE / MAP: a point</text>
+  <text x="270" y="12" text-anchor="middle" fill="var(--ink-hi)" font-size="8.5" font-weight="700">Bayes: a distribution</text>
+  <line x1="20" y1="78" x2="160" y2="78" stroke="var(--rim)"/>
+  <line x1="90" y1="78" x2="90" y2="30" stroke="var(--prime)" stroke-width="2.5"/><circle cx="90" cy="30" r="3" fill="var(--prime)"/>
+  <text x="90" y="94" text-anchor="middle" fill="var(--ink-low)" font-size="7">θ̂ only — no spread</text>
+  <line x1="200" y1="78" x2="340" y2="78" stroke="var(--rim)"/>
+  <path d="M200,78 C250,78 255,30 270,30 C285,30 290,78 340,78" fill="var(--prime-faint)" stroke="var(--prime)" stroke-width="1.6"/>
+  <line x1="240" y1="78" x2="240" y2="58" stroke="var(--amber)" stroke-dasharray="2 2"/><line x1="300" y1="78" x2="300" y2="58" stroke="var(--amber)" stroke-dasharray="2 2"/>
+  <text x="270" y="94" text-anchor="middle" fill="var(--ink-low)" font-size="7">P(θ|data) — credible interval</text>
+  <text x="180" y="26" text-anchor="middle" fill="var(--ink-mid)" font-size="7">P(data)=∫P(data|θ)P(θ)dθ intractable → MCMC / VI</text>
+</svg>`,
+    },
     recap: [
       "**Posterior ∝ likelihood × prior;** it's a full distribution over params, not a point — captures uncertainty.",
       "**The denominator P(data)=∫P(data|θ)P(θ)dθ is the intractable part** — this is why MCMC and VI exist.",
@@ -931,7 +1046,9 @@ EM generalizes far beyond Gaussian mixture models. K-means is a hard-assignment 
 
 The theoretical guarantee: EM increases the marginal log-likelihood L(θ) = log P(X | θ) at every iteration. This follows from Jensen's inequality applied to the log-sum structure of the marginal likelihood. The E-step constructs a lower bound that is tight at the current θ. The M-step maximizes that lower bound. The next iteration starts from a point where the bound and the true objective coincide — so the objective has not decreased.
 
-**NOT this.** EM is not an algorithm for mixture models. EM is a general framework for maximum likelihood estimation when data has missing or latent variables. The pattern is always: treat the missing data as if it were observed but uncertain (E-step fills in the expected complete data), then maximize the resulting expected complete-data log-likelihood (M-step). K-means, Baum-Welch for HMMs, and probabilistic PCA are all instances of this pattern.`,
+**NOT this.** EM is not an algorithm for mixture models. EM is a general framework for maximum likelihood estimation when data has missing or latent variables. The pattern is always: treat the missing data as if it were observed but uncertain (E-step fills in the expected complete data), then maximize the resulting expected complete-data log-likelihood (M-step). K-means, Baum-Welch for HMMs, and probabilistic PCA are all instances of this pattern.
+
+[FIGURE:em]`,
     keyPoints: [
       `**Use EM whenever you have latent variables and the complete-data log-likelihood has a closed-form maximizer.** This is the pattern in GMMs, HMMs, probabilistic PCA, and factor models. When the M-step does not have a closed-form solution, replace it with gradient ascent on the expected complete-data log-likelihood — this is called Generalized EM and still monotonically increases the marginal likelihood.`,
       `**Trap: EM converges to local optima.** Run EM with multiple random initializations — typically 5 to 10 — and take the solution with the highest final log-likelihood. K-means++ initialization (choosing initial centroids with probability proportional to their squared distance from already-chosen centroids) gives better starting points and reduces the number of restarts needed for reliable convergence.`,
@@ -971,6 +1088,21 @@ The theoretical guarantee: EM increases the marginal log-likelihood L(θ) = log 
       },
     ],
     takeaway: `EM converts one intractable optimization — maximizing the marginal likelihood when variables are hidden — into a sequence of tractable steps by alternating between filling in hidden variable distributions and maximizing the resulting expected log-likelihood. Any model with latent variables and a tractable complete-data likelihood is a candidate for EM.`,
+    figures: {
+      em: `<svg viewBox="0 0 360 108" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="90" y="12" text-anchor="middle" fill="var(--ink-hi)" font-size="8.5" font-weight="700">E ⇄ M loop</text>
+  <rect x="20" y="24" width="60" height="26" rx="5" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="50" y="41" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5" font-weight="700">E: soft labels</text>
+  <rect x="20" y="66" width="60" height="26" rx="5" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="50" y="83" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5" font-weight="700">M: update θ</text>
+  <path d="M80,37 C120,37 120,79 84,79" fill="none" stroke="var(--ink-low)" stroke-width="1.4" marker-end="url(#em1)"/>
+  <path d="M50,66 L50,50" stroke="var(--ink-low)" stroke-width="1.4" marker-end="url(#em1)"/>
+  <text x="270" y="12" text-anchor="middle" fill="var(--ink-hi)" font-size="8.5" font-weight="700">log-likelihood never decreases</text>
+  <line x1="170" y1="98" x2="350" y2="98" stroke="var(--rim)"/><line x1="170" y1="24" x2="170" y2="98" stroke="var(--rim)"/>
+  <path d="M170,92 L200,72 L230,54 L260,44 L290,40 L340,38" fill="none" stroke="var(--amber)" stroke-width="1.8"/>
+  <circle cx="170" cy="92" r="2.2" fill="var(--amber)"/><circle cx="200" cy="72" r="2.2" fill="var(--amber)"/><circle cx="230" cy="54" r="2.2" fill="var(--amber)"/><circle cx="260" cy="44" r="2.2" fill="var(--amber)"/><circle cx="290" cy="40" r="2.2" fill="var(--amber)"/><circle cx="340" cy="38" r="2.2" fill="var(--amber)"/>
+  <text x="255" y="106" text-anchor="middle" fill="var(--ink-low)" font-size="7">iterations → converges to a local max</text>
+  <defs><marker id="em1" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="var(--ink-low)"/></marker></defs>
+</svg>`,
+    },
     recap: [
       "**EM breaks the chicken-and-egg** of latent variables: need labels for params, need params for labels.",
       "**E-step:** given θ, compute soft responsibilities P(segment k | point i), summing to 1 per point.",
@@ -996,7 +1128,9 @@ Union bound (Bonferroni): P(A₁ ∪ A₂ ∪ ... ∪ A_k) ≤ Σ P(A_i). This i
 
 VC dimension and generalization: the generalization error is bounded by O(√(d_VC log(n/d_VC) / n)) where d_VC is the VC dimension of the hypothesis class and n is training size. More data always helps. More complex models need more data to generalize. For modern overparameterized networks with VC dimension far exceeding training size, these classical bounds are vacuous — the implicit regularization from gradient descent produces tighter practical guarantees.
 
-**NOT this.** Concentration inequalities are not only relevant in theory. These bounds are exactly why you can trust a sample size calculation. Hoeffding's inequality tells you that for click-through rates bounded in [0,1], you need n ≥ log(2/δ) / (2ε²) samples to guarantee P(|X̄ - μ| ≥ ε) ≤ δ with no distributional assumption. Every power calculation in data science is a concentration inequality with a distributional assumption substituted in. The normal approximation underlying t-tests and z-tests is just a special case with a Gaussian assumption; Hoeffding works without any distributional assumption at all.`,
+**NOT this.** Concentration inequalities are not only relevant in theory. These bounds are exactly why you can trust a sample size calculation. Hoeffding's inequality tells you that for click-through rates bounded in [0,1], you need n ≥ log(2/δ) / (2ε²) samples to guarantee P(|X̄ - μ| ≥ ε) ≤ δ with no distributional assumption. Every power calculation in data science is a concentration inequality with a distributional assumption substituted in. The normal approximation underlying t-tests and z-tests is just a special case with a Gaussian assumption; Hoeffding works without any distributional assumption at all.
+
+[FIGURE:conc]`,
     keyPoints: [
       `**Use Hoeffding's inequality for sample size estimation when your data is bounded.** For click-through rates in [0,1], n ≥ log(2/δ) / (2ε²) samples guarantees P(|X̄ - μ| ≥ ε) ≤ δ. This requires no distributional assumption beyond boundedness — it works whether the true distribution is Bernoulli, Beta, or anything else. For ε = 0.01 and δ = 0.05, that is n ≥ log(40) / 0.0002 ≈ 18,444 samples.`,
       `**Trap: applying CLT-based confidence intervals when n is small or the distribution is heavy-tailed.** The CLT requires finite variance and sufficiently large n. Hoeffding's bound is distribution-free and valid for any n as long as the variable is bounded. For small-sample A/B tests or metrics with extreme outliers, use Hoeffding or bootstrap confidence intervals instead of assuming normality.`,
@@ -1036,6 +1170,20 @@ VC dimension and generalization: the generalization error is bounded by O(√(d_
       },
     ],
     takeaway: `Concentration inequalities are the mathematical foundation of every sample size calculation and every generalization bound. Hoeffding's inequality gives distribution-free guarantees for bounded variables — understanding it is what separates a rigorous sample size justification from an intuitive one.`,
+    figures: {
+      conc: `<svg viewBox="0 0 360 104" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="12" text-anchor="middle" fill="var(--ink-hi)" font-size="8.5" font-weight="700">tighter bounds need stronger assumptions</text>
+  <line x1="30" y1="84" x2="340" y2="84" stroke="var(--rim)"/><line x1="180" y1="22" x2="180" y2="84" stroke="var(--rim)" stroke-dasharray="2 2"/>
+  <path d="M30,84 C120,84 150,30 180,30 C210,30 240,84 330,84" fill="none" stroke="var(--ink-mid)" stroke-width="1.4"/>
+  <text x="180" y="94" text-anchor="middle" fill="var(--ink-low)" font-size="7">true sampling distribution of X̄</text>
+  <line x1="245" y1="84" x2="245" y2="30" stroke="var(--amber)" stroke-dasharray="3 2"/><text x="248" y="28" fill="var(--amber)" font-size="7">t</text>
+  <rect x="245" y="60" width="85" height="24" fill="var(--prime)" opacity="0.10"/>
+  <text x="40" y="40" fill="var(--ink-mid)" font-size="7">Markov: 1/a  (loosest)</text>
+  <text x="40" y="52" fill="var(--ink-mid)" font-size="7">Chebyshev: σ²/k²  (poly)</text>
+  <text x="40" y="64" fill="var(--prime)" font-size="7" font-weight="700">Hoeffding: 2e^(−2nt²)  (exp)</text>
+  <text x="180" y="102" text-anchor="middle" fill="var(--ink-low)" font-size="7">shaded tail P(|X̄−μ|≥t) — bound shrinks exponentially in n for bounded X</text>
+</svg>`,
+    },
     recap: [
       "**Concentration = how tightly a sample statistic hugs its true value** as n grows — turns intuition into proof.",
       "**Markov:** P(X ≥ a) ≤ E[X]/a — weakest, needs only a finite mean.",
@@ -1127,7 +1275,9 @@ The t-distribution: when σ is unknown and estimated from data as the sample sta
 
 Bootstrap sampling distribution: the empirical alternative to analytical formulas. Draw n samples with replacement from your data, compute the statistic, repeat 10,000 times. The distribution of the statistic across bootstrap samples is the sampling distribution. Works for any statistic — AUC, precision@K, NDCG — with no formula required.
 
-**NOT this.** The CLT applies to any distribution for large n is not unconditionally true. The CLT requires finite mean and finite variance. For heavy-tailed distributions — Pareto with tail index less than 2, some financial return distributions — the variance does not exist and the CLT does not apply. The sample mean does not converge to a Gaussian; it converges to a stable distribution with heavier tails. For web latency, transaction sizes, and other power-law distributed data, checking whether the CLT applies before running a t-test is not paranoia — it is necessary.`,
+**NOT this.** The CLT applies to any distribution for large n is not unconditionally true. The CLT requires finite mean and finite variance. For heavy-tailed distributions — Pareto with tail index less than 2, some financial return distributions — the variance does not exist and the CLT does not apply. The sample mean does not converge to a Gaussian; it converges to a stable distribution with heavier tails. For web latency, transaction sizes, and other power-law distributed data, checking whether the CLT applies before running a t-test is not paranoia — it is necessary.
+
+[FIGURE:clt]`,
     keyPoints: [
       `**Always report the standard error (σ/√n) alongside any point estimate.** An estimate without its standard error is not a scientific claim — it is a number without an indication of how much it would vary across repeated samples. For differences between groups, the standard error of the difference is √(σ₁²/n₁ + σ₂²/n₂), assuming independence between groups.`,
       `**Trap: using a z-test when n < 30 and the distribution is non-normal.** The z-test uses critical value 1.96, which comes from N(0,1). For small n with unknown σ, the correct critical value comes from the t-distribution: t_{0.025, n-1}. For n=10, that critical value is 2.228 instead of 1.96 — using z inflates Type I error because the interval is too narrow.`,
@@ -1167,6 +1317,21 @@ Bootstrap sampling distribution: the empirical alternative to analytical formula
       },
     ],
     takeaway: `The sampling distribution tells you how much a statistic varies across repeated samples. The CLT makes sample means approximately normal for large n — but large depends on tail behavior. Always verify the CLT assumption holds before running t-tests or z-tests on data with heavy tails.`,
+    figures: {
+      clt: `<svg viewBox="0 0 360 104" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="85" y="12" text-anchor="middle" fill="var(--ink-hi)" font-size="8.5" font-weight="700">population (skewed)</text>
+  <text x="275" y="12" text-anchor="middle" fill="var(--ink-hi)" font-size="8.5" font-weight="700">dist. of X̄ (normal)</text>
+  <line x1="20" y1="82" x2="160" y2="82" stroke="var(--rim)"/>
+  <path d="M20,82 C40,82 45,26 60,26 C85,26 110,80 160,82" fill="var(--amber)" opacity="0.18" stroke="var(--amber)" stroke-width="1.4"/>
+  <path d="M175,42 l24,0" stroke="var(--ink-low)" stroke-width="1.5" marker-end="url(#cl1)"/><text x="187" y="36" text-anchor="middle" fill="var(--ink-mid)" font-size="7">average n draws</text>
+  <line x1="210" y1="82" x2="350" y2="82" stroke="var(--rim)"/>
+  <path d="M210,82 C255,82 262,28 280,28 C298,28 305,82 350,82" fill="var(--prime-faint)" stroke="var(--prime)" stroke-width="1.6"/>
+  <line x1="280" y1="82" x2="280" y2="28" stroke="var(--prime)" stroke-dasharray="2 2"/><text x="280" y="94" text-anchor="middle" fill="var(--ink-low)" font-size="7">μ</text>
+  <line x1="262" y1="82" x2="298" y2="82" stroke="var(--prime)" stroke-width="2.5"/><text x="322" y="70" fill="var(--prime)" font-size="7" font-weight="700">SE=σ/√n</text>
+  <text x="180" y="104" text-anchor="middle" fill="var(--ink-low)" font-size="7">any shape → X̄ becomes normal as n grows; spread narrows as 1/√n</text>
+  <defs><marker id="cl1" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="var(--ink-low)"/></marker></defs>
+</svg>`,
+    },
     recap: [
       "**Sampling distribution answers \"is this real or noise?\"** — how a statistic varies across repeated samples.",
       "**Sample mean:** E[X̄]=μ, Var[X̄]=σ²/n, standard error = σ/√n.",

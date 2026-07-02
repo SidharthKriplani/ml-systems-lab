@@ -1,12 +1,15 @@
 export const RL_MODULES = [
   {
     id: 'mdp_framework',
+    interactiveId: 'discount_horizon_viz',
     title: 'Markov Decision Processes',
     subtitle: 'States, actions, rewards, transitions, discount factor — the formal RL framework',
     difficulty: 'foundational',
     estimatedMin: 40,
     tags: ['mdp', 'markov', 'bellman', 'discount', 'pomdp'],
     summary: `Imagine a robot navigating a grid to reach a goal. At each step it sees its current position, chooses a direction to move, and receives a reward: +1 for reaching the goal, -0.01 for each step taken, -1 for falling into a hole. After moving it ends up in a new position, and the decision problem repeats until the robot reaches a terminal state. That sequence of state-action-reward-state is an episode, and RL's entire job is to find the sequence of actions — the policy — that maximizes total reward across that episode.
+
+[FIGURE: loop]
 
 The MDP (Markov Decision Process) is the formal language for this. It has five components. The state space S is all possible positions the robot can be in. The action space A is all directions it can move. The transition function T(s, a, s') = P(s' | s, a) is the probability of landing in s' after moving in direction a from state s. The reward function R(s, a, s') is the immediate reward received on that transition. The discount factor γ ∈ [0, 1) controls how much future rewards are worth relative to immediate ones: γ = 0 means the robot cares only about the next step, γ = 0.99 means a reward 100 steps away still matters almost as much as one received now.
 
@@ -73,6 +76,25 @@ NOT this: RL is only for games and robotics. Any sequential decision problem wit
       "**Easy-to-measure reward misaligned with the true objective** is the classic production trap (clicks -> clickbait).",
       "**MDP is the language, not just games:** ad bidding, recsys, drug dosing all fit.",
     ],
+    figures: {
+      loop: `<svg viewBox="0 0 360 150" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <rect x="40" y="20" width="110" height="34" rx="7" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="95" y="41" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">Agent  &#960;(a|s)</text>
+  <rect x="210" y="20" width="110" height="34" rx="7" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="265" y="41" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">Environment</text>
+  <path d="M150,30 C185,20 190,20 210,30" fill="none" stroke="var(--ink-low)" stroke-width="1.5" marker-end="url(#ah)"/>
+  <text x="180" y="15" text-anchor="middle" fill="var(--ink-mid)" font-size="8">action a</text>
+  <path d="M210,46 C190,58 185,58 150,46" fill="none" stroke="var(--amber)" stroke-width="1.5" marker-end="url(#ah2)"/>
+  <text x="180" y="72" text-anchor="middle" fill="var(--amber)" font-size="8">reward R, next state s'</text>
+  <text x="40" y="100" fill="var(--ink-low)" font-size="8">s &#8594; a &#8594; R &#8594; s' &#8594; a' &#8594; ...  one episode, over and over</text>
+  <text x="40" y="118" fill="var(--ink-low)" font-size="8">Markov: s' depends only on (s, a), never on the history.</text>
+  <text x="40" y="136" fill="var(--ink-low)" font-size="8">Goal: find &#960; maximizing G&#8348; = R&#8348; + &#947;R&#8348;&#8330;&#8321; + &#947;&#178;R&#8348;&#8330;&#8322; + ...</text>
+  <defs>
+    <marker id="ah" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="var(--ink-low)"/></marker>
+    <marker id="ah2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="var(--amber)"/></marker>
+  </defs>
+</svg>`,
+    },
   },
   {
     id: 'bellman_equations',
@@ -82,6 +104,8 @@ NOT this: RL is only for games and robotics. Any sequential decision problem wit
     estimatedMin: 45,
     tags: ['bellman', 'value function', 'dynamic programming', 'contraction', 'tabular'],
     summary: `Consider a 4×4 grid world with γ = 0.9. You want to know: what is the expected total reward — the value — of being at position (2,3) if you follow the optimal policy? To answer this, you need to know the value of neighboring positions, because your value here depends on where you can move next. But those values depend on their neighbors too. The circular dependency seems impossible to resolve — yet this is exactly what the Bellman equations do: they express the value of a state as a function of the values of its successors, turning a circular problem into a recursive one with a guaranteed fixed point.
+
+[FIGURE: backup]
 
 The state value function under a policy π is V^π(s) = E_π[R_{t+1} + γ V^π(S_{t+1}) | S_t = s]. The value of a state equals immediate expected reward plus discounted expected value of the next state. This is the Bellman expectation equation — self-consistent, recursive, and for a fixed policy, linear enough to solve directly.
 
@@ -148,6 +172,22 @@ NOT this: you need to know the transition model T(s, a, s') to use Bellman equat
       "**Tabular is a physical impossibility at scale:** 6 joints × 100 positions = $10^{12}$ states. Need function approximation.",
       "**Unbounded $Q$ during training = diverging Bellman backup.** Fix with a frozen target network.",
     ],
+    figures: {
+      backup: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <circle cx="180" cy="24" r="15" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="180" y="28" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">s</text>
+  <text x="205" y="20" fill="var(--ink-low)" font-size="7.5">V*(s) = max over a</text>
+  ${[80, 180, 280].map((x, i) => `
+  <line x1="180" y1="39" x2="${x}" y2="66" stroke="var(--ink-low)" stroke-width="1.2"/>
+  <rect x="${x - 14}" y="66" width="28" height="18" rx="4" fill="none" stroke="var(--amber)"/>
+  <text x="${x}" y="79" text-anchor="middle" fill="var(--amber)" font-size="8">a${i + 1}</text>`).join('')}
+  ${[[55, 105], [180, 105], [305, 105]].map((p, i) => `
+  <line x1="${[80, 180, 280][i]}" y1="84" x2="${p[0]}" y2="118" stroke="var(--ink-low)" stroke-width="1" stroke-dasharray="2 2"/>
+  <circle cx="${p[0]}" cy="128" r="12" fill="var(--depth)" stroke="var(--rim)"/>
+  <text x="${p[0]}" y="131" text-anchor="middle" fill="var(--ink-mid)" font-size="7.5">s'</text>`).join('')}
+  <text x="10" y="152" fill="var(--ink-low)" font-size="7.5">backup: V*(s) = max&#8323; [ R(s,a) + &#947; &#931;&#8347;&#8242; P(s'|s,a) V*(s') ]  &#8212; the max makes it nonlinear</text>
+</svg>`,
+    },
   },
   {
     id: 'temporal_difference',
@@ -157,6 +197,8 @@ NOT this: you need to know the transition model T(s, a, s') to use Bellman equat
     estimatedMin: 50,
     tags: ['td learning', 'sarsa', 'q-learning', 'eligibility traces', 'deadly triad', 'off-policy'],
     summary: `Consider a stock trading system. After each trade you receive a reward — profit or loss. But the final profit of a multi-leg strategy is not known until all positions close, potentially hours later. You cannot wait for the episode to end before updating your value estimates. You need to learn from partial information, updating as you go. Temporal difference learning does exactly this: update V(s_t) based on the observed reward R_{t+1} and the current estimate V(s_{t+1}), without waiting for the final return.
+
+[FIGURE: tdmc]
 
 The TD(0) update is V(s_t) ← V(s_t) + α [R_{t+1} + γ V(s_{t+1}) - V(s_t)]. The term in brackets is the TD error δ_t — the difference between what you predicted and what the next step says you should have predicted. V(s_{t+1}) is a bootstrapped estimate: you are using one estimate to update another. This is the fundamental difference from Monte Carlo, which waits for the full return G_t = R_{t+1} + γR_{t+2} + ... before updating.
 
@@ -213,6 +255,22 @@ NOT this: TD is just a faster version of Monte Carlo. The bias-variance distinct
       "**Learning rate too large = divergence:** check $\\alpha$ first; needs Robbins-Monro ($\\sum\\alpha=\\infty, \\sum\\alpha^2<\\infty$).",
       "**Deadly triad = off-policy + bootstrapping + FA** (Baird's counterexample); plot TD error as your diagnostic.",
     ],
+    figures: {
+      tdmc: `<svg viewBox="0 0 360 150" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="4" y="14" fill="var(--ink-low)" font-size="8" font-weight="700">TD(0): bootstrap after ONE step</text>
+  ${[0, 1, 2, 3, 4].map(i => `<circle cx="${30 + i * 46}" cy="38" r="9" fill="${i < 2 ? 'var(--prime-faint)' : 'var(--depth)'}" stroke="${i < 2 ? 'var(--prime)' : 'var(--rim)'}"/><text x="${30 + i * 46}" y="41" text-anchor="middle" fill="var(--ink-mid)" font-size="7">s${i}</text>`).join('')}
+  <path d="M39,38 l28,0" stroke="var(--prime)" stroke-width="1.5" marker-end="url(#t1)"/>
+  <text x="30" y="60" fill="var(--prime)" font-size="7">target = R&#8321; + &#947;V(s&#8321;)  &#8592; uses an estimate: low variance, biased</text>
+  <text x="4" y="88" fill="var(--ink-low)" font-size="8" font-weight="700">Monte Carlo: wait for the FULL return</text>
+  ${[0, 1, 2, 3, 4].map(i => `<circle cx="${30 + i * 46}" cy="108" r="9" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="${30 + i * 46}" y="111" text-anchor="middle" fill="var(--ink-mid)" font-size="7">s${i}</text>`).join('')}
+  <path d="M39,108 C120,132 150,132 214,108" fill="none" stroke="var(--amber)" stroke-width="1.5" marker-end="url(#t2)"/>
+  <text x="30" y="132" fill="var(--amber)" font-size="7">target = G&#8320; = R&#8321;+&#947;R&#8322;+...+&#947;&#8319;R&#8345;  &#8592; real rewards: unbiased, high variance</text>
+  <defs>
+    <marker id="t1" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="var(--prime)"/></marker>
+    <marker id="t2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="var(--amber)"/></marker>
+  </defs>
+</svg>`,
+    },
   },
   {
     id: 'deep_q_networks',
@@ -355,6 +413,8 @@ NOT this: policy gradients are unbiased because they use sampled returns. Unbias
     tags: ['actor-critic', 'a2c', 'a3c', 'advantage', 'gae', 'bias-variance'],
     summary: `Return to the robotic arm. With REINFORCE, you collect a full episode before updating — the arm attempts the reach, you compute G_t at every step, and you update the policy. Two problems. First, you need complete episodes. Second, G_t at step t includes rewards from steps t+1 through the end of the episode — all caused by different actions, not the one at step t. The credit assignment is noisy. Variance is high.
 
+[FIGURE: twoheads]
+
 Actor-critic solves both. Maintain two networks simultaneously. The actor π_θ(a|s) selects actions — the policy. The critic V_φ(s) estimates the state value — how much total reward to expect from here under the current policy. After each step, update the critic using TD: the critic learns V(s_t) ≈ R + γV(s_{t+1}). Then compute the advantage A(s_t, a_t) = R + γV(s_{t+1}) - V(s_t) — how much better than expected was this particular step? Update the actor proportionally. You get updates every step, not every episode.
 
 The advantage has a key property: E_{a~π}[A(s, a)] = 0. It is zero-mean across actions. This means it carries only relative information — this action was above average, that one was below. Unlike raw Q(s, a), which can be large and positive for all actions in a highly valuable state, the advantage removes the state's baseline value and isolates the signal about action quality. This is what makes actor-critic gradient estimates so much lower variance than REINFORCE.
@@ -414,9 +474,26 @@ uld you choose each?`,
       "**Set critic LR 3–10× the actor LR** so the critic leads and the actor isn't chasing a moving target.",
       "**Actor down, critic plateaus high = reward magnitude too large;** normalize rewards to ~$[-1,1]$.",
     ],
+    figures: {
+      twoheads: `<svg viewBox="0 0 360 150" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <rect x="130" y="14" width="100" height="24" rx="5" fill="var(--depth)" stroke="var(--rim)"/>
+  <text x="180" y="30" text-anchor="middle" fill="var(--ink-mid)" font-size="8">shared state s</text>
+  <line x1="150" y1="38" x2="90" y2="58" stroke="var(--ink-low)" stroke-width="1.2"/>
+  <line x1="210" y1="38" x2="270" y2="58" stroke="var(--ink-low)" stroke-width="1.2"/>
+  <rect x="30" y="58" width="120" height="30" rx="6" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="90" y="72" text-anchor="middle" fill="var(--ink-hi)" font-size="8.5" font-weight="700">Actor  &#960;&#952;(a|s)</text>
+  <text x="90" y="83" text-anchor="middle" fill="var(--ink-mid)" font-size="7">picks the action</text>
+  <rect x="210" y="58" width="120" height="30" rx="6" fill="none" stroke="var(--amber)"/>
+  <text x="270" y="72" text-anchor="middle" fill="var(--amber)" font-size="8.5" font-weight="700">Critic  V&#966;(s)</text>
+  <text x="270" y="83" text-anchor="middle" fill="var(--ink-mid)" font-size="7">scores the state</text>
+  <text x="30" y="112" fill="var(--ink-low)" font-size="8">advantage A = R + &#947;V(s') &#8722; V(s)  &#8212; critic supplies the baseline</text>
+  <text x="30" y="130" fill="var(--ink-low)" font-size="8">A &gt; 0 &#8594; push &#960; toward a ;  A &lt; 0 &#8594; push away.  E[A]=0.</text>
+</svg>`,
+    },
   },
   {
     id: 'ppo_trpo',
+    interactiveId: 'ppo_clip_viz',
     title: 'PPO and TRPO',
     subtitle: 'Trust region, KL constraint, clipped surrogate, entropy bonus, implementation details',
     difficulty: 'advanced',
@@ -427,6 +504,8 @@ uld you choose each?`,
 TRPO formalizes the constraint: maximize the expected advantage subject to KL(π_old || π_new) ≤ δ. The KL constraint defines a trust region — updates inside it are theoretically safe, with a guaranteed lower bound on policy improvement. The cost is second-order optimization: computing the natural gradient requires Fisher information matrix-vector products, conjugate gradient, and a line search. Correct, but expensive and complex.
 
 PPO approximates TRPO with a clipped objective: L_CLIP = E[min(r_t A_t, clip(r_t, 1-ε, 1+ε) A_t)] where r_t = π_new/π_old. When A_t > 0 and r_t > 1+ε — the policy is already much more likely to take this good action — the gradient is killed. When A_t < 0 and r_t < 1-ε — the policy has already moved away from this bad action — the gradient is killed again. The clip enforces a soft trust region using only first-order optimization and vanilla Adam.
+
+[FIGURE: clip]
 
 PPO's clip parameter ε = 0.2 allows up to 20% policy ratio change per step. This is not overly conservative — it prevents catastrophic collapse while still allowing rapid learning across multiple mini-batch epochs per collected batch. The fraction of clipped updates should be 10–30% during stable training. Below 1% means the clip is never activating and providing no stability benefit. Above 90% means the policy is drifting too far and the trust region is already broken.
 
@@ -479,6 +558,23 @@ NOT this: PPO is conservative and learns slowly. PPO with ε = 0.2 is not slow �
       "**Too many minibatch epochs $K$ defeats the trust region** — limit to 3–10; PPO is the default over TRPO.",
       "**In RLHF, the KL penalty to SFT is non-optional** — remove it and the LLM reward-hacks.",
     ],
+    figures: {
+      clip: `<svg viewBox="0 0 360 170" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="4" y="12" fill="var(--ink-low)" font-size="8" font-weight="700">Clipped objective vs ratio r&#8348; = &#960;&#8345;&#8331;&#8355;/&#960;&#8331;&#8343;&#8340;  (case A&#8348; &gt; 0)</text>
+  <line x1="40" y1="130" x2="340" y2="130" stroke="var(--rim)" stroke-width="1"/>
+  <line x1="40" y1="30" x2="40" y2="140" stroke="var(--rim)" stroke-width="1"/>
+  <rect x="150" y="30" width="80" height="105" fill="var(--prime-faint)" opacity="0.35"/>
+  <line x1="150" y1="30" x2="150" y2="140" stroke="var(--ink-low)" stroke-width="0.8" stroke-dasharray="3 3"/>
+  <line x1="230" y1="30" x2="230" y2="140" stroke="var(--ink-low)" stroke-width="0.8" stroke-dasharray="3 3"/>
+  <path d="M40,120 L230,44 L340,44" fill="none" stroke="var(--prime)" stroke-width="2"/>
+  <text x="150" y="152" text-anchor="middle" fill="var(--ink-mid)" font-size="7.5">1&#8722;&#949;</text>
+  <text x="190" y="152" text-anchor="middle" fill="var(--ink-low)" font-size="7.5">1</text>
+  <text x="230" y="152" text-anchor="middle" fill="var(--ink-mid)" font-size="7.5">1+&#949;</text>
+  <text x="285" y="40" fill="var(--prime)" font-size="7.5">flat: gradient = 0</text>
+  <text x="190" y="24" text-anchor="middle" fill="var(--prime)" font-size="7.5">trust region (no clip)</text>
+  <text x="4" y="168" fill="var(--ink-low)" font-size="7.5">once r&#8348; &gt; 1+&#949; on a good action, the objective flattens &#8594; step is capped, no collapse</text>
+</svg>`,
+    },
   },
   {
     id: 'rlhf_reward_modeling',
@@ -488,6 +584,8 @@ NOT this: PPO is conservative and learns slowly. PPO with ε = 0.2 is not slow �
     estimatedMin: 65,
     tags: ['rlhf', 'reward model', 'bradley-terry', 'reward hacking', 'dpo', 'goodhart'],
     summary: `GPT-4 trained on internet text predicts next tokens accurately. But next-token prediction accuracy has nothing to do with helpfulness. The model often produces responses that are technically fluent but unhelpful, harmful, or dishonest — because those properties were not measured by the training objective. You want to fine-tune the model to be helpful, but you cannot write a mathematical function that measures helpfulness. You can, however, ask humans to compare two responses and say which is better.
+
+[FIGURE: pipeline]
 
 This comparative signal is what RLHF uses. The pipeline has three stages. Stage 1: supervised fine-tuning. Fine-tune the base model on a small dataset of high-quality human-written responses. This creates an SFT model — capable, but not yet aligned. Stage 2: reward model training. Show human labelers pairs of responses to the same prompt and ask which is better. Train a reward model R_φ(prompt, response) using the Bradley-Terry preference model: P(A preferred over B) = σ(R(A) - R(B)). The reward model learns to predict human preference from comparative judgments, not absolute ratings. Stage 3: RL fine-tuning. Use PPO to optimize the SFT model to maximize R_φ(prompt, π(prompt)). Add a KL penalty KL(π || π_SFT) to prevent the model from drifting too far from SFT behavior.
 
@@ -544,6 +642,19 @@ NOT this: RLHF is the final step in making a language model safe and aligned. RL
       "**DPO eliminates the reward model:** the partition function $Z(x)$ cancels in the winner-minus-loser difference.",
       "**High RM score but humans don't prefer it = over-optimization (Goodhart);** reduce PPO steps or raise KL.",
     ],
+    figures: {
+      pipeline: `<svg viewBox="0 0 360 130" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  ${[['1. SFT', 'human demos', 'base &#8594; SFT model'], ['2. Reward model', 'A vs B prefs', 'Bradley-Terry R&#966;'], ['3. PPO', 'maximize R&#966;', '+ KL to SFT']].map((s, i) => `
+  <rect x="${8 + i * 118}" y="30" width="104" height="52" rx="7" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="${60 + i * 118}" y="48" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">${s[0]}</text>
+  <text x="${60 + i * 118}" y="62" text-anchor="middle" fill="var(--ink-mid)" font-size="7.5">${s[1]}</text>
+  <text x="${60 + i * 118}" y="74" text-anchor="middle" fill="var(--ink-low)" font-size="7">${s[2]}</text>
+  ${i < 2 ? `<path d="M${112 + i * 118},56 l6,0" stroke="var(--ink-low)" stroke-width="1.5" marker-end="url(#pp)"/>` : ''}`).join('')}
+  <text x="8" y="20" fill="var(--ink-low)" font-size="7.5">the reward model turns "which is better?" into a scalar the optimizer can chase</text>
+  <text x="8" y="104" fill="var(--amber)" font-size="7.5">KL(&#960; &#8214; &#960;&#8347;&#8355;&#8348;) is the leash &#8212; drift too far and R&#966; is extrapolating &#8594; reward hacking</text>
+  <defs><marker id="pp" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="var(--ink-low)"/></marker></defs>
+</svg>`,
+    },
   },
   {
     id: 'exploration_exploitation',

@@ -10,6 +10,8 @@ export const SELF_SUPERVISED_MODULES = [
 
 Self-supervised learning generates its own supervision from the structure of the data itself. Instead of human-provided labels, it uses a pretext task: predict the masked word, reconstruct the missing image patch, learn representations that are invariant to different augmented views of the same image. Because the supervision signal is automatic, SSL can absorb internet-scale data that no annotation budget could touch. That is why Common Crawl—petabytes of raw web text—became the training substrate for every major language model, while ImageNet required millions of annotation hours for 1.2M images.
 
+[FIGURE: paradigms]
+
 The three paradigms work differently. Predictive SSL (BERT, MAE) masks content and forces the model to reconstruct it—the reconstruction pressure encodes syntax, semantics, and spatial structure because local shortcuts cannot solve the task at high mask rates. Contrastive SSL (SimCLR, MoCo) avoids reconstruction entirely, instead pulling together representations of two augmented views of the same image while pushing representations of different images apart—the model learns which variations are irrelevant (color, crop, blur) and which distinctions matter. Generative methods (autoencoders, diffusion models) reconstruct the full input from a compressed representation, learning rich structure but often at the cost of representations that are less discriminative for downstream classification.
 
 **NOT this.** Self-supervised is not the same as unsupervised learning. Unsupervised methods like k-means or PCA find clusters and components in data without any objective tied to downstream use. SSL uses a pretext task—a constructed supervised objective derived from data structure—specifically to produce representations that transfer well. The difference is not philosophical: a representation learned by predicting masked words encodes semantic relationships because the prediction task requires them; a representation learned by PCA encodes variance, not meaning. The SSL pretext task is the mechanism that aligns what gets learned with what downstream tasks need.
@@ -72,6 +74,29 @@ The practical consequence is the pretrain-then-adapt paradigm that now dominates
       `**SSL ≠ unsupervised:** k-means/PCA encode variance; pretext tasks encode meaning that transfers.`,
       `**Pretrain-then-adapt now dominates every modality** — the current structure of the field, not a trend.`,
     ],
+    figures: {
+      paradigms: `<svg viewBox="0 0 360 118" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="4" y="12" fill="var(--ink-low)" font-size="7.5">Three ways to build supervision from unlabeled data</text>
+  <rect x="4" y="20" width="112" height="86" rx="6" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="60" y="34" text-anchor="middle" fill="var(--ink-hi)" font-size="8.5" font-weight="700">Predictive</text>
+  <text x="60" y="47" text-anchor="middle" fill="var(--ink-mid)" font-size="7">mask &amp; reconstruct</text>
+  <text x="60" y="62" text-anchor="middle" fill="var(--ink-low)" font-size="7">BERT · MAE</text>
+  <text x="60" y="80" text-anchor="middle" fill="var(--ink-mid)" font-size="7">forces syntax,</text>
+  <text x="60" y="90" text-anchor="middle" fill="var(--ink-mid)" font-size="7">spatial structure</text>
+  <rect x="124" y="20" width="112" height="86" rx="6" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="180" y="34" text-anchor="middle" fill="var(--ink-hi)" font-size="8.5" font-weight="700">Contrastive</text>
+  <text x="180" y="47" text-anchor="middle" fill="var(--ink-mid)" font-size="7">align augmented views</text>
+  <text x="180" y="62" text-anchor="middle" fill="var(--ink-low)" font-size="7">SimCLR · MoCo</text>
+  <text x="180" y="80" text-anchor="middle" fill="var(--ink-mid)" font-size="7">learns which</text>
+  <text x="180" y="90" text-anchor="middle" fill="var(--ink-mid)" font-size="7">variations are irrelevant</text>
+  <rect x="244" y="20" width="112" height="86" rx="6" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="300" y="34" text-anchor="middle" fill="var(--ink-hi)" font-size="8.5" font-weight="700">Generative</text>
+  <text x="300" y="47" text-anchor="middle" fill="var(--ink-mid)" font-size="7">compress &amp; reconstruct</text>
+  <text x="300" y="62" text-anchor="middle" fill="var(--ink-low)" font-size="7">autoencoder · diffusion</text>
+  <text x="300" y="80" text-anchor="middle" fill="var(--ink-mid)" font-size="7">rich but less</text>
+  <text x="300" y="90" text-anchor="middle" fill="var(--ink-mid)" font-size="7">discriminative</text>
+</svg>`,
+    },
   },
   {
     id: 'contrastive_loss',
@@ -82,6 +107,8 @@ The practical consequence is the pretrain-then-adapt paradigm that now dominates
     estimatedMin: 45,
     tags: ['contrastive loss', 'NT-Xent', 'InfoNCE', 'temperature', 'hard negatives', 'uniformity'],
     summary: `In a batch of 512 images, each image has one positive pair—a second augmented view of itself—and 1,022 negatives: every other image in the batch. The NT-Xent loss for positive pair (i,j) is: -log[exp(sim(zᵢ,zⱼ)/τ) / Σ_{k≠i} exp(sim(zᵢ,zₖ)/τ)]. That formula looks mechanical until you understand what each piece does. The cosine similarities in the denominator are all the "wrong" answers the model must learn to reject. The temperature τ controls how much the model focuses on the hardest wrong answers versus treating all negatives equally.
+
+[FIGURE: pullpush]
 
 Temperature is the hyperparameter practitioners misset most. Set τ = 0.07 (SimCLR's default) and the model concentrates gradient on the negatives closest to the anchor—useful, informative signal. Set τ = 0.01 and exp(sim/0.01) overflows: exp(1/0.01) ≈ 2.7×10^43, the softmax denominator saturates, gradients explode, training collapses to NaN within 100 steps. Set τ = 1.0 and every negative gets nearly equal weight, slowing convergence to a crawl because the signal cannot distinguish hard from easy negatives. The useful operating range is 0.07–0.2, and knowing why that range exists is more useful than memorizing it.
 
@@ -147,6 +174,33 @@ Hard negatives—items close to the anchor in embedding space but not actually t
       `**Hard negatives speed convergence but raise false-negative risk:** two cats in a batch pushed apart.`,
       `**Debiased loss** estimates the same-class fraction and corrects the denominator.`,
     ],
+    figures: {
+      pullpush: `<svg viewBox="0 0 360 132" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="4" y="12" fill="var(--ink-low)" font-size="7.5">NT-Xent: pull the one positive close, push all N−1 negatives away</text>
+  <circle cx="180" cy="70" r="9" fill="var(--prime)" stroke="var(--ink-hi)"/>
+  <text x="180" y="73" text-anchor="middle" fill="var(--bg)" font-size="7.5" font-weight="700">a</text>
+  <text x="180" y="93" text-anchor="middle" fill="var(--ink-mid)" font-size="7">anchor z_i</text>
+  <circle cx="230" cy="46" r="8" fill="#4eb87c" stroke="var(--ink-hi)"/>
+  <text x="230" y="49" text-anchor="middle" fill="var(--bg)" font-size="7" font-weight="700">+</text>
+  <path d="M197,63 L219,51" stroke="#4eb87c" stroke-width="2" marker-end="url(#pull)"/>
+  <text x="245" y="42" fill="#4eb87c" font-size="7">positive (other view) — PULL</text>
+  <circle cx="70" cy="34" r="7" fill="var(--depth)" stroke="#e85d4a"/>
+  <circle cx="52" cy="70" r="7" fill="var(--depth)" stroke="#e85d4a"/>
+  <circle cx="76" cy="104" r="7" fill="var(--depth)" stroke="#e85d4a"/>
+  <circle cx="120" cy="112" r="7" fill="var(--depth)" stroke="#e85d4a"/>
+  <path d="M164,64 L83,40" stroke="#e85d4a" stroke-width="1.3" marker-end="url(#push)"/>
+  <path d="M162,71 L63,70" stroke="#e85d4a" stroke-width="1.3" marker-end="url(#push)"/>
+  <path d="M166,78 L86,99" stroke="#e85d4a" stroke-width="1.3" marker-end="url(#push)"/>
+  <path d="M171,80 L127,105" stroke="#e85d4a" stroke-width="1.3" marker-end="url(#push)"/>
+  <text x="24" y="124" fill="#e85d4a" font-size="7">N−1 negatives — PUSH (τ concentrates on the closest)</text>
+  <text x="250" y="112" fill="var(--ink-low)" font-size="6.8">low τ → focus hard negs</text>
+  <text x="250" y="123" fill="var(--ink-low)" font-size="6.8">τ&lt;0.05 → overflow / NaN</text>
+  <defs>
+    <marker id="pull" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#4eb87c"/></marker>
+    <marker id="push" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#e85d4a"/></marker>
+  </defs>
+</svg>`,
+    },
   },
   {
     id: 'simclr',
@@ -157,6 +211,8 @@ Hard negatives—items close to the anchor in embedding space but not actually t
     estimatedMin: 45,
     tags: ['SimCLR', 'contrastive learning', 'data augmentation', 'projection head', 'batch size'],
     summary: `A batch of 256 images becomes 512 views. Each image passes through ResNet-50, producing a 2048-dimensional representation h. A 2-layer MLP maps h to a 128-dimensional z. NT-Xent loss runs on z. At fine-tuning time, the MLP is thrown away and a linear layer attaches to h. That discard is the central puzzle of SimCLR: something you train and then immediately delete turns out to be critical.
+
+[FIGURE: pipeline]
 
 The key to SimCLR's performance is not the architecture and not the loss—it is the augmentation composition. Random crop plus color jitter plus Gaussian blur forces the encoder to produce representations invariant to photometric and spatial perturbations. Ablate random cropping and accuracy drops sharply. Ablate color jitter and it drops further. Two random crops of the same 224×224 image can overlap by as little as 10% of the original area; the encoder must recognize the same object despite seeing drastically different local regions, which means texture matching fails and semantic encoding becomes necessary.
 
@@ -212,6 +268,43 @@ SimCLR's practical bottleneck is the large-batch dependency. Good performance re
       `**Large-batch need (4,096–8,192) is an in-batch-negatives artifact, not fundamental** — MoCo hits the same quality at batch 256 on 8 GPUs.`,
       `**Domain matters:** in medical imaging color is diagnostic, so color jitter hurts — pick invariances the domain allows.`,
     ],
+    figures: {
+      pipeline: `<svg viewBox="0 0 360 150" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="4" y="12" fill="var(--ink-low)" font-size="7.5">One image → two augmented views → shared encoder → NT-Xent on z</text>
+  <rect x="4" y="60" width="40" height="30" rx="5" fill="var(--depth)" stroke="var(--rim)"/>
+  <text x="24" y="79" text-anchor="middle" fill="var(--ink-hi)" font-size="8">img</text>
+  <path d="M44,68 L64,40" stroke="var(--ink-low)" stroke-width="1.3" marker-end="url(#s)"/>
+  <path d="M44,82 L64,110" stroke="var(--ink-low)" stroke-width="1.3" marker-end="url(#s)"/>
+  <text x="52" y="46" fill="var(--ink-low)" font-size="6.5">aug t</text>
+  <text x="52" y="118" fill="var(--ink-low)" font-size="6.5">aug t'</text>
+  <rect x="66" y="24" width="52" height="26" rx="5" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="92" y="41" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5">view 1</text>
+  <rect x="66" y="100" width="52" height="26" rx="5" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="92" y="117" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5">view 2</text>
+  <rect x="132" y="24" width="60" height="26" rx="5" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="162" y="38" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5" font-weight="700">encoder f</text>
+  <text x="162" y="47" text-anchor="middle" fill="var(--ink-mid)" font-size="6.5">h (2048-d)</text>
+  <rect x="132" y="100" width="60" height="26" rx="5" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="162" y="114" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5" font-weight="700">encoder f</text>
+  <text x="162" y="123" text-anchor="middle" fill="var(--ink-mid)" font-size="6.5">h (2048-d)</text>
+  <path d="M118,37 L131,37" stroke="var(--ink-low)" stroke-width="1.3" marker-end="url(#s)"/>
+  <path d="M118,113 L131,113" stroke="var(--ink-low)" stroke-width="1.3" marker-end="url(#s)"/>
+  <rect x="206" y="24" width="58" height="26" rx="5" fill="var(--depth)" stroke="#e85d4a" stroke-dasharray="3 2"/>
+  <text x="235" y="38" text-anchor="middle" fill="var(--ink-hi)" font-size="7">proj head g</text>
+  <text x="235" y="47" text-anchor="middle" fill="var(--ink-mid)" font-size="6.5">z (128-d)</text>
+  <rect x="206" y="100" width="58" height="26" rx="5" fill="var(--depth)" stroke="#e85d4a" stroke-dasharray="3 2"/>
+  <text x="235" y="114" text-anchor="middle" fill="var(--ink-hi)" font-size="7">proj head g</text>
+  <text x="235" y="123" text-anchor="middle" fill="var(--ink-mid)" font-size="6.5">z (128-d)</text>
+  <path d="M192,37 L205,37" stroke="var(--ink-low)" stroke-width="1.3" marker-end="url(#s)"/>
+  <path d="M192,113 L205,113" stroke="var(--ink-low)" stroke-width="1.3" marker-end="url(#s)"/>
+  <path d="M264,37 L300,70" stroke="var(--ink-low)" stroke-width="1.3" marker-end="url(#s)"/>
+  <path d="M264,113 L300,80" stroke="var(--ink-low)" stroke-width="1.3" marker-end="url(#s)"/>
+  <rect x="300" y="60" width="56" height="30" rx="5" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="328" y="79" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5" font-weight="700">NT-Xent</text>
+  <text x="206" y="140" fill="#e85d4a" font-size="7">proj head discarded at fine-tune — a linear layer attaches to h</text>
+  <defs><marker id="s" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5" fill="var(--ink-low)"/></marker></defs>
+</svg>`,
+    },
   },
   {
     id: 'moco',
@@ -221,6 +314,8 @@ SimCLR's practical bottleneck is the large-batch dependency. Good performance re
     estimatedMin: 50,
     tags: ['MoCo', 'momentum encoder', 'queue', 'contrastive learning', 'ViT', 'BYOL'],
     summary: `SimCLR's TPU requirement is not a property of contrastive SSL—it is an artifact of where SimCLR stores its negatives. In-batch negatives give you as many negatives as your batch minus one. Get 65,536 negatives at batch size 256, and you need a different storage mechanism. The memory bank approach stores all N training embeddings and gives unlimited negatives—but as the encoder updates, embeddings produced three steps ago no longer reflect the current encoder state. The similarity comparisons in NT-Xent become incoherent because negatives come from different encoder versions. Training degrades.
+
+[FIGURE: momentum]
 
 MoCo's solution is a queue of 65,536 negative key embeddings combined with a momentum encoder that produces them. The momentum encoder is an exponential moving average of the query encoder: θ_k ← 0.999·θ_k + 0.001·θ_q. It never receives gradients from backpropagation. At each step, the online encoder processes the query and the momentum encoder processes the key; the key is enqueued and the oldest key is dequeued. Because the momentum encoder moves by at most 0.001 per step, all 65,536 keys in the queue reflect nearly the same encoder state—the consistency guarantee that the memory bank lost.
 
@@ -286,6 +381,46 @@ MoCo v2 demonstrated something important: SimCLR's large-batch advantage was nev
       `**MoCo v2 = MoCo + SimCLR's MLP head + blur → matches SimCLR at batch 256:** proves large batch was never fundamental.`,
       `**EMA target became the SSL primitive** — reused by BYOL, DINO, data2vec.`,
     ],
+    figures: {
+      momentum: `<svg viewBox="0 0 360 148" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="4" y="12" fill="var(--ink-low)" font-size="7.5">Query encoder gets gradients; key encoder is a slow EMA copy feeding a queue</text>
+  <rect x="8" y="30" width="40" height="26" rx="5" fill="var(--depth)" stroke="var(--rim)"/>
+  <text x="28" y="47" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5">query</text>
+  <rect x="8" y="96" width="40" height="26" rx="5" fill="var(--depth)" stroke="var(--rim)"/>
+  <text x="28" y="113" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5">key</text>
+  <rect x="66" y="26" width="70" height="34" rx="5" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="101" y="40" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5" font-weight="700">encoder θ_q</text>
+  <text x="101" y="51" text-anchor="middle" fill="#4eb87c" font-size="6.5">← backprop</text>
+  <rect x="66" y="92" width="70" height="34" rx="5" fill="var(--prime-faint)" stroke="var(--prime)" stroke-dasharray="3 2"/>
+  <text x="101" y="106" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5" font-weight="700">encoder θ_k</text>
+  <text x="101" y="117" text-anchor="middle" fill="var(--ink-mid)" font-size="6.5">no gradient</text>
+  <path d="M48,43 L65,43" stroke="var(--ink-low)" stroke-width="1.3" marker-end="url(#m)"/>
+  <path d="M48,109 L65,109" stroke="var(--ink-low)" stroke-width="1.3" marker-end="url(#m)"/>
+  <path d="M101,92 L101,60" stroke="#e85d4a" stroke-width="1.3" marker-end="url(#me)"/>
+  <text x="106" y="78" fill="#e85d4a" font-size="6.5">θ_k ← 0.999·θ_k</text>
+  <text x="106" y="87" fill="#e85d4a" font-size="6.5">+ 0.001·θ_q  (EMA)</text>
+  <rect x="150" y="26" width="46" height="30" rx="5" fill="var(--depth)" stroke="var(--prime)"/>
+  <text x="173" y="45" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5">q</text>
+  <path d="M136,43 L149,43" stroke="var(--ink-low)" stroke-width="1.3" marker-end="url(#m)"/>
+  <text x="4" y="140" fill="var(--ink-low)" font-size="7">m=0.999 → ~1000-step window keeps all keys consistent; m&lt;0.99 loses ~5 pts</text>
+  <text x="212" y="22" fill="var(--ink-low)" font-size="7">FIFO queue (65,536 keys) — enqueue new, dequeue oldest</text>
+  <rect x="212" y="96" width="20" height="26" rx="3" fill="#4eb87c" stroke="var(--ink-hi)" opacity="0.85"/>
+  <rect x="234" y="96" width="20" height="26" rx="3" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <rect x="256" y="96" width="20" height="26" rx="3" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <rect x="278" y="96" width="20" height="26" rx="3" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <rect x="300" y="96" width="20" height="26" rx="3" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <rect x="322" y="96" width="20" height="26" rx="3" fill="var(--depth)" stroke="#e85d4a" stroke-dasharray="2 2"/>
+  <text x="222" y="112" text-anchor="middle" fill="var(--bg)" font-size="7" font-weight="700">new</text>
+  <text x="332" y="112" text-anchor="middle" fill="#e85d4a" font-size="6">old</text>
+  <path d="M136,109 L211,109" stroke="var(--ink-low)" stroke-width="1.3" marker-end="url(#m)"/>
+  <path d="M196,41 L280,90" stroke="var(--ink-low)" stroke-width="1" stroke-dasharray="2 2" marker-end="url(#m)"/>
+  <text x="240" y="60" fill="var(--ink-low)" font-size="6.5">contrast q vs queue</text>
+  <defs>
+    <marker id="m" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5" fill="var(--ink-low)"/></marker>
+    <marker id="me" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5" fill="#e85d4a"/></marker>
+  </defs>
+</svg>`,
+    },
   },
   {
     id: 'byol_barlow',
@@ -295,6 +430,8 @@ MoCo v2 demonstrated something important: SimCLR's large-batch advantage was nev
     estimatedMin: 60,
     tags: ['BYOL', 'Barlow Twins', 'VICReg', 'collapse', 'stop-gradient', 'negative-free SSL'],
     summary: `Contrastive methods need negatives to prevent representational collapse, but negatives introduce the false negative problem—treating same-class images as push-away targets. BYOL's 2020 paper claimed to remove negatives entirely by using a stop-gradient and a momentum EMA target network, with an asymmetric predictor. The paper could not explain analytically why this did not collapse. The real answer arrived in the follow-up literature: BYOL prevents collapse because BatchNorm computes statistics across the batch, making each sample's representation a function of all other samples in the batch. This implicit cross-sample interaction acts as an implicit negative mechanism. Replace BatchNorm with LayerNorm—per-sample normalization, no cross-batch interaction—and BYOL collapses immediately.
+
+[FIGURE: byol]
 
 The running example makes this concrete. BYOL uses an online network updated by backprop plus a target network updated by EMA (m≈0.996). An additional predictor MLP maps online representations to target representations. The loss minimizes L2 distance between predictor(online(view1)) and stop_gradient(target(view2)). Stop-gradient on the target branch is necessary—without it both networks collapse together by setting everything to zero. But stop-gradient alone is not sufficient: the collapse resistance comes from BatchNorm, and removing it with a larger batch (65,536) actually breaks BYOL because BatchNorm statistics converge to population statistics, eliminating the noisy cross-sample interaction that provides the implicit negative mechanism.
 
@@ -359,15 +496,54 @@ Barlow Twins takes a more direct approach: push the cross-correlation matrix bet
       `**Barlow Twins = explicit fix:** cross-correlation → identity; diagonal→1 (invariance), off-diagonal→0 (redundancy reduction = collapse prevention).`,
       `**At ViT/production scale, contrastive (MoCo v3 / CLIP) beats negative-free.**`,
     ],
+    figures: {
+      byol: `<svg viewBox="0 0 360 142" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="4" y="12" fill="var(--ink-low)" font-size="7.5">No negatives — asymmetric: predictor + stop-gradient on the EMA target branch</text>
+  <text x="10" y="30" fill="#4eb87c" font-size="7" font-weight="700">online (backprop)</text>
+  <rect x="10" y="36" width="52" height="24" rx="5" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="36" y="51" text-anchor="middle" fill="var(--ink-hi)" font-size="7">encoder</text>
+  <rect x="72" y="36" width="52" height="24" rx="5" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="98" y="51" text-anchor="middle" fill="var(--ink-hi)" font-size="7">projector</text>
+  <rect x="134" y="36" width="56" height="24" rx="5" fill="var(--depth)" stroke="#4eb87c"/>
+  <text x="162" y="48" text-anchor="middle" fill="var(--ink-hi)" font-size="7">predictor</text>
+  <text x="162" y="57" text-anchor="middle" fill="var(--ink-mid)" font-size="6">(asymmetry)</text>
+  <path d="M62,48 L71,48" stroke="var(--ink-low)" stroke-width="1.2" marker-end="url(#b)"/>
+  <path d="M124,48 L133,48" stroke="var(--ink-low)" stroke-width="1.2" marker-end="url(#b)"/>
+  <text x="10" y="88" fill="var(--ink-low)" font-size="7" font-weight="700">target (EMA m≈0.996)</text>
+  <rect x="10" y="94" width="52" height="24" rx="5" fill="var(--prime-faint)" stroke="var(--prime)" stroke-dasharray="3 2"/>
+  <text x="36" y="109" text-anchor="middle" fill="var(--ink-hi)" font-size="7">encoder</text>
+  <rect x="72" y="94" width="52" height="24" rx="5" fill="var(--prime-faint)" stroke="var(--prime)" stroke-dasharray="3 2"/>
+  <text x="98" y="109" text-anchor="middle" fill="var(--ink-hi)" font-size="7">projector</text>
+  <path d="M62,106 L71,106" stroke="var(--ink-low)" stroke-width="1.2" marker-end="url(#b)"/>
+  <rect x="134" y="94" width="56" height="24" rx="5" fill="var(--depth)" stroke="#e85d4a"/>
+  <text x="162" y="109" text-anchor="middle" fill="#e85d4a" font-size="6.5" font-weight="700">stop-grad</text>
+  <path d="M124,106 L133,106" stroke="var(--ink-low)" stroke-width="1.2" marker-end="url(#b)"/>
+  <path d="M36,60 L36,93" stroke="#e85d4a" stroke-width="1.2" stroke-dasharray="2 2" marker-end="url(#be)"/>
+  <text x="40" y="80" fill="#e85d4a" font-size="6">EMA copy</text>
+  <rect x="230" y="60" width="60" height="34" rx="6" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="260" y="74" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5" font-weight="700">L2 loss</text>
+  <text x="260" y="86" text-anchor="middle" fill="var(--ink-mid)" font-size="6.5">pred ≈ target</text>
+  <path d="M190,48 L230,72" stroke="var(--ink-low)" stroke-width="1.2" marker-end="url(#b)"/>
+  <path d="M190,106 L230,84" stroke="var(--ink-low)" stroke-width="1.2" marker-end="url(#b)"/>
+  <text x="4" y="134" fill="#e85d4a" font-size="7">Real collapse-preventer = BatchNorm's cross-batch stats; LayerNorm → collapses</text>
+  <defs>
+    <marker id="b" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5" fill="var(--ink-low)"/></marker>
+    <marker id="be" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5" fill="#e85d4a"/></marker>
+  </defs>
+</svg>`,
+    },
   },
   {
     id: 'masked_autoencoders',
+    interactiveId: 'mask_ratio_viz',
     title: 'Masked Autoencoders and Masked Prediction',
     subtitle: 'MAE, BERT masking, high masking ratio, asymmetric encoder-decoder, data2vec',
     difficulty: 'advanced',
     estimatedMin: 60,
     tags: ['MAE', 'masked autoencoder', 'BERT', 'masked prediction', 'ViT', 'data2vec'],
     summary: `A 224×224 image divides into 196 patches of 16×16 pixels each. MAE masks 75% of them—147 patches—and asks the encoder to see only the remaining 49. The decoder, given the encoded visible patches plus learnable mask tokens, reconstructs the original pixel values of all 147 hidden patches. The question is: why does this work at 75% masking but fail to learn semantics at 25% masking?
+
+[FIGURE: maskrecon]
 
 At 25% masking, there are enough adjacent unmasked patches that a model can solve the reconstruction task by bicubic interpolation. It copies pixel values from neighboring patches, produces low reconstruction error, and learns nothing about global image structure. The training objective is satisfied without semantic encoding. This is the fundamental failure mode of naive generative SSL applied to images: spatial redundancy gives the model a shortcut that bypasses the intended learning signal.
 
@@ -423,6 +599,46 @@ The architectural asymmetry matters for the same reason. MAE's encoder processes
       `**MAE ≠ compression** — goal is transferable representations, not compact pixels.`,
       `**MAE for dense tasks (detection/segmentation); contrastive for classification/retrieval:** MAE 68% probe / 86.9% fine-tuned vs SimCLR ~70% / ~82%.`,
     ],
+    figures: {
+      maskrecon: `<svg viewBox="0 0 360 120" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="4" y="12" fill="var(--ink-low)" font-size="7.5">Mask 75% of patches · encode only the 25% visible · decoder rebuilds pixels</text>
+  <text x="30" y="28" text-anchor="middle" fill="var(--ink-mid)" font-size="7">input (masked)</text>
+  <rect x="6" y="32" width="14" height="14" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <rect x="22" y="32" width="14" height="14" fill="var(--depth)" stroke="var(--rim)"/>
+  <rect x="38" y="32" width="14" height="14" fill="var(--depth)" stroke="var(--rim)"/>
+  <rect x="6" y="48" width="14" height="14" fill="var(--depth)" stroke="var(--rim)"/>
+  <rect x="22" y="48" width="14" height="14" fill="var(--depth)" stroke="var(--rim)"/>
+  <rect x="38" y="48" width="14" height="14" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <rect x="6" y="64" width="14" height="14" fill="var(--depth)" stroke="var(--rim)"/>
+  <rect x="22" y="64" width="14" height="14" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <rect x="38" y="64" width="14" height="14" fill="var(--depth)" stroke="var(--rim)"/>
+  <text x="30" y="92" text-anchor="middle" fill="var(--ink-low)" font-size="6.5">filled=visible</text>
+  <text x="30" y="101" text-anchor="middle" fill="var(--ink-low)" font-size="6.5">empty=masked</text>
+  <rect x="78" y="38" width="52" height="34" rx="5" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="104" y="52" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5" font-weight="700">encoder</text>
+  <text x="104" y="63" text-anchor="middle" fill="var(--ink-mid)" font-size="6.5">24 blocks · deep</text>
+  <path d="M54,55 L77,55" stroke="var(--ink-low)" stroke-width="1.3" marker-end="url(#mk)"/>
+  <text x="60" y="50" fill="var(--ink-low)" font-size="6">49 vis</text>
+  <rect x="152" y="42" width="52" height="26" rx="5" fill="var(--depth)" stroke="#e85d4a"/>
+  <text x="178" y="52" text-anchor="middle" fill="var(--ink-hi)" font-size="7">decoder</text>
+  <text x="178" y="62" text-anchor="middle" fill="#e85d4a" font-size="6">8 blocks · weak</text>
+  <path d="M130,55 L151,55" stroke="var(--ink-low)" stroke-width="1.3" marker-end="url(#mk)"/>
+  <text x="134" y="50" fill="var(--ink-low)" font-size="5.5">+mask tok</text>
+  <text x="320" y="28" text-anchor="middle" fill="var(--ink-mid)" font-size="7">reconstruction</text>
+  <rect x="296" y="32" width="14" height="14" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <rect x="312" y="32" width="14" height="14" fill="#4eb87c" stroke="var(--ink-hi)" opacity="0.7"/>
+  <rect x="328" y="32" width="14" height="14" fill="#4eb87c" stroke="var(--ink-hi)" opacity="0.7"/>
+  <rect x="296" y="48" width="14" height="14" fill="#4eb87c" stroke="var(--ink-hi)" opacity="0.7"/>
+  <rect x="312" y="48" width="14" height="14" fill="#4eb87c" stroke="var(--ink-hi)" opacity="0.7"/>
+  <rect x="328" y="48" width="14" height="14" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <rect x="296" y="64" width="14" height="14" fill="#4eb87c" stroke="var(--ink-hi)" opacity="0.7"/>
+  <rect x="312" y="64" width="14" height="14" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <rect x="328" y="64" width="14" height="14" fill="#4eb87c" stroke="var(--ink-hi)" opacity="0.7"/>
+  <path d="M204,55 L295,55" stroke="var(--ink-low)" stroke-width="1.3" marker-end="url(#mk)"/>
+  <text x="4" y="112" fill="var(--ink-low)" font-size="7">25% masking → interpolate from neighbors (shortcut). 75% → must encode global structure.</text>
+  <defs><marker id="mk" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5" fill="var(--ink-low)"/></marker></defs>
+</svg>`,
+    },
   },
   {
     id: 'clip_alignment',
@@ -434,6 +650,8 @@ The architectural asymmetry matters for the same reason. MAE's encoder processes
     summary: `An image search system trained on 400 million image-text pairs from the web can, at zero-shot, classify images into 1,000 ImageNet categories at 76% top-1 accuracy—without ever seeing an ImageNet label. The mechanism is not magic: the web contains images of golden retrievers paired with captions that say "golden retriever," images of airplanes paired with captions that say "airplane," and so on for essentially every visual concept. CLIP trains an image encoder and a text encoder to align their representations for matching pairs, using InfoNCE loss over all N²-N non-matching pairs in each batch.
 
 Zero-shot classification works because encoding "a photo of a {class}" with the text encoder places it in the region of embedding space where the image encoder maps images of that class. The text template acts as a classifier without fine-tuning. The mechanism fails on concepts absent from the pretraining distribution—CLIP cannot classify medical imaging findings that never appeared in web image-text pairs, because there is no alignment relationship to transfer.
+
+[FIGURE: alignment]
 
 The training loss scales with N². For a batch of N pairs, compute an N×N similarity matrix where S_{ij} = cosine_sim(img_i, txt_j). Loss is mean cross-entropy over rows (image finds correct text) and columns (text finds correct image). Temperature τ is learned starting at 0.07, with a clamp at τ ≥ 0.01 to prevent overflow. At batch size 32,768 on 256 GPUs, each pair has 32,767 negatives in both directions—a tight mutual information estimate.
 
@@ -487,6 +705,40 @@ Why CLIP embeddings generalize broadly is the key insight. A supervised ImageNet
       `**Fails on out-of-distribution concepts** (e.g. medical imaging) — no alignment relationship to transfer; fine-tune on domain image-text.`,
       `**Fails on composition/relations:** "red cube on blue sphere" ≈ "blue cube on red sphere"; near-chance on ARO — encodes co-occurrence, not binding.`,
     ],
+    figures: {
+      alignment: `<svg viewBox="0 0 360 138" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="4" y="12" fill="var(--ink-low)" font-size="7.5">Two encoders → N×N similarity matrix · diagonal = matched pairs (pull)</text>
+  <rect x="6" y="26" width="46" height="24" rx="5" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="29" y="41" text-anchor="middle" fill="var(--ink-hi)" font-size="7">img enc</text>
+  <rect x="6" y="88" width="46" height="24" rx="5" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="29" y="103" text-anchor="middle" fill="var(--ink-hi)" font-size="7">txt enc</text>
+  <text x="90" y="24" fill="var(--ink-mid)" font-size="7">text embeddings T1..T4 →</text>
+  <text x="66" y="72" fill="var(--ink-mid)" font-size="7" transform="rotate(-90 66 72)">images I1..I4 ↓</text>
+  <rect x="90" y="30" width="22" height="22" fill="#4eb87c" stroke="var(--ink-hi)" opacity="0.85"/>
+  <rect x="114" y="30" width="22" height="22" fill="var(--depth)" stroke="var(--rim)"/>
+  <rect x="138" y="30" width="22" height="22" fill="var(--depth)" stroke="var(--rim)"/>
+  <rect x="162" y="30" width="22" height="22" fill="var(--depth)" stroke="var(--rim)"/>
+  <rect x="90" y="54" width="22" height="22" fill="var(--depth)" stroke="var(--rim)"/>
+  <rect x="114" y="54" width="22" height="22" fill="#4eb87c" stroke="var(--ink-hi)" opacity="0.85"/>
+  <rect x="138" y="54" width="22" height="22" fill="var(--depth)" stroke="var(--rim)"/>
+  <rect x="162" y="54" width="22" height="22" fill="var(--depth)" stroke="var(--rim)"/>
+  <rect x="90" y="78" width="22" height="22" fill="var(--depth)" stroke="var(--rim)"/>
+  <rect x="114" y="78" width="22" height="22" fill="var(--depth)" stroke="var(--rim)"/>
+  <rect x="138" y="78" width="22" height="22" fill="#4eb87c" stroke="var(--ink-hi)" opacity="0.85"/>
+  <rect x="162" y="78" width="22" height="22" fill="var(--depth)" stroke="var(--rim)"/>
+  <rect x="90" y="102" width="22" height="22" fill="var(--depth)" stroke="var(--rim)"/>
+  <rect x="114" y="102" width="22" height="22" fill="var(--depth)" stroke="var(--rim)"/>
+  <rect x="138" y="102" width="22" height="22" fill="var(--depth)" stroke="var(--rim)"/>
+  <rect x="162" y="102" width="22" height="22" fill="#4eb87c" stroke="var(--ink-hi)" opacity="0.85"/>
+  <text x="212" y="40" fill="#4eb87c" font-size="7" font-weight="700">diagonal → maximize</text>
+  <text x="212" y="52" fill="var(--ink-mid)" font-size="6.5">matched image-text pairs</text>
+  <text x="212" y="72" fill="#e85d4a" font-size="7" font-weight="700">off-diagonal → minimize</text>
+  <text x="212" y="84" fill="var(--ink-mid)" font-size="6.5">N²−N mismatched pairs</text>
+  <text x="212" y="104" fill="var(--ink-low)" font-size="6.5">InfoNCE over rows + cols,</text>
+  <text x="212" y="114" fill="var(--ink-low)" font-size="6.5">learned τ (start 0.07)</text>
+  <text x="212" y="130" fill="var(--ink-low)" font-size="6.5">zero-shot: "a photo of a {class}"</text>
+</svg>`,
+    },
   },
   {
     id: 'ssl_for_tabular',

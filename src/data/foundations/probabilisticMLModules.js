@@ -1,6 +1,7 @@
 export const PROBABILISTIC_ML_MODULES = [
   {
     id: 'bayesian_inference',
+    interactiveId: 'bayesian_updating_viz',
     title: 'Bayesian Inference',
     subtitle: 'Likelihood, prior, posterior, conjugate priors, predictive distribution, sequential updating',
     difficulty: 'foundational',
@@ -9,7 +10,10 @@ export const PROBABILISTIC_ML_MODULES = [
     interactivePrompt: `Before you touch the controls: you flip a coin 3 times and get H, H, H. What is your best estimate of P(heads) — and how confident should you be in that estimate?`,
     summary: `You flip a coin 3 times and get H, H, H. The frequentist MLE gives P(H) = 3/3 = 1.0 — the model is certain the coin always lands heads. But you only have 3 flips. The model has fit the data perfectly and is telling you something obviously wrong. This is what happens when you collapse inference to a single point estimate without tracking uncertainty.
 
-Bayesian inference solves this by maintaining a full distribution over the unknown parameter rather than collapsing to one value. The update rule is: posterior ∝ likelihood \xd7 prior. With a uniform prior Beta(1, 1) — encoding no prior knowledge about the coin — and likelihood P(data | θ) = θ\xb3, the posterior is Beta(4, 1). The posterior mean is 4/5 = 0.8, not 1.0. The prior has pulled the estimate away from the degenerate MLE, encoding the reasonable belief that most coins are somewhere near fair.
+Bayesian inference solves this by maintaining a full distribution over the unknown parameter rather than collapsing to one value. The update rule is: posterior ∝ likelihood \xd7 prior. With a uniform prior Beta(1, 1) — encoding no prior knowledge about the coin — and likelihood P(data | θ) = θ\xb3, the posterior is Beta(4, 1).
+
+[FIGURE: posterior]
+ The posterior mean is 4/5 = 0.8, not 1.0. The prior has pulled the estimate away from the degenerate MLE, encoding the reasonable belief that most coins are somewhere near fair.
 
 The key mechanism: the prior's influence is inversely proportional to the amount of data. With 3 flips, the posterior is 0.8 — meaningfully different from MLE. With 300 flips and 300 heads, the posterior mean is 300/302 ≈ 0.99 — nearly identical to MLE. The likelihood dominates and the prior washes out. This is the correct behavior: priors matter when data is scarce and become irrelevant when data is abundant.
 
@@ -80,6 +84,24 @@ The practical cost of this framework is the denominator in Bayes' theorem: p(θ 
       `**Predictive distribution integrates over the posterior** — plugging in MAP underestimates uncertainty, badly in low-data.`,
       `**Credible ≠ confidence:** credible = direct $P(θ∈[L,U]|data)$; confidence = long-run coverage, silent on any single interval.`,
     ],
+    figures: {
+      posterior: `<svg viewBox="0 0 360 140" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <line x1="34" y1="112" x2="340" y2="112" stroke="var(--ink-low)" stroke-width="1"/>
+  <line x1="34" y1="112" x2="34" y2="16" stroke="var(--ink-low)" stroke-width="1"/>
+  <text x="34" y="126" fill="var(--ink-low)" font-size="7.5">0</text>
+  <text x="183" y="126" fill="var(--ink-low)" font-size="7.5">θ = P(heads)</text>
+  <text x="332" y="126" fill="var(--ink-low)" font-size="7.5">1</text>
+  <path d="M34,58 L340,58" fill="none" stroke="var(--ink-low)" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="40" y="54" fill="var(--ink-mid)" font-size="7.5">prior Beta(1,1): flat — no belief</text>
+  <path d="M34,112 C 140,112 240,96 340,16" fill="none" stroke="var(--prime)" stroke-width="2.5"/>
+  <text x="150" y="90" fill="var(--prime)" font-size="8" font-weight="700">posterior Beta(4,1)</text>
+  <line x1="278" y1="112" x2="278" y2="40" stroke="var(--amber)" stroke-width="1.5" stroke-dasharray="3 2"/>
+  <text x="200" y="36" fill="var(--amber)" font-size="7.5">mean 0.8 (not MLE 1.0)</text>
+  <circle cx="340" cy="112" r="3" fill="#ef4444"/>
+  <text x="286" y="120" fill="#ef4444" font-size="7.5">MLE = 1.0 (degenerate)</text>
+  <text x="34" y="12" fill="var(--ink-low)" font-size="7">density · 3 flips HHH: prior × likelihood θ³ pulls the estimate off the wall</text>
+</svg>`,
+    },
   },
   {
     id: 'gaussian_processes',
@@ -91,6 +113,8 @@ The practical cost of this framework is the denominator in Bayes' theorem: p(θ 
     tags: ['GP', 'gaussian process', 'kernel', 'Bayesian optimisation', 'inducing points', 'SVGP'],
     interactivePrompt: `Before you touch the controls: you have 5 noisy measurements of a physical process at time points {1, 2, 5, 7, 10}. At time 3 — between your first two measurements — what would you predict, and how uncertain should you be? What should happen to that uncertainty at time 20, far beyond your data?`,
     summary: `You have 5 noisy measurements of a physical process at time points {1, 2, 5, 7, 10}. You want to predict the value at time 3. A standard regression model gives you a point prediction — but how confident should you be? The measurements are noisy, and time 3 sits between two observations. A model that says "value = 4.2" with no indication of uncertainty is only half useful.
+
+[FIGURE: gp]
 
 A Gaussian Process solves this by treating the unknown function itself as a random variable. A GP defines a distribution over functions: any finite collection of points {f(x₁), ..., f(xₙ)} follows a jointly Gaussian distribution. The kernel function k(x, x') defines the covariance between any two points — points close in time covary strongly, points far apart covary weakly. You specify the prior over functions by choosing the kernel. The posterior at time 3 conditions the joint Gaussian on your 5 observations, yielding a Gaussian predictive distribution: a mean (best estimate) and a variance (uncertainty). Near the data, the variance collapses — the GP knows what it knows. Far from the data, the variance expands — the GP correctly reports ignorance.
 
@@ -152,6 +176,25 @@ The cost of this principled uncertainty is computational: the matrix inversion [
       `**Sparse GPs (SVGP): m ≪ n inducing points, $O(m^3)$/step**; tradeoff = underestimated uncertainty between inducing points.`,
       `**Bayesian optimisation is where GPs earn their keep:** GP surrogate + EI/UCB acquisition, far more sample-efficient than grid/random.`,
     ],
+    figures: {
+      gp: `<svg viewBox="0 0 360 150" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <line x1="30" y1="120" x2="344" y2="120" stroke="var(--ink-low)" stroke-width="1"/>
+  <line x1="30" y1="120" x2="30" y2="14" stroke="var(--ink-low)" stroke-width="1"/>
+  <text x="30" y="134" fill="var(--ink-low)" font-size="7.5">time →</text>
+  <path d="M30,70 C 55,48 70,50 78,58 C 100,80 130,86 168,68 C 200,54 230,74 264,66 C 300,58 330,40 344,24 L344,120 C 330,110 300,96 264,96 C 230,96 200,84 168,90 C 130,98 100,104 78,92 C 62,84 50,82 30,96 Z" fill="var(--prime-faint)" opacity="0.55"/>
+  <path d="M30,83 C 55,66 70,66 78,72 C 100,86 130,90 168,80 C 200,72 230,80 264,78 C 300,76 330,66 344,58" fill="none" stroke="var(--prime)" stroke-width="2"/>
+  <circle cx="78" cy="72" r="3" fill="var(--ink-hi)"/>
+  <circle cx="98" cy="85" r="3" fill="var(--ink-hi)"/>
+  <circle cx="168" cy="80" r="3" fill="var(--ink-hi)"/>
+  <circle cx="220" cy="78" r="3" fill="var(--ink-hi)"/>
+  <circle cx="264" cy="78" r="3" fill="var(--ink-hi)"/>
+  <text x="60" y="14" fill="var(--ink-low)" font-size="7">● = 5 noisy observations · band = ±2σ posterior</text>
+  <line x1="128" y1="120" x2="128" y2="83" stroke="var(--amber)" stroke-width="1" stroke-dasharray="2 2"/>
+  <text x="102" y="132" fill="var(--amber)" font-size="7">t=3: interpolate, band narrow</text>
+  <text x="288" y="20" fill="#ef4444" font-size="7.5" font-weight="700">band widens</text>
+  <text x="272" y="112" fill="#ef4444" font-size="7">far from data → GP admits ignorance</text>
+</svg>`,
+    },
   },
   {
     id: 'variational_inference',
@@ -165,6 +208,8 @@ The cost of this principled uncertainty is computational: the matrix inversion [
     summary: `You want to fit a topic model (LDA) to 100,000 documents. The exact posterior P(topics | documents) requires summing over all possible topic assignments for every word in every document — exponential in the number of words. You cannot compute it. MCMC could sample from it, but running chains long enough to converge on 100,000 documents takes hours to days. You need a tractable alternative that scales with the data. This is the problem variational inference solves.
 
 Variational inference reframes posterior computation as optimization. Instead of computing the true posterior p(z|x), you pick a simpler family of distributions q(z; φ) — typically factorized Gaussians or Dirichlet distributions — and find the member of that family closest to the true posterior. "Closest" is measured by KL divergence. You minimize KL(q ‖ p) by maximizing the ELBO (Evidence Lower Bound): ELBO = E_q[log p(x, z)] - E_q[log q(z)]. The ELBO is a lower bound on log p(x). Maximizing it pushes q as close to p as possible while keeping q tractable.
+
+[FIGURE: elbo]
 
 The mechanism: ELBO = log p(x) - KL[q(z) ‖ p(z|x)]. Since KL ≥ 0, ELBO ≤ log p(x) always. Maximizing ELBO is exactly equivalent to minimizing KL[q ‖ p(z|x)] — they are the same objective. Once you can compute and differentiate the ELBO, the posterior approximation reduces to gradient descent. Stochastic VI uses minibatch gradient estimates, reducing cost to O(batch_size) per update. This is how VI scales to millions of examples — making LDA at scale, SVGP, and VAE training all tractable.
 
@@ -221,6 +266,24 @@ The mechanism: ELBO = log p(x) - KL[q(z) ‖ p(z|x)]. Since KL ≥ 0, ELBO ≤ l
       `**Amortised VI:** an inference network predicts $q(z|x)$ in one forward pass (the VAE encoder) — trades per-datapoint accuracy for speed.`,
       `**VI biased, MCMC asymptotically exact:** VI when scale matters and approx uncertainty is fine; MCMC when exact uncertainty is the deliverable.`,
     ],
+    figures: {
+      elbo: `<svg viewBox="0 0 360 120" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <line x1="150" y1="16" x2="150" y2="104" stroke="var(--ink-low)" stroke-width="1"/>
+  <line x1="150" y1="24" x2="330" y2="24" stroke="var(--ink-hi)" stroke-width="1.5"/>
+  <text x="150" y="12" fill="var(--ink-hi)" font-size="8" font-weight="700">log p(x)  — the true evidence (fixed)</text>
+  <rect x="150" y="30" width="180" height="34" rx="3" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="240" y="51" text-anchor="middle" fill="var(--prime)" font-size="9" font-weight="700">ELBO (maximise this)</text>
+  <rect x="150" y="66" width="180" height="24" rx="3" fill="var(--amber)" opacity="0.28" stroke="var(--amber)"/>
+  <text x="240" y="82" text-anchor="middle" fill="var(--amber)" font-size="8" font-weight="700">gap = KL[q ‖ p(z|x)] ≥ 0</text>
+  <path d="M136,24 L136,90" stroke="var(--ink-low)" stroke-width="1"/>
+  <path d="M132,24 l4,0 M132,90 l4,0" stroke="var(--ink-low)" stroke-width="1"/>
+  <text x="14" y="50" fill="var(--ink-mid)" font-size="7.5">log p(x) =</text>
+  <text x="14" y="62" fill="var(--ink-mid)" font-size="7.5">ELBO + KL</text>
+  <text x="14" y="86" fill="var(--ink-low)" font-size="7">push ELBO up →</text>
+  <text x="14" y="96" fill="var(--ink-low)" font-size="7">KL gap shrinks →</text>
+  <text x="14" y="106" fill="var(--ink-low)" font-size="7">q → p(z|x)</text>
+</svg>`,
+    },
   },
   {
     id: 'vae_foundations',
@@ -231,6 +294,8 @@ The mechanism: ELBO = log p(x) - KL[q(z) ‖ p(z|x)]. Since KL ≥ 0, ELBO ≤ l
     estimatedMin: 65,
     tags: ['VAE', 'ELBO', 'reparameterisation', 'posterior collapse', 'beta-VAE', 'latent space'],
     summary: `Standard autoencoders compress data into a latent code and reconstruct it — but the latent space is irregular. Interpolating between two codes often passes through empty regions that decode into nonsense, because there is no constraint on what the latent space looks like globally. VAEs solve this by placing a probabilistic structure on the latent space: instead of mapping each input to a single point, the encoder maps it to a distribution q(z|x), and the KL regularisation term forces these distributions to stay close to a standard Gaussian prior.
+
+[FIGURE: vae]
 
 The result is a continuous, densely populated latent space where interpolation makes sense and unseen points decode coherently. The reparameterisation trick — writing z = μ + σ\xb7ε where ε ~ N(0,I) — is what makes gradients flow through the sampling step. The central failure mode is posterior collapse: an expressive decoder learns to model p(x) without using z at all, the encoder degenerates to the prior, KL drops to zero, and you have trained a very expensive unconditional generator.`,
     keyPoints: [
@@ -286,6 +351,29 @@ The result is a continuous, densely populated latent space where interpolation m
       `**Fixes: KL annealing** (β: 0 → 1) and **free bits** — force the decoder to use z before the KL penalty bites.`,
       `**β-VAE:** β > 1 → disentanglement + worse reconstruction; VAE blurriness is intrinsic (expected MSE averages plausible reconstructions).`,
     ],
+    figures: {
+      vae: `<svg viewBox="0 0 360 116" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <rect x="6" y="40" width="40" height="36" rx="4" fill="var(--depth)" stroke="var(--ink-low)"/>
+  <text x="26" y="62" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">x</text>
+  <path d="M52,42 L92,52 L92,64 L52,74 Z" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="72" y="61" text-anchor="middle" fill="var(--prime)" font-size="7" font-weight="700">encoder</text>
+  <rect x="100" y="34" width="58" height="48" rx="4" fill="none" stroke="var(--ink-low)" stroke-dasharray="3 2"/>
+  <text x="129" y="30" text-anchor="middle" fill="var(--ink-mid)" font-size="7">q(z|x)=N(μ,σ²)</text>
+  <text x="129" y="52" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">μ, σ</text>
+  <text x="129" y="70" text-anchor="middle" fill="var(--amber)" font-size="7">z=μ+σ⊙ε</text>
+  <circle cx="190" cy="58" r="16" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="190" y="55" text-anchor="middle" fill="var(--prime)" font-size="9" font-weight="700">z</text>
+  <text x="190" y="66" text-anchor="middle" fill="var(--ink-low)" font-size="6">latent</text>
+  <text x="190" y="30" text-anchor="middle" fill="var(--ink-low)" font-size="6.5">ε~N(0,I)</text>
+  <line x1="190" y1="34" x2="190" y2="42" stroke="var(--amber)" stroke-width="1" stroke-dasharray="2 2"/>
+  <path d="M212,52 L252,42 L252,74 L212,64 Z" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="232" y="61" text-anchor="middle" fill="var(--prime)" font-size="7" font-weight="700">decoder</text>
+  <rect x="260" y="40" width="40" height="36" rx="4" fill="var(--depth)" stroke="var(--ink-low)"/>
+  <text x="280" y="62" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">x̂</text>
+  <text x="6" y="100" fill="var(--ink-mid)" font-size="7">ELBO = reconstruction(x, x̂)  −  KL[q(z|x) ‖ N(0,I)]</text>
+  <text x="6" y="112" fill="#ef4444" font-size="7">posterior collapse: KL → 0, decoder ignores z, encoder = prior</text>
+</svg>`,
+    },
   },
   {
     id: 'approximate_inference',
@@ -294,7 +382,10 @@ The result is a continuous, densely populated latent space where interpolation m
     difficulty: 'advanced',
     estimatedMin: 70,
     tags: ['MCMC', 'HMC', 'Metropolis-Hastings', 'Laplace approximation', 'importance sampling', 'R-hat', 'ESS'],
-    summary: `Outside of conjugate models, the posterior p(θ|X) is intractable — you cannot compute it, only approximate it. The question is how much approximation you can tolerate and at what computational cost. MAP (maximum a posteriori) is the fastest: find the mode and stop, discarding all information about posterior shape. Laplace adds one matrix inversion to recover a Gaussian approximation around the MAP — fast but wrong if the posterior is multimodal or heavy-tailed. MCMC is the gold standard: given enough time, it converges to the true posterior, but "enough time" is often hours or days for complex models. Most production ML systems use MAP with frequentist standard errors and reserve MCMC for settings where exact uncertainty is the product — clinical decision support, scientific inference, hierarchical models. Knowing when each method is appropriate, and critically how to diagnose whether MCMC has actually converged, is what separates theoretical understanding from practical competence.`,
+    summary: `Outside of conjugate models, the posterior p(θ|X) is intractable — you cannot compute it, only approximate it. The question is how much approximation you can tolerate and at what computational cost.
+
+[FIGURE: ladder]
+ MAP (maximum a posteriori) is the fastest: find the mode and stop, discarding all information about posterior shape. Laplace adds one matrix inversion to recover a Gaussian approximation around the MAP — fast but wrong if the posterior is multimodal or heavy-tailed. MCMC is the gold standard: given enough time, it converges to the true posterior, but "enough time" is often hours or days for complex models. Most production ML systems use MAP with frequentist standard errors and reserve MCMC for settings where exact uncertainty is the product — clinical decision support, scientific inference, hierarchical models. Knowing when each method is appropriate, and critically how to diagnose whether MCMC has actually converged, is what separates theoretical understanding from practical competence.`,
     keyPoints: [
       `**Laplace approximation: find the MAP, compute the Hessian H = -∇\xb2 log p(θ|X) at that point, approximate the posterior as N(θ_MAP, H⁻¹).** No sampling — just one optimisation and one Hessian computation. When the posterior is genuinely unimodal and approximately Gaussian (which the Bernstein-von Mises theorem guarantees asymptotically), this is excellent. It fails badly for multimodal posteriors because the Hessian only captures local curvature at one mode — if the posterior has mass elsewhere, the Laplace approximation misses it entirely.`,
       `**Importance sampling estimates E_p[f(θ)] using a proposal q: E_p[f(θ)] ≈ Σᵢ wᵢ f(θᵢ) where wᵢ ∝ p(θᵢ|X)/q(θᵢ).** The effective sample size ESS ≈ (Σwᵢ)\xb2/Σwᵢ\xb2 tells you how many i.i.d. samples the weighted set is worth. In high dimensions, IS collapses catastrophically: the typical sets of p and q have negligible overlap, almost all weights are near zero, and a few lucky samples dominate the estimate. ESS < 5% of N means the IS estimate is unreliable regardless of sample count.`,
@@ -347,6 +438,24 @@ The result is a continuous, densely populated latent space where interpolation m
       `**R-hat > 1.01 = not converged** — the samples are not from the posterior. HMC divergences are a hard stop, not a warning.`,
       `**Non-centred reparameterisation** ($μ_i = μ + σ·z_i$) removes the funnel geometry that causes hierarchical-model divergences.`,
     ],
+    figures: {
+      ladder: `<svg viewBox="0 0 360 130" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="8" y="14" fill="var(--ink-low)" font-size="7.5">accuracy ↑ · cost ↑  →  the approximation ladder</text>
+  <rect x="8" y="94" width="104" height="26" rx="4" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="60" y="106" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">MAP</text>
+  <text x="60" y="116" text-anchor="middle" fill="var(--ink-low)" font-size="6.5">mode only · fastest</text>
+  <rect x="126" y="60" width="104" height="26" rx="4" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="178" y="72" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">Laplace</text>
+  <text x="178" y="82" text-anchor="middle" fill="var(--ink-low)" font-size="6.5">N(θ_MAP, H⁻¹)</text>
+  <rect x="244" y="24" width="108" height="26" rx="4" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="298" y="36" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">MCMC / HMC</text>
+  <text x="298" y="46" text-anchor="middle" fill="var(--ink-low)" font-size="6.5">exact · hours–days</text>
+  <path d="M112,100 L126,76" stroke="var(--ink-low)" stroke-width="1.5" marker-end="url(#la)"/>
+  <path d="M230,66 L244,44" stroke="var(--ink-low)" stroke-width="1.5" marker-end="url(#la)"/>
+  <defs><marker id="la" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="var(--ink-low)"/></marker></defs>
+  <text x="8" y="128" fill="var(--amber)" font-size="7">diagnostics gate MCMC: R̂ &gt; 1.01 or any HMC divergence = not the posterior yet</text>
+</svg>`,
+    },
   },
   {
     id: 'bayesian_neural_networks',
@@ -356,6 +465,9 @@ The result is a continuous, densely populated latent space where interpolation m
     estimatedMin: 70,
     tags: ['BNN', 'uncertainty', 'epistemic', 'aleatoric', 'deep ensembles', 'conformal prediction', 'dropout VI'],
     summary: `Standard neural networks output a prediction with no honest signal about confidence. A network that outputs 95% probability on every prediction — whether it has seen thousands of similar examples or none at all — is not expressing uncertainty, it is suppressing it. Bayesian Neural Networks address this by placing distributions over weights rather than point estimates, splitting predictive uncertainty into two types: irreducible noise in the data (aleatoric) and uncertainty from insufficient data coverage (epistemic).
+
+[FIGURE: uncertainty]
+
 
 In practice, full BNNs are infeasible at any useful scale. The empirical punchline is that deep ensembles — train several models from different random seeds — consistently beat most principled Bayesian approximations on calibration benchmarks. The reason is not Bayesian coverage; ensembles explore different loss basins and get function-space diversity that MC Dropout and most VI methods miss. Conformal prediction takes a completely different route: rigorous coverage guarantees with no Bayesian machinery at all.`,
     keyPoints: [
@@ -411,9 +523,29 @@ In practice, full BNNs are infeasible at any useful scale. The empirical punchli
       `**Temperature scaling** (scalar T on logits) — accuracy unchanged, cuts overconfidence; mandatory before probabilistic deployment.`,
       `**Conformal prediction:** only method with a formal coverage guarantee $P(y^* ∈ C(x^*)) ≥ 1-α$ under exchangeability.`,
     ],
+    figures: {
+      uncertainty: `<svg viewBox="0 0 360 132" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <line x1="30" y1="98" x2="344" y2="98" stroke="var(--ink-low)" stroke-width="1"/>
+  <line x1="30" y1="98" x2="30" y2="14" stroke="var(--ink-low)" stroke-width="1"/>
+  <text x="30" y="112" fill="var(--ink-low)" font-size="7.5">input x →   (● = training data)</text>
+  <rect x="70" y="54" width="120" height="44" fill="var(--prime-faint)" opacity="0.5"/>
+  <path d="M30,74 C 70,66 110,66 190,72 C 250,76 300,72 344,70" fill="none" stroke="var(--prime)" stroke-width="2"/>
+  <circle cx="86" cy="70" r="2.5" fill="var(--ink-hi)"/>
+  <circle cx="110" cy="76" r="2.5" fill="var(--ink-hi)"/>
+  <circle cx="134" cy="72" r="2.5" fill="var(--ink-hi)"/>
+  <circle cx="160" cy="78" r="2.5" fill="var(--ink-hi)"/>
+  <circle cx="182" cy="74" r="2.5" fill="var(--ink-hi)"/>
+  <path d="M228,44 C 260,36 300,30 344,26 M228,96 C 260,104 300,110 344,116" fill="none" stroke="#ef4444" stroke-width="1.3" stroke-dasharray="3 2"/>
+  <text x="72" y="48" fill="var(--prime)" font-size="7.5" font-weight="700">aleatoric: thin band</text>
+  <text x="72" y="130" fill="var(--ink-mid)" font-size="7">irreducible noise — more data won't shrink it</text>
+  <text x="238" y="20" fill="#ef4444" font-size="7.5" font-weight="700">epistemic: band flares</text>
+  <text x="212" y="130" fill="#ef4444" font-size="7">no data here → reducible; tells you what to collect</text>
+</svg>`,
+    },
   },
   {
     id: 'calibration',
+    interactiveId: 'temperature_scaling_viz',
     title: 'Probabilistic Calibration',
     subtitle: 'Reliability diagrams, ECE, overconfidence in NNs, temperature scaling, Platt scaling, isotonic regression',
     difficulty: 'intermediate',
@@ -421,6 +553,8 @@ In practice, full BNNs are infeasible at any useful scale. The empirical punchli
     tags: ['calibration', 'ECE', 'temperature scaling', 'Platt scaling', 'reliability diagram', 'overconfidence'],
     interactivePrompt: `Before you touch the controls: your random forest predicts 80% probability of loan default — when you look at all historical loans where the model said "80%", what fraction do you expect actually defaulted?`,
     summary: `Your risk team is using a random forest to score loan applications. When the model outputs 0.8, they treat it as an 80% probability of default. They set loss reserves, calculate expected portfolio losses, and make approval decisions based on these numbers. Then you run an audit. Among all loans where the model predicted "80% default probability," only 55% actually defaulted. The model is overconfident by 25 percentage points. Every risk calculation built on those numbers is wrong. This is a calibration failure, and it is costing real money.
+
+[FIGURE: reliability]
 
 Calibration asks a simple question: when a model says 70%, does 70% of the time the positive outcome actually occur? A calibration curve — also called a reliability diagram — makes this visible. Bin all predictions into intervals (0–10%, 10–20%, and so on). For each bin, plot the mean predicted probability against the fraction of actual positives. A perfectly calibrated model produces a diagonal line. An overconfident model produces a curve that sags below the diagonal — predictions of 80% correspond to actual rates of 55%.
 
@@ -476,6 +610,29 @@ Three methods fix this. Platt scaling fits a logistic regression on top of model
         answer: `A`,
       },
     ],
+    figures: {
+      reliability: `<svg viewBox="0 0 360 138" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <line x1="40" y1="118" x2="40" y2="14" stroke="var(--ink-low)" stroke-width="1"/>
+  <line x1="40" y1="118" x2="160" y2="118" stroke="var(--ink-low)" stroke-width="1"/>
+  <line x1="40" y1="118" x2="160" y2="18" stroke="var(--ink-low)" stroke-width="1" stroke-dasharray="3 3"/>
+  <path d="M40,118 C 80,110 104,94 160,52" fill="none" stroke="var(--prime)" stroke-width="2"/>
+  <line x1="128" y1="118" x2="128" y2="64" stroke="var(--amber)" stroke-width="1" stroke-dasharray="2 2"/>
+  <line x1="40" y1="64" x2="128" y2="64" stroke="var(--amber)" stroke-width="0.8" stroke-dasharray="2 2"/>
+  <text x="16" y="16" fill="var(--ink-low)" font-size="7">actual</text>
+  <text x="42" y="14" fill="var(--ink-low)" font-size="7">ideal y=x</text>
+  <text x="40" y="130" fill="var(--ink-low)" font-size="7.5">predicted probability →</text>
+  <text x="66" y="106" fill="var(--prime)" font-size="7.5" font-weight="700">model curve</text>
+  <text x="118" y="132" fill="var(--amber)" font-size="7">say 0.8</text>
+  <text x="6" y="61" fill="var(--amber)" font-size="7">→ 0.55</text>
+  <text x="184" y="30" fill="var(--ink-hi)" font-size="8" font-weight="700">sags below diagonal</text>
+  <text x="184" y="46" fill="var(--ink-mid)" font-size="7.5">= overconfident; gap = ECE</text>
+  <text x="184" y="66" fill="var(--ink-mid)" font-size="7.5">RF / GBM / NN default here;</text>
+  <text x="184" y="78" fill="var(--ink-mid)" font-size="7.5">logistic reg is on the line.</text>
+  <text x="184" y="98" fill="var(--prime)" font-size="7.5" font-weight="700">fix: temperature scaling</text>
+  <text x="184" y="110" fill="var(--ink-mid)" font-size="7.5">divide logits by T → curve</text>
+  <text x="184" y="122" fill="var(--ink-mid)" font-size="7.5">straightens, accuracy unchanged</text>
+</svg>`,
+    },
   },
   {
     id: 'information_geometry',
@@ -484,7 +641,11 @@ Three methods fix this. Platt scaling fits a logistic regression on top of model
     difficulty: 'advanced',
     estimatedMin: 75,
     tags: ['Fisher information', 'natural gradient', 'information geometry', 'K-FAC', 'Riemannian metric', 'Adam'],
-    summary: `Standard gradient descent treats all parameter directions as equally meaningful. But two parameters that differ by the same Euclidean distance in parameter space may correspond to distributions that are almost identical or drastically different — the Euclidean metric ignores how sensitive the model's outputs are to perturbations in each direction. This produces the ravine problem: gradient descent zigzags across high-curvature directions while inching along low-curvature directions, wasting steps. Information geometry gives the right metric: the space of probability distributions is a Riemannian manifold where distances are measured by the Fisher information matrix (FIM), which quantifies how much the output distribution changes per unit perturbation of parameters. Natural gradient descent premultiplies the gradient by the inverse FIM, taking steps that are equal-sized in distribution space.
+    summary: `Standard gradient descent treats all parameter directions as equally meaningful. But two parameters that differ by the same Euclidean distance in parameter space may correspond to distributions that are almost identical or drastically different — the Euclidean metric ignores how sensitive the model's outputs are to perturbations in each direction. This produces the ravine problem: gradient descent zigzags across high-curvature directions while inching along low-curvature directions, wasting steps.
+
+[FIGURE: ravine]
+
+Information geometry gives the right metric: the space of probability distributions is a Riemannian manifold where distances are measured by the Fisher information matrix (FIM), which quantifies how much the output distribution changes per unit perturbation of parameters. Natural gradient descent premultiplies the gradient by the inverse FIM, taking steps that are equal-sized in distribution space.
 
 The result is faster convergence per step. The catch: computing and inverting the full FIM is O(p\xb2) in storage and O(p\xb3) in compute — prohibitive at any useful scale. Adam's per-parameter learning rate scaling is a diagonal FIM approximation, which explains both why Adam works and why it fails when parameters are highly correlated.`,
     keyPoints: [
@@ -540,6 +701,20 @@ The result is faster convergence per step. The catch: computing and inverting th
       `**Adam is a diagonal FIM approximation** ($v_t ≈ \text{diag}(F)$) — works when parameters are uncorrelated, fails when off-diagonals matter.`,
       `**TRPO/PPO = natural gradient in RL:** constrain $KL[π_{old} ‖ π_{new}]$, not Euclidean weight change — Euclidean constraints don't bound policy shift.`,
     ],
+    figures: {
+      ravine: `<svg viewBox="0 0 360 128" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <ellipse cx="180" cy="66" rx="150" ry="30" fill="none" stroke="var(--ink-low)" stroke-width="0.8"/>
+  <ellipse cx="180" cy="66" rx="108" ry="21" fill="none" stroke="var(--ink-low)" stroke-width="0.8"/>
+  <ellipse cx="180" cy="66" rx="64" ry="12" fill="none" stroke="var(--ink-low)" stroke-width="0.8"/>
+  <circle cx="180" cy="66" r="3" fill="var(--ink-hi)"/>
+  <text x="150" y="18" fill="var(--ink-low)" font-size="7">loss ravine (elongated contours)</text>
+  <path d="M44,50 L70,82 L96,54 L120,78 L142,58 L162,72 L180,66" fill="none" stroke="#ef4444" stroke-width="1.6"/>
+  <text x="40" y="44" fill="#ef4444" font-size="7.5" font-weight="700">SGD: zigzags (Euclidean metric)</text>
+  <path d="M44,88 C 100,84 150,72 180,66" fill="none" stroke="var(--prime)" stroke-width="2"/>
+  <text x="40" y="104" fill="var(--prime)" font-size="7.5" font-weight="700">natural grad: θ ← θ − ηF⁻¹∇L</text>
+  <text x="40" y="116" fill="var(--ink-mid)" font-size="7">F rescales to equal steps in distribution space → straight to the min</text>
+</svg>`,
+    },
   },
   {
     id: 'probabilistic_graphical_models',
@@ -549,6 +724,8 @@ The result is faster convergence per step. The catch: computing and inverting th
     estimatedMin: 70,
     tags: ['PGM', 'Bayesian network', 'MRF', 'd-separation', 'belief propagation', 'HMM', 'factor graph'],
     summary: `High-dimensional joint distributions are intractable to work with directly — storing and computing over p(X₁,...,Xₙ) is exponential in n.
+
+[FIGURE: collider]
 
 The key observation is that most real-world variables are not all directly dependent on each other. PGMs formalise this: encode which variables are independent of which using a graph structure, then factorise the joint into local potentials over connected subsets. Inference becomes a local message-passing operation over the graph rather than a global computation over the full joint. Bayesian networks use directed edges to encode generative causal stories; Markov Random Fields use undirected edges to encode symmetric correlations. PGMs largely ceded perception tasks to deep learning after 2012, but remain the right tool when conditional independence structure must be explicitly represented, audited, and explained — medical diagnosis networks, causal models, structured prediction with hard output constraints.`,
     keyPoints: [
@@ -604,5 +781,32 @@ The key observation is that most real-world variables are not all directly depen
       `**Treewidth sets inference cost:** junction tree $O(K^{tw+1})$; exact only for low treewidth, else loopy BP / VI / MCMC.`,
       `**Why PGMs faded then persist:** lost perception to deep nets (feature/treewidth cost), but win when structure must be audited and explained.`,
     ],
+    figures: {
+      collider: `<svg viewBox="0 0 360 132" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="66" y="14" fill="var(--ink-mid)" font-size="7.5" font-weight="700">Z unobserved</text>
+  <circle cx="34" cy="40" r="13" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="34" y="44" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">X</text>
+  <circle cx="150" cy="40" r="13" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="150" y="44" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">Y</text>
+  <circle cx="92" cy="86" r="13" fill="var(--depth)" stroke="var(--ink-low)"/>
+  <text x="92" y="90" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">Z</text>
+  <path d="M45,50 L80,76" stroke="var(--ink-low)" stroke-width="1.5" marker-end="url(#c1)"/>
+  <path d="M139,50 L104,76" stroke="var(--ink-low)" stroke-width="1.5" marker-end="url(#c1)"/>
+  <text x="10" y="112" fill="var(--prime)" font-size="7.5" font-weight="700">X ⟂ Y  (path blocked)</text>
+  <line x1="182" y1="20" x2="182" y2="120" stroke="var(--rim)" stroke-width="1"/>
+  <text x="248" y="14" fill="var(--amber)" font-size="7.5" font-weight="700">condition on Z</text>
+  <circle cx="216" cy="40" r="13" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="216" y="44" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">X</text>
+  <circle cx="332" cy="40" r="13" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="332" y="44" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">Y</text>
+  <circle cx="274" cy="86" r="13" fill="var(--amber)" opacity="0.35" stroke="var(--amber)"/>
+  <text x="274" y="90" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">Z</text>
+  <path d="M227,50 L262,76" stroke="var(--ink-low)" stroke-width="1.5" marker-end="url(#c1)"/>
+  <path d="M321,50 L286,76" stroke="var(--ink-low)" stroke-width="1.5" marker-end="url(#c1)"/>
+  <path d="M229,40 L319,40" stroke="#ef4444" stroke-width="1.4" stroke-dasharray="4 2"/>
+  <text x="192" y="112" fill="#ef4444" font-size="7.5" font-weight="700">X ⟂̸ Y  spurious link (Berkson)</text>
+  <defs><marker id="c1" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="var(--ink-low)"/></marker></defs>
+</svg>`,
+    },
   },
 ]

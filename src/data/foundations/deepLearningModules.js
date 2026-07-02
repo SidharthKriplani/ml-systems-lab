@@ -290,6 +290,8 @@ Here is a subtlety that turns out to matter. The mean and spread used to normali
 
 There is a second normaliser, **layer norm**, and picking the wrong one is a genuine error, not a tuning choice. Batch norm normalises each feature *across the batch* — which only makes sense if the examples in a batch are comparable. In a Transformer chewing through tokens from different positions in different sentences, "the average of this feature across the batch" is semantic nonsense. Layer norm instead normalises *across the features of a single example*, so it is well-defined for one token at a time, at any position, with any batch size. That is why every Transformer uses layer norm, and CNNs on images use batch norm.
 
+[FIGURE: norm_axes]
+
 (One practical gotcha with batch norm: at inference you have no batch, so it switches to running averages collected during training. Forget to flip the model into eval mode and a single-example prediction gets normalised against a batch of one — which quietly produces garbage, with no error.)`,
     interactivePrompt: `Before you touch the controls: if you forget to call model.eval() at inference time with batch norm, what happens to a single-sample prediction — and why would it fail silently rather than throwing an error?`,
     keyPoints: [
@@ -340,6 +342,38 @@ There is a second normaliser, **layer norm**, and picking the wrong one is a gen
       },
     ],
     interactiveId: 'batch_norm_viz',
+    figures: {
+      norm_axes: `<svg viewBox="0 0 360 210" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="90" y="16" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">BatchNorm</text>
+  <text x="270" y="16" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">LayerNorm</text>
+  <!-- axis labels -->
+  <text x="14" y="105" text-anchor="middle" font-size="9" fill="var(--ink-low)" transform="rotate(-90,14,105)">batch (samples)</text>
+  <text x="90" y="200" text-anchor="middle" font-size="9" fill="var(--ink-low)">features →</text>
+  <text x="270" y="200" text-anchor="middle" font-size="9" fill="var(--ink-low)">features →</text>
+  <!-- LEFT grid: 4 rows (samples) x 5 cols (features); highlight one feature column across batch -->
+  <rect x="30" y="30" width="120" height="120" fill="var(--prime-faint)" stroke="var(--rim)" stroke-width="1"/>
+  <rect x="54" y="30" width="24" height="120" fill="var(--amber)" opacity="0.85"/>
+  <line x1="54" y1="30" x2="54" y2="150" stroke="var(--rim)" stroke-width="0.5"/>
+  <line x1="78" y1="30" x2="78" y2="150" stroke="var(--rim)" stroke-width="0.5"/>
+  <line x1="102" y1="30" x2="102" y2="150" stroke="var(--rim)" stroke-width="0.5"/>
+  <line x1="126" y1="30" x2="126" y2="150" stroke="var(--rim)" stroke-width="0.5"/>
+  <line x1="30" y1="60" x2="150" y2="60" stroke="var(--rim)" stroke-width="0.5"/>
+  <line x1="30" y1="90" x2="150" y2="90" stroke="var(--rim)" stroke-width="0.5"/>
+  <line x1="30" y1="120" x2="150" y2="120" stroke="var(--rim)" stroke-width="0.5"/>
+  <text x="90" y="168" text-anchor="middle" font-size="8.5" fill="var(--ink-mid)">normalise 1 feature down the batch</text>
+  <!-- RIGHT grid: highlight one sample row across features -->
+  <rect x="210" y="30" width="120" height="120" fill="var(--prime-faint)" stroke="var(--rim)" stroke-width="1"/>
+  <rect x="210" y="66" width="120" height="24" fill="var(--prime)" opacity="0.8"/>
+  <line x1="234" y1="30" x2="234" y2="150" stroke="var(--rim)" stroke-width="0.5"/>
+  <line x1="258" y1="30" x2="258" y2="150" stroke="var(--rim)" stroke-width="0.5"/>
+  <line x1="282" y1="30" x2="282" y2="150" stroke="var(--rim)" stroke-width="0.5"/>
+  <line x1="306" y1="30" x2="306" y2="150" stroke="var(--rim)" stroke-width="0.5"/>
+  <line x1="210" y1="60" x2="330" y2="60" stroke="var(--rim)" stroke-width="0.5"/>
+  <line x1="210" y1="90" x2="330" y2="90" stroke="var(--rim)" stroke-width="0.5"/>
+  <line x1="210" y1="120" x2="330" y2="120" stroke="var(--rim)" stroke-width="0.5"/>
+  <text x="270" y="168" text-anchor="middle" font-size="8.5" fill="var(--ink-mid)">normalise 1 sample across its features</text>
+</svg>`,
+    },
   },
   {
     id: 'optimizers',
@@ -424,6 +458,8 @@ Here is the twist. On image-classification benchmarks, a well-tuned **SGD with m
 
 Convolution is the solution to that invisibility. A 3×3 filter slides across the image, computing a dot product at every position: the same 9 weights applied at (3,4), at (15,20), and at every other location. That is weight sharing — the filter has 9 parameters regardless of image size. When the filter learns to detect a horizontal edge, it detects horizontal edges everywhere, because the same weights do the computation everywhere. A flat linear layer needs 100K parameters to do what a single convolutional filter does with 9. Pooling takes the output of a filter across a small spatial region and keeps only the maximum: if the edge appeared slightly left or slightly right, the pooled value is the same. This builds position invariance. Stack several layers: the first layer detects edges, the second layer detects combinations of edges into corners and curves, the third detects shapes, the fourth detects objects. Each neuron at a deep layer "sees" a large portion of the original image because its receptive field grows with each convolution — a neuron at layer 5 of a 3×3-stride-1 network has a receptive field of 11×11 pixels in the original image, seeing a neighborhood that spans multiple objects.
 
+[FIGURE: receptive_field]
+
 **NOT this.** "CNNs were designed for images." The principle — local patterns plus translation equivariance — applies anywhere locality matters. 1D CNNs classify audio and DNA sequences, where adjacent time steps or nucleotides are locally related. 3D CNNs process video, where nearby frames in time are locally correlated. Graph CNNs extend the idea to molecular structures and social networks. The architecture is not about pixels; it is about exploiting whatever spatial or sequential structure your data has. If your input has the property that neighboring elements are more related than distant elements, a convolutional inductive bias is appropriate. If your input is a bag of features with no meaningful ordering, it is not.`,
     keyPoints: [
       `**Use CNNs over MLPs whenever the input has local structure — weight sharing cuts parameters 10–100× and builds in the right inductive bias.**\n\nA flat MLP applied to a 224×224 image needs 150M parameters in the first layer alone. A convolutional layer with 64 filters of size 3×3 needs 64×9×3 = 1,728 parameters, regardless of image size. The accuracy gain is not from having more parameters — it is from encoding the assumption that local patterns repeat, which is correct for images, audio, and sequences.`,
@@ -473,6 +509,39 @@ Convolution is the solution to that invisibility. A 3×3 filter slides across th
       `**Trap — depth without residuals kills gradients:** plain 50-layer CNN trained worse than 34-layer; skip connections (output = F(x) + x) give gradient a direct path, unlocking 100+ layers.`,
       `**Diagnostic:** healthy first-layer filters look like oriented edge/colour detectors after one epoch — random static means gradient isn't reaching them.`,
     ],
+    figures: {
+      receptive_field: `<svg viewBox="0 0 360 190" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="15" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">receptive field grows with depth</text>
+  <!-- input grid 8x8 at left -->
+  <text x="45" y="38" text-anchor="middle" font-size="9" fill="var(--ink-low)">input</text>
+  <g stroke="var(--rim)" stroke-width="0.5" fill="var(--prime-faint)">
+    <rect x="15" y="45" width="80" height="80"/>
+  </g>
+  <g stroke="var(--rim)" stroke-width="0.5">
+    <line x1="35" y1="45" x2="35" y2="125"/><line x1="55" y1="45" x2="55" y2="125"/><line x1="75" y1="45" x2="75" y2="125"/>
+    <line x1="15" y1="65" x2="95" y2="65"/><line x1="15" y1="85" x2="95" y2="85"/><line x1="15" y1="105" x2="95" y2="105"/>
+  </g>
+  <!-- 3x3 filter window highlighted -->
+  <rect x="35" y="65" width="60" height="60" fill="var(--amber)" opacity="0.7" stroke="var(--amber)" stroke-width="1.5"/>
+  <text x="45" y="140" text-anchor="middle" font-size="8" fill="var(--ink-mid)">3×3 filter</text>
+  <!-- layer 1 feature: single cell -->
+  <text x="185" y="38" text-anchor="middle" font-size="9" fill="var(--ink-low)">layer 1</text>
+  <rect x="170" y="75" width="20" height="20" fill="var(--prime)" opacity="0.85" stroke="var(--rim)" stroke-width="0.5"/>
+  <text x="180" y="110" text-anchor="middle" font-size="8" fill="var(--ink-mid)">sees 3×3</text>
+  <!-- arrows -->
+  <line x1="100" y1="95" x2="165" y2="88" stroke="var(--ink-low)" stroke-width="1" marker-end="url(#rf-a)"/>
+  <line x1="195" y1="88" x2="255" y2="88" stroke="var(--ink-low)" stroke-width="1" marker-end="url(#rf-a)"/>
+  <!-- layer 2 feature -->
+  <text x="290" y="38" text-anchor="middle" font-size="9" fill="var(--ink-low)">layer 2</text>
+  <rect x="278" y="75" width="24" height="24" fill="var(--prime)" opacity="0.85" stroke="var(--rim)" stroke-width="0.5"/>
+  <text x="290" y="114" text-anchor="middle" font-size="8" fill="var(--ink-mid)">sees 5×5</text>
+  <text x="180" y="165" text-anchor="middle" font-size="9" fill="var(--ink-mid)">same 9 shared weights applied at every position (weight sharing)</text>
+  <text x="180" y="180" text-anchor="middle" font-size="9" fill="var(--ink-low)">each deeper neuron sees a wider slice of the input</text>
+  <defs>
+    <marker id="rf-a" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="var(--ink-low)"/></marker>
+  </defs>
+</svg>`,
+    },
   },
   {
     id: 'rnns_lstms',
@@ -718,6 +787,8 @@ The fix is to stamp each word's representation with a position signal before the
 
 Stack the pieces and you get the repeating block every Transformer is built from: normalise the inputs, run **multi-head attention** (words look at each other), add the result back through a **residual shortcut**, normalise again, run a small two-layer **feed-forward network** (FFN) on each word, and add that back too. Two details matter. The FFN is deliberately *wide* — usually 4× the model's width in the middle — because it acts as the model's *memory*, where a lot of its factual knowledge is stored; shrink it and the model measurably forgets facts. And the **residual shortcuts** are not decoration: they give the gradient a direct path back to every layer, which is the only reason you can stack dozens of these blocks without the signal dying (exactly the vanishing-gradient fix from earlier).
 
+[FIGURE: transformer_block]
+
 ---
 
 **Two flavours: encoder and decoder.**
@@ -771,6 +842,52 @@ The same block comes in two modes, set by *who is allowed to look at whom*. **En
         answer: `D`,
       },
     ],
+    figures: {
+      transformer_block: `<svg viewBox="0 0 360 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:300px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="16" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">one Transformer block</text>
+  <!-- input -->
+  <rect x="120" y="28" width="120" height="24" rx="4" fill="var(--prime-faint)" stroke="var(--rim)" stroke-width="1"/>
+  <text x="180" y="44" text-anchor="middle" font-size="10" fill="var(--ink-mid)">tokens + positional enc</text>
+  <!-- main flow arrow -->
+  <line x1="180" y1="52" x2="180" y2="66" stroke="var(--ink-low)" stroke-width="1.5" marker-end="url(#tb-a)"/>
+  <!-- LayerNorm 1 -->
+  <rect x="130" y="66" width="100" height="20" rx="4" fill="var(--depth)" stroke="var(--rim)" stroke-width="1"/>
+  <text x="180" y="80" text-anchor="middle" font-size="9" fill="var(--ink-hi)">LayerNorm</text>
+  <line x1="180" y1="86" x2="180" y2="98" stroke="var(--ink-low)" stroke-width="1.5" marker-end="url(#tb-a)"/>
+  <!-- MHA -->
+  <rect x="110" y="98" width="140" height="26" rx="4" fill="var(--prime)" opacity="0.85" stroke="var(--rim)" stroke-width="1"/>
+  <text x="180" y="115" text-anchor="middle" font-size="9.5" fill="#000" font-weight="700">Multi-Head Attention</text>
+  <!-- add (residual 1) -->
+  <line x1="180" y1="124" x2="180" y2="138" stroke="var(--ink-low)" stroke-width="1.5" marker-end="url(#tb-a)"/>
+  <circle cx="180" cy="146" r="9" fill="var(--depth)" stroke="var(--amber)" stroke-width="1.5"/>
+  <text x="180" y="150" text-anchor="middle" font-size="11" fill="var(--amber)" font-weight="700">+</text>
+  <!-- residual skip 1 (right side) -->
+  <path d="M180,60 L300,60 L300,146 L189,146" fill="none" stroke="var(--amber)" stroke-width="1.3" stroke-dasharray="4,3" marker-end="url(#tb-b)"/>
+  <text x="306" y="103" font-size="8" fill="var(--amber)" transform="rotate(90,306,103)">residual</text>
+  <!-- LayerNorm 2 -->
+  <line x1="180" y1="155" x2="180" y2="168" stroke="var(--ink-low)" stroke-width="1.5" marker-end="url(#tb-a)"/>
+  <rect x="130" y="168" width="100" height="20" rx="4" fill="var(--depth)" stroke="var(--rim)" stroke-width="1"/>
+  <text x="180" y="182" text-anchor="middle" font-size="9" fill="var(--ink-hi)">LayerNorm</text>
+  <line x1="180" y1="188" x2="180" y2="200" stroke="var(--ink-low)" stroke-width="1.5" marker-end="url(#tb-a)"/>
+  <!-- FFN -->
+  <rect x="110" y="200" width="140" height="30" rx="4" fill="var(--prime)" opacity="0.6" stroke="var(--rim)" stroke-width="1"/>
+  <text x="180" y="214" text-anchor="middle" font-size="9.5" fill="var(--ink-hi)" font-weight="700">Feed-Forward (4× wide)</text>
+  <text x="180" y="225" text-anchor="middle" font-size="7.5" fill="var(--ink-mid)">stores factual knowledge</text>
+  <!-- add (residual 2) -->
+  <line x1="180" y1="230" x2="180" y2="244" stroke="var(--ink-low)" stroke-width="1.5" marker-end="url(#tb-a)"/>
+  <circle cx="180" cy="252" r="9" fill="var(--depth)" stroke="var(--amber)" stroke-width="1.5"/>
+  <text x="180" y="256" text-anchor="middle" font-size="11" fill="var(--amber)" font-weight="700">+</text>
+  <path d="M180,162 L60,162 L60,252 L171,252" fill="none" stroke="var(--amber)" stroke-width="1.3" stroke-dasharray="4,3" marker-end="url(#tb-b)"/>
+  <text x="54" y="207" font-size="8" fill="var(--amber)" transform="rotate(-90,54,207)">residual</text>
+  <!-- output -->
+  <line x1="180" y1="261" x2="180" y2="274" stroke="var(--ink-low)" stroke-width="1.5" marker-end="url(#tb-a)"/>
+  <text x="180" y="290" text-anchor="middle" font-size="9" fill="var(--ink-low)">to next block ×N</text>
+  <defs>
+    <marker id="tb-a" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="var(--ink-low)"/></marker>
+    <marker id="tb-b" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="var(--amber)"/></marker>
+  </defs>
+</svg>`,
+    },
   },
   {
     id: 'pretraining',
@@ -788,6 +905,8 @@ Now do one thing differently: start from **PubMedBERT**, a model already trained
 **What pre-training actually does.**
 
 Pre-training is *self-supervised*: you take a mountain of unlabelled text and make the model play fill-in-the-blank or predict-the-next-word, billions of times. To get good at that game, the model is forced to internalise how language works — grammar, vocabulary, which words go together, domain structure — and all of that gets baked into its weights, landing it in a *region of parameter space* that already "understands" the language. Fine-tuning then just nudges it a short distance from there to solve your specific task. You are not teaching from scratch; you are giving directions from a place that is already most of the way there.
+
+[FIGURE: transfer_flow]
 
 ---
 
@@ -848,6 +967,40 @@ Fine-tuning has a trap called **catastrophic forgetting**: hit the pre-trained m
       `**Safety recipe:** LR 10–100× smaller than pre-training (~2e-5), few epochs, short warmup, weight decay 0.01 — stay near the pre-trained basin.`,
       `**Diagnostic:** immediate divergence → LR too high (÷10); never beats baseline → domain mismatch or wrong task head.`,
     ],
+    figures: {
+      transfer_flow: `<svg viewBox="0 0 360 180" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="16" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">pre-train once, fine-tune many times</text>
+  <!-- big corpus -->
+  <rect x="14" y="40" width="84" height="54" rx="5" fill="var(--prime-faint)" stroke="var(--rim)" stroke-width="1"/>
+  <text x="56" y="62" text-anchor="middle" font-size="9.5" fill="var(--ink-hi)" font-weight="700">huge</text>
+  <text x="56" y="75" text-anchor="middle" font-size="9.5" fill="var(--ink-hi)" font-weight="700">unlabelled</text>
+  <text x="56" y="88" text-anchor="middle" font-size="8.5" fill="var(--ink-mid)">corpus (14M)</text>
+  <!-- arrow: self-supervised -->
+  <line x1="98" y1="67" x2="140" y2="67" stroke="var(--ink-low)" stroke-width="1.5" marker-end="url(#tf-a)"/>
+  <text x="119" y="60" text-anchor="middle" font-size="7.5" fill="var(--ink-low)">self-sup.</text>
+  <!-- pretrained model -->
+  <rect x="140" y="40" width="90" height="54" rx="5" fill="var(--prime)" opacity="0.85" stroke="var(--rim)" stroke-width="1"/>
+  <text x="185" y="62" text-anchor="middle" font-size="10" fill="#000" font-weight="700">pretrained</text>
+  <text x="185" y="76" text-anchor="middle" font-size="10" fill="#000" font-weight="700">model</text>
+  <text x="185" y="88" text-anchor="middle" font-size="7.5" fill="#000">knows the language</text>
+  <!-- three fine-tune branches -->
+  <line x1="230" y1="55" x2="272" y2="40" stroke="var(--amber)" stroke-width="1.5" marker-end="url(#tf-b)"/>
+  <line x1="230" y1="67" x2="272" y2="97" stroke="var(--amber)" stroke-width="1.5" marker-end="url(#tf-b)"/>
+  <line x1="230" y1="79" x2="272" y2="154" stroke="var(--amber)" stroke-width="1.5" marker-end="url(#tf-b)"/>
+  <rect x="272" y="28" width="80" height="26" rx="4" fill="var(--depth)" stroke="var(--rim)" stroke-width="1"/>
+  <text x="312" y="45" text-anchor="middle" font-size="8.5" fill="var(--ink-hi)">task A: 500 labels</text>
+  <rect x="272" y="84" width="80" height="26" rx="4" fill="var(--depth)" stroke="var(--rim)" stroke-width="1"/>
+  <text x="312" y="101" text-anchor="middle" font-size="8.5" fill="var(--ink-hi)">task B: 500 labels</text>
+  <rect x="272" y="140" width="80" height="26" rx="4" fill="var(--depth)" stroke="var(--rim)" stroke-width="1"/>
+  <text x="312" y="157" text-anchor="middle" font-size="8.5" fill="var(--ink-hi)">task C: 500 labels</text>
+  <text x="243" y="128" text-anchor="middle" font-size="7.5" fill="var(--amber)">fine-tune</text>
+  <text x="180" y="176" text-anchor="middle" font-size="8.5" fill="var(--ink-low)">expensive pre-training amortised across every downstream task</text>
+  <defs>
+    <marker id="tf-a" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="var(--ink-low)"/></marker>
+    <marker id="tf-b" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="var(--amber)"/></marker>
+  </defs>
+</svg>`,
+    },
   },
   {
     id: 'finetune',
@@ -863,6 +1016,8 @@ Fine-tuning has a trap called **catastrophic forgetting**: hit the pre-trained m
 **LoRA: train a tiny add-on, freeze the rest.**
 
 The key insight behind **LoRA** is that the *change* a model needs to adapt to a new task is small and simple — it lives in a low-dimensional space. So instead of learning a full 4096×4096 update matrix (16.7 million numbers), LoRA learns it as the product of two skinny matrices — say 4096×8 and 8×4096 — just about **65,000** numbers, a 99.6% cut. The giant base model stays *frozen*; only these two little matrices train. And the elegant part: once trained, the tiny update can be *added straight back* into the original weights, so the deployed model is exactly the same size and speed as the original — **zero extra inference cost.** That mergeability is LoRA's edge over "adapter" approaches that bolt on permanent extra modules.
+
+[FIGURE: lora_decomp]
 
 ---
 
@@ -923,6 +1078,37 @@ People sometimes call "train a fresh classifier on top of a frozen model" *fine-
       `**Feature extraction ≠ fine-tuning:** a fresh classifier on a frozen model only re-sorts existing representations; real fine-tuning (incl. LoRA) changes effective weights to learn new behaviour.`,
       `**Diagnostic:** if training loss drops but target behaviour doesn't, the data doesn't actually demonstrate the target behaviour.`,
     ],
+    figures: {
+      lora_decomp: `<svg viewBox="0 0 360 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="16" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">LoRA: W frozen, learn a low-rank update</text>
+  <!-- frozen W big square -->
+  <rect x="24" y="40" width="90" height="90" fill="var(--depth)" stroke="var(--rim)" stroke-width="1"/>
+  <text x="69" y="82" text-anchor="middle" font-size="13" fill="var(--ink-mid)" font-weight="700">W</text>
+  <text x="69" y="98" text-anchor="middle" font-size="8" fill="var(--ink-low)">4096×4096</text>
+  <text x="69" y="146" text-anchor="middle" font-size="9" fill="var(--ink-low)">frozen ❄ (16.7M)</text>
+  <!-- plus -->
+  <text x="130" y="90" text-anchor="middle" font-size="18" fill="var(--ink-mid)" font-weight="700">+</text>
+  <!-- B tall skinny -->
+  <rect x="150" y="40" width="18" height="90" fill="var(--prime)" opacity="0.85" stroke="var(--rim)" stroke-width="1"/>
+  <text x="159" y="88" text-anchor="middle" font-size="11" fill="#000" font-weight="700">B</text>
+  <text x="159" y="146" text-anchor="middle" font-size="8" fill="var(--ink-low)">4096×8</text>
+  <!-- times -->
+  <text x="182" y="90" text-anchor="middle" font-size="14" fill="var(--ink-mid)" font-weight="700">×</text>
+  <!-- A wide short -->
+  <rect x="196" y="76" width="90" height="18" fill="var(--amber)" opacity="0.85" stroke="var(--rim)" stroke-width="1"/>
+  <text x="241" y="90" text-anchor="middle" font-size="11" fill="#000" font-weight="700">A</text>
+  <text x="241" y="112" text-anchor="middle" font-size="8" fill="var(--ink-low)">8×4096</text>
+  <!-- equals result -->
+  <text x="300" y="90" text-anchor="middle" font-size="16" fill="var(--ink-mid)" font-weight="700">=</text>
+  <rect x="314" y="55" width="40" height="60" fill="var(--prime-faint)" stroke="var(--rim)" stroke-width="1"/>
+  <text x="334" y="82" text-anchor="middle" font-size="8.5" fill="var(--ink-hi)">ΔW</text>
+  <text x="334" y="95" text-anchor="middle" font-size="7" fill="var(--ink-mid)">update</text>
+  <!-- trainable bracket -->
+  <line x1="150" y1="160" x2="286" y2="160" stroke="var(--prime)" stroke-width="1.5"/>
+  <text x="218" y="174" text-anchor="middle" font-size="9" fill="var(--prime)" font-weight="700">only these train — ~65K params (99.6% cut)</text>
+  <text x="180" y="192" text-anchor="middle" font-size="8.5" fill="var(--ink-low)">after training, merge B·A back into W → zero extra inference cost</text>
+</svg>`,
+    },
   },
   {
     id: 'quantization',
@@ -942,6 +1128,8 @@ We can get away with a lot less. Store each weight as an 8-bit integer instead �
 An 8-bit integer can only be one of 256 values. So you take the actual range of the weights — say [−0.5, 0.5] — and chop it into 256 evenly spaced buckets. Each weight is rounded to its nearest bucket: \`x_int = round(x_float / scale)\`, where \`scale = (max − min) / 255\`. Two nearby floats that land in the same bucket become the same integer. That rounding is the price you pay — a small error per weight.
 
 The catch is *outliers.* If 99.9% of weights sit in [−0.5, 0.5] but one weight is 5.0, the range must stretch to cover it — and now your 256 buckets are spread across a huge span, wasting almost all of them and leaving the common weights with almost no precision. Handling outliers well is the whole game in quantization.
+
+[FIGURE: int8_buckets]
 
 ---
 
@@ -1002,6 +1190,38 @@ Push down to 4-bit and PTQ starts dropping 2–5% accuracy — too many weights 
       `**Skip calibration → silent accuracy collapse:** no error in the logs. The single most common quantization mistake.`,
       `**Below INT8:** GPTQ/AWQ reach 4-bit at <1% loss; QAT simulates rounding during training for the best accuracy but costs a full retrain.`,
     ],
+    figures: {
+      int8_buckets: `<svg viewBox="0 0 360 210" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="16" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">FP32 → INT8: 256 evenly spaced buckets</text>
+  <!-- GOOD: tight range -->
+  <text x="24" y="40" font-size="9.5" fill="var(--prime)" font-weight="700">tight range → precision preserved</text>
+  <line x1="30" y1="70" x2="330" y2="70" stroke="var(--ink-low)" stroke-width="1"/>
+  <text x="30" y="86" text-anchor="middle" font-size="8" fill="var(--ink-low)">−0.5</text>
+  <text x="330" y="86" text-anchor="middle" font-size="8" fill="var(--ink-low)">0.5</text>
+  <!-- bucket ticks evenly across full width -->
+  <g stroke="var(--rim)" stroke-width="0.6">
+    <line x1="60" y1="64" x2="60" y2="76"/><line x1="90" y1="64" x2="90" y2="76"/><line x1="120" y1="64" x2="120" y2="76"/><line x1="150" y1="64" x2="150" y2="76"/><line x1="180" y1="64" x2="180" y2="76"/><line x1="210" y1="64" x2="210" y2="76"/><line x1="240" y1="64" x2="240" y2="76"/><line x1="270" y1="64" x2="270" y2="76"/><line x1="300" y1="64" x2="300" y2="76"/>
+  </g>
+  <!-- weight dots spread across buckets -->
+  <circle cx="72" cy="70" r="3" fill="var(--prime)"/><circle cx="108" cy="70" r="3" fill="var(--prime)"/><circle cx="165" cy="70" r="3" fill="var(--prime)"/><circle cx="222" cy="70" r="3" fill="var(--prime)"/><circle cx="255" cy="70" r="3" fill="var(--prime)"/><circle cx="288" cy="70" r="3" fill="var(--prime)"/>
+  <text x="180" y="98" text-anchor="middle" font-size="8" fill="var(--ink-mid)">buckets land on real weights — small rounding error</text>
+  <!-- BAD: outlier stretches range -->
+  <text x="24" y="128" font-size="9.5" fill="var(--amber)" font-weight="700">one outlier → buckets wasted</text>
+  <line x1="30" y1="158" x2="330" y2="158" stroke="var(--ink-low)" stroke-width="1"/>
+  <text x="30" y="174" text-anchor="middle" font-size="8" fill="var(--ink-low)">−0.5</text>
+  <text x="330" y="174" text-anchor="middle" font-size="8" fill="var(--ink-low)">5.0</text>
+  <!-- common weights all crammed near left -->
+  <g stroke="var(--rim)" stroke-width="0.6">
+    <line x1="60" y1="152" x2="60" y2="164"/><line x1="90" y1="152" x2="90" y2="164"/><line x1="120" y1="152" x2="120" y2="164"/><line x1="150" y1="152" x2="150" y2="164"/><line x1="180" y1="152" x2="180" y2="164"/><line x1="210" y1="152" x2="210" y2="164"/><line x1="240" y1="152" x2="240" y2="164"/><line x1="270" y1="152" x2="270" y2="164"/><line x1="300" y1="152" x2="300" y2="164"/>
+  </g>
+  <rect x="30" y="150" width="24" height="16" fill="var(--prime)" opacity="0.35"/>
+  <circle cx="36" cy="158" r="3" fill="var(--prime)"/><circle cx="42" cy="158" r="3" fill="var(--prime)"/><circle cx="48" cy="158" r="3" fill="var(--prime)"/>
+  <circle cx="330" cy="158" r="4" fill="var(--amber)"/>
+  <text x="330" y="146" text-anchor="middle" font-size="8" fill="var(--amber)" font-weight="700">outlier</text>
+  <text x="180" y="190" text-anchor="middle" font-size="8" fill="var(--ink-mid)">all common weights crushed into 1 bucket → precision destroyed</text>
+  <text x="180" y="204" text-anchor="middle" font-size="8" fill="var(--ink-low)">calibration sets the range from real data to avoid this</text>
+</svg>`,
+    },
   },
   {
     id: 'dl_serving',
@@ -1013,6 +1233,8 @@ Push down to 4-bit and PTQ starts dropping 2–5% accuracy — too many weights 
     summary: `You put a GPT-2 model behind an API. The obvious way to serve it: take one request, run it, return the answer, take the next. Each forward pass takes 50ms, so you get 20 requests per second. But watch the GPU while this happens — it is 95% idle. A GPU is a machine built to do thousands of multiplications at once, and you are feeding it one request at a time. It is a delivery truck making one trip per parcel.
 
 So fill the truck. Stack 32 requests together and run them in a single forward pass. Because the GPU was mostly empty, those 32 finish in roughly the same 50ms as one did — **640 requests per second from the exact same hardware, no model change at all.** Batching is the first and biggest lever in serving.
+
+[FIGURE: batching_throughput]
 
 ---
 
@@ -1081,6 +1303,41 @@ One more trick for generation speed. Let a small, fast "draft" model guess the n
       `**Speculative decoding:** small draft model guesses K tokens, big model verifies all K in one pass → 2–3× when the guess is right.`,
       `**Diagnostic:** target 70–85% GPU utilization at P99 budget — under 60% = under-batching; over 95% with high latency = over-batched or model too big.`,
     ],
+    figures: {
+      batching_throughput: `<svg viewBox="0 0 360 190" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="16" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">batching fills an idle GPU</text>
+  <!-- no batching -->
+  <text x="90" y="36" text-anchor="middle" font-size="9.5" fill="var(--ink-mid)" font-weight="700">1 request / pass</text>
+  <rect x="30" y="44" width="120" height="70" rx="4" fill="var(--depth)" stroke="var(--rim)" stroke-width="1"/>
+  <text x="90" y="42" text-anchor="middle" font-size="7" fill="var(--ink-low)">GPU</text>
+  <!-- one filled cell of many -->
+  <rect x="38" y="52" width="16" height="16" fill="var(--prime)" opacity="0.85"/>
+  <g fill="var(--rim)" opacity="0.4">
+    <rect x="58" y="52" width="16" height="16"/><rect x="78" y="52" width="16" height="16"/><rect x="98" y="52" width="16" height="16"/><rect x="118" y="52" width="16" height="16"/>
+    <rect x="38" y="72" width="16" height="16"/><rect x="58" y="72" width="16" height="16"/><rect x="78" y="72" width="16" height="16"/><rect x="98" y="72" width="16" height="16"/><rect x="118" y="72" width="16" height="16"/>
+    <rect x="38" y="92" width="16" height="16"/><rect x="58" y="92" width="16" height="16"/><rect x="78" y="92" width="16" height="16"/><rect x="98" y="92" width="16" height="16"/><rect x="118" y="92" width="16" height="16"/>
+  </g>
+  <text x="90" y="130" text-anchor="middle" font-size="8" fill="var(--ink-low)">95% idle</text>
+  <text x="90" y="146" text-anchor="middle" font-size="11" fill="var(--ink-hi)" font-weight="700">20 req/s</text>
+  <!-- arrow -->
+  <line x1="158" y1="80" x2="200" y2="80" stroke="var(--amber)" stroke-width="2" marker-end="url(#bt-a)"/>
+  <text x="179" y="72" text-anchor="middle" font-size="7.5" fill="var(--amber)">batch 32</text>
+  <!-- with batching: full grid -->
+  <text x="270" y="36" text-anchor="middle" font-size="9.5" fill="var(--ink-mid)" font-weight="700">32 requests / pass</text>
+  <rect x="210" y="44" width="120" height="70" rx="4" fill="var(--depth)" stroke="var(--rim)" stroke-width="1"/>
+  <g fill="var(--prime)" opacity="0.85">
+    <rect x="218" y="52" width="16" height="16"/><rect x="238" y="52" width="16" height="16"/><rect x="258" y="52" width="16" height="16"/><rect x="278" y="52" width="16" height="16"/><rect x="298" y="52" width="16" height="16"/>
+    <rect x="218" y="72" width="16" height="16"/><rect x="238" y="72" width="16" height="16"/><rect x="258" y="72" width="16" height="16"/><rect x="278" y="72" width="16" height="16"/><rect x="298" y="72" width="16" height="16"/>
+    <rect x="218" y="92" width="16" height="16"/><rect x="238" y="92" width="16" height="16"/><rect x="258" y="92" width="16" height="16"/><rect x="278" y="92" width="16" height="16"/><rect x="298" y="92" width="16" height="16"/>
+  </g>
+  <text x="270" y="130" text-anchor="middle" font-size="8" fill="var(--ink-low)">GPU saturated</text>
+  <text x="270" y="146" text-anchor="middle" font-size="11" fill="var(--prime)" font-weight="700">640 req/s</text>
+  <text x="180" y="176" text-anchor="middle" font-size="8.5" fill="var(--ink-mid)">same 50ms per pass, same hardware — 32× throughput, no model change</text>
+  <defs>
+    <marker id="bt-a" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="var(--amber)"/></marker>
+  </defs>
+</svg>`,
+    },
   },
   {
     id: 'dl_debugging',

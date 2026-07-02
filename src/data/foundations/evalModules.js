@@ -567,6 +567,8 @@ Offline metrics measure how well a model predicts *past* behaviour. Online metri
 
 Nowhere near perfectly. For search and recommendation, the correlation between an offline gain and the matching online gain is usually only about 0.3 to 0.7. A 5% offline NDCG bump might buy a 2% CTR lift, which might buy a 1% revenue lift — the signal fades at every hop. So measure this correlation *on your own system*: over your last ten A/B tests, plot the offline delta against the realised online delta. If they barely track each other (correlation below about 0.5), then redesigning your evaluation matters far more than tuning the model yet again.
 
+[FIGURE: signal_fade]
+
 ---
 
 **The habit that keeps you honest.**
@@ -682,6 +684,24 @@ You can partly de-bias offline log evaluation with **inverse propensity scoring*
       `**Design properly:** power/MDE up front, full weekly cycles, no peeking, correct for multiple tests.`,
       `**Tools:** IPS de-biases logs but high variance under small propensities; interleaving = cheap relative preference; bandits minimise regret but block a clean causal estimate.`,
     ],
+    figures: {
+      signal_fade: `<svg viewBox="0 0 360 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="18" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">The signal fades at every hop</text>
+  <rect x="20" y="40" width="150" height="46" rx="4" fill="var(--prime)" opacity="0.22" stroke="var(--prime)" stroke-width="1.2"/>
+  <text x="95" y="60" text-anchor="middle" fill="var(--ink-hi)" font-size="13" font-weight="700">+5%</text>
+  <text x="95" y="77" text-anchor="middle" fill="var(--ink-low)" font-size="8.5">offline NDCG (a hypothesis)</text>
+  <rect x="105" y="102" width="150" height="42" rx="4" fill="var(--teal)" opacity="0.22" stroke="var(--teal)" stroke-width="1.2"/>
+  <text x="180" y="121" text-anchor="middle" fill="var(--ink-hi)" font-size="12" font-weight="700">+2%</text>
+  <text x="180" y="137" text-anchor="middle" fill="var(--ink-low)" font-size="8.5">online CTR (A/B, causal)</text>
+  <rect x="190" y="160" width="150" height="34" rx="4" fill="var(--amber)" opacity="0.22" stroke="var(--amber)" stroke-width="1.2"/>
+  <text x="265" y="176" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">+1%</text>
+  <text x="265" y="189" text-anchor="middle" fill="var(--ink-low)" font-size="8.5">revenue</text>
+  <path d="M100 86 L165 100" stroke="var(--ink-low)" stroke-width="1.2" marker-end="url(#sfarrow)"/>
+  <path d="M185 144 L250 158" stroke="var(--ink-low)" stroke-width="1.2" marker-end="url(#sfarrow)"/>
+  <text x="308" y="120" fill="var(--ink-low)" font-size="8.5">rho ~ 0.3-0.7</text>
+  <defs><marker id="sfarrow" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="var(--ink-low)"/></marker></defs>
+</svg>`,
+    },
   },
   {
     id: 'validation_traps',
@@ -719,6 +739,8 @@ This one is subtle. The feature has a valid timestamp, but it is a *consequence*
 **The one question that catches almost everything.**
 
 For every feature, ask: *would this exact value exist at the moment of prediction in production, knowing nothing about future events?* If the answer is no, it is leakage — full stop. And a few red flags should trigger an immediate audit: validation AUC above 0.97 on a problem where even human experts disagree; one feature towering over all the others in importance; train and validation accuracy nearly identical with no gap; or a mediocre model suddenly looking brilliant right after you added one new feature group.
+
+[FIGURE: leakage_timeline]
 
 ---
 
@@ -835,6 +857,24 @@ Leakage often isn't caught offline at all — it surfaces after deploy. The sign
       `**Preprocessing leaks too:** scaler/imputer/PCA/SMOTE/target-encoding fit on train fold only (use a Pipeline).`,
       `**Real systems need group + time together**; prove with negative controls (shuffle labels → chance), monitor offline-online collapse in prod.`,
     ],
+    figures: {
+      leakage_timeline: `<svg viewBox="0 0 360 210" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="18" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">One question: does the value exist before prediction time?</text>
+  <line x1="20" y1="150" x2="340" y2="150" stroke="var(--ink-low)" stroke-width="1"/>
+  <text x="30" y="168" fill="var(--ink-low)" font-size="9">past</text>
+  <text x="315" y="168" fill="var(--ink-low)" font-size="9">future</text>
+  <line x1="200" y1="34" x2="200" y2="162" stroke="var(--amber)" stroke-width="1.6" stroke-dasharray="4,3"/>
+  <text x="200" y="30" text-anchor="middle" fill="var(--amber)" font-size="9" font-weight="700">prediction time</text>
+  <rect x="40" y="46" width="140" height="20" rx="4" fill="var(--teal)" opacity="0.55"/>
+  <text x="110" y="60" text-anchor="middle" fill="var(--ink-hi)" font-size="8.5">valid feature (built from past)</text>
+  <rect x="40" y="74" width="250" height="20" rx="4" fill="#ef4444" opacity="0.4"/>
+  <text x="110" y="88" text-anchor="middle" fill="var(--ink-hi)" font-size="8.5">"return over next 7 days"</text>
+  <text x="248" y="88" text-anchor="middle" fill="#ef4444" font-size="8.5" font-weight="700">reaches into future = LEAK</text>
+  <rect x="40" y="102" width="130" height="20" rx="4" fill="#ef4444" opacity="0.4"/>
+  <text x="105" y="116" text-anchor="middle" fill="var(--ink-hi)" font-size="8.5">"days in ICU" (after outcome)</text>
+  <text x="180" y="196" text-anchor="middle" fill="var(--ink-low)" font-size="9">valid = fully left of the line · any bar crossing right = leakage</text>
+</svg>`,
+    },
   },
   {
     id: 'cross_validation',
@@ -1364,6 +1404,7 @@ Keep the two steps separate. **Calibration** makes the probability *truthful* (0
   },
   {
     id: 'ablation',
+    interactiveId: 'ablation_viz',
     title: 'Ablation Studies & Baselines',
     subtitle: 'Designing ablations, good baselines, isolating contributions',
     difficulty: 'intermediate',
@@ -1374,6 +1415,8 @@ Keep the two steps separate. **Calibration** makes the probability *truthful* (0
 The answer requires ablation. Remove each component one at a time, hold everything else fixed, measure the AUC drop. Without graph embeddings: AUC 0.83 (−0.08). Without temporal aggregations: AUC 0.89 (−0.02). Without feature interactions: AUC 0.91 (−0.00). Without scaling: AUC 0.90 (−0.01). Without outlier clipping: AUC 0.91 (−0.00).
 
 The diagnosis is immediate. Graph embeddings carry almost all of the signal — an 8-point drop when removed. Temporal aggregations contribute meaningfully. Feature interactions and outlier clipping are vestigial. The next engineering investment should go toward improving graph embeddings, not toward the components that ablation shows are dead weight. Two hours of running ablations replaced a month of speculative architecture search.
+
+[FIGURE: ablation_bars]
 
 Ablation is the empirical partial derivative of the system — it measures the marginal contribution of each component holding all others fixed. There are two designs. Leave-one-out ablation starts from the full system and removes one component at a time. Add-one-in ablation starts from the simplest baseline and adds components one at a time. Both are valid. They can give different answers when components interact — component A may contribute little on its own but be essential when combined with B. Leave-one-out ablation misses this; you need interaction ablation to catch it.
 
@@ -1430,6 +1473,31 @@ The formal statement: ablation is leave-one-out estimation of component importan
       `**Many near-zero ablations = single-component dependence** → fragility signal, needs backup.`,
       `**Two hours of ablation beats two weeks of speculative architecture search.**`,
     ],
+    figures: {
+      ablation_bars: `<svg viewBox="0 0 360 210" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="180" y="16" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">AUC drop when each component is removed</text>
+  <text x="180" y="30" text-anchor="middle" fill="var(--ink-low)" font-size="8.5">full system = 0.91 · longer bar = more essential</text>
+  <text x="120" y="52" text-anchor="end" fill="var(--ink-mid)" font-size="9">Graph embeddings</text>
+  <rect x="126" y="42" width="200" height="14" rx="2" fill="var(--prime)" opacity="0.8"/>
+  <text x="332" y="52" fill="var(--ink-hi)" font-size="9" font-weight="700">-0.08</text>
+  <text x="120" y="76" text-anchor="end" fill="var(--ink-mid)" font-size="9">Temporal aggregations</text>
+  <rect x="126" y="66" width="50" height="14" rx="2" fill="var(--prime)" opacity="0.6"/>
+  <text x="182" y="76" fill="var(--ink-hi)" font-size="9" font-weight="700">-0.02</text>
+  <text x="120" y="100" text-anchor="end" fill="var(--ink-mid)" font-size="9">Scaling</text>
+  <rect x="126" y="90" width="25" height="14" rx="2" fill="var(--prime)" opacity="0.5"/>
+  <text x="157" y="100" fill="var(--ink-hi)" font-size="9">-0.01</text>
+  <text x="120" y="124" text-anchor="end" fill="var(--ink-mid)" font-size="9">Feature interactions</text>
+  <rect x="126" y="114" width="4" height="14" rx="2" fill="var(--ink-low)" opacity="0.5"/>
+  <text x="136" y="124" fill="var(--ink-low)" font-size="9">-0.00</text>
+  <text x="120" y="148" text-anchor="end" fill="var(--ink-mid)" font-size="9">Outlier clipping</text>
+  <rect x="126" y="138" width="4" height="14" rx="2" fill="var(--ink-low)" opacity="0.5"/>
+  <text x="136" y="148" fill="var(--ink-low)" font-size="9">-0.00</text>
+  <line x1="126" y1="36" x2="126" y2="158" stroke="var(--ink-low)" stroke-width="1"/>
+  <rect x="126" y="172" width="200" height="26" rx="4" fill="var(--amber)" opacity="0.16" stroke="var(--amber)" stroke-width="1"/>
+  <text x="226" y="182" text-anchor="middle" fill="var(--ink-hi)" font-size="8.5" font-weight="700">interaction trap</text>
+  <text x="226" y="193" text-anchor="middle" fill="var(--ink-low)" font-size="8">remove interactions + temporal together: -0.05 &gt; sum of solos</text>
+</svg>`,
+    },
   },
   {
     id: 'evaluation_in_prod',

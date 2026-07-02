@@ -7,7 +7,11 @@ export const TIME_SERIES_MODULES = [
     difficulty: 'foundational',
     estimatedMin: 35,
     tags: ['stationarity', 'unit-root', 'differencing', 'cointegration', 'ADF', 'KPSS'],
-    summary: `Regress two independent random walks against each other and you'll get R² near 1 and t-statistics in double digits — not because they're related, but because both are trending. That's spurious regression, and it invalidates every downstream conclusion. It's the reason stationarity matters: non-stationary series have growing variance and shifting means, so the statistical tests that assume constant moments produce completely unreliable results. The ADF and KPSS tests tell you whether you have a unit root; differencing removes trends; seasonal differencing removes periodicity. The flip side of non-stationarity is cointegration — two non-stationary series can share a long-run equilibrium whose spread is stationary, and error correction models exploit that structure rather than discarding it.`,
+    summary: `Regress two independent random walks against each other and you'll get R² near 1 and t-statistics in double digits — not because they're related, but because both are trending. That's spurious regression, and it invalidates every downstream conclusion.
+
+[FIGURE: stationary_vs_trending]
+
+It's the reason stationarity matters: non-stationary series have growing variance and shifting means, so the statistical tests that assume constant moments produce completely unreliable results. The ADF and KPSS tests tell you whether you have a unit root; differencing removes trends; seasonal differencing removes periodicity. The flip side of non-stationarity is cointegration — two non-stationary series can share a long-run equilibrium whose spread is stationary, and error correction models exploit that structure rather than discarding it.`,
     keyPoints: [
       `**Two random walks regressed against each other will look strongly related — R² > 0.5, |t| > 2 — with zero true relationship.** The tell is Durbin-Watson near 0: residuals are nearly perfectly autocorrelated, which is the signature of a spurious regression between two non-stationary series. OLS standard errors assume independent residuals; when they're serially correlated, standard errors are severely underestimated and all inference collapses. This is not a small-sample problem — it gets worse with more data.`,
       `**Weak (covariance) stationarity requires three properties: constant mean E[Y_t] = μ, constant variance Var(Y_t) = σ², and autocovariance Cov(Y_t, Y_{t-k}) = γ(k) that depends only on lag k, not on t.** A random walk
@@ -73,6 +77,18 @@ ne difference gives ΔY_t = ε_t, which is stationary. The I(d) notation means d
       `**ECM:** \`α(Y_{t-1}−βX_{t-1})\` term, α<0 pulls back to equilibrium.`,
       `**Not a one-time check:** structural breaks kill stationarity in production — monitor with rolling ADF/CUSUM.`,
     ],
+    figures: {
+      stationary_vs_trending: `<svg viewBox="0 0 360 152" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="8" y="12" fill="var(--ink-low)" font-size="8">Stationary — constant mean, bounded variance</text>
+  <line x1="8" y1="42" x2="352" y2="42" stroke="var(--rim)" stroke-width="0.75" stroke-dasharray="3 3"/>
+  <text x="352" y="39" text-anchor="end" fill="var(--ink-low)" font-size="6.5">mean μ</text>
+  <polyline fill="none" stroke="var(--prime)" stroke-width="1.5" points="8,42 26,30 44,50 62,38 80,52 98,34 116,48 134,40 152,52 170,32 188,46 206,38 224,50 242,36 260,48 278,42 296,52 314,34 332,46 352,40"/>
+  <text x="8" y="82" fill="var(--ink-low)" font-size="8">Trending (random walk) — mean drifts, variance grows as t·σ²</text>
+  <polyline fill="none" stroke="var(--gold)" stroke-width="1.5" points="8,138 26,132 44,134 62,124 80,128 98,116 116,120 134,106 152,110 170,96 188,100 206,88 224,92 242,78 260,82 278,70 296,74 314,62 332,66 352,54"/>
+  <line x1="8" y1="140" x2="352" y2="140" stroke="var(--rim)" stroke-width="0.75"/>
+  <text x="180" y="150" text-anchor="middle" fill="var(--ink-low)" font-size="6.5">Regress two random walks against each other → spurious R²; difference once → stationary</text>
+</svg>`,
+    },
   },
 
   {
@@ -230,7 +246,11 @@ For the airline data, the seasonal structure at period s=12 requires SARIMA: sea
     difficulty: 'intermediate',
     estimatedMin: 40,
     tags: ['prophet', 'changepoints', 'Fourier', 'piecewise-linear', 'uncertainty', 'holiday'],
-    summary: `Most time series forecasting tools require deep domain expertise to configure — choosing ARIMA orders, specifying seasonal structure, diagnosing residuals. Prophet was built to solve a specific operational problem at Meta: let analysts without time series expertise produce sensible forecasts for thousands of business KPIs without model-by-model tuning. It achieves this by encoding strong structural assumptions: piecewise linear growth with sparse changepoints, Fourier seasonality at weekly and annual periods, and an explicit holiday calendar. These assumptions work well for typical business metrics (daily active users, weekly revenue, annual seasonal sales). The mistake is treating Prophet as a general-purpose forecaster. Feed it a volatile financial series, a mean-reverting series, or anything where recent trend doesn't extrapolate linearly, and it will produce confidently wrong forecasts. Knowing the failure modes matters more than knowing the feature list.`,
+    summary: `Most time series forecasting tools require deep domain expertise to configure — choosing ARIMA orders, specifying seasonal structure, diagnosing residuals. Prophet was built to solve a specific operational problem at Meta: let analysts without time series expertise produce sensible forecasts for thousands of business KPIs without model-by-model tuning. It achieves this by encoding strong structural assumptions: piecewise linear growth with sparse changepoints, Fourier seasonality at weekly and annual periods, and an explicit holiday calendar. These assumptions work well for typical business metrics (daily active users, weekly revenue, annual seasonal sales).
+
+[FIGURE: prophet_additive]
+
+The mistake is treating Prophet as a general-purpose forecaster. Feed it a volatile financial series, a mean-reverting series, or anything where recent trend doesn't extrapolate linearly, and it will produce confidently wrong forecasts. Knowing the failure modes matters more than knowing the feature list.`,
     keyPoints: [
       `**Prophet is a structural additive regression model: y(t) = g(t) + s(t) + h(t) + ε_t. g(t) is piecewise linear (or logistic) growth, s(t) is Fourier seasonality, h(t) is holiday effects.** Each component is a separate, interpretable regression. This makes Prophet easy to inspect and debug — you can plot each component and check whether the trend extrapolation, seasonal pattern, and holiday effects make domain-knowledge sense.`,
       `**Piecewise linear growth: rate changes δ_j at potential changepoints are regularised with a Laplace prior, so most changepoints have δ ≈ 0 — sparsity by design.** Changepoints are placed automatically across the first 80% of training data. This means the last 20% of training data has few changepoints — recent trend changes go undetected. changepoint_prior_scale (default 0.05) controls how aggressively trend changes are allowed; it is the single most consequential hyperparameter. Too large → overfits recent trend at the forecast boundary; too small → sluggish response to genuine structural breaks.`,
@@ -283,6 +303,27 @@ For the airline data, the seasonal structure at period s=12 requires SARIMA: sea
       `**add_regressor trap:** regressor must exist at forecast time — backtesting with actuals inflates accuracy.`,
       `**Fails on mean-reverting / volatile series** and <1-2yr history; validate via rolling-origin CV.`,
     ],
+    figures: {
+      prophet_additive: `<svg viewBox="0 0 360 192" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="8" y="11" fill="var(--ink-low)" font-size="7.5">g(t) — piecewise-linear growth (changepoints ▲, only first 80%)</text>
+  <polyline fill="none" stroke="var(--prime)" stroke-width="1.5" points="8,34 120,24 230,26 352,10"/>
+  <path d="M120,34 l-3,-5 l6,0 z" fill="var(--gold)"/>
+  <path d="M230,34 l-3,-5 l6,0 z" fill="var(--gold)"/>
+  <line x1="288" y1="6" x2="288" y2="186" stroke="var(--rim)" stroke-width="0.75" stroke-dasharray="2 3"/>
+  <text x="291" y="184" fill="var(--ink-low)" font-size="6">forecast →</text>
+  <text x="8" y="59" fill="var(--ink-low)" font-size="7.5">+ s(t) — Fourier seasonality (weekly N=3, yearly N=10)</text>
+  <polyline fill="none" stroke="var(--green)" stroke-width="1.3" points="8,74 26,64 44,80 62,66 80,82 98,66 116,80 134,64 152,82 170,66 188,80 206,64 224,82 242,66 260,80 278,64 296,82 314,66 332,80 352,66"/>
+  <text x="8" y="104" fill="var(--ink-low)" font-size="7.5">+ h(t) — holiday spikes (explicit calendar)</text>
+  <line x1="8" y1="124" x2="352" y2="124" stroke="var(--rim)" stroke-width="0.75"/>
+  <line x1="70" y1="124" x2="70" y2="110" stroke="var(--gold)" stroke-width="2"/>
+  <line x1="185" y1="124" x2="185" y2="106" stroke="var(--gold)" stroke-width="2"/>
+  <line x1="300" y1="124" x2="300" y2="112" stroke="var(--gold)" stroke-width="2"/>
+  <text x="8" y="146" fill="var(--ink-hi)" font-size="7.5" font-weight="700">= y(t) forecast, with prediction interval</text>
+  <path d="M8,176 L120,168 L230,170 L352,158 L352,150 L230,160 L120,158 L8,166 Z" fill="var(--prime-faint)" stroke="none"/>
+  <polyline fill="none" stroke="var(--prime)" stroke-width="1.6" points="8,171 120,163 230,165 352,154"/>
+  <text x="180" y="190" text-anchor="middle" fill="var(--ink-low)" font-size="6.5">MAP intervals omit parameter uncertainty (too narrow) — use MCMC when width drives decisions</text>
+</svg>`,
+    },
   },
 
   {
@@ -292,7 +333,11 @@ For the airline data, the seasonal structure at period s=12 requires SARIMA: sea
     difficulty: 'intermediate',
     estimatedMin: 40,
     tags: ['exponential smoothing', 'ETS', 'Holt-Winters', 'state space', 'SES', 'MLE'],
-    summary: `ARIMA requires ACF/PACF identification to choose p, d, q — a manual process that breaks at scale and fails for practitioners without time series expertise. Exponential smoothing methods sidestep this by imposing a simple structural assumption: past observations should be weighted by recency, with exponentially decaying weights. SES does this for level; Holt's method adds a trend component; Holt-Winters adds seasonality. The mistake is treating these as heuristic update rules. ETS (Error-Trend-Seasonality) is a proper statistical state space model — it has a likelihood function, parameters estimated via MLE, and AIC-based model selection across 30 component combinations.
+    summary: `ARIMA requires ACF/PACF identification to choose p, d, q — a manual process that breaks at scale and fails for practitioners without time series expertise. Exponential smoothing methods sidestep this by imposing a simple structural assumption: past observations should be weighted by recency, with exponentially decaying weights. SES does this for level; Holt's method adds a trend component; Holt-Winters adds seasonality.
+
+[FIGURE: exp_decay_weights]
+
+The mistake is treating these as heuristic update rules. ETS (Error-Trend-Seasonality) is a proper statistical state space model — it has a likelihood function, parameters estimated via MLE, and AIC-based model selection across 30 component combinations.
 
 This means ETS implicitly performs ARIMA order selection without the ACF/PACF identification step, which is why ETS consistently outperforms ARIMA on large benchmark datasets like M3 and M4.`,
     keyPoints: [
@@ -359,6 +404,28 @@ independently. Multiplicative seasonality handles the case where seasonal amplit
       `**Multiplicative-error ETS handles heteroskedasticity** (variance grows with level) where Gaussian ARIMA misspecifies.`,
       `**Croston's for intermittent demand** (>30-50% zeros); **M4 lesson:** always ensemble ETS+ARIMA+baseline.`,
     ],
+    figures: {
+      exp_decay_weights: `<svg viewBox="0 0 360 130" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="8" y="12" fill="var(--ink-low)" font-size="8">SES weight on past observations: α(1−α)ʲ  (here α = 0.5)</text>
+  <line x1="20" y1="104" x2="352" y2="104" stroke="var(--rim)" stroke-width="0.75"/>
+  <rect x="24"  y="24"  width="26" height="80" rx="2" fill="var(--prime)"/>
+  <rect x="66"  y="64"  width="26" height="40" rx="2" fill="var(--prime)" opacity="0.85"/>
+  <rect x="108" y="84"  width="26" height="20" rx="2" fill="var(--prime)" opacity="0.7"/>
+  <rect x="150" y="94"  width="26" height="10" rx="2" fill="var(--prime)" opacity="0.55"/>
+  <rect x="192" y="99"  width="26" height="5"  rx="2" fill="var(--prime)" opacity="0.45"/>
+  <rect x="234" y="101" width="26" height="3"  rx="2" fill="var(--prime)" opacity="0.35"/>
+  <rect x="276" y="102" width="26" height="2"  rx="2" fill="var(--prime)" opacity="0.28"/>
+  <rect x="318" y="103" width="26" height="1"  rx="2" fill="var(--prime)" opacity="0.22"/>
+  <text x="37"  y="118" text-anchor="middle" fill="var(--ink-low)" font-size="6.5">Yₜ</text>
+  <text x="79"  y="118" text-anchor="middle" fill="var(--ink-low)" font-size="6.5">Yₜ₋₁</text>
+  <text x="121" y="118" text-anchor="middle" fill="var(--ink-low)" font-size="6.5">Yₜ₋₂</text>
+  <text x="163" y="118" text-anchor="middle" fill="var(--ink-low)" font-size="6.5">Yₜ₋₃</text>
+  <text x="205" y="118" text-anchor="middle" fill="var(--ink-low)" font-size="6.5">Yₜ₋₄</text>
+  <text x="290" y="118" text-anchor="middle" fill="var(--ink-low)" font-size="6.5">older…</text>
+  <text x="352" y="30" text-anchor="end" fill="var(--ink-low)" font-size="6.5">α→1: only yesterday (≈random walk)</text>
+  <text x="352" y="42" text-anchor="end" fill="var(--ink-low)" font-size="6.5">α→0: weights all history equally</text>
+</svg>`,
+    },
   },
 
   {
@@ -368,7 +435,10 @@ independently. Multiplicative seasonality handles the case where seasonal amplit
     difficulty: 'advanced',
     estimatedMin: 60,
     tags: ['N-BEATS', 'N-HiTS', 'TFT', 'PatchTST', 'transformer', 'neural forecasting', 'TimeGPT', 'MOIRAI'],
-    summary: `Electricity demand forecasting is the benchmark problem for neural time series methods: 1-year history, predict 24 hours ahead. A sequence of Transformer-based papers — Informer, Autoformer, FEDformer — each claimed state-of-the-art on this benchmark. Then a 2023 paper (Zeng et al.) showed that a single linear layer applied to the flattened lookback window outperforms all of them. The reason exposes a structural flaw: Transformer attention is permutation-equivariant. Attention scores are computed from pairwise content similarity — dot products of embeddings — not from temporal position. Shuffle the timestamps and performance barely changes. A model that ignores temporal order cannot model autocorrelation, trend, or seasonality. Positional encodings are added but don't fix this — they make position part of the content, which still allows position-insensitive mixing.
+    summary: `Electricity demand forecasting is the benchmark problem for neural time series methods: 1-year history, predict 24 hours ahead. A sequence of Transformer-based papers — Informer, Autoformer, FEDformer — each claimed state-of-the-art on this benchmark. Then a 2023 paper (Zeng et al.) showed that a single linear layer applied to the flattened lookback window outperforms all of them. The reason exposes a structural flaw: Transformer attention is permutation-equivariant. Attention scores are computed from pairwise content similarity — dot products of embeddings — not from temporal position. Shuffle the timestamps and performance barely changes. A model that ignores temporal order cannot model autocorrelation, trend, or seasonality.
+
+[FIGURE: attention_permutation]
+ Positional encodings are added but don't fix this — they make position part of the content, which still allows position-insensitive mixing.
 
 N-BEATS and N-HiTS sidestep this entirely. N-BEATS uses MLP stacks with a doubly-residual architecture: each block produces a backcast (reconstruction of its input) and a forecast; the backcast is subtracted before the next block, so each block models only what previous blocks couldn't explain. N-HiTS extends this with hierarchical multi-rate sampling — a coarse stack captures trends from downsampled series, a fine stack captures high-frequency variation — which is the right inductive bias for the 24-hour-ahead problem where trend and daily cycle operate at different timescales.
 
@@ -433,16 +503,41 @@ The Temporal Fusion Transformer (TFT) is competitive despite using attention bec
       `**Foundation models (TimeGPT, MOIRAI) win exactly one case:** cold start, <30 obs/series.`,
       `**With 2+ years of in-domain data, local/global models trained on your data dominate zero-shot.**`,
     ],
+    figures: {
+      attention_permutation: `<svg viewBox="0 0 360 156" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="8" y="12" fill="var(--ink-low)" font-size="8">Self-attention scores from content similarity, not position…</text>
+  <text x="8" y="34" fill="var(--ink-mid)" font-size="7.5">original</text>
+  <text x="8" y="80" fill="var(--ink-mid)" font-size="7.5">shuffled</text>
+  <g font-size="8" font-weight="700" text-anchor="middle">
+    <rect x="70"  y="24" width="26" height="18" rx="3" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="83"  y="37" fill="var(--ink-hi)">x1</text>
+    <rect x="120" y="24" width="26" height="18" rx="3" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="133" y="37" fill="var(--ink-hi)">x2</text>
+    <rect x="170" y="24" width="26" height="18" rx="3" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="183" y="37" fill="var(--ink-hi)">x3</text>
+    <rect x="220" y="24" width="26" height="18" rx="3" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="233" y="37" fill="var(--ink-hi)">x4</text>
+    <rect x="270" y="24" width="26" height="18" rx="3" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="283" y="37" fill="var(--ink-hi)">x5</text>
+    <rect x="70"  y="66" width="26" height="18" rx="3" fill="var(--depth)" stroke="var(--rim)"/><text x="83"  y="79" fill="var(--ink-mid)">x3</text>
+    <rect x="120" y="66" width="26" height="18" rx="3" fill="var(--depth)" stroke="var(--rim)"/><text x="133" y="79" fill="var(--ink-mid)">x1</text>
+    <rect x="170" y="66" width="26" height="18" rx="3" fill="var(--depth)" stroke="var(--rim)"/><text x="183" y="79" fill="var(--ink-mid)">x5</text>
+    <rect x="220" y="66" width="26" height="18" rx="3" fill="var(--depth)" stroke="var(--rim)"/><text x="233" y="79" fill="var(--ink-mid)">x2</text>
+    <rect x="270" y="66" width="26" height="18" rx="3" fill="var(--depth)" stroke="var(--rim)"/><text x="283" y="79" fill="var(--ink-mid)">x4</text>
+  </g>
+  <text x="8" y="108" fill="var(--ink-hi)" font-size="8" font-weight="700">…so MSE barely changes → attention ignores temporal order</text>
+  <rect x="8" y="118" width="344" height="28" rx="5" fill="var(--depth)" stroke="var(--rim)"/>
+  <text x="180" y="135" text-anchor="middle" fill="var(--ink-mid)" font-size="7.5">DLinear — one linear layer on the flattened window —</text>
+  <text x="180" y="145" text-anchor="middle" fill="var(--ink-mid)" font-size="7.5">beats Informer / Autoformer / FEDformer</text>
+</svg>`,
+    },
   },
 
   {
     id: 'forecast_evaluation',
+    interactiveId: 'walk_forward_viz',
     title: 'Forecast Evaluation',
     subtitle: 'MASE, pinball loss, Winkler score, Diebold-Mariano, rolling vs expanding window',
     difficulty: 'intermediate',
     estimatedMin: 45,
     tags: ['MASE', 'MAPE', 'pinball loss', 'Winkler score', 'Diebold-Mariano', 'backtesting', 'lookahead bias'],
     summary: `MAPE is the default metric most teams use, and it has three distinct failure modes that make it actively misleading. It's undefined when actuals are near zero (division by zero). It systematically biases selection toward models that underpredict, because over-forecasts generate larger percentage errors than under-forecasts of equal absolute magnitude. And it's not comparable across series with different scales. MASE solves all three by normalising against the in-sample naïve forecast — scale-free, symmetric, defined when Y_t = 0, and interpretable (MASE < 1 means you beat the naïve baseline). But metric choice is the second problem. The first is backtesting design: a rolling-origin evaluation that faithfully simulates production conditions is the only reliable proxy for live performance. Fitting normalisation scalers on the full dataset including the test period is ubiquitous and inflates reported performance by 5-15% — not from overfitting the model, but from the preprocessing pipeline implicitly seeing the future.`,
+    interactivePrompt: `Before you touch the controls: with a fixed dataset length, what do you trade away when you lengthen the forecast horizon — and how does switching from expanding to rolling change the number of usable backtest folds?`,
     keyPoints: [
       `**MAPE fails in three distinct ways.** Division by zero: any series with zero values on some days breaks it — daily new user counts, SKU-level sales with stockouts, any count series. Asymmetric penalty: over-forecasting by 50% produces a larger MAPE contribution than under-forecasting by 50% — MAPE is minimised by systematically underforecasting, biasing model selection toward conservative forecasters even when over-forecasting is equally costly. Scale dependence: MAPE on a series with mean 10 versus mean 10,000 are not comparable, making cross-series performance comparison meaningless.`,
       `**MASE (Hyndman & Koehler 2006) solves all three MAPE failure modes.** MASE = MAE / (MAE of in-sample naïve forecast). MASE < 1 means the model beats the naïve baseline on average. Scale-free: the normalisation makes MASE comparable across series with different scales. Symmetric: over- and under-forecasting of equal magnitude contribute equally. Defined when Y_t = 0: the denominator uses historical naïve errors which are well-defined even when actuals are zero. The M4 competition chose MASE as the primary metric — treat it as the default.`,
@@ -591,7 +686,10 @@ tion and k=3-4. The decomposition removes expected variation; the threshold dete
     difficulty: 'advanced',
     estimatedMin: 65,
     tags: ['Granger causality', 'CausalImpact', 'synthetic control', 'interrupted time series', 'DiD', 'BSTS'],
-    summary: `Granger causality is the most widely misused concept in applied time series work. It answers a predictive question — does X help predict Y beyond Y's own past? — not a causal one. A shared upstream cause Z that affects both X and Y with different lags produces Granger causality between X and Y with zero direct relationship. Knowing that search volume Granger-causes sales tells you nothing about whether investing in SEO will increase sales. The tools that actually support causal claims — synthetic control, CausalImpact, interrupted time series, difference-in-differences — all require a credible counterfactual: what would have happened to the treated unit absent the intervention. The harder problem in practice is staggered rollouts, where different units receive treatment at different times. Standard two-way fixed effects DiD is biased under treatment effect heterogeneity in this case — already-treated units contaminate the control group — and the fix (Callaway-Sant'Anna) is not widely known.`,
+    summary: `Granger causality is the most widely misused concept in applied time series work. It answers a predictive question — does X help predict Y beyond Y's own past? — not a causal one. A shared upstream cause Z that affects both X and Y with different lags produces Granger causality between X and Y with zero direct relationship. Knowing that search volume Granger-causes sales tells you nothing about whether investing in SEO will increase sales. The tools that actually support causal claims — synthetic control, CausalImpact, interrupted time series, difference-in-differences — all require a credible counterfactual: what would have happened to the treated unit absent the intervention.
+
+[FIGURE: causal_counterfactual]
+ The harder problem in practice is staggered rollouts, where different units receive treatment at different times. Standard two-way fixed effects DiD is biased under treatment effect heterogeneity in this case — already-treated units contaminate the control group — and the fix (Callaway-Sant'Anna) is not widely known.`,
     keyPoints: [
       `**Granger causality tests whether lagged X improves prediction of Y beyond lagged Y alone — it is a predictive test, not a causal test.** A shared upstream cause Z that affects both X and Y with different lags produces Granger causality X → Y with no direct mechanism. TV advertising that simultaneously increases search volume and sales will produce Granger causality from search to sales even if search has no causal effect on sales. The correct interpretation: "X has predictive information about Y beyond Y's own past." The incorrect interpretation: "changing X will change Y."`,
       `**Interrupted Time Series (ITS): OLS regression
@@ -658,5 +756,22 @@ he slope change post-intervention.** Critical assumptions: no other intervention
       `**Staggered TWFE is biased** under heterogeneous effects (already-treated as controls, negative weights) → Callaway-Sant'Anna.`,
       `**No holdout = strong untestable assumptions;** the real fix is a prospective holdout design for future launches.`,
     ],
+    figures: {
+      causal_counterfactual: `<svg viewBox="0 0 360 148" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="8" y="11" fill="var(--ink-low)" font-size="8">Synthetic control / CausalImpact — effect = observed − counterfactual</text>
+  <line x1="215" y1="18" x2="215" y2="118" stroke="var(--rim)" stroke-width="0.75" stroke-dasharray="2 3"/>
+  <text x="218" y="26" fill="var(--ink-low)" font-size="6.5">intervention</text>
+  <polyline fill="none" stroke="var(--prime)" stroke-width="1.6" points="16,96 55,90 94,92 133,84 172,86 215,80 254,54 293,44 332,30"/>
+  <polyline fill="none" stroke="var(--gold)" stroke-width="1.5" stroke-dasharray="4 3" points="215,80 254,76 293,72 332,66"/>
+  <path d="M254,54 L254,76 M293,44 L293,72 M332,30 L332,66" stroke="var(--green)" stroke-width="1" opacity="0.7"/>
+  <line x1="16" y1="118" x2="344" y2="118" stroke="var(--rim)" stroke-width="0.75"/>
+  <g font-size="6.5">
+    <rect x="16" y="126" width="10" height="4" fill="var(--prime)"/><text x="30" y="131" fill="var(--ink-mid)">observed (treated)</text>
+    <rect x="150" y="126" width="10" height="4" fill="var(--gold)"/><text x="164" y="131" fill="var(--ink-mid)">counterfactual (synthetic)</text>
+    <rect x="300" y="126" width="10" height="4" fill="var(--green)"/><text x="314" y="131" fill="var(--ink-mid)">effect</text>
+  </g>
+  <text x="180" y="145" text-anchor="middle" fill="var(--ink-low)" font-size="6.5">Pre-period fit is directly observable — a poor match invalidates the counterfactual (and the effect)</text>
+</svg>`,
+    },
   },
 ]

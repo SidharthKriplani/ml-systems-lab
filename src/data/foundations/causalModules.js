@@ -8,6 +8,8 @@ export const CAUSAL_MODULES = [
     tags: ['causal inference', 'potential outcomes', 'ATE', 'Rubin'],
     summary: `You want to know if sending a discount email causes users to make a purchase. User 47 receives the email and purchases. Would they have purchased anyway without the email? You can never know — you can only observe one reality for User 47. The "would have purchased anyway" outcome is the counterfactual — the potential outcome under the treatment not received. This is the fundamental problem of causal inference: for each individual, you observe exactly one of two potential outcomes, and the other is permanently missing.
 
+[FIGURE: potoutcomes]
+
 Rubin's potential outcomes framework names this gap precisely. For each unit i, define Y_i(1) — the outcome if treated — and Y_i(0) — the outcome if untreated. The individual treatment effect (ITE) is Y_i(1) − Y_i(0). You observe either Y_i(1) or Y_i(0), never both. The Average Treatment Effect (ATE) = E[Y_i(1) − Y_i(0)] is the average causal effect across all units. ATE is estimable even though ITE is not — with appropriate experimental design that makes the missing potential outcome recoverable in expectation.
 
 Three identification assumptions make this possible. SUTVA (Stable Unit Treatment Value Assumption): your treatment does not affect others' outcomes — no spillover. Violated by network effects: treating one user can change connected users' behavior, contaminating the "untreated" group. Consistency: the observed outcome for a treated unit equals Y_i(1). Positivity/overlap: every unit has some probability of being in either treatment or control. If high-income users are never assigned to the discount condition, you have no evidence about the treatment effect for that group.
@@ -73,15 +75,36 @@ What this framework is not: a statement that causal inference is impossible. It 
       `**SUTVA breaks on network effects:** treated neighbours contaminate controls' Y_i(0) → underestimates the effect.`,
       `**Ignorability is unverifiable** from the same data — argue from domain knowledge, design, or sensitivity analysis.`,
     ],
+    figures: {
+      potoutcomes: `<svg viewBox="0 0 360 118" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="4" y="12" fill="var(--ink-low)" font-size="7.5">You observe ONE cell per unit — the diagonal is forever missing</text>
+  <text x="132" y="30" text-anchor="middle" fill="var(--ink-mid)" font-size="8" font-weight="700">Y(1) if treated</text>
+  <text x="256" y="30" text-anchor="middle" fill="var(--ink-mid)" font-size="8" font-weight="700">Y(0) if control</text>
+  <text x="8" y="58" fill="var(--ink-mid)" font-size="8" font-weight="700">Treated</text>
+  <rect x="70" y="40" width="124" height="26" rx="5" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="132" y="57" text-anchor="middle" fill="var(--ink-hi)" font-size="8">observed ✓</text>
+  <rect x="200" y="40" width="112" height="26" rx="5" fill="none" stroke="var(--rim)" stroke-dasharray="3 3"/>
+  <text x="256" y="57" text-anchor="middle" fill="var(--ink-low)" font-size="8">counterfactual</text>
+  <text x="8" y="90" fill="var(--ink-mid)" font-size="8" font-weight="700">Control</text>
+  <rect x="70" y="72" width="124" height="26" rx="5" fill="none" stroke="var(--rim)" stroke-dasharray="3 3"/>
+  <text x="132" y="89" text-anchor="middle" fill="var(--ink-low)" font-size="8">counterfactual</text>
+  <rect x="200" y="72" width="112" height="26" rx="5" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="256" y="89" text-anchor="middle" fill="var(--ink-hi)" font-size="8">observed ✓</text>
+  <text x="4" y="113" fill="var(--ink-low)" font-size="7.5">ITE = Y(1)−Y(0) needs both cells → never per-unit. ATE recovers it in expectation.</text>
+</svg>`,
+    },
   },
   {
     id: 'dag_confounding',
+    interactiveId: 'confounding_bias_viz',
     title: 'DAGs and Confounding',
     subtitle: 'Directed acyclic graphs, backdoor criterion, collider bias, d-separation',
     difficulty: 'intermediate',
     estimatedMin: 32,
     tags: ['DAG', 'confounding', 'collider bias', 'd-separation'],
     summary: `You observe that coffee drinkers have higher lung cancer rates. Should coffee drinkers stop? Probably not — because smoking confounds the relationship. Smokers both drink more coffee and have higher cancer rates. The Coffee → Cancer association is a spurious path through the confounder Smoking. Without a way to represent this structure, you would add "coffee drinker" as a control variable in a cancer regression and be satisfied. But whether that controls for the right thing, blocks the wrong thing, or introduces new bias depends entirely on the causal structure — and the regression output will not tell you which case you are in.
+
+[FIGURE: confounddag]
 
 Directed Acyclic Graphs (DAGs) make that structure explicit. Nodes are variables. Directed arrows are direct causal claims. Three path types determine which variables to condition on. A confounding path runs Smoking → Coffee AND Smoking → Cancer: the backdoor path Treatment ← Confounder → Outcome. It must be blocked — condition on the confounder. A mediation path runs Treatment → Mediator → Outcome: the indirect causal channel. Conditioning on the mediator blocks the path you want to measure and underestimates the total effect. A collider is caused by both Treatment and Outcome: A → Collider ← B. Conditioning on the collider opens a spurious path between A and B that was never causally present. Classic collider bias: conditioning on hospitalization (collider of disease severity and treatment choice) creates spurious correlation between diseases and treatments within the hospitalized sample.
 
@@ -146,6 +169,34 @@ What this is not: "control for everything." Controlling for a collider creates b
       `**"Control for everything" is wrong** — it systematically introduces collider bias while claiming to remove confounding.`,
       `**Diagnostic:** a control that shifts the estimate >50% is either a real confounder (good) or a collider (bad) — draw the DAG.`,
     ],
+    figures: {
+      confounddag: `<svg viewBox="0 0 360 120" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <defs><marker id="ah" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="var(--ink-low)"/></marker></defs>
+  <text x="4" y="12" fill="var(--ink-low)" font-size="7.5">CONFOUNDER: block it (condition on Z)</text>
+  <circle cx="90" cy="30" r="13" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="90" y="34" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">Z</text>
+  <circle cx="40" cy="72" r="13" fill="var(--depth)" stroke="var(--rim)"/>
+  <text x="40" y="76" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">T</text>
+  <circle cx="140" cy="72" r="13" fill="var(--depth)" stroke="var(--rim)"/>
+  <text x="140" y="76" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">Y</text>
+  <path d="M80,40 L50,60" stroke="var(--ink-low)" stroke-width="1.4" marker-end="url(#ah)"/>
+  <path d="M100,40 L130,60" stroke="var(--ink-low)" stroke-width="1.4" marker-end="url(#ah)"/>
+  <path d="M54,72 L125,72" stroke="var(--ink-ghost)" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#ah)"/>
+  <text x="90" y="68" text-anchor="middle" fill="var(--ink-low)" font-size="6.5">effect of interest</text>
+  <line x1="188" y1="20" x2="188" y2="110" stroke="var(--rim)"/>
+  <text x="205" y="12" fill="var(--ink-low)" font-size="7.5">COLLIDER: do NOT condition (opens spurious A—B)</text>
+  <circle cx="235" cy="34" r="13" fill="var(--depth)" stroke="var(--rim)"/>
+  <text x="235" y="38" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">A</text>
+  <circle cx="335" cy="34" r="13" fill="var(--depth)" stroke="var(--rim)"/>
+  <text x="335" y="38" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">B</text>
+  <circle cx="285" cy="90" r="14" fill="none" stroke="#ef4444"/>
+  <text x="285" y="94" text-anchor="middle" fill="#ef4444" font-size="8.5" font-weight="700">C</text>
+  <path d="M245,45 L275,78" stroke="var(--ink-low)" stroke-width="1.4" marker-end="url(#ah)"/>
+  <path d="M325,45 L295,78" stroke="var(--ink-low)" stroke-width="1.4" marker-end="url(#ah)"/>
+  <path d="M250,30 L320,30" stroke="#ef4444" stroke-width="1.2" stroke-dasharray="3 3"/>
+  <text x="285" y="24" text-anchor="middle" fill="#ef4444" font-size="6.5">spurious if you condition on C</text>
+</svg>`,
+    },
   },
   {
     id: 'rct_design',
@@ -306,6 +357,8 @@ What observational methods cannot do: remove confounding from unmeasured covaria
     tags: ['IV', 'instrumental variables', '2SLS', 'LATE', 'exclusion restriction'],
     summary: `Does education increase earnings? The confound is ability. Smart people get more education and earn more regardless of education level — so any observed correlation between education and earnings contains both the causal effect of education and a spurious component from ability. You need variation in education that is unrelated to ability. A valid instrument: distance from college. Students born close to a college are more likely to attend (the instrument predicts treatment). But distance from college affects earnings only through education — it does not directly affect a person's earnings potential except by influencing whether they went to college (exclusion restriction). This isolates variation in education driven only by geography, not ability.
 
+[FIGURE: ivdag]
+
 An instrumental variable Z requires three conditions. Relevance: Z is correlated with the treatment T. Distance predicts college attendance — testable with the first-stage F-statistic. Exclusion restriction: Z affects the outcome Y only through T, not through any other path. Distance does not directly affect earnings except by influencing education — this is argued on subject-matter grounds, not verified statistically. Independence: Z is uncorrelated with T-Y confounders. Where you were born was not chosen based on your cognitive ability.
 
 Two-Stage Least Squares (2SLS) operationalizes this. Stage 1: regress T on Z and controls, get fitted values T̂ — the variation in T predicted only by the instrument. Stage 2: regress Y on T̂ instead of T. The first stage extracts only the exogenous variation in T; the second stage estimates the causal effect of that variation on Y.
@@ -371,15 +424,42 @@ What this is not: any variable correlated with treatment is a valid instrument. 
       `**Exclusion restriction is almost never testable** — argue every path Z→Y away on subject-matter grounds.`,
       `**Diagnostic:** IV vs OLS gap reveals the direction of the unmeasured confounding.`,
     ],
+    figures: {
+      ivdag: `<svg viewBox="0 0 360 110" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <defs><marker id="ivh" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="var(--ink-low)"/></marker></defs>
+  <text x="4" y="12" fill="var(--ink-low)" font-size="7.5">Z affects Y ONLY through T (exclusion), and Z ⊥ U (independence)</text>
+  <circle cx="40" cy="62" r="14" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="40" y="66" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">Z</text>
+  <text x="40" y="88" text-anchor="middle" fill="var(--ink-low)" font-size="6.5">distance</text>
+  <circle cx="160" cy="62" r="14" fill="var(--depth)" stroke="var(--rim)"/>
+  <text x="160" y="66" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">T</text>
+  <text x="160" y="88" text-anchor="middle" fill="var(--ink-low)" font-size="6.5">education</text>
+  <circle cx="290" cy="62" r="14" fill="var(--depth)" stroke="var(--rim)"/>
+  <text x="290" y="66" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">Y</text>
+  <text x="290" y="88" text-anchor="middle" fill="var(--ink-low)" font-size="6.5">earnings</text>
+  <circle cx="225" cy="24" r="13" fill="none" stroke="#f59e0b"/>
+  <text x="225" y="28" text-anchor="middle" fill="#f59e0b" font-size="8.5" font-weight="700">U</text>
+  <text x="225" y="10" text-anchor="middle" fill="#f59e0b" font-size="6.5">ability (unobs.)</text>
+  <path d="M55,62 L143,62" stroke="var(--ink-low)" stroke-width="1.5" marker-end="url(#ivh)"/>
+  <path d="M175,62 L273,62" stroke="var(--ink-low)" stroke-width="1.5" marker-end="url(#ivh)"/>
+  <path d="M212,33 L170,52" stroke="#f59e0b" stroke-width="1.3" marker-end="url(#ivh)"/>
+  <path d="M238,33 L282,50" stroke="#f59e0b" stroke-width="1.3" marker-end="url(#ivh)"/>
+  <text x="100" y="55" text-anchor="middle" fill="var(--ink-low)" font-size="6.5">relevance</text>
+  <text x="4" y="106" fill="var(--ink-low)" font-size="7.5">2SLS uses only the Z-driven variation in T — the part U cannot touch. Estimates LATE.</text>
+</svg>`,
+    },
   },
   {
     id: 'did',
+    interactiveId: 'parallel_trends_viz',
     title: 'Difference-in-Differences',
     subtitle: 'Parallel trends, event studies, staggered DiD, DiD failures',
     difficulty: 'advanced',
     estimatedMin: 30,
     tags: ['DiD', 'difference-in-differences', 'parallel trends', 'event study', 'staggered DiD'],
-    summary: `A city passes a minimum wage law in 2020. You want to know if it reduced employment. Treated group: businesses in the city. Control group: businesses in a neighboring city without the law. Pre-period: 2018–2019. Post-period: 2020–2021. Simple before-after comparison for the treated city would confound the policy effect with COVID-related employment drops that hit both cities. DiD subtracts the control city's change from the treated city's change: (treated post − treated pre) − (control post − control pre). This removes the common time trend, leaving only the differential change that appeared when treatment was administered.
+    summary: `A city passes a minimum wage law in 2020. You want to know if it reduced employment. Treated group: businesses in the city. Control group: businesses in a neighboring city without the law. Pre-period: 2018–2019. Post-period: 2020–2021. Simple before-after comparison for the treated city would confound the policy effect with COVID-related employment drops that hit both cities. [FIGURE: paralleltrends]
+
+DiD subtracts the control city's change from the treated city's change: (treated post − treated pre) − (control post − control pre). This removes the common time trend, leaving only the differential change that appeared when treatment was administered.
 
 The parallel trends assumption is the key identifying assumption. In the absence of treatment, the treated group's outcomes would have followed the same trend as the control group. This is untestable in the post-period — the treated city's counterfactual employment trend under no policy is never observed. It can be tested in pre-periods: if treated and control trends were parallel in 2017 and 2018, they were likely to remain parallel in 2020 absent the intervention. Non-zero pre-period effects in an event study are evidence against parallel trends.
 
@@ -436,6 +516,25 @@ What parallel trends is not: a weak assumption that is always satisfied. Paralle
       `**Fix:** Callaway-Sant'Anna / Sun-Abraham — clean 2×2 DiDs using only not-yet-treated or never-treated controls.`,
       `**Placebo test:** a "significant" effect on an unaffected outcome signals confounding, not causation.`,
     ],
+    figures: {
+      paralleltrends: `<svg viewBox="0 0 360 120" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="4" y="12" fill="var(--ink-low)" font-size="7.5">Counterfactual = control's change applied to treated. Gap = DiD estimate.</text>
+  <line x1="40" y1="100" x2="340" y2="100" stroke="var(--rim)"/>
+  <line x1="40" y1="24" x2="40" y2="100" stroke="var(--rim)"/>
+  <line x1="190" y1="24" x2="190" y2="100" stroke="var(--rim)" stroke-dasharray="3 3"/>
+  <text x="190" y="20" text-anchor="middle" fill="var(--ink-low)" font-size="7">policy →</text>
+  <text x="115" y="114" text-anchor="middle" fill="var(--ink-low)" font-size="7">pre</text>
+  <text x="265" y="114" text-anchor="middle" fill="var(--ink-low)" font-size="7">post</text>
+  <polyline points="70,72 190,60 310,84" fill="none" stroke="var(--prime)" stroke-width="2"/>
+  <text x="316" y="86" fill="var(--prime)" font-size="7" font-weight="700">treated</text>
+  <polyline points="70,52 190,40 310,40" fill="none" stroke="var(--ink-mid)" stroke-width="2"/>
+  <text x="316" y="42" fill="var(--ink-mid)" font-size="7">control</text>
+  <polyline points="190,60 310,48" fill="none" stroke="var(--prime)" stroke-width="1.4" stroke-dasharray="4 3"/>
+  <text x="300" y="60" text-anchor="end" fill="var(--ink-low)" font-size="6.5">counterfactual</text>
+  <line x1="310" y1="48" x2="310" y2="84" stroke="#ef4444" stroke-width="2"/>
+  <text x="4" y="116" fill="#ef4444" font-size="7.5">If pre-period slopes differ, parallel trends fails — the estimate is confounded.</text>
+</svg>`,
+    },
   },
   {
     id: 'rdd',
@@ -445,6 +544,8 @@ What parallel trends is not: a weak assumption that is always satisfied. Paralle
     estimatedMin: 30,
     tags: ['RDD', 'regression discontinuity', 'bandwidth', 'local randomisation', 'sharp RDD'],
     summary: `A scholarship is awarded to students who score ≥ 70 on an entrance exam. You want to know if the scholarship improves graduation rates. You cannot randomize scholarship receipt — it is rule-based. But students just above and just below 70 are essentially identical in every way except scholarship receipt. A student scoring 69 and one scoring 71 have the same underlying ability, preparation, and motivation — they differ only in their eligibility. Comparing outcomes for students just above and just below the threshold identifies the causal effect of the scholarship without measuring any confounders, because near the cutoff the assignment is locally as-good-as-random.
+
+[FIGURE: rddjump]
 
 RDD exploits a threshold rule in treatment assignment. The running variable (exam score) determines treatment. The key identifying assumption: no other variable changes discontinuously at the cutoff. Any discontinuity in the outcome at the cutoff is caused by the treatment, because nothing else jumped there.
 
@@ -501,15 +602,36 @@ What RDD requires that must always be checked: units cannot precisely manipulate
       `**Manipulation test:** McCrary density — bunching at/just above the cutoff violates local randomisation.`,
       `**Placebo checks:** RDD on pre-treatment outcomes/covariates should show no jump at the cutoff.`,
     ],
+    figures: {
+      rddjump: `<svg viewBox="0 0 360 120" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="4" y="12" fill="var(--ink-low)" font-size="7.5">Effect = vertical jump in the fit AT the cutoff (score = 70)</text>
+  <line x1="30" y1="102" x2="345" y2="102" stroke="var(--rim)"/>
+  <line x1="30" y1="24" x2="30" y2="102" stroke="var(--rim)"/>
+  <line x1="188" y1="24" x2="188" y2="102" stroke="var(--ink-low)" stroke-dasharray="3 3"/>
+  <text x="188" y="118" text-anchor="middle" fill="var(--ink-mid)" font-size="7" font-weight="700">cutoff 70</text>
+  <text x="100" y="118" text-anchor="middle" fill="var(--ink-low)" font-size="7">below (control)</text>
+  <text x="270" y="118" text-anchor="middle" fill="var(--ink-low)" font-size="7">above (treated)</text>
+  <text x="18" y="60" text-anchor="middle" fill="var(--ink-low)" font-size="7" transform="rotate(-90 18 60)">grad. rate</text>
+  <circle cx="55" cy="90" r="2" fill="var(--ink-low)"/><circle cx="80" cy="85" r="2" fill="var(--ink-low)"/><circle cx="110" cy="82" r="2" fill="var(--ink-low)"/><circle cx="140" cy="78" r="2" fill="var(--ink-low)"/><circle cx="170" cy="74" r="2" fill="var(--ink-low)"/>
+  <line x1="50" y1="92" x2="188" y2="70" stroke="var(--ink-mid)" stroke-width="2"/>
+  <circle cx="210" cy="52" r="2" fill="var(--prime)"/><circle cx="240" cy="49" r="2" fill="var(--prime)"/><circle cx="270" cy="46" r="2" fill="var(--prime)"/><circle cx="300" cy="43" r="2" fill="var(--prime)"/><circle cx="330" cy="40" r="2" fill="var(--prime)"/>
+  <line x1="188" y1="52" x2="335" y2="38" stroke="var(--prime)" stroke-width="2"/>
+  <line x1="188" y1="70" x2="188" y2="52" stroke="#22c55e" stroke-width="3"/>
+  <text x="196" y="64" fill="#22c55e" font-size="7.5" font-weight="700">τ (effect)</text>
+</svg>`,
+    },
   },
   {
     id: 'uplift_modeling',
+    interactiveId: 'uplift_targeting_viz',
     title: 'Uplift Modeling',
     subtitle: 'S-learner, T-learner, X-learner, R-learner — heterogeneous treatment effects and targeting',
     difficulty: 'advanced',
     estimatedMin: 35,
     tags: ['uplift', 'CATE', 'causal ML', 'treatment effect', 'meta-learner'],
     summary: `A marketing team has a $1M budget for promotional emails. They can send to 1M users, but only 200K will benefit from the discount — people who would not have purchased without it. Sending to users who would purchase anyway wastes the discount cost. Sending to users who actively dislike being contacted is counterproductive. A simple propensity-to-purchase model predicts who will buy — but that is not uplift. Uplift is: who changes their behavior because of the treatment?
+
+[FIGURE: upliftquad]
 
 Four user types define the targeting problem. Persuadables will buy with treatment and not without — your target. Sure Things will buy regardless — wasting budget on them yields zero incremental revenue. Lost Causes will not buy regardless. Sleeping Dogs will buy without treatment but not with it — negative uplift, worse than doing nothing. A model maximizing purchase propensity concentrates budget on Sure Things. An uplift model maximizes incremental effect.
 
@@ -586,6 +708,27 @@ What a response model is not: an uplift model. A response model predicts P(purch
       `**Evaluate with Qini/AUUC** ranked by predicted uplift — but a no-contact holdout is required to confirm causal targeting.`,
       `**Collapse warning:** corr(τ̂, baseline propensity) > 0.7 means the uplift model has degenerated into a response model.`,
     ],
+    figures: {
+      upliftquad: `<svg viewBox="0 0 360 122" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="4" y="12" fill="var(--ink-low)" font-size="7.5">Only Persuadables have positive uplift. Sleeping Dogs are negative.</text>
+  <text x="108" y="26" text-anchor="middle" fill="var(--ink-mid)" font-size="7.5" font-weight="700">buys if treated</text>
+  <text x="256" y="26" text-anchor="middle" fill="var(--ink-mid)" font-size="7.5" font-weight="700">no buy if treated</text>
+  <text x="34" y="55" text-anchor="middle" fill="var(--ink-mid)" font-size="7" transform="rotate(-90 34 55)">no buy if ctrl</text>
+  <text x="34" y="100" text-anchor="middle" fill="var(--ink-mid)" font-size="7" transform="rotate(-90 34 100)">buys if ctrl</text>
+  <rect x="44" y="32" width="128" height="42" rx="5" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="108" y="50" text-anchor="middle" fill="var(--ink-hi)" font-size="8.5" font-weight="700">Persuadables</text>
+  <text x="108" y="63" text-anchor="middle" fill="#22c55e" font-size="7">TARGET · uplift +</text>
+  <rect x="184" y="32" width="128" height="42" rx="5" fill="var(--depth)" stroke="var(--rim)"/>
+  <text x="248" y="50" text-anchor="middle" fill="var(--ink-hi)" font-size="8.5" font-weight="700">Lost Causes</text>
+  <text x="248" y="63" text-anchor="middle" fill="var(--ink-low)" font-size="7">waste · uplift 0</text>
+  <rect x="44" y="78" width="128" height="42" rx="5" fill="var(--depth)" stroke="var(--rim)"/>
+  <text x="108" y="96" text-anchor="middle" fill="var(--ink-hi)" font-size="8.5" font-weight="700">Sure Things</text>
+  <text x="108" y="109" text-anchor="middle" fill="var(--ink-low)" font-size="7">waste · uplift 0</text>
+  <rect x="184" y="78" width="128" height="42" rx="5" fill="none" stroke="#ef4444"/>
+  <text x="248" y="96" text-anchor="middle" fill="var(--ink-hi)" font-size="8.5" font-weight="700">Sleeping Dogs</text>
+  <text x="248" y="109" text-anchor="middle" fill="#ef4444" font-size="7">backfire · uplift −</text>
+</svg>`,
+    },
   },
   {
     id: 'mediation',
@@ -595,6 +738,8 @@ What a response model is not: an uplift model. A response model predicts P(purch
     estimatedMin: 30,
     tags: ['mediation', 'indirect effects', 'NDE', 'NIE', 'causal path analysis'],
     summary: `Job training increases earnings. How much of the effect is direct — training improves skills and directly raises wages — versus indirect — training leads to employment, which raises earnings? This is a mediation question: decomposing the total causal effect into the portion that flows through a mediator (employment) versus the direct path. The distinction matters for policy. If employment mediates the effect, job placement services might be as effective as skills training at lower cost. If the effect is direct, the content of the training matters and placement alone is insufficient.
+
+[FIGURE: mediationdag]
 
 Definitions. Total Effect (TE) = Direct Effect (DE) + Indirect Effect (IE). Natural Direct Effect (NDE) = Y(t, M(t′)) − Y(t′, M(t′)): the effect of treatment holding the mediator at the value it would take under control. Natural Indirect Effect (NIE) = Y(t, M(t)) − Y(t, M(t′)): the effect of the mediator shifting from its control-level to its treatment-level value while holding treatment fixed.
 
@@ -630,6 +775,16 @@ What mediation analysis is not: controlling for the mediator in a regression. Co
         ],
         answer: `B`,
       },
+      {
+        q: `Your treatment T was assigned by a clean randomized experiment. Why can the mediation decomposition (NDE/NIE) through mediator M still be biased?`,
+        options: [
+          `A) Randomization guarantees ignorability of T but not of M — an unmeasured mediator-outcome confounder survives randomization and biases the NDE and NIE.`,
+          `B) It cannot be biased: randomizing T automatically makes the NDE and NIE unbiased, so no further assumption about M is required.`,
+          `C) The mediator is measured post-treatment, so reverse causation between M and Y always breaks the decomposition regardless of the design used.`,
+          `D) RCTs recover only average effects, and mediation needs individual-level counterfactuals that are fundamentally unidentifiable in any study.`,
+        ],
+        answer: `A`,
+      },
     ],
     takeaway: `Mediation requires a stronger assumption than total effect estimation — an RCT guarantees T-ignorability but not M-ignorability, and every mediation result needs sensitivity analysis for unmeasured mediator-outcome confounding.`,
     recap: [
@@ -641,6 +796,31 @@ What mediation analysis is not: controlling for the mediator in a regression. Co
       `**Controlling for M ≠ mediation** — gives the controlled direct effect and opens collider bias if M and Y share a hidden cause.`,
       `**Always run Imai-Keele-Tingley sensitivity analysis** (ACME) for unmeasured M-Y confounding.`,
     ],
+    figures: {
+      mediationdag: `<svg viewBox="0 0 360 108" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <defs><marker id="mh" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="var(--ink-low)"/></marker></defs>
+  <text x="4" y="12" fill="var(--ink-low)" font-size="7.5">Total = Direct (T→Y) + Indirect (T→M→Y)</text>
+  <circle cx="180" cy="30" r="14" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="180" y="34" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">M</text>
+  <text x="180" y="18" text-anchor="middle" fill="var(--ink-low)" font-size="6.5">employment</text>
+  <circle cx="55" cy="78" r="14" fill="var(--depth)" stroke="var(--rim)"/>
+  <text x="55" y="82" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">T</text>
+  <text x="55" y="102" text-anchor="middle" fill="var(--ink-low)" font-size="6.5">training</text>
+  <circle cx="305" cy="78" r="14" fill="var(--depth)" stroke="var(--rim)"/>
+  <text x="305" y="82" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">Y</text>
+  <text x="305" y="102" text-anchor="middle" fill="var(--ink-low)" font-size="6.5">earnings</text>
+  <path d="M68,68 L167,40" stroke="var(--prime)" stroke-width="1.5" marker-end="url(#mh)"/>
+  <path d="M193,40 L292,68" stroke="var(--prime)" stroke-width="1.5" marker-end="url(#mh)"/>
+  <path d="M69,80 L290,80" stroke="var(--ink-mid)" stroke-width="1.5" marker-end="url(#mh)"/>
+  <text x="180" y="93" text-anchor="middle" fill="var(--ink-mid)" font-size="7">NDE (direct)</text>
+  <text x="112" y="50" text-anchor="middle" fill="var(--prime)" font-size="7">NIE (indirect)</text>
+  <circle cx="240" cy="50" r="11" fill="none" stroke="#f59e0b" stroke-dasharray="2 2"/>
+  <text x="240" y="53" text-anchor="middle" fill="#f59e0b" font-size="7" font-weight="700">U</text>
+  <path d="M232,42 L200,36" stroke="#f59e0b" stroke-width="1.1" marker-end="url(#mh)"/>
+  <path d="M247,58 L296,68" stroke="#f59e0b" stroke-width="1.1" marker-end="url(#mh)"/>
+  <text x="4" y="105" fill="#f59e0b" font-size="7">RCT randomises T, not M — a hidden M–Y confounder U survives.</text>
+</svg>`,
+    },
   },
   {
     id: 'sensitivity_analysis',

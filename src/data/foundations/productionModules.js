@@ -1,6 +1,7 @@
 export const PRODUCTION_MODULES = [
   {
     id: 'training_serving_skew',
+    interactiveId: 'train_serve_skew_viz',
     title: 'Training-Serving Skew',
     subtitle: 'Definition, causes, detection, remediation',
     difficulty: 'intermediate',
@@ -8,6 +9,8 @@ export const PRODUCTION_MODULES = [
     tags: ['training-serving skew', 'production ML', 'feature drift'],
     interactivePrompt: `Before you touch the controls: a fraud model was trained on Python-computed features and is served with a Java microservice computing the "same" features — would you expect them to agree?`,
     summary: `Your fraud model scored beautifully in offline testing. In production it is 15% worse. The features look right. No exception is thrown. The pipeline reports success every hour. So what broke?
+
+[FIGURE: skew]
 
 One feature broke: "number of transactions in the last 7 days." At training time you computed it from a historical database — exact counts, every transaction, counted precisely. In production it comes from a real-time streaming service that counts *approximately* to stay fast (it uses a probabilistic sketch under the hood). The two numbers are close but not equal. For high-volume power users the gap is big enough to move the prediction — and those are exactly the users most likely to be committing fraud. The model learned from exact counts and is now judging approximate ones. That mismatch has a name: **training-serving skew.**
 
@@ -77,6 +80,23 @@ Build one feature-computation layer that both training and serving call — a fe
       },
     ],
     takeaway: `Training-serving skew is an infrastructure problem, not a modeling problem. A model cannot compensate for receiving different feature values than it was trained on. Two separately maintained codepaths will always drift. The only reliable fix is a single shared computation function with serialized preprocessing parameters — anything else is relying on discipline that will eventually fail at the worst moment.`,
+    figures: {
+      skew: `<svg viewBox="0 0 360 118" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="6" y="12" fill="var(--ink-low)" font-size="7.5">same feature, two codepaths — they drift, silently</text>
+  <rect x="6" y="20" width="150" height="30" rx="5" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="81" y="33" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">TRAIN: Python / SQL</text>
+  <text x="81" y="44" text-anchor="middle" fill="var(--ink-mid)" font-size="7.5">exact count = 47</text>
+  <rect x="204" y="20" width="150" height="30" rx="5" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="279" y="33" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">SERVE: Java / Redis</text>
+  <text x="279" y="44" text-anchor="middle" fill="var(--ink-mid)" font-size="7.5">approx count = 43</text>
+  <path d="M156,35 l46,0" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4 2"/>
+  <text x="179" y="31" text-anchor="middle" fill="#ef4444" font-size="7.5" font-weight="700">≠</text>
+  <rect x="6" y="62" width="348" height="24" rx="5" fill="none" stroke="#ef4444"/>
+  <text x="180" y="77" text-anchor="middle" fill="#ef4444" font-size="8" font-weight="700">model scores value it never trained on — worst on high-volume users</text>
+  <rect x="6" y="94" width="348" height="20" rx="5" fill="var(--prime-faint)" stroke="#22c55e"/>
+  <text x="180" y="107" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">FIX: one shared computation path → 47 = 47 by construction</text>
+</svg>`,
+    },
     recap: [
       `**Training-serving skew = the model scores values it never learned from.** Silent, no exception, no crash.`,
       `**Infrastructure problem, not modeling.** Team size irrelevant — exposure appears the moment training code ≠ serving code.`,
@@ -89,6 +109,7 @@ Build one feature-computation layer that both training and serving call — a fe
   },
   {
     id: 'feature_engineering_prod',
+    interactiveId: 'point_in_time_join_viz',
     title: 'Feature Engineering in Production',
     subtitle: 'Online vs offline features, point-in-time joins, backfill risk',
     difficulty: 'intermediate',
@@ -109,6 +130,8 @@ One shared computation path removes all five at once: a single library or servic
 ---
 
 **Point-in-time joins: the rule that keeps training honest.**
+
+[FIGURE: pit]
 
 Here is the subtle one. When you build a training row for a fraud event at time T, you must join only feature values that existed *before* T. Grab a value from T + 1 hour — easy to do by accident, because the training job ran later — and you've leaked the future into the past. For a rolling 7-day window computed an hour late, the count can include transactions that happened *after* the event you're trying to predict. The model learns a pattern built partly on future data. In production it never has the future, so the offline number is a mirage and production comes in lower.
 
@@ -164,6 +187,21 @@ Here is the subtle one. When you build a training row for a fraud event at time 
       },
     ],
     takeaway: `Training-serving skew is not discovered through monitoring — it is prevented by building a single feature computation path that makes two diverging implementations structurally impossible.`,
+    figures: {
+      pit: `<svg viewBox="0 0 360 92" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="6" y="12" fill="var(--ink-low)" font-size="7.5">building a training row for event T — join only what existed before T</text>
+  <line x1="10" y1="56" x2="350" y2="56" stroke="var(--ink-low)" stroke-width="1"/>
+  <rect x="40" y="46" width="140" height="20" rx="3" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="110" y="60" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5" font-weight="700">7-day window (≤ T) ✓</text>
+  <rect x="180" y="46" width="80" height="20" rx="3" fill="#ef4444" fill-opacity="0.25" stroke="#ef4444"/>
+  <text x="220" y="60" text-anchor="middle" fill="#ef4444" font-size="7.5" font-weight="700">after T ✗ leak</text>
+  <line x1="180" y1="38" x2="180" y2="72" stroke="var(--amber)" stroke-width="2"/>
+  <text x="180" y="32" text-anchor="middle" fill="var(--amber)" font-size="8" font-weight="700">event T</text>
+  <line x1="260" y1="42" x2="260" y2="72" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3 2"/>
+  <text x="260" y="82" text-anchor="middle" fill="#ef4444" font-size="7">backfill ran later</text>
+  <text x="6" y="90" fill="var(--ink-low)" font-size="7">grab a value from T+1h and the future leaks into the past → offline AUC is a mirage</text>
+</svg>`,
+    },
     recap: [
       `**Same feature, wrong value:** SQL exact count at train vs Redis approximate count at serve → 94% AUC drops to 82%.`,
       `**Worst on high-volume accounts** — the very users most likely to be fraud.`,
@@ -184,6 +222,8 @@ Here is the subtle one. When you build a training row for a fraud event at time 
     summary: `Five ML teams at one company all need the same thing: "user average spend in last 30 days." Each team builds its own pipeline. Five nightly SQL jobs. Five Redis keys. Five different implementations of the 30-day window, each with its own null handling, timezone quirks, and new-user edge cases. A user spends ten thousand dollars at midnight, and each team's copy of the feature updates at a slightly different time with a slightly different number. The fraud model and the recommendation model now disagree about this user's spending. Neither team can see the other's value. Neither is wrong by its own logic. Yet they are quietly inconsistent, and both models suffer for it.
 
 A feature store fixes this by computing each feature *once,* correctly, and serving that one answer to everyone — through two storage backends built for two very different jobs.
+
+[FIGURE: stores]
 
 ---
 
@@ -253,6 +293,24 @@ And that's the real answer to "isn't this just a database?" A database stores by
       },
     ],
     takeaway: `A feature store is not storage — it is the infrastructure that makes training-serving consistency a structural property rather than an agreement between engineers who will eventually disagree.`,
+    figures: {
+      stores: `<svg viewBox="0 0 360 116" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <rect x="120" y="6" width="120" height="20" rx="4" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="180" y="19" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">materialization (compute once)</text>
+  <path d="M120,26 l-30,20" stroke="var(--ink-low)" stroke-width="1"/>
+  <path d="M240,26 l30,20" stroke="var(--ink-low)" stroke-width="1"/>
+  <rect x="6" y="48" width="160" height="44" rx="6" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="86" y="62" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">OFFLINE store</text>
+  <text x="86" y="74" text-anchor="middle" fill="var(--ink-mid)" font-size="7">every past value, time-stamped</text>
+  <text x="86" y="85" text-anchor="middle" fill="var(--ink-mid)" font-size="7">"as of T" → training sets</text>
+  <rect x="194" y="48" width="160" height="44" rx="6" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="274" y="62" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">ONLINE store</text>
+  <text x="274" y="74" text-anchor="middle" fill="var(--ink-mid)" font-size="7">latest value only (Redis)</text>
+  <text x="274" y="85" text-anchor="middle" fill="var(--ink-mid)" font-size="7">&lt;5ms → live serving</text>
+  <text x="86" y="106" text-anchor="middle" fill="var(--ink-low)" font-size="7">history, sized for storage</text>
+  <text x="274" y="106" text-anchor="middle" fill="var(--ink-low)" font-size="7">current, sized for latency</text>
+</svg>`,
+    },
     recap: [
       `**Problem:** five teams compute "30d avg spend" five ways → silent inconsistency, all models suffer.`,
       `**Fix = compute once, serve everyone,** through two backends for two jobs.`,
@@ -273,6 +331,8 @@ And that's the real answer to "isn't this just a database?" A database stores by
     summary: `A new user signs up. Your feature "average spend in last 30 days" has no history for them, so the feature store returns null. The model — which only ever saw users with 30+ days of history — gets a null where its main spend signal should be. It still produces a score. The score looks plausible. It is garbage. This is the **cold start** problem, and it fires on the very first request for every new user, item, or account, across every feature built on history.
 
 And nothing warns you. The null gets quietly turned into zero (shoving the model toward its most extreme low-spend prediction) or passed straight through the network (behaving however that architecture happens to behave). Either way the model was never trained for this input, and a real user gets a confidently wrong answer.
+
+[FIGURE: coldstart]
 
 Cold start is one of four silent failure modes in production feature stores. Here are the other three.
 
@@ -340,6 +400,16 @@ Cold start is one of four silent failure modes in production feature stores. Her
       },
     ],
     takeaway: `Feature store failures are silent — no exception fires when a feature is stale, null, or semantically different from what the model expects, and the only mechanism that finds them before users do is explicit monitoring that you built specifically for that purpose.`,
+    figures: {
+      coldstart: `<svg viewBox="0 0 360 76" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="6" y="12" fill="var(--ink-low)" font-size="7.5">new user, no history → the silent path to confident garbage</text>
+  ${['new user', 'feature = null', 'imputed → 0', 'confident\\ngarbage'].map((t, i) => `
+  <rect x="${6 + i * 90}" y="26" width="80" height="30" rx="5" fill="${i === 3 ? 'none' : 'var(--prime-faint)'}" stroke="${i === 3 ? '#ef4444' : 'var(--prime)'}"/>
+  <text x="${46 + i * 90}" y="45" text-anchor="middle" fill="${i === 3 ? '#ef4444' : 'var(--ink-hi)'}" font-size="7.5" font-weight="700">${t.replace('\\n', ' ')}</text>
+  ${i < 3 ? `<path d="M${86 + i * 90},41 l4,0" stroke="var(--ink-low)" stroke-width="1.5"/>` : ''}`).join('')}
+  <text x="6" y="72" fill="var(--ink-low)" font-size="7">fix: population median, never 0, plus an explicit is_new_entity flag</text>
+</svg>`,
+    },
     recap: [
       `**Four silent failure modes:** cold start, stale features, in-place version change, backfill that leaks the future.`,
       `**Cold start:** new entity → null → imputed to zero → confident garbage. Fires on the first request for every new user/item.`,
@@ -352,6 +422,7 @@ Cold start is one of four silent failure modes in production feature stores. Her
   },
   {
     id: 'late_arriving_data',
+    interactiveId: 'label_delay_viz',
     title: 'Late-Arriving Data',
     subtitle: 'Watermarking, streaming late data handling, impact on labels, remediation',
     difficulty: 'advanced',
@@ -364,6 +435,8 @@ Cold start is one of four silent failure modes in production feature stores. Her
 **Don't guess the wait — measure it.**
 
 The lazy fix is "just wait longer before training." It works, but it throws away recency. The real fix is to learn the *shape* of the delay: for your data, what fraction of chargebacks are in by day 1, day 3, day 7? That's the **completeness curve.** At 50% completeness you have half the labels; at 95%, nearly all. Set your incubation period — how long before you call a label final — at the 99th percentile of that curve, not at some round number that felt about right.
+
+[FIGURE: completeness]
 
 ---
 
@@ -425,6 +498,21 @@ A *watermark* is how a streaming system announces "every event up to time T is n
       },
     ],
     takeaway: `Label delay and late-arriving events are not edge cases — they are structural properties of asynchronous systems, and the only safe design measures the actual completeness curve for your specific data source rather than assuming any default.`,
+    figures: {
+      completeness: `<svg viewBox="0 0 360 104" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="6" y="12" fill="var(--ink-low)" font-size="7.5">completeness curve — set incubation at the 99th percentile, not a round number</text>
+  <line x1="30" y1="20" x2="30" y2="86" stroke="var(--ink-low)" stroke-width="0.75"/>
+  <line x1="30" y1="86" x2="350" y2="86" stroke="var(--ink-low)" stroke-width="0.75"/>
+  <text x="26" y="24" text-anchor="end" fill="var(--ink-ghost)" font-size="6.5">100%</text>
+  <text x="26" y="88" text-anchor="end" fill="var(--ink-ghost)" font-size="6.5">0%</text>
+  <path d="M30,86 C90,40 160,26 350,22" fill="none" stroke="var(--prime)" stroke-width="1.75"/>
+  <line x1="70" y1="20" x2="70" y2="86" stroke="#ef4444" stroke-width="1.25"/>
+  <text x="70" y="98" text-anchor="middle" fill="#ef4444" font-size="7">day 1 (~50%)</text>
+  <line x1="250" y1="20" x2="250" y2="86" stroke="#22c55e" stroke-width="1" stroke-dasharray="3 2"/>
+  <text x="250" y="98" text-anchor="middle" fill="#22c55e" font-size="7">day 7 = p99 ✓</text>
+  <text x="200" y="34" fill="var(--ink-low)" font-size="7">cut too early → recent positives missing</text>
+</svg>`,
+    },
     recap: [
       `**Label delay:** truth arrives after the event — chargeback filed 7 days on. Recent week looks fraud-free because evidence hasn't shown up.`,
       `**Don't guess the wait, measure it:** the completeness curve = fraction of labels in by day 1/3/7. Set incubation at the 99th percentile.`,
@@ -458,6 +546,8 @@ At *ingestion:* does the data even exist, in the expected volume, with the expec
 ---
 
 **The five checks that catch the most.**
+
+[FIGURE: checks]
 
 *Freshness* — is data arriving on time (alert when nothing new for longer than expected). *Completeness* — null rates within bounds, per feature. *Validity* — values in range, categories from the known set. *Volume* — row count within ±30% of the rolling weekly average. *Schema consistency* — no surprise column renames or type changes from upstream. Tools like Great Expectations and TensorFlow Data Validation turn these into assertions that *fail the pipeline loudly* — not dashboards someone has to remember to open.
 
@@ -511,6 +601,17 @@ And the mindset that ties it together: data quality is never "done at launch." U
       },
     ],
     takeaway: `Bad data throws no exceptions — the only thing that distinguishes "pipeline ran" from "pipeline ran on data the model was trained to handle" is data quality assertions you wrote before the incident happened.`,
+    figures: {
+      checks: `<svg viewBox="0 0 360 96" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="6" y="12" fill="var(--ink-low)" font-size="7.5">five assertions that fail the pipeline loudly — not dashboards you must remember to open</text>
+  ${[['Freshness', 'arriving on time?'], ['Complete', 'null rate in bounds'], ['Validity', 'range / categories'], ['Volume', '±30% weekly avg'], ['Schema', 'no surprise change']].map((c, i) => `
+  <rect x="${6 + i * 70}" y="26" width="64" height="40" rx="5" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="${38 + i * 70}" y="42" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5" font-weight="700">${c[0]}</text>
+  <text x="${38 + i * 70}" y="54" text-anchor="middle" fill="var(--ink-mid)" font-size="6">${c[1]}</text>`).join('')}
+  <rect x="6" y="74" width="348" height="18" rx="4" fill="none" stroke="#ef4444"/>
+  <text x="180" y="86" text-anchor="middle" fill="#ef4444" font-size="7.5" font-weight="700">any check fails → stop the pipeline before the model trains on garbage</text>
+</svg>`,
+    },
     recap: [
       `**The asymmetry:** bad data raises no exceptions. Empty table returns in 5ms, failed join returns a number, all-zeros model returns a confident score.`,
       `**"Did the pipeline run?" tells you almost nothing** — you must check the data itself.`,
@@ -623,6 +724,8 @@ If the truth for an event at time T only arrives at T+7 days, you must drop the 
 
 **What a real pipeline is: eight stages, end to end.**
 
+[FIGURE: stages]
+
 *Ingestion* pulls the data, checks the schema, and writes a versioned snapshot. *Feature engineering* runs reproducible transforms into versioned tables. *Training* is pinned to a data version, hyperparameters, and a random seed, producing a versioned artifact. *Evaluation* scores it on a fixed holdout and compares to the current production model. *A deployment gate* auto-promotes if it clears the bar, or routes to a human if not. *Serving* looks up the model, computes online features, logs predictions. *Monitoring* watches drift and performance. *A retraining trigger* — on a schedule or an event — kicks the whole loop off again.
 
 ---
@@ -685,6 +788,22 @@ The orchestrator you pick (Airflow, Prefect, Kubeflow, Metaflow) matters far les
       },
     ],
     takeaway: `A pipeline that reports success tells you nothing about whether it produced correct data — the gap between "ran without errors" and "produced correct outputs" is exactly where silent bugs live, and only data quality assertions on pipeline outputs close it.`,
+    figures: {
+      stages: `<svg viewBox="0 0 360 92" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="6" y="12" fill="var(--ink-low)" font-size="7.5">eight stages — training + deploy are only two of them</text>
+  ${['Ingest', 'Features', 'Train', 'Eval'].map((t, i) => `
+  <rect x="${6 + i * 88}" y="20" width="78" height="22" rx="4" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="${45 + i * 88}" y="34" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5" font-weight="700">${t}</text>
+  ${i < 3 ? `<path d="M${84 + i * 88},31 l4,0" stroke="var(--ink-low)" stroke-width="1.5"/>` : ''}`).join('')}
+  ${['Gate', 'Serve', 'Monitor', 'Retrain'].map((t, i) => `
+  <rect x="${6 + i * 88}" y="52" width="78" height="22" rx="4" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="${45 + i * 88}" y="66" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5" font-weight="700">${t}</text>
+  ${i < 3 ? `<path d="M${84 + i * 88},63 l4,0" stroke="var(--ink-low)" stroke-width="1.5"/>` : ''}`).join('')}
+  <path d="M320,42 C338,44 338,50 320,52" fill="none" stroke="var(--ink-low)" stroke-width="1"/>
+  <path d="M45,74 C20,84 20,84 6,74" fill="none" stroke="var(--amber)" stroke-width="1" stroke-dasharray="3 2"/>
+  <text x="180" y="90" text-anchor="middle" fill="var(--ink-low)" font-size="7">idempotent · fast-fail on bad data · complete lineage — retrain loops back to ingest</text>
+</svg>`,
+    },
     recap: [
       `**"Training script + deploy script + cron" is not a pipeline** — it's a pile of scripts held together by fading memory.`,
       `**Eight stages:** ingestion → feature engineering → training → evaluation → deployment gate → serving → monitoring → retraining trigger.`,
@@ -709,6 +828,8 @@ The orchestrator you pick (Airflow, Prefect, Kubeflow, Metaflow) matters far les
 **What a registry actually is.**
 
 It's the governance layer sitting between training and production. It holds the model artifact and its full lineage — the exact dataset (with a content hash), the code commit, the feature versions used, the hyperparameters. It holds deployment history: which version went where, who approved it, what gate it passed. And it holds lifecycle state: Experiment → Staging → Production → Archived.
+
+[FIGURE: lifecycle]
 
 ---
 
@@ -772,6 +893,19 @@ That's the whole difference from "just an S3 folder." Plain storage hands you a 
       },
     ],
     takeaway: `The three questions that matter during a production incident — what is live, what produced it, what is the rollback target — have no reliable answers without mandatory lineage and programmatic gates enforced by the registry.`,
+    figures: {
+      lifecycle: `<svg viewBox="0 0 360 100" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="6" y="12" fill="var(--ink-low)" font-size="7.5">lifecycle states + the complete artifact travelling with them</text>
+  ${['Experiment', 'Staging', 'Production', 'Archived'].map((t, i) => `
+  <rect x="${6 + i * 88}" y="22" width="78" height="24" rx="5" fill="var(--prime-faint)" stroke="${i === 2 ? '#22c55e' : 'var(--prime)'}"/>
+  <text x="${45 + i * 88}" y="37" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5" font-weight="700">${t}</text>
+  ${i < 3 ? `<path d="M${84 + i * 88},34 l4,0" stroke="var(--ink-low)" stroke-width="1.5"/>` : ''}`).join('')}
+  <path d="M45,46 C45,64 250,64 250,48" fill="none" stroke="var(--amber)" stroke-width="1.25" stroke-dasharray="3 2"/>
+  <text x="150" y="70" text-anchor="middle" fill="var(--amber)" font-size="7">rollback = promote previous version (one API call)</text>
+  <rect x="6" y="78" width="348" height="18" rx="4" fill="none" stroke="#ef4444"/>
+  <text x="180" y="90" text-anchor="middle" fill="#ef4444" font-size="7.5" font-weight="700">artifact = weights + fitted preprocessing + schema (weights alone → confident garbage)</text>
+</svg>`,
+    },
     recap: [
       `**Registry = governance layer between training and production.** Without it, every incident answer is archaeology through Slack and S3 timestamps.`,
       `**Holds three things:** the artifact + full lineage (dataset hash, code commit, features, hyperparams), deployment history, lifecycle state (Experiment→Staging→Production→Archived).`,
@@ -808,6 +942,8 @@ A biased assignment still produces a p-value, a confidence interval, a tidy resu
 **The single most important check: Sample Ratio Mismatch.**
 
 You intended 50/50 and observed 52/48. That is *not* noise — it's the fingerprint of a systematic bug in assignment or logging. Even a 1% mismatch means your two groups came from different populations, and then every comparison is invalid no matter how significant it looks. Run a χ² test on the raw split *before* you open any metric dashboard. Above 1% SRM, there is no valid analysis to do.
+
+[FIGURE: srm]
 
 ---
 
@@ -861,6 +997,23 @@ You intended 50/50 and observed 52/48. That is *not* noise — it's the fingerpr
       },
     ],
     takeaway: `A biased assignment generates a p-value, a confidence interval, and a recommendation — every number in the chain is invalid, no alarm fires, and there is no statistical correction for a compromised experiment.`,
+    figures: {
+      srm: `<svg viewBox="0 0 360 92" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="6" y="12" fill="var(--ink-low)" font-size="7.5">intended 50/50, observed 52/48 — the χ² test runs BEFORE any metric dashboard</text>
+  <text x="6" y="30" fill="var(--ink-mid)" font-size="7.5" font-weight="700">intended</text>
+  <rect x="60" y="22" width="145" height="12" fill="var(--prime)" opacity="0.55"/>
+  <rect x="205" y="22" width="145" height="12" fill="var(--prime)" opacity="0.85"/>
+  <text x="132" y="31" text-anchor="middle" fill="var(--ink-hi)" font-size="7">control 50%</text>
+  <text x="277" y="31" text-anchor="middle" fill="var(--ink-hi)" font-size="7">treatment 50%</text>
+  <text x="6" y="54" fill="var(--ink-mid)" font-size="7.5" font-weight="700">observed</text>
+  <rect x="60" y="46" width="139" height="12" fill="#ef4444" opacity="0.45"/>
+  <rect x="199" y="46" width="151" height="12" fill="#ef4444" opacity="0.75"/>
+  <text x="129" y="55" text-anchor="middle" fill="var(--ink-hi)" font-size="7">48%</text>
+  <text x="274" y="55" text-anchor="middle" fill="var(--ink-hi)" font-size="7">52%</text>
+  <rect x="6" y="70" width="348" height="18" rx="4" fill="none" stroke="#ef4444"/>
+  <text x="180" y="82" text-anchor="middle" fill="#ef4444" font-size="7.5" font-weight="700">SRM &gt; 1% = assignment/logging bug — no valid analysis exists downstream</text>
+</svg>`,
+    },
     recap: [
       `**Experiment interference:** same power users land in treatment across six concurrent tests → all six results structurally broken.`,
       `**An A/B bug is scarier than a model bug:** it hides behind real-looking p-values and confidence intervals.`,
@@ -879,6 +1032,8 @@ You intended 50/50 and observed 52/48. That is *not* noise — it's the fingerpr
     estimatedMin: 29,
     tags: ['online learning', 'concept drift', 'model staleness', 'shadow mode', 'canary'],
     summary: `A news recommender retrains once a week. A big crypto story breaks Tuesday and interest spikes within hours. The weekly model doesn't surface crypto until Sunday — five days after the peak, three days after it started fading. An online model, updating on every click in real time, is surfacing crypto within minutes. For trending content, that five-day lag is real lost engagement.
+
+[FIGURE: lag]
 
 That's the case for online learning. But it's a *narrow* case, so start with a measurement, not a preference.
 
@@ -952,6 +1107,22 @@ The model's own predictions shape user behavior, that behavior becomes training 
       },
     ],
     takeaway: `Online learning solves a real problem — retraining latency — but creates three new ones: feedback loops, catastrophic forgetting, and a continuously changing model that cannot be audited, debugged, or rolled back the way a batch-trained model can; use it only when the measurement shows the tradeoff is worth it.`,
+    figures: {
+      lag: `<svg viewBox="0 0 360 96" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="6" y="12" fill="var(--ink-low)" font-size="7.5">crypto interest spikes Tue — retraining lag is the whole tradeoff</text>
+  <line x1="20" y1="52" x2="350" y2="52" stroke="var(--ink-low)" stroke-width="0.75"/>
+  <path d="M20,52 C80,52 95,22 110,22 C130,22 150,50 350,50" fill="none" stroke="var(--amber)" stroke-width="1.5"/>
+  <text x="110" y="18" text-anchor="middle" fill="var(--amber)" font-size="7">true interest (peaks Tue)</text>
+  <line x1="110" y1="22" x2="110" y2="72" stroke="#22c55e" stroke-width="1" stroke-dasharray="2 2"/>
+  <text x="110" y="82" text-anchor="middle" fill="#22c55e" font-size="7">online: surfaces in minutes</text>
+  <line x1="300" y1="22" x2="300" y2="72" stroke="#ef4444" stroke-width="1.25"/>
+  <text x="300" y="82" text-anchor="middle" fill="#ef4444" font-size="7">weekly batch: Sunday</text>
+  <path d="M114,66 l182,0" stroke="#ef4444" stroke-width="1" marker-end="url(#lg)"/>
+  <text x="205" y="63" text-anchor="middle" fill="#ef4444" font-size="7" font-weight="700">5-day lag = lost engagement</text>
+  <defs><marker id="lg" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5" fill="#ef4444"/></marker></defs>
+  <text x="6" y="94" fill="var(--ink-low)" font-size="7">but batch keeps auditability, debuggability, one-click rollback — use online only if the gain is measured</text>
+</svg>`,
+    },
     recap: [
       `**Case for online:** weekly news recommender lags a crypto spike by 5 days; an online model surfaces it in minutes.`,
       `**But start with a measurement, not a preference:** is daily-retrained batch actually too slow on the metric you care about?`,

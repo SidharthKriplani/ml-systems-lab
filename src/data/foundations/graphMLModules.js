@@ -14,6 +14,8 @@ Graphs appear wherever relationships between entities carry information: molecul
 
 Before any model runs, you need the right data structure. A 50M-node social graph stored as a dense adjacency matrix requires 50M × 50M entries at 1 bit each: 312 terabytes. Stored as a CSR (Compressed Sparse Row) sparse matrix with only the 500M actual edges, it requires about 40 gigabytes. This is not a detail — it is the difference between a system that is buildable and one that is not.
 
+[FIGURE:adjacency]
+
 Beyond data structures, graph tasks split into three types. Node-level tasks (fraud detection, protein function prediction) require a prediction per node, using each node's final embedding directly. Edge-level tasks (link prediction, drug-target interaction) require a prediction per edge, typically from a decoder applied to the two endpoint embeddings. Graph-level tasks (molecular property prediction) require one prediction for the entire graph, using a readout function that aggregates all node embeddings into a fixed-size vector.
 
 **NOT this.** "Graphs are just for network analysis." Graphs appear wherever entities have relationships that carry information: molecular property prediction where the graph is a molecule, recommendation systems where the graph connects users to items, knowledge graphs that power QA systems, traffic routing where roads are edges. Any problem with entities and relations between them is potentially a graph problem. The question is whether the relational structure contains signal that a per-entity feature vector would miss — and in most domains, it does.`,
@@ -79,6 +81,33 @@ Beyond data structures, graph tasks split into three types. Node-level tasks (fr
       `**Inductive vs transductive is a deployment commitment:** vanilla GCN can't embed unseen nodes; GraphSAGE/GAT can.`,
       `**Heterogeneous graphs are the production default** — ignoring node/edge types is a lossy baseline.`,
     ],
+    figures: {
+      adjacency: `<svg viewBox="0 0 360 116" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="8" y="12" fill="var(--ink-low)" font-size="8">Graph (4 nodes, 4 edges)</text>
+  <line x1="40" y1="46" x2="92" y2="30" stroke="var(--rim)" stroke-width="1.5"/>
+  <line x1="40" y1="46" x2="92" y2="78" stroke="var(--rim)" stroke-width="1.5"/>
+  <line x1="92" y1="30" x2="92" y2="78" stroke="var(--rim)" stroke-width="1.5"/>
+  <line x1="92" y1="78" x2="40" y2="96" stroke="var(--rim)" stroke-width="1.5"/>
+  <circle cx="40" cy="46" r="10" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="40" y="49" text-anchor="middle" fill="var(--ink-hi)" font-size="8">0</text>
+  <circle cx="92" cy="30" r="10" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="92" y="33" text-anchor="middle" fill="var(--ink-hi)" font-size="8">1</text>
+  <circle cx="92" cy="78" r="10" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="92" y="81" text-anchor="middle" fill="var(--ink-hi)" font-size="8">2</text>
+  <circle cx="40" cy="96" r="10" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="40" y="99" text-anchor="middle" fill="var(--ink-hi)" font-size="8">3</text>
+  <text x="150" y="12" fill="var(--ink-low)" font-size="8">Dense A (N x N)</text>
+  <text x="150" y="102" fill="var(--ink-low)" font-size="7">O(N&#178;) &#8594; 50M nodes &#8776; 312 TB</text>
+  <g font-size="8" fill="var(--ink-mid)" text-anchor="middle">
+  <text x="160" y="34">0</text><text x="176" y="34">1</text><text x="192" y="34">1</text><text x="208" y="34">0</text>
+  <text x="160" y="50">1</text><text x="176" y="50">0</text><text x="192" y="50">1</text><text x="208" y="50">0</text>
+  <text x="160" y="66">1</text><text x="176" y="66">1</text><text x="192" y="66">0</text><text x="208" y="66">1</text>
+  <text x="160" y="82">0</text><text x="176" y="82">0</text><text x="192" y="82">1</text><text x="208" y="82">0</text>
+  </g>
+  <text x="252" y="12" fill="#22c55e" font-size="8">CSR (edges only)</text>
+  <text x="252" y="30" fill="var(--ink-mid)" font-size="7">row_ptr [0,2,4,7,8]</text>
+  <text x="252" y="44" fill="var(--ink-mid)" font-size="7">col_idx [1,2,0,2,0,1,3,2]</text>
+  <text x="252" y="66" fill="#22c55e" font-size="7">O(|E|+|V|)</text>
+  <text x="252" y="80" fill="#22c55e" font-size="7">50M nodes &#8776; 40 GB</text>
+  <text x="252" y="102" fill="var(--ink-low)" font-size="7">buildable vs not</text>
+</svg>`,
+    },
   },
   {
     id: 'spectral_gcn',
@@ -94,6 +123,8 @@ Beyond data structures, graph tasks split into three types. Node-level tasks (fr
 Standard convolution is defined for regular grids — the same kernel slides over every pixel position. Graphs have no grid, no canonical node ordering, and variable neighborhood sizes. You cannot slide a fixed-size kernel over a graph. Spectral methods provided the first principled definition of graph convolution by grounding it in signal processing: the graph Laplacian L = D - A acts as the frequency operator, and filtering in spectral space multiplies signal components in eigenspace.
 
 The problem is that eigendecomposition of the Laplacian costs O(N\xb3) — infeasible for any real graph. ChebNet avoids explicit eigendecomposition by approximating spectral filters with Chebyshev polynomials of degree K, reducing convolution to sparse matrix multiplications that scale with edge count. Kipf & Welling (2017) simplified further to K=1 with a self-loop trick, giving one sparse matrix multiply per layer: H^{(l+1)} = σ(D̃^{-1/2} Ã D̃^{-1/2} H^{(l)} W^{(l)}). This GCN achieves 81% accuracy on the citation network versus 56% for the feature-only MLP — the graph structure accounts for 25 percentage points of accuracy.
+
+[FIGURE:oversmooth]
 
 But spectral GCNs carry a fundamental limitation that no hyperparameter can fix: the learned filter weights are defined in the eigenspace of a specific graph's Laplacian. A new graph has a different Laplacian with different eigenvectors. The model cannot generalize. This is why every production GNN system uses spatial methods.
 
@@ -150,6 +181,23 @@ But spectral GCNs carry a fundamental limitation that no hyperparameter can fix:
       `**Spectral filters can't transfer:** weights tied to the training graph's Laplacian → transductive only.`,
       `**Over-smoothing:** low-pass filter to the L-th power collapses embeddings to the dominant eigenvector.`,
     ],
+    figures: {
+      oversmooth: `<svg viewBox="0 0 360 104" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="8" y="12" fill="var(--ink-low)" font-size="8">Each GCN layer = low-pass filter (eigenvalues in [0,1]) &#8594; raised to the L-th power</text>
+  <text x="40" y="30" text-anchor="middle" fill="var(--ink-mid)" font-size="8">L = 2</text>
+  <circle cx="24" cy="52" r="8" fill="#22c55e"/><circle cx="44" cy="44" r="8" fill="var(--prime)"/><circle cx="34" cy="70" r="8" fill="var(--amber)"/><circle cx="56" cy="66" r="8" fill="#ef4444"/>
+  <text x="40" y="94" text-anchor="middle" fill="#22c55e" font-size="7">distinct</text>
+  <text x="160" y="30" text-anchor="middle" fill="var(--ink-mid)" font-size="8">L = 4</text>
+  <circle cx="144" cy="52" r="8" fill="#7c9c6b"/><circle cx="164" cy="44" r="8" fill="var(--prime)"/><circle cx="154" cy="70" r="8" fill="#9a8f5c"/><circle cx="176" cy="66" r="8" fill="#b06b5c"/>
+  <text x="160" y="94" text-anchor="middle" fill="var(--amber)" font-size="7">blurring</text>
+  <text x="290" y="30" text-anchor="middle" fill="var(--ink-mid)" font-size="8">L = 8</text>
+  <circle cx="274" cy="52" r="8" fill="var(--ink-low)"/><circle cx="294" cy="44" r="8" fill="var(--ink-low)"/><circle cx="284" cy="70" r="8" fill="var(--ink-low)"/><circle cx="306" cy="66" r="8" fill="var(--ink-low)"/>
+  <text x="290" y="94" text-anchor="middle" fill="#ef4444" font-size="7">collapsed (85% &#8594; 60%)</text>
+  <path d="M92,66 l40,0" stroke="var(--ink-low)" stroke-width="1.3" marker-end="url(#os)"/>
+  <path d="M212,66 l50,0" stroke="var(--ink-low)" stroke-width="1.3" marker-end="url(#os)"/>
+  <defs><marker id="os" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5" fill="var(--ink-low)"/></marker></defs>
+</svg>`,
+    },
   },
   {
     id: 'spatial_gcn',
@@ -165,6 +213,8 @@ But spectral GCNs carry a fundamental limitation that no hyperparameter can fix:
 GraphSAGE reframes the problem. Instead of learning fixed embeddings for each node, it learns aggregation functions — parameterized operations that map any neighborhood to an embedding. The same learned function applies to nodes never seen during training. Give it a new pin's features and its neighbors' features, run the aggregation, and you get an embedding in milliseconds. No retraining. This inductivity — generalizing to new nodes without retraining — is the architectural property that makes billion-scale GNN deployment possible.
 
 The second key problem is neighborhood explosion. A 2-layer GNN on a node with 100 average-degree neighbors requires 100 first-hop neighbors and up to 10,000 second-hop neighbors. A 3-layer GNN requires up to 1 million. GraphSAGE samples a fixed number of neighbors at each hop — 25 at hop 1, 10 at hop 2 — capping computation at 250 nodes per target node regardless of actual degree. This bounded fan-out is what makes mini-batch training tractable.
+
+[FIGURE:sampling]
 
 The aggregation function choice matters. Mean aggregation treats all neighbors equally. Max-pooling picks the most activated feature across neighbors — useful when a few neighbors carry strong signal and the rest are noise. LSTM aggregation has higher capacity but breaks permutation invariance, which is a theoretical violation for graph learning.
 
@@ -221,6 +271,24 @@ The aggregation function choice matters. Mean aggregation treats all neighbors e
       `**Concat ego, don't replace with mean** — preserves the central node's identity vs its hubs.`,
       `**PinSage = production reference:** random-walk sampling, separate feature/graph stores, MapReduce offline embeddings, ANN serving.`,
     ],
+    figures: {
+      sampling: `<svg viewBox="0 0 360 110" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="8" y="12" fill="var(--ink-low)" font-size="8">Fixed fan-out caps the neighbor explosion: sample [25, 10] not all</text>
+  <circle cx="40" cy="60" r="11" fill="var(--prime)"/><text x="40" y="63" text-anchor="middle" fill="var(--ink-hi)" font-size="8">v</text>
+  <text x="40" y="88" text-anchor="middle" fill="var(--ink-low)" font-size="7">target</text>
+  <g stroke="var(--prime)" stroke-width="1.3">
+  <line x1="51" y1="54" x2="150" y2="24"/><line x1="51" y1="58" x2="150" y2="46"/><line x1="51" y1="62" x2="150" y2="68"/><line x1="51" y1="66" x2="150" y2="90"/>
+  </g>
+  <g fill="var(--prime-faint)" stroke="var(--prime)"><circle cx="158" cy="24" r="8"/><circle cx="158" cy="46" r="8"/><circle cx="158" cy="68" r="8"/><circle cx="158" cy="90" r="8"/></g>
+  <text x="158" y="106" text-anchor="middle" fill="var(--prime)" font-size="7">hop 1: 25</text>
+  <g stroke="var(--rim)" stroke-width="1"><line x1="166" y1="24" x2="250" y2="16"/><line x1="166" y1="24" x2="250" y2="34"/><line x1="166" y1="68" x2="250" y2="60"/><line x1="166" y1="90" x2="250" y2="98"/></g>
+  <g fill="var(--depth)" stroke="var(--rim)"><circle cx="256" cy="16" r="6"/><circle cx="256" cy="34" r="6"/><circle cx="256" cy="60" r="6"/><circle cx="256" cy="98" r="6"/></g>
+  <text x="256" y="112" text-anchor="middle" fill="var(--ink-low)" font-size="7">hop 2: 10</text>
+  <text x="304" y="48" fill="#22c55e" font-size="8" font-weight="700">&#8804; 250</text>
+  <text x="304" y="62" fill="var(--ink-low)" font-size="7">per target,</text>
+  <text x="304" y="74" fill="var(--ink-low)" font-size="7">any degree</text>
+</svg>`,
+    },
   },
   {
     id: 'graph_attention',
@@ -234,6 +302,8 @@ The aggregation function choice matters. Mean aggregation treats all neighbors e
     summary: `A citation network has 2708 papers. GCN weights all neighbor contributions equally by degree normalization — a paper cited by Nature and one cited by a predatory journal receive identical aggregation weights. The GCN has no mechanism to distinguish citation quality. For homophilic graphs where all neighbors are roughly equally informative, this is a reasonable prior. For graphs where neighbor relevance varies widely, it discards the most important signal.
 
 Graph Attention Networks replace fixed aggregation weights with learned, data-dependent attention coefficients. For each edge (i, j), GAT computes an attention score from the features of both endpoints: α_{ij} = softmax(LeakyReLU(a^T [W h_i ‖ W h_j])). The aggregation becomes a weighted sum over neighbors, where each weight is proportional to how relevant that neighbor's features are. The Nature citation gets high attention weight; the predatory journal citation gets near zero.
+
+[FIGURE:attention]
 
 The original GAT has a subtle flaw discovered by Brody et al. (2022): its attention is static. The computation e_{ij} = a^T · LeakyReLU(W₁h_i + W₂h_j) decomposes into independent source and target terms — the ranking of neighbor j is the same for every source node i. If neighbor A ranks above neighbor B for node i, it ranks above B for every other node in the graph. GATv2 fixes this by applying the nonlinearity after concatenating source and target features rather than before: e_{ij} = a^T · LeakyReLU(W · [h_i ‖ h_j]). Now the joint (i, j) representation enters the nonlinearity, making attention genuinely dynamic — different source nodes produce different neighbor rankings.
 
@@ -290,6 +360,24 @@ The original GAT has a subtle flaw discovered by Brody et al. (2022): its attent
       `**GAT ≠ always better:** on uniform-weight graphs attention → near-uniform, no payoff. Inspect $\\alpha_{ij}$ before claiming it helps.`,
       `**Attention collapse in deep GAT:** weights concentrate on hubs → dropout on $\\alpha_{ij}$ regularizes it.`,
     ],
+    figures: {
+      attention: `<svg viewBox="0 0 360 108" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="8" y="12" fill="var(--ink-low)" font-size="8">GAT learns per-edge weights &#945;&#8339; instead of uniform degree-norm</text>
+  <line x1="167" y1="56" x2="62" y2="34" stroke="var(--prime)" stroke-width="4.5"/>
+  <line x1="167" y1="62" x2="62" y2="88" stroke="var(--rim)" stroke-width="1"/>
+  <line x1="193" y1="56" x2="300" y2="34" stroke="var(--prime)" stroke-width="3"/>
+  <line x1="193" y1="64" x2="300" y2="90" stroke="var(--rim)" stroke-width="1"/>
+  <circle cx="180" cy="60" r="13" fill="var(--prime)"/><text x="180" y="64" text-anchor="middle" fill="var(--ink-hi)" font-size="9">i</text>
+  <circle cx="50" cy="32" r="11" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="50" y="35" text-anchor="middle" fill="var(--ink-hi)" font-size="7">Nature</text>
+  <text x="108" y="30" fill="#22c55e" font-size="8" font-weight="700">&#945;=0.55</text>
+  <circle cx="50" cy="90" r="11" fill="var(--depth)" stroke="var(--rim)"/><text x="50" y="93" text-anchor="middle" fill="var(--ink-low)" font-size="6">predatory</text>
+  <text x="102" y="92" fill="#ef4444" font-size="8">&#945;=0.02</text>
+  <circle cx="312" cy="32" r="11" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="312" y="35" text-anchor="middle" fill="var(--ink-hi)" font-size="7">cited</text>
+  <text x="228" y="30" fill="var(--prime)" font-size="8">&#945;=0.30</text>
+  <text x="240" y="92" fill="var(--ink-low)" font-size="8">&#945;=0.13</text>
+  <text x="8" y="104" fill="var(--ink-low)" font-size="7">&#945;&#8339;&#11388; = softmax(LeakyReLU(a&#7488;[Wh&#7522; &#8214; Wh&#11388;])) &#8212; near-uniform &#8594; attention isn't helping</text>
+</svg>`,
+    },
   },
   {
     id: 'message_passing_framework',
@@ -385,6 +473,8 @@ Two traps define the field. First, structural heuristics often match or beat lea
 
 Second, evaluation is easy to get wrong in ways that inflate reported accuracy without any genuine generalization. If test edge (A, B) has training edges (A, C) and (C, B) in the training graph, the GNN encodes C's embedding in both A's and B's representations. The dot product between A's and B's embeddings is high because both reflect the shared neighbor C — not because the model generalized. The correct procedure removes test edges from the training adjacency matrix before any GNN training.
 
+[FIGURE:leakage]
+
 **NOT this.** "Knowledge graphs require hand-crafted ontologies." Modern knowledge graphs are mostly extracted from text automatically using information extraction and OpenIE systems. Wikidata has 90 million-plus triples and is collaboratively maintained. The knowledge graph embedding literature — TransE, RotatE, ComplEx — focuses on how to learn representations from the triple structure, not how to curate the ontology. The curation question is upstream of the ML question, and for most research and production applications it is already solved.`,
     keyPoints: [
       `**Structural heuristics run in O(|E|) time, require no training, and often outperform learned models on homophilic citation and social networks.** Common Neighbors (CN): score(u,v) = |N(u) ∩ N(v)|. Adamic-Adar: Σ_{w∈N(u)∩N(v)} 1/log(|N(w)|) — downweights high-degree common neighbors that provide less specific signal. Katz index: Σ_{l=1}^∞ β^l |paths_{uv}^l| — counts all paths between u and v with exponential decay. Always establish a heuristic baseline before training a GNN; if the GNN doesn't beat Adamic-Adar, the model is not learning anything the structure doesn't already tell you.`,
@@ -438,9 +528,27 @@ Second, evaluation is easy to get wrong in ways that inflate reported accuracy w
       `**Data leakage is the trap:** if test edge $(u,v)$ has training path $u$-$w$-$v$, dot product is inflated by shared $w$ — remove test edges from the training adjacency.`,
       `**SEAL** trains on the local enclosing subgraph (structural labels) → avoids leakage, captures link structure directly.`,
     ],
+    figures: {
+      leakage: `<svg viewBox="0 0 360 104" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="8" y="12" fill="var(--ink-low)" font-size="8">Leakage: test edge A&#8211;B with training path A&#8211;C&#8211;B inflates z&#8320;&#183;z&#8331;</text>
+  <line x1="70" y1="46" x2="132" y2="66" stroke="var(--prime)" stroke-width="1.5"/>
+  <line x1="70" y1="86" x2="132" y2="66" stroke="var(--prime)" stroke-width="1.5"/>
+  <line x1="70" y1="46" x2="70" y2="86" stroke="#ef4444" stroke-width="2" stroke-dasharray="4 3"/>
+  <circle cx="70" cy="46" r="11" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="70" y="49" text-anchor="middle" fill="var(--ink-hi)" font-size="8">A</text>
+  <circle cx="70" cy="86" r="11" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="70" y="89" text-anchor="middle" fill="var(--ink-hi)" font-size="8">B</text>
+  <circle cx="132" cy="66" r="11" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="132" y="69" text-anchor="middle" fill="var(--ink-hi)" font-size="8">C</text>
+  <text x="34" y="70" fill="#ef4444" font-size="7">test</text>
+  <text x="196" y="38" fill="#ef4444" font-size="8" font-weight="700">&#10007; naive split</text>
+  <text x="196" y="54" fill="var(--ink-mid)" font-size="7">C sits in both z&#8320; and z&#8331;</text>
+  <text x="196" y="68" fill="var(--ink-mid)" font-size="7">&#8594; high score from shared C,</text>
+  <text x="196" y="82" fill="var(--ink-mid)" font-size="7">not generalization</text>
+  <text x="196" y="98" fill="#22c55e" font-size="7">Fix: drop test/val edges from train adj</text>
+</svg>`,
+    },
   },
   {
     id: 'node_classification_at_scale',
+    interactiveId: 'neighbor_explosion_viz',
     title: 'Scalable GNNs for Node Classification',
     subtitle: 'Neighbor explosion, Cluster-GCN, GraphSAINT, SIGN, cold-start, class imbalance',
     difficulty: 'advanced',
@@ -448,6 +556,8 @@ Second, evaluation is easy to get wrong in ways that inflate reported accuracy w
     tags: ['scalable GNN', 'Cluster-GCN', 'GraphSAINT', 'SIGN', 'cold-start', 'mini-batch', 'imbalance'],
     interactivePrompt: `Before you touch the controls: a 2-layer GNN on a node with average degree 100 needs 100 first-hop neighbors and up to 10,000 second-hop neighbors. A 3-layer GNN needs up to 1 million. For a graph with 100 million nodes, full-batch training is impossible. What are your options for training in mini-batches — and what does each approach trade away?`,
     summary: `A 2-layer GNN on a node with average degree 100 requires 100 first-hop and up to 10,000 second-hop neighbors. A 3-layer GNN requires up to 1 million. For a graph with 100 million nodes, full-batch training is not a slow option — it is not an option at all. This is the neighbor explosion problem, and it appears immediately when scaling beyond academic benchmarks.
+
+[FIGURE:scaling]
 
 Three production approaches exist. Cluster-GCN partitions the graph into dense clusters using METIS. Each mini-batch is one cluster; GNN training runs entirely within the cluster. No neighbor explosion because the subgraph is bounded. The approximation error is the ignored cross-cluster edges. For graphs with strong community structure, these are few. For globally connected graphs, ignoring cross-cluster edges causes significant distribution shift.
 
@@ -508,6 +618,29 @@ SIGN precomputes multi-hop diffusion features offline — X^k = (D̃^{-1/2} Ã D
       `**Distribution shift symptom:** ~5% gap between subgraph-train accuracy and full-graph inference — always eval on full-graph inference.`,
       `**Class imbalance often beats architecture:** fraud 0.1% positive → focal loss, BalancedSampler; add degree/clustering as features.`,
     ],
+    figures: {
+      scaling: `<svg viewBox="0 0 360 112" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="8" y="12" fill="var(--ink-low)" font-size="8">Neighbor explosion (K=3, deg 100 &#8594; up to 1M) &#8594; three mini-batch strategies</text>
+  <rect x="6" y="22" width="112" height="80" rx="6" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="62" y="38" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">Cluster-GCN</text>
+  <text x="62" y="54" text-anchor="middle" fill="var(--ink-mid)" font-size="7">METIS dense clusters,</text>
+  <text x="62" y="66" text-anchor="middle" fill="var(--ink-mid)" font-size="7">train within cluster</text>
+  <text x="62" y="86" text-anchor="middle" fill="var(--amber)" font-size="7">drops cross-cluster</text>
+  <text x="62" y="97" text-anchor="middle" fill="var(--ink-low)" font-size="7">best: dense communities</text>
+  <rect x="124" y="22" width="112" height="80" rx="6" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="180" y="38" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">GraphSAINT</text>
+  <text x="180" y="54" text-anchor="middle" fill="var(--ink-mid)" font-size="7">sample subgraphs,</text>
+  <text x="180" y="66" text-anchor="middle" fill="var(--ink-mid)" font-size="7">norm by samp. prob</text>
+  <text x="180" y="86" text-anchor="middle" fill="#22c55e" font-size="7">unbiased gradients</text>
+  <text x="180" y="97" text-anchor="middle" fill="var(--ink-low)" font-size="7">best: globally connected</text>
+  <rect x="242" y="22" width="112" height="80" rx="6" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="298" y="38" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">SIGN</text>
+  <text x="298" y="54" text-anchor="middle" fill="var(--ink-mid)" font-size="7">precompute k-hop</text>
+  <text x="298" y="66" text-anchor="middle" fill="var(--ink-mid)" font-size="7">features &#8594; MLP</text>
+  <text x="298" y="86" text-anchor="middle" fill="#22c55e" font-size="7">fast as tabular</text>
+  <text x="298" y="97" text-anchor="middle" fill="var(--amber)" font-size="7">can't adapt to new edges</text>
+</svg>`,
+    },
   },
   {
     id: 'heterogeneous_graphs',
@@ -518,6 +651,8 @@ SIGN precomputes multi-hop diffusion features offline — X^k = (D̃^{-1/2} Ã D
     tags: ['heterogeneous graph', 'HAN', 'HGT', 'meta-path', 'knowledge graph', 'RGCN', 'relational'],
     interactivePrompt: `Before you touch the controls: an e-commerce graph has User, Item, Category, and Brand nodes connected by views, purchases, belongs_to, and makes edges. A homogeneous GNN treating all nodes and edges the same discards the distinction between a "view" edge and a "purchase" edge. What would that cost you commercially — and what would you need the model to do instead?`,
     summary: `Pinterest has Pin, Board, User, and Image nodes connected by Save, Click, Follow, and Similarity edges. A homogeneous GNN that ignores node and edge types aggregates all neighbor types together — a "Click" edge and a "Purchase" edge contribute identically to the target node's embedding. But a user purchasing an item is a fundamentally different signal than a user clicking it. Treating them the same discards the relational semantics that distinguish high-intent from low-intent interactions — often the most commercially valuable signals in the graph.
+
+[FIGURE:hetero]
 
 Heterogeneous GNNs model type information explicitly. RGCN uses relation-specific weight matrices: one W_r per relation type. With 25 relation types and embedding dimension 256, that is 25 × 256² = 1.6 million parameters just for relation weights — and rare relation types with under 1,000 training edges have insufficient gradient to learn their full matrix. This is the overparameterization problem.
 
@@ -576,6 +711,23 @@ HGT (Heterogeneous Graph Transformer) solves this with shared weights and small 
       `**HGT is the recommended default:** relation-specific attention, shared weights + small modifiers → O(|A|\xd7d\xb2)+O(|R|\xd7d), no meta-paths.`,
       `**Homogenize deliberately** when types are numerous+rare or encodable as edge features — not by default.`,
     ],
+    figures: {
+      hetero: `<svg viewBox="0 0 360 106" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="8" y="12" fill="var(--ink-low)" font-size="8">Typed nodes + typed edges: a "purchase" is not a "view"</text>
+  <line x1="60" y1="48" x2="180" y2="40" stroke="#22c55e" stroke-width="3"/>
+  <line x1="60" y1="56" x2="180" y2="76" stroke="var(--ink-low)" stroke-width="1" stroke-dasharray="4 3"/>
+  <line x1="204" y1="40" x2="300" y2="34" stroke="var(--prime)" stroke-width="1.5"/>
+  <line x1="204" y1="76" x2="300" y2="82" stroke="var(--prime)" stroke-width="1.5"/>
+  <circle cx="46" cy="52" r="13" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="46" y="55" text-anchor="middle" fill="var(--ink-hi)" font-size="7">User</text>
+  <rect x="180" y="28" width="26" height="24" rx="4" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="193" y="43" text-anchor="middle" fill="var(--ink-hi)" font-size="7">Item</text>
+  <rect x="180" y="64" width="26" height="24" rx="4" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="193" y="79" text-anchor="middle" fill="var(--ink-hi)" font-size="7">Item</text>
+  <polygon points="314,26 326,42 302,42" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="314" y="55" text-anchor="middle" fill="var(--ink-mid)" font-size="6">Category</text>
+  <polygon points="314,74 326,90 302,90" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="314" y="102" text-anchor="middle" fill="var(--ink-mid)" font-size="6">Brand</text>
+  <text x="96" y="34" fill="#22c55e" font-size="7" font-weight="700">purchase</text>
+  <text x="96" y="82" fill="var(--ink-low)" font-size="7">view</text>
+  <text x="8" y="102" fill="var(--ink-low)" font-size="7">Homogenize &#8594; purchase &#8801; view; RGCN: W&#7869; per relation; HGT: shared W + modifiers</text>
+</svg>`,
+    },
   },
   {
     id: 'gnn_applications',
