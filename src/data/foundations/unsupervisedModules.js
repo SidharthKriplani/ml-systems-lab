@@ -64,6 +64,15 @@ NOT-this: "Clustering finds the true segments in your data." Clustering finds se
     ],
     interactivePrompt: `Before you touch the controls: what assumption about cluster shape does K-means make, and what kind of data would violate it?`,
     takeaway: `Choosing a clustering algorithm is choosing an assumption about what "similar" means — and the algorithm will always produce confident groups regardless of whether those groups reflect real structure or just its geometric constraints.`,
+    recap: [
+      "**No labels = no accuracy:** clustering finds structure, cannot measure \"correct.\"",
+      "**Choosing the algorithm = choosing an assumption:** K-means spherical, DBSCAN density-separated, hierarchical nested.",
+      "**Wrong assumption → confident, stable, wrong clusters.**",
+      "**Internal metrics** (silhouette, Davies-Bouldin, Calinski-Harabasz) measure geometry, not business utility.",
+      "**Real test = business validity:** pull 20 per cluster, ask \"does this make sense?\"",
+      "**K is a business decision,** not a metric to optimize.",
+      "**Near-zero silhouette across all K = no cluster structure** under that geometry.",
+    ],
   },
   {
     id: 'kmeans',
@@ -143,6 +152,15 @@ NOT-this: "K-means finds the natural clusters." K-means partitions space into Vo
     ],
     interactivePrompt: `Before you touch the controls: if you ran K-means twice on the same data with different random seeds and got different clusters, what does that tell you and what would you do?`,
     takeaway: `K-means converges every time — the dangerous part is that it converges just as confidently when clusters are non-spherical, unequal in size, or initialization was poor as when everything is perfect.`,
+    recap: [
+      "**Lloyd's algorithm:** assign to nearest centroid → move centroid to mean → repeat.",
+      "**Converges always, global optimum never** — minimizes inertia $\\Sigma\\|x_i-\\mu_k\\|^2$, NP-hard, local min.",
+      "**K-means++ + n_init=10:** distance-weighted init beats random restarts (sklearn default).",
+      "**Elbow method:** inertia always drops with K — look for the knee.",
+      "**Three limits:** assumes spherical clusters, outlier-sensitive, K fixed in advance.",
+      "**High-D first reduce:** distances concentrate → PCA to 20–50 dims before clustering.",
+      "**Hard-assignment limit of EM on GMM** with shared isotropic $\\sigma^2 I$, $\\sigma\\to0$.",
+    ],
     interactiveId: 'kmeans_viz',
     figures: {
       kmeans_steps: `<svg viewBox="0 0 480 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:480px;font-family:var(--font-sans,sans-serif)">
@@ -284,6 +302,15 @@ NOT-this: "You need to specify K before running hierarchical clustering." The wh
     ],
     interactivePrompt: `Before you touch the controls: what does a long vertical segment in a dendrogram tell you, and what does its absence tell you?`,
     takeaway: `The dendrogram encodes cluster structure at every granularity in one run — natural boundaries appear as long vertical segments, and the absence of those segments means discrete cluster structure is probably not there.`,
+    recap: [
+      "**Dendrogram = every K in one run:** cut at any height, no need to commit K.",
+      "**Agglomerative (bottom-up):** each point its own cluster → merge closest → repeat.",
+      "**Linkage = definition of cluster distance:** single (chaining), complete (compact), average, Ward (min variance).",
+      "**Ward is the near-universal default** — compact, equal-variance clusters.",
+      "**Read the tree:** long vertical segments = natural boundaries; none = no discrete structure.",
+      "**Cost:** $O(n^2)$ space, $O(n^3)$ time — infeasible past ~10,000 points; use HDBSCAN.",
+      "**Reduce to 20–50 PCA dims first** — raw high-D distances measure noise.",
+    ],
     interactiveId: 'hierarchical_clustering_viz',
   },
   {
@@ -352,6 +379,15 @@ NOT-this: "DBSCAN does not require K, so it is always better than K-means." DBSC
     ],
     interactivePrompt: `Before you touch the controls: what happens to DBSCAN's output if ε is set too large, and what happens if it is set too small?`,
     takeaway: `DBSCAN finds clusters of any shape and labels outliers explicitly — but a single ε threshold breaks when clusters have different internal densities, which is exactly the problem HDBSCAN was built to fix.`,
+    recap: [
+      "**Density-connected regions of any shape;** sparse points labeled noise (-1). No K.",
+      "**Core point:** ≥ minPts within ε. **Border:** near a core. **Noise:** near nothing.",
+      "**Clusters follow chains of core points** → crescents, rings, L-shapes.",
+      "**Params:** minPts ≈ 2×dims; set ε at the knee of the k-distance plot.",
+      "**ε too small → all noise; ε too large → one giant cluster.**",
+      "**Explicit -1 noise label is operationally valuable** — route to human review.",
+      "**Fails on varying density** — single ε breaks; HDBSCAN fixes it.",
+    ],
     interactiveId: 'dbscan_viz',
   },
   {
@@ -498,6 +534,15 @@ Match the tool to the goal. For **visualisation** of nonlinear structure, **t-SN
     ],
     interactivePrompt: `Before you touch the controls: why does PCA fail to remove noise, and under what condition does high explained variance in the first component become a problem rather than an asset?`,
     takeaway: `PCA keeps the highest-variance directions — but the task-discriminative signal might live in a low-variance direction that PCA throws out, so explained variance ratio is not a reliable proxy for information preserved for downstream tasks.`,
+    recap: [
+      "**Finds directions of maximum spread** (principal components), orthogonal, ranked by explained variance.",
+      "**Components = eigenvectors of covariance;** computed via SVD; best linear compression that exists.",
+      "**Keeps variance, not signal:** batch effects preserved, low-variance signal deleted.",
+      "**Standardise first, every time** — PCA chases variance, big-scale features dominate.",
+      "**PCA leaks:** fit on the training fold only, inside a Pipeline within CV.",
+      "**Whitening** rescales components to unit variance but amplifies low-variance noise.",
+      "**Linear, variance-based, outlier-sensitive;** 2D plot is for hypotheses, not proof of separability.",
+    ],
     interactiveId: 'pca_viz',
     figures: {
       pca_variance: `<svg viewBox="0 0 320 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:320px;font-family:var(--font-sans,sans-serif)">
@@ -618,6 +663,15 @@ NOT-this: "t-SNE cluster distances are interpretable." The distances between clu
     ],
     interactivePrompt: `Before you touch the controls: why is it wrong to run K-means on t-SNE output, and what is the correct workflow if you want both a 2D visualization and cluster labels?`,
     takeaway: `t-SNE and UMAP are for looking at data, not for generating features — inter-cluster distances in t-SNE are deliberately distorted, UMAP's are approximate, and clustering on either's 2D output will mislead you at exactly the boundaries that matter most.`,
+    recap: [
+      "**For looking, not for features** — 2D visualization of nonlinear structure.",
+      "**t-SNE:** match high-D and low-D similarities, minimize KL; Student-t tails prevent crowding.",
+      "**Inter-cluster distances are meaningless** — deliberately distorted; never interpret them.",
+      "**UMAP default over t-SNE:** faster ($O(n\\log n)$), preserves more global structure, out-of-sample transform.",
+      "**Cluster sizes in the plot carry no quantitative meaning** — report from original space.",
+      "**Never run K-means on the 2D output** — cluster on PCA-50, use UMAP for display only.",
+      "**Perplexity / n_neighbors are knobs:** trust structure that persists across settings.",
+    ],
     interactiveId: 'tsne_viz',
   },
   {
@@ -763,6 +817,15 @@ The encoder/decoder shape should match the data. **Dense** (fully-connected) aut
     ],
     interactivePrompt: `Before you touch the controls: if you make the bottleneck too large, what happens to the autoencoder's ability to flag anomalies, and why?`,
     takeaway: `Autoencoders compress input through a bottleneck and flag anything the decoder cannot reconstruct well — but only if the bottleneck is sized right: too wide and the model memorizes everything including anomalies, too narrow and normal samples also fail to reconstruct.`,
+    recap: [
+      "**Encoder squeezes to a bottleneck, decoder rebuilds;** trained to minimize reconstruction error.",
+      "**Bottleneck forces keeping only what matters** — nonlinear compression, beats PCA on curved structure.",
+      "**Denoising AE:** reconstruct clean from corrupted input → learns real structure.",
+      "**VAE is generative:** encodes to a distribution + KL term; sample new points; plain AE cannot.",
+      "**Reparameterisation trick:** $z=\\mu+\\sigma\\cdot\\varepsilon$ makes sampling differentiable; posterior collapse is the failure mode.",
+      "**Anomaly detection via reconstruction error** — bottleneck sizing is the whole game (too wide memorizes, too narrow rejects normal).",
+      "**Match loss to data:** MSE continuous, BCE [0,1], perceptual for images; contaminated \"normal\" training fails silently.",
+    ],
     figures: {
       autoencoder: `<svg viewBox="0 0 400 190" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:400px;font-family:var(--font-sans,sans-serif)">
   <!-- input -->
@@ -850,6 +913,15 @@ NOT-this: "GMM is just soft K-means." Soft K-means is GMM with spherical covaria
     ],
     interactivePrompt: `Before you touch the controls: what is the difference between a hard cluster assignment in K-means and a soft assignment in GMM, and when does the difference matter operationally?`,
     takeaway: `GMM lifts three K-means restrictions at once — soft assignments, elliptical clusters, log-likelihood as the fit criterion — but EM only finds a local optimum, so run multiple restarts and use BIC to choose K.`,
+    recap: [
+      "**Soft probabilistic assignment:** $P(x)=\\Sigma\\pi_k\\,N(x|\\mu_k,\\Sigma_k)$, fitted by EM.",
+      "**Lifts three K-means limits:** soft membership, elliptical clusters, log-likelihood as fit criterion.",
+      "**Covariance type controls shape:** full (any ellipsoid), tied, diag, spherical (= soft K-means).",
+      "**EM only finds a local optimum** — use multiple restarts.",
+      "**Select K by BIC** ($k\\log n - 2\\log\\hat{L}$, lower better), fit K=1–20, take the minimum.",
+      "**Init means with K-means** to avoid component collapse (sklearn default).",
+      "**Overlapping ellipses = K too large;** points between centers = K too small.",
+    ],
     interactiveId: 'gmm_viz',
   },
   {
@@ -1004,6 +1076,15 @@ A production detector isn't a score, it's an alerting system, and that layer is 
     ],
     interactivePrompt: `Before you touch the controls: why does Isolation Forest give anomalies a shorter average path length, and what does that reveal about the assumption it is making about anomalies?`,
     takeaway: `Each anomaly detection algorithm encodes a different definition of "unusual" — Isolation Forest flags what is easy to isolate, LOF flags what is sparser than its neighbors, autoencoders flag what is hard to reconstruct — pick the definition that matches the anomalies you actually expect.`,
+    recap: [
+      "**Learn normal, flag what doesn't fit** — no fraud labels needed, catches unseen attacks.",
+      "**Isolation Forest = scalable tabular default:** anomalies isolate in few random cuts, no distributional assumption.",
+      "**LOF** flags locally sparse points; **autoencoder** flags what rebuilds badly; **one-class SVM** wraps a nonlinear boundary (small/clean data, $O(n^2)$–$O(n^3)$).",
+      "**Per-feature Z-scores miss multivariate anomalies** — individually normal, jointly unusual.",
+      "**Score → threshold is a business choice;** check Precision@K against base rate on a tiny labeled set.",
+      "**Novelty (clean training) vs outlier (contaminated training)** decides method and data handling.",
+      "**Time-series anomalies:** point, contextual, collective — per-point methods miss the last two; a detector is an alerting system, not a score.",
+    ],
     interactiveId: 'anomaly_detection_viz',
     figures: {
       isolation: `<svg viewBox="0 0 400 190" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:400px;font-family:var(--font-sans,sans-serif)">
@@ -1171,6 +1252,15 @@ Topic models aren't fit-once artifacts. Real corpora **drift** — new products,
     ],
     interactivePrompt: `Before you touch the controls: why does perplexity keep improving as you add more topics, and why does that make it a poor criterion for choosing K?`,
     takeaway: `Statistical fit (perplexity) and human interpretability (coherence) optimize different objectives and disagree about the optimal K — the only test that matters is whether domain experts can assign a meaningful label to every topic without hedging.`,
+    recap: [
+      "**Topic = words that travel together;** document = a blend of a few topics.",
+      "**LDA:** Dirichlet priors (α = topics per doc, β = word sparsity), inferred backward via Gibbs / variational inference.",
+      "**NMF:** $V\\approx W\\times H$ non-negative, parts-based, faster and better on short text.",
+      "**BERTopic:** embed → cluster → read off words; wins on short messy text but depends on embedding model, has -1 outlier topic, unstable across runs.",
+      "**Perplexity misleads** (keeps improving with K); **coherence** peaks at a sensible K.",
+      "**Real test:** can an expert one-word-label every topic? Preprocess aggressively — strip stop words.",
+      "**Topics drift in production** — retraining cadence, new-topic detection, taxonomy governance.",
+    ],
     figures: {
       topic_mixture: `<svg viewBox="0 0 380 180" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:380px;font-family:var(--font-sans,sans-serif)">
   <text x="190" y="20" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">one ticket = a blend of topics</text>

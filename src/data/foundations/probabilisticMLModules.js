@@ -71,6 +71,15 @@ The practical cost of this framework is the denominator in Bayes' theorem: p(θ 
       },
     ],
     takeaway: `The practical cost of collapsing to a point estimate (MAP) shows up in the predictive distribution: MAP plugged into p(x*|θ̂) underestimates uncertainty because it pretends the parameter is known exactly. The correct predictive distribution integrates over the posterior and is wider, especially in low-data regimes. The credible interval vs confidence interval distinction is the sharpest interview signal: credible intervals are direct probability statements about where the parameter is; confidence intervals are long-run coverage guarantees that say nothing about any single computed interval.`,
+    recap: [
+      `**Posterior ∝ likelihood × prior.** 3 flips HHH: MLE = 1.0 (degenerate); Beta(1,1) prior → Beta(4,1), posterior mean 0.8.`,
+      `**Prior's pull is inversely proportional to data:** dominates when scarce, washes out when abundant (300/300 → 0.99 ≈ MLE).`,
+      `**The hard part is the normaliser $p(X)=\int p(X|θ)p(θ)dθ$** — analytic only for conjugate pairs; MCMC/VI/Laplace exist to dodge it.`,
+      `**Conjugate priors = closed-form updates:** Beta+Binomial, Gaussian+Gaussian, Dirichlet+Categorical — convenient but constrains prior shape.`,
+      `**MAP = regularised MLE** (L2 ↔ Gaussian prior, L1 ↔ Laplace); collapses posterior to a point, discards uncertainty.`,
+      `**Predictive distribution integrates over the posterior** — plugging in MAP underestimates uncertainty, badly in low-data.`,
+      `**Credible ≠ confidence:** credible = direct $P(θ∈[L,U]|data)$; confidence = long-run coverage, silent on any single interval.`,
+    ],
   },
   {
     id: 'gaussian_processes',
@@ -134,6 +143,15 @@ The cost of this principled uncertainty is computational: the matrix inversion [
       },
     ],
     takeaway: `The O(n\xb3) wall is the central engineering fact about GPs, and SVGP with inducing points is the standard workaround — but the tradeoff is that the variational approximation underestimates predictive uncertainty between inducing points. Kernel choice encodes the prior over functions: RBF assumes infinite differentiability (wrong for most real processes), Mat\xe9rn 5/2 assumes twice-differentiability (usually correct), and a periodic kernel is required for any recurring pattern — the GP is only as good as the prior you encode in its kernel.`,
+    recap: [
+      `**GP = distribution over functions:** any finite set $f(x_1)...f(x_n) \sim N(m, K)$; kernel $k(x,x')$ IS the prior.`,
+      `**Posterior variance collapses at data, expands away from it** — the one thing other regression gives you for free.`,
+      `**$O(n^3)$ compute, $O(n^2)$ memory** from inverting $[K+σ^2I]$ — hard wall at n > 10,000. The central engineering fact.`,
+      `**Kernel = prior over functions:** RBF assumes infinite smoothness (usually wrong); Matérn 5/2 (twice-diff) is the better default.`,
+      `**Hyperparameters learned by maximising log marginal likelihood** — fit term vs log-det complexity penalty = automatic Occam's razor.`,
+      `**Sparse GPs (SVGP): m ≪ n inducing points, $O(m^3)$/step**; tradeoff = underestimated uncertainty between inducing points.`,
+      `**Bayesian optimisation is where GPs earn their keep:** GP surrogate + EI/UCB acquisition, far more sample-efficient than grid/random.`,
+    ],
   },
   {
     id: 'variational_inference',
@@ -194,6 +212,15 @@ The mechanism: ELBO = log p(x) - KL[q(z) ‖ p(z|x)]. Since KL ≥ 0, ELBO ≤ l
       },
     ],
     takeaway: `VI is biased by construction: it minimises KL[q ‖ p], which is mode-seeking, so it concentrates on one posterior mode and systematically underestimates uncertainty. Tight VI posteriors do not mean the true posterior is tight — they may mean VI found one mode and ignored the rest. The practical choice is: VI when scalability matters and approximate uncertainty is acceptable; MCMC when exact uncertainty is the deliverable and you can afford the runtime.`,
+    recap: [
+      `**VI reframes inference as optimisation:** pick tractable $q(z;φ)$, minimise $KL[q \| p]$ by maximising the ELBO.`,
+      `**ELBO = log p(x) − KL[q ‖ p(z|x)]** — a lower bound (KL ≥ 0); maximising ELBO ≡ minimising KL to the true posterior.`,
+      `**Mean-field $q(z)=\prod_i q_i(z_i)$ assumes independence** — real posteriors are correlated; marginals can look right while the joint is wrong.`,
+      `**Forward $KL[q \| p]$ is mode-seeking** — concentrates on one mode, systematically underestimates uncertainty (overconfident).`,
+      `**Stochastic VI scales it:** minibatch ELBO gradients, $O(\text{batch})$/step → runs on millions (LDA, SVGP, VAEs).`,
+      `**Amortised VI:** an inference network predicts $q(z|x)$ in one forward pass (the VAE encoder) — trades per-datapoint accuracy for speed.`,
+      `**VI biased, MCMC asymptotically exact:** VI when scale matters and approx uncertainty is fine; MCMC when exact uncertainty is the deliverable.`,
+    ],
   },
   {
     id: 'vae_foundations',
@@ -250,6 +277,15 @@ The result is a continuous, densely populated latent space where interpolation m
       },
     ],
     takeaway: `Posterior collapse — KL → 0, encoder mapping every input to the prior, decoder ignoring z — is caused by expressive decoders that can model p(x) without information from z; KL annealing is the standard fix, because it forces the decoder to commit to using z before the KL penalty activates. VAE blurriness is a mathematical consequence: optimising expected MSE over the posterior averages over all plausible reconstructions, whereas GANs and diffusion models sample individual reconstructions. The reparameterisation trick is what makes VAE training tractable, and it breaks exactly when z is discrete — no differentiable reparameterisation exists for Bernoulli or categorical latents.`,
+    recap: [
+      `**VAE = probabilistic latent space:** encoder maps x to $q(z|x)$; KL to $N(0,I)$ keeps it dense so interpolation stays coherent.`,
+      `**ELBO = reconstruction − KL[q(z|x) ‖ p(z)]** — maximise a lower bound because the true likelihood needs the intractable $\int p(x|z)p(z)dz$.`,
+      `**Reparameterisation trick: $z = μ + σ⊙ε$, $ε \sim N(0,I)$** — makes sampling differentiable so gradients flow to φ.`,
+      `**Trick breaks for discrete z** (Bernoulli, categorical) — no differentiable reparameterisation; use Gumbel-Softmax.`,
+      `**Posterior collapse (KL → 0):** expressive decoder models p(x) ignoring z; encoder degenerates to the prior.`,
+      `**Fixes: KL annealing** (β: 0 → 1) and **free bits** — force the decoder to use z before the KL penalty bites.`,
+      `**β-VAE:** β > 1 → disentanglement + worse reconstruction; VAE blurriness is intrinsic (expected MSE averages plausible reconstructions).`,
+    ],
   },
   {
     id: 'approximate_inference',
@@ -302,6 +338,15 @@ The result is a continuous, densely populated latent space where interpolation m
       },
     ],
     takeaway: `R-hat > 1.01 means the chains are not sampling from the same distribution — the samples are not from the posterior. This is not a warning to note; it means you do not have valid posterior samples. Non-centred reparameterisation for hierarchical models eliminates the funnel geometry that causes divergences by changing μ_i ~ N(μ, σ\xb2) to μ_i = μ + σ\xb7z_i, z_i ~ N(0,1). The Metropolis-Hastings ratio cancels p(X) — this is the key insight that makes MCMC possible for unnormalised posteriors, because you only ever need the ratio of densities, not the densities themselves.`,
+    recap: [
+      `**Cost/accuracy ladder:** MAP (mode only) → Laplace (Gaussian at MAP) → MCMC (exact, but hours-to-days).`,
+      `**Laplace = $N(θ_{MAP}, H^{-1})$** — one Hessian; fails for multimodal/heavy-tailed posteriors (only local curvature).`,
+      `**Importance sampling collapses in high-D:** typical sets of p and q barely overlap; ESS < 5% of N → unreliable.`,
+      `**Metropolis-Hastings ratio cancels $p(X)$** — the key that makes MCMC work on unnormalised posteriors (only ratios needed).`,
+      `**HMC/NUTS use gradients** for large, high-acceptance proposals; NUTS auto-tunes and is the Stan/PyMC default.`,
+      `**R-hat > 1.01 = not converged** — the samples are not from the posterior. HMC divergences are a hard stop, not a warning.`,
+      `**Non-centred reparameterisation** ($μ_i = μ + σ·z_i$) removes the funnel geometry that causes hierarchical-model divergences.`,
+    ],
   },
   {
     id: 'bayesian_neural_networks',
@@ -357,6 +402,15 @@ In practice, full BNNs are infeasible at any useful scale. The empirical punchli
       },
     ],
     takeaway: `Deep ensembles consistently outperform MC Dropout and most VI-based BNN approximations on calibration benchmarks, and their advantage is function-space diversity from different loss basins — not Bayesian posterior coverage. The aleatoric/epistemic distinction has a concrete operational meaning: aleatoric uncertainty cannot be reduced by collecting more data, while epistemic uncertainty is a direct signal of where more data will improve the model. Conformal prediction is the only method with a formal marginal coverage guarantee under exchangeability — everything else is heuristic.`,
+    recap: [
+      `**BNNs put distributions over weights** to split uncertainty into aleatoric (irreducible noise) vs epistemic (data coverage).`,
+      `**Aleatoric = irreducible** (more data won't help); **epistemic = reducible** — high epistemic tells you exactly where to collect data.`,
+      `**MC Dropout:** dropout on at test time, T passes, variance = uncertainty — zero architecture change, most-deployed heuristic.`,
+      `**Last-layer Laplace:** Gaussian posterior on final weights only ($d_{last} × d_{last}$ Hessian) — strong post-hoc baseline.`,
+      `**Deep ensembles beat MC Dropout / VI** on calibration — advantage is function-space diversity across loss basins, not Bayesian coverage.`,
+      `**Temperature scaling** (scalar T on logits) — accuracy unchanged, cuts overconfidence; mandatory before probabilistic deployment.`,
+      `**Conformal prediction:** only method with a formal coverage guarantee $P(y^* ∈ C(x^*)) ≥ 1-α$ under exchangeability.`,
+    ],
   },
   {
     id: 'calibration',
@@ -381,6 +435,15 @@ Three methods fix this. Platt scaling fits a logistic regression on top of model
       `**The diagnostic is the reliability diagram, and the fix is temperature scaling first.** Build the reliability diagram: bin predictions into 10 equal-frequency bins, plot mean predicted probability vs. actual positive rate per bin. If it sags below the diagonal uniformly (overconfidence), apply temperature scaling — fit scalar T on a held-out set by minimizing NLL of softmax(logits/T). Accuracy is unchanged. ECE typically drops from 10–15% to 1–3%. If the curve has a non-uniform shape (overconfident at high probabilities, underconfident at low), use Platt scaling. If neither is sufficient and you have more than 1,000 calibration examples per class, isotonic regression can correct any monotone miscalibration pattern.`,
     ],
     takeaway: `Temperature scaling cannot hurt accuracy (argmax is unchanged) and fixes most of the systematic overconfidence that cross-entropy training induces — it is the mandatory post-training step before using a neural classifier for probabilistic decisions. The AUC vs ECE tradeoff is the calibration insight that matters most: AUC measures ranking quality, ECE measures whether probabilities are accurate at the threshold you actually use for decisions. A model with high AUC but poor calibration is systematically mispricing risk at every decision boundary.`,
+    recap: [
+      `**Calibration: when the model says 70%, does the positive outcome happen 70% of the time?** "0.8 predicted, 55% actual" = overconfident.`,
+      `**Reliability diagram:** bin predictions, plot mean predicted vs actual positive rate; perfect = diagonal, overconfident sags below.`,
+      `**Family behaviour:** logistic regression calibrated by design; random forests / GBMs overconfident (leaf proportions near 0/1); NNs overconfident post-CE.`,
+      `**Temperature scaling: divide logits by scalar T** — one param, no retrain, accuracy unchanged; ECE 10–15% → 1–3%. Do it first.`,
+      `**Platt scaling** for non-uniform miscalibration; **isotonic regression** for any monotone pattern but needs > 1,000 examples/class.`,
+      `**AUC ⊥ calibration:** AUC measures ranking, ECE measures probability accuracy at the threshold — a model can rank well and misprice risk.`,
+      `**Brier score $=\frac1n\sum(p_i-y_i)^2$ penalises both** discrimination and calibration jointly; ECE isolates the calibration part.`,
+    ],
     checkQuestions: [
       {
         q: `Your model has 92% accuracy but ECE = 12%. What does this mean, and what would you do?`,
@@ -468,6 +531,15 @@ The result is faster convergence per step. The catch: computing and inverting th
       },
     ],
     takeaway: `Parameter space is the wrong space to measure gradient steps — what matters is how much the model's output distribution changes per step, which is measured by the FIM. Adam's diagonal FIM approximation works when parameters are uncorrelated but fails when off-diagonal Fisher terms are large. The TRPO/PPO connection is the most concrete production application: constraining updates by KL[π_old ‖ π_new] instead of Euclidean weight change is what stabilises RL training, because Euclidean constraints on weights do not bound how much the policy distribution changes.`,
+    recap: [
+      `**Parameter space is the wrong metric** — what matters is how much the output distribution moves per step, measured by the FIM.`,
+      `**FIM = curvature of KL:** $KL[p_θ ‖ p_{θ+δ}] ≈ \tfrac12 δ^T F δ$ — the metric tensor for distribution space.`,
+      `**Natural gradient: $θ_{t+1} = θ_t - η F^{-1}∇L$** — small steps in steep (high-Fisher) directions, large in flat ones; fixes ravine zigzag.`,
+      `**Natural gradient is covariant** to reparameterisation; plain SGD finds different optima depending on parameterisation (batch vs weight norm).`,
+      `**Full FIM is $O(p^2)$ store / $O(p^3)$ invert** — infeasible; K-FAC uses Kronecker factoring $F ≈ A ⊗ G$ per layer.`,
+      `**Adam is a diagonal FIM approximation** ($v_t ≈ \text{diag}(F)$) — works when parameters are uncorrelated, fails when off-diagonals matter.`,
+      `**TRPO/PPO = natural gradient in RL:** constrain $KL[π_{old} ‖ π_{new}]$, not Euclidean weight change — Euclidean constraints don't bound policy shift.`,
+    ],
   },
   {
     id: 'probabilistic_graphical_models',
@@ -523,5 +595,14 @@ The key observation is that most real-world variables are not all directly depen
       },
     ],
     takeaway: `The collider rule is the most interview-critical concept in PGMs: conditioning on a collider Z opens the path between its parents X and Y, creating a dependence that did not exist marginally. This is Berkson's paradox and the mechanism behind selection bias in observational studies. Treewidth determines inference complexity: exact inference is tractable only for low-treewidth graphs, and the exponential cost in treewidth is the primary reason PGMs lost perception tasks to neural networks — but PGMs remain the right tool when conditional independence structure must be explicitly represented, inspected, and explained.`,
+    recap: [
+      `**PGMs factorise the joint via a graph** — encode independence, turn global computation into local message passing.`,
+      `**Bayes net = DAG:** $p(X)=\prod_i p(X_i|Pa(X_i))$, every missing edge is an independence assumption. **MRF = undirected**, cliques + intractable $Z$.`,
+      `**Collider rule (the surprising one):** conditioning on a collider $X→Z←Y$ opens the path — Berkson's paradox, the mechanism of selection bias.`,
+      `**Belief propagation exact on trees** ($2|E|$ passes); loopy BP on graphs with cycles is approximate but works in practice.`,
+      `**HMM = chain Bayes net:** forward-backward $O(T·K^2)$, Viterbi (best path), Baum-Welch (EM) — all just BP in different forms.`,
+      `**Treewidth sets inference cost:** junction tree $O(K^{tw+1})$; exact only for low treewidth, else loopy BP / VI / MCMC.`,
+      `**Why PGMs faded then persist:** lost perception to deep nets (feature/treewidth cost), but win when structure must be audited and explained.`,
+    ],
   },
 ]

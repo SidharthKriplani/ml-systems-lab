@@ -68,6 +68,15 @@ d N_a(T) is the number of times you pull it.** Minimising regret means minimisin
       },
     ],
     takeaway: `Regret — not reward prediction accuracy — is the right objective for bandit problems, because a model that predicts rewards correctly but selects greedily incurs linear regret whenever it initially underestimates the best arm. The Lai-Robbins lower bound (Ω(log T)) means no consistent algorithm can do better than O(log T) regret on all instances, and the KL term in the bound tells you why: near-optimal arms require many pulls to eliminate, because small distributional differences are hard to detect.`,
+    recap: [
+      `**Explore vs exploit:** try arms to learn value, pick the best as often as possible — do both at once.`,
+      `**Regret, not reward accuracy:** greedy on a perfect reward model still incurs linear O(T) regret if it never explores.`,
+      `**Regret decomposes:** $R_T = Σ_{a≠a*} Δ_a · E[N_a(T)]$ — minimise pulls on suboptimal arms.`,
+      `**Lai-Robbins lower bound Ω(log T):** any consistent algorithm pulls suboptimal arms ∝ ln T / KL(μ_a, μ*).`,
+      `**KL term = cost of near-optimal arms:** small gap → many pulls to distinguish.`,
+      `**Stochastic vs adversarial:** i.i.d. fixed distributions (UCB/TS, O(log T)) vs no assumptions (EXP3, O(√(KT ln K))).`,
+      `**Finite horizon matters:** theory is asymptotic; at T=1000, K=20, priors and warm-starts dominate the constant.`,
+    ],
   },
   {
     id: 'epsilon_greedy',
@@ -123,6 +132,15 @@ The second flaw is deeper. With ε=0.1, every round has a 10% chance of random a
       },
     ],
     takeaway: `Fixed ε causes linear regret because the exploration cost ε·T grows without bound — annealing ε_t → 0 is mathematically required, not optional. Uniform exploration is the core inefficiency: ε/K budget goes to every arm equally, wasting capacity on clearly inferior arms that UCB and Thompson Sampling would deprioritize automatically. The two critical production failure modes are cold start and stale means, both of which require patches that principled algorithms handle natively.`,
+    recap: [
+      `**Mechanism:** with prob ε pick random arm, else exploit highest estimated CTR.`,
+      `**Fixed ε → linear regret:** exploration cost ε·T·Δ̄ grows without bound, however small ε is.`,
+      `**Annealing is mandatory:** ε_t = c/t drops exploration cost to O(log T).`,
+      `**Uniform exploration = core flaw:** ε/K goes to every arm, wasting budget on clearly inferior arms.`,
+      `**Cold start:** new arm with K=50, ε=0.1 gets 0.2% traffic — far too little.`,
+      `**Stale means:** old data barely moves the mean after a 30% CTR drop from creative fatigue.`,
+      `**NOT this:** decaying ε→0 freezes under non-stationarity — keep an ε floor or track changing rewards.`,
+    ],
   },
   {
     id: 'ucb_algorithms',
@@ -199,6 +217,15 @@ instance-optimal (low regret when gaps are large) but not minimax-optimal. Use U
       },
     ],
     takeaway: `UCB's self-correcting optimism is the key mechanism: if an arm wins the argmax because it was over-estimated, the next observation corrects that estimate and shrinks its UCB — over-optimism generates exactly the exploration needed to correct itself. The 1/Δ_a regret factor matters: near-optimal arms (small gap) require O(log T / Δ_a) pulls to identify as suboptimal, because small distributional differences need many observations to resolve. Arms with large gaps are eliminated quickly; arms close to the best take persistent exploration.`,
+    recap: [
+      `**UCB1 index:** $a_t = argmax_a [μ̂_a + √(2 ln t / N_a(t))]$ — bonus decays with N_a, grows with t.`,
+      `**Optimism principle:** act as if each arm's mean is its most optimistic plausible value; over-optimism self-corrects on the next pull.`,
+      `**Never-pulled arm has infinite UCB:** natural cold-start solution.`,
+      `**O(log T) regret with 8/Δ_a factor:** near-optimal arms get pulled more — they take longest to eliminate.`,
+      `**Variants:** UCB1-tuned (empirical variance), KL-UCB (tighter, matches Lai-Robbins constant), MOSS (minimax O(√(KT))).`,
+      `**Web scale K=10M:** naive argmax O(K) infeasible — use two-stage ANN retrieval, batched Redis scores, or hierarchical UCB.`,
+      `**Heavy tails break Hoeffding bounds:** use robust mean estimators (trimmed mean, median of means).`,
+    ],
   },
   {
     id: 'thompson_sampling',
@@ -254,6 +281,15 @@ The update rule is trivially simple. On each impression: if click, α += 1; if n
       },
     ],
     takeaway: `Thompson Sampling exploration is proportional to P(arm a is optimal) — as posteriors concentrate around low values for inferior arms, their pull probability collapses toward zero automatically, without any fixed formula. UCB applies a confidence bonus regardless of how implausible it is that the arm is optimal, so it gives up on inferior arms more slowly. The critical production failure mode is prior misspecification: Beta(1,1) on an arm with true CTR 0.001 puts 50% probability above 0.5 and wastes enormous early exploration budget — use informative priors in production.`,
+    recap: [
+      `**Mechanism:** sample θ from each arm's posterior, show the arm with the highest sample.`,
+      `**Beta-Binomial update:** on reward r∈{0,1}, α += r, β += (1−r) — trivially simple.`,
+      `**Exploration ∝ P(arm optimal):** wide posteriors sample high often; inferior arms collapse to near-zero pulls automatically.`,
+      `**Beats UCB at finite horizons:** posterior shape adapts to data; UCB's fixed Hoeffding bonus gives up on losers more slowly.`,
+      `**Prior misspecification = main failure:** Beta(1,1) on true CTR 0.001 puts 50% mass above 0.5 — use informative priors.`,
+      `**Adaptive allocation breaks frequentist stopping:** peeking inflates Type-I error — use Bayesian stopping (P(best)>0.95) or always-valid p-values.`,
+      `**NOT this:** conjugate priors are a computational convenience, not required — Normal-Normal for Gaussian, Laplace/neural for non-conjugate.`,
+    ],
   },
   {
     id: 'contextual_bandits',
@@ -310,6 +346,15 @@ eward) pairs. UCB for arm a at context x = θ̂_a^T x + α√(x^T A_a^{-1} x) wh
       },
     ],
     takeaway: `Contextual bandits learn which arm is best for which user, not just which arm is best on average — this is the gap between standard A/B testing and personalised allocation. The critical failure mode of greedy supervised learning is exploration bias: arms underrepresented in the logging policy remain poorly estimated forever and are either permanently avoided or over-trusted. LinUCB's uncertainty bonus √(x^T A^{-1} x) is largest for contexts far from previously observed data — it targets exploration exactly where knowledge is lacking.`,
+    recap: [
+      `**Formulation:** observe context x_t, pick arm a_t, learn which arm is best as a function of context — not on average.`,
+      `**Subsumes A/B testing:** a standard A/B test has context but ignores it; contextual bandits learn heterogeneous treatment effects while running.`,
+      `**LinUCB:** $r_t = θ_a^T x_t + ε_t$; index = θ̂_a^T x + α√(x^T A_a^{-1} x); bonus large for novel contexts.`,
+      `**LinTS:** sample θ̃_a ~ N(θ̂_a, σ²A_a^{-1}); same bounds as LinUCB, empirically better with informative priors.`,
+      `**Greedy supervised = wrong baseline:** no uncertainty bonus → under-logged arms permanently avoided or over-trusted.`,
+      `**OPE estimators:** DM (low variance, biased), IS (unbiased, high variance), DR (consistent if either model is right).`,
+      `**Regret O(d√T ln K):** context adds √d over pure MAB — richer reward functions need more exploration.`,
+    ],
   },
   {
     id: 'linucb',
@@ -387,6 +432,15 @@ e.g., user features) and x_t are arm-specific features (e.g., ad content feature
       },
     ],
     takeaway: `x^T A^{-1} x is the central LinUCB quantity: it measures how far the current context is from the span of previously observed data, so the exploration bonus is automatically largest in under-observed directions of context space. The Yahoo! news result — optimal α was 25× smaller than theory predicts — is a reliable reminder that worst-case theoretical constants are not production constants. Always tune α empirically and use Sherman-Morrison O(d²) updates rather than O(d³) full matrix inversions for real-time updates.`,
+    recap: [
+      `**Ridge regression reward:** $θ̂_a = A_a^{-1} b_a$, A_a = Σ x_i x_i^T + λI; λI keeps A_a invertible (Gaussian prior).`,
+      `**Confidence ellipsoid → index:** θ̂_a^T x + α√(x^T A_a^{-1} x); the bonus is the ellipsoid width projected onto x.`,
+      `**x^T A^{-1} x = geometric uncertainty:** large in under-observed directions of context space, small where data is abundant.`,
+      `**Tune α empirically:** Yahoo! news optimal α=0.2 was 25× below the theoretical ≈5 — worst-case constants aren't production constants.`,
+      `**Disjoint vs hybrid:** per-arm (A_a, b_a) with no sharing vs shared β^T z + θ_a^T x for sample efficiency.`,
+      `**Sherman-Morrison:** O(d²) online update instead of O(d³) inversion — feasible at 10K QPS on one core.`,
+      `**Watch failures:** nonlinear reward breaks the ellipsoid (monitor residuals); covariate shift under-calibrates the bonus (forgetting factor).`,
+    ],
   },
   {
     id: 'off_policy_evaluation',
@@ -452,6 +506,15 @@ les the weighted dataset is worth. If N_eff falls below 5-10% of T, a handful of
 $N_eff = (Σw)²/(Σw²) continuously — if it falls below 5-10%$
 
 of sample size, a handful of high-weight observations dominate the estimate and the OPE is unreliable regardless of how much data you have.`,
+    recap: [
+      `**OPE goal:** estimate a new policy's value from logged behaviour-policy data, without deploying it.`,
+      `**Direct method (DM):** train r̂(x,a); low variance, biased where π_e diverges from π_b — exactly the interesting contexts.`,
+      `**Importance sampling (IS):** reweight by w_t = π_e/π_b; unbiased but variance explodes when policies diverge.`,
+      `**Doubly robust (DR):** $V̂_DR = (1/T) Σ_t [r̂ + w_t(r_t − r̂)]$; consistent if either r̂ or propensities are right — the production standard.`,
+      `**Monitor N_eff = (Σw)²/Σw²:** below 5-10% of T → a few high-weight rows dominate, OPE unreliable; clip weights to trade bias for variance.`,
+      `**Log propensities at serve time:** reconstructing later breaks every IS estimator.`,
+      `**Partial feedback:** you only see the reward of the action taken — counterfactual estimation is what makes OPE hard.`,
+    ],
   },
   {
     id: 'bandits_in_recsys',
@@ -505,6 +568,15 @@ of sample size, a handful of high-weight observations dominate the estimate and 
       },
     ],
     takeaway: `Pure exploitation creates a filter bubble: items that receive no impressions cannot accumulate data, so they never escape the cold start, so catalog coverage collapses. The operational answer is: dedicate a fixed exploration budget (e.g., 5% of traffic), use content-based priors to warm-start new item posteriors, and use position-debiased reward estimates to avoid conflating cascade position effects with item quality — otherwise exploration slots at high positions look like item quality improvements.`,
+    recap: [
+      `**Filter bubble:** items never shown accumulate no data, so they're never shown — catalog coverage collapses.`,
+      `**Cold start = exploration problem:** give new items a forced impression budget with a decaying uncertainty bonus and content-based priors.`,
+      `**Exploration bonus in ranking:** score = predicted_reward + α·uncertainty, at item / user / context levels.`,
+      `**Delayed feedback:** clicks arrive seconds to days later — buffer (context, arm), impute optimistically, or use fast proxy rewards.`,
+      `**Batched bandits:** update hourly/daily on fixed policy; regret degrades only O(√batch_size).`,
+      `**Cascade position bias:** users scan top-down; raw CTR conflates quality with position — use position-debiased rewards.`,
+      `**Measure exploration separately:** catalog discovery rate and impression entropy, not just short-term CTR.`,
+    ],
   },
   {
     id: 'non_stationary_bandits',
@@ -578,5 +650,14 @@ mory length ≈ 1/(1−γ) rounds. Smoother than SW-UCB — old observations don
       },
     ],
     takeaway: `Standard UCB/TS freezes on a historically dominant arm after a change point because N_a is too large for the empirical mean to move quickly — it takes O(N_a) post-change observations to detect the drop. The right production strategy combines CUSUM-based change detection for abrupt shifts (immediate statistics reset) and sliding window or discounted UCB for gradual drift (continuous forgetting). Predictable seasonality is not non-stationarity — recurring patterns belong in contextual features where the model learns them, not in a forgetting mechanism that discards them.`,
+    recap: [
+      `**Failure mode:** standard UCB/TS freezes on a once-dominant arm — large N_a means the mean barely moves after a change.`,
+      `**Detection is slow:** O(N_a) post-change pulls needed — thousands of pulls for an arm with 50K observations.`,
+      `**Sliding window UCB:** keep last W observations; window fills with fresh data in W rounds; W ≈ √(T/K).`,
+      `**Discounted UCB:** $μ̂_a = Σ γ^(t−s) r_s / Σ γ^(t−s)$; effective memory ≈ 1/(1−γ); smoother than SW-UCB.`,
+      `**CUSUM change detection + reset:** forgets only when a change is actually detected, not continuously.`,
+      `**EXP3 / REXP3:** adversarial O(√(KT ln K)) via importance-weighted rewards; restart in epochs for Υ change points.`,
+      `**NOT this:** predictable seasonality isn't drift — put day_of_week / hour_of_day in context features, don't forget the data.`,
+    ],
   },
 ]

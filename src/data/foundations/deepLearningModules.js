@@ -31,6 +31,14 @@ But — and this matters — the theorem only says a good solution *exists* at d
       `**The diagnostic: overfit a single training batch.** Before any hyperparameter search, take one mini-batch and train on it alone with no regularisation. A correct model should reach near-zero loss within 100–200 steps. If it does not, the model cannot learn anything — the architecture, loss function, or output activation is wrong. This test rules out implementation bugs before you spend hours tuning a broken model.`,
     ],
     takeaway: `Depth buys representational efficiency, not accuracy for free — every layer must receive gradient signal or it contributes nothing, which is why the entire architecture of modern deep learning is an answer to the question of how to make depth trainable.`,
+    recap: [
+      `**XOR = the whole game:** no single line separates the 1s from the 0s. A linear model hits a hard structural limit, not a tuning one.`,
+      `**One hidden layer fixes it:** non-linear neurons reshape the input into a space where a straight boundary finally works. Every hidden layer is doing this.`,
+      `**Universal approximation:** one hidden layer with enough neurons approximates any continuous function — but "enough" can be exponential; depth represents the same function with far fewer parameters.`,
+      `**Depth buys efficiency, not free accuracy:** the theorem only says a solution *exists* at depth, not that gradient descent finds it.`,
+      `**Verify capacity-limited before adding depth:** log per-layer gradient norms; a 1000:1 last-to-first ratio means early layers get no signal — depth is wasted.`,
+      `**Diagnostic — overfit one batch:** a correct model reaches near-zero loss in 100–200 steps. If not, the architecture/loss/output activation is wrong, not the hyperparameters.`,
+    ],
     checkQuestions: [
       {
         q: `A fully connected layer with 512 inputs and 256 outputs has how many parameters? What is the forward pass computation?`,
@@ -120,6 +128,15 @@ Because the backward pass reuses the forward pass's intermediate values, they al
       `**The diagnostic: verify gradient flow before anything else.** Register a backward hook on each layer and log the mean absolute gradient at each step. For a 10-layer network with healthy gradient flow, the norms should decay by at most ~10× from output to input — not 10⁶×. If you see exponential decay, the activation function is saturating. If you see exponential growth, gradient clipping (max_norm=1.0) is missing. Both symptoms are visible before the first epoch completes.`,
     ],
     takeaway: `Backprop computes every parameter gradient in roughly one forward pass by caching intermediates and applying the chain rule in reverse — without caching, each gradient would cost a separate forward pass, making large-scale training impossible.`,
+    recap: [
+      `**Naive gradient = one forward pass per weight:** 100M weights → 100M passes per step. Untrainable.`,
+      `**Backprop = one forward + one backward:** reuse the forward pass's cached values, walk backward, get every gradient at once.`,
+      `**Chain rule in reverse is the magic:** it's the *reverse* order that makes it cost one pass, not one-per-parameter.`,
+      `**Vanishing gradients:** sigmoid slope ≤ 0.25; multiply per layer → ~0.25¹⁰ ≈ one-in-a-million after 10 layers. Early layers never learn. Fix: ReLU (slope 1), residual connections.`,
+      `**Exploding gradients:** factor >1 multiplied repeatedly → NaN. Fix: gradient clipping (scale down, keep direction).`,
+      `**Memory cost:** cached activations must be stored until backward runs. Gradient checkpointing recomputes some → ~30% extra compute for O(√depth) memory.`,
+      `**Diagnostic — log per-layer gradient norms:** healthy 10-layer network decays ≤10× output-to-input, not 10⁶×.`,
+    ],
     checkQuestions: [
       {
         q: `Derive the gradient of the loss with respect to the bias in a single hidden layer: L = (σ(wx + b) - y)². Compute ∂L/∂b step by step.`,
@@ -192,6 +209,15 @@ All of the above is about the *hidden* layers. The *output* activation is a corr
       `**The diagnostic: gradient norm ratio between first and last hidden layer.** Log the mean absolute gradient at each layer's weights after one backward pass. In a healthy 10-layer network with ReLU, the ratio should be within 10× between first and last layer. With sigmoid, expect 10⁶× or more — every layer of sigmoid compresses gradients by 4×. If you see a large ratio with ReLU, dying neurons are the cause: neurons with zero output contribute zero gradient to the weight update for that layer.`,
     ],
     takeaway: `The history of activation functions is a sequence of gradient-flow fixes: sigmoid killed gradients through saturation, ReLU fixed saturation but introduced dead neurons, GELU eliminated both — and each step unlocked a new generation of viable network depth.`,
+    recap: [
+      `**Activation = the non-linear squash after each layer:** it lets the network bend space, and it decides whether the learning signal survives backward.`,
+      `**Sigmoid kills gradients:** slope ≤ 0.25 → ~0.25¹⁰ after 10 layers ≈ one-in-a-million. Early layers freeze; a 10-layer net acts like a 2-layer one.`,
+      `**ReLU fixes saturation:** slope = 1 for active neurons, passes signal through untouched — what made 20+ layer nets trainable.`,
+      `**ReLU's flaw — dead neuron:** always-negative input → output 0, slope 0, zero gradient forever. Leaky ReLU (slope 0.01) and GELU keep a trickle alive.`,
+      `**GELU:** smooth, soft-gates each input by how positive it is — used by BERT, GPT, every modern Transformer.`,
+      `**Output activation is a correctness rule, not a knob:** sigmoid for probability, softmax for class distribution, none for regression.`,
+      `**Diagnostic — dead-neuron fraction:** >10% neurons outputting exactly zero on a validation batch is a capacity problem; lower LR or switch to Leaky ReLU/GELU.`,
+    ],
     checkQuestions: [
       {
         q: `ReLU has a 'dying ReLU' problem. Explain mechanistically what causes it and what Leaky ReLU does to fix it.`,
@@ -272,6 +298,15 @@ There is a second normaliser, **layer norm**, and picking the wrong one is a gen
       `**The diagnostic: compare training loss at a large batch versus a small one.**\n\nIf the same model trains noticeably worse and noisier at batch size 4 than at 32, batch norm is the culprit — with only four samples the per-batch mean and variance are poor estimates and destabilise the normalisation. Swap in group norm or layer norm and re-run; if the gap closes, that confirms it.`,
     ],
     takeaway: `Normalisation stabilises the optimisation landscape so training converges; regularisation reduces capacity so the solution generalises — conflating the two is the source of most tuning mistakes.`,
+    recap: [
+      `**The problem — moving target:** each layer's update shifts the distribution the layer above expected, forcing a tiny learning rate. Training crawls.`,
+      `**Batch norm:** re-centre and re-scale each layer's outputs to mean 0, spread 1 across the batch. Learned γ, β dials let the network re-stretch if needed.`,
+      `**Payoff:** 5–10× higher learning rate, less sensitivity to initialisation, much faster convergence.`,
+      `**Free regularisation:** per-batch mean/spread jitter means the same example is normalised differently each batch — a mild regulariser.`,
+      `**Batch norm vs layer norm is a correctness choice:** BN normalises a feature across the batch (CNNs on images); LN normalises across a single example's features (Transformers, variable-length, small batches).`,
+      `**Batch norm inference gotcha:** no batch → uses running averages. Forget \`model.eval()\` and a single-example prediction silently produces garbage, no error.`,
+      `**Diagnostic:** if training is much noisier at batch 4 than 32, BN's per-batch stats are the culprit — swap in group/layer norm.`,
+    ],
     checkQuestions: [
       {
         q: `Batch normalisation has four parameters per feature: γ, β, μ_batch, σ_batch. Which are learned and which are computed? What happens at inference time?`,
@@ -336,6 +371,15 @@ Here is the twist. On image-classification benchmarks, a well-tuned **SGD with m
       `**The diagnostic: plot training and validation loss per optimiser, not just final accuracy.**\n\nIf Adam reaches a lower *training* loss but the same or worse *validation* loss than SGD, it has found a sharper minimum, not a better one — and sharp minima are exactly what a shift in the test distribution punishes. If your deployment data differs from training, lean toward SGD's flatter optima; if training speed is the bottleneck, take Adam and accept the trade-off.`,
     ],
     takeaway: `Adam converges faster but lands in sharper minima; SGD+momentum is slower but finds flatter optima that generalise better under distribution shift — the choice is training speed versus the generalisation ceiling, and neither should ever run at a fixed learning rate for the full training run.`,
+    recap: [
+      `**One fixed learning rate can't suit all weights:** a rare-word embedding gets a gradient once in 1000 steps and needs big pushes; a final-layer weight gets one every step and needs small ones.`,
+      `**Adaptive optimisers = per-weight effective LR** based on gradient history.`,
+      `**Lineage:** AdaGrad (sum of squared grads — stalls on dense problems) → RMSProp (decaying average, never collapses) → Adam (RMSProp + momentum). Adam is the default.`,
+      `**SGD sometimes wins:** well-tuned SGD+momentum often beats Adam on validation for image classification — its noise finds flatter, wider minima that generalise better.`,
+      `**AdamW when using weight decay:** plain Adam's L2 penalty gets distorted by per-parameter rescaling; AdamW applies decay uniformly.`,
+      `**Never a fixed LR for the whole run:** decay over time, and for Transformers *warm up* first (near-zero, ramp over ~1,000–4,000 steps) or early noisy gradients blow training up.`,
+      `**Diagnostic:** if Adam has lower *training* loss but same/worse *validation* loss than SGD, it found a sharper minimum, not a better one.`,
+    ],
     checkQuestions: [
       {
         q: `Adam is used with default parameters (β1=0.9, β2=0.999, ε=1e-8). Training loss decreases but validation loss starts increasing after epoch 10. Should you change the optimizer or change regularisation?`,
@@ -420,6 +464,15 @@ Convolution is the solution to that invisibility. A 3×3 filter slides across th
       },
     ],
     takeaway: `A CNN's efficiency comes entirely from weight sharing: the same filter applied everywhere encodes the assumption that features repeat across space, cutting parameters 100× versus a flat model and building translation equivariance into the architecture by construction.`,
+    recap: [
+      `**Flat layers are blind to spatial structure:** they treat neighbouring pixels as independent inputs and must relearn every feature at every position.`,
+      `**Convolution = weight sharing:** a 3×3 filter (9 params) slides everywhere — learn a horizontal-edge detector once, detect edges everywhere. 9 params vs ~100K for a flat layer.`,
+      `**Pooling = position invariance:** keep the max over a region, so a slightly shifted feature gives the same output.`,
+      `**Stacking builds a hierarchy:** edges → corners → shapes → objects; receptive field grows with depth.`,
+      `**Not just images:** local pattern + translation equivariance applies to 1D (audio, DNA), 3D (video), and graphs — any data where neighbours are more related than distant elements.`,
+      `**Trap — depth without residuals kills gradients:** plain 50-layer CNN trained worse than 34-layer; skip connections (output = F(x) + x) give gradient a direct path, unlocking 100+ layers.`,
+      `**Diagnostic:** healthy first-layer filters look like oriented edge/colour detectors after one epoch — random static means gradient isn't reaching them.`,
+    ],
   },
   {
     id: 'rnns_lstms',
@@ -473,6 +526,15 @@ The LSTM was designed specifically to defeat this. Rather than passing the gradi
       },
     ],
     takeaway: `The LSTM's cell state is an additive gradient highway: when the forget gate stays near 1, the gradient flows back through hundreds of steps without shrinking — the one mechanism that vanilla RNNs lack and the reason LSTMs remain the right choice for any task where inference is sequential, real-time, and the full sequence is not available.`,
+    recap: [
+      `**Vanilla RNN vanishing gradient:** gradient to early tokens passes through one Jacobian per step; each ~0.5 → 0.5²⁰ ≈ 10⁻⁶ after 20 steps. Can't learn that "not" flips sentiment.`,
+      `**LSTM cell state = additive highway:** C_t = f_t ⊙ C_{t-1} + i_t ⊙ g_t. Gradient of C_t w.r.t. C_{t-1} is the forget gate f_t.`,
+      `**Forget gate near 1 preserves the signal:** the network learns f_t ≈ 1 where memory matters, giving early tokens a direct path.`,
+      `**GRU:** two gates instead of four, fewer params, comparable performance on most tasks.`,
+      `**Not obsolete:** RNNs are the right tool for streaming inference — audio, live feeds, robotics — where the full sequence isn't available. Transformer attention needs all positions at once (O(n²) memory); an RNN handles each new token in O(1).`,
+      `**Trap:** even LSTMs vanish beyond ~200 steps (product of forget gates < 1 compounds); for 500+ steps offline, use attention.`,
+      `**Diagnostic:** init forget-gate bias to 1.0 (not 0) — sigmoid(0)=0.5 already halves the gradient path per step from the start.`,
+    ],
     interactiveId: 'rnn_viz',
   },
   {
@@ -519,6 +581,15 @@ The catch is cost: comparing every word with every other word is **O(n²)** — 
       `**The diagnostic: visualise attention weights on a known example before trusting any trained model.** For an encoder model, check whether the attention distribution for a given word is concentrated on related words (e.g., the subject attends to its verb) or diffuse noise. Uniform attention weights across all positions indicate the model has not learned meaningful relationships — either the query-key projections are not trained or the softmax temperature is too high. Log the entropy of attention distributions per head per layer: low entropy = head is attending specifically; high entropy = head is attending uniformly (potentially wasted capacity).`,
     ],
     takeaway: `Self-attention creates an O(1) information path between any two positions in a sequence — that is the property RNNs cannot replicate without exponential gradient attenuation, and the O(n²) memory cost is the price every efficient Transformer variant is trying to reduce.`,
+    recap: [
+      `**Core question:** how do you let a word look at the other words that matter to it? That's attention — the one idea behind every Transformer.`,
+      `**Old encoder-decoder RNNs** squeezed the whole sentence into one fixed summary vector; long-range clues got diluted or lost.`,
+      `**Attention lets each word reach back and look at all others at once,** weighted by relevance — no squeeze.`,
+      `**Q, K, V:** Query ("what am I looking for?"), Key ("what do I offer?"), Value ("what I hand over if picked").`,
+      `**Mechanism:** score = Q·K (dot product), softmax the scores into weights summing to 1, then weighted average of the values.`,
+      `**Self-attention = O(1) path between any two positions** — what RNNs can't replicate without exponential gradient attenuation.`,
+      `**Cost is O(n²) memory** — the price every efficient Transformer variant is trying to cut.`,
+    ],
     checkQuestions: [
       {
         q: `In scaled dot-product attention, why divide by √d_k? What happens without this scaling for large d_k?`,
@@ -659,6 +730,15 @@ The same block comes in two modes, set by *who is allowed to look at whom*. **En
       `**The diagnostic: check training loss curve shape in the first 1000 steps.** A healthy Transformer training run shows a rapid initial drop followed by smooth decay. A loss spike in the first 500 steps (then recovery) is the signature of insufficient learning rate warmup — Adam's moment estimates were too noisy for the initial learning rate. A flat loss that does not decrease at all is the signature of a missing or inverted causal mask in a decoder model — the model is attending to future tokens and the prediction task is trivially solved (training loss looks low, generation is random). Both are diagnosable before committing GPU hours.`,
     ],
     takeaway: `The Transformer's power rests on three mutually dependent components: direct all-to-all attention for O(1) path length, residual connections that route gradients to every layer simultaneously, and a 4×-expanded FFN that stores and retrieves factual knowledge — each degrades measurably without the others.`,
+    recap: [
+      `**Attention's blind spot — no order:** "dog bit man" and "man bit dog" look identical to raw attention.`,
+      `**Positional encoding fixes it:** stamp each word with a position signal (sine/cosine waves; modern models use RoPE for relative position).`,
+      `**The block:** norm → multi-head attention → residual add → norm → FFN → residual add.`,
+      `**FFN is deliberately 4× wide:** it's the model's memory where factual knowledge lives — shrink it and the model measurably forgets facts.`,
+      `**Residual shortcuts route gradients to every layer** — the only reason you can stack dozens of blocks.`,
+      `**Two flavours:** encoder-only (BERT, bidirectional — understanding tasks); decoder-only (GPT, masks the future — generation, and every token is a target giving more signal per pass).`,
+      `**Pre-LN over Post-LN:** every modern large model uses Pre-LN; Post-LN blows up gradient norms early and needs careful warmup.`,
+    ],
     checkQuestions: [
       {
         q: `Why does the transformer use positional encodings, and why does standard sinusoidal encoding allow the model to generalise to longer sequences than seen in training?`,
@@ -759,6 +839,15 @@ Fine-tuning has a trap called **catastrophic forgetting**: hit the pre-trained m
       },
     ],
     takeaway: `Pre-training changes the optimization starting point, not just the weight scale — it places the model in a loss basin near representations that generalize, which is why 500 fine-tuning examples produce a 26-point AUC gain that no amount of regularization from random initialization can replicate.`,
+    recap: [
+      `**Transfer learning payoff:** 500 radiology reports from scratch → AUC 0.61; same 500 fine-tuning PubMedBERT → 0.87. Only the *starting point* changed.`,
+      `**Pre-training is self-supervised:** fill-in-the-blank / next-word on a mountain of unlabelled text, forcing the model to internalise language into its weights.`,
+      `**Fine-tuning nudges a short distance** from a place already most of the way there — not teaching from scratch.`,
+      `**Two styles:** masked LM (BERT — both-sides context, understanding tasks); causal LM (GPT — predict next word, denser signal, generation).`,
+      `**Trap — catastrophic forgetting:** a big LR on a small dataset overwrites the pre-trained knowledge that made the model valuable.`,
+      `**Safety recipe:** LR 10–100× smaller than pre-training (~2e-5), few epochs, short warmup, weight decay 0.01 — stay near the pre-trained basin.`,
+      `**Diagnostic:** immediate divergence → LR too high (÷10); never beats baseline → domain mismatch or wrong task head.`,
+    ],
   },
   {
     id: 'finetune',
@@ -825,6 +914,15 @@ People sometimes call "train a fresh classifier on top of a frozen model" *fine-
       },
     ],
     takeaway: `Task-specific weight updates have low intrinsic rank — LoRA exploits this to fine-tune a 70B model with 0.2% of its parameters, and because BA merges directly into W after training, the deployed model is byte-for-byte identical to the base model with zero inference overhead.`,
+    recap: [
+      `**Full fine-tuning is brutal:** all 70B weights → ~14 bytes/param ≈ 980GB, a dozen GPUs, and risk of overwriting what made the model good.`,
+      `**LoRA insight:** the needed update is low-rank. Learn a 4096×4096 update as two skinny matrices (4096×8, 8×4096) — ~65K numbers, a 99.6% cut. Base model frozen.`,
+      `**LoRA merges back into W:** deployed model is same size and speed as the original — zero extra inference cost (its edge over adapters).`,
+      `**QLoRA:** squash frozen base to 4-bit (~140GB → ~35GB), train full-precision LoRA on top → 70B fine-tune on one 80GB GPU; rounding error barely matters since base weights never update.`,
+      `**Rank guidance:** 8–16 for tone/format/behaviour the model partly knows; 64+ or full fine-tune for genuinely new knowledge.`,
+      `**Feature extraction ≠ fine-tuning:** a fresh classifier on a frozen model only re-sorts existing representations; real fine-tuning (incl. LoRA) changes effective weights to learn new behaviour.`,
+      `**Diagnostic:** if training loss drops but target behaviour doesn't, the data doesn't actually demonstrate the target behaviour.`,
+    ],
   },
   {
     id: 'quantization',
@@ -895,6 +993,15 @@ Push down to 4-bit and PTQ starts dropping 2–5% accuracy — too many weights 
       },
     ],
     takeaway: `Quantization is a calibration problem: the scale factors that map float ranges to integers are only valid for the distribution they were calibrated on — skip calibration or shift the production distribution and the accuracy drop will be silent, with no error and no obvious cause.`,
+    recap: [
+      `**FP32 = 4 bytes/weight:** GPT-2's 117M weights = 468MB, often too big/slow for a phone.`,
+      `**INT8 = 1 byte:** 4× smaller *and* 2–4× faster (CPUs have integer-math hardware).`,
+      `**Float → int:** \`x_int = round(x_float / scale)\`, \`scale = (max − min) / 255\` — 256 buckets, rounding is the cost.`,
+      `**Outliers are the whole game:** one weight at 5.0 stretches the range, wasting buckets and starving the common weights of precision.`,
+      `**Calibrate on real data:** activation ranges are input-dependent, so run 100–1000 representative inputs to set scale factors. This is PTQ — no retraining, minutes, typically <1% loss.`,
+      `**Skip calibration → silent accuracy collapse:** no error in the logs. The single most common quantization mistake.`,
+      `**Below INT8:** GPTQ/AWQ reach 4-bit at <1% loss; QAT simulates rounding during training for the best accuracy but costs a full retrain.`,
+    ],
   },
   {
     id: 'dl_serving',
@@ -965,6 +1072,15 @@ One more trick for generation speed. Let a small, fast "draft" model guess the n
       },
     ],
     takeaway: `Throughput and latency are opposing objectives — batching 32 requests gives 32× throughput but adds queuing time, and KV cache gives 512× compute reduction for generation but consumes memory that limits concurrency — optimize for one explicitly before touching model size or architecture.`,
+    recap: [
+      `**One request at a time wastes the GPU:** 50ms/pass = 20 req/s, GPU 95% idle. A GPU wants thousands of multiplies at once.`,
+      `**Batching = fill the truck:** 32 requests in one pass finish in ~the same 50ms → 640 req/s, no model change. The biggest serving lever.`,
+      `**Dynamic batching:** set a small deadline (~5ms), run whatever arrived — most of the gain, bounded wait. One config flag in vLLM/TGI/ONNX.`,
+      `**KV cache fixes generation's n² problem:** save each token's key/value, reuse them → work drops n² → n (~512× for a 512-token reply).`,
+      `**KV cache cost is memory:** ~524KB/token for LLaMA-7B → ~256MB per 512-token chat; an 80GB A100 fits only ~300 chats. Long context runs you out of memory — the cache, not the weights.`,
+      `**Speculative decoding:** small draft model guesses K tokens, big model verifies all K in one pass → 2–3× when the guess is right.`,
+      `**Diagnostic:** target 70–85% GPU utilization at P99 budget — under 60% = under-batching; over 95% with high latency = over-batched or model too big.`,
+    ],
   },
   {
     id: 'dl_debugging',
@@ -1035,5 +1151,13 @@ Loss frozen at log(K): the model is outputting uniform probabilities — the out
       },
     ],
     takeaway: `Overfit one batch first, then log gradient norms per layer — these two tests diagnose 80% of training failures in minutes, before touching hyperparameters or architecture, because a model that cannot learn one example has a bug, not a tuning problem.`,
+    recap: [
+      `**Before "why won't it learn what I want," ask "can it learn anything at all?"** Most bugs surface there first — resist turning knobs.`,
+      `**Step 1 — overfit one batch:** turn off regularisation, train on one batch for 1000 steps; a working model must crash to near-zero loss.`,
+      `**If it can't:** loss/output mismatch (softmax+MSE, cross-entropy on raw logits), wrong class count, wrong label shape, or a forward-pass bug. 60-second test rules them all out.`,
+      `**Step 2 — gradient flow:** log per-layer average gradient; healthy layers stay within ~10× of each other. 10,000× = vanishing (fix: ReLU, residuals, init); huge early gradients = exploding (clip max_norm=1.0).`,
+      `**Classic failures:** loss frozen at log(K) → output not connected or wrong loss; sudden NaN → LR too high or log(0) in cross-entropy (add ε); train falling but val flat → distribution mismatch or untuned threshold.`,
+      `**The trap:** a falling loss doesn't mean it works — always-predict-majority hits 95% accuracy on imbalanced data. Check predictions, confusion matrix, and gradient norms (~0.001–10).`,
+    ],
   },
 ]

@@ -210,6 +210,15 @@ R² tells you how much you beat the lazy mean-model, but for reporting error you
       },
     ],
     takeaway: `Least squares picks the weights that make the total squared miss smallest, and for a straight line one formula solves for them in a single step — the same trick Gauss used to find a lost planet. Judge the fit with R² (how much you beat the lazy "always guess the average" model), and switch to adjusted R² once you start adding features. Never trust a single weight when two facts move together, and always plot the misses — because R² cannot see a wrong shape, but the misses can.`,
+    recap: [
+      "**OLS = weights that minimise total squared miss.** Squaring: signs don't cancel, big misses dominate, loss is a smooth bowl.",
+      "**One-step solve:** θ̂ = (XᵀX)⁻¹Xᵀy — no search, provably best weights (Gauss's planet trick).",
+      "**Collinearity:** correlated facts → weights wobble and can flip sign, predictions stay fine. Fix: Ridge.",
+      "**R²** = fraction of the lazy mean-model's error you cleared; switch to **adjusted R²** once you add features (junk features never lower plain R²).",
+      "**Always plot the misses vs predictions.** R² can't see a wrong shape; a U-pattern can.",
+      "**Two assumption piles:** predict well (linearity, no near-duplicate features) vs trust the weights (exogeneity, homoscedasticity, independence). Heteroscedasticity → weights unbiased but standard errors lie.",
+      "**Real solvers use QR/SVD, not literal (XᵀX)⁻¹** — inverting squares the numerical sensitivity.",
+    ],
     interactiveId: 'linear_regression_viz',
   },
   {
@@ -391,6 +400,14 @@ The decision boundary logistic regression draws is *linear* in whatever feature 
       },
     ],
     takeaway: `Logistic regression lets a linear equation predict the log-odds, then a sigmoid turns that into a probability — so one weight reads three ways: it adds to the log-odds, multiplies the odds by e^w, and moves the probability non-linearly. Train it with log loss, not MSE: log loss makes a confident wrong answer cost enormously and keeps the gradient alive, while MSE goes flat exactly when the model most needs to learn.`,
+    recap: [
+      "**Logistic regression = linear equation predicts the log-odds, sigmoid turns it into a probability** in (0,1).",
+      "**One weight, three readings:** adds to the log-odds, multiplies the odds by e^w, moves the probability non-linearly.",
+      "**Train with log loss, not MSE.** Log loss punishes confident-wrong enormously and keeps the gradient alive; MSE goes flat right when learning matters.",
+      "**Output is a probability; threshold is a separate business call.** Under imbalance, 0.5 and accuracy both betray you.",
+      "**Knobs:** C = inverse regularisation (small C = strong penalty); penalty must match the solver.",
+      "**Boundary is linear in feature space** — engineer features to bend it; read coefficients as odds ratios.",
+    ],
     interactiveId: 'logistic_regression_viz',
   },
   {
@@ -550,6 +567,14 @@ Finally, regularisation isn't a linear-regression trick — it's everywhere. It'
       },
     ],
     takeaway: `Regularisation adds a penalty on weight size to the loss, so gradient descent — which only ever chases a smaller loss — keeps the weights small and the model simple. L2 (Ridge) shrinks everything smoothly; L1 (Lasso) drives some weights to exactly zero and so selects features. Always standardise first, because the penalty judges weights by size, not by usefulness.`,
+    recap: [
+      "**Regularisation = penalty on weight size added to the loss.** Gradient descent chases smaller loss → weights stay small, model stays simple.",
+      "**L2 (Ridge):** shrinks everything smoothly. **L1 (Lasso):** drives some weights to exactly zero → feature selection.",
+      "**Always standardise first** — the penalty judges weights by size, not usefulness.",
+      "**Lasso is shaky under correlated features** — it keeps one, zeros the rest, and which it keeps can change.",
+      "**Trades a little bias for a big drop in variance;** λ is tuned, not guessed.",
+      "**Ridge has a closed form;** library naming (C = 1/λ) is a minefield.",
+    ],
     interactiveId: 'regularization_viz',
     figures: {
       l1_l2_geometry: `<svg viewBox="0 0 480 240" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:480px;font-family:var(--font-sans,sans-serif)">
@@ -765,6 +790,15 @@ Every guarantee here — bias-variance, VC bounds, PAC, even the honest test set
       },
     ],
     takeaway: `Test error splits into three parts: noise you cannot beat, bias (the model is too simple — underfitting), and variance (the model is too twitchy — overfitting). The two failures need opposite fixes, so measure training error to tell them apart. And remember: more data cures variance, not bias — a wrong-shaped model stays wrong no matter how much you feed it.`,
+    recap: [
+      "**Test error = noise (irreducible) + bias² + variance.**",
+      "**Bias** = model too simple (underfitting); **variance** = model too twitchy (overfitting). Opposite fixes.",
+      "**Measure training error to tell them apart** — high train error = bias, low train + high test = variance.",
+      "**More data cures variance, not bias.** A wrong-shaped model stays wrong.",
+      "**Learning curve** (train + validation error vs dataset size) is the diagnostic.",
+      "**Capacity ≠ parameter count** — VC dimension is the real measure; every PAC guarantee assumes a fixed distribution.",
+      "**Double descent** breaks the classic U-curve, but with caveats.",
+    ],
     interactiveId: 'bias_variance_viz',
     figures: {
       bias_variance_targets: `<svg viewBox="0 0 460 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:460px;font-family:var(--font-sans,sans-serif)">
@@ -965,6 +999,14 @@ A classification leaf reports the *frequency* of each class among its training p
       },
     ],
     takeaway: `A decision tree is a flowchart of yes/no questions, each chosen to split the data into purer groups (measured by Gini). It is easy to read but twitchy — change a few rows and the whole tree can change — and it can only cut straight, axis-aligned lines, so diagonal boundaries need a clumsy staircase. That very instability is what makes trees the perfect building block for random forests and boosting.`,
+    recap: [
+      "**Decision tree = flowchart of yes/no questions,** each split chosen to make groups purer (Gini).",
+      "**Easy to read but twitchy** — change a few rows and the whole tree can change.",
+      "**Axis-aligned cuts only** — diagonal boundaries need a clumsy staircase.",
+      "**That instability is a feature** — it makes trees the perfect base for random forests and boosting.",
+      "**Don't trust built-in feature importances** — they're biased.",
+      "**Prune to control depth:** sweep pruning strength and watch train vs test accuracy.",
+    ],
     interactiveId: 'decision_tree_viz',
   },
   {
@@ -1101,6 +1143,14 @@ A random forest is a fantastic *baseline*, but on tabular-accuracy leaderboards 
       },
     ],
     takeaway: `A random forest is the wisdom of the crowd applied to decision trees: grow many trees, let them vote, and their errors cancel — but only if the trees are diverse, which bagging (random resamples) and random feature choices at each split make sure of. It throws in free out-of-bag validation, and its one silent trap is that a regression forest can never predict outside the range of values it trained on.`,
+    recap: [
+      "**Random forest = wisdom of the crowd on trees** — grow many, let them vote, errors cancel.",
+      "**Only works if trees are diverse:** bagging (random resamples) + random feature subset at each split.",
+      "**Reduces variance, not bias.**",
+      "**Free OOB validation** — the ~37% left out of each bootstrap validate that tree.",
+      "**More trees isn't the lever** — past a couple hundred, extra trees barely move anything.",
+      "**Silent trap:** a regression forest can never predict outside its training range (no extrapolation).",
+    ],
     interactiveId: 'random_forest_viz',
     figures: {
       bagging_forest: `<svg viewBox="0 0 480 230" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:480px;font-family:var(--font-sans,sans-serif)">
@@ -1307,6 +1357,14 @@ They're not interchangeable. **XGBoost** is the stable, general-purpose default.
       },
     ],
     takeaway: `Gradient boosting trains trees in a line, each one fitting the team's current misses — and those misses are literally the loss gradient, so every tree is one careful step of gradient descent on the prediction function. That is why it handles any goal you can write as a loss, why the trees stay shallow and the steps small, and why early stopping (not a fixed tree count) is how you size it. XGBoost won by baking regularisation and curvature into every split.`,
+    recap: [
+      "**Gradient boosting = trees trained in a line,** each fitting the team's current misses.",
+      "**Those misses are literally the loss gradient** — every tree is one gradient-descent step in function space.",
+      "**Handles any goal you can write as a loss;** trees stay shallow, steps (learning rate) stay small.",
+      "**Size it with early stopping, not a fixed tree count** — plot train + held-out loss vs number of trees.",
+      "**Family:** AdaBoost reweights rows, gradient boosting fits the gradient, XGBoost regularises explicitly + uses curvature.",
+      "**Leakage-sensitive** — tune the right knobs and validate honestly.",
+    ],
   },
   {
     id: 'ensembles',
@@ -1452,6 +1510,14 @@ Diversity isn't only "different algorithms." You can manufacture it from differe
       },
     ],
     takeaway: `An ensemble combines several models and beats the best single one — but only because they make different mistakes, so voting cancels the errors. Diversity, not the number of models, is the lever: bagging builds it from different data, boosting from fixing mistakes in sequence, and stacking by training a meta-learner to combine genuinely different models — using out-of-fold predictions, or the whole thing leaks.`,
+    recap: [
+      "**Ensemble = combine several models, beat the best single one** — because they make different mistakes and voting cancels errors.",
+      "**Diversity, not count, is the lever.**",
+      "**Bagging** builds diversity from different data; **boosting** from fixing mistakes in sequence; **stacking** trains a meta-learner over different models.",
+      "**Stacking must use out-of-fold predictions** — feed the meta-learner base predictions on their own training rows and it leaks.",
+      "**Soft voting beats hard voting only if base models are calibrated.**",
+      "**Respect time/group boundaries in OOF, and weigh the real cost of ensembling.**",
+    ],
     interactiveId: 'ensemble_viz',
     figures: {
       stacking_ensemble: `<svg viewBox="0 0 480 210" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:480px;font-family:var(--font-sans,sans-serif)">
@@ -1540,6 +1606,14 @@ The hard limit: SVMs stall at $n > 50\\text{K}$. The kernel matrix $K$ where $K_
       },
     ],
     takeaway: `SVMs maximise the margin — the gap between classes — and only the points on the margin edge (support vectors) determine the boundary; the kernel trick substitutes dot products with kernel evaluations to get non-linear boundaries without computing the feature map.`,
+    recap: [
+      "**SVM = maximise the margin,** the gap between classes.",
+      "**Only support vectors (points on the margin edge) determine the boundary.**",
+      "**Kernel trick:** swap dot products for kernel evaluations → non-linear boundaries without computing the feature map.",
+      "**Soft margin (C) trades margin width for training errors.**",
+      "**Reach for kernel SVM when n < 50K,** moderate dimension, clean separable data — and always scale features.",
+      "**Tune C and γ jointly;** count support vectors — >50% of data means C too large or γ too small.",
+    ],
     interactiveId: 'svm_viz',
     figures: {
       svm_margin: `<svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:400px;font-family:var(--font-sans,sans-serif)">
@@ -1636,6 +1710,14 @@ The formal statement: exact kNN is O(nd) per query where n is the number of inde
       },
     ],
     takeaway: `kNN makes one bet — nearby points share labels — so the distance metric and the feature space are the model, k is just a smoothing parameter, and in high dimensions that bet fails because all distances converge; the production answer is ANN indexing over learned embeddings where the space is built to make proximity meaningful.`,
+    recap: [
+      "**kNN's one bet: nearby points share labels.** Zero training time — it just stores the data.",
+      "**The distance metric and feature space ARE the model;** k is just a smoothing parameter.",
+      "**High dimensions break it** — all distances converge (curse of dimensionality).",
+      "**Always scale features** — a 1000× range difference makes kNN see only the largest feature.",
+      "**At scale (n > 100K) use ANN** (FAISS, HNSW) — exact kNN is O(n) per query; HNSW gives sub-ms search over 100M vectors at 95%+ recall.",
+      "**Production answer: ANN over learned embeddings** where the space is built to make proximity meaningful.",
+    ],
     interactiveId: 'knn_viz',
   },
   {
@@ -1696,6 +1778,14 @@ The formal statement: ŷ = argmax_k [log P(y=k) + Σⱼ log P(xⱼ|y=k)]. Always
       },
     ],
     takeaway: `Naive Bayes only needs to rank P(spam|words) above P(ham|words) correctly — not to get the individual probabilities right — and the independence assumption fails symmetrically enough that the ranking holds even when the probabilities saturate toward 0 and 1.`,
+    recap: [
+      "**Naive Bayes multiplies P(feature|class) across features** via Bayes' theorem; larger product wins.",
+      "**Only needs to rank P(spam|words) > P(ham|words)** — not to get individual probabilities right.",
+      "**Independence assumption fails symmetrically enough** that the ranking survives even as probabilities saturate to 0/1.",
+      "**Laplace smoothing is mandatory** — one unseen word zeroes the whole posterior; use α > 0 (sklearn default α = 1).",
+      "**Gaussian NB for continuous features** — fast O(nd) baseline.",
+      "**If it predicts near 0/1 with high confidence,** independence is badly violated — use for ranking only, not as probabilities.",
+    ],
   },
   {
     id: 'calibration',
@@ -1839,6 +1929,15 @@ Finally, calibration is not permanent. A model calibrated on last year's data ca
       },
     ],
     takeaway: `AUC tells you if a model ranks cases correctly; calibration tells you if its probabilities are actually true — when it says 0.7, does it happen 70% of the time? The two are separate, and most models (random forests, neural nets) come out overconfident. Whenever a decision uses the probability itself, plot the reliability diagram, and fix miscalibration with Platt scaling or isotonic regression on a separate calibration set — never on training or test.`,
+    recap: [
+      "**AUC = does it rank correctly. Calibration = are the probabilities literally true?** Separate properties.",
+      "**Calibrated means: when it says 0.7, the thing happens ~70% of the time.**",
+      "**Most models come out overconfident** (random forests, neural nets).",
+      "**Whenever a decision uses the probability itself, plot the reliability diagram.**",
+      "**Fix with Platt scaling or isotonic regression** on a separate calibration set — never train or test.",
+      "**Don't trust ECE alone** — pair it with the reliability diagram and the Brier score.",
+      "**Calibration ≠ thresholding, and it decays under drift.**",
+    ],
     interactiveId: 'calibration_curve_viz',
     figures: {
       reliability_diagram: `<svg viewBox="0 0 280 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:280px;font-family:var(--font-sans,sans-serif)">
@@ -2006,6 +2105,15 @@ At 1-in-100,000 (rare diseases, novel fraud), the classification framing itself 
       },
     ],
     takeaway: `On an imbalanced problem, accuracy is a trap — a model that always guesses the majority class scores high and does nothing. The real issue is that the two kinds of mistake cost different amounts. Measure with precision, recall, and PR-AUC instead; make the model care about the rare class with class weights (or resampling); and set the decision threshold deliberately to match what the problem actually costs, rather than leaving it at 0.5.`,
+    recap: [
+      "**Accuracy is a trap** — always guessing the majority class scores high and does nothing.",
+      "**Real issue: the two kinds of mistake cost different amounts.**",
+      "**Measure with precision, recall, PR-AUC** — not accuracy.",
+      "**Make the model care about the rare class** with class weights (or resampling).",
+      "**Set the decision threshold deliberately** to match the cost — don't leave it at 0.5.",
+      "**When action is capacity-limited, optimise precision@K** and derive the threshold from a cost matrix.",
+      "**SMOTE has sharp edges;** resampling distorts probabilities — the right fix depends on the model.",
+    ],
     interactiveId: 'class_imbalance_viz',
     figures: {
       imbalance_skew: `<svg viewBox="0 0 360 175" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
@@ -2162,6 +2270,14 @@ One last discipline: a feature set chosen from a single run can be a fluke of th
       },
     ],
     takeaway: `More features is not always better — past a point they add noise and spread your data so thin that patterns vanish (the curse of dimensionality). Pick features deliberately: filter methods are fast but blind, wrapper methods are accurate but slow, and embedded methods (Lasso, tree or SHAP importance) usually give the best balance. Keep selection (which preserves your original, explainable features) separate from PCA-style reduction (which invents new ones). And always select inside cross-validation, or the test labels leak in and your results are a mirage.`,
+    recap: [
+      "**More features isn't always better** — past a point they add noise and thin your data out (curse of dimensionality).",
+      "**Three ways to choose, speed vs smartness:** filter (fast, blind), wrapper (accurate, slow), embedded (best balance).",
+      "**Embedded = Lasso, tree or SHAP importance** — usually the sweet spot.",
+      "**Selection ≠ reduction:** selection keeps original explainable features; PCA invents new ones.",
+      "**Always select inside cross-validation** — choose features on the whole dataset and test labels leak in (mirage results).",
+      "**Read importances with the correlation caveat, and importance ≠ cause.**",
+    ],
     figures: {
       curse_of_dimensionality: `<svg viewBox="0 0 470 180" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:470px;font-family:var(--font-sans,sans-serif)">
   <text x="75" y="20" text-anchor="middle" fill="var(--ink-hi)" font-size="12" font-weight="700">1D</text>

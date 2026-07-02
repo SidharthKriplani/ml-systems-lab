@@ -30,15 +30,6 @@ The shape of the landscape is not a detail. It determines whether your optimizer
       `**"Finding the global minimum" is the wrong objective for deep learning.** For overparameterized networks, there are exponentially many parameter configurations that achieve near-zero training loss. The optimizer finds one of them. What matters is which one — the geometry of that basin, not just its altitude.`,
     ],
     takeaway: `The loss landscape determines what is learnable and what generalizes. For convex losses, geometry is trivial — one bottom. For deep networks, the geometry is what makes training hard: saddle points stall it, sharp minima trap it, and flat minima are the goal. Every optimizer design decision is ultimately about navigating this landscape more effectively.`,
-    recap: [
-      "**Loss landscape = parameter space, not data space:** n params → a point; loss = altitude; training = walking downhill.",
-      "**MSE + linear regression is a convex bowl** — one minimum, solvable analytically.",
-      "**Nonlinear activations destroy convexity:** ReLU/sigmoid fold the surface into saddles and plateaus.",
-      "**High-dim obstacle is saddle points, not local minima** — the old \"stuck in local minima\" fear was mostly wrong.",
-      "**Sharp minima = high curvature (fragile); flat minima = low curvature (generalize).**",
-      "**SGD gradient noise is the mechanism** that bounces the optimizer out of sharp pits into flat basins.",
-      "**\"Find the global minimum\" is the wrong goal** — overparam nets have many near-zero-loss basins; which basin matters.",
-    ],
     checkQuestions: [
       {
         q: `Why does MSE loss produce a convex (bowl-shaped) landscape for linear regression but not for a two-layer neural network with ReLU activations?`,
@@ -170,15 +161,6 @@ A few characteristic failure modes, each with a tell and a fix. **Vanishing grad
     ],
     interactivePrompt: `Before you touch the controls: if the learning rate is 10x too large, will the loss increase monotonically, oscillate, or explode to infinity — and does the answer change for convex vs non-convex loss landscapes?`,
     takeaway: `Gradient descent replaces an impossible search over $10^{500000}$ parameter combinations with iterative local steps — each step costs one forward and backward pass, moves downhill by one gradient step, and repeats until convergence or budget exhaustion.`,
-    recap: [
-      "**Brute force is impossible:** 500k params × 10 values = $10^{500000}$ ≫ $10^{80}$ atoms.",
-      "**Update rule:** new = old − (learning rate) × gradient; the gradient is steepest uphill, so flip its sign.",
-      "**Learning rate:** too small crawls, too large overshoots/diverges — most of the game is getting it right.",
-      "**Recompute the gradient every step** — it is local; the valley curves, so the downhill direction rotates as you move.",
-      "**Ravine (condition-number) problem:** one step size can't serve steep and flat directions at once → momentum/Adam/schedules.",
-      "**Newton's method is the ideal fix but hopeless at scale:** 500k params → 250B-entry Hessian, ~1TB.",
-      "**Batch spectrum:** full-batch (exact, slow) → SGD (noisy, fast) → mini-batch (32–512, the default); backprop supplies the gradient, optimizer decides the step.",
-    ],
     interactiveId: 'gradient_descent',
     checkQuestions: [
       {
@@ -376,15 +358,6 @@ Random mini-batching assumes every batch is a fair sample — but under heavy im
     ],
     interactivePrompt: `Before you touch the controls: if you increase batch size from 32 to 256 while keeping learning rate fixed, predict whether training loss will converge faster or slower — and whether the model that finishes training will generalize better or worse.`,
     takeaway: `Mini-batch SGD was invented for computational feasibility; its gradient noise turned out to be the mechanism that finds flat, generalizing minima — making batch size a generalization hyperparameter, not just a throughput setting.`,
-    recap: [
-      "**Full-batch is infeasible:** 10M examples/step → ~3 hrs per step.",
-      "**Mini-batch SGD:** estimate the slope from a random handful (e.g. 32) → 300,000+ updates per pass instead of 1.",
-      "**The noise helps:** it kicks the optimizer out of sharp pits and lets it settle in flat, generalizing basins.",
-      "**Batch size is a regularization dial, not just memory:** bigger batch = less noise → sharper, worse-generalizing minima.",
-      "**Shuffle before every epoch** — unshuffled sorted data gives all-one-class batches with biased gradients.",
-      "**Vocabulary:** epoch = one full pass; step/iteration = one mini-batch update; updates/epoch = ceil(N / batch_size).",
-      "**Caveats:** small-batch-generalizes-better is a tendency not a law; linear LR-scaling has a ceiling; BatchNorm couples training to batch size; imbalance can leave batches with zero rare-class examples.",
-    ],
     checkQuestions: [
       {
         q: `Team A uses B=32; Team B uses B=2048 with 64× the learning rate (linear scaling rule). Both reach the same training loss, yet Team B generalizes worse. Why?`,
@@ -486,15 +459,6 @@ The solution is to give the optimizer memory. Momentum maintains a velocity vect
       `**The β hyperparameter sets the effective memory window. β=0.9 gives a window of 1/(1−0.9) = 10 gradient steps — enough to smooth mini-batch noise without making the optimizer sluggish to landscape changes. β=0.99 gives a window of 100 steps, useful for very noisy gradient signals but slow to respond when the loss landscape changes character during training.**`,
     ],
     takeaway: `Momentum was invented to fix gradient descent's amnesia. Without memory of where it came from, the optimizer zigzags in ravines and stalls at saddle points. Velocity accumulation dampens oscillations across high-curvature directions and builds speed along consistent-gradient directions — transforming a step-by-step random walk into a directed trajectory.`,
-    recap: [
-      "**Plain GD has amnesia:** each step is fresh from the local gradient, so it zigzags in ravines and stalls at saddles.",
-      "**Momentum = velocity of past gradients:** v ← βv + ∇L(θ), then θ ← θ − αv.",
-      "**Oscillations cancel, consistent directions accumulate** — damps zig-zag across the ravine, builds speed along the floor.",
-      "**Effective LR is amplified:** steady-state velocity → ∇L/(1−β), so β=0.9 makes steps ~10× larger — reduce base α.",
-      "**Nesterov looks ahead** at θ − αβv, braking before overshoot: O(1/t²) convergence on convex problems.",
-      "**Momentum escapes saddle points:** accumulated velocity carries it through the zero-gradient region where plain GD freezes.",
-      "**β sets the memory window:** β=0.9 ≈ 10 steps, β=0.99 ≈ 100 steps (noisier signals but slower to adapt).",
-    ],
     interactiveId: 'momentum_viz',
     checkQuestions: [
       {
@@ -563,15 +527,6 @@ Training stalls long before convergence. RMSProp fixes this with one change: rep
       `**The ρ hyperparameter sets the memory window. ρ=0.9 gives a 10-step window — responds quickly to changes in gradient scale. ρ=0.99 gives 100 steps — more stable but slow to adapt.** For highly non-stationary gradient environments (reinforcement learning, tasks with phase transitions), lower ρ is better. For stable supervised learning, ρ=0.9–0.99 both work and the choice matters little.`,
     ],
     takeaway: `AdaGrad was invented to solve the sparse-gradient scaling problem that SGD could not handle. It worked, then killed itself: its cumulative accumulation meant every dense-gradient parameter's learning rate decayed to zero. RMSProp swapped the cumulative sum for an exponential moving average — a single structural change that preserved the per-parameter adaptation while making the algorithm viable for dense networks.`,
-    recap: [
-      "**Problem: one global LR fails when parameters have different scales** — \"the\" updates constantly, \"quasar\" rarely.",
-      "**AdaGrad = per-parameter LR:** G_i ← G_i + g_i²; step scaled by α/√(G_i+ε) — rare params get big steps, frequent ones small.",
-      "**Great for sparse NLP embeddings** — rare words finally get appropriately large updates.",
-      "**AdaGrad's fatal flaw:** G_i only grows, so on dense layers effective LR → α/√T → 0 and training stalls.",
-      "**RMSProp fix = one change:** replace cumulative sum with EMA, G_i ← ρG_i + (1−ρ)g_i², so it stabilizes instead of decaying.",
-      "**Curvature link:** g_i² ≈ diagonal Fisher, so dividing by √G_i is a cheap approximate diagonal Newton step.",
-      "**RMSProp was built for RNNs** (Hinton, 2012); ρ=0.9 ≈ 10-step window, ρ=0.99 ≈ 100 steps.",
-    ],
     checkQuestions: [
       {
         q: `AdaGrad is used to train word embeddings for a 100,000-word vocabulary. After 500,000 training steps, what happens to the learning rate for the embedding of "the" vs the embedding of "platypus"? Which converges more correctly?`,
@@ -615,7 +570,7 @@ Training stalls long before convergence. RMSProp fixes this with one change: rep
     tags: ['adam', 'adamw', 'bias-correction', 'weight-decay', 'transformers'],
     summary: `You are training a transformer. Loss starts at 4.2, decreases for a few thousand steps with SGD, then plateaus at 3.8 for 10,000 steps before barely moving again. The problem is not your data or architecture — it is that your transformer has attention matrices, embedding tables, and feedforward layers all updating simultaneously, each at wildly different gradient scales. A single global learning rate is completely wrong for all of them at once.
 
-This is the problem Adam was built to solve. By 2014, practitioners had two partial solutions sitting separately on the shelf. RMSProp tracked each parameter's gradient magnitude via an exponential moving average $v_t = β_2 v_{t-1} + (1-β_2)g_t^2$, then divided by $\\sqrt{v_t}$ to normalize steps — slow-updating parameters got large steps, fast-updating ones got small steps. SGD with momentum tracked gradient direction history $m_t = β_1 m_{t-1} + (1-β_1)g_t$, smoothing out oscillations and building velocity in consistent directions. Adam (Kingma & Ba, 2014) ran both simultaneously. The $m_t$ term provides direction stability. The $v_t$ term provides per-parameter scale adaptation. Dividing the smoothed direction by the smoothed magnitude gives a step that is both directionally stable and scale-normalized: $θ_t = θ_{t-1} - α \\cdot \\hat{m}_t / (\\sqrt{\\hat{v}_t} + ε)$.
+This is the problem Adam was built to solve. By 2014, practitioners had two partial solutions sitting separately on the shelf. RMSProp tracked each parameter\`s gradient magnitude via an exponential moving average $v_t = β_2 v_{t-1} + (1-β_2)g_t^2$, then divided by $\\sqrt{v_t}$ to normalize steps — slow-updating parameters got large steps, fast-updating ones got small steps. SGD with momentum tracked gradient direction history $m_t = β_1 m_{t-1} + (1-β_1)g_t$, smoothing out oscillations and building velocity in consistent directions. Adam (Kingma & Ba, 2014) ran both simultaneously. The $m_t$ term provides direction stability. The $v_t$ term provides per-parameter scale adaptation. Dividing the smoothed direction by the smoothed magnitude gives a step that is both directionally stable and scale-normalized: $θ_t = θ_{t-1} - α \\cdot \\hat{m}_t / (\\sqrt{\\hat{v}_t} + ε)$.
 
 There is a critical initialization trap. At step 1, both $m_0 = 0$ and $v_0 = 0$. So $m_1 = (1-β_1)g_1 = 0.1 g_1$ — the first moment is 10x too small. $v_1 = (1-β_2)g_1^2 = 0.001 g_1^2$ — the second moment is 1000x too small. Without correction, the ratio $m_1 / \\sqrt{v_1}$ is unpredictably scaled. Bias correction divides by the initialization factor: $\\hat{m}_t = m_t / (1 - β_1^t)$, $\\hat{v}_t = v_t / (1 - β_2^t)$. At $t=1$: $\\hat{m}_1 = m_1 / 0.1 = g_1$, $\\hat{v}_1 = v_1 / 0.001 = g_1^2$. Correct. Without this, early transformer training can corrupt embeddings in ways that are nearly impossible to recover from.
 
@@ -625,21 +580,12 @@ AdamW (Loshchilov & Hutter, 2019) fixes this surgically. Instead of modifying th
 
 Every GPT, BERT, and Llama-class model is trained with AdamW, not Adam. The difference shows up as 1–2% perplexity improvement with no other changes. For your transformer that was plateauing at 3.8: switch to AdamW, set weight\_decay=0.1, add warmup. The loss plateau disappears because the per-parameter adaptation of Adam finally has matching regularization.`,
     keyPoints: [
-      `**Use AdamW for transformers and most deep learning; SGD+momentum for CNNs where you have time to tune and need best generalization.**\n\nThe deployment signal: heterogeneous parameter scales (transformers, multi-modal models, anything with embeddings) → AdamW. Homogeneous architectures (ResNet, VGG) where SGD has a well-documented training recipe → SGD+momentum. Default AdamW hyperparameters: $β_1=0.9$, $β_2=0.999$, $ε=1e$-$8$, $weight\_decay=0.01$–$0.1$. PyTorch's AdamW is correct; Adam + manual L2 in the loss is not equivalent.`,
+      `**Use AdamW for transformers and most deep learning; SGD+momentum for CNNs where you have time to tune and need best generalization.**\n\nThe deployment signal: heterogeneous parameter scales (transformers, multi-modal models, anything with embeddings) → AdamW. Homogeneous architectures (ResNet, VGG) where SGD has a well-documented training recipe → SGD+momentum. Default AdamW hyperparameters: $β_1=0.9$, $β_2=0.999$, $ε=1e$-$8$, $weight\_decay=0.01$–$0.1$. PyTorch\`s AdamW is correct; Adam + manual L2 in the loss is not equivalent.`,
       `**The most common production trap: using Adam with L2 regularization in the loss and calling it weight decay.**\n\nSymptom: model overfits despite high $λ$, or regularization seems to have no effect. Root cause: the adaptive denominator $\\sqrt{\\hat{v}}$ is dividing away your L2 penalty on the parameters that need it most. Fix: switch to AdamW and pass weight\_decay directly to the optimizer. Never add L2 to the loss when using any adaptive optimizer — it does not do what you think.`,
       `**Diagnostic: if loss diverges in the first 100–500 steps with Adam, bias correction or missing warmup is the culprit.**\n\nAt step $t=1$ with $β_2=0.999$: $\\hat{v}_1 = g_1^2$ after bias correction — fine. But if warmup is absent, the full $α$ is applied from step 1 before gradient statistics have stabilized across layers. Standard fix: linear warmup from $α_{min}=1e$-$7$ to $α=1e$-$4$ over 1%–4% of total training steps. If loss is stable but plateauing: check weight\_decay is set on AdamW (not zero). If loss oscillates throughout training: $α$ is too high — reduce by 3x–10x.`,
     ],
     interactivePrompt: `Before you touch the controls: if both $m_t$ and $v_t$ start at zero, predict what happens to the step size in the first 10 training steps without bias correction — too large, too small, or roughly correct?`,
-    takeaway: `Adam combines momentum (direction stability) and RMSProp (per-parameter scale adaptation) with bias correction; AdamW corrects Adam's broken regularization by applying weight decay directly to parameters instead of through the gradient, which is why AdamW is the standard for every serious language model.`,
-    recap: [
-      "**Problem: one global LR is wrong for attention, embeddings, and FFN all at once** — they update at wildly different scales.",
-      "**Adam = momentum + RMSProp:** $m_t$ (direction) over $\\sqrt{v_t}$ (per-param scale) → directionally stable, scale-normalized.",
-      "**Bias correction is essential:** $m_0=v_0=0$ so early moments are 10×/1000× too small — divide by $(1-β_1^t)$, $(1-β_2^t)$.",
-      "**Adam + L2-in-the-loss ≠ weight decay:** $\\sqrt{\\hat v}$ divides the $λθ$ penalty down on exactly the params that need it most — backwards.",
-      "**AdamW fixes it:** decay applied directly to weights, $θ ← (1-αλ)θ - α\\hat m/(\\sqrt{\\hat v}+ε)$ — uniform, gradient-independent.",
-      "**Every GPT/BERT/Llama uses AdamW, not Adam** — worth ~1–2% perplexity.",
-      "**Defaults:** $β_1=0.9$, $β_2=0.999$, $ε=1e$-$8$, weight_decay 0.01–0.1; lower $β_2$ for non-stationary (RL, fine-tuning).",
-    ],
+    takeaway: `Adam combines momentum (direction stability) and RMSProp (per-parameter scale adaptation) with bias correction; AdamW corrects Adam\`s broken regularization by applying weight decay directly to parameters instead of through the gradient, which is why AdamW is the standard for every serious language model.`,
     checkQuestions: [
       {
         q: `Without bias correction, what happens to Adam's step size in the first 10 training steps when β1=0.9, β2=0.999? Why does this matter for training stability?`,
@@ -695,11 +641,11 @@ Every GPT, BERT, and Llama-class model is trained with AdamW, not Adam. The diff
 
 The solution is to make the learning rate change over time. But how? The crudest version is step decay: drop $α$ by a factor of 10 at epoch 30 and epoch 60. This is the classic ResNet schedule and it works. The problem is the suddenness. Wherever the optimizer happens to be at epoch 30, that basin is now where it will stay — a sharp drop removes the energy needed to escape. If the optimizer landed in a slightly sharp basin at epoch 29, it is now trapped there.
 
-Before we even get to decay strategies, there is a problem at the very start. Early in training, gradient directions are unreliable: weights are far from any useful configuration, batch statistics are noisy, and Adam's second moment estimate $v_t$ has not stabilized from zero. Applying the full learning rate at step 1 means taking large steps in arbitrary directions. Warmup — linearly ramping $α$ from near-zero to the target value over the first 1%–5% of training steps — gives gradient estimates time to accumulate before large steps are applied. For transformers, skipping warmup causes early embedding corruption that is nearly impossible to recover from.
+Before we even get to decay strategies, there is a problem at the very start. Early in training, gradient directions are unreliable: weights are far from any useful configuration, batch statistics are noisy, and Adam\`s second moment estimate $v_t$ has not stabilized from zero. Applying the full learning rate at step 1 means taking large steps in arbitrary directions. Warmup — linearly ramping $α$ from near-zero to the target value over the first 1%–5% of training steps — gives gradient estimates time to accumulate before large steps are applied. For transformers, skipping warmup causes early embedding corruption that is nearly impossible to recover from.
 
 **NOT this.** Most people think warmup is an Adam-specific trick to work around bias correction. Actually, warmup solves a different problem: gradient direction reliability. Even with perfect bias correction, the gradient direction at step 1 is computed on one mini-batch of a randomly-initialized model — it is essentially noise. Warmup says "do not trust this yet, take small steps until the signal stabilizes." Bias correction fixes the magnitude of early moments; warmup is about not acting aggressively on unreliable directions.
 
-After the stable phase, cosine annealing replaces step decay's abrupt drop with a smooth curve: $α(t) = α_{min} + 0.5(α_{max} - α_{min})(1 + \cos(πt/T))$. The gradual decrease means the optimizer keeps exploring broadly early and narrows its search gradually rather than stopping abruptly. Empirically, cosine annealing finds flatter basins than step decay, delivering 0.5%–2% better test accuracy on standard benchmarks. The mechanism: in the high-$α$ phase, the optimizer can still occasionally escape mediocre basins. As $α$ decreases continuously, exploration narrows and the optimizer settles into the flattest basin it has found.
+After the stable phase, cosine annealing replaces step decay\`s abrupt drop with a smooth curve: $α(t) = α_{min} + 0.5(α_{max} - α_{min})(1 + \cos(πt/T))$. The gradual decrease means the optimizer keeps exploring broadly early and narrows its search gradually rather than stopping abruptly. Empirically, cosine annealing finds flatter basins than step decay, delivering 0.5%–2% better test accuracy on standard benchmarks. The mechanism: in the high-$α$ phase, the optimizer can still occasionally escape mediocre basins. As $α$ decreases continuously, exploration narrows and the optimizer settles into the flattest basin it has found.
 
 OneCycleLR (Smith, 2018) goes further: ramp $α$ up from $α_{min}$ to a peak 5–10x higher than a typical constant rate over 30% of steps, then cosine decay down over the remaining 70%. The high-$α$ peak phase is aggressive exploration. The long decay phase is fine-grained convergence. This "super-convergence" has achieved matching accuracy in 10–20x fewer epochs on some tasks. The canonical transformer schedule — linear warmup, cosine decay to near zero — is structurally identical: aggressive early phase, extended fine-grained final phase.`,
     keyPoints: [
@@ -709,15 +655,6 @@ OneCycleLR (Smith, 2018) goes further: ramp $α$ up from $α_{min}$ to a peak 5�
     ],
     interactivePrompt: `Before you touch the controls: if you use a constant learning rate throughout training instead of a schedule, predict whether the final model will have better or worse test accuracy than cosine decay — and whether your answer changes if you train for 10x longer.`,
     takeaway: `Learning rate schedules change which regions of the loss landscape are accessible: warmup prevents corrupt early steps, cosine annealing prevents premature basin-locking, and OneCycleLR combines aggressive exploration with fine-grained convergence — together they are worth 5%–10% accuracy over a naive fixed rate.`,
-    recap: [
-      "**No single fixed LR works:** too high oscillates from epoch 1, too low locks into a mediocre minimum.",
-      "**Warmup:** ramp α from near-zero over the first 1–5% of steps — early gradients are unreliable (noisy directions), not just biased magnitudes.",
-      "**Warmup fixes direction reliability, not Adam bias** — even with perfect bias correction, step-1 gradient is essentially noise.",
-      "**Step decay locks the basin:** an abrupt 10× drop freezes the optimizer wherever it is — cosine anneals smoothly instead.",
-      "**Cosine annealing finds flatter basins** than step decay → 0.5–2% better test accuracy on benchmarks.",
-      "**OneCycleLR:** ramp to a 5–10× peak over 30% of steps, then cosine-decay — aggressive exploration then fine convergence.",
-      "**Canonical transformer schedule = linear warmup + cosine decay to near zero;** worth 5–10% over a naive fixed rate.",
-    ],
     interactiveId: 'lr_schedule_viz',
     checkQuestions: [
       {
@@ -837,15 +774,6 @@ Tell the two failures apart by their signatures. **Vanishing**: early-layer grad
       `**Diagnose gradient flow directly, and know clipping's limits.**\n\nTransformers stack residual connections + layer norm, and pre-norm (norm inside the residual branch) trains deeper and more stably than the original post-norm. Measure health with per-layer gradient norms (a steep decay toward the input = vanishing), activation histograms (saturation/dead zeros), NaN checks, and weight-update ratios (~1e-3). Read the symptoms: vanishing = early layers stall, loss crawls; exploding = NaN, oscillating loss, huge norms. Clipping is a seatbelt against catastrophic steps — it does not fix bad conditioning, LR, or init, so clipping on most steps means the real problem is upstream.`,
     ],
     takeaway: `Gradient flow is the reason deep networks were impractical before 2010. Sigmoid saturates, vanishing the gradient. RNNs multiply the same matrix T times, exploding it. The solutions — ReLU, gradient clipping, residual connections, LSTM gates, layer norm — are all gradient infrastructure, not representational improvements. The network architectures we use today were designed around the constraint that gradients must survive the backward pass.`,
-    recap: [
-      "**Core mechanism: the backward signal is multiplied by each layer's sensitivity** — chains < 1 vanish it, > 1 explode it, exponentially with depth.",
-      "**Sigmoid caused vanishing** (sensitivity ≤ 0.25 → $0.25^{10}$ ≈ millionth); **ReLU mostly cured it** (sensitivity 1 for active neurons).",
-      "**Exploding hits RNNs hardest** (same matrix × T times); **gradient clipping** caps the update size while keeping direction — a seatbelt.",
-      "**Durable cures are architectural:** residual connections give a direct route home; LSTM gates add rather than multiply; layer norm keeps activations in the responsive range.",
-      "**Initialization comes first:** He (2/fan_in) for ReLU, Xavier (1/fan_in) for tanh/sigmoid — wrong one reintroduces vanishing/exploding at step one.",
-      "**Norm axis matters:** BatchNorm across the batch (batch-sensitive, CNNs); LayerNorm across features (batch-independent, transformers).",
-      "**Diagnose directly:** per-layer gradient norms, activation histograms, NaN checks, weight-update ratios (~1e-3); clipping does not fix bad conditioning/LR/init.",
-    ],
     checkQuestions: [
       {
         q: `A 20-layer sigmoid network barely trains, but a 20-layer ReLU network trains fine. What is the mechanistic difference in how the learning signal flows?`,
@@ -1007,15 +935,6 @@ You can catch a bad initialisation before wasting a training run. Check the **lo
       `**Modern architectures forgive init more, transformers need residual scaling, and you can diagnose it fast.**\n\n"Wrong init = silent failure" holds for deep plain nets but is softened a lot by residual connections and BatchNorm/LayerNorm, which repair bad scale at every layer — init still matters for stability and final quality, just less of a cliff. Deep transformers scale residual-branch weights down with depth (so the residual stream doesn't grow) and this is why they needed warmup. Sanity-check init before a full run: loss at step 0 ≈ ln(K), roughly constant activation variance across layers, healthy per-layer gradient norms, low dead-ReLU count, and no NaN/Inf.`,
     ],
     takeaway: `Initialization is gradient flow at step zero. Before the optimizer runs, the parameters must already be at a scale where signals neither vanish nor explode in the forward pass — because if they vanish in the forward pass, they also vanish in the backward pass. The correct variance formula depends on the activation function, and using the wrong formula (Xavier for ReLU, or He for tanh) produces a deep network that silently fails to learn.`,
-    recap: [
-      "**Never initialize all weights to zero:** identical neurons get identical gradients and stay identical forever — break symmetry with randomness.",
-      "**Scale decides survival:** too-small weights fade the signal to zero over depth; too-large blow it up or saturate tanh/sigmoid.",
-      "**Match recipe to activation:** Xavier/Glorot for tanh, He/Kaiming for ReLU (2× variance to offset ReLU discarding the negative half).",
-      "**LSTM exception:** forget-gate bias starts at 1 (lean toward remember), keeping the memory highway open; other biases can be 0.",
-      "**Formulas:** He = 2/fan_in; Xavier = 1/fan_in (forward) or 2/(fan_in+fan_out) (forward+backward compromise); uniform ≈ normal.",
-      "**Orthogonal init for RNNs/deep-linear stacks** — preserves vector norms under repeated multiplication.",
-      "**Residuals + norm forgive bad init;** deep transformers scale residual-branch weights down with depth; sanity-check: loss at step 0 ≈ ln(K).",
-    ],
     checkQuestions: [
       {
         q: `A 30-layer tanh network is initialised with weights from N(0, 1). Training loss barely moves. What is happening, and what is the fix?`,
@@ -1141,15 +1060,6 @@ Choosing among them comes down to a few axes: dataset/parameter size, gradient n
       `**Pick the optimizer by scale, noise, and stability.** AdamW for large noisy mini-batch deep learning; SGD+momentum for well-tuned vision/CNNs; L-BFGS for small-to-medium full-batch deterministic objectives and classical ML (it fails on noisy mini-batches because gradient-difference curvature goes indefinite); Newton/IRLS for tiny convex problems (IRLS is Newton for GLMs); K-FAC/natural gradient only when the per-step gain beats the 2–5× overhead. The "4 TB Hessian" figure is float32 — float64 doubles it, but either way it's infeasible.`,
     ],
     takeaway: `Second-order methods would give optimal steps if you could afford them. Newton's method converges in a handful of steps for well-conditioned problems. The Hessian for a million-parameter network requires 4 TB of memory and 10^18 operations to invert — which is why we use gradient descent. Every adaptive optimizer from AdaGrad to Adam is a practical approximation to diagonal Newton steps, not a theoretical preference for first-order methods.`,
-    recap: [
-      "**GD sees no curvature** — the learning rate is a hand-tuned proxy for the curvature it lacks.",
-      "**Newton's step:** θ ← θ − H⁻¹∇L, exact minimizer of the local quadratic; quadratic convergence (digits double per step).",
-      "**Hessian is infeasible at scale:** n=10⁶ → 10¹² entries (~4 TB), O(n³) ≈ 10¹⁸ ops to invert.",
-      "**L-BFGS approximates H⁻¹** from the last m gradient pairs at O(mn) — good for small, full-batch, deterministic objectives; fails on noisy mini-batches.",
-      "**Raw Newton is unsafe:** overshoots non-quadratic losses (need line search / trust region) and points the wrong way at indefinite saddles (need damping).",
-      "**ML uses PSD substitutes:** Gauss-Newton and Fisher (natural gradient, K-FAC) — curvature-aware without wrong-way steps.",
-      "**Adam ≠ diagonal Newton:** it divides by the gradients' second moment E[g²], not Hessian diagonals — curvature-*like* preconditioning, imprecise identity.",
-    ],
     checkQuestions: [
       {
         q: `A 3-parameter loss function has Hessian H = [[4, 0, 0], [0, 1, 0], [0, 0, 100]] and gradient g = [2, 1, 10]. Compare the gradient descent step (α=0.01) to the Newton step. What does this reveal about condition number?`,
@@ -1224,15 +1134,6 @@ Deep network loss landscapes violate essentially every assumption. The first ass
       `**Continual learning is a geometry problem.** When a network learns task 2 after task 1, the loss landscape for task 1 changes — parameters optimal for task 2 may lie in a sharp region for task 1. Catastrophic forgetting occurs when the task 2 minimum is outside the flat basin for task 1. Methods like Elastic Weight Consolidation (EWC) explicitly penalize movement away from the flat region of task 1's loss landscape, trying to keep parameters in the intersection of flat basins across all tasks.`,
     ],
     takeaway: `Local minima are not the obstacle — they barely exist in high dimensions. Sharp minima are the obstacle: they achieve low training loss but generalize poorly because the solution is fragile to parameter perturbation. Every generalization-focused technique in modern deep learning — small batches, weight decay, dropout, SAM — is ultimately a mechanism for steering the optimizer away from sharp minima and into flat, wide basins.`,
-    recap: [
-      "**Local minima barely exist in high dim:** a true minimum needs all n Hessian eigenvalues positive — (0.5)^n → ~0 for n=10⁶.",
-      "**Saddle points dominate** — a speed problem (noise + momentum power through), not a permanent trap.",
-      "**Sharp vs flat minima decide generalization:** test data shifts the optimum slightly — sharp minima spike, flat minima absorb it.",
-      "**Large-batch training finds sharper minima** (low noise slides into the nearest sharp basin) → the large-batch generalization gap.",
-      "**SAM minimizes worst-case loss in a ρ-ball** — forces flat minima; 2× compute, +1–3% ImageNet / +1–4% language.",
-      "**Double descent breaks classical bias-variance:** past the interpolation threshold, overparam models generalize better (GD finds the min-norm/simplest solution).",
-      "**Everything generalization-focused (small batches, weight decay, dropout, SAM) steers away from sharp minima.**",
-    ],
     checkQuestions: [
       {
         q: `Why are local minima less of a concern in high-dimensional deep network loss landscapes than in classical 1D or 2D optimization? Give the probabilistic argument.`,
@@ -1319,15 +1220,6 @@ The catch is that these tools interact — with each other and with the optimize
       `**Regularisers are a coupled system with a budget — do not just stack them all.**\n\nSmall-batch SGD already regularises for free through its gradient noise, so a small model may need little more; large-batch Adam has almost none and leans on explicit weight decay and dropout. Stack every regulariser at full strength and you can over-regularise a small model into underfitting. Tune one knob at a time, start with weight decay (the largest lever), and match the total to your model size versus dataset size.`,
     ],
     takeaway: `Regularization and optimizer are a coupled system. Gradient clipping is not regularization — it is catastrophe prevention for sequence models. Weight decay is the primary regularizer but works only as intended in AdamW, not in Adam with L2 in the loss. Dropout and label smoothing address separate failure modes and can be stacked with weight decay without interaction. Get the pairings wrong — L2 in Adam, no clipping for RNNs — and regularization either does nothing or quietly corrupts training.`,
-    recap: [
-      "**Gradient clipping is a safety valve, not a regularizer** — caps the gradient's size (keeping direction) so no single step wrecks a sequence model; norm-clip at 1.0.",
-      "**Weight decay is the main regularizer** — shrink every weight toward zero a fixed fraction each step, keeping the model simple.",
-      "**With Adam, use AdamW, never L2-in-the-loss:** Adam's rescaling makes an L2 penalty uneven and backwards; AdamW decays weights directly.",
-      "**Dropout attacks over-reliance:** randomly switch off neurons (~50% dense, 10–30% transformers) so the net builds redundant paths.",
-      "**Label smoothing attacks over-confidence:** soften targets (0.9 not 1.0) so perfect confidence is impossible → better calibration.",
-      "**Regularizers are a coupled system with a budget** — small-batch SGD regularizes for free; over-stacking underfits.",
-      "**Tune one knob at a time, weight decay first** (biggest lever); match the amount to model and dataset size.",
-    ],
     checkQuestions: [
       {
         q: `Adam with L2 (λ=0.01 in the loss) reaches the same training loss as AdamW (weight_decay=0.01) but noticeably worse test perplexity. Why?`,

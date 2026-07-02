@@ -105,6 +105,7 @@ export function SystemDesignFoundationTab({ onNavigate }) {
   const [selectedId, setSelectedId] = useState(null)
   const [tick, setTick] = useState(0)
   const [trackPopoverOpen, setTrackPopoverOpen] = useState(false)
+  const [recapMode, setRecapMode] = useState(false)
   const trackBtnRef = useRef(null)
 
   useEffect(() => {
@@ -113,8 +114,8 @@ export function SystemDesignFoundationTab({ onNavigate }) {
     return () => window.removeEventListener('msl_progress', h)
   }, [])
 
-  // Close track popover when module selection changes
-  useEffect(() => { setTrackPopoverOpen(false) }, [selectedId])
+  // Close track popover + exit recap mode when module selection changes
+  useEffect(() => { setTrackPopoverOpen(false); setRecapMode(false) }, [selectedId])
 
   const doneCount = getDoneCount(MODULES)
   const selected = MODULES.find(m => m.id === selectedId)
@@ -234,6 +235,44 @@ export function SystemDesignFoundationTab({ onNavigate }) {
             </p>
           </div>
 
+          {selected.recap && (
+            <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1.25rem' }}>
+              <button
+                onClick={() => setRecapMode(false)}
+                style={{ fontSize: '0.78rem', fontWeight: 700, fontFamily: 'var(--font-sans)', cursor: 'pointer',
+                  padding: '0.4rem 0.9rem', borderRadius: '7px',
+                  background: !recapMode ? 'var(--prime)' : 'var(--surface)',
+                  color: !recapMode ? '#000' : 'var(--ink-mid)',
+                  border: `1px solid ${!recapMode ? 'var(--prime)' : 'var(--rim)'}` }}>
+                Full module
+              </button>
+              <button
+                onClick={() => setRecapMode(true)}
+                style={{ fontSize: '0.78rem', fontWeight: 700, fontFamily: 'var(--font-sans)', cursor: 'pointer',
+                  padding: '0.4rem 0.9rem', borderRadius: '7px',
+                  background: recapMode ? 'var(--prime)' : 'var(--surface)',
+                  color: recapMode ? '#000' : 'var(--ink-mid)',
+                  border: `1px solid ${recapMode ? 'var(--prime)' : 'var(--rim)'}` }}>
+                ⚡ Quick recap
+              </button>
+            </div>
+          )}
+
+          {recapMode && selected.recap && (
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '10px',
+              padding: '1.25rem 1.4rem', marginBottom: '1.5rem' }}>
+              <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--prime)', textTransform: 'uppercase',
+                letterSpacing: '0.08em', marginBottom: '0.9rem' }}>Quick Recap · {selected.title}</div>
+              {selected.recap.map((pt, i) => (
+                <div key={i} style={{ display: 'flex', gap: '0.6rem', marginBottom: '0.7rem', alignItems: 'flex-start' }}>
+                  <span style={{ color: 'var(--prime)', fontWeight: 800, flexShrink: 0, fontSize: '0.9rem', lineHeight: 1.5 }}>›</span>
+                  <div style={{ fontSize: '0.9rem', color: 'var(--ink-mid)', lineHeight: 1.55 }}>{renderMd(pt)}</div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!recapMode && (<>
           <div style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '10px',
             padding: '1.1rem 1.25rem', marginBottom: '1.25rem' }}>
             <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--prime)', textTransform: 'uppercase',
@@ -287,6 +326,7 @@ export function SystemDesignFoundationTab({ onNavigate }) {
               {selected.checkQuestions.map((cq, i) => <CheckQuestion key={i} q={cq.q} options={cq.options} answer={cq.answer} />)}
             </div>
           )}
+          </>)}
 
           <MarkDoneButton moduleId={selected.id} onDone={() => setTick(t => t + 1)} />
         </div>

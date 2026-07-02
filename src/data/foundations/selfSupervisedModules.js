@@ -64,6 +64,14 @@ The practical consequence is the pretrain-then-adapt paradigm that now dominates
       },
     ],
     takeaway: `SSL's advantage over supervised training on scarce labels comes from forcing models to solve pretext tasks that require semantic understanding—not from labels, but from the structure of unlabeled data itself. The 22-point accuracy gap on 1K labeled examples is not magic; it is what happens when a model encodes the full unlabeled distribution before seeing any label.`,
+    recap: [
+      `**SSL = supervision from data structure, not labels:** 1M images, 1K labels → supervised 62% vs SSL-pretrain+fine-tune 84%.`,
+      `**Pretext task is the mechanism:** it must require semantics that low-level shortcuts can't provide.`,
+      `**Three paradigms:** predictive (mask+reconstruct) · contrastive (align augmented views) · generative (compress+reconstruct).`,
+      `**Good pretext ≠ solvable by shortcut:** masked LM good; predicting file size / noise level bad.`,
+      `**SSL ≠ unsupervised:** k-means/PCA encode variance; pretext tasks encode meaning that transfers.`,
+      `**Pretrain-then-adapt now dominates every modality** — the current structure of the field, not a trend.`,
+    ],
   },
   {
     id: 'contrastive_loss',
@@ -131,6 +139,14 @@ Hard negatives—items close to the anchor in embedding space but not actually t
       },
     ],
     takeaway: `Temperature τ is the most consequential contrastive hyperparameter: it controls whether gradients concentrate on the hardest negatives (low τ, overflow risk below 0.05) or spread uniformly over all negatives (high τ, slow convergence). More negatives tightens the InfoNCE mutual information lower bound—so methods like MoCo's 65,536-entry queue exist not as engineering convenience but as a formal improvement in what is being optimized.`,
+    recap: [
+      `**NT-Xent = classify 1 positive among N−1 negatives:** -log[exp(sim(zᵢ,zⱼ)/τ) / Σ_{k≠i} exp(sim(zᵢ,zₖ)/τ)].`,
+      `**More negatives = tighter InfoNCE bound:** batch 512 → 1,022 negs; MoCo queue → 65,536 negs, formally harder.`,
+      `**Temperature τ range 0.07–0.2:** τ=0.01 overflows (exp(100)≈2.7×10⁴³) → NaN in ~100 steps; τ=1.0 → indiscriminate, slow.`,
+      `**Check τ first when contrastive training is unstable.**`,
+      `**Hard negatives speed convergence but raise false-negative risk:** two cats in a batch pushed apart.`,
+      `**Debiased loss** estimates the same-class fraction and corrects the denominator.`,
+    ],
   },
   {
     id: 'simclr',
@@ -188,6 +204,14 @@ SimCLR's practical bottleneck is the large-batch dependency. Good performance re
       },
     ],
     takeaway: `SimCLR's projection head is discarded at fine-tuning not out of habit but because the contrastive loss forces it to absorb destructive invariances—color, crop, blur—that would harm downstream tasks if they reached the encoder. The augmentation strategy is the actual performance driver: random crop forces semantic encoding by making local texture matching geometrically impossible, and this principle—not the architecture—is what transfers to new domains.`,
+    recap: [
+      `**Augmentation is the performance driver:** random crop + color jitter + Gaussian blur; ablate any one and accuracy drops sharply.`,
+      `**Random crop forces semantics:** two crops can overlap ~10% → texture matching fails, object identity must be encoded.`,
+      `**Projection head is discarded at fine-tuning** — it absorbs destructive invariances (color/crop/blur); apply NT-Xent directly to the encoder and linear probe drops ~10 points.`,
+      `**Encoder (2048-dim) stays rich; head (128-dim) compresses to augmentation-invariant.**`,
+      `**Large-batch need (4,096–8,192) is an in-batch-negatives artifact, not fundamental** — MoCo hits the same quality at batch 256 on 8 GPUs.`,
+      `**Domain matters:** in medical imaging color is diagnostic, so color jitter hurts — pick invariances the domain allows.`,
+    ],
   },
   {
     id: 'moco',
@@ -254,6 +278,14 @@ MoCo v2 demonstrated something important: SimCLR's large-batch advantage was nev
       },
     ],
     takeaway: `MoCo's momentum encoder (m=0.999) solves the memory bank's consistency problem: as the encoder trains, old embeddings in a memory bank no longer reflect the current encoder state, making NT-Xent comparisons incoherent. The EMA update keeps all 65,536 queue entries within a narrow window of encoder states, delivering SimCLR-quality negative count at batch size 256 on 8 GPUs. The pattern—a slowly-updating EMA target—became the standard primitive for any SSL method needing a stable reference representation.`,
+    recap: [
+      `**Problem:** memory bank gives unlimited negatives but stale ones — old embeddings no longer match the current encoder → incoherent NT-Xent.`,
+      `**MoCo fix:** queue of 65,536 keys + momentum encoder θ_k ← 0.999·θ_k + 0.001·θ_q (no gradients).`,
+      `**m=0.999 keeps all keys consistent:** ~1,000-step window; m<0.99 loses ~5 points linear probe.`,
+      `**FIFO queue bounds staleness** to K/N_batch steps (65,536/256 = 256); random replacement wouldn't.`,
+      `**MoCo v2 = MoCo + SimCLR's MLP head + blur → matches SimCLR at batch 256:** proves large batch was never fundamental.`,
+      `**EMA target became the SSL primitive** — reused by BYOL, DINO, data2vec.`,
+    ],
   },
   {
     id: 'byol_barlow',
@@ -318,6 +350,15 @@ Barlow Twins takes a more direct approach: push the cross-correlation matrix bet
       },
     ],
     takeaway: `BYOL does not prevent collapse via stop-gradient alone—it prevents collapse because BatchNorm creates implicit cross-sample interactions that act as implicit negatives. Replace BatchNorm with LayerNorm and BYOL collapses immediately. This mechanism also explains BYOL's large-batch failure: at batch size 65,536, BatchNorm statistics stabilize and the implicit negative mechanism disappears. Barlow Twins makes the collapse-prevention mechanism explicit and interpretable, which is why it remains the right default when the BatchNorm mechanism is unavailable.`,
+    recap: [
+      `**Negatives prevent collapse but cause false negatives:** same-class images treated as push-away.`,
+      `**BYOL setup:** online (backprop) + target (EMA m≈0.996) + predictor MLP, minimize L2 to stop-gradient target.`,
+      `**Real collapse-preventer is BatchNorm, not stop-gradient:** cross-batch stats = implicit negatives; swap to LayerNorm and BYOL collapses immediately.`,
+      `**Stop-gradient necessary but not sufficient** — without it both nets collapse to zero.`,
+      `**BYOL breaks at batch 65,536:** BatchNorm stats stabilize → implicit-negative mechanism vanishes.`,
+      `**Barlow Twins = explicit fix:** cross-correlation → identity; diagonal→1 (invariance), off-diagonal→0 (redundancy reduction = collapse prevention).`,
+      `**At ViT/production scale, contrastive (MoCo v3 / CLIP) beats negative-free.**`,
+    ],
   },
   {
     id: 'masked_autoencoders',
@@ -374,6 +415,14 @@ The architectural asymmetry matters for the same reason. MAE's encoder processes
       },
     ],
     takeaway: `MAE's 75% masking ratio is not arbitrary—it is the threshold where local interpolation from adjacent patches becomes geometrically impossible, forcing the encoder to capture global semantic structure. The weak decoder closes the same shortcut from the architecture side: a strong decoder would do the semantic work internally and allow the encoder to be shallow. Together, the masking ratio and architectural asymmetry ensure reconstruction quality can only come from genuine semantic encoding.`,
+    recap: [
+      `**MAE setup:** 224×224 → 196 patches (16×16); mask 75% (147), encode 49 visible, decoder reconstructs hidden pixels.`,
+      `**25% masking fails:** adjacent patches let the model interpolate (bicubic) — no semantics learned.`,
+      `**75% masking works:** local interpolation geometrically impossible → encoder must capture global structure; linear probe rises monotonically to 75%.`,
+      `**Asymmetric encoder-decoder closes the shortcut too:** weak decoder (8 blocks) vs deep encoder (24) forces the encoder to do the semantic work.`,
+      `**MAE ≠ compression** — goal is transferable representations, not compact pixels.`,
+      `**MAE for dense tasks (detection/segmentation); contrastive for classification/retrieval:** MAE 68% probe / 86.9% fine-tuned vs SimCLR ~70% / ~82%.`,
+    ],
   },
   {
     id: 'clip_alignment',
@@ -430,6 +479,14 @@ Why CLIP embeddings generalize broadly is the key insight. A supervised ImageNet
       },
     ],
     takeaway: `CLIP's zero-shot capability works because web-scale image-text co-occurrence covers essentially all visual concepts, and aligning images with open-vocabulary descriptions forces encoding of everything language can describe. The failure mode—poor performance on compositional and relational descriptions—is systematic: CLIP encodes co-occurrence, not composition, so any task requiring binding attributes to specific objects will fail regardless of scale.`,
+    recap: [
+      `**CLIP = align image + text encoders on 400M web pairs** via InfoNCE over the N×N similarity matrix.`,
+      `**Zero-shot 76% ImageNet top-1, no ImageNet labels:** "a photo of a {class}" lands in the matched-image region.`,
+      `**Broad transfer because language describes everything:** color, style, layout, action — encoder must encode it all; supervised ImageNet collapses to 1,000 logits and discards the rest.`,
+      `**Learned τ (start 0.07, clamp ≥0.01)** to prevent overflow.`,
+      `**Fails on out-of-distribution concepts** (e.g. medical imaging) — no alignment relationship to transfer; fine-tune on domain image-text.`,
+      `**Fails on composition/relations:** "red cube on blue sphere" ≈ "blue cube on red sphere"; near-chance on ARO — encodes co-occurrence, not binding.`,
+    ],
   },
   {
     id: 'ssl_for_tabular',
@@ -486,6 +543,15 @@ Audio SSL (wav2vec 2.0, HuBERT) is the most successful SSL transfer outside text
       },
     ],
     takeaway: `SSL does not transfer seamlessly across domains—the corruption or augmentation strategy must reflect what variations leave the semantic identity of a sample invariant. For tabular data, marginal-distribution corruption forces detection through inter-feature relationships, which is exactly what transfers downstream. For audio, temporal masking maps onto the same masked prediction framework that works for text. The pretext task design question is always: what shortcut would a lazy model exploit, and how does the design eliminate it?`,
+    recap: [
+      `**SCARF (tabular):** corrupt fraction α of features with draws from each feature's *marginal* distribution; original vs corrupted = positive pair.`,
+      `**Marginal draws look plausible** → can't detect by out-of-range; forces encoding inter-feature relationships (age vs years-since-retirement).`,
+      `**Tabular SSL fails when features are heavily engineered or labels are plentiful:** break-even ≈ unlabeled 10× labeled + non-obvious correlations.`,
+      `**Audio (wav2vec 2.0, HuBERT) is the big win outside text/vision:** speech's temporal structure maps onto masked prediction — 10 min labeled → competitive WER (100× less data).`,
+      `**wav2vec quantizer** gives discrete symmetry-breaking targets (like BERT's vocab) to prevent collapse.`,
+      `**Graph edge-drop is domain-dependent:** valid for social graphs, breaks molecular identity (bonds).`,
+      `**Design question always:** what shortcut would a lazy model exploit, and how do you eliminate it?`,
+    ],
   },
   {
     id: 'downstream_adaptation',
@@ -552,5 +618,14 @@ Layer-wise learning rate decay (LLRD) encodes a prior about what each layer shou
       },
     ],
     takeaway: `MAE vs SimCLR is the direct counterexample to trusting linear probe as a proxy for fine-tuning performance: lower linear probe, higher fine-tuning accuracy, because MAE's pixel reconstruction preserves fine-grained local information that is not linearly organized but is accessible to a fine-tuned nonlinear network. With 1,000 labeled examples, full fine-tuning erases the pretrained representations that justified using SSL—use LoRA or adapters with low learning rate and early stopping.`,
+    recap: [
+      `**Linear probe ≠ fine-tuning:** MAE 68% probe / 86.9% fine-tuned vs SimCLR 70% probe / ~82% — opposite ranks.`,
+      `**Why:** MAE preserves fine-grained local detail not linearly organized; a fine-tuned nonlinear net accesses it, a frozen linear layer can't.`,
+      `**Full fine-tuning on <10K examples risks catastrophic forgetting:** sparse gradients overwrite pretrained weights without correction.`,
+      `**With ~1,000 labels: use LoRA/adapters, low LR (1e-5–5e-5), early stopping.**`,
+      `**LoRA:** ΔW = AB (r ≪ d), train A,B only; ~1% params, zero forgetting, merges at inference (W+AB) with no latency.`,
+      `**LLRD (d≈0.75, scale d^{L-l}):** near-zero LR low layers (general), base LR upper layers (task-specific).`,
+      `**LoRA vs prompt tuning:** LoRA for internal feature shifts / 100+ examples; prompt tuning for in-distribution tasks, <50 examples, many tasks from one model.`,
+    ],
   },
 ]

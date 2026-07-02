@@ -55,6 +55,9 @@ const registry = {
   variational_inference_viz:   lazy(() => import('./VariationalInferenceViz').then(m => ({ default: m.VariationalInferenceViz }))),
   convex_optimization_viz:     lazy(() => import('./ConvexOptimizationViz').then(m => ({ default: m.ConvexOptimizationViz }))),
   stationarity_viz:            lazy(() => import('./StationarityViz').then(m => ({ default: m.StationarityViz }))),
+  retrieval_funnel_viz:        lazy(() => import('./RetrievalFunnelViz').then(m => ({ default: m.RetrievalFunnelViz }))),
+  latency_budget_viz:          lazy(() => import('./LatencyBudgetViz').then(m => ({ default: m.LatencyBudgetViz }))),
+  value_model_mixer_viz:       lazy(() => import('./ValueModelMixerViz').then(m => ({ default: m.ValueModelMixerViz }))),
 }
 
 export function InteractivePanel({ interactiveId }) {

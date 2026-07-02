@@ -148,6 +148,15 @@ One discipline ties it together. The decision threshold is a *parameter you tune
       },
     ],
     takeaway: `Before picking any classification metric, write down the cost of a FP and the cost of a FN — every metric choice follows from that ratio, and skipping that step is how teams end up optimizing the wrong number for months.`,
+    recap: [
+      `**Accuracy lies on imbalance:** 99% by predicting "not fraud" on a 1% dataset, recall 0.`,
+      `**Confusion matrix = TP / FP / FN / TN** — the four outcomes cost different amounts.`,
+      `**Precision** = TP/(TP+FP); **recall** = TP/(TP+FN) — they trade off via the threshold.`,
+      `**F1** = harmonic mean of P and R; **F-beta** tilts by cost ($\\beta>1$ favours recall).`,
+      `**Cost matrix first:** write cost(FP) vs cost(FN), every metric choice follows.`,
+      `**Vocabulary:** recall = sensitivity = TPR; specificity = TNR; FPR = 1−specificity.`,
+      `**Under imbalance** prefer balanced accuracy or MCC; **precision@K/recall@K** when action is capacity-limited; **tune threshold on validation, freeze, report on test once.**`,
+    ],
     interactiveId: 'confusion_matrix_viz',
     figures: {
       confusion_matrix: `<svg viewBox="0 0 360 240" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
@@ -319,6 +328,15 @@ AUC is binary by construction, so for K classes you extend it. **One-vs-rest (Ov
       },
     ],
     takeaway: `ROC-AUC denominates FPR with true negatives, so on imbalanced datasets it is structurally optimistic — switch to PR-AUC when your positive class is rare, and always set a concrete operating threshold from your cost matrix before shipping.`,
+    recap: [
+      `**ROC curve = TPR vs FPR** across all thresholds; random = 0.5, perfect = 1.0.`,
+      `**AUC = P(score(pos) > score(neg))** — pure ranking score, = normalized Mann-Whitney U.`,
+      `**Rare positives fool ROC-AUC:** huge TN keeps FPR tiny, so 0.91 hides precision 0.17.`,
+      `**Positives < ~10% → use PR-AUC** (ignores TN); heuristic, not law.`,
+      `**AUC picks the model, cost matrix picks the threshold.**`,
+      `**AUC ignores calibration:** scale all probs by 0.5 → AUC unchanged, probs now lies.`,
+      `**Precision** = $\\pi\\cdot TPR / (\\pi\\cdot TPR + (1-\\pi)\\cdot FPR)$ — moves with prevalence; use partial AUC in your operating FPR band; state OvR vs OvO for multiclass.`,
+    ],
     interactiveId: 'roc_curve_viz',
     figures: {
       roc_curve: `<svg viewBox="0 0 320 280" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:320px;font-family:var(--font-sans,sans-serif)">
@@ -495,6 +513,15 @@ A final subtlety interviewers probe: NDCG, MAP, and MRR are based on *sorting*, 
       },
     ],
     takeaway: `All ranking metrics embed a model of user attention — MRR says users stop after the first hit, MAP says they care about every relevant item equally, NDCG says attention decays with position and highly relevant results matter more — so choosing the metric is choosing which user behaviour you believe, not which formula is standard.`,
+    recap: [
+      `**Position matters:** a metric ignoring rank is useless for search/recsys.`,
+      `**MRR** = 1/rank of first hit — user stops at first good answer.`,
+      `**MAP** = avg precision at each relevant hit — found them all, early (binary labels).`,
+      `**NDCG** adds graded relevance: $(2^{grade}-1)$ gain, $\\log_2(pos+1)$ discount, normalized to ideal.`,
+      `**Match metric to behaviour**, not formula; **Precision@K** when every slot is equal.`,
+      `**Two stages:** retrieval judged by recall@K/hit-rate@K, ranker by NDCG/MAP.`,
+      `**Click labels are position-biased** (debias: IPW, interleaving); **balance relevance vs coverage/diversity/novelty**; NDCG non-differentiable → train on pairwise/listwise surrogates (LambdaMART).`,
+    ],
     figures: {
       rank_discount: `<svg viewBox="0 0 300 210" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:300px;font-family:var(--font-sans,sans-serif)">
   <text x="150" y="18" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">a hit is worth less further down</text>
@@ -646,6 +673,15 @@ You can partly de-bias offline log evaluation with **inverse propensity scoring*
       },
     ],
     takeaway: `Offline metrics measure how well a model predicts past behavior under a past policy — so the offline-online gap is systematic, not random, and the right response is to measure the offline-online correlation empirically on your own system before trusting any offline improvement as evidence that the model improved.`,
+    recap: [
+      `**Offline measures the past, online measures now** — NDCG up, CTR down is routine.`,
+      `**Three gaps:** distribution shift, proxy labels (click ≠ satisfaction), feedback loops.`,
+      `**Correlation is weak:** offline→online gain typically ρ ≈ 0.3–0.7; measure it on your own system.`,
+      `**A/B is causal, offline logs are observational + policy-biased** — the A/B is the gold standard.`,
+      `**Primary metric + guardrails** (retention, latency, revenue) defined before the test.`,
+      `**Design properly:** power/MDE up front, full weekly cycles, no peeking, correct for multiple tests.`,
+      `**Tools:** IPS de-biases logs but high variance under small propensities; interleaving = cheap relative preference; bandits minimise regret but block a clean causal estimate.`,
+    ],
   },
   {
     id: 'validation_traps',
@@ -790,6 +826,15 @@ Leakage often isn't caught offline at all — it surfaces after deploy. The sign
       },
     ],
     takeaway: `Data leakage is a data engineering error, not a modeling error — the fix is upstream in feature computation, and the single question that catches most leakage is whether each feature value would exist at the exact moment of prediction in production with no knowledge of future events.`,
+    recap: [
+      `**Leakage = future/outcome info in features** — normal train/test split doesn't catch it (both halves contaminated).`,
+      `**Temporal:** random split lets model peek ahead → strict time cutoff.`,
+      `**Group:** same user in both sides → split by group.`,
+      `**Label:** feature is a consequence of the outcome ("days in ICU") → causal audit.`,
+      `**The one question:** would this value exist at prediction time knowing nothing of the future?`,
+      `**Preprocessing leaks too:** scaler/imputer/PCA/SMOTE/target-encoding fit on train fold only (use a Pipeline).`,
+      `**Real systems need group + time together**; prove with negative controls (shuffle labels → chance), monitor offline-online collapse in prod.`,
+    ],
   },
   {
     id: 'cross_validation',
@@ -933,6 +978,15 @@ Stratification isn't only for single-label classification. For **regression**, s
       },
     ],
     takeaway: `Every CV strategy embeds an assumption about deployment — pick the wrong one and you are evaluating a scenario that does not exist, which is why walk-forward is mandatory for time-series and group k-fold is mandatory whenever new entities appear at inference time.`,
+    recap: [
+      `**One split has high variance** — k-fold averages many; k=5 (80%) or k=10 (90%), LOO is noisy.`,
+      `**Stratified:** imbalanced classes (<~20% positive) → keep class ratio per fold.`,
+      `**Group:** repeated subjects, deploy on new entities → all of one entity's rows on one side.`,
+      `**Time-series → walk-forward** (train past, test future) + **purge gap** for rolling-window features.`,
+      `**Expanding window** = all history (stable world); **rolling** = recent only (strong drift).`,
+      `**Tuning + reporting the best fold is inflated** → nested CV (search in inner loop).`,
+      `**Nested CV scores the procedure**, not the shipped model (retrain on all data); fold std ≠ valid CI (training sets overlap).`,
+    ],
     interactiveId: 'cross_validation_viz',
     figures: {
       cv_folds: `<svg viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:400px;font-family:var(--font-sans,sans-serif)">
@@ -1130,6 +1184,15 @@ Before claiming a fix works, run an **ablation**: remove the suspicious feature,
       },
     ],
     takeaway: `Aggregate metrics tell you that a problem exists — error slicing by confidence, subgroup, and input type tells you which specific subpopulation has the problem — and targeting 200 examples of the hardest error category almost always moves more metric than any architectural change.`,
+    recap: [
+      `**Aggregate metric says a problem exists; error analysis says which group, what kind, what fix.**`,
+      `**Five steps:** sample errors (favour high-confidence), tag by cause, count buckets, prioritise by impact×feasibility, trace to root cause.`,
+      `**High-confidence errors** = systematic bias, not noise — fix first.`,
+      `**Weight by cost, not frequency:** 12% negation errors can hurt more than 67% of benign ones.`,
+      `**Data gap beats architecture:** 200 labelled examples of the worst bucket usually moves more metric.`,
+      `**Small slices lie:** 40% error on n=5 is noise — report slice size, CI, minimum-support threshold.`,
+      `**Slice FP and FN separately** (different causes/costs); wire findings into monitored production slices; prioritise by volume × error rate × cost × feasibility.`,
+    ],
     figures: {
       error_slices: `<svg viewBox="0 0 360 170" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
   <text x="180" y="18" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">94% accurate — but where do the errors live?</text>
@@ -1274,6 +1337,15 @@ Keep the two steps separate. **Calibration** makes the probability *truthful* (0
       },
     ],
     takeaway: `AUC measures whether a model ranks correctly and calibration measures whether its probability estimates are honest — these are independent, so for any application where the probability output drives a real-world decision, calibration must be evaluated and fixed separately from discrimination.`,
+    recap: [
+      `**Ranking ≠ calibration:** AUC 1.0 model can say "90%" when only 60% actually happen.`,
+      `**Reliability diagram:** predicted vs actual rate per bucket; below diagonal = overconfident (typical of neural nets).`,
+      `**ECE** = avg gap from diagonal; **Brier** = mean squared error of probs (folds in discrimination + calibration).`,
+      `**Fix on a separate calibration set:** temperature scaling (one T, try first) → Platt → isotonic.`,
+      `**Brier = reliability − resolution + uncertainty** → lower Brier can come from resolution alone, not better calibration.`,
+      `**ECE is binning-sensitive** (adaptive/equal-count bins; top-label vs classwise).`,
+      `**Calibration decays under covariate/base-rate shift even if AUC is stable** — monitor by cohort; calibration ≠ thresholding.`,
+    ],
     interactiveId: 'calibration_curve_viz',
     figures: {
       reliability_curve: `<svg viewBox="0 0 280 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:280px;font-family:var(--font-sans,sans-serif)">
@@ -1349,6 +1421,15 @@ The formal statement: ablation is leave-one-out estimation of component importan
       },
     ],
     takeaway: `Ablation is the empirical partial derivative of your system — remove one component, measure the drop, repeat — and two hours of ablation before committing to any architecture investment will consistently outperform two weeks of speculative engineering.`,
+    recap: [
+      `**Ablation = empirical partial derivative:** remove one component, hold rest fixed, measure the drop.`,
+      `**Marginal contribution** of C = AUC(full) − AUC(full \\ {C}) — invest only where the drop is real.`,
+      `**Two designs:** leave-one-out (from full) vs add-one-in (from baseline); they differ when components interact.`,
+      `**Interaction trap:** a component with zero solo contribution can be essential paired — use pairwise ablation, confirm by re-adding.`,
+      `**Ablate on held-out data**, not training (trees find spurious interactions that don't generalise).`,
+      `**Many near-zero ablations = single-component dependence** → fragility signal, needs backup.`,
+      `**Two hours of ablation beats two weeks of speculative architecture search.**`,
+    ],
   },
   {
     id: 'evaluation_in_prod',
@@ -1499,6 +1580,15 @@ At scale dozens of tests run at once, and they can **interact** — test A chang
       },
     ],
     takeaway: `Statistical significance confirms the effect is unlikely to be noise — it says nothing about whether it will persist, whether it is practically meaningful, or whether the experiment was valid; a 2-day test during a novelty window with daily peeking can produce p = 0.001 on an effect that reverses completely in two weeks.`,
+    recap: [
+      `**Novelty trap:** +18% CTR over 2 days can reverse to −4% revenue — the window measured novelty.`,
+      `**Every ship call rests on a controlled experiment;** offline/shadow just cheaply filter candidates.`,
+      `**Shadow mode first:** same traffic, no user impact — catches serving bugs offline can't.`,
+      `**Three A/B rules:** ≥2 business cycles, fix primary metric + sample size up front (no peeking), set guardrails.`,
+      `**Significant ≠ worth it:** at 10M users a 0.01% bump hits p<0.0001 — a thousand clicks.`,
+      `**SRM check before any metric:** a 50/50 design landing 55/45 means a broken pipeline.`,
+      `**Size with power/MDE (winner's curse), CUPED for variance, staged ramp;** interference violates SUTVA (cluster-randomise), delayed metrics need a permanent holdout.`,
+    ],
     figures: {
       novelty_curve: `<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:320px;font-family:var(--font-sans,sans-serif)">
   <line x1="40" y1="170" x2="300" y2="170" stroke="var(--ink-low)" stroke-width="1"/>

@@ -64,6 +64,15 @@ ne difference gives ΔY_t = ε_t, which is stationary. The I(d) notation means d
       },
     ],
     takeaway: `Stationarity is not a box to check once at model training time — spurious regression is the immediate consequence of skipping it, and structural breaks mean a series that was stationary at training time may not be stationary in production. The most important inference to demonstrate is knowing when two non-stationary series should be modelled jointly (cointegration + ECM preserves the long-run relationship) versus separately in first differences (when no cointegrating vector exists and the long-run relationship is meaningless).`,
+    recap: [
+      `**Spurious regression:** two random walks → R²>0.5, |t|>2, DW≈0, zero true relation.`,
+      `**Weak stationarity = constant mean + variance + lag-only autocovariance γ(k).**`,
+      `**ADF (H₀: unit root) + KPSS (H₀: stationary) run together resolve ambiguity.**`,
+      `**Trend-stationary → detrend; difference-stationary → difference.** Wrong choice leaves a unit root or induces MA noise.`,
+      `**Cointegration:** two I(1) series, spread I(0) — model jointly via ECM, don't difference away the equilibrium.`,
+      `**ECM:** \`α(Y_{t-1}−βX_{t-1})\` term, α<0 pulls back to equilibrium.`,
+      `**Not a one-time check:** structural breaks kill stationarity in production — monitor with rolling ADF/CUSUM.`,
+    ],
   },
 
   {
@@ -130,6 +139,15 @@ For the airline data, the seasonal structure at period s=12 requires SARIMA: sea
       },
     ],
     takeaway: `ARIMA's "I" solves non-stationarity by differencing — one difference removes a linear trend, enabling the AR and MA components to model the stationary residuals. ACF/PACF cutoffs are a starting point, not a recipe: textbook-clean patterns only appear in simulated data, so Box-Jenkins is always iterative via residual diagnostics. The most consequential failure mode is the structural break: after a regime change the model absorbs the shift as a spurious long-lag effect, producing biased forecasts indefinitely — the fix is re-identifying orders on post-break data, not adding more lags.`,
+    recap: [
+      `**AR(p) = momentum** ($Y_t=Σφ_iY_{t-i}+ε_t$); **MA(q) = shocks**; **I(d) = differencing** removes trend.`,
+      `**One difference removes a linear trend** — ARIMA(p,1,q) for trending series; d=2 usually over-differencing.`,
+      `**ACF/PACF = starting point, not recipe:** clean cutoffs only in simulated data; compare candidates by AIC.`,
+      `**Ljung-Box must pass at ALL lags** — overall p=0.42 can hide a lag-12 seasonal spike → go SARIMA.`,
+      `**Structural break = worst failure:** model absorbs regime shift as long-lag effect, biased forecasts forever.`,
+      `**Fix a break by re-identifying orders on post-break data**, not adding more lags.`,
+      `**Per-SKU ARIMA doesn't scale** (50k series, cold start, intermittent) → global models / Croston's.`,
+    ],
   },
 
   {
@@ -194,6 +212,15 @@ For the airline data, the seasonal structure at period s=12 requires SARIMA: sea
       },
     ],
     takeaway: `The practical insight that separates strong candidates is knowing when STL fails and what to do instead. STL handles smoothly evolving seasonality at a fixed calendar period but is blind to calendar-shifting events (Black Friday, Ramadan, Easter) because it assumes the seasonal spike falls at the same calendar week each year. The diagnostic — "seasonal component smeared across 3-4 weeks, peak attenuated" — identifies STL failure, and the fix is explicit holiday features or event indicators rather than encoding the event in the seasonal component.`,
+    recap: [
+      `**Additive \`Y=T+S+R\`** (fixed absolute season) vs **multiplicative \`Y=T×S×R\`** (season scales with level).`,
+      `**Diagnose:** amplitude constant → additive; amplitude grows with trend → multiplicative or log first.`,
+      `**Classical decomposition:** season forced identical across years + missing endpoints → biased recent estimate.`,
+      `**STL:** LOESS smoother; \`s.window="periodic"\` fixes season (correct only if driver physically fixed, e.g. daylight).`,
+      `**Multiple seasonalities need MSTL** (weekly then daily); single STL leaves residual structure.`,
+      `**Fourier terms** (K sin/cos pairs) handle non-integer periods like 365.25 and long periods cheaply.`,
+      `**STL breaks on calendar-shifting events** (Black Friday smears across 3-4 weeks) → explicit holiday features.`,
+    ],
   },
 
   {
@@ -247,6 +274,15 @@ For the airline data, the seasonal structure at period s=12 requires SARIMA: sea
       },
     ],
     takeaway: `Prophet is a specific tool for a specific problem: business KPIs with trend + weekly + yearly seasonality, designed for analysts who need sensible forecasts without deep time series expertise. Its failure modes are predictable from its structural assumptions — trend explosion at the forecast boundary when changepoint_prior_scale is too high, silently using future regressor values during backtesting, and underconfident MAP intervals. changepoint_prior_scale is the single most consequential hyperparameter and must be validated via rolling-origin cross-validation rather than left at the default.`,
+    recap: [
+      `**Prophet = structural additive regression:** \`y(t)=g(t)+s(t)+h(t)+ε\` — growth + Fourier seasonality + holidays.`,
+      `**Built for analysts:** sensible KPI forecasts (DAU, revenue) without per-series tuning.`,
+      `**Piecewise linear growth**, changepoints only in first 80% of data → recent trend shifts undetected.`,
+      `**changepoint_prior_scale (default 0.05) is THE hyperparameter:** too high → trend explosion at boundary; too low → sluggish.`,
+      `**MAP intervals (default) are too narrow** — capture only noise + changepoint sampling, not parameter uncertainty; use MCMC.`,
+      `**add_regressor trap:** regressor must exist at forecast time — backtesting with actuals inflates accuracy.`,
+      `**Fails on mean-reverting / volatile series** and <1-2yr history; validate via rolling-origin CV.`,
+    ],
   },
 
   {
@@ -314,6 +350,15 @@ independently. Multiplicative seasonality handles the case where seasonal amplit
       },
     ],
     takeaway: `ETS is not a heuristic — it is a proper state space model whose parameters are estimated by MLE and whose AIC-selected variant implicitly performs ARIMA order selection without the ACF/PACF identification step. The ETS-ARIMA equivalence (SES = ARIMA(0,1,1), Holt = ARIMA(0,2,2)) proves these are the same underlying model class in different parameterisations. The practical M4 conclusion: always ensemble ETS with ARIMA and a simple baseline, because model uncertainty across forecast horizons is large enough that combination consistently dominates any single method.`,
+    recap: [
+      `**Exponential smoothing = recency-weighted average**, sidesteps ACF/PACF identification.`,
+      `**SES (level) → Holt (+trend) → Holt-Winters (+seasonality)**; all params estimated jointly by MLE.`,
+      `**Damped trend** (slope × φ^h, φ∈0.8–0.98) — most reliable medium-horizon improvement.`,
+      `**ETS(E,T,S)** = proper state space model; AIC over ~30 variants auto-selects (Box-Jenkins via likelihood).`,
+      `**ETS-ARIMA equivalence:** SES=ARIMA(0,1,1), Holt=ARIMA(0,2,2) — same model class, different parameterisation.`,
+      `**Multiplicative-error ETS handles heteroskedasticity** (variance grows with level) where Gaussian ARIMA misspecifies.`,
+      `**Croston's for intermittent demand** (>30-50% zeros); **M4 lesson:** always ensemble ETS+ARIMA+baseline.`,
+    ],
   },
 
   {
@@ -379,6 +424,15 @@ The Temporal Fusion Transformer (TFT) is competitive despite using attention bec
       },
     ],
     takeaway: `Transformer self-attention ignores temporal order by design, which is why DLinear outperforms Informer on standard benchmarks — always include DLinear as a baseline before claiming any neural forecasting win. N-HiTS retains temporal inductive bias through hierarchical multi-rate MLP stacks and beats N-BEATS on long horizons; TFT is competitive only when rich covariates exist. Foundation models win exactly one scenario: cold start with fewer than 30 observations per series.`,
+    recap: [
+      `**Transformer attention is permutation-equivariant** — ignores temporal order; shuffling timestamps barely changes MSE.`,
+      `**DLinear (one linear layer) beats Informer/Autoformer/FEDformer** — mandatory baseline before any neural claim.`,
+      `**N-BEATS doubly-residual:** each block backcasts + forecasts, subtracts before next → smaller task per block.`,
+      `**N-HiTS adds hierarchical multi-rate sampling** — beats N-BEATS beyond 96-step horizons, handles double seasonality.`,
+      `**TFT competitive only with rich covariates.**`,
+      `**Foundation models (TimeGPT, MOIRAI) win exactly one case:** cold start, <30 obs/series.`,
+      `**With 2+ years of in-domain data, local/global models trained on your data dominate zero-shot.**`,
+    ],
   },
 
   {
@@ -441,6 +495,15 @@ The Temporal Fusion Transformer (TFT) is competitive despite using attention bec
       },
     ],
     takeaway: `MAPE misleads in three ways simultaneously: it's undefined for zero-valued series, penalises over-forecasting more than under-forecasting of equal absolute magnitude, and can't be compared across series with different scales. MASE solves all three and should be the default metric. The more consequential failure mode is backtesting design: fitting preprocessing (normalisation, scaling) on the full dataset including test data is a ubiquitous form of lookahead bias that inflates reported MASE by 5-15% — not from overfitting the model, but from the scaler implicitly encoding future level information.`,
+    recap: [
+      `**MAPE fails 3 ways:** undefined at Y=0, penalises over- more than under-forecasting, not scale-comparable.`,
+      `**MASE = MAE / naïve-MAE** — scale-free, symmetric, defined at zero; <1 beats naïve. Default metric (M4).`,
+      `**Probabilistic eval:** pinball/quantile loss → CRPS; Winkler score penalises width + misses.`,
+      `**Diebold-Mariano** tests equal expected loss; across many series use paired t-test/Wilcoxon on per-series MASE.`,
+      `**Effect size > p-value:** a significant 0.001 MASE gap is operationally irrelevant.`,
+      `**Expanding window** (stationary DGP) vs **rolling window** (non-stationary); rolling gives more cutoffs.`,
+      `**Lookahead bias inflates MASE 5-15%:** fit ALL preprocessing on train only; touch test set exactly once.`,
+    ],
   },
 
   {
@@ -509,6 +572,16 @@ tion and k=3-4. The decomposition removes expected variation; the threshold dete
       },
     ],
     takeaway: `Nearly all production false-positive problems in time series anomaly detection trace back to applying a threshold to the raw series instead of the residuals of a properly specified seasonal+trend model. The decompose-first, threshold-on-residuals pattern eliminates seasonality-driven false positives immediately. The second most important insight is distinguishing root causes from downstream symptoms via causal graph traversal: a single upstream failure floods the alert queue with correlated alerts across dozens of metrics, and incident response fails when teams chase symptoms while the root cause persists.`,
+    recap: [
+      `**#1 production failure:** thresholding the raw series instead of decomposition residuals → seasonal false positives.`,
+      `**Decompose \`Y=T+S+R\`, threshold R_t** (|R|>k·σ, IQR-based, k=3-4) — kills seasonality-driven alerts.`,
+      `**Three types:** point (single spike), contextual (500 sales normal Tue vs Black Friday), collective (sustained drift).`,
+      `**CUSUM** accumulates evidence of sustained shift — good for collective anomalies, resistant to single spikes.`,
+      `**LSTM autoencoder:** reconstruction error as score, trained on normal data; needs rolling threshold recalibration (concept drift).`,
+      `**Adaptive thresholds** (EWMA, quantile regression, conformal) beat static 3-sigma; conformal guarantees ≤α FPR.`,
+      `**Root cause vs symptom:** one upstream failure floods alerts across metrics — trace causal graph, don't chase symptoms.`,
+      `**Imbalanced eval:** PR-AUC beats ROC-AUC; NAB rewards early detection.`,
+    ],
   },
 
   {
@@ -576,5 +649,14 @@ he slope change post-intervention.** Critical assumptions: no other intervention
       },
     ],
     takeaway: `Granger causality is the most frequently misused concept in applied time series work: it measures predictive priority, not causation, and a common upstream cause produces Granger causality between two otherwise unrelated series. The second most important insight for applied causal time series is that TWFE DiD is biased under staggered rollouts with heterogeneous treatment effects — already-treated units contaminate the control group, and the fix is Callaway-Sant'Anna, not just clustering standard errors. Always run an event study plot before reporting any DiD estimate.`,
+    recap: [
+      `**Granger = predictive, NOT causal:** a shared upstream cause Z produces Granger causality with no direct mechanism.`,
+      `**ITS:** pre-period trend extrapolation as counterfactual; correct autocorrelated residuals (Newey-West/Prais-Winsten).`,
+      `**Synthetic control:** weighted control units matching pre-treatment — pre-fit quality is directly observable.`,
+      `**CausalImpact (BSTS):** counterfactual from control regressors; breaks if controls hit by spillover.`,
+      `**DiD needs parallel trends** — always plot event-study pre-trend coefficients before reporting an estimate.`,
+      `**Staggered TWFE is biased** under heterogeneous effects (already-treated as controls, negative weights) → Callaway-Sant'Anna.`,
+      `**No holdout = strong untestable assumptions;** the real fix is a prospective holdout design for future launches.`,
+    ],
   },
 ]
