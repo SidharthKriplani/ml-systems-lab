@@ -48,6 +48,7 @@ const MLCodingTab       = lazy(() => import('./tabs/MLCodingTab.jsx'))
 const ProjectLabTab     = lazy(() => import('./tabs/ProjectLabTab.jsx'))
 const LoanDefaultTab = lazy(() => import('./tabs/LoanDefaultTab.jsx'))
 const FraudDetectionTab = lazy(() => import('./tabs/FraudDetectionTab.jsx'))
+const StartHereTab      = lazy(() => import('./tabs/StartHereTab.jsx'))
 const PlansTab          = lazy(() => import('./tabs/PlansTab.jsx'))
 const ProfilePage       = lazy(() => import('./tabs/ProfilePage.jsx'))
 const ResourcesTab      = lazy(() => import('./tabs/ResourcesTab.jsx'))
@@ -146,6 +147,7 @@ const ALL_TABS = [
   { id: 'optimization_foundation',     component: OptimizationFoundationTab },
   { id: 'data_foundation',             component: DataFoundationTab },
   { id: 'my_tracks',                   component: MyTracksTab },
+  { id: 'start_here',                  component: StartHereTab },
 ]
 
 // ── Freemium gate ─────────────────────────────────────────────────────────────
@@ -867,6 +869,7 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked, 
         {/* TRACK (top, always visible) */}
         <SidebarNavItem id="home" label="Home" {...navProps} />
         <SidebarNavItem id="profile" label="Profile" {...navProps} />
+        <SidebarNavItem id="start_here" label="Start Here" {...navProps} />
         <SidebarNavItem id="plans" label="Plans & Access" {...navProps} />
         <SidebarNavItem id="resources" label="Resources" {...navProps} />
 
