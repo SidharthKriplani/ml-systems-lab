@@ -365,30 +365,10 @@ function KLMode() {
 
 export const InformationTheoryViz = forwardRef(function InformationTheoryViz(props, ref) {
   const [tab, setTab] = useState('entropy');
-  const animRef = useRef(null);
 
-  const play = useCallback(() => {
-    if (animRef.current) return
-    animRef.current = setInterval(() => {
-      setTab(t => t === 'entropy' ? 'kl' : 'entropy')
-    }, 1500)
-  }, [])
-
-  const pause = useCallback(() => {
-    if (animRef.current) { clearInterval(animRef.current); animRef.current = null }
-  }, [])
-
-  const reset = useCallback(() => {
-    pause()
-    setTab('entropy')
-  }, [pause])
-
-  const step = useCallback(() => {
-    pause()
-    setTab(t => t === 'entropy' ? 'kl' : 'entropy')
-  }, [pause])
-
-  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step])
+  // Tab/slider-driven component — "play" previously just toggled between the two
+  // tabs, which isn't a real animation. Expose nothing so the shell renders no Play button.
+  useImperativeHandle(ref, () => ({}), [])
 
   return (
     <div style={{

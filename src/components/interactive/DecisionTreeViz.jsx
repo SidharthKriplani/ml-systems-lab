@@ -38,6 +38,14 @@ function generatePoints(seed) {
 }
 
 const SEEDS = [42, 0xABCDEF, 0x13579BD, 0xFEDCBA];
+const MAX_DEPTH = 6;
+
+// A held-out set: same distribution, DIFFERENT points the tree never trained on.
+// Test accuracy peaks at a moderate depth then falls as deep trees memorise
+// training noise — that gap is the visible signature of overfitting.
+function generateTestPoints(seed) {
+  return generatePoints(seed ^ 0x9E3779B9);
+}
 
 // ── Real decision tree (greedy Gini) ──────────────────────────────────────────
 function gini(pts) {
@@ -102,8 +110,15 @@ function collectSplits(tree, box = { x0: 0, x1: 1, y0: 0, y1: 1 }) {
 }
 
 function computeAccuracy(pts, tree) {
+  if (!pts.length) return 0;
   const correct = pts.filter(p => predictTree(tree, p.x, p.y) === p.cls).length;
   return Math.round((correct / pts.length) * 100);
+}
+
+// Count leaves = number of distinct regions the tree carves the plane into
+function countRegions(tree) {
+  if (!tree || tree.leaf) return 1;
+  return countRegions(tree.left) + countRegions(tree.right);
 }
 
 function getRootSplitGini(pts, tree) {
@@ -195,11 +210,15 @@ export const DecisionTreeViz = forwardRef(function DecisionTreeViz(props, ref) {
   const [depth, setDepth] = useState(2);
   const [seedIdx, setSeedIdx] = useState(0);
 
-  const points   = useMemo(() => generatePoints(SEEDS[seedIdx]), [seedIdx]);
-  const tree     = useMemo(() => buildTree(points, depth), [points, depth]);
-  const splits   = useMemo(() => collectSplits(tree), [tree]);
-  const accuracy = useMemo(() => computeAccuracy(points, tree), [points, tree]);
-  const giniInfo = useMemo(() => getRootSplitGini(points, tree), [points, tree]);
+  const points     = useMemo(() => generatePoints(SEEDS[seedIdx]), [seedIdx]);
+  const testPoints = useMemo(() => generateTestPoints(SEEDS[seedIdx]), [seedIdx]);
+  const tree       = useMemo(() => buildTree(points, depth), [points, depth]);
+  const splits     = useMemo(() => collectSplits(tree), [tree]);
+  const accuracy   = useMemo(() => computeAccuracy(points, tree), [points, tree]);
+  const testAcc    = useMemo(() => computeAccuracy(testPoints, tree), [testPoints, tree]);
+  const regions    = useMemo(() => countRegions(tree), [tree]);
+  const giniInfo   = useMemo(() => getRootSplitGini(points, tree), [points, tree]);
+  const gap        = accuracy - testAcc;
 
   useEffect(() => { depthRef.current = depth; }, [depth]);
 
@@ -231,7 +250,7 @@ export const DecisionTreeViz = forwardRef(function DecisionTreeViz(props, ref) {
     if (animRef.current) return;
     let lastTime = 0;
     const tick = (time) => {
-      if (depthRef.current >= 4) { animRef.current = null; return; }
+      if (depthRef.current >= MAX_DEPTH) { animRef.current = null; return; }
       if (time - lastTime >= 800) { lastTime = time; setDepth(d => d + 1); }
       animRef.current = requestAnimationFrame(tick);
     };
@@ -243,14 +262,16 @@ export const DecisionTreeViz = forwardRef(function DecisionTreeViz(props, ref) {
   }, []);
 
   const reset = useCallback(() => { pause(); setDepth(1); setSeedIdx(0); }, [pause]);
-  const step  = useCallback(() => { pause(); setDepth(d => Math.min(d + 1, 4)); }, [pause]);
+  const step  = useCallback(() => { pause(); setDepth(d => Math.min(d + 1, MAX_DEPTH)); }, [pause]);
 
   useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step]);
 
-  const depthNote = depth <= 2
-    ? 'Underfitting — misses patterns in the data'
-    : depth === 3 ? 'Good balance'
-    : 'Overfitting — splits memorize noise';
+  // Overfitting verdict driven by the train-vs-held-out gap, not by depth alone
+  const verdict = gap >= 15
+    ? { text: 'Overfitting — memorising training noise', color: '#ef4444' }
+    : depth <= 1
+    ? { text: 'Underfitting — too coarse to catch the pattern', color: '#22d3ee' }
+    : { text: 'Good balance — fits the pattern, ignores the noise', color: '#4ade80' };
 
   return (
     <div ref={containerRef} style={{ fontFamily: 'var(--font-sans, sans-serif)', color: 'var(--ink-hi, #eee)' }}>
@@ -259,18 +280,17 @@ export const DecisionTreeViz = forwardRef(function DecisionTreeViz(props, ref) {
         style={{ display: 'block', width: '100%', borderRadius: 6, border: '1px solid var(--rim, #333)', background: 'var(--depth, #111)' }}
       />
 
+      {/* Cause: the one control that drives everything */}
       <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-        <label style={{ fontSize: 13, color: 'var(--ink-mid, #aaa)' }}>
-          Tree depth:
+        <label style={{ fontSize: 13, color: 'var(--ink-mid, #aaa)', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <strong style={{ color: 'var(--ink-hi,#eee)' }}>Max depth</strong>
           <input
-            type="range" min={1} max={4} step={1} value={depth}
+            type="range" min={1} max={MAX_DEPTH} step={1} value={depth}
             onChange={e => setDepth(Number(e.target.value))}
-            style={{ marginLeft: 8, accentColor: 'var(--prime, #F0A500)', verticalAlign: 'middle' }}
+            style={{ accentColor: 'var(--prime, #F0A500)', verticalAlign: 'middle', width: 160 }}
           />
+          <span style={{ fontFamily: 'var(--font-mono,monospace)', color: 'var(--prime,#F0A500)', fontWeight: 700 }}>{depth}</span>
         </label>
-        <span style={{ fontSize: 13, color: 'var(--prime, #F0A500)', fontWeight: 600 }}>
-          Depth {depth}: {accuracy}% training accuracy
-        </span>
         <button
           onClick={() => setSeedIdx(i => (i + 1) % SEEDS.length)}
           style={{
@@ -280,12 +300,35 @@ export const DecisionTreeViz = forwardRef(function DecisionTreeViz(props, ref) {
             cursor: 'pointer', fontWeight: 700, fontFamily: 'var(--font-mono,monospace)',
           }}
         >
-          🎲 Reseed ({seedIdx + 1}/{SEEDS.length})
+          Reseed ({seedIdx + 1}/{SEEDS.length})
         </button>
       </div>
 
-      <div style={{ marginTop: 6, fontSize: 12, color: 'var(--ink-mid, #aaa)', fontStyle: 'italic' }}>
-        {depthNote}
+      {/* Effect: plain-language cause→effect line + live metrics */}
+      <div style={{ marginTop: 8, fontSize: 13, color: 'var(--ink-mid,#aaa)' }}>
+        Depth <strong style={{ color: 'var(--prime,#F0A500)' }}>{depth}</strong> →{' '}
+        <strong style={{ color: 'var(--ink-hi,#eee)' }}>{regions}</strong> regions.{' '}
+        <span style={{ color: 'var(--ink-low,#888)' }}>Drag right = more regions = tighter fit to these exact points.</span>
+      </div>
+
+      {/* Live metrics: train climbs to 100%, held-out lags — the gap IS overfitting */}
+      <div style={{ marginTop: 8, display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'baseline', fontSize: 13 }}>
+        <span style={{ color: 'var(--ink-mid,#aaa)' }}>
+          Train acc: <strong style={{ color: '#4ade80', fontFamily: 'var(--font-mono,monospace)' }}>{accuracy}%</strong>
+        </span>
+        <span style={{ color: 'var(--ink-mid,#aaa)' }}>
+          Held-out acc: <strong style={{ color: '#22d3ee', fontFamily: 'var(--font-mono,monospace)' }}>{testAcc}%</strong>
+        </span>
+        <span style={{ color: 'var(--ink-mid,#aaa)' }}>
+          Gap: <strong style={{ color: gap >= 15 ? '#ef4444' : 'var(--ink-hi,#eee)', fontFamily: 'var(--font-mono,monospace)' }}>{gap > 0 ? '+' : ''}{gap} pts</strong>
+        </span>
+      </div>
+
+      <div style={{ marginTop: 6, fontSize: 12, color: verdict.color, fontWeight: 600 }}>
+        {verdict.text}
+      </div>
+      <div style={{ marginTop: 2, fontSize: 11, color: 'var(--ink-low,#888)', fontStyle: 'italic' }}>
+        Deeper trees push train accuracy toward 100%, but held-out accuracy stalls or drops — a widening gap means the extra splits memorised noise, not signal.
       </div>
 
       {seedIdx > 0 && (
@@ -294,12 +337,12 @@ export const DecisionTreeViz = forwardRef(function DecisionTreeViz(props, ref) {
           padding: '6px 10px', background: 'rgba(34,211,238,0.05)',
           borderRadius: 4, border: '1px solid rgba(34,211,238,0.15)',
         }}>
-          <strong>Instability demo:</strong> same depth={depth}, different training sample → the tree splits are completely different. Deep trees are highly sensitive to which data points they see — tiny perturbations cause dramatically different partitions. This is exactly why Random Forest trains T trees on different bootstrap samples and averages: individual variance cancels out.
+          <strong>Instability demo (why this matters):</strong> same depth={depth}, a different training sample → completely different splits. A single deep tree is high-variance: reshuffle the data and its decision boundary lurches. That instability is the problem ensembles solve — Random Forest trains many trees on different bootstrap samples and averages them, so each tree's idiosyncratic variance cancels out.
         </div>
       )}
 
       <p style={{ marginTop: 10, fontSize: 11, color: 'var(--ink-low, #888)', lineHeight: 1.5 }}>
-        Tree uses real greedy Gini splits on this dataset. Each split picks the axis+threshold maximizing information gain ΔG. Deeper trees fit training data better but generalize worse.
+        Real greedy Gini splits — each split picks the axis+threshold maximising information gain ΔG. Points are the training set; held-out accuracy is measured on fresh points from the same distribution that the tree never saw.
       </p>
       <div style={{ marginTop: 6, fontSize: 11, color: 'var(--ink-ghost, #555)', display: 'flex', gap: 16 }}>
         <span style={{ color: '#F0A500' }}>● Class 1</span>

@@ -296,16 +296,26 @@ export const BiasVarianceViz = forwardRef(function BiasVarianceViz(props, ref) {
 
   const play = useCallback(() => {
     if (animRef.current) return;
-    const tick = () => {
-      setDegree(d => {
-        const nd = d >= 12 ? 12 : d + 1;
-        if (nd >= 12) {
-          animRef.current = null;
+    // Gate each degree increment to ~450ms so a full run (degrees 1→12) takes
+    // ~5s and is actually observable, rather than blitzing through in one frame.
+    const STEP_MS = 450;
+    let lastStep = 0;
+    const tick = (ts) => {
+      if (!lastStep) lastStep = ts;
+      if (ts - lastStep >= STEP_MS) {
+        lastStep = ts;
+        let done = false;
+        setDegree(d => {
+          const nd = d >= 12 ? 12 : d + 1;
+          if (nd >= 12) done = true;
           return nd;
+        });
+        if (done) {
+          animRef.current = null;
+          return;
         }
-        animRef.current = requestAnimationFrame(tick);
-        return nd;
-      });
+      }
+      animRef.current = requestAnimationFrame(tick);
     };
     animRef.current = requestAnimationFrame(tick);
   }, []);

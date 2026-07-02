@@ -68,8 +68,12 @@ export const BackpropViz = forwardRef(function BackpropViz(props, ref) {
   const [mode, setMode] = useState('forward'); // 'forward' | 'backward'
   const [anim, setAnim] = useState(0);       // pulse progress 0..1 while playing
   const [playing, setPlaying] = useState(false);
+  const [rounds, setRounds] = useState(0);   // gradient-descent steps taken while playing
   const rafRef = useRef(null);
   const lastTsRef = useRef(0);
+  const accRef = useRef(0);                   // ms accumulator between training rounds
+  const inRef = useRef({ x1, x2, target });
+  inRef.current = { x1, x2, target };
   // Editable weights — deep-cloned from defaults so edits recompute both passes.
   const [W, setW] = useState(() => ({
     W1: DEFAULT_W.W1.map(r => [...r]),
@@ -166,19 +170,45 @@ export const BackpropViz = forwardRef(function BackpropViz(props, ref) {
     return edgeThickness(val, maxVal);
   };
 
+  // One gradient-descent step: nudges every weight/bias down its gradient so the
+  // network actually LEARNS — activations, output, and loss all change each round.
+  const applyGradStep = useCallback(() => {
+    const { x1: a, x2: b, target: y } = inRef.current;
+    const lr = 0.25;
+    setW(prev => {
+      const f = forwardPass(a, b, prev);
+      const g = backwardPass(a, b, f, y, prev);
+      return {
+        W1: [
+          [prev.W1[0][0] - lr * g.dLoss_dW1[0][0], prev.W1[0][1] - lr * g.dLoss_dW1[0][1]],
+          [prev.W1[1][0] - lr * g.dLoss_dW1[1][0], prev.W1[1][1] - lr * g.dLoss_dW1[1][1]],
+        ],
+        b1: [prev.b1[0] - lr * g.dLoss_dz1[0], prev.b1[1] - lr * g.dLoss_dz1[1]],
+        W2: [[prev.W2[0][0] - lr * g.dLoss_dW2[0], prev.W2[0][1] - lr * g.dLoss_dW2[1]]],
+        b2: [prev.b2[0] - lr * g.dLoss_dz2],
+      };
+    });
+    setRounds(r => r + 1);
+  }, []);
+
   const play = useCallback(() => {
     if (rafRef.current) return;
     setPlaying(true);
     lastTsRef.current = 0;
+    accRef.current = 0;
     const tick = (ts) => {
       if (!lastTsRef.current) lastTsRef.current = ts;
       const dt = ts - lastTsRef.current;
       lastTsRef.current = ts;
-      setAnim(a => (a + dt / 1800) % 1); // one traversal ≈ 1.8s
+      setAnim(a => (a + dt / 1400) % 1); // signal pulse sweep
+      // Every ~1.4s the pulse completes a lap → take one training round so the
+      // neuron values and loss visibly update as it "keeps happening each round".
+      accRef.current += dt;
+      if (accRef.current >= 1400) { accRef.current -= 1400; applyGradStep(); }
       rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);
-  }, []);
+  }, [applyGradStep]);
 
   const pause = useCallback(() => {
     if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
@@ -192,6 +222,8 @@ export const BackpropViz = forwardRef(function BackpropViz(props, ref) {
     reset: () => {
       pause();
       setAnim(0);
+      accRef.current = 0;
+      setRounds(0);
       setMode('forward');
       setX1(1.0); setX2(0.5); setTarget(1.0);
       setW({
@@ -220,6 +252,13 @@ export const BackpropViz = forwardRef(function BackpropViz(props, ref) {
       <h3 style={{ margin: '0 0 4px', color: 'var(--ink-hi)', fontSize: 18, fontWeight: 700 }}>Backpropagation Visualizer</h3>
       <p style={{ margin: '0 0 16px', color: 'var(--ink-mid)', fontSize: 13 }}>
         2 inputs → 2 hidden (ReLU) → 1 output (sigmoid)
+        {rounds > 0 && (
+          <span style={{ color: 'var(--prime)', fontFamily: 'var(--font-mono)' }}>
+            {'  ·  training round '}{rounds}{' · loss '}{fmtShort(loss)}
+          </span>
+        )}
+        <br />
+        <span style={{ fontSize: 12, color: 'var(--ink-low)' }}>Press ▶ to run gradient descent — the values and loss update each round as it learns.</span>
       </p>
 
       {/* Mode toggle */}

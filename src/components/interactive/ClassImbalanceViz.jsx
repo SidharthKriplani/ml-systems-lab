@@ -183,7 +183,6 @@ function drawCanvas(canvas, mode) {
 export const ClassImbalanceViz = forwardRef(function ClassImbalanceViz(props, ref) {
   const [mode, setMode] = useState('Original');
   const canvasRef = useRef(null);
-  const animRef = useRef(null);
 
   useEffect(() => {
     if (canvasRef.current) drawCanvas(canvasRef.current, mode);
@@ -256,35 +255,10 @@ export const ClassImbalanceViz = forwardRef(function ClassImbalanceViz(props, re
     },
   };
 
-  const play = useCallback(() => {
-    if (animRef.current) return;
-    animRef.current = setInterval(() => {
-      setMode(m => {
-        const idx = MODES.indexOf(m);
-        return MODES[(idx + 1) % MODES.length];
-      });
-    }, 800);
-  }, []);
-
-  const pause = useCallback(() => {
-    clearInterval(animRef.current);
-    animRef.current = null;
-  }, []);
-
-  const reset = useCallback(() => {
-    pause();
-    setMode('Original');
-  }, [pause]);
-
-  const step = useCallback(() => {
-    pause();
-    setMode(m => {
-      const idx = MODES.indexOf(m);
-      return MODES[(idx + 1) % MODES.length];
-    });
-  }, [pause]);
-
-  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step]);
+  // Tab-driven component — "play" previously just cycled through the three
+  // resampling modes (a tab toggle), which isn't a real animation. Expose nothing
+  // so the shell renders no Play button.
+  useImperativeHandle(ref, () => ({}), []);
 
   return (
     <div style={s.wrapper}>

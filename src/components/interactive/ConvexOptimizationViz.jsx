@@ -468,14 +468,9 @@ export const ConvexOptimizationViz = forwardRef(function ConvexOptimizationViz(p
     computeAndDraw(false);
   };
 
-  const play = useCallback(() => { setHasRun(true); computeAndDraw(true); }, [computeAndDraw]);
-  const pause = useCallback(() => {
-    if (animRef.current) { cancelAnimationFrame(animRef.current); animRef.current = null; }
-  }, []);
-  const resetImp = useCallback(() => { setHasRun(false); setPathStats(null); computeAndDraw(false); }, [computeAndDraw]);
-  const stepImp = useCallback(() => { setHasRun(true); computeAndDraw(true); }, [computeAndDraw]);
-
-  useImperativeHandle(ref, () => ({ play, pause, reset: resetImp, step: stepImp }), [play, pause, resetImp, stepImp]);
+  // Static render driven by the on-screen "Run GD"/"Reset" buttons and sliders —
+  // there is no time animation to play. Expose nothing so the shell renders no Play button.
+  useImperativeHandle(ref, () => ({}), []);
 
   // Initial draw
   useEffect(() => { computeAndDraw(hasRun); }, [computeAndDraw, hasRun]);

@@ -208,43 +208,9 @@ export const BayesCalculator = forwardRef(function BayesCalculator(props, ref) {
     },
   };
 
-  const presetIdxRef = useRef(0)
-  const autoPlayRef = useRef(null)
-
-  const applyPreset = useCallback((idx) => {
-    const p = PRESETS[idx]
-    setPH(p.pH)
-    setPEH(p.pEH)
-    setPEnotH(p.pEnotH)
-  }, [])
-
-  useImperativeHandle(ref, () => ({
-    play: () => {
-      if (autoPlayRef.current) return
-      autoPlayRef.current = setInterval(() => {
-        presetIdxRef.current = (presetIdxRef.current + 1) % PRESETS.length
-        applyPreset(presetIdxRef.current)
-      }, 1000)
-    },
-    pause: () => {
-      if (autoPlayRef.current) {
-        clearInterval(autoPlayRef.current)
-        autoPlayRef.current = null
-      }
-    },
-    reset: () => {
-      if (autoPlayRef.current) {
-        clearInterval(autoPlayRef.current)
-        autoPlayRef.current = null
-      }
-      presetIdxRef.current = 0
-      applyPreset(0)
-    },
-    step: () => {
-      presetIdxRef.current = (presetIdxRef.current + 1) % PRESETS.length
-      applyPreset(presetIdxRef.current)
-    },
-  }), [applyPreset])
+  // Slider/preset-driven component — no time animation to play.
+  // Expose nothing so the shell renders no Play button.
+  useImperativeHandle(ref, () => ({}), [])
 
   const barFill = (value, color) => ({
     position: 'absolute',

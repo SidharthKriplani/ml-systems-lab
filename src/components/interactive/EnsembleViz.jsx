@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback, useState, useImperativeHandle, forwardRef } from 'react';
+import React, { useRef, useEffect, useCallback, useMemo, useState, useImperativeHandle, forwardRef } from 'react';
 
 // Seeded deterministic RNG
 function mulberry32(seed) {
@@ -10,324 +10,237 @@ function mulberry32(seed) {
   };
 }
 
-function generatePoints() {
-  const rng = mulberry32(99);
-  const points = [];
-
-  // Class 0: lower-left, with some noise
-  for (let i = 0; i < 15; i++) {
-    const x = rng() * 0.55;
-    const y = rng() * 0.55;
-    points.push({ x, y, label: 0 });
-  }
-
-  // Class 1: upper-right, with some noise
-  for (let i = 0; i < 15; i++) {
-    const x = 0.4 + rng() * 0.55;
-    const y = 0.4 + rng() * 0.55;
-    points.push({ x: Math.min(x, 0.98), y: Math.min(y, 0.98), label: 1 });
-  }
-
-  return points;
+// ── True target function ──────────────────────────────────────────────────────
+// A smooth wavy boundary the models are trying to recover. p(x) is the "right
+// answer"; each model only sees noisy points and guesses a jagged version of it.
+function trueP(x) {
+  return 0.5 + 0.28 * Math.sin(x * Math.PI * 2.1);
 }
 
-const POINTS = generatePoints();
-
-// Decision stumps
-const STUMPS = [
-  {
-    name: 'Stump A',
-    predict: (x, y) => x > 0.45 ? 1 : 0,
-    boundary: { type: 'vertical', val: 0.45 },
-  },
-  {
-    name: 'Stump B',
-    predict: (x, y) => y > 0.50 ? 1 : 0,
-    boundary: { type: 'horizontal', val: 0.50 },
-  },
-  {
-    name: 'Stump C',
-    predict: (x, y) => x + y > 0.95 ? 1 : 0,
-    boundary: { type: 'diagonal', val: 0.95 },
-  },
-];
-
-function ensemblePredict(x, y) {
-  const votes = STUMPS.reduce((acc, s) => acc + s.predict(x, y), 0);
-  return votes >= 2 ? 1 : 0;
-}
-
-function accuracy(predictFn) {
-  let correct = 0;
-  for (const p of POINTS) {
-    if (predictFn(p.x, p.y) === p.label) correct++;
+// One high-variance model: fit a noisy bootstrap sample with an over-flexible
+// piecewise-constant regressor (many narrow bins). Because it chases the noise
+// in its particular sample, each model's prediction curve is jagged and every
+// model is jagged in a DIFFERENT way. That per-model wobble is the "variance".
+const BINS = 24;
+function makeModel(seed) {
+  const rng = mulberry32(seed);
+  const binSum = new Array(BINS).fill(0);
+  const binCnt = new Array(BINS).fill(0);
+  // 40 noisy training points drawn for THIS model (its bootstrap sample)
+  for (let i = 0; i < 40; i++) {
+    const x = rng();
+    const y = trueP(x) + (rng() - 0.5) * 0.55; // heavy noise
+    const b = Math.min(BINS - 1, Math.floor(x * BINS));
+    binSum[b] += y;
+    binCnt[b] += 1;
   }
-  return Math.round((correct / POINTS.length) * 100);
+  // Bin means; empty bins fall back to the global mean so the curve is defined
+  const globalMean = binCnt.reduce((a, c, i) => a + binSum[i], 0) /
+                     Math.max(1, binCnt.reduce((a, c) => a + c, 0));
+  const bins = binSum.map((s, i) => (binCnt[i] ? s / binCnt[i] : globalMean));
+  return (x) => bins[Math.min(BINS - 1, Math.floor(x * BINS))];
 }
 
-const STUMP_ACCURACIES = STUMPS.map(s => accuracy(s.predict));
-const ENSEMBLE_ACCURACY = accuracy(ensemblePredict);
+// Sample x-grid once
+const GRID = Array.from({ length: 100 }, (_, i) => (i + 0.5) / 100);
 
-const CLASS0_COLOR = '#4A9EFF';
-const CLASS1_COLOR = '#F0A500';
-const WRONG_COLOR = '#FF6B6B';
+// Build a fixed pool of models (deterministic). The slider reveals the first N.
+const POOL_SIZE = 60;
+const MODEL_POOL = Array.from({ length: POOL_SIZE }, (_, i) => makeModel(1000 + i * 7));
 
-function drawPanel(canvas, predictFn, boundary, isEnsemble) {
+// Ensemble prediction = average of the first N models, evaluated on the grid.
+function ensembleCurve(n) {
+  return GRID.map((x) => {
+    let s = 0;
+    for (let i = 0; i < n; i++) s += MODEL_POOL[i](x);
+    return s / n;
+  });
+}
+
+// Variance of the ensemble estimator: how much the averaged curve would jump
+// around across independent runs. For an average of N i.i.d. models it scales
+// like Var(single)/N. We measure it empirically by splitting the pool into
+// disjoint groups of N and looking at the spread of their averaged curves.
+function ensembleVariance(n) {
+  const groups = Math.floor(POOL_SIZE / n);
+  if (groups < 2) {
+    // Not enough disjoint groups to measure spread — fall back to the theoretical
+    // single-model variance divided by N (same 1/N law).
+    return singleVariance() / n;
+  }
+  const curves = [];
+  for (let g = 0; g < groups; g++) {
+    const curve = GRID.map((x) => {
+      let s = 0;
+      for (let i = 0; i < n; i++) s += MODEL_POOL[g * n + i](x);
+      return s / n;
+    });
+    curves.push(curve);
+  }
+  // Average per-x variance across the groups
+  let total = 0;
+  for (let k = 0; k < GRID.length; k++) {
+    const vals = curves.map((c) => c[k]);
+    const m = vals.reduce((a, v) => a + v, 0) / vals.length;
+    total += vals.reduce((a, v) => a + (v - m) * (v - m), 0) / vals.length;
+  }
+  return total / GRID.length;
+}
+
+let _singleVar = null;
+function singleVariance() {
+  if (_singleVar != null) return _singleVar;
+  let total = 0;
+  for (let k = 0; k < GRID.length; k++) {
+    const vals = MODEL_POOL.map((m) => m(GRID[k]));
+    const mean = vals.reduce((a, v) => a + v, 0) / vals.length;
+    total += vals.reduce((a, v) => a + (v - mean) * (v - mean), 0) / vals.length;
+  }
+  _singleVar = total / GRID.length;
+  return _singleVar;
+}
+
+const TRUE_COLOR = '#4ade80';   // green — the target we want to recover
+const MODEL_COLOR = 'rgba(120,150,220,0.35)'; // faint blue — individual noisy models
+const ENSEMBLE_COLOR = '#F0A500'; // prime — the averaged prediction
+
+// ── Canvas draw ───────────────────────────────────────────────────────────────
+function drawScene(canvas, n) {
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
   const rect = canvas.getBoundingClientRect();
+  if (rect.width === 0) return;
   canvas.width = Math.round(rect.width * dpr);
   canvas.height = Math.round(rect.height * dpr);
-  ctx.scale(dpr, dpr);
-  const W = canvas.clientWidth, H = canvas.clientHeight;
-  const PAD = 20;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const W = rect.width, H = rect.height;
+  const PAD = 24;
   const dw = W - 2 * PAD, dh = H - 2 * PAD;
+  const toX = (x) => PAD + x * dw;
+  const toY = (y) => PAD + (1 - y) * dh;
 
-  const toCanvas = (x, y) => [PAD + x * dw, PAD + (1 - y) * dh];
-
-  // Background
   const bg = getComputedStyle(document.documentElement).getPropertyValue('--depth').trim() || '#0F1117';
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
 
-  // Background shading for prediction regions
-  const steps = 40;
-  for (let xi = 0; xi < steps; xi++) {
-    for (let yi = 0; yi < steps; yi++) {
-      const cx = (xi + 0.5) / steps;
-      const cy = (yi + 0.5) / steps;
-      const pred = predictFn(cx, cy);
-      const [px, py] = toCanvas(cx, cy);
-      const cellW = dw / steps, cellH = dh / steps;
-      ctx.fillStyle = pred === 1
-        ? `${CLASS1_COLOR}18`
-        : `${CLASS0_COLOR}18`;
-      ctx.fillRect(px - cellW / 2, py - cellH / 2, cellW, cellH);
-    }
+  // Faint axis frame
+  ctx.strokeStyle = 'rgba(150,150,160,0.18)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(PAD, PAD, dw, dh);
+
+  const drawCurve = (vals, color, width, alpha = 1) => {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.beginPath();
+    vals.forEach((v, i) => {
+      const cx = toX(GRID[i]);
+      const cy = toY(Math.max(0, Math.min(1, v)));
+      i === 0 ? ctx.moveTo(cx, cy) : ctx.lineTo(cx, cy);
+    });
+    ctx.stroke();
+    ctx.restore();
+  };
+
+  // 1) The individual noisy models (faint, jagged, each different)
+  for (let i = 0; i < n; i++) {
+    const curve = GRID.map((x) => MODEL_POOL[i](x));
+    drawCurve(curve, MODEL_COLOR, 1);
   }
 
-  // Decision boundary
-  const primeColor = getComputedStyle(document.documentElement).getPropertyValue('--prime').trim() || '#F0A500';
-  ctx.strokeStyle = isEnsemble ? primeColor : (getComputedStyle(document.documentElement).getPropertyValue('--ink-mid').trim() || '#888');
-  ctx.lineWidth = isEnsemble ? 2 : 1.5;
-  ctx.setLineDash([5, 4]);
+  // 2) The true target (green, smooth) — what we're trying to recover
+  drawCurve(GRID.map(trueP), TRUE_COLOR, 2, 0.9);
 
-  if (boundary && boundary.type === 'vertical') {
-    const [bx] = toCanvas(boundary.val, 0);
-    ctx.beginPath();
-    ctx.moveTo(bx, PAD);
-    ctx.lineTo(bx, H - PAD);
-    ctx.stroke();
-  } else if (boundary && boundary.type === 'horizontal') {
-    const [, by] = toCanvas(0, boundary.val);
-    ctx.beginPath();
-    ctx.moveTo(PAD, by);
-    ctx.lineTo(W - PAD, by);
-    ctx.stroke();
-  } else if (boundary && boundary.type === 'diagonal') {
-    // x + y = val => y = val - x
-    const x0 = 0, y0 = boundary.val - x0;
-    const x1 = 1, y1 = boundary.val - x1;
-    const [cx0, cy0] = toCanvas(x0, Math.max(0, Math.min(1, y0)));
-    const [cx1, cy1] = toCanvas(x1, Math.max(0, Math.min(1, y1)));
-    ctx.beginPath();
-    ctx.moveTo(cx0, cy0);
-    ctx.lineTo(cx1, cy1);
-    ctx.stroke();
-  } else if (isEnsemble) {
-    // Draw a rough ensemble boundary via contour
-    // (skip explicit boundary, background shading shows it)
-  }
-  ctx.setLineDash([]);
+  // 3) The ensemble average (prime, bold) — smooths toward the target as N grows
+  drawCurve(ensembleCurve(n), ENSEMBLE_COLOR, 3);
 
-  // Points
-  for (const p of POINTS) {
-    const pred = predictFn(p.x, p.y);
-    const correct = pred === p.label;
-    const [cx, cy] = toCanvas(p.x, p.y);
-    const pointColor = p.label === 1 ? CLASS1_COLOR : CLASS0_COLOR;
-
-    if (correct) {
-      ctx.fillStyle = pointColor;
-      ctx.globalAlpha = 0.9;
-      ctx.beginPath();
-      ctx.arc(cx, cy, 5, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.globalAlpha = 1;
-    } else {
-      // Wrong: draw X
-      ctx.strokeStyle = WRONG_COLOR;
-      ctx.lineWidth = 2;
-      const s = 5;
-      ctx.beginPath();
-      ctx.moveTo(cx - s, cy - s); ctx.lineTo(cx + s, cy + s);
-      ctx.moveTo(cx + s, cy - s); ctx.lineTo(cx - s, cy + s);
-      ctx.stroke();
-    }
-  }
-}
-
-function PanelCanvas({ predictFn, boundary, isEnsemble, title, accuracy: acc }) {
-  const canvasRef = useRef(null);
-
-  const redraw = useCallback(() => {
-    drawPanel(canvasRef.current, predictFn, boundary, isEnsemble);
-  }, [predictFn, boundary, isEnsemble]);
-
-  useEffect(() => {
-    redraw();
-  }, [redraw]);
-
-  const prime = '#F0A500';
-
-  return (
-    <div style={{
-      border: `1px solid ${isEnsemble ? prime : 'var(--rim)'}`,
-      borderRadius: 8,
-      overflow: 'hidden',
-      boxShadow: isEnsemble ? `0 0 12px ${prime}33` : 'none',
-    }}>
-      <div style={{
-        padding: '7px 12px',
-        background: isEnsemble ? `${prime}22` : 'var(--depth)',
-        borderBottom: `1px solid ${isEnsemble ? prime : 'var(--rim)'}`,
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-      }}>
-        <span style={{ fontWeight: 700, fontSize: 13, color: isEnsemble ? prime : 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>
-          {title}
-        </span>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: isEnsemble ? prime : 'var(--ink-mid)' }}>
-          {acc}% acc
-        </span>
-      </div>
-      <canvas
-        ref={canvasRef}
-        style={{ width: '100%', height: '160px', display: 'block' }}
-      />
-    </div>
-  );
+  // Labels (light-colored on the dark canvas)
+  ctx.fillStyle = 'rgba(210,210,215,0.75)';
+  ctx.font = '11px var(--font-sans, sans-serif)';
+  ctx.fillText('prediction', 6, 14);
+  ctx.fillText('x', W - 12, H - 8);
 }
 
 export const EnsembleViz = forwardRef(function EnsembleViz(props, ref) {
-  const animRef = useRef(null);
-  const [visibleStumps, setVisibleStumps] = useState(3);
+  const canvasRef = useRef(null);
+  const [n, setN] = useState(1);
 
-  const accA = STUMP_ACCURACIES[0];
-  const accB = STUMP_ACCURACIES[1];
-  const accC = STUMP_ACCURACIES[2];
+  const variance = useMemo(() => ensembleVariance(n), [n]);
+  const baseVariance = useMemo(() => ensembleVariance(1), []);
+  const reductionPct = Math.round((1 - variance / baseVariance) * 100);
 
-  const play = useCallback(() => {
-    if (animRef.current) return;
-    let lastTime = 0;
-    const stumpCountRef = { value: visibleStumps };
-    const tick = (time) => {
-      if (time - lastTime >= 700) {
-        lastTime = time;
-        setVisibleStumps(v => {
-          const nv = v >= 3 ? 1 : v + 1;
-          stumpCountRef.value = nv;
-          return nv;
-        });
-      }
-      animRef.current = requestAnimationFrame(tick);
-    };
-    animRef.current = requestAnimationFrame(tick);
-  }, [visibleStumps]);
+  const redraw = useCallback(() => { drawScene(canvasRef.current, n); }, [n]);
 
-  const pause = useCallback(() => {
-    if (animRef.current) { cancelAnimationFrame(animRef.current); animRef.current = null; }
-  }, []);
+  useEffect(() => { redraw(); }, [redraw]);
 
-  const reset = useCallback(() => {
-    pause();
-    setVisibleStumps(1);
-  }, [pause]);
+  useEffect(() => {
+    const onResize = () => redraw();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [redraw]);
 
-  const step = useCallback(() => {
-    pause();
-    setVisibleStumps(v => v >= 3 ? 1 : v + 1);
-  }, [pause]);
-
-  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step]);
+  // Slider-driven viz — no animation, so no play/pause exposed.
+  const reset = useCallback(() => setN(1), []);
+  const step = useCallback(() => setN((v) => Math.min(v + 5, POOL_SIZE)), []);
+  useImperativeHandle(ref, () => ({ reset, step }), [reset, step]);
 
   return (
     <div style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: 12, padding: 24, fontFamily: 'var(--font-sans)' }}>
-      <h3 style={{ margin: '0 0 4px', color: 'var(--ink-hi)', fontSize: 18, fontWeight: 700 }}>Ensemble Methods</h3>
+      <h3 style={{ margin: '0 0 4px', color: 'var(--ink-hi)', fontSize: 18, fontWeight: 700 }}>Ensembling reduces variance</h3>
       <p style={{ margin: '0 0 16px', color: 'var(--ink-mid)', fontSize: 13 }}>
-        Three decision stumps combined via majority vote
+        Each model is high-variance and jagged. Averaging many of them cancels their individual noise and leaves the shared signal.
       </p>
 
       {/* Legend */}
-      <div style={{ display: 'flex', gap: 16, marginBottom: 12, fontSize: 12, color: 'var(--ink-mid)', flexWrap: 'wrap' }}>
-        <span>
-          <span style={{ display: 'inline-block', width: 9, height: 9, borderRadius: '50%', background: CLASS0_COLOR, marginRight: 5, verticalAlign: 'middle' }} />
-          Class 0 (correct)
-        </span>
-        <span>
-          <span style={{ display: 'inline-block', width: 9, height: 9, borderRadius: '50%', background: CLASS1_COLOR, marginRight: 5, verticalAlign: 'middle' }} />
-          Class 1 (correct)
-        </span>
-        <span style={{ color: WRONG_COLOR }}>
-          ✕ Misclassified
-        </span>
-        <span style={{ color: 'var(--ink-low)' }}>
-          Shading = predicted region
-        </span>
+      <div style={{ display: 'flex', gap: 18, marginBottom: 12, fontSize: 12, color: 'var(--ink-mid)', flexWrap: 'wrap' }}>
+        <span style={{ color: TRUE_COLOR }}>— true signal</span>
+        <span style={{ color: '#8aa0dc' }}>— individual models (noisy)</span>
+        <span style={{ color: ENSEMBLE_COLOR }}>— ensemble average</span>
       </div>
 
-      {/* 2×2 grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-        <div style={{ opacity: visibleStumps >= 1 ? 1 : 0.2, transition: 'opacity 0.3s' }}>
-          <PanelCanvas
-            predictFn={STUMPS[0].predict}
-            boundary={STUMPS[0].boundary}
-            isEnsemble={false}
-            title="Stump A"
-            accuracy={accA}
+      <canvas
+        ref={canvasRef}
+        style={{ width: '100%', height: '240px', display: 'block', borderRadius: 8, border: '1px solid var(--rim)' }}
+      />
+
+      {/* The one control that drives everything */}
+      <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <label style={{ fontSize: 13, color: 'var(--ink-mid)', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <strong style={{ color: 'var(--ink-hi)' }}>Models in ensemble</strong>
+          <input
+            type="range" min={1} max={POOL_SIZE} step={1} value={n}
+            onChange={(e) => setN(Number(e.target.value))}
+            style={{ accentColor: 'var(--prime)', verticalAlign: 'middle', width: 200 }}
           />
-        </div>
-        <div style={{ opacity: visibleStumps >= 2 ? 1 : 0.2, transition: 'opacity 0.3s' }}>
-          <PanelCanvas
-            predictFn={STUMPS[1].predict}
-            boundary={STUMPS[1].boundary}
-            isEnsemble={false}
-            title="Stump B"
-            accuracy={accB}
-          />
-        </div>
-        <div style={{ opacity: visibleStumps >= 3 ? 1 : 0.2, transition: 'opacity 0.3s' }}>
-          <PanelCanvas
-            predictFn={STUMPS[2].predict}
-            boundary={STUMPS[2].boundary}
-            isEnsemble={false}
-            title="Stump C"
-            accuracy={accC}
-          />
-        </div>
-        <PanelCanvas
-          predictFn={ensemblePredict}
-          boundary={null}
-          isEnsemble={true}
-          title="Ensemble (majority vote)"
-          accuracy={ENSEMBLE_ACCURACY}
-        />
+          <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--prime)', fontWeight: 700 }}>N = {n}</span>
+        </label>
       </div>
 
-      {/* Summary bar */}
-      <div style={{ marginTop: 16, padding: '10px 14px', background: 'var(--depth)', borderRadius: 8, fontFamily: 'var(--font-mono)', fontSize: 13 }}>
-        <span style={{ color: 'var(--ink-mid)' }}>Individual stumps: </span>
-        <span style={{ color: 'var(--ink-hi)' }}>{accA}%</span>
-        <span style={{ color: 'var(--ink-low)' }}>, </span>
-        <span style={{ color: 'var(--ink-hi)' }}>{accB}%</span>
-        <span style={{ color: 'var(--ink-low)' }}>, </span>
-        <span style={{ color: 'var(--ink-hi)' }}>{accC}%</span>
-        <span style={{ color: 'var(--ink-mid)' }}> → Ensemble: </span>
-        <span style={{ color: '#F0A500', fontWeight: 700 }}>{ENSEMBLE_ACCURACY}%</span>
+      {/* Plain-language cause→effect label */}
+      <div style={{ marginTop: 10, fontSize: 13, color: 'var(--ink-mid)' }}>
+        <strong style={{ color: 'var(--prime)' }}>N = {n} models</strong> — averaging cancels their individual noise; variance{' '}
+        <span style={{ color: reductionPct > 0 ? '#4ade80' : 'var(--ink-hi)', fontWeight: 700 }}>
+          {'↓'} {reductionPct > 0 ? `${reductionPct}%` : '—'}
+        </span>{' '}
+        vs. a single model.
+      </div>
+
+      {/* Live variance metric */}
+      <div style={{ marginTop: 12, padding: '10px 14px', background: 'var(--depth)', borderRadius: 8, fontFamily: 'var(--font-mono)', fontSize: 13, lineHeight: 1.8 }}>
+        <div>
+          <span style={{ color: 'var(--ink-mid)' }}>Ensemble variance: </span>
+          <span style={{ color: ENSEMBLE_COLOR, fontWeight: 700 }}>{variance.toFixed(4)}</span>
+          <span style={{ color: 'var(--ink-low)' }}> (single model: {baseVariance.toFixed(4)})</span>
+        </div>
+        <div style={{ color: 'var(--ink-low)', fontSize: 12 }}>
+          Var(average of N) {'≈'} Var(single) / N — drag the slider and watch it fall.
+        </div>
       </div>
 
       <p style={{ marginTop: 14, fontSize: 12, color: 'var(--ink-low)', lineHeight: 1.6, borderTop: '1px solid var(--rim)', paddingTop: 12 }}>
-        No single stump is accurate, but their errors are uncorrelated — different stumps make mistakes on different points. Majority voting cancels out individual errors. This is why ensembles work.
+        Each faint blue curve is one over-flexible model fit to its own noisy sample — individually unreliable and jagged in its own way. Their errors are uncorrelated, so the orange average settles onto the green true signal as N grows. This is the whole point of bagging and Random Forests: keep the models flexible (low bias), and let averaging kill the variance.
       </p>
     </div>
   );
