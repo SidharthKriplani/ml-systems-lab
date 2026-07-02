@@ -376,12 +376,13 @@ const NAV_SECTIONS = [
         label: 'CODE',
         items: [
           { id: 'mlcoding', label: 'ML Coding',            desc: 'ML-specific Python problems — implement/debug/optimise/design, live Pyodide.' },
+          { id: 'codebugs', label: 'Bug Hunt',             desc: 'Read code, find the buried bug — ML/DL/pipeline debugging.' },
           { id: 'ext_python', label: 'Python fluency → PL ↗', external: true, href: 'https://github.com/SidharthKriplani/programming-lab', desc: 'General Python & DSA fluency lives in Programming Lab (sibling lab).' },
           { id: 'ext_sql',    label: 'SQL fluency → PAL ↗', external: true, href: 'https://product-analytics-lab.vercel.app/#/sql-lab', desc: 'The canonical SQL problem bank lives in Product Analytics Lab (sibling lab).' },
         ],
       },
       {
-        label: 'DATA ENGINEERING',
+        label: 'DATA ENG · adjacent',
         items: [
           { id: 'spark',    label: 'Spark Lab',            desc: 'PySpark optimization — shuffle, skew, broadcast joins, AQE.' },
           { id: 'dbt',      label: 'dbt / SQL transforms', desc: 'Analytics-engineering SQL transformation patterns.' },
@@ -407,7 +408,7 @@ const NAV_SECTIONS = [
     icon: 'scale',
     groups: [
       {
-        label: 'SCENARIOS',
+        label: 'DRILLS · BY SUBJECT',
         items: [
           { id: 'features',     label: 'Feature Engineering', desc: 'Skew, leakage, freshness — production failure modes.' },
           { id: 'eval',         label: 'Model Evaluation',    desc: 'Metric selection, calibration, segment slicing.' },
@@ -421,11 +422,10 @@ const NAV_SECTIONS = [
         ],
       },
       {
-        label: 'ADVERSARIAL',
+        label: 'CROSS-DOMAIN',
         items: [
           { id: 'spottheflaw',  label: 'Spot the Flaw',  desc: '12 analyses with one buried methodological flaw — find it.' },
           { id: 'incidentroom', label: 'Incident Room',  desc: 'Cross-domain production incident diagnosis.' },
-          { id: 'codebugs',     label: 'Bug Hunt',        desc: 'Production code with exactly one buried flaw.' },
           { id: 'casestudies',  label: 'Case Studies',    desc: 'Worked production timelines — diagnosis + fix.' },
           { id: 'stafflayer',   label: 'Staff Layer',     desc: 'IC3 → IC5 → Staff perspective reveals.' },
         ],
