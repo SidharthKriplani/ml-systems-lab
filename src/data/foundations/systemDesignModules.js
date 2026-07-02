@@ -850,4 +850,331 @@ export const SYSTEM_DESIGN_MODULES = [
 </svg>`,
     },
   },
+  {
+    id: 'sequential_recsys',
+    title: 'Sequential & Session-Based RecSys',
+    subtitle: 'GRU4Rec, SASRec, next-item prediction, short vs long-term intent',
+    difficulty: 'advanced',
+    estimatedMin: 24,
+    tags: ['sequential', 'session-based', 'SASRec', 'GRU4Rec', 'RecSys'],
+    summary: `Two-tower and matrix-factorization models treat a user as a static bag of past items — they know *what* you clicked but throw away the *order*. That's wrong for intent. A shopper who viewed [tent, sleeping bag, hiking boots] in that order is mid-mission; the same three items reshuffled tells a different story, and the *next* item (a headlamp) is predictable only from the sequence.
+
+[FIGURE: seq]
+
+---
+
+**Session-based models predict the next item from the ordered history.** GRU4Rec runs a recurrent network over the session, carrying a hidden state that summarizes everything seen so far; SASRec (and transformers4rec) replaces recurrence with self-attention so each position can look back at any earlier item directly. Self-attention wins at scale because it captures long-range dependencies without the vanishing-gradient decay a GRU suffers over a 50-event session.
+
+---
+
+**Short-term vs long-term intent are two different signals that must be fused.** Your *long-term* profile says you love indie films; your *current session* is 4 straight cooking videos — right now you want a fifth cooking video, not an indie trailer. A pure long-term model ignores the session; a pure session model forgets you the moment you leave. Production systems concatenate a long-term user embedding with a session-encoded state, letting the ranker weigh "who you are" against "what you're doing now."
+
+---
+
+**Worked scale:** a session of length L=50 in a d=128 model costs O(L²·d) ≈ 50²·128 ≈ 320k multiply-adds for one self-attention layer — trivial per request. That cheapness is why SASRec-style models moved from retrieval-only into ranking features: the sequence encoder runs in a few hundred microseconds and its output is just another embedding the funnel already knows how to consume.`,
+    keyPoints: [
+      `**Order carries intent that a bag-of-items loses.** [tent → sleeping bag → boots] implies a camping trip and a predictable next item; the same set unordered does not. Sequential models keep the order; MF/two-tower discard it. Use sequential features when the *next action* depends on the *recent trajectory*, not just the lifetime aggregate.`,
+      `**GRU4Rec (recurrence) vs SASRec (self-attention): attention wins on long sessions.** A GRU compresses history into one hidden state and decays old items via vanishing gradients; self-attention lets position t attend directly to position 1, so a 50-event session keeps early signal. transformers4rec is the productionized transformer variant.`,
+      `**Fuse short-term (session) and long-term (profile) — neither alone is enough.** The session captures *what you're doing now*; the long-term embedding captures *who you are*. Concatenate both into the ranker so a 4-video cooking binge can override a lifetime indie-film preference for the next slot, without erasing the profile.`,
+      `**Sequence encoders are cheap enough to sit in ranking, not just retrieval.** O(L²·d) for L=50, d=128 is ~320k FLOPs — sub-millisecond — so the encoded session becomes just another feature the funnel consumes.`,
+    ],
+    takeaway: `Sequential recommenders (GRU4Rec, SASRec/transformers4rec) predict the next item from the *ordered* session rather than a bag of past items, and production systems fuse a session-encoded short-term state with a long-term profile embedding so "what you're doing now" can override "who you are" for the next slot.`,
+    checkQuestions: [
+      {
+        q: `A retail model recommends from a lifetime-aggregate user embedding. A user who just viewed [running shoes → socks → shorts] gets recommended a blender (their most-clicked lifetime category). What's the root cause?`,
+        options: [
+          `A) The embedding dimension is too small to hold both the running and blender interests; increase it.`,
+          `B) The model aggregates history into an order-less profile, so it can't see the in-session running-gear trajectory that predicts the next item; a session/sequential encoder that consumes the ordered recent events fixes it.`,
+          `C) The blender category is over-sampled in training; down-weight it and the running items win.`,
+          `D) The ANN index is stale, returning yesterday's candidates; rebuild the index more frequently.`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `On sessions averaging 60 events, a GRU4Rec model under-weights items from early in the session versus a SASRec model. Why does self-attention help here?`,
+        options: [
+          `A) Self-attention uses more parameters, so it simply memorizes longer sessions.`,
+          `B) SASRec ignores order entirely, which coincidentally helps on long sessions.`,
+          `C) The GRU compresses the whole history into a single recurrently-updated hidden state, so early items decay through vanishing gradients; self-attention lets each position attend directly to any earlier position, preserving long-range signal.`,
+          `D) GRUs cannot process sessions longer than 32 events, truncating the early ones.`,
+        ],
+        answer: `C`,
+      },
+      {
+        q: `A team fuses a long-term user embedding with a session encoder. A user with a strong lifetime "documentary" profile is mid-session on 5 comedy clips. The system correctly serves a 6th comedy clip. Which design choice made this possible?`,
+        options: [
+          `A) The long-term embedding was zeroed out at session start so only recent behavior counts.`,
+          `B) Both signals are concatenated into the ranker, letting the strong in-session comedy state outweigh the profile for the next slot without deleting the profile — so tomorrow's fresh session can lean documentary again.`,
+          `C) The model retrained online on the 5 comedy clips, permanently overwriting the documentary profile.`,
+          `D) A business rule hard-codes comedy after any 3 consecutive comedy views.`,
+        ],
+        answer: `B`,
+      },
+    ],
+    recap: [
+      `**Order = intent:** [tent→bag→boots] predicts a headlamp; the unordered set doesn't. MF/two-tower discard order, sequential models keep it.`,
+      `**GRU4Rec** = recurrence (one decaying hidden state); **SASRec / transformers4rec** = self-attention (each position attends to any earlier one).`,
+      `**Self-attention beats GRU on long sessions** — no vanishing-gradient decay of early items.`,
+      `**Fuse short-term (session) + long-term (profile):** current binge can override lifetime taste for the next slot, profile survives for tomorrow.`,
+      `**Cheap:** O(L²·d) ≈ 320k FLOPs at L=50, d=128 → sub-ms → usable as a ranking feature, not just retrieval.`,
+    ],
+    figures: {
+      seq: `<svg viewBox="0 0 360 108" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="8" y="14" fill="var(--ink-low)" font-size="7.5">ordered session → next-item prediction</text>
+  <rect x="8" y="24" width="52" height="22" rx="4" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="34" y="38" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5" font-weight="700">tent</text>
+  <rect x="72" y="24" width="66" height="22" rx="4" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="105" y="38" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5" font-weight="700">sleep bag</text>
+  <rect x="150" y="24" width="52" height="22" rx="4" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="176" y="38" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5" font-weight="700">boots</text>
+  <rect x="214" y="24" width="66" height="22" rx="4" fill="none" stroke="var(--amber)" stroke-dasharray="3 2"/><text x="247" y="38" text-anchor="middle" fill="var(--amber)" font-size="7.5" font-weight="700">headlamp?</text>
+  <path d="M60,35 l10,0M138,35 l10,0M202,35 l10,0" stroke="var(--ink-low)" stroke-width="1"/>
+  <text x="8" y="66" fill="var(--ink-mid)" font-size="7.5">self-attention: each item looks back at all earlier ones</text>
+  <path d="M247,50 C200,72 100,72 34,50" stroke="var(--rim)" stroke-width="0.8" fill="none"/>
+  <path d="M247,50 C210,80 140,80 105,50" stroke="var(--rim)" stroke-width="0.8" fill="none"/>
+  <path d="M247,50 C230,68 190,68 176,50" stroke="var(--rim)" stroke-width="0.8" fill="none"/>
+  <text x="8" y="100" fill="var(--ink-low)" font-size="7.5">short-term session state fused with long-term profile embedding</text>
+</svg>`,
+    },
+  },
+  {
+    id: 'embeddings_ann',
+    title: 'Embeddings + ANN Serving Deep-Dive',
+    subtitle: 'HNSW vs IVF-PQ, the recall–latency knob, index build/refresh, quantization',
+    difficulty: 'advanced',
+    estimatedMin: 26,
+    tags: ['ANN', 'HNSW', 'IVF-PQ', 'quantization', 'retrieval'],
+    summary: `Once retrieval is a dot product between a query embedding and every item embedding, the bottleneck is search, not the model. Exact nearest-neighbor over 100M vectors of dimension 256 is 100M·256 ≈ 25.6 billion multiply-adds per query — hopeless in 10ms. Approximate nearest-neighbor (ANN) trades a sliver of recall for two-to-three orders of magnitude speedup.
+
+[FIGURE: ann]
+
+---
+
+**HNSW builds a navigable graph; IVF-PQ partitions and compresses.** HNSW (hierarchical navigable small world) links each vector to a few neighbors across layered graphs, so a query "greedily walks" from an entry point to its neighborhood in ~log(N) hops — very fast, very high recall, but the full float vectors sit in RAM (100M × 256 × 4 bytes ≈ 100GB). IVF-PQ instead clusters vectors into, say, 4096 cells (search only the nearest few), and product-quantizes each vector — splitting 256 dims into 32 sub-vectors, each mapped to one of 256 centroids — so a vector shrinks from 1024 bytes to 32 bytes, a 32× compression that fits 100M vectors in ~3GB.
+
+---
+
+**Recall and latency are one knob, turned at query time.** HNSW's \`efSearch\` (how many candidates to keep on the walk) and IVF's \`nprobe\` (how many cells to scan) both trade recall for latency continuously: nprobe=8 might hit 0.92 recall at 3ms, nprobe=64 hits 0.99 recall at 12ms. You don't pick "an index" — you pick an operating point on its recall–latency curve, and that point is a product decision (how many good candidates can the funnel afford to lose?).
+
+---
+
+**Build cost and staleness are the operational tax.** HNSW graph construction is O(N·log N) and expensive to mutate, so high-churn catalogs favor periodic rebuilds or a small "fresh" index searched alongside the main one. Quantization (PQ) is lossy: the 32× compression that saves RAM also blurs fine distances, costing a few points of recall — acceptable at retrieval (the ranker re-scores anyway) but never in the final ranker.`,
+    keyPoints: [
+      `**Exact NN is infeasible at scale; ANN buys ~100–1000× speedup for a few points of recall.** 100M × 256-dim exact search ≈ 25.6B MACs/query — impossible in budget. ANN is not an optimization, it's the only way retrieval runs in real time.`,
+      `**HNSW = graph walk (fast, high recall, RAM-heavy); IVF-PQ = partition + quantize (compact, tunable, mildly lossy).** HNSW keeps full float vectors (~100GB for 100M×256); IVF-PQ compresses 1024B → 32B (~32×, ~3GB) by splitting into sub-vectors and centroid-coding each. Choose by whether RAM or recall is the binding constraint.`,
+      `**Recall and latency are a single tunable knob (efSearch / nprobe), set at query time.** More candidates scanned → higher recall, higher latency. You select an operating point on the curve, not a fixed index — and that point is a business call about how many good candidates the funnel can lose.`,
+      `**Build cost and quantization loss are the operational reality.** HNSW is costly to mutate → high-churn catalogs use rebuilds or a side "fresh" index; PQ's compression is lossy, tolerable at retrieval (the ranker re-scores) but not in final ranking.`,
+    ],
+    takeaway: `ANN serving turns retrieval's dot-product-over-millions into a tunable recall–latency tradeoff: HNSW greedily walks a navigable graph (fast, high-recall, RAM-heavy) while IVF-PQ partitions and product-quantizes vectors (32× smaller, mildly lossy), and in both you pick an operating point (efSearch/nprobe) rather than a fixed index.`,
+    checkQuestions: [
+      {
+        q: `You must index 200M 256-dim vectors but have only 8GB of RAM per serving node. Exact search and plain HNSW both overflow memory. Which approach fits, and what's the cost?`,
+        options: [
+          `A) Reduce embedding dimension to 4 so full vectors fit; recall stays high because low dimensions are easier to search.`,
+          `B) Store all vectors on disk and do exact search per query; SSD latency is negligible at this scale.`,
+          `C) IVF-PQ: cluster into cells and product-quantize each vector (e.g., 256 dims → 32 sub-vectors × 1 byte = 32B/vector ≈ 6.4GB for 200M), accepting a small recall loss from lossy quantization that the downstream ranker re-scores away.`,
+          `D) Switch to a cross-encoder so no index is needed at all.`,
+        ],
+        answer: `C`,
+      },
+      {
+        q: `Retrieval recall@1000 is 0.90 at nprobe=8 and 3ms. The latency budget allows 12ms and the ranker keeps missing relevant items. What's the correct single-knob change?`,
+        options: [
+          `A) Rebuild the index nightly instead of weekly — staleness, not recall, is the issue.`,
+          `B) Raise nprobe (e.g., 8 → 64) so more IVF cells are scanned, lifting recall toward ~0.99 while staying within the 12ms budget — you're moving along the recall–latency curve, not changing index type.`,
+          `C) Lower nprobe to 2 to speed up search, freeing time for the ranker to compensate.`,
+          `D) Switch dot-product to cosine similarity; recall improves for free.`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `A catalog adds and removes thousands of items per minute. Retrieval keeps returning deleted items and missing brand-new ones, even though HNSW recall benchmarks are excellent. What's the underlying issue?`,
+        options: [
+          `A) HNSW recall degrades above 10M vectors; shard the index into smaller pieces.`,
+          `B) efSearch is set too high, causing the walk to revisit deleted nodes; lower it.`,
+          `C) Product quantization is corrupting the new vectors; disable PQ and the freshness problem resolves.`,
+          `D) HNSW graphs are costly to mutate, so a periodically-rebuilt index goes stale between builds — new items aren't in it and deleted ones linger. Fix with a small frequently-refreshed "fresh" index searched alongside the main one (or incremental upserts), not a bigger main index.`,
+        ],
+        answer: `D`,
+      },
+    ],
+    recap: [
+      `**Exact NN is hopeless at scale:** 100M × 256-dim ≈ 25.6B MACs/query. ANN trades a little recall for 100–1000× speed.`,
+      `**HNSW** = greedy graph walk, ~log N hops, high recall, but full floats in RAM (~100GB @ 100M×256).`,
+      `**IVF-PQ** = cluster into cells (scan nearest few) + product-quantize (1024B→32B, ~32×) → ~3GB, mildly lossy.`,
+      `**Recall–latency is one knob** (efSearch / nprobe), set at query time — pick an operating point, not an index.`,
+      `**Build is costly, PQ is lossy:** high-churn → rebuild or side "fresh" index; quantization loss OK at retrieval (ranker re-scores), never in final ranking.`,
+    ],
+    figures: {
+      ann: `<svg viewBox="0 0 360 118" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="8" y="14" fill="var(--ink-low)" font-size="7.5">recall–latency curve — you pick an operating point</text>
+  <line x1="40" y1="96" x2="330" y2="96" stroke="var(--rim)"/><line x1="40" y1="24" x2="40" y2="96" stroke="var(--rim)"/>
+  <text x="185" y="112" text-anchor="middle" fill="var(--ink-low)" font-size="7">latency (nprobe / efSearch ↑)</text>
+  <text x="14" y="60" fill="var(--ink-low)" font-size="7" transform="rotate(-90 14 60)">recall</text>
+  <path d="M50,88 C110,60 180,38 320,32" stroke="var(--prime)" stroke-width="1.5" fill="none"/>
+  <circle cx="120" cy="58" r="3" fill="var(--amber)"/><text x="126" y="55" fill="var(--amber)" font-size="6.5">nprobe=8 · 0.92 · 3ms</text>
+  <circle cx="250" cy="36" r="3" fill="var(--amber)"/><text x="176" y="34" fill="var(--amber)" font-size="6.5">nprobe=64 · 0.99 · 12ms</text>
+  <text x="8" y="108" fill="var(--ink-mid)" font-size="6.5">HNSW: full floats, RAM-heavy · IVF-PQ: 32× smaller, mildly lossy</text>
+</svg>`,
+    },
+  },
+  {
+    id: 'reranking_diversity',
+    title: 'Re-Ranking for Diversity & Freshness',
+    subtitle: 'MMR, DPP, business-rule mixing, why the ranker alone over-concentrates',
+    difficulty: 'advanced',
+    estimatedMin: 22,
+    tags: ['re-ranking', 'diversity', 'MMR', 'DPP', 'freshness'],
+    summary: `The ranker scores each item *independently* — it answers "how good is this item for this user?" one item at a time. That's exactly why the top-10 by score can be terrible as a *set*: if the user likes basketball, the 10 highest-scoring items are 10 near-identical basketball clips. The ranker has no notion that showing #2 right after #1 adds almost nothing because they're redundant.
+
+[FIGURE: rerank]
+
+---
+
+**MMR trades relevance against redundancy, greedily.** Maximal Marginal Relevance picks items one at a time to maximize \`λ·relevance(i) − (1−λ)·max similarity(i, already-picked)\`. With λ=0.7 you mostly follow the ranker but penalize an item that's too similar to something already chosen. Concretely: item A scores 0.9, item B scores 0.88 but is 0.95 similar to A — MMR's marginal value for B collapses (0.7·0.88 − 0.3·0.95 ≈ 0.33) so a less-similar 0.80 item can leapfrog it.
+
+---
+
+**DPP models diversity as volume, not pairwise patching.** A Determinantal Point Process assigns a set a probability proportional to the *determinant* of a kernel matrix built from item quality and similarity — geometrically, the squared volume the item vectors span. Redundant items are near-parallel vectors spanning near-zero volume, so DPP naturally down-weights whole redundant *sets*, not just adjacent pairs. It's the principled cousin of MMR.
+
+---
+
+**Freshness and business rules ride the same re-rank stage.** New items have thin engagement history, so the ranker systematically under-scores them (a cold-start feedback trap); a freshness boost or an explicit exploration slot in re-ranking counteracts it. Hard business rules — "no more than 2 items per creator in the top 10", "at least 1 item from a followed account" — are also applied here, *after* scoring, because they constrain the *set*, which the per-item ranker structurally cannot.`,
+    keyPoints: [
+      `**The ranker scores items independently, so the top-k by score is often a redundant set.** "Best 10 items" ≠ "best set of 10": 10 near-duplicate basketball clips each score high but collectively bore the user. Diversity is a *set* property the per-item ranker cannot express — it must be imposed after scoring.`,
+      `**MMR = greedy relevance-minus-redundancy with a λ knob.** Pick to maximize λ·rel − (1−λ)·max-sim-to-chosen. λ high → follow the ranker; λ low → aggressively diversify. Cheap, tunable, the default production diversifier.`,
+      `**DPP = diversity as spanned volume, penalizing whole redundant sets.** Set probability ∝ determinant of a quality×similarity kernel = squared volume of the item vectors; near-parallel (redundant) vectors span ~0 volume and are suppressed. More principled than MMR's pairwise patch, at higher compute.`,
+      `**Freshness boosts and hard business rules live in re-ranking because they constrain the set.** Cold items are under-scored by an engagement-trained ranker; freshness/exploration slots counteract it. "≤2 per creator", quotas, and mixing rules apply post-scoring — the per-item ranker can't enforce set-level constraints.`,
+    ],
+    takeaway: `The ranker scores items one at a time, so the top-k by raw score over-concentrates on near-duplicates; re-ranking imposes *set-level* properties — MMR trades relevance against redundancy greedily, DPP models diversity as the volume item vectors span, and freshness boosts plus hard business rules ride the same stage because they too constrain the set.`,
+    checkQuestions: [
+      {
+        q: `A feed's top-10 by ranker score is 9 clips about the same football match. Each individually scores highest for this user. Why can't tuning the ranker fix this, and where does the fix belong?`,
+        options: [
+          `A) The ranker is overfit to football; add regularization and the duplicates disappear.`,
+          `B) The candidates are stale; refresh retrieval and diversity resolves itself.`,
+          `C) Football features are over-weighted; drop them from the feature set.`,
+          `D) The ranker scores each item independently, so it can't represent that item #2 adds little given item #1 — redundancy is a set property. The fix is a re-ranking step (MMR/DPP) that penalizes similarity to already-chosen items.`,
+        ],
+        answer: `D`,
+      },
+      {
+        q: `Using MMR with λ=0.7: item A has relevance 0.9; item B has relevance 0.88 but similarity 0.95 to the already-picked A; item C has relevance 0.80 and similarity 0.2 to A. Which is picked next and why?`,
+        options: [
+          `A) B — it has the higher raw relevance (0.88 > 0.80), and MMR always prefers higher relevance.`,
+          `B) C — its MMR score 0.7·0.80 − 0.3·0.2 = 0.50 beats B's 0.7·0.88 − 0.3·0.95 ≈ 0.33, because B's near-duplication of A collapses its marginal value.`,
+          `C) A — it is re-picked since it has the highest relevance overall.`,
+          `D) B and C tie, so the ranker's original order breaks the tie in B's favor.`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `A platform wants to guarantee "no more than 2 posts from the same creator in the top 10" and give brand-new posts a visibility boost. Where do these belong and why?`,
+        options: [
+          `A) In re-ranking: the per-creator cap is a set-level constraint the independently-scoring ranker can't enforce, and the freshness boost counters the ranker's systematic under-scoring of low-history items — both operate on the assembled set after scoring.`,
+          `B) In the ranker's loss function as extra terms, since it already scores every item.`,
+          `C) In retrieval, by fetching at most 2 items per creator and only fresh items.`,
+          `D) In the ANN index, by weighting creators and recency into the embeddings.`,
+        ],
+        answer: `A`,
+      },
+    ],
+    recap: [
+      `**Ranker scores items independently → top-k is often a redundant set.** "Best 10 items" ≠ "best set of 10".`,
+      `**MMR:** greedy pick of λ·rel − (1−λ)·max-sim-to-chosen; λ knob trades relevance vs diversity. Cheap default.`,
+      `**DPP:** set probability ∝ determinant (spanned volume) of a quality×similarity kernel → suppresses whole redundant sets, not just pairs.`,
+      `**Freshness/exploration slots** counter the ranker's under-scoring of thin-history new items.`,
+      `**Hard business rules** ("≤2 per creator", quotas, followed-account guarantees) are set-level → applied post-scoring in re-rank, not in the ranker.`,
+    ],
+    figures: {
+      rerank: `<svg viewBox="0 0 360 110" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="8" y="14" fill="var(--ink-low)" font-size="7.5">ranker top-k (by score)</text>
+  ${['🏀','🏀','🏀','🏀','🏀'].map((_, i) => '<rect x="' + (8 + i*30) + '" y="22" width="26" height="20" rx="4" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="' + (21 + i*30) + '" y="36" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">B</text>').join('')}
+  <text x="8" y="58" fill="var(--ink-low)" font-size="7.5">after MMR / DPP re-rank (diverse set)</text>
+  ${[['B','var(--prime)'],['C','var(--amber)'],['B','var(--prime)'],['D','var(--rim)'],['C','var(--amber)']].map((s, i) => '<rect x="' + (8 + i*30) + '" y="66" width="26" height="20" rx="4" fill="var(--depth)" stroke="' + s[1] + '"/><text x="' + (21 + i*30) + '" y="80" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">' + s[0] + '</text>').join('')}
+  <text x="8" y="102" fill="var(--ink-mid)" font-size="7">λ·relevance − (1−λ)·max-similarity-to-chosen · + freshness + business rules</text>
+</svg>`,
+    },
+  },
+  {
+    id: 'recsys_feedback_loops',
+    title: 'Feedback Loops & Popularity Bias',
+    subtitle: 'Exposure bias, self-reinforcing popularity, IPW / randomisation, echo chambers',
+    difficulty: 'advanced',
+    estimatedMin: 24,
+    tags: ['feedback loop', 'popularity bias', 'IPW', 'exposure bias', 'RecSys'],
+    summary: `A recommender doesn't just observe behavior — it *creates* the data it later trains on. You can only click what you were shown, and what you were shown was chosen by yesterday's model. So the logs aren't a neutral sample of preference; they're a sample of preference *conditioned on the old policy's choices*. Train naively on them and the system teaches itself to keep doing what it already did.
+
+[FIGURE: loop]
+
+---
+
+**Popularity self-reinforces into a rich-get-richer spiral.** A popular item is shown more → gets more clicks (partly *because* it was shown more, not because it's better) → the model reads those clicks as quality → shows it even more. A worked sketch: item X and item Y are equally good, but X starts with 2× the exposure. X collects ~2× the clicks, the model scores it higher, next round X gets 3× exposure, then 5×… the gap widens every cycle even though true quality never differed. The long tail starves.
+
+---
+
+**Exposure bias is the formal name; IPW is the standard correction.** Inverse-Propensity Weighting reweights each logged example by 1/P(shown) — an item shown 10% of the time counts 10× when it *is* clicked, an item shown 90% of the time counts ~1.1×. This mathematically un-does the exposure imbalance so the model estimates *relevance* rather than *what got shown*. IPW needs the logging propensities (the probability each item was shown), which is why serious systems log them, and it has high variance when propensities are tiny — so it's paired with randomization: a small fraction of traffic serves items uniformly (or ε-greedy) to inject unbiased exposure the model can learn from.
+
+---
+
+**Left uncorrected, the loop produces filter bubbles and echo chambers.** A user shown one viewpoint clicks it → the model infers preference → shows more of it → the user's world narrows, and the *narrowing itself* is misread as stronger preference. The fix is the same triad as popularity: propensity correction to de-bias training, plus deliberate exploration/diversity injection to keep feeding the model signal it would otherwise never collect.`,
+    keyPoints: [
+      `**The recommender generates its own training data — logs are conditioned on the old policy, not neutral.** You can only click what was shown; what was shown was yesterday's model's choice. Naive training on these logs reproduces the old policy rather than learning true preference.`,
+      `**Popularity is self-reinforcing: exposure → clicks → higher score → more exposure.** Two equally-good items diverge purely because one started with more exposure; the gap widens each cycle and the long tail starves. This is a systemic bias, not noise.`,
+      `**IPW corrects exposure bias by reweighting each example by 1/P(shown).** A rarely-shown item's clicks count more; a heavily-shown item's count less — recovering a relevance estimate instead of an exposure estimate. Requires logged propensities and has high variance when P(shown) is tiny.`,
+      `**Randomization/exploration is the necessary partner to IPW.** A small uniform/ε-greedy traffic slice injects unbiased exposure the model can't get from a pure-exploit policy — countering both popularity bias and echo-chamber narrowing at their source.`,
+    ],
+    takeaway: `A recommender manufactures its own training data — logs are conditioned on the old policy — so popularity self-reinforces (exposure → clicks → score → more exposure) and users drift into echo chambers; the correction is inverse-propensity weighting (reweight by 1/P(shown)) to de-bias training, paired with deliberate randomization/exploration to inject the unbiased signal IPW needs.`,
+    checkQuestions: [
+      {
+        q: `Two items are truly equally relevant, but item X was historically shown twice as often as item Y. Trained on raw click logs, the model scores X well above Y. What is this, and what breaks the cycle?`,
+        options: [
+          `A) Label noise — Y's clicks are just noisier; collect more data on Y and scores equalize on their own.`,
+          `B) Exposure/popularity bias — X's extra clicks come partly from extra exposure, which the model misreads as quality, widening the gap each round. Inverse-propensity weighting (down-weight X's heavily-shown examples, up-weight Y's) plus some randomized exposure recovers their true equality.`,
+          `C) A calibration error in the click head; re-calibrate and X and Y converge.`,
+          `D) Overfitting to X's features; add dropout and the bias disappears.`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `A team wants to apply inverse-propensity weighting to de-bias its ranker. What must it have logged, and what's IPW's main failure mode?`,
+        options: [
+          `A) Only the clicks are needed; IPW infers propensities from click frequency, and its main issue is slow training.`,
+          `B) It needs the item embeddings only; IPW's failure mode is that it increases popularity bias.`,
+          `C) It must have logged the propensity P(item shown) for each impression; IPW reweights clicks by 1/P(shown), and its main failure mode is high variance when some propensities are tiny (1/P blows up) — which is why it's paired with randomization to keep propensities bounded away from zero.`,
+          `D) It needs editorial relevance labels; IPW's weakness is that it can't be computed online.`,
+        ],
+        answer: `C`,
+      },
+      {
+        q: `Over months, users on a video app each converge to a narrow topic and engagement per user quietly rises, but catalog coverage collapses. Leadership calls the rising engagement a win. What's actually happening?`,
+        options: [
+          `A) A genuine win — rising per-user engagement means the model learned preferences better; no action needed.`,
+          `B) An echo-chamber feedback loop: showing one viewpoint drives clicks, the model reads narrowing as stronger preference and narrows further. Short-term engagement rises while coverage and long-term satisfaction erode; the fix is propensity de-biasing plus deliberate exploration/diversity injection.`,
+          `C) Seasonal drift in content supply; wait for the catalog to rebalance itself.`,
+          `D) An ANN staleness problem; rebuild the index and coverage recovers.`,
+        ],
+        answer: `B`,
+      },
+    ],
+    recap: [
+      `**The recommender makes its own data:** logs are conditioned on the old policy — naive training just reproduces it.`,
+      `**Popularity self-reinforces:** exposure → clicks → higher score → more exposure. Equal-quality items diverge; the long tail starves.`,
+      `**Exposure bias → IPW:** reweight each example by 1/P(shown) to recover relevance, not exposure. Needs logged propensities.`,
+      `**IPW is high-variance** when P(shown) is tiny → pair with **randomization / ε-greedy exploration** to inject unbiased signal.`,
+      `**Uncorrected loops → filter bubbles / echo chambers:** narrowing is misread as preference. Same fix: de-bias + explore.`,
+    ],
+    figures: {
+      loop: `<svg viewBox="0 0 360 120" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="8" y="14" fill="var(--ink-low)" font-size="7.5">rich-get-richer loop</text>
+  <rect x="20" y="26" width="86" height="22" rx="5" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="63" y="40" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5" font-weight="700">more exposure</text>
+  <rect x="254" y="26" width="86" height="22" rx="5" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="297" y="40" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5" font-weight="700">more clicks</text>
+  <rect x="254" y="82" width="86" height="22" rx="5" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="297" y="96" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5" font-weight="700">higher score</text>
+  <rect x="20" y="82" width="86" height="22" rx="5" fill="none" stroke="var(--amber)"/><text x="63" y="93" text-anchor="middle" fill="var(--amber)" font-size="7">IPW + random</text><text x="63" y="101" text-anchor="middle" fill="var(--amber)" font-size="6.5">breaks the loop</text>
+  <path d="M106,37 l148,0" stroke="var(--ink-low)" stroke-width="1" marker-end="url(#ah)"/>
+  <path d="M297,48 l0,34" stroke="var(--ink-low)" stroke-width="1" marker-end="url(#ah)"/>
+  <path d="M254,93 l-148,0" stroke="var(--rim)" stroke-width="1" stroke-dasharray="3 2"/>
+  <path d="M63,82 l0,-34" stroke="var(--ink-low)" stroke-width="1" marker-end="url(#ah)"/>
+  <defs><marker id="ah" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="var(--ink-low)"/></marker></defs>
+  <text x="8" y="118" fill="var(--ink-mid)" font-size="6.5">equal-quality items diverge purely from an exposure head-start</text>
+</svg>`,
+    },
+  },
 ]

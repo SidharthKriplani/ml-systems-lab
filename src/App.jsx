@@ -410,32 +410,15 @@ const NAV_SECTIONS = [
     icon: 'scale',
     groups: [
       {
-        label: 'NEW · PREVIEW',
+        label: 'DRILLS',
         items: [
-          { id: 'judge_browser', label: 'Judgment drills (preview)', desc: 'Tag-driven drill pool — the rebuild, on real content.' },
+          { id: 'judge_browser', label: 'Judgment drills', desc: '367 drills across 10 subjects — filter by subject and level, junior → staff.' },
         ],
       },
       {
-        label: 'DRILLS · BY SUBJECT',
+        label: 'CAPSTONE',
         items: [
-          { id: 'features',     label: 'Feature Engineering', desc: 'Skew, leakage, freshness — production failure modes.' },
-          { id: 'eval',         label: 'Model Evaluation',    desc: 'Metric selection, calibration, segment slicing.' },
-          { id: 'classical',    label: 'Classical ML',        desc: 'Trees, ensembles, regularization, bias-variance.' },
-          { id: 'causal',       label: 'Causal Inference',    desc: 'Experiment design, SUTVA, confounding, treatment effects.' },
-          { id: 'ts',           label: 'Time Series',         desc: 'Non-stationarity, seasonality, walk-forward backtesting.' },
-          { id: 'design',       label: 'System Design',       desc: 'End-to-end ML system design — the round seniors lose.' },
-          { id: 'dl',           label: 'Deep Learning',       desc: 'Training failures, fine-tuning (LoRA/PEFT), and serving (quantization, GPU memory).' },
-          { id: 'monitor',      label: 'Monitoring',          desc: 'Drift, PSI, silent model staleness.' },
-          { id: 'mlops_deploy', label: 'MLOps',               desc: 'Deploy (canary/shadow/rollback), CI/CD gates, infra, and model registry.' },
-        ],
-      },
-      {
-        label: 'CROSS-DOMAIN',
-        items: [
-          { id: 'spottheflaw',  label: 'Spot the Flaw',  desc: '12 analyses with one buried methodological flaw — find it.' },
-          { id: 'incidentroom', label: 'Incident Room',  desc: 'Cross-domain production incident diagnosis.' },
-          { id: 'casestudies',  label: 'Case Studies',    desc: 'Worked production timelines — diagnosis + fix.' },
-          { id: 'stafflayer',   label: 'Staff Layer',     desc: 'IC3 → IC5 → Staff perspective reveals.' },
+          { id: 'incidentroom', label: 'Incident Room',  desc: 'Cross-domain, multi-step incident diagnosis.' },
         ],
       },
     ],

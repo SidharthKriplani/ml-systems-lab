@@ -604,6 +604,90 @@ The model passed every canary check. What happened?`,
     ],
     lesson: 'Canary metrics must match the product\'s success horizon. CTR is a click signal, not a retention signal. For recommendation systems: canary duration ≥ 2× median inter-session time, and the metric set must include session depth and short-term return rate alongside CTR.',
   },
+  {
+    id: 'inc-uber-seasonality',
+    title: 'Surge Model Blind to New Year\'s Eve — 90-Day Window Erased Annual Seasonality',
+    domain: 'Cross-domain: Training Data → Forecasting → Monitoring',
+    readMin: 8,
+    situation: `Uber's dynamic surge pricing model failed during New Year's Eve. The model predicted normal demand, surge was not applied early enough, and thousands of riders faced 45-minute waits.
+• Post-incident: the model had never seen NYE data at this year's scale — it used a 90-day rolling training window.
+• A 90-day window trained in Nov–Dec contains no NYE data (the last NYE was 365+ days ago), so annual seasonality is completely invisible.
+
+The pricing team wants to know how this slipped through. What could have caught it?`,
+    steps: [
+      {
+        question: 'What monitoring would have caught this before New Year\'s Eve?',
+        options: [
+          { id: 'a', text: 'Track only model accuracy metrics' },
+          { id: 'b', text: 'Shadow-score upcoming high-risk dates using historical data; alert when forecast diverges from event-adjusted baseline' },
+          { id: 'c', text: 'Only monitor real-time prediction errors' },
+          { id: 'd', text: 'Check model version in production' },
+        ],
+        correct: 'b',
+        finding: `Proactive shadow evaluation: 1 week before NYE, run the model on last year's NYE patterns. Compare output to expected surge. Alert if model predicts normal demand on a known high-event date.`,
+        whatsTested: 'Whether you monitor by proactively shadow-scoring known high-risk future dates rather than waiting for live prediction errors.',
+        antiPattern: 'Monitoring only accuracy or real-time errors detects the failure while it is already happening — too late for a once-a-year event.',
+        staffFraming: 'For rare, high-impact events, monitoring must be forward-looking: replay the model against historical instances of the upcoming event and alert when it under-forecasts before the date arrives.',
+      },
+      {
+        question: 'How should surge pricing balance explore/exploit — accuracy vs. user experience?',
+        options: [
+          { id: 'a', text: 'Always maximize accuracy' },
+          { id: 'b', text: 'Use contextual bandits to test different surge levels, learning true elasticity curves' },
+          { id: 'c', text: 'Only apply surge during confirmed events' },
+          { id: 'd', text: 'Set surge manually during all major events' },
+        ],
+        correct: 'b',
+        finding: `True demand elasticity is unknown. Contextual bandit: try different surge levels in similar contexts, observe supply response and rider cancellations. Balances exploration (learn elasticity) with exploitation (apply optimal surge).`,
+        whatsTested: 'Whether you recognise that surge levels must be learned online via contextual bandits because true elasticity is never known a priori.',
+        antiPattern: 'Always maximising accuracy or setting surge manually ignores that the elasticity curve itself is unknown and must be estimated from live supply/cancellation response.',
+        staffFraming: 'When the ground-truth response function is unobservable, treat pricing as a bandit: explore surge levels to learn elasticity, exploit to apply the optimal level.',
+      },
+    ],
+    lesson: 'A short rolling training window silently erases annual seasonality — the model never sees events that happen once a year. Fix the data strategy (stratified temporal sampling that always retains historical holiday examples, plus a dedicated event-spike model), and make monitoring forward-looking by shadow-scoring high-risk dates before they arrive.',
+  },
+  {
+    id: 'inc-doordash-drift',
+    title: 'ETA Overestimates 8 Minutes After Batched Delivery Launch — Concept Drift, No Batching Features',
+    domain: 'Cross-domain: Concept Drift → Feature Eng → Segmented Monitoring',
+    readMin: 8,
+    situation: `DoorDash's delivery ETA model showed systematic 8-minute overestimates in dense urban areas during lunch rush, causing order cancellations.
+• A new 'batched delivery' feature (one driver picks up multiple orders) had recently launched.
+• The model had no batching features and was trained on pre-batching data.
+
+Same distance + same traffic now implies a longer time due to multi-stop routing — but the model can't see it. What kind of shift is this, and how do you monitor for it?`,
+    steps: [
+      {
+        question: "What type of distribution shift occurred and why didn't the model detect it?",
+        options: [
+          { id: 'a', text: 'Covariate shift only' },
+          { id: 'b', text: "Concept drift — delivery mechanics changed, making P(delivery_time | features) different post-batching, with no batching features in the model" },
+          { id: 'c', text: 'Label shift only' },
+          { id: 'd', text: 'Sample selection bias' },
+        ],
+        correct: 'b',
+        finding: `Batched delivery changes P(Y|X): same distance + same traffic now implies longer time due to multi-stop route. The model had no batching features, so this new causal mechanism was invisible to monitoring.`,
+        whatsTested: 'Whether you can distinguish concept drift (P(Y|X) changed) from covariate/label shift, and connect it to the missing batching features.',
+        antiPattern: 'Calling it covariate or label shift misdiagnoses the cause — the input distribution barely moved; it is the relationship between features and delivery time that changed.',
+        staffFraming: 'When a product mechanic changes the causal relationship between existing features and the target, that is concept drift — and it is invisible to feature-distribution monitoring because the features themselves look unchanged.',
+      },
+      {
+        question: 'How would you set up online monitoring to catch this within 30 minutes of onset?',
+        options: [
+          { id: 'a', text: 'Monitor overall RMSE daily' },
+          { id: 'b', text: 'Real-time tracking of prediction residuals by delivery type with CUSUM anomaly detection; alert when 30-min residual exceeds 2 minutes' },
+          { id: 'c', text: 'Monitor only driver ratings' },
+          { id: 'd', text: 'Check model version daily' },
+        ],
+        correct: 'b',
+        finding: `CUSUM on 30-min residuals by segment (batched/non-batched, urban/suburban, time-of-day). Triggers within minutes of systematic shift. Segmented monitoring ensures urban/batched degradation doesn't get averaged away.`,
+        whatsTested: 'Whether you monitor residuals segmented by delivery type with a fast changepoint detector, rather than a single aggregate metric.',
+        antiPattern: 'Monitoring overall daily RMSE averages the urban/batched degradation away — the systematic error hides inside the aggregate and takes days to surface.',
+        staffFraming: 'Segment monitoring by the dimension where drift concentrates (delivery type, geo, time-of-day) and use CUSUM on residuals so a systematic bias trips an alert within minutes instead of days.',
+      },
+    ],
+    lesson: 'A new product mechanic can change P(Y|X) — concept drift — while feature distributions look unchanged, so it evades standard drift monitoring. The durable fix is to add features encoding the new mechanic (is_batched, batch_size, batch_position, route detour) and to monitor residuals segmented by that mechanic with a fast changepoint detector.',
+  },
 ]
 
 // ── Component ─────────────────────────────────────────────────────────────────

@@ -25,6 +25,8 @@ import { TIMESERIES_DRILLS } from './timeSeries.js'
 import { MONITORING_DRILLS } from './monitoring.js'
 import { SPOTFLAW_DRILLS } from './spotFlaw.js'
 import { AUTHORED_DRILLS } from './authored.js'
+import { RECSYS_DRILLS } from './recsys.js'
+import { GAPFILL_DRILLS } from './gapfill.js'
 
 export const SUBJECT_LABELS = {
   eval: 'Model evaluation',
@@ -36,6 +38,7 @@ export const SUBJECT_LABELS = {
   classical_ml: 'Classical ML',
   data: 'Data & features',
   time_series: 'Time series',
+  recsys: 'Recommender systems',
 }
 
 const SEED = [
@@ -199,4 +202,6 @@ export const DRILL_POOL = [
   ...MONITORING_DRILLS,
   ...SPOTFLAW_DRILLS,
   ...AUTHORED_DRILLS,
+  ...RECSYS_DRILLS,
+  ...GAPFILL_DRILLS,
 ]
