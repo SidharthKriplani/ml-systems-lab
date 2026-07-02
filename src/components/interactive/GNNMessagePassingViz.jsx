@@ -315,15 +315,6 @@ export const GNNMessagePassingViz = forwardRef(function GNNMessagePassingViz(pro
   // Initial draw
   useEffect(() => { redraw(0, null) }, [redraw])
 
-  // Auto-advance when autoPlayRef is true and not currently animating
-  useEffect(() => {
-    if (autoPlayRef.current && !isAnimating && currentRound < 3) {
-      const t = setTimeout(() => nextRound(), 300)
-      return () => clearTimeout(t)
-    }
-    if (currentRound >= 3) autoPlayRef.current = false
-  }, [isAnimating, currentRound, nextRound])
-
   const nextRound = useCallback(() => {
     if (isAnimating || currentRound >= 3) return
     setIsAnimating(true)
@@ -346,6 +337,17 @@ export const GNNMessagePassingViz = forwardRef(function GNNMessagePassingViz(pro
     }
     rafRef.current = requestAnimationFrame(tick)
   }, [isAnimating, currentRound, redraw])
+
+  // Auto-advance when autoPlayRef is true and not currently animating.
+  // NOTE: must be declared AFTER nextRound — referencing it earlier throws a
+  // temporal-dead-zone ReferenceError at render (blanks the whole app).
+  useEffect(() => {
+    if (autoPlayRef.current && !isAnimating && currentRound < 3) {
+      const t = setTimeout(() => nextRound(), 300)
+      return () => clearTimeout(t)
+    }
+    if (currentRound >= 3) autoPlayRef.current = false
+  }, [isAnimating, currentRound, nextRound])
 
   const reset = useCallback(() => {
     if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null }

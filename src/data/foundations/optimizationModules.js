@@ -1355,13 +1355,13 @@ Deep network loss landscapes violate essentially every assumption. The first ass
   <circle cx="180" cy="110" r="4" fill="var(--ink-low)"/>
   <text x="180" y="128" text-anchor="middle" fill="var(--ink-low)" font-size="8">gradient = 0 here</text>
   <line x1="180" y1="110" x2="180" y2="60" stroke="var(--amber)" stroke-width="1.6" marker-end="url(#sup)"/>
-  <text x="186" y="66" fill="var(--amber)" font-size="9" font-weight="700">loss up</text>
+  <text x="188" y="86" fill="var(--amber)" font-size="9" font-weight="700">loss up</text>
   <line x1="180" y1="110" x2="300" y2="110" stroke="var(--prime)" stroke-width="1.6" marker-end="url(#sdn)"/>
   <text x="230" y="103" fill="var(--prime)" font-size="9" font-weight="700">escape: loss down</text>
   <text x="180" y="190" text-anchor="middle" fill="var(--ink-low)" font-size="8">in high dim almost every zero-gradient point is a saddle, not a minimum</text>
   <defs>
-    <marker id="sup" markerWidth="7" markerHeight="7" refX="3" refY="1" orient="auto"><path d="M0,6 L3,0 L6,6" fill="none" stroke="var(--amber)" stroke-width="1.2"/></marker>
-    <marker id="sdn" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="none" stroke="var(--prime)" stroke-width="1.2"/></marker>
+    <marker id="sup" markerWidth="8" markerHeight="8" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="var(--amber)"/></marker>
+    <marker id="sdn" markerWidth="8" markerHeight="8" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="var(--prime)"/></marker>
   </defs>
 </svg>`,
     },
