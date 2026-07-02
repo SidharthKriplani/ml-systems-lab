@@ -1,24 +1,44 @@
 import { useState, useEffect, useRef } from 'react'
-import { getTracks, createTrack, addModule, getTracksForModule } from '../../utils/tracks.js'
+import { createPortal } from 'react-dom'
+import { getTracks, createTrack, addModule, getTracksForModule, addItem, getTracksForItem } from '../../utils/tracks.js'
 
 /**
- * Popover for adding a foundation module to a track.
- * Props: tabId, moduleId, label, difficulty, onClose, anchorRef
+ * Popover for adding content to a track.
+ * Legacy module mode:  tabId, moduleId, label, difficulty, onClose, anchorRef
+ * Generic item mode:   itemType, itemId, label, itemMeta, onClose, anchorRef, fixedPos
  */
-export function AddToTrackPopover({ tabId, moduleId, label, difficulty, onClose, anchorRef }) {
+export function AddToTrackPopover({
+  // legacy module props
+  tabId, moduleId, difficulty,
+  // generic item props
+  itemType, itemId, itemMeta,
+  // shared
+  label,
+  onClose, anchorRef,
+  fixedPos, // { top, right } — use position:fixed (for portal / overflow:hidden escape)
+}) {
+  const isGeneric = !!itemType
+
+  const getIn = () =>
+    isGeneric ? getTracksForItem(itemType, String(itemId)) : getTracksForModule(tabId, moduleId)
+
+  const doAdd = (trackId) => {
+    if (isGeneric) addItem(trackId, itemType, String(itemId), label || '', itemMeta || {})
+    else addModule(trackId, tabId, moduleId, label || '', difficulty)
+  }
+
   const [tracks, setTracks]   = useState(() => getTracks())
-  const [inTracks, setInTracks] = useState(() => getTracksForModule(tabId, moduleId))
+  const [inTracks, setInTracks] = useState(getIn)
   const [newName, setNewName] = useState('')
   const [creating, setCreating] = useState(false)
   const popoverRef = useRef(null)
   const inputRef   = useRef(null)
 
-  // Close on outside click
   useEffect(() => {
     function handle(e) {
       if (
         popoverRef.current && !popoverRef.current.contains(e.target) &&
-        anchorRef?.current && !anchorRef.current.contains(e.target)
+        (!anchorRef?.current || !anchorRef.current.contains(e.target))
       ) onClose()
     }
     document.addEventListener('mousedown', handle)
@@ -31,11 +51,11 @@ export function AddToTrackPopover({ tabId, moduleId, label, difficulty, onClose,
 
   function refresh() {
     setTracks(getTracks())
-    setInTracks(getTracksForModule(tabId, moduleId))
+    setInTracks(getIn())
   }
 
   function handleToggle(trackId) {
-    if (!inTracks.includes(trackId)) addModule(trackId, tabId, moduleId, label, difficulty)
+    if (!inTracks.includes(trackId)) doAdd(trackId)
     refresh()
   }
 
@@ -43,17 +63,22 @@ export function AddToTrackPopover({ tabId, moduleId, label, difficulty, onClose,
     e.preventDefault()
     if (!newName.trim()) return
     const t = createTrack(newName.trim())
-    addModule(t.id, tabId, moduleId, label, difficulty)
+    doAdd(t.id)
     setNewName('')
     setCreating(false)
     refresh()
   }
 
+  const posStyle = fixedPos
+    ? { position: 'fixed', top: fixedPos.top, right: fixedPos.right }
+    : { position: 'absolute', top: '100%', right: 0, marginTop: '6px' }
+
   return (
     <div
       ref={popoverRef}
       style={{
-        position: 'absolute', zIndex: 9999, top: '100%', right: 0, marginTop: '6px',
+        ...posStyle,
+        zIndex: 9999,
         background: 'var(--surface)', border: '1px solid var(--rim)',
         borderRadius: '10px', boxShadow: '0 8px 24px rgba(0,0,0,0.30)',
         minWidth: '220px', maxWidth: '270px', padding: '0.6rem 0', fontSize: '0.82rem',
@@ -139,5 +164,60 @@ export function AddToTrackPopover({ tabId, moduleId, label, difficulty, onClose,
         )}
       </div>
     </div>
+  )
+}
+
+/**
+ * Self-contained + button that opens AddToTrackPopover via React portal.
+ * Safe inside overflow:hidden containers — uses getBoundingClientRect + position:fixed.
+ * Props: itemType, itemId, label, itemMeta
+ */
+export function AddTrackBtn({ itemType, itemId, label, itemMeta = {} }) {
+  const [open, setOpen] = useState(false)
+  const btnRef = useRef(null)
+  const [pos, setPos] = useState({ top: 0, right: 0 })
+
+  function toggle(e) {
+    e.stopPropagation()
+    if (!open && btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect()
+      setPos({ top: r.bottom + 6, right: window.innerWidth - r.right })
+    }
+    setOpen(o => !o)
+  }
+
+  return (
+    <>
+      <button
+        ref={btnRef}
+        onClick={toggle}
+        title="Add to track"
+        style={{
+          background: 'none',
+          border: '1px solid var(--rim)',
+          borderRadius: '5px',
+          cursor: 'pointer',
+          padding: '2px 7px',
+          fontSize: '13px',
+          color: 'var(--prime)',
+          flexShrink: 0,
+          lineHeight: 1,
+          fontWeight: 700,
+          fontFamily: 'var(--font-sans)',
+        }}
+      >+</button>
+      {open && createPortal(
+        <AddToTrackPopover
+          itemType={itemType}
+          itemId={itemId}
+          label={label}
+          itemMeta={itemMeta}
+          onClose={() => setOpen(false)}
+          anchorRef={btnRef}
+          fixedPos={pos}
+        />,
+        document.body
+      )}
+    </>
   )
 }

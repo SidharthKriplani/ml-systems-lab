@@ -2,7 +2,11 @@
 // localStorage key: 'msl-tracks-v1'
 // Track shape: { id, name, createdAt, items: [...] }
 // Module item: { type: 'module', tabId, moduleId, label, difficulty, addedAt }
-// Note item:   { type: 'note', content, addedAt }
+// Note item:   { type: 'note', id, title, blocks: [...], addedAt, updatedAt }
+//   Block shapes:
+//     { id, type: 'text',  content }
+//     { id, type: 'video', url, videoId, platform, title }
+//     { id, type: 'link',  url, domain, title, summary }
 
 const KEY = 'msl-tracks-v1'
 
@@ -48,11 +52,43 @@ export function addModule(trackId, tabId, moduleId, label, difficulty) {
   }))
 }
 
-export function addNote(trackId, content) {
-  const tracks = getTracks()
-  save(tracks.map(t => {
+// ── Note CRUD ─────────────────────────────────────────────────────────────────
+
+export function createNote(trackId, title = 'Untitled note') {
+  const note = {
+    type: 'note',
+    id: uid(),
+    title,
+    blocks: [{ id: uid(), type: 'text', content: '' }],
+    addedAt: Date.now(),
+    updatedAt: Date.now(),
+  }
+  save(getTracks().map(t => {
     if (t.id !== trackId) return t
-    return { ...t, items: [...t.items, { type: 'note', content, addedAt: Date.now() }] }
+    return { ...t, items: [...t.items, note] }
+  }))
+  return note
+}
+
+export function updateNote(trackId, noteId, patch) {
+  // patch can be { title } or { blocks } or both
+  save(getTracks().map(t => {
+    if (t.id !== trackId) return t
+    return {
+      ...t,
+      items: t.items.map(i =>
+        i.type === 'note' && i.id === noteId
+          ? { ...i, ...patch, updatedAt: Date.now() }
+          : i
+      ),
+    }
+  }))
+}
+
+export function deleteNote(trackId, noteId) {
+  save(getTracks().map(t => {
+    if (t.id !== trackId) return t
+    return { ...t, items: t.items.filter(i => !(i.type === 'note' && i.id === noteId)) }
   }))
 }
 
@@ -77,5 +113,24 @@ export function reorderItems(trackId, fromIndex, toIndex) {
 export function getTracksForModule(tabId, moduleId) {
   return getTracks()
     .filter(t => t.items.some(i => i.type === 'module' && i.tabId === tabId && i.moduleId === moduleId))
+    .map(t => t.id)
+}
+
+// ── Generic item CRUD (interview, flashcard, case, flaw, bug) ────────────────
+// Item shape: { type, itemId, label, meta, addedAt }
+
+export function addItem(trackId, type, itemId, label, meta = {}) {
+  const tracks = getTracks()
+  save(tracks.map(t => {
+    if (t.id !== trackId) return t
+    const already = t.items.some(i => i.type === type && i.itemId === String(itemId))
+    if (already) return t
+    return { ...t, items: [...t.items, { type, itemId: String(itemId), label, meta, addedAt: Date.now() }] }
+  }))
+}
+
+export function getTracksForItem(type, itemId) {
+  return getTracks()
+    .filter(t => t.items.some(i => i.type === type && i.itemId === String(itemId)))
     .map(t => t.id)
 }

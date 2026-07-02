@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Icon } from '../components/Icon.jsx'
+import { AddTrackBtn } from '../components/tracks/AddToTrackPopover.jsx'
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
@@ -639,8 +640,9 @@ function Flashcards() {
         {cards.map((card, i) => (
           <div key={i} style={{ border: '1px solid var(--rim)', borderRadius: '10px', overflow: 'hidden',
             background: openIdx === i ? 'rgba(240,165,0,0.05)' : 'transparent', transition: 'background var(--t-fast)' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start' }}>
             <button onClick={() => setOpenIdx(openIdx === i ? null : i)}
-              style={{ width: '100%', textAlign: 'left', padding: '14px 18px', background: 'transparent', border: 'none', cursor: 'pointer',
+              style={{ flex: 1, textAlign: 'left', padding: '14px 18px', background: 'transparent', border: 'none', cursor: 'pointer',
                 display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px' }}>
               <div>
                 <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', marginRight: '10px' }}>{card.group}</span>
@@ -648,6 +650,10 @@ function Flashcards() {
               </div>
               <span style={{ color: 'var(--prime)', fontSize: '11px', flexShrink: 0, fontFamily: 'var(--font-mono)', marginTop: '2px' }}>{openIdx === i ? '▲' : '▼'}</span>
             </button>
+            <div style={{ padding: '14px 14px 14px 0', flexShrink: 0 }}>
+              <AddTrackBtn itemType="flashcard" itemId={String(i)} label={card.q.slice(0, 80)} itemMeta={{ group: card.group }} />
+            </div>
+            </div>
             {openIdx === i && (
               <div style={{ padding: '0 18px 16px', fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.75, borderTop: '1px solid var(--rim)', paddingTop: '12px' }}>
                 {card.a}

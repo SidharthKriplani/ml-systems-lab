@@ -5,6 +5,7 @@ import { CheckMark } from '../components/Icons'
 import { Icon } from '../components/Icon.jsx'
 import { recordInterviewSessionMastery } from '../utils/progress.js'
 import { toggleBookmark, isBookmarked, getBookmarks } from '../utils/bookmarks.js'
+import { AddTrackBtn } from '../components/tracks/AddToTrackPopover.jsx'
 
 const QUESTIONS = [
   // ─── ML System Design ────────────────────────────────────────────────────
@@ -1004,6 +1005,7 @@ export default function InterviewPrepTab({ onNavigate }) {
                       style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', padding: '0 4px', color: isBookmarked('interview', String(q.id)) ? 'var(--prime)' : 'var(--ink-ghost)', flexShrink: 0, lineHeight: 1 }}
                       title={isBookmarked('interview', String(q.id)) ? 'Remove bookmark' : 'Bookmark'}
                     >{isBookmarked('interview', String(q.id)) ? <svg width="12" height="14" viewBox="0 0 12 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M2 0.5h8a1 1 0 011 1v11.25l-5-2.917-5 2.917V1.5a1 1 0 011-1z"/></svg> : <svg width="12" height="14" viewBox="0 0 12 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M2 1h8a.5.5 0 01.5.5v11L6 9.75 1.5 12.5V1.5A.5.5 0 012 1z"/></svg>}</button>
+                    <AddTrackBtn itemType="interview" itemId={String(q.id)} label={q.q.slice(0, 80)} itemMeta={{ cat: q.cat, company: q.company, level: q.level }} />
                     <span style={{ color: 'var(--ink-low)', fontSize: '13px', paddingTop: '2px', transition: 'transform 0.15s', transform: isOpen ? 'rotate(180deg)' : 'none', flexShrink: 0 }}>▾</span>
                   </div>
                   {isOpen && (

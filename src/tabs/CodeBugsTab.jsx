@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import FidelityBadge from '../components/FidelityBadge.jsx'
+import { AddTrackBtn } from '../components/tracks/AddToTrackPopover.jsx'
 
 const LS_KEY = 'msl_score:codebugs'
 
@@ -880,13 +881,14 @@ function BugCard({ bug, answer, onAnswer }) {
       overflow: 'hidden',
     }}>
       {/* Header row */}
+      <div style={{ display: 'flex', alignItems: 'stretch' }}>
       <button
         onClick={() => setOpen(o => !o)}
         style={{
           display: 'flex',
           alignItems: 'center',
           gap: 10,
-          width: '100%',
+          flex: 1,
           padding: '12px 16px',
           background: 'none',
           border: 'none',
@@ -931,6 +933,10 @@ function BugCard({ bug, answer, onAnswer }) {
           transition: 'transform 0.2s',
         }}>▾</span>
       </button>
+      <div style={{ padding: '0 12px', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+        <AddTrackBtn itemType="bug" itemId={bug.id} label={bug.title} itemMeta={{ domain: bug.domain }} />
+      </div>
+      </div>
 
       {open && (
         <div style={{ padding: '0 16px 16px' }}>

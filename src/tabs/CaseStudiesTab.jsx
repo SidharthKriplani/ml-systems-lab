@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import FidelityBadge from '../components/FidelityBadge.jsx'
+import { AddTrackBtn } from '../components/tracks/AddToTrackPopover.jsx'
 
 const STORAGE_KEY = 'msl_casestudies'
 
@@ -332,9 +333,10 @@ export default function CaseStudiesTab({ onNavigate }) {
           return (
             <div key={c.id} style={{ background: 'var(--surface)', border: `1px solid var(--rim)`, borderRadius: '10px', overflow: 'hidden' }}>
               {/* Card header */}
+              <div style={{ display: 'flex', alignItems: 'center' }}>
               <button
                 onClick={() => setOpenCase(isOpen ? null : c.id)}
-                style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left' }}
+                style={{ flex: 1, background: 'none', border: 'none', cursor: 'pointer', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left' }}
               >
                 <span style={{ background: c.color + '20', color: c.color, border: `1px solid ${c.color}40`, borderRadius: '6px', padding: '3px 10px', fontSize: '12px', fontWeight: 700, flexShrink: 0 }}>
                   {c.company}
@@ -347,6 +349,10 @@ export default function CaseStudiesTab({ onNavigate }) {
                 </div>
                 <span style={{ color: 'var(--ink-ghost)', fontSize: '12px', marginLeft: '4px' }}>{isOpen ? '▲' : '▼'}</span>
               </button>
+              <div style={{ padding: '0 16px 0 0', flexShrink: 0 }}>
+                <AddTrackBtn itemType="case" itemId={c.id} label={`${c.company}: ${c.summary.slice(0, 60)}`} itemMeta={{ company: c.company }} />
+              </div>
+              </div>
 
               {/* Expanded content */}
               {isOpen && (

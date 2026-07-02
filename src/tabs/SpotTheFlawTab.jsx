@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import TabHeader from '../components/TabHeader.jsx'
 import FidelityBadge from '../components/FidelityBadge.jsx'
 import HowToStrip from '../components/HowToStrip.jsx'
+import { AddTrackBtn } from '../components/tracks/AddToTrackPopover.jsx'
 
 const SCENARIOS = [
   {
@@ -863,13 +864,18 @@ function ScenarioCard({ scenario, state, onPick }) {
   return (
     <div style={{ border: `1px solid ${open ? 'rgba(240,165,0,0.35)' : 'var(--rim)'}`, borderRadius: '12px', overflow: 'hidden', transition: 'border-color 0.15s' }}>
       {/* Header */}
-      <button onClick={() => onPick('toggle')} style={{ width: '100%', textAlign: 'left', padding: '14px 18px', background: open ? 'rgba(240,165,0,0.05)' : 'var(--depth)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'stretch' }}>
+      <button onClick={() => onPick('toggle')} style={{ flex: 1, textAlign: 'left', padding: '14px 18px', background: open ? 'rgba(240,165,0,0.05)' : 'var(--depth)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px' }}>
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)', minWidth: '24px' }}>{scenario.id.replace('stf', '').padStart(2, '0')}</span>
         <span style={{ flex: 1, fontSize: '13.5px', fontWeight: 600, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>{scenario.title}</span>
         <span style={{ fontSize: '9px', padding: '2px 8px', borderRadius: '4px', background: 'var(--prime-bg-light)', color: 'var(--prime)', fontFamily: 'var(--font-mono)', letterSpacing: '0.04em' }}>FLAW HUNT</span>
         {revealed && <span style={{ fontSize: '11px', color: isCorrect ? 'var(--mint)' : 'var(--rose)' }}>{isCorrect ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><polyline points="20 6 9 17 4 12"/></svg>' : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"inline-block",verticalAlign:"text-bottom",marginRight:"3px"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'}</span>}
         <span style={{ color: 'var(--ink-ghost)', transform: open ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s', display: 'inline-flex' }}><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 2l4 3-4 3"/></svg></span>
       </button>
+      <div style={{ padding: '0 14px', display: 'flex', alignItems: 'center', flexShrink: 0, background: open ? 'rgba(240,165,0,0.05)' : 'var(--depth)' }}>
+        <AddTrackBtn itemType="flaw" itemId={scenario.id} label={scenario.title} itemMeta={{ category: scenario.flawCategory }} />
+      </div>
+      </div>
 
       {open && (
         <div style={{ padding: '0 18px 18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
