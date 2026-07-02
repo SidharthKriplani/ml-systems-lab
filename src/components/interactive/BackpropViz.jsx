@@ -66,6 +66,10 @@ export const BackpropViz = forwardRef(function BackpropViz(props, ref) {
   const [x2, setX2] = useState(0.5);
   const [target, setTarget] = useState(1.0);
   const [mode, setMode] = useState('forward'); // 'forward' | 'backward'
+  const [anim, setAnim] = useState(0);       // pulse progress 0..1 while playing
+  const [playing, setPlaying] = useState(false);
+  const rafRef = useRef(null);
+  const lastTsRef = useRef(0);
   // Editable weights — deep-cloned from defaults so edits recompute both passes.
   const [W, setW] = useState(() => ({
     W1: DEFAULT_W.W1.map(r => [...r]),
@@ -162,10 +166,32 @@ export const BackpropViz = forwardRef(function BackpropViz(props, ref) {
     return edgeThickness(val, maxVal);
   };
 
+  const play = useCallback(() => {
+    if (rafRef.current) return;
+    setPlaying(true);
+    lastTsRef.current = 0;
+    const tick = (ts) => {
+      if (!lastTsRef.current) lastTsRef.current = ts;
+      const dt = ts - lastTsRef.current;
+      lastTsRef.current = ts;
+      setAnim(a => (a + dt / 1800) % 1); // one traversal ≈ 1.8s
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+  }, []);
+
+  const pause = useCallback(() => {
+    if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
+    lastTsRef.current = 0;
+    setPlaying(false);
+  }, []);
+
   useImperativeHandle(ref, () => ({
-    play: () => {},
-    pause: () => {},
+    play,
+    pause,
     reset: () => {
+      pause();
+      setAnim(0);
       setMode('forward');
       setX1(1.0); setX2(0.5); setTarget(1.0);
       setW({
@@ -173,8 +199,8 @@ export const BackpropViz = forwardRef(function BackpropViz(props, ref) {
         W2: DEFAULT_W.W2.map(r => [...r]), b2: [...DEFAULT_W.b2],
       });
     },
-    step: () => setMode(m => m === 'forward' ? 'backward' : 'forward'),
-  }), [])
+    step: () => { pause(); setMode(m => m === 'forward' ? 'backward' : 'forward'); },
+  }), [play, pause])
 
   const sliderStyle = { width: '100%', accentColor: 'var(--prime)', cursor: 'pointer' };
   const inkMid = { color: 'var(--ink-mid)', fontSize: 13 };
@@ -227,20 +253,29 @@ export const BackpropViz = forwardRef(function BackpropViz(props, ref) {
           {edges.map((edge, ei) => {
             const [fl, fi, tl, ti] = edge;
             const from = layers[fl][fi], to = layers[tl][ti];
-            const midX = (from.x + to.x) / 2;
-            const midY = (from.y + to.y) / 2;
+            const sx = from.x + NODE_R, sy = from.y;
+            const ex = to.x - NODE_R, ey = to.y;
+            // Place label 32% along the edge from the source so the two crossing
+            // edges (which share a midpoint) no longer stack their labels.
+            const t = 0.32;
+            const lx = sx + t * (ex - sx), ly = sy + t * (ey - sy);
+            // Pulse: signal flows source→target in forward mode, target→source in backward.
+            const p = mode === 'forward' ? anim : 1 - anim;
+            const px = sx + p * (ex - sx), py = sy + p * (ey - sy);
             return (
               <g key={ei}>
-                <line
-                  x1={from.x + NODE_R} y1={from.y}
-                  x2={to.x - NODE_R} y2={to.y}
-                  stroke={edgeColor(edge)}
-                  strokeWidth={edgeWidth(edge)}
-                />
-                <text x={midX} y={midY - 4} textAnchor="middle"
-                  fill="var(--ink-mid)" fontSize="9" fontFamily="var(--font-mono)">
+                <line x1={sx} y1={sy} x2={ex} y2={ey}
+                  stroke={edgeColor(edge)} strokeWidth={edgeWidth(edge)} />
+                <text x={lx} y={ly - 4} textAnchor="middle"
+                  fill="var(--ink-mid)" fontSize="9" fontFamily="var(--font-mono)"
+                  stroke="var(--depth)" strokeWidth="2.5" paintOrder="stroke">
                   {edgeLabel(edge)}
                 </text>
+                {playing && (
+                  <circle cx={px} cy={py} r={4}
+                    fill={mode === 'forward' ? '#F0A500' : '#6495ff'}
+                    stroke="#000" strokeWidth="0.5" />
+                )}
               </g>
             );
           })}
@@ -275,10 +310,10 @@ export const BackpropViz = forwardRef(function BackpropViz(props, ref) {
             })
           )}
 
-          {/* Loss label */}
-          <text x={SVG_W - 10} y={120} textAnchor="end"
-            fill="var(--ink-mid)" fontSize="11" fontFamily="var(--font-mono)">
-            {`Loss: ${fmtShort(loss)}`}
+          {/* Loss readout — below the output node so it never overlaps it */}
+          <text x={layers[2][0].x} y={192} textAnchor="middle"
+            fill="var(--prime)" fontSize="12" fontWeight="700" fontFamily="var(--font-mono)">
+            {`Loss ${fmtShort(loss)}`}
           </text>
         </svg>
       </div>
