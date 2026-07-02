@@ -121,14 +121,19 @@ export function renderMd(text, containerStyle = {}, figures = {}) {
           const figId = figMatch[1]
           const svgStr = figures[figId]
           if (svgStr) {
+            // Scale figures up (authored max-width is ~360px, too small in a wide reader pane)
+            const scaled = svgStr.replace(/max-width:\s*\d+px/, 'max-width:560px')
             return (
               <div key={i} style={{
                 margin: '1.5rem 0',
                 display: 'flex',
                 justifyContent: 'center',
                 overflow: 'hidden',
-                borderRadius: '8px',
-              }} dangerouslySetInnerHTML={{ __html: svgStr }} />
+                borderRadius: '10px',
+                background: 'var(--depth)',
+                border: '1px solid var(--rim)',
+                padding: '1.1rem 1.25rem',
+              }} dangerouslySetInnerHTML={{ __html: scaled }} />
             )
           }
           return (

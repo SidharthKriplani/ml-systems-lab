@@ -371,12 +371,24 @@ const NAV_SECTIONS = [
     id: 'do',
     label: 'DO',
     icon: 'terminal',
-    items: [
-      { id: 'mlcoding', label: 'ML Coding',            desc: 'ML-specific Python problems — implement/debug/optimise/design, live Pyodide.' },
-      { id: 'spark',    label: 'Spark Lab',            desc: 'PySpark optimization — shuffle, skew, broadcast joins, AQE.' },
-      { id: 'dbt',      label: 'dbt / SQL transforms', desc: 'Analytics-engineering SQL transformation patterns.' },
-      { id: 'ext_python', label: 'Python fluency → PL ↗', external: true, href: 'https://github.com/SidharthKriplani/programming-lab', desc: 'General Python & DSA fluency lives in Programming Lab (sibling lab).' },
-      { id: 'ext_sql',    label: 'SQL fluency → PAL ↗', external: true, href: 'https://product-analytics-lab.vercel.app/#/sql-lab', desc: 'The canonical SQL problem bank lives in Product Analytics Lab (sibling lab).' },
+    groups: [
+      {
+        label: 'CODE',
+        items: [
+          { id: 'mlcoding', label: 'ML Coding',            desc: 'ML-specific Python problems — implement/debug/optimise/design, live Pyodide.' },
+          { id: 'ext_python', label: 'Python fluency → PL ↗', external: true, href: 'https://github.com/SidharthKriplani/programming-lab', desc: 'General Python & DSA fluency lives in Programming Lab (sibling lab).' },
+          { id: 'ext_sql',    label: 'SQL fluency → PAL ↗', external: true, href: 'https://product-analytics-lab.vercel.app/#/sql-lab', desc: 'The canonical SQL problem bank lives in Product Analytics Lab (sibling lab).' },
+        ],
+      },
+      {
+        label: 'DATA ENGINEERING',
+        items: [
+          { id: 'spark',    label: 'Spark Lab',            desc: 'PySpark optimization — shuffle, skew, broadcast joins, AQE.' },
+          { id: 'dbt',      label: 'dbt / SQL transforms', desc: 'Analytics-engineering SQL transformation patterns.' },
+          { id: 'airflow',  label: 'Airflow',              desc: 'DAG failures, backfill, late data.' },
+          { id: 'modeling', label: 'Data Modeling',        desc: 'Star/OBT, SCDs, OLAP formats.' },
+        ],
+      },
     ],
   },
   {
@@ -387,7 +399,6 @@ const NAV_SECTIONS = [
       { id: 'projectlab',      label: 'Project Lab · Telco', desc: 'End-to-end churn notebook (Pyodide) with 5 judgment checkpoints.' },
       { id: 'loan_default',    label: 'Project Lab · Loans', desc: 'Loan-default notebook — fairness audit, ECOA, disparate impact.' },
       { id: 'fraud_detection', label: 'Project Lab · Fraud', desc: 'Fraud notebook — 1:200 imbalance, precision@K, ops capacity.' },
-      { id: 'defense',         label: 'Defense Plan',        desc: 'Paste a JD → gap map → study plan; defend your projects under pressure.' },
     ],
   },
   {
@@ -410,8 +421,6 @@ const NAV_SECTIONS = [
           { id: 'monitor',      label: 'Monitoring',          desc: 'Drift, PSI, silent model staleness.' },
           { id: 'mlops_deploy', label: 'Deployment',          desc: 'Canary, shadow, A/B, rollback.' },
           { id: 'mlops_pipes',  label: 'CI/CD & Infra',       desc: 'Pipeline gates, model registry, infra decisions.' },
-          { id: 'airflow',      label: 'Airflow',             desc: 'DAG failures, backfill, late data.' },
-          { id: 'modeling',     label: 'Data Modeling',       desc: 'Star/OBT, SCDs, OLAP formats.' },
         ],
       },
       {
@@ -431,6 +440,7 @@ const NAV_SECTIONS = [
     label: 'PREP & ASSESS',
     icon: 'clipboard',
     items: [
+      { id: 'defense',        label: 'Defense Plan',     desc: 'Paste a JD → gap map → study plan; defend your projects under pressure.' },
       { id: 'interview',      label: 'Q&A Bank',         desc: '128+ senior MLE questions with model answers and 4-tier scoring.' },
       { id: 'trainer',        label: 'Trainer',          desc: 'Spaced-repetition MCQ drill + weakness heatmap.' },
       { id: 'combinator',     label: 'Timed Exam',       desc: 'Mixed-domain timed mock under interview pressure.' },
