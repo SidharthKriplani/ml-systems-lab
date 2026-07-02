@@ -1,108 +1,67 @@
 import { useState, useEffect } from 'react'
-import { downloadProgressJSON } from '../utils/export.js'
 import {
-  FOUNDATIONS_TIERS, TOTAL_POSTS,
-  readFoundationsRead, overallCompletion, isFoundationsTouched,
+  readFoundationsRead, overallCompletion,
 } from '../data/foundationsPath.js'
 import {
   recommendNext, readOnboarding, readHomeOverride, writeHomeOverride, deriveHomeMode,
 } from '../data/recommendationEngine.js'
 import { track } from '../analytics.js'
 import { computeReadiness, readinessLabel, readinessColor } from '../utils/readiness.js'
-import QuizCard from '../components/QuizCard.jsx'
 import Next30Card from '../components/Next30Card.jsx'
-import { Icon } from '../components/Icon.jsx'
 
-// ── Recently added — update when new content ships ────────────────────────────
-const RECENTLY_ADDED = [
-  { date: '2026-06-18', label: 'Gradient — 5 new posts (122–126)', desc: 'Graph ML for Fraud · Real-Time Features · LLM Serving · Hierarchical Forecasting · Auction Theory', tab: 'gradient' },
-  { date: '2026-06-18', label: 'ML Coding — 4-type framework', desc: 'Type 2: Debug (leaking CV), Type 3: Optimise (10× pandas), Type 4: Design (feature store 100K QPS)', tab: 'mlcoding' },
-  { date: '2026-06-18', label: 'Gradient — 9 inline visualisations', desc: 'Interactive: attention heatmap, bias-variance, L1/L2 geometry, PR threshold slider, gradient descent path…', tab: 'gradient' },
-  { date: '2026-06-18', label: 'Interview Cheatsheet',      desc: '4-tier last-minute prep: 50 flashcards · 12 formulas · traps · domain audit · 7-day plan + company profiles', tab: 'cheatsheet' },
-  { date: '2026-06-18', label: 'Gradient — 200 interview Qs', desc: '4 Q&As per post across posts 51–100: RecSys, Search, Fraud, Pricing, Causal, DL, and more', tab: 'gradient' },
+// ── The five frames of the current app ───────────────────────────────────────
+// Each maps to its representative launch tab. This is the ground truth for Home —
+// deep dashboards live in My Progress; Home is a lean launcher.
+const FRAMES = [
+  {
+    id: 'know',
+    label: 'KNOW',
+    sub: 'Foundations & theory',
+    desc: 'Deep-dive essays and the MLE Path — math, stats, classical ML, deep learning, system design.',
+    tab: 'gradient',
+    cta: 'Open essays →',
+  },
+  {
+    id: 'do',
+    label: 'DO',
+    sub: 'Code',
+    desc: 'ML coding across four types — implement, debug, optimise, design — plus buggy-code review drills.',
+    tab: 'mlcoding',
+    cta: 'Start coding →',
+  },
+  {
+    id: 'build',
+    label: 'BUILD',
+    sub: 'Projects',
+    desc: 'End-to-end notebooks in your browser — churn, loan default, and fraud detection with live execution.',
+    tab: 'projectlab',
+    cta: 'Open project lab →',
+  },
+  {
+    id: 'judge',
+    label: 'JUDGE',
+    sub: 'Judgment',
+    desc: '425 judgment drills across 10 subjects, plus the Incident Room for production diagnosis under pressure.',
+    tab: 'judge_browser',
+    cta: 'Open drills →',
+  },
+  {
+    id: 'prep',
+    label: 'PREP & ASSESS',
+    sub: 'Interview',
+    desc: '210 interview questions — Q&A, behavioral/STAR, take-homes, defend-your-project — and timed drilling.',
+    tab: 'interview_questions',
+    cta: 'Open questions →',
+  },
 ]
 
-// ── Section tab registry ───────────────────────────────────────────────────────
-const SECTION_TABS = {
-  foundations: ['models', 'classical'],
-  scenarios:   ['features', 'spark', 'airflow', 'dbt', 'modeling', 'eval', 'dl', 'dl_finetune', 'design', 'dl_serving', 'mlops_deploy', 'mlops_pipes', 'monitor', 'ts', 'causal'],
-  practice:    ['incidentroom', 'mlcoding', 'codebugs', 'projectlab', 'loan_default', 'fraud_detection', 'casestudies'],
-  interview:   ['interview', 'combinator', 'verbal', 'stafflayer', 'defense', 'spottheflaw', 'takehome', 'trainer'],
-  learn:       ['gradient', 'landscape'],
+// Where "work next" on a readiness weakness should send the user.
+const WEAKEST_TAB = {
+  foundations: 'gradient',
+  practice:    'interview_questions',
 }
 
-const SECTIONS = [
-  { id: 'foundations', label: 'Foundations', desc: 'Math, stats, classical ML.',                     defaultTab: 'models',       icon: '≡' },
-  { id: 'scenarios',   label: 'Scenarios',   desc: 'Production failure modes by responsibility.',    defaultTab: 'features',     icon: '⊟' },
-  { id: 'practice',    label: 'Practice',    desc: 'Incidents, coding problems, end-to-end labs.',   defaultTab: 'incidentroom', icon: 'zap' },
-  { id: 'interview',   label: 'Interview',   desc: '128 questions, timed exam, verbal, behavioral.', defaultTab: 'interview',    icon: '◈' },
-  { id: 'learn',       label: 'Learn',       desc: '50 deep-dive posts on production ML.',           defaultTab: 'gradient',     icon: '∇' },
-]
-
-const ENTRY_PATHS = [
-  { label: 'Preparing for interviews',     desc: "Build the framing that separates a pass from a hire — Q&A bank, timed exam, verbal practice.",    tab: 'interview',    cta: 'Go to Interview →' },
-  { label: 'Sharpening production skills', desc: "Scenario-based practice across features, evaluation, system design, and monitoring.",               tab: 'features',     cta: 'Go to Scenarios →' },
-  { label: 'Building foundations',         desc: "Statistics, classical ML, and math — the vocabulary that makes every other section land.",           tab: 'models',       cta: 'Go to Foundations →' },
-]
-
-// ── Guided paths ───────────────────────────────────────────────────────────────
-const GUIDED_PATHS = [
-  {
-    id: 'senior_mle',
-    label: 'Senior MLE in 4 weeks',
-    desc: 'The complete interview loop — framing, Q&A, timed exam, incident diagnosis, live coding.',
-    steps: [
-      { tabId: 'classical',   label: 'Classical ML',   scoreKey: 'msl_score:classical' },
-      { tabId: 'defense',     label: 'Defense Plan',   scoreKey: null,               checkFn: () => !!localStorage.getItem('msl_defense_progress') },
-      { tabId: 'interview',   label: 'Q&A Bank (128)', scoreKey: 'msl_score:interview' },
-      { tabId: 'combinator',  label: 'Combinator Exam',scoreKey: 'msl_score:combinator' },
-      { tabId: 'incidentroom',label: 'Incident Room',  scoreKey: 'msl_score:incidentroom' },
-      { tabId: 'mlcoding',    label: 'ML Coding',      scoreKey: 'msl_score:mlcoding' },
-      { tabId: 'verbal',      label: 'Verbal Practice',scoreKey: null, checkFn: () => !!localStorage.getItem('msl_verbal_history') },
-    ],
-  },
-  {
-    id: 'data_eng',
-    label: 'Data Engineering Focus',
-    desc: 'Spark, Airflow, dbt, data modeling — the stack behind every ML pipeline.',
-    steps: [
-      { tabId: 'spark',    label: 'Spark Lab',      scoreKey: 'msl_score:spark' },
-      { tabId: 'airflow',  label: 'Airflow',         scoreKey: 'msl_score:airflow' },
-      { tabId: 'dbt',      label: 'dbt',             scoreKey: 'msl_score:dbt' },
-      { tabId: 'modeling', label: 'Data Modeling',   scoreKey: 'msl_score:modeling' },
-      { tabId: 'mlcoding', label: 'ML Coding',       scoreKey: 'msl_score:mlcoding' },
-    ],
-  },
-  {
-    id: 'quick_cal',
-    label: 'Quick Calibration',
-    desc: 'Two hours. Covers your weakest areas — classical ML, hyperparam judgment, and timed MCQs.',
-    steps: [
-      { tabId: 'classical',  label: 'Classical ML',   scoreKey: 'msl_score:classical' },
-      { tabId: 'features',   label: 'Feature Eng',    scoreKey: 'msl_score:features' },
-      { tabId: 'eval',       label: 'Model Eval',     scoreKey: 'msl_score:eval' },
-      { tabId: 'trainer',    label: 'Trainer',        scoreKey: 'msl_score:trainer' },
-      { tabId: 'combinator', label: 'Combinator Exam',scoreKey: 'msl_score:combinator' },
-    ],
-  },
-]
-
-// ── Helpers ────────────────────────────────────────────────────────────────────
-function readSectionProgress() {
-  const result = {}
-  Object.entries(SECTION_TABS).forEach(([sectionId, tabs]) => {
-    let attempted = 0, total = 0
-    tabs.forEach(tabId => {
-      try {
-        const raw = localStorage.getItem(`msl_score:${tabId}`)
-        if (raw) { const p = JSON.parse(raw); attempted += p.attempted || 0; total += p.total || 0 }
-      } catch {}
-    })
-    result[sectionId] = { attempted, total, pct: total > 0 ? Math.round((attempted / total) * 100) : 0 }
-  })
-  return result
-}
-
+// ── Streak (read-only; Home does not gate on it) ─────────────────────────────
 function readAndUpdateStreak() {
   try {
     const today = new Date().toISOString().slice(0, 10)
@@ -118,97 +77,41 @@ function readAndUpdateStreak() {
   } catch { return 0 }
 }
 
-function readActivity() {
-  const data = {}
-  for (let i = 0; i < 91; i++) {
-    const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10)
-    const v = localStorage.getItem(`msl_activity_${d}`)
-    if (v) data[d] = 1
-  }
-  return data
-}
-
-function readChallengeStats() {
-  let totalWrong = 0
-  const gapTabs = []
-  const allTabs = Object.values(SECTION_TABS).flat()
-  allTabs.forEach(tabId => {
-    try {
-      const raw = localStorage.getItem(`msl_score:${tabId}`)
-      if (raw) {
-        const p = JSON.parse(raw)
-        totalWrong += Math.max(0, (p.attempted || 0) - (p.correct || 0))
-      } else {
-        gapTabs.push(tabId)
-      }
-    } catch {}
-  })
-  return { totalWrong, gapTabs, total: allTabs.length }
-}
-
-function buildSimPrompt(sectionProgress) {
-  const lines = ['=== ML Systems Lab — Interview Sim Context ===', '']
-  lines.push('SCORE SUMMARY')
-  Object.entries(sectionProgress).forEach(([section, prog]) => {
-    if (prog.total > 0) {
-      const pct = prog.pct
-      const flag = pct === 0 ? '⬛ not started' : pct < 40 ? '🔴 weak' : pct < 70 ? '🟡 partial' : '🟢 strong'
-      lines.push(`  ${section.padEnd(14)} ${String(prog.attempted).padStart(3)}/${prog.total}  ${pct}%  ${flag}`)
-    }
-  })
-  lines.push('')
-  const weak = Object.entries(sectionProgress).filter(([, p]) => p.total > 0 && p.pct < 50).map(([s]) => s)
-  if (weak.length) lines.push(`WEAK AREAS: ${weak.join(', ')}`)
-  const lastTab = (() => { try { return localStorage.getItem('msl_tab') } catch { return null } })()
-  if (lastTab) lines.push(`LAST ACTIVE: ${lastTab}`)
-  lines.push('')
-  lines.push('INSTRUCTIONS FOR TRAINER')
-  lines.push('Use this context to run a mock ML interview. Start with weak areas. Ask one question at a time.')
-  lines.push('After each answer, give brief feedback then move to the next question. Focus on production judgment.')
-  return lines.join('\n')
-}
-
-function readBookmarks() {
-  try { return JSON.parse(localStorage.getItem('msl_bookmarks') || '[]') }
-  catch { return [] }
-}
-
-function stepDone(step) {
-  if (step.checkFn) return step.checkFn()
-  if (!step.scoreKey) return false
+function readTotalAttempted() {
+  let attempted = 0
   try {
-    const raw = localStorage.getItem(step.scoreKey)
-    if (!raw) return false
-    const p = JSON.parse(raw)
-    return (p.attempted || 0) > 0 || (p.correct || 0) > 0
-  } catch { return false }
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (!key || !key.startsWith('msl_score:')) continue
+      const raw = localStorage.getItem(key)
+      if (!raw) continue
+      try {
+        const p = JSON.parse(raw)
+        if (p && typeof p.attempted === 'number') attempted += p.attempted
+      } catch {}
+    }
+  } catch {}
+  return attempted
 }
 
-// ── Main ───────────────────────────────────────────────────────────────────────
+// ── Main ─────────────────────────────────────────────────────────────────────
 export default function HomeTab({ onNavigate }) {
-  const [sectionProgress, setSectionProgress] = useState(() => readSectionProgress())
   const [streak] = useState(() => readAndUpdateStreak())
-  const [bookmarks] = useState(() => readBookmarks())
-  const [activity] = useState(() => readActivity())
-  const [challengeStats] = useState(() => readChallengeStats())
-  const [foundationsProg] = useState(() => overallCompletion(readFoundationsRead()))
-  const lastTab = (() => { try { return localStorage.getItem('msl_tab') } catch { return null } })()
-
-  function openFoundationsPath() {
-    if (onNavigate) onNavigate('gradient')
-    setTimeout(() => window.dispatchEvent(new CustomEvent('msl-open-foundations-path')), 50)
-  }
+  const [totalAttempted, setTotalAttempted] = useState(() => readTotalAttempted())
+  const [foundationsProg, setFoundationsProg] = useState(() => overallCompletion(readFoundationsRead()))
 
   useEffect(() => {
-    function onProg() { setSectionProgress(readSectionProgress()) }
-    window.addEventListener('msl_score_updated', onProg)
-    window.addEventListener('storage', onProg)
-    return () => { window.removeEventListener('msl_score_updated', onProg); window.removeEventListener('storage', onProg) }
+    function refresh() {
+      setTotalAttempted(readTotalAttempted())
+      setFoundationsProg(overallCompletion(readFoundationsRead()))
+    }
+    window.addEventListener('msl_score_updated', refresh)
+    window.addEventListener('storage', refresh)
+    return () => {
+      window.removeEventListener('msl_score_updated', refresh)
+      window.removeEventListener('storage', refresh)
+    }
   }, [])
-
-  const totalAttempted = Object.values(sectionProgress).reduce((s, p) => s + p.attempted, 0)
-  const totalScenarios = Object.values(sectionProgress).reduce((s, p) => s + p.total, 0)
-  const overallPct     = totalScenarios > 0 ? Math.round((totalAttempted / totalScenarios) * 100) : 0
 
   // ── Cold Home / Next 30 Minutes mode derivation ─────────────────────────
   const [homeMode, setHomeMode] = useState(() => {
@@ -221,16 +124,10 @@ export default function HomeTab({ onNavigate }) {
       override,
     })
   })
-  const [onboardingPick, setOnboardingPick] = useState(() => readOnboarding())
+  const [onboardingPick] = useState(() => readOnboarding())
   const [recommendation, setRecommendation] = useState(() =>
     recommendNext({ level: onboardingPick.level, urgency: onboardingPick.urgency })
   )
-
-  function handleQuizComplete(picked) {
-    setOnboardingPick(picked)
-    setRecommendation(recommendNext({ level: picked.level, urgency: picked.urgency }))
-    setHomeMode('next30')
-  }
 
   function handleSeeEverything() {
     setHomeMode('dashboard')
@@ -243,12 +140,7 @@ export default function HomeTab({ onNavigate }) {
     track('dashboard_back_to_focused_clicked')
   }
 
-  // Strongest + not-started
-  const rankedSections = SECTIONS
-    .map(s => ({ ...s, pct: sectionProgress[s.id]?.pct || 0, total: sectionProgress[s.id]?.total || 0 }))
-    .filter(s => s.total > 0)
-  const strongest  = rankedSections.reduce((best, s) => (s.pct > (best?.pct || -1) ? s : best), null)
-  const notStarted = rankedSections.find(s => s.pct === 0)
+  const isNewUser = totalAttempted === 0 && foundationsProg.read === 0
 
   // ── Brand-new users are handed to Start Here (the onboarding owner) ──────
   if (homeMode === 'quiz') {
@@ -260,11 +152,11 @@ export default function HomeTab({ onNavigate }) {
         <div style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: 12, padding: '1.6rem 1.6rem' }}>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--ink-hi)', margin: '0 0 0.5rem', letterSpacing: '-0.02em' }}>New here?</h2>
           <p style={{ fontSize: '0.9rem', color: 'var(--ink-mid)', margin: '0 0 1.2rem', lineHeight: 1.6 }}>
-            Start Here walks you through the lab's six layers and points you at a concrete first read and practice room based on your level and timeline.
+            Start Here walks you through the lab's frames and points you at a concrete first read and practice room based on your level and timeline.
           </p>
           <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
             <button onClick={() => onNavigate('start_here')} style={{ background: 'var(--prime)', color: '#000', fontWeight: 700, fontSize: '0.85rem', border: 'none', borderRadius: 8, padding: '0.65rem 1.3rem', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>Go to Start Here →</button>
-            <button onClick={() => setHomeMode('dashboard')} style={{ background: 'var(--depth)', color: 'var(--ink-mid)', fontWeight: 600, fontSize: '0.85rem', border: '1px solid var(--rim)', borderRadius: 8, padding: '0.65rem 1.3rem', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>Skip to dashboard</button>
+            <button onClick={() => setHomeMode('dashboard')} style={{ background: 'var(--depth)', color: 'var(--ink-mid)', fontWeight: 600, fontSize: '0.85rem', border: '1px solid var(--rim)', borderRadius: 8, padding: '0.65rem 1.3rem', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>Skip to launcher</button>
           </div>
         </div>
       </div>
@@ -288,8 +180,10 @@ export default function HomeTab({ onNavigate }) {
     )
   }
 
-  // ── Dashboard mode (default for returning users) ─────────────────────────
-  // Render the full historical Home below. Override-users get a "back to focused" pill.
+  // ── Launcher mode (default) ──────────────────────────────────────────────
+  const r = computeReadiness()
+  const weakTab = r.weakest ? (WEAKEST_TAB[r.weakest.key] || 'gradient') : null
+
   return (
     <div style={{ maxWidth: '660px', margin: '0 auto', paddingBottom: '48px' }}>
 
@@ -297,23 +191,14 @@ export default function HomeTab({ onNavigate }) {
       {totalAttempted < 5 && readHomeOverride() === 'dashboard' && (
         <div style={{ paddingTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
           <button onClick={handleBackToFocused}
-            style={{
-              padding: '6px 12px',
-              fontSize: '11px',
-              fontFamily: 'var(--font-mono)',
-              color: 'var(--ink-low)',
-              background: 'rgba(0,0,0,0.18)',
-              border: '1px solid var(--rim)',
-              borderRadius: '999px',
-              cursor: 'pointer',
-            }}>
+            style={{ padding: '6px 12px', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', background: 'rgba(0,0,0,0.18)', border: '1px solid var(--rim)', borderRadius: '999px', cursor: 'pointer' }}>
             ← back to focused mode
           </button>
         </div>
       )}
 
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <div style={{ paddingTop: '40px', marginBottom: '32px' }}>
+      {/* ── Header ────────────────────────────────────────────────────────── */}
+      <div style={{ paddingTop: '40px', marginBottom: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
           <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--prime)' }}>ML Systems Lab</div>
           {streak > 0 && (
@@ -322,243 +207,89 @@ export default function HomeTab({ onNavigate }) {
             </div>
           )}
         </div>
-        <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '30px', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.12, color: 'var(--ink-hi)', marginBottom: '14px' }}>
+        <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.14, color: 'var(--ink-hi)', marginBottom: '10px' }}>
           Production ML judgment.<br />Built through real failure modes.
         </h1>
-        <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.7, maxWidth: '500px', marginBottom: '18px' }}>
-          Not theory. The actual failure modes that break production ML systems — and the framing senior practitioners use to reason through them.
+        <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.7, maxWidth: '500px' }}>
+          Five frames — know it, do it, build it, judge it, and prep for the room. Pick where to work.
         </p>
-        {totalScenarios > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '240px', height: '3px', background: 'var(--rim)', borderRadius: '2px' }}>
-              <div style={{ width: `${overallPct}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.5s', boxShadow: '0 0 8px var(--prime-glow)' }} />
-            </div>
-            <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--prime)' }}>{overallPct}%</span>
-            <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>{totalAttempted}/{totalScenarios} scenarios</span>
-          </div>
-        )}
       </div>
 
-      {/* ── Interview readiness % (shown once user has any progress) ─────── */}
-      {(totalAttempted > 0 || foundationsProg.read > 0) && (() => {
-        const r = computeReadiness()
-        return (
-          <div style={{ marginBottom: '28px', padding: '18px 20px', borderRadius: '12px', background: 'var(--depth)', border: '1px solid var(--rim)' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
-              <div style={{ flex: 1, minWidth: '220px' }}>
-                <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '6px', fontWeight: 700 }}>Interview readiness</div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '8px' }}>
-                  <span style={{ fontFamily: 'var(--font-sans)', fontSize: '40px', fontWeight: 900, letterSpacing: '-0.04em', color: readinessColor(r.level) }}>
-                    {r.score}%
-                  </span>
-                  <span style={{ fontSize: '13px', fontFamily: 'var(--font-mono)', color: readinessColor(r.level), fontWeight: 600 }}>
-                    {readinessLabel(r.level)}
-                  </span>
-                </div>
-                <div style={{ width: '100%', height: '4px', background: 'var(--rim)', borderRadius: '2px', overflow: 'hidden', marginBottom: '12px' }}>
-                  <div style={{ width: `${r.score}%`, height: '100%', background: readinessColor(r.level), transition: 'width 0.5s' }} />
-                </div>
-                <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)' }}>
-                  <span title="The MLE Path — 50% of readiness">Path {r.breakdown.path}%</span>
-                  <span title="Practice scenarios attempted (target: 80) — 30% of readiness">Practice {r.breakdown.practice}%</span>
-                  <span title="Active days in last 28 — 20% of readiness">Activity {r.breakdown.activity}%</span>
-                  {r.breakdown.accuracy > 0 && (
-                    <span title="Accuracy across practice scenarios">Accuracy {r.breakdown.accuracy}%</span>
-                  )}
-                </div>
-              </div>
+      {/* ── Readiness hero ───────────────────────────────────────────────── */}
+      {isNewUser ? (
+        <div style={{ marginBottom: '28px', padding: '18px 20px', background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.3)', borderLeft: '3px solid var(--prime)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: '220px' }}>
+            <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px' }}>Start here</div>
+            <div style={{ fontSize: '15px', fontWeight: 800, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', letterSpacing: '-0.01em', marginBottom: '4px' }}>Get your first readiness reading</div>
+            <div style={{ fontSize: '13px', color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)', lineHeight: 1.55 }}>
+              Ten minutes of production-judgment scenarios calibrates where you stand — no setup.
             </div>
           </div>
-        )
-      })()}
-
-      {/* ── First-session directive (new users only) ─────────────────────── */}
-      {totalAttempted === 0 && (
-        <div style={{ marginBottom: '28px', padding: '14px 18px', background: 'var(--prime-bg-light)', border: '1px solid rgba(240,165,0,0.3)', borderLeft: '3px solid var(--prime)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
-          <div>
-            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--prime)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '3px' }}>New here?</div>
-            <div style={{ fontSize: '13px', color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)' }}>Start with a 10-minute calibration — production judgment scenarios, no setup.</div>
-          </div>
-          <button onClick={() => onNavigate('classical')}
-            style={{ flexShrink: 0, fontSize: '12px', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--prime)', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.35)', borderRadius: '6px', padding: '8px 16px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-            Start first session →
-          </button>
-        </div>
-      )}
-
-      {/* ── The MLE Path card ────────────────────────────────────────────── */}
-      <div style={{ marginBottom: '28px', padding: '18px 20px', background: 'linear-gradient(135deg, rgba(240,165,0,0.10) 0%, rgba(240,165,0,0.04) 100%)', border: '1px solid rgba(240,165,0,0.28)', borderRadius: '12px' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
-          <div style={{ flex: 1, minWidth: '240px' }}>
-            <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px' }}>↥ The MLE Path</div>
-            <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', marginBottom: '6px', letterSpacing: '-0.02em' }}>
-              {foundationsProg.read > 0 ? 'Continue the MLE climb' : 'Preparing for senior MLE interviews? Start here.'}
-            </div>
-            <div style={{ fontSize: '12px', color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)', lineHeight: 1.55 }}>
-              {TOTAL_POSTS} posts across 11 tiers — observation discipline, math, statistics, linear models, classical algorithms, unsupervised, evaluation, sequence, production engineering, monitoring &amp; MLOps, system design, interview bridge. Every tier ends with a practice tab to apply what you read.
-            </div>
-            {foundationsProg.read > 0 && (
-              <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{ width: '160px', height: '4px', background: 'var(--rim)', borderRadius: '2px' }}>
-                  <div style={{ width: `${Math.round((foundationsProg.read / foundationsProg.total) * 100)}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px' }} />
-                </div>
-                <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)' }}>{foundationsProg.read}/{foundationsProg.total}</span>
-              </div>
-            )}
-          </div>
-          <button onClick={openFoundationsPath}
+          <button onClick={() => onNavigate('start_here')}
             style={{ flexShrink: 0, fontSize: '12px', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--void)', background: 'var(--prime)', border: 'none', borderRadius: '7px', padding: '10px 18px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-            {foundationsProg.read > 0 ? 'Resume path →' : 'Start the path →'}
+            Start here →
           </button>
         </div>
-      </div>
-
-      {/* ── WhatsApp community card — only show if not yet joined ─────────── */}
-      {!localStorage.getItem('msl_community_joined') && totalAttempted > 0 && (
-        <div style={{ marginBottom: '28px', padding: '14px 18px', background: 'rgba(37,211,102,0.06)', border: '1px solid rgba(37,211,102,0.20)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '14px', flexWrap: 'wrap' }}>
-          <div style={{ flex: 1, minWidth: '200px' }}>
-            <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'rgb(37,211,102)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px', fontWeight: 700 }}>Community · WhatsApp</div>
-            <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', marginBottom: '4px', letterSpacing: '-0.01em' }}>
-              Indian senior MLE prep group
-            </div>
-            <div style={{ fontSize: '12px', color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)', lineHeight: 1.45 }}>
-              Weekly mock interviews, real company interview reports, fast feedback on your prep questions.
-            </div>
+      ) : (
+        <div style={{ marginBottom: '28px', padding: '18px 20px', borderRadius: '12px', background: 'var(--depth)', border: '1px solid var(--rim)' }}>
+          <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '8px', fontWeight: 700 }}>Interview readiness</div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '10px' }}>
+            <span style={{ fontFamily: 'var(--font-sans)', fontSize: '44px', fontWeight: 900, letterSpacing: '-0.04em', color: readinessColor(r.level), lineHeight: 1 }}>
+              {r.score}%
+            </span>
+            <span style={{ fontSize: '13px', fontFamily: 'var(--font-mono)', color: readinessColor(r.level), fontWeight: 600 }}>
+              {readinessLabel(r.level)}
+            </span>
           </div>
-          <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-            <a href="https://chat.whatsapp.com/KqFoGxAW0XMF9hNllGyAo9" target="_blank" rel="noopener noreferrer"
-              onClick={() => { try { localStorage.setItem('msl_community_joined', '1') } catch {} }}
-              style={{ padding: '8px 14px', borderRadius: '7px', background: 'rgb(37,211,102)', color: '#ffffff', fontSize: '12px', fontFamily: 'var(--font-mono)', fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>
-              Join →
-            </a>
-            <button onClick={() => { try { localStorage.setItem('msl_community_joined', '1') } catch {}; setSectionProgress({ ...sectionProgress }) }}
-              style={{ padding: '8px 12px', borderRadius: '7px', background: 'transparent', border: '1px solid var(--rim)', color: 'var(--ink-low)', fontSize: '11px', fontFamily: 'var(--font-sans)', cursor: 'pointer' }}>
-              Already in
-            </button>
+          <div style={{ width: '100%', height: '4px', background: 'var(--rim)', borderRadius: '2px', overflow: 'hidden', marginBottom: r.weakest ? '14px' : '0' }}>
+            <div style={{ width: `${r.score}%`, height: '100%', background: readinessColor(r.level), transition: 'width 0.5s' }} />
           </div>
-        </div>
-      )}
-
-      {/* ── Recently added ────────────────────────────────────────────────── */}
-      {totalAttempted > 0 && (
-        <div style={{ marginBottom: '28px' }}>
-          <div style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.13em', color: 'var(--ink-ghost)', marginBottom: '10px' }}>Recently added</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {RECENTLY_ADDED.slice(0, 3).map(item => (
-              <button key={item.label} onClick={() => onNavigate(item.tab)}
-                style={{ textAlign: 'left', padding: '10px 14px', background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--ink-ghost)', flexShrink: 0, minWidth: '68px' }}>{item.date.slice(5)}</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', marginBottom: '1px' }}>{item.label}</div>
-                  <div style={{ fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-sans)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.desc}</div>
-                </div>
-                <span style={{ fontSize: '11px', color: 'var(--ink-ghost)', flexShrink: 0 }}>→</span>
+          {r.weakest && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '14px', flexWrap: 'wrap' }}>
+              <div style={{ fontSize: '13px', fontFamily: 'var(--font-sans)', color: 'var(--ink-mid)' }}>
+                Work next: <span style={{ fontWeight: 700, color: 'var(--ink-hi)' }}>{r.weakest.label}</span>
+              </div>
+              <button onClick={() => onNavigate(weakTab)}
+                style={{ flexShrink: 0, fontSize: '12px', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--prime)', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.35)', borderRadius: '6px', padding: '7px 14px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                Work on it →
               </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ── Progress callouts ─────────────────────────────────────────────── */}
-      {(strongest || notStarted) && (
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '28px', flexWrap: 'wrap' }}>
-          {strongest && strongest.pct > 0 && (
-            <button onClick={() => onNavigate(strongest.defaultTab)} style={{ flex: 1, minWidth: '180px', textAlign: 'left', padding: '10px 14px', background: 'rgba(52,211,153,0.07)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '8px', cursor: 'pointer' }}>
-              <div style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '3px' }}>Strongest area</div>
-              <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>{strongest.label} · {strongest.pct}%</div>
-            </button>
-          )}
-          {notStarted && (
-            <button onClick={() => onNavigate(notStarted.defaultTab)} style={{ flex: 1, minWidth: '180px', textAlign: 'left', padding: '10px 14px', background: 'rgba(244,63,94,0.06)', border: '1px solid rgba(244,63,94,0.18)', borderRadius: '8px', cursor: 'pointer' }}>
-              <div style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: 'var(--rose)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '3px' }}>Not started</div>
-              <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>{notStarted.label} →</div>
-            </button>
+            </div>
           )}
         </div>
       )}
 
-      {/* ── Entry paths ───────────────────────────────────────────────────── */}
+      {/* ── Five launch cards ────────────────────────────────────────────── */}
       <div style={{ marginBottom: '32px' }}>
-        <div style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.13em', color: 'var(--ink-ghost)', marginBottom: '12px' }}>Where to start</div>
+        <div style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.13em', color: 'var(--ink-ghost)', marginBottom: '12px' }}>Where to work</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {ENTRY_PATHS.map(path => <EntryCard key={path.tab} path={path} onNavigate={onNavigate} />)}
+          {FRAMES.map(frame => <FrameCard key={frame.id} frame={frame} onNavigate={onNavigate} />)}
         </div>
       </div>
 
-      {/* ── Guided paths ─────────────────────────────────────────────────── */}
-      <div style={{ marginBottom: '32px' }}>
-        <div style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.13em', color: 'var(--ink-ghost)', marginBottom: '12px' }}>Guided paths</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {GUIDED_PATHS.map(path => <PathCard key={path.id} path={path} onNavigate={onNavigate} />)}
-        </div>
-      </div>
-
-      {/* ── Section overview ─────────────────────────────────────────────── */}
-      <div style={{ marginBottom: '32px' }}>
-        <div style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.13em', color: 'var(--ink-ghost)', marginBottom: '12px' }}>Sections</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          {SECTIONS.map(section => (
-            <SectionRow key={section.id} section={section} prog={sectionProgress[section.id] || { pct: 0, attempted: 0, total: 0 }} onNavigate={onNavigate} />
-          ))}
-        </div>
-      </div>
-
-      {/* ── Activity heatmap — progressively surfaced after 3+ active days ── */}
-      {Object.keys(activity).length >= 3 && (
-        <div style={{ marginBottom: '28px' }}>
-          <div style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.13em', color: 'var(--ink-ghost)', marginBottom: '10px' }}>91-day activity</div>
-          <ActivityHeatmap activity={activity} />
-        </div>
-      )}
-
-      {/* ── Challenge log — progressively surfaced after 5+ attempts ────── */}
-      {totalAttempted >= 5 && (
-        <div style={{ marginBottom: '28px' }}>
-          <div style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.13em', color: 'var(--ink-ghost)', marginBottom: '10px' }}>Challenge log</div>
-          <ChallengeLog stats={challengeStats} onNavigate={onNavigate} />
-        </div>
-      )}
-
-      {/* ── Interview Sim export — progressively surfaced after 10+ attempts */}
-      {totalAttempted >= 10 && (
-        <div style={{ marginBottom: '28px' }}>
-          <InterviewSimExport sectionProgress={sectionProgress} />
-        </div>
-      )}
-
-      {/* ── Bookmarks ─────────────────────────────────────────────────────── */}
-      {bookmarks.length > 0 && (
-        <div style={{ marginBottom: '28px' }}>
-          <div style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.13em', color: 'var(--ink-ghost)', marginBottom: '10px' }}>Bookmarks</div>
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-            {bookmarks.map(bm => (
-              <button key={bm.id || bm} onClick={() => onNavigate(bm.tabId || bm)}
-                style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', background: 'rgba(240,165,0,0.07)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '6px', padding: '4px 10px', cursor: 'pointer' }}>
-                {bm.label || bm.tabId || bm} →
-              </button>
-            ))}
+      {/* ── New here? → Start Here handoff ─────────────────────────────────── */}
+      <div style={{ marginBottom: '28px', padding: '14px 18px', background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
+        <div style={{ flex: 1, minWidth: '200px' }}>
+          <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', marginBottom: '2px' }}>New here?</div>
+          <div style={{ fontSize: '12px', color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)', lineHeight: 1.5 }}>
+            Start Here walks the five frames and points you at a concrete first read and practice room.
           </div>
         </div>
-      )}
-
-      {/* ── Continue ─────────────────────────────────────────────────────── */}
-      {lastTab && lastTab !== 'home' && (
-        <div style={{ marginBottom: '28px' }}>
-          <div style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.13em', color: 'var(--ink-ghost)', marginBottom: '10px' }}>Continue</div>
-          <ResumeBtn lastTab={lastTab} onNavigate={onNavigate} />
-        </div>
-      )}
+        <button onClick={() => onNavigate('start_here')}
+          style={{ flexShrink: 0, fontSize: '12px', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--prime)', background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '6px', padding: '8px 14px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+          Go to Start Here →
+        </button>
+      </div>
 
       {/* ── Footer ───────────────────────────────────────────────────────── */}
       <div style={{ borderTop: '1px solid var(--rim)', paddingTop: '18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>
-          {totalAttempted > 0 ? `${totalAttempted} scenarios attempted` : 'No progress yet — pick a path above.'}
+          {totalAttempted > 0 ? `${totalAttempted} scenarios attempted` : 'No progress yet — pick a frame above.'}
         </span>
-        <button onClick={downloadProgressJSON}
+        <button onClick={() => onNavigate('progress')}
           style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0' }}
           onMouseEnter={e => e.currentTarget.style.color = 'var(--ink-low)'}
           onMouseLeave={e => e.currentTarget.style.color = 'var(--ink-ghost)'}>
-          ↓ export progress
+          full dashboard in My Progress →
         </button>
       </div>
 
@@ -567,173 +298,17 @@ export default function HomeTab({ onNavigate }) {
 }
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
-function EntryCard({ path, onNavigate }) {
+function FrameCard({ frame, onNavigate }) {
   const [hov, setHov] = useState(false)
   return (
-    <button onClick={() => onNavigate(path.tab)} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ textAlign: 'left', padding: '14px 16px', background: hov ? 'var(--card-tint)' : 'var(--surface)', border: `1px solid ${hov ? 'var(--rim-hi)' : 'var(--rim)'}`, borderRadius: '10px', cursor: 'pointer', width: '100%', transition: 'border-color var(--t), background var(--t)' }}>
-      <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '13px', color: 'var(--ink-hi)', marginBottom: '4px' }}>{path.label}</div>
-      <div style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.6, marginBottom: '8px' }}>{path.desc}</div>
-      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--prime)', fontWeight: 600 }}>{path.cta}</div>
-    </button>
-  )
-}
-
-function PathCard({ path, onNavigate }) {
-  const [hov, setHov] = useState(false)
-  const doneCount = path.steps.filter(stepDone).length
-  const total     = path.steps.length
-  const pct       = Math.round((doneCount / total) * 100)
-  const nextStep  = path.steps.find(s => !stepDone(s))
-
-  return (
-    <div style={{ background: hov ? 'var(--card-tint)' : 'var(--surface)', border: `1px solid ${hov ? 'var(--rim-hi)' : 'var(--rim)'}`, borderRadius: '10px', padding: '14px 16px', transition: 'border-color var(--t), background var(--t)' }}
-      onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '8px' }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '13px', color: 'var(--ink-hi)', marginBottom: '3px' }}>{path.label}</div>
-          <div style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', color: 'var(--ink-low)', lineHeight: 1.5 }}>{path.desc}</div>
-        </div>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', fontWeight: 700, color: doneCount === total ? 'var(--mint)' : 'var(--prime)', flexShrink: 0 }}>
-          {doneCount}/{total}
-        </div>
+    <button onClick={() => onNavigate(frame.tab)} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      style={{ textAlign: 'left', padding: '15px 17px', background: hov ? 'var(--card-tint)' : 'var(--surface)', border: `1px solid ${hov ? 'var(--rim-hi)' : 'var(--rim)'}`, borderRadius: '10px', cursor: 'pointer', width: '100%', transition: 'border-color var(--t), background var(--t)' }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '5px' }}>
+        <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.1em', color: 'var(--prime)' }}>{frame.label}</span>
+        <span style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', color: 'var(--ink-ghost)' }}>{frame.sub}</span>
       </div>
-      <div style={{ display: 'flex', gap: '4px', marginBottom: '10px' }}>
-        {path.steps.map((step, i) => (
-          <div key={i} style={{ flex: 1, height: '3px', borderRadius: '2px', background: stepDone(step) ? 'var(--prime)' : 'var(--rim)', transition: 'background 0.3s' }} />
-        ))}
-      </div>
-      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-        {path.steps.map((step, i) => {
-          const done = stepDone(step)
-          return (
-            <button key={i} onClick={() => onNavigate(step.tabId)}
-              style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', padding: '3px 8px', borderRadius: '5px', cursor: 'pointer', border: `1px solid ${done ? 'rgba(52,211,153,0.3)' : step === nextStep ? 'rgba(240,165,0,0.4)' : 'var(--rim)'}`, background: done ? 'rgba(52,211,153,0.08)' : step === nextStep ? 'rgba(240,165,0,0.08)' : 'transparent', color: done ? 'var(--mint)' : step === nextStep ? 'var(--prime)' : 'var(--ink-ghost)', fontWeight: step === nextStep ? 700 : 400 }}>
-              {step === nextStep && '→ '}{step.label}
-            </button>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-function SectionRow({ section, prog, onNavigate }) {
-  const [hov, setHov] = useState(false)
-  return (
-    <button onClick={() => onNavigate(section.defaultTab)} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ textAlign: 'left', padding: '11px 14px', background: hov ? 'var(--card-tint)' : 'var(--surface)', border: `1px solid ${hov ? 'var(--rim-hi)' : 'var(--rim)'}`, borderRadius: '8px', cursor: 'pointer', width: '100%', transition: 'border-color var(--t), background var(--t)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-      <span style={{ fontSize: '15px', width: '18px', textAlign: 'center', color: 'var(--ink-ghost)', flexShrink: 0 }}>{section.icon === 'zap' ? <Icon name="zap" size={15} /> : section.icon}</span>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: prog.total > 0 ? '4px' : '0' }}>
-          <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '12px', color: 'var(--ink-hi)' }}>{section.label}</span>
-          <span style={{ fontFamily: 'var(--font-sans)', fontSize: '11px', color: 'var(--ink-ghost)' }}>{section.desc}</span>
-        </div>
-        {prog.total > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ width: '120px', height: '2px', background: 'var(--rim)', borderRadius: '2px', flexShrink: 0 }}>
-              <div style={{ width: `${prog.pct}%`, height: '100%', background: 'var(--prime)', borderRadius: '2px', transition: 'width 0.5s' }} />
-            </div>
-            <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: prog.pct > 0 ? 'var(--prime)' : 'var(--ink-ghost)' }}>{prog.pct}%</span>
-          </div>
-        )}
-      </div>
-      <span style={{ fontSize: '14px', color: 'var(--ink-ghost)', flexShrink: 0 }}>›</span>
-    </button>
-  )
-}
-
-function ActivityHeatmap({ activity }) {
-  const days = []
-  for (let i = 90; i >= 0; i--) {
-    const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10)
-    days.push({ date: d, active: !!activity[d] })
-  }
-  const weeks = []
-  for (let i = 0; i < days.length; i += 7) weeks.push(days.slice(i, i + 7))
-  return (
-    <div style={{ display: 'flex', gap: '3px' }}>
-      {weeks.map((week, wi) => (
-        <div key={wi} style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-          {week.map(day => (
-            <div key={day.date} title={day.date}
-              style={{ width: '10px', height: '10px', borderRadius: '2px', background: day.active ? 'var(--prime)' : 'var(--rim)', opacity: day.active ? 1 : 0.5, transition: 'background 0.2s' }} />
-          ))}
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function ChallengeLog({ stats, onNavigate }) {
-  const { totalWrong, gapTabs, total } = stats
-  const covered = total - gapTabs.length
-  return (
-    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-      <div style={{ flex: 1, minWidth: '140px', padding: '10px 14px', background: totalWrong > 0 ? 'rgba(244,63,94,0.06)' : 'rgba(52,211,153,0.06)', border: `1px solid ${totalWrong > 0 ? 'rgba(244,63,94,0.18)' : 'rgba(52,211,153,0.18)'}`, borderRadius: '8px' }}>
-        <div style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: totalWrong > 0 ? 'var(--rose)' : 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '3px' }}>Wrong answers</div>
-        <div style={{ fontSize: '20px', fontWeight: 900, fontFamily: 'var(--font-mono)', color: 'var(--ink-hi)' }}>{totalWrong}</div>
-      </div>
-      <div style={{ flex: 1, minWidth: '140px', padding: '10px 14px', background: gapTabs.length > 0 ? 'rgba(240,165,0,0.05)' : 'rgba(52,211,153,0.06)', border: `1px solid ${gapTabs.length > 0 ? 'rgba(240,165,0,0.2)' : 'rgba(52,211,153,0.18)'}`, borderRadius: '8px' }}>
-        <div style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: gapTabs.length > 0 ? 'var(--prime)' : 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '3px' }}>Tab coverage</div>
-        <div style={{ fontSize: '20px', fontWeight: 900, fontFamily: 'var(--font-mono)', color: 'var(--ink-hi)' }}>{covered}<span style={{ fontSize: '12px', color: 'var(--ink-ghost)', fontWeight: 400 }}>/{total}</span></div>
-      </div>
-      {gapTabs.length > 0 && (
-        <div style={{ width: '100%', padding: '10px 14px', background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '8px' }}>
-          <div style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>Not started ({gapTabs.length})</div>
-          <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-            {gapTabs.map(t => (
-              <button key={t} onClick={() => onNavigate(t)}
-                style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', background: 'transparent', border: '1px solid var(--rim)', borderRadius: '5px', padding: '2px 8px', cursor: 'pointer' }}>
-                {t}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function InterviewSimExport({ sectionProgress }) {
-  const [open, setOpen] = useState(false)
-  const [copied, setCopied] = useState(false)
-  const prompt = open ? buildSimPrompt(sectionProgress) : ''
-  function copy() {
-    try { navigator.clipboard.writeText(prompt) } catch {}
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-  return (
-    <div>
-      <button onClick={() => setOpen(o => !o)}
-        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: open ? 'rgba(240,165,0,0.1)' : 'var(--depth)', border: `1px solid ${open ? 'rgba(240,165,0,0.35)' : 'var(--rim)'}`, borderRadius: '8px', cursor: 'pointer', width: '100%' }}>
-        <span style={{ fontSize: '13px', color: 'var(--prime)' }}>⬡</span>
-        <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '13px', color: 'var(--ink-hi)', flex: 1, textAlign: 'left' }}>Start Interview Sim</span>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--ink-ghost)' }}>generates trainer prompt {open ? '▲' : '▼'}</span>
-      </button>
-      {open && (
-        <div style={{ marginTop: '8px', position: 'relative' }}>
-          <pre style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--ink-mid)', background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: '8px', padding: '14px', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word', lineHeight: 1.7, maxHeight: '240px', overflowY: 'auto' }}>{prompt}</pre>
-          <button onClick={copy}
-            style={{ position: 'absolute', top: '8px', right: '8px', fontFamily: 'var(--font-mono)', fontSize: '10px', fontWeight: 700, color: copied ? 'var(--mint)' : 'var(--prime)', background: 'var(--surface)', border: `1px solid ${copied ? 'rgba(52,211,153,0.3)' : 'rgba(240,165,0,0.3)'}`, borderRadius: '5px', padding: '3px 10px', cursor: 'pointer' }}>
-            {copied ? '✓ copied' : 'copy'}
-          </button>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function ResumeBtn({ lastTab, onNavigate }) {
-  const [hov, setHov] = useState(false)
-  return (
-    <button onClick={() => onNavigate(lastTab)} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '11px 14px', background: hov ? 'var(--card-tint)' : 'var(--surface)', border: `1px solid ${hov ? 'var(--rim-hi)' : 'var(--rim)'}`, borderRadius: '8px', cursor: 'pointer', width: '100%', transition: 'border-color var(--t), background var(--t)' }}>
-      <span style={{ fontSize: '16px', lineHeight: 1 }}>↩</span>
-      <span style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', color: 'var(--ink-mid)' }}>
-        Resume <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--prime)', fontSize: '12px' }}>{lastTab}</span>
-      </span>
+      <div style={{ fontFamily: 'var(--font-sans)', fontSize: '12.5px', color: 'var(--ink-mid)', lineHeight: 1.55, marginBottom: '8px' }}>{frame.desc}</div>
+      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--prime)', fontWeight: 600 }}>{frame.cta}</div>
     </button>
   )
 }
