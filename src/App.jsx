@@ -77,6 +77,7 @@ const BanditsFoundationTab        = lazy(() => import('./tabs/foundations/Bandit
 const ProbabilisticMLFoundationTab = lazy(() => import('./tabs/foundations/ProbabilisticMLFoundationTab.jsx').then(m => ({ default: m.ProbabilisticMLFoundationTab })))
 const OptimizationFoundationTab    = lazy(() => import('./tabs/foundations/OptimizationFoundationTab.jsx').then(m => ({ default: m.OptimizationFoundationTab })))
 const DataFoundationTab            = lazy(() => import('./tabs/foundations/DataFoundationTab.jsx').then(m => ({ default: m.DataFoundationTab })))
+const MyTracksTab                  = lazy(() => import('./tabs/MyTracksTab.jsx').then(m => ({ default: m.MyTracksTab })))
 
 // ── Tab registry ──────────────────────────────────────────────────────────────
 const ALL_TABS = [
@@ -144,6 +145,7 @@ const ALL_TABS = [
   { id: 'probabilistic_ml_foundation', component: ProbabilisticMLFoundationTab },
   { id: 'optimization_foundation',     component: OptimizationFoundationTab },
   { id: 'data_foundation',             component: DataFoundationTab },
+  { id: 'my_tracks',                   component: MyTracksTab },
 ]
 
 // ── Freemium gate ─────────────────────────────────────────────────────────────
@@ -443,6 +445,7 @@ const NAV_SECTIONS = [
       { id: 'landscape',   label: 'ML Landscape',  desc: 'ML tools & infrastructure landscape map.' },
       { id: 'leaderboard', label: 'Leaderboard',   desc: 'Ranked by total problems and modules solved across every room.' },
       { id: 'progress',    label: 'My Progress',   desc: 'Readiness score, heatmap, room progress bars, and study plan.' },
+      { id: 'my_tracks',   label: 'My Tracks',     desc: 'Custom study tracks — group foundation modules for focused review.' },
     ],
   },
 ]
@@ -1153,6 +1156,13 @@ export default function App() {
       return (
         <Suspense fallback={<LoadingSpinner />}>
           <ProgressTab user={user} onNavigate={goTo} />
+        </Suspense>
+      )
+    }
+    if (activeTab === 'my_tracks') {
+      return (
+        <Suspense fallback={<LoadingSpinner />}>
+          <MyTracksTab onNavigate={goTo} />
         </Suspense>
       )
     }
