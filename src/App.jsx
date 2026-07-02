@@ -38,6 +38,7 @@ const TakeHomeTab    = lazy(() => import('./tabs/TakeHomeTab.jsx'))
 const TrainerTab     = lazy(() => import('./tabs/TrainerTab.jsx'))
 const CombinatorTab  = lazy(() => import('./tabs/CombinatorTab.jsx'))
 const DrillTab       = lazy(() => import('./tabs/DrillTab.jsx'))
+const InterviewQuestionsTab = lazy(() => import('./tabs/InterviewQuestionsTab.jsx'))
 const CodeBugsTab    = lazy(() => import('./tabs/CodeBugsTab.jsx'))
 const CaseStudiesTab = lazy(() => import('./tabs/CaseStudiesTab.jsx'))
 const StaffLayerTab  = lazy(() => import('./tabs/StaffLayerTab.jsx'))
@@ -115,6 +116,7 @@ const ALL_TABS = [
   { id: 'trainer',     component: TrainerTab },
   { id: 'combinator',  component: CombinatorTab },
   { id: 'drill',       component: DrillTab },
+  { id: 'interview_questions', component: InterviewQuestionsTab },
   { id: 'codebugs',    component: CodeBugsTab },
   { id: 'casestudies', component: CaseStudiesTab },
   { id: 'stafflayer',  component: StaffLayerTab },
@@ -451,29 +453,10 @@ const NAV_SECTIONS = [
     id: 'assess',
     label: 'PREP & ASSESS',
     icon: 'clipboard',
-    groups: [
-      {
-        label: 'QUESTION BANKS',
-        items: [
-          { id: 'interview',   label: 'Q&A Bank',          desc: 'Senior MLE questions with model answers and 4-tier scoring.' },
-          { id: 'behavioral',  label: 'Behavioral / STAR', desc: '24 senior/staff behavioral questions — STAR scaffolds + what each round is testing.' },
-          { id: 'takehome',    label: 'Take-Home Bank',    desc: '15 open-ended system-design questions; compare to a senior answer.' },
-        ],
-      },
-      {
-        label: 'DRILL & TEST',
-        items: [
-          { id: 'drill',       label: 'Drill',             desc: 'One bank, two modes — untimed spaced-rep practice or a timed mock exam.' },
-        ],
-      },
-      {
-        label: 'REHEARSE',
-        items: [
-          { id: 'mock_interview', label: 'Mock Interview',  desc: 'Paste a JD; get a customized AI-interviewer prompt.' },
-          { id: 'verbal',         label: 'Verbal Practice', desc: 'Say your answer out loud (Web Speech) — the communication layer.' },
-          { id: 'defense',        label: 'Defense Plan',    desc: 'Paste a JD → gap map → study plan; defend your projects under pressure.' },
-        ],
-      },
+    items: [
+      { id: 'interview_questions', label: 'Interview Questions', desc: 'One open-ended bank — Q&A, Behavioral/STAR, system-design take-homes, and the defend-your-project round.' },
+      { id: 'drill',               label: 'Drill',               desc: 'Self-test the MCQ bank — untimed spaced-rep practice or a timed mock exam.' },
+      { id: 'mock_interview',      label: 'Mock Interview',      desc: 'Paste a JD; get a customized AI-interviewer prompt for a live, adaptive mock.' },
     ],
   },
 ]
