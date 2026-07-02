@@ -6,6 +6,29 @@ export function InteractiveShell({ children }) {
   const [playing, setPlaying] = useState(false)
   const hasPlayedRef = useRef(false)
 
+  // Capability detection — the child (often lazy-loaded) exposes some subset of
+  // play/pause/reset/step via useImperativeHandle. Slider-driven interactives
+  // expose NONE. We only render controls for the methods that actually exist,
+  // so a Play button never appears on something that can't play.
+  const [caps, setCaps] = useState({ play: false, pause: false, reset: false, step: false })
+  useEffect(() => {
+    let raf
+    let attempts = 0
+    const check = () => {
+      const v = vizRef.current
+      if (v && (v.play || v.pause || v.reset || v.step)) {
+        setCaps({ play: !!v.play, pause: !!v.pause, reset: !!v.reset, step: !!v.step })
+        return
+      }
+      // keep polling briefly while a lazy child mounts, then give up (no controls)
+      if (attempts++ < 40) raf = requestAnimationFrame(check)
+    }
+    check()
+    return () => { if (raf) cancelAnimationFrame(raf) }
+  }, [])
+
+  const hasControls = caps.play || caps.pause || caps.reset || caps.step
+
   const play = useCallback(() => {
     if (vizRef.current?.play) {
       vizRef.current.play()
@@ -34,8 +57,10 @@ export function InteractiveShell({ children }) {
     }
   }, [])
 
-  // IntersectionObserver: auto-play when top edge enters viewport, pause when it leaves
+  // IntersectionObserver: auto-play when top edge enters viewport, pause when it
+  // leaves — but only for interactives that can actually play.
   useEffect(() => {
+    if (!caps.play) return
     const el = containerRef.current
     if (!el) return
     const observer = new IntersectionObserver(
@@ -51,7 +76,7 @@ export function InteractiveShell({ children }) {
     )
     observer.observe(el)
     return () => observer.disconnect()
-  }, [play, pause, playing])
+  }, [caps.play, play, pause, playing])
 
   const btnStyle = (active) => ({
     background: active ? 'var(--prime)' : 'var(--depth)',
@@ -67,14 +92,17 @@ export function InteractiveShell({ children }) {
   return (
     <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       {React.cloneElement(children, { ref: vizRef })}
-      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-        {playing
-          ? <button style={btnStyle(true)} onClick={pause}>⏸</button>
-          : <button style={btnStyle(false)} onClick={play}>▶</button>
-        }
-        <button style={btnStyle(false)} onClick={step}>⏭</button>
-        <button style={btnStyle(false)} onClick={reset}>↺</button>
-      </div>
+      {hasControls && (
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          {(caps.play || caps.pause) && (
+            playing
+              ? <button style={btnStyle(true)} onClick={pause} title="Pause">⏸</button>
+              : <button style={btnStyle(false)} onClick={play} title="Play">▶</button>
+          )}
+          {caps.step && <button style={btnStyle(false)} onClick={step} title="Step">⏭</button>}
+          {caps.reset && <button style={btnStyle(false)} onClick={reset} title="Reset">↺</button>}
+        </div>
+      )}
     </div>
   )
 }

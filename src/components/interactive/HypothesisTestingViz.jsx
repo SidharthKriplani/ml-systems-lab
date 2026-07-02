@@ -273,7 +273,7 @@ export const HypothesisTestingViz = forwardRef(function HypothesisTestingViz(pro
     if (animRef.current) return
     let lastTime = 0
     const tick = (time) => {
-      if (time - lastTime >= 100) {
+      if (time - lastTime >= 260) {
         lastTime = time
         setMuB(b => {
           const nb = Math.min(0.90, b + 0.005)

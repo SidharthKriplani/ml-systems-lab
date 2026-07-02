@@ -48,6 +48,10 @@ const MLCodingTab       = lazy(() => import('./tabs/MLCodingTab.jsx'))
 const ProjectLabTab     = lazy(() => import('./tabs/ProjectLabTab.jsx'))
 const LoanDefaultTab = lazy(() => import('./tabs/LoanDefaultTab.jsx'))
 const FraudDetectionTab = lazy(() => import('./tabs/FraudDetectionTab.jsx'))
+const BehavioralBankTab = lazy(() => import('./tabs/BehavioralBankTab.jsx'))
+const RankingProjectTab = lazy(() => import('./tabs/RankingProjectTab.jsx'))
+const ForecastProjectTab = lazy(() => import('./tabs/ForecastProjectTab.jsx'))
+const NLPContentProjectTab = lazy(() => import('./tabs/NLPContentProjectTab.jsx'))
 const StartHereTab      = lazy(() => import('./tabs/StartHereTab.jsx'))
 const DrillBrowser      = lazy(() => import('./components/judge/DrillBrowser.jsx'))
 const PlansTab          = lazy(() => import('./tabs/PlansTab.jsx'))
@@ -102,6 +106,7 @@ const ALL_TABS = [
   { id: 'mlops_deploy', component: MLOpsDeployTab },
   { id: 'mlops_pipes',  component: MLOpsPipelinesTab },
   { id: 'interview',    component: InterviewPrepTab },
+  { id: 'behavioral',   component: BehavioralBankTab },
   { id: 'gradient',     component: GradientTab },
   { id: 'landscape',    component: LandscapeTab },
   // New feature tabs
@@ -119,6 +124,9 @@ const ALL_TABS = [
   { id: 'projectlab',    component: ProjectLabTab },
   { id: 'loan_default', component: LoanDefaultTab },
   { id: 'fraud_detection', component: FraudDetectionTab },
+  { id: 'ranking_project', component: RankingProjectTab },
+  { id: 'forecast_project', component: ForecastProjectTab },
+  { id: 'nlp_content_project', component: NLPContentProjectTab },
   { id: 'plans',     component: PlansTab },
   { id: 'profile',   component: ProfilePage },
   { id: 'resources',   component: ResourcesTab },
@@ -162,7 +170,7 @@ const PREMIUM_TABS = new Set([
   'interview', 'takehome', 'combinator', 'verbal', 'spottheflaw', 'incidentroom', 'mlcoding',
   // Labs (drill tools + project labs)
   'trainer', 'codebugs', 'casestudies', 'stafflayer',
-  'projectlab', 'loan_default', 'fraud_detection',
+  'projectlab', 'loan_default', 'fraud_detection', 'ranking_project', 'forecast_project', 'nlp_content_project',
   // Advanced practice modules
   'design', 'spark', 'airflow', 'dbt', 'modeling',
   'dl', 'dl_finetune', 'dl_serving',
@@ -402,6 +410,9 @@ const NAV_SECTIONS = [
       { id: 'projectlab',      label: 'Project Lab · Telco', desc: 'End-to-end churn notebook (Pyodide) with 5 judgment checkpoints.' },
       { id: 'loan_default',    label: 'Project Lab · Loans', desc: 'Loan-default notebook — fairness audit, ECOA, disparate impact.' },
       { id: 'fraud_detection', label: 'Project Lab · Fraud', desc: 'Fraud notebook — 1:200 imbalance, precision@K, ops capacity.' },
+      { id: 'ranking_project', label: 'Project Lab · Ranking', desc: 'Retrieve→rank→serve recommender — LTR, NDCG, online A/B. In development.', wip: true },
+      { id: 'forecast_project', label: 'Project Lab · Forecasting', desc: 'Demand forecasting with walk-forward backtesting and intervals. In development.', wip: true },
+      { id: 'nlp_content_project', label: 'Project Lab · NLP/Content', desc: 'Content-embedding cold-start for a new catalog. In development.', wip: true },
     ],
   },
   {
@@ -412,7 +423,7 @@ const NAV_SECTIONS = [
       {
         label: 'DRILLS',
         items: [
-          { id: 'judge_browser', label: 'Judgment drills', desc: '367 drills across 10 subjects — filter by subject and level, junior → staff.' },
+          { id: 'judge_browser', label: 'Judgment drills', desc: '425 drills across 10 subjects — filter by subject and level, junior → staff.' },
         ],
       },
       {
@@ -427,14 +438,30 @@ const NAV_SECTIONS = [
     id: 'assess',
     label: 'PREP & ASSESS',
     icon: 'clipboard',
-    items: [
-      { id: 'defense',        label: 'Defense Plan',     desc: 'Paste a JD → gap map → study plan; defend your projects under pressure.' },
-      { id: 'interview',      label: 'Q&A Bank',         desc: '128+ senior MLE questions with model answers and 4-tier scoring.' },
-      { id: 'trainer',        label: 'Trainer',          desc: 'Spaced-repetition MCQ drill + weakness heatmap.' },
-      { id: 'combinator',     label: 'Timed Exam',       desc: 'Mixed-domain timed mock under interview pressure.' },
-      { id: 'mock_interview', label: 'Mock Interview',   desc: 'Paste a JD; get a customized AI-interviewer prompt.' },
-      { id: 'takehome',       label: 'Take-Home Bank',   desc: '15 open-ended system-design questions; compare to a senior answer.' },
-      { id: 'verbal',         label: 'Verbal Practice',  desc: 'Say your answer out loud (Web Speech) — the communication layer.' },
+    groups: [
+      {
+        label: 'QUESTION BANKS',
+        items: [
+          { id: 'interview',   label: 'Q&A Bank',          desc: 'Senior MLE questions with model answers and 4-tier scoring.' },
+          { id: 'behavioral',  label: 'Behavioral / STAR', desc: '24 senior/staff behavioral questions — STAR scaffolds + what each round is testing.' },
+          { id: 'takehome',    label: 'Take-Home Bank',    desc: '15 open-ended system-design questions; compare to a senior answer.' },
+        ],
+      },
+      {
+        label: 'DRILL & TEST',
+        items: [
+          { id: 'trainer',     label: 'Drill · untimed',   desc: 'Spaced-repetition MCQ over the question bank + weakness heatmap.' },
+          { id: 'combinator',  label: 'Drill · timed exam', desc: 'Same bank under a clock — mixed-domain timed mock with interview pressure.' },
+        ],
+      },
+      {
+        label: 'REHEARSE',
+        items: [
+          { id: 'mock_interview', label: 'Mock Interview',  desc: 'Paste a JD; get a customized AI-interviewer prompt.' },
+          { id: 'verbal',         label: 'Verbal Practice', desc: 'Say your answer out loud (Web Speech) — the communication layer.' },
+          { id: 'defense',        label: 'Defense Plan',    desc: 'Paste a JD → gap map → study plan; defend your projects under pressure.' },
+        ],
+      },
     ],
   },
   {
