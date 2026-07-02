@@ -923,45 +923,15 @@ export default function InterviewPrepTab({ onNavigate }) {
 
   if (mode === 'practice') return <TimedPractice questions={shuffle(filtered.length > 0 ? filtered : QUESTIONS)} onExit={() => setMode('bank')} />
 
-  const MODES = [
-    { key: 'bank',    label: 'Question Bank' },
-    { key: 'practice',label: 'Timed Practice' },
-    { key: 'fluency', label: 'Fluency Drills' },
-    { key: 'design',  label: 'Design Judgment' },
-    { key: 'behavioral', label: 'Behavioral' },
-  ]
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Header */}
       <div>
         <TabHeader title="Interview Prep" style={{ marginBottom: '6px' }} />
         <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.65, maxWidth: '600px', margin: '0 0 4px' }}>
-          {QUESTIONS.length} questions across System Design, Features, Evaluation, Spark, Statistics, Trees, SQL, Regression, Architecture, and Coding. Plus 30 fluency drills for weak-to-strong vocabulary.
+          {QUESTIONS.length} senior/staff questions across System Design, Features, Evaluation, Spark, Statistics, Trees, SQL, Regression, Architecture, and Coding. Filter by topic, company, and level; click any question to read a model answer.
         </p>
-        <p style={{ fontSize: '13px', color: 'var(--ink-low)', lineHeight: 1.5, margin: 0, fontFamily: 'var(--font-sans)', maxWidth: '600px' }}>Browse the bank to scan by topic, run Timed Practice to simulate interview pacing, use Fluency Drills to tighten ML vocabulary, or try Design Judgment for open-ended reasoning questions.</p>
       </div>
-
-      {/* Mode switcher */}
-      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', padding: '4px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--rim)', borderRadius: '10px', width: 'fit-content' }}>
-        {MODES.map(m => (
-          <button key={m.key} onClick={() => setMode(m.key)}
-            style={{ padding: '7px 16px', borderRadius: '7px', border: 'none', cursor: 'pointer', fontSize: '13px', fontFamily: 'var(--font-sans)', fontWeight: 500, transition: 'all 0.15s',
-              background: mode === m.key ? 'var(--prime)' : 'transparent',
-              color: mode === m.key ? 'var(--void)' : 'var(--ink-mid)' }}>
-            {m.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Fluency mode */}
-      {mode === 'fluency' && <FluencyDrills />}
-
-      {/* Design Judgment mode */}
-      {mode === 'design' && <SystemDesignJudgment />}
-
-      {/* Behavioral Scenarios mode */}
-      {mode === 'behavioral' && <BehavioralScenarios />}
 
       {/* Bank mode */}
       {mode === 'bank' && (

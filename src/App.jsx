@@ -391,7 +391,7 @@ const NAV_SECTIONS = [
         items: [
           { id: 'mlcoding', label: 'ML Coding',            desc: 'ML-specific Python problems — implement/debug/optimise/design, live Pyodide.' },
           { id: 'codebugs', label: 'Bug Hunt',             desc: 'Read code, find the buried bug — ML/DL/pipeline debugging.' },
-          { id: 'ext_python', label: 'Python fluency → PL ↗', external: true, href: 'https://github.com/SidharthKriplani/programming-lab', desc: 'General Python & DSA fluency lives in Programming Lab (sibling lab).' },
+          { id: 'ext_python', label: 'Python fluency → PL ↗', external: true, href: 'https://programming-lab.vercel.app', desc: 'General Python & DSA fluency lives in Programming Lab (sibling lab).' },
           { id: 'ext_sql',    label: 'SQL fluency → PAL ↗', external: true, href: 'https://product-analytics-lab.vercel.app/#/sql-lab', desc: 'The canonical SQL problem bank lives in Product Analytics Lab (sibling lab).' },
         ],
       },
@@ -445,7 +445,6 @@ const NAV_SECTIONS = [
     items: [
       { id: 'interview_questions', label: 'Interview Questions', desc: 'One open-ended bank — Q&A, Behavioral/STAR, system-design take-homes, and the defend-your-project round.' },
       { id: 'drill',               label: 'Drill',               desc: 'Self-test the MCQ bank — untimed spaced-rep practice or a timed mock exam.' },
-      { id: 'mock_interview',      label: 'Mock Interview',      desc: 'Paste a JD; get a customized AI-interviewer prompt for a live, adaptive mock.' },
     ],
   },
 ]
@@ -1343,6 +1342,8 @@ export default function App() {
           <a href="https://genai-systems-lab-ivory.vercel.app" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--ink-ghost)', textDecoration: 'underline', textUnderlineOffset: '3px' }}>GenAI Systems Lab</a>
           {' · '}
           <a href="https://product-analytics-lab.vercel.app" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--ink-ghost)', textDecoration: 'underline', textUnderlineOffset: '3px' }}>Product Analytics Lab</a>
+          {' · '}
+          <a href="https://programming-lab.vercel.app" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--ink-ghost)', textDecoration: 'underline', textUnderlineOffset: '3px' }}>Programming Lab</a>
         </p>
       </footer>
 

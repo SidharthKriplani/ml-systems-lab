@@ -1,21 +1,18 @@
 import { useState } from 'react'
 import InterviewPrepTab from './InterviewPrepTab.jsx'
 import { BehavioralBankTab } from './BehavioralBankTab.jsx'
-import TakeHomeTab from './TakeHomeTab.jsx'
 import DefendYourProjectTab from './DefendYourProjectTab.jsx'
 
-// Unified open-ended interview-question bank. One entry, four modes over the
-// distinct question types, each rendered by its native engine:
-//   Q&A            → read a question + model answer (InterviewPrepTab)
+// Unified open-ended interview-question bank. One entry, three sharp modes,
+// each rendered by its native engine:
+//   Q&A            → filterable question bank + model answers (InterviewPrepTab)
 //   Behavioral     → STAR-scaffolded behavioral (BehavioralBankTab)
-//   Take-homes     → long-form system-design + self-score (TakeHomeTab)
 //   Defend project → the project deep-dive round (DefendYourProjectTab)
-// Replaces the separate Q&A / Behavioral / Take-Home / Verbal / Defense tabs.
+// Timed practice / fluency → Drill; design judgment → JUDGE (not duplicated here).
 
 const MODES = [
-  { id: 'qa',        label: 'Q&A',            hint: 'Senior MLE questions with model answers and 4-tier scoring.' },
+  { id: 'qa',        label: 'Q&A',            hint: 'Senior/staff questions with model answers — filter by topic, company, and level.' },
   { id: 'behavioral', label: 'Behavioral',    hint: 'STAR-scaffolded behavioral questions — what each round is testing.' },
-  { id: 'takehome',  label: 'Take-homes',     hint: 'Long-form system-design prompts; write your answer, compare to a senior response.' },
   { id: 'defend',    label: 'Defend project', hint: 'The project deep-dive round — probes into your own work.' },
 ]
 
@@ -54,7 +51,6 @@ export default function InterviewQuestionsTab({ onNavigate }) {
       </div>
       {mode === 'qa'         && <InterviewPrepTab onNavigate={onNavigate} />}
       {mode === 'behavioral' && <BehavioralBankTab />}
-      {mode === 'takehome'   && <TakeHomeTab onNavigate={onNavigate} />}
       {mode === 'defend'     && <DefendYourProjectTab />}
     </div>
   )
