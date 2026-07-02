@@ -257,7 +257,10 @@ export const CalibrationCurveViz = forwardRef(function CalibrationCurveViz(props
   }, [model]);
 
   const play = useCallback(() => {
-    if (animRef.current) return;
+    // Restart from the first model every time: clear any running loop, reset
+    // to 'perfect', then cycle through the calibration regimes from the start.
+    if (animRef.current) { clearInterval(animRef.current); animRef.current = null; }
+    setModelKey('perfect');
     animRef.current = setInterval(() => {
       setModelKey(k => {
         const idx = MODEL_KEYS.indexOf(k);

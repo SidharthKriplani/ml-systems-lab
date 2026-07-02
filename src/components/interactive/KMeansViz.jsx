@@ -310,6 +310,22 @@ export const KMeansViz = forwardRef(function KMeansViz(props, ref) {
     setRunning((r) => !r);
   }, [converged, phase]);
 
+  // Re-seed centroids from scratch and auto-run Lloyd's iterations to
+  // convergence. Used by the imperative play() so ▶ always restarts the
+  // animation from a fresh initialization, even after it has converged.
+  const startFresh = useCallback(() => {
+    clearInterval(intervalRef.current);
+    setConverged(false);
+    setStepCount(0);
+    setLastDist(null);
+    const c = initCentroids(k);
+    const assigned = assignPoints(POINTS, c);
+    setPoints(assigned);
+    setCentroids(c);
+    setPhase('assigned');
+    setRunning(true);
+  }, [k]);
+
   const handleReset = useCallback(() => {
     clearInterval(intervalRef.current);
     setRunning(false);
@@ -328,13 +344,15 @@ export const KMeansViz = forwardRef(function KMeansViz(props, ref) {
   }, [k]);
 
   useImperativeHandle(ref, () => ({
-    play: () => { if (phase !== 'init' && !converged) { handleInit(); } },
+    // Always re-seed centroids and animate Lloyd's iterations from scratch to
+    // convergence — even if the previous run already converged.
+    play: startFresh,
     pause: () => { setRunning(false) },
     reset: handleReset,
     step: () => {
       if (phase === 'init') { handleInit(); } else { handleStep(); }
     },
-  }), [phase, converged, handleInit, handleStep, handleReset])
+  }), [phase, startFresh, handleInit, handleStep, handleReset])
 
   return (
     <div style={styles.root}>

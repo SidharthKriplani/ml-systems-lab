@@ -68,7 +68,7 @@ const ISOLATION_SPLITS = [
 ];
 
 const CANVAS_W = 420;
-const CANVAS_H = 280;
+const CANVAS_H = 240;
 
 function drawCanvas(canvas, threshold, showSplits, visibleCount = ALL_POINTS.length) {
   const dpr = window.devicePixelRatio || 1;
@@ -202,81 +202,82 @@ export const AnomalyDetectionViz = forwardRef(function AnomalyDetectionViz(props
     wrapper: {
       fontFamily: `var(--font-sans, sans-serif)`,
       color: `var(--ink-hi)`,
-      padding: '24px',
+      padding: '16px',
       background: `var(--depth)`,
       borderRadius: '12px',
       maxWidth: '900px',
     },
     heading: {
-      fontSize: '18px',
+      fontSize: '16px',
       fontWeight: 700,
       color: `var(--prime)`,
-      marginBottom: '4px',
+      marginBottom: '2px',
     },
     subheading: {
-      fontSize: '14px',
+      fontSize: '12px',
       color: `var(--ink-mid)`,
-      marginBottom: '20px',
+      marginBottom: '12px',
     },
     mainRow: {
       display: 'flex',
-      gap: '20px',
-      alignItems: 'flex-start',
+      gap: '16px',
+      alignItems: 'stretch',
       flexWrap: 'wrap',
     },
     sidebar: {
-      flex: '0 0 200px',
+      flex: '0 0 190px',
       display: 'flex',
       flexDirection: 'column',
-      gap: '14px',
+      gap: '8px',
     },
     conceptBox: {
       background: `var(--surface)`,
       border: `1px solid var(--rim)`,
       borderRadius: '8px',
-      padding: '12px',
+      padding: '8px 10px',
     },
     conceptTitle: {
-      fontSize: '11px',
+      fontSize: '10px',
       fontWeight: 600,
       color: `var(--ink-mid)`,
       textTransform: 'uppercase',
       letterSpacing: '0.06em',
-      marginBottom: '8px',
+      marginBottom: '5px',
     },
     splitLines: {
       display: 'flex',
       flexDirection: 'column',
-      gap: '3px',
-      marginBottom: '6px',
+      gap: '2px',
+      marginBottom: '5px',
     },
     splitLine: {
       height: '2px',
       borderRadius: '1px',
     },
     conceptLabel: {
-      fontSize: '11px',
+      fontSize: '10px',
       color: `var(--ink-low)`,
-      lineHeight: 1.5,
+      lineHeight: 1.45,
     },
     controlRow: {
       display: 'flex',
       alignItems: 'center',
       gap: '10px',
-      marginBottom: '12px',
+      marginBottom: '10px',
+      flexWrap: 'wrap',
     },
     statsRow: {
       display: 'flex',
-      gap: '12px',
-      marginTop: '14px',
+      gap: '8px',
+      marginTop: '10px',
       flexWrap: 'wrap',
     },
     statBox: {
       background: `var(--surface)`,
       border: `1px solid var(--rim)`,
       borderRadius: '8px',
-      padding: '10px 16px',
-      fontSize: '13px',
+      padding: '7px 12px',
+      fontSize: '12px',
       color: `var(--ink-mid)`,
     },
     statVal: {
@@ -286,14 +287,10 @@ export const AnomalyDetectionViz = forwardRef(function AnomalyDetectionViz(props
       fontFamily: `var(--font-mono, monospace)`,
     },
     note: {
-      fontSize: '12px',
+      fontSize: '11px',
       color: `var(--ink-low)`,
-      lineHeight: 1.6,
-      background: `var(--surface)`,
-      border: `1px solid var(--rim)`,
-      borderRadius: '8px',
-      padding: '12px 16px',
-      marginTop: '16px',
+      lineHeight: 1.5,
+      marginTop: '10px',
     },
   };
 
@@ -365,9 +362,7 @@ export const AnomalyDetectionViz = forwardRef(function AnomalyDetectionViz(props
               ))}
             </div>
             <div style={s.conceptLabel}>
-              Many splits needed<br />
-              Deep tree<br />
-              <span style={{ color: `var(--prime)` }}>Low anomaly score</span>
+              Many splits to isolate → deep tree → <span style={{ color: `var(--prime)` }}>low score</span>
             </div>
           </div>
 
@@ -383,39 +378,31 @@ export const AnomalyDetectionViz = forwardRef(function AnomalyDetectionViz(props
               ))}
             </div>
             <div style={s.conceptLabel}>
-              Few splits needed<br />
-              Shallow tree<br />
-              <span style={{ color: '#FF6B6B' }}>High anomaly score</span>
+              Few splits to isolate → shallow tree → <span style={{ color: '#FF6B6B' }}>high score</span>
             </div>
           </div>
 
-          <div style={{
-            fontSize: '11px',
-            color: `var(--ink-ghost, #374151)`,
-            lineHeight: 1.5,
-            padding: '8px',
-          }}>
-            <span style={{ color: '#3B82F6' }}>●</span> score &lt; threshold: normal<br />
-            <span style={{ color: '#FF6B6B' }}>●</span> score ≥ threshold: anomaly<br />
-            Circle size ∝ anomaly score
+          <div style={s.statsRow}>
+            <div style={s.statBox}>
+              Flagged:{` `}
+              <span style={s.statVal}>{flagged.length}</span>
+              {` `}({(flagged.length / 45 * 100).toFixed(0)}%)
+            </div>
+            <div style={s.statBox}>
+              True anomalies:{` `}
+              <span style={s.statVal}>{trueAnomaliesDetected}/5</span>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <div style={s.statsRow}>
-        <div style={s.statBox}>
-          Flagged as anomaly:{` `}
-          <span style={s.statVal}>{flagged.length} pts</span>
-          {` `}({(flagged.length / 45 * 100).toFixed(1)}%)
-        </div>
-        <div style={s.statBox}>
-          True anomalies detected:{` `}
-          <span style={s.statVal}>{trueAnomaliesDetected}/5</span>
+          <div style={{ fontSize: '10px', color: `var(--ink-low)`, lineHeight: 1.45 }}>
+            <span style={{ color: '#3B82F6' }}>●</span> normal (score &lt; threshold)&nbsp;&nbsp;
+            <span style={{ color: '#FF6B6B' }}>●</span> anomaly (score ≥ threshold)&nbsp;· size ∝ score
+          </div>
         </div>
       </div>
 
       <div style={s.note}>
-        {`Isolation Forest doesn't model what 'normal' looks like — it just finds points that are easy to isolate. This makes it fast and effective for high-dimensional data without assumptions about the distribution.`}
+        {`Isolation Forest doesn't model what 'normal' looks like — it just finds points that are easy to isolate, which makes it fast on high-dimensional data with no distribution assumptions.`}
       </div>
     </div>
   );

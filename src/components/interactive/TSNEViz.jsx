@@ -195,34 +195,18 @@ export const TSNEViz = forwardRef(function TSNEViz(props, ref) {
   const [activeIdx, setActiveIdx] = useState(1);
   const canvasRef = useRef(null);
 
-  const animRef = useRef(null)
-
-  const play = useCallback(() => {
-    if (animRef.current) return
-    animRef.current = setInterval(() => {
-      setActiveIdx(i => (i + 1) % 3)
-    }, 1500)
-  }, [])
-
-  const pause = useCallback(() => {
-    if (animRef.current) { clearInterval(animRef.current); animRef.current = null }
-  }, [])
-
+  // No play/pause: cycling perplexity tabs is not an animation, it's just tab
+  // switching, so we don't expose it. reset returns to the default (p=30) view;
+  // step advances to the next perplexity tab as a manual "next" affordance.
   const reset = useCallback(() => {
-    pause()
     setActiveIdx(1)
-  }, [pause])
+  }, [])
 
   const step = useCallback(() => {
-    pause()
     setActiveIdx(i => (i + 1) % 3)
-  }, [pause])
-
-  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step])
-
-  useEffect(() => {
-    return () => { if (animRef.current) clearInterval(animRef.current) }
   }, [])
+
+  useImperativeHandle(ref, () => ({ reset, step }), [reset, step])
 
   const activeTab = TABS[activeIdx];
 

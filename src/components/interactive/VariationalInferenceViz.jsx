@@ -333,7 +333,9 @@ export const VariationalInferenceViz = forwardRef(function VariationalInferenceV
   // ── Optimization ─────────────────────────────────────────────────────────
 
   const optimize = useCallback(() => {
-    if (optimizing) return
+    // Always restart from the initial state: cancel any in-flight loop and
+    // clear the ELBO history so the descent animates fresh from step 0.
+    if (animRef.current) { cancelAnimationFrame(animRef.current); animRef.current = null }
     stateRef.current  = { ...INIT_STATE }
     elboHistRef.current = []
     setDisplayState({ ...INIT_STATE })

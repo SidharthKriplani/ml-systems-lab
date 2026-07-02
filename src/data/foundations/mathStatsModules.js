@@ -959,6 +959,8 @@ As $n → ∞$, the likelihood dominates and MAP converges to MLE — the data e
   },
   {
     id: 'bayesian_inference',
+    interactiveId: 'bayesian_updating_viz',
+    interactivePrompt: 'Bayesian inference = prior updated by data into a posterior. Press play to fold in observations one at a time and watch the posterior tighten toward the evidence.',
     title: 'Bayesian Inference',
     subtitle: 'Prior, likelihood, posterior, conjugate priors, MCMC',
     difficulty: 'advanced',

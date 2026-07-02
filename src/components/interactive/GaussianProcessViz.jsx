@@ -398,13 +398,19 @@ export const GaussianProcessViz = forwardRef(function GaussianProcessViz(props, 
   }, []);
 
   const play = useCallback(() => {
-    if (animRef.current) return;
+    // Restart from the beginning every time: cancel any running loop and
+    // clear all observations so the GP re-fills from the prior.
+    if (animRef.current) { cancelAnimationFrame(animRef.current); animRef.current = null; }
+    setPoints([]);
     let lastTime = 0;
     const tick = (time) => {
       if (time - lastTime >= 800) {
         lastTime = time;
         setPoints(prev => {
-          if (prev.length >= 20) { animRef.current = null; return prev; }
+          if (prev.length >= 20) {
+            if (animRef.current) { cancelAnimationFrame(animRef.current); animRef.current = null; }
+            return prev;
+          }
           const rng = mulberry32((Date.now() + prev.length * 1337) & 0xffffffff);
           const x = rng();
           const y = Math.sin(2 * Math.PI * x) + 0.3 * randNormal(rng);

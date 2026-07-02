@@ -291,7 +291,11 @@ export const VAEViz = forwardRef(function VAEViz(props, ref) {
   }, []);
 
   const play = useCallback(() => {
-    if (animRef.current) return;
+    // Restart fresh every time: clear any running loop, clear the current
+    // sample, then begin cycling new latent samples from scratch.
+    if (animRef.current) { clearInterval(animRef.current); animRef.current = null; }
+    setSample(null);
+    sampleRandom();
     animRef.current = setInterval(() => {
       sampleRandom();
     }, 800);

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useImperativeHandle, forwardRef } from 'react'
+import React, { useState, useCallback, useRef, useEffect, useImperativeHandle, forwardRef } from 'react'
 
 // Teaches: posterior = prior + data, and the prior's pull is inversely
 // proportional to the amount of data. Beta(a,b) prior + h heads / n flips ->
@@ -36,18 +36,54 @@ const W = 320, H = 190, PAD = 30
 
 export const BayesianUpdatingViz = forwardRef(function BayesianUpdatingViz(props, ref) {
   const [s, setS] = useState({ ...DEFAULTS })
-  useImperativeHandle(ref, () => ({ reset: () => setS({ ...DEFAULTS }) }))
-  const set = useCallback((k, v) => setS(prev => ({ ...prev, [k]: v })), [])
+  // shown: how many of the s.flips observations have been folded in so far.
+  // null => not animating, use the full slider value. During play() it steps
+  // 0 -> s.flips one observation at a time so the posterior visibly tightens.
+  const [shown, setShown] = useState(null)
+  const timerRef = useRef(null)
+
+  const stop = useCallback(() => {
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null }
+  }, [])
+
+  const set = useCallback((k, v) => { stop(); setShown(null); setS(prev => ({ ...prev, [k]: v })) }, [stop])
+
+  // play(): reset to the prior (zero observations folded in), then reveal the
+  // observed flips one at a time so the learner watches the posterior migrate
+  // off the prior toward the MLE and sharpen as evidence accumulates.
+  const play = useCallback(() => {
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null }
+    const total = s.flips
+    setShown(0)
+    if (total <= 0) return
+    let n = 0
+    const tick = () => {
+      n += 1
+      setShown(n)
+      if (n >= total) { timerRef.current = null; return }
+      timerRef.current = setTimeout(tick, 700)
+    }
+    timerRef.current = setTimeout(tick, 700)
+  }, [s.flips])
+
+  const pause = useCallback(() => { stop() }, [stop])
+  const reset = useCallback(() => { stop(); setShown(null); setS({ ...DEFAULTS }) }, [stop])
+
+  useImperativeHandle(ref, () => ({ play, pause, reset }), [play, pause, reset])
+  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current) }, [])
+
+  // How many flips are currently "revealed": all of them unless mid-animation.
+  const nFlips = shown == null ? s.flips : shown
 
   const priorA = s.priorStrength / 2
   const priorB = s.priorStrength / 2
-  const heads = Math.round(s.flips * s.headRate)
-  const tails = s.flips - heads
+  const heads = Math.round(nFlips * s.headRate)
+  const tails = nFlips - heads
   const postA = priorA + heads
   const postB = priorB + tails
 
   const priorMean = priorA / (priorA + priorB) // always 0.5 (symmetric)
-  const mle = s.flips > 0 ? heads / s.flips : NaN
+  const mle = nFlips > 0 ? heads / nFlips : NaN
   const postMean = postA / (postA + postB)
 
   // sample both curves and share a common y-scale
@@ -100,7 +136,7 @@ export const BayesianUpdatingViz = forwardRef(function BayesianUpdatingViz(props
 
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', marginTop: '6px' }}>
           <span>Number of flips (data)</span>
-          <span style={{ color: 'var(--ink-hi)', fontWeight: 700 }}>{s.flips} flips → {heads}H / {tails}T</span>
+          <span style={{ color: 'var(--ink-hi)', fontWeight: 700 }}>{shown == null ? s.flips : `${nFlips}/${s.flips}`} flips → {heads}H / {tails}T</span>
         </div>
         <input type="range" min={0} max={300} step={1} value={s.flips} onChange={e => set('flips', +e.target.value)} style={{ width: '100%' }} />
 

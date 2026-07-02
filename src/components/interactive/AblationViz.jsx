@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useImperativeHandle, forwardRef } from 'react'
+import React, { useState, useCallback, useRef, useEffect, useImperativeHandle, forwardRef } from 'react'
 
 // Reactive ablation: toggle components off; an SVG bar chart shows each one's
 // leave-one-out AUC drop, and the {interactions, temporal} pair drops MORE than
@@ -22,10 +22,42 @@ function computeAUC(on) {
   return auc
 }
 
+// Order components are ablated in during play: biggest solo contributor first,
+// but keep the synergistic pair {interactions, temporal} adjacent so the
+// super-additive drop is visible as they come off together.
+const ABLATE_ORDER = ['graph', 'interactions', 'temporal', 'scaling', 'clipping']
+
 export const AblationViz = forwardRef(function AblationViz(props, ref) {
   const [on, setOn] = useState({ ...DEFAULTS })
-  useImperativeHandle(ref, () => ({ reset: () => setOn({ ...DEFAULTS }) }))
-  const toggle = useCallback(k => setOn(p => ({ ...p, [k]: !p[k] })), [])
+  const timerRef = useRef(null)
+
+  const stop = useCallback(() => {
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null }
+  }, [])
+
+  // play(): start from the full model, then remove one component per step so the
+  // user watches the AUC bar fall as each ablation lands — and see the pair drop.
+  const play = useCallback(() => {
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null }
+    setOn({ ...DEFAULTS })
+    let i = 0
+    const tick = () => {
+      if (i >= ABLATE_ORDER.length) { timerRef.current = null; return }
+      const k = ABLATE_ORDER[i]
+      setOn(p => ({ ...p, [k]: false }))
+      i += 1
+      timerRef.current = setTimeout(tick, 800)
+    }
+    timerRef.current = setTimeout(tick, 800)
+  }, [])
+
+  const pause = useCallback(() => { stop() }, [stop])
+  const reset = useCallback(() => { stop(); setOn({ ...DEFAULTS }) }, [stop])
+
+  useImperativeHandle(ref, () => ({ play, pause, reset }), [play, pause, reset])
+  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current) }, [])
+
+  const toggle = useCallback(k => { stop(); setOn(p => ({ ...p, [k]: !p[k] })) }, [stop])
 
   const fullAUC = computeAUC(DEFAULTS)
   const currentAUC = computeAUC(on)

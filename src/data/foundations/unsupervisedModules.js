@@ -825,6 +825,8 @@ NOT-this: "t-SNE cluster distances are interpretable." The distances between clu
   },
   {
     id: 'autoencoders_dim_reduction',
+    interactiveId: 'vae_viz',
+    interactivePrompt: 'An autoencoder squeezes data through a bottleneck and reconstructs it — explore the encoder → latent → decoder path and how the bottleneck forces a compressed representation.',
     title: 'Autoencoders for Dimensionality Reduction',
     subtitle: 'Encoder-decoder mechanics, bottleneck, VAE, anomaly detection via reconstruction error',
     difficulty: 'advanced',
