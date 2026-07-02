@@ -18,6 +18,13 @@ import { EVAL_DRILLS } from './eval.js'
 import { CAUSAL_DRILLS } from './causal.js'
 import { DL_DRILLS } from './deepLearning.js'
 import { SYSDESIGN_DRILLS } from './systemDesign.js'
+import { PRODUCTION_DRILLS } from './production.js'
+import { CLASSICAL_DRILLS } from './classical.js'
+import { DATA_DRILLS } from './data.js'
+import { TIMESERIES_DRILLS } from './timeSeries.js'
+import { MONITORING_DRILLS } from './monitoring.js'
+import { SPOTFLAW_DRILLS } from './spotFlaw.js'
+import { AUTHORED_DRILLS } from './authored.js'
 
 export const SUBJECT_LABELS = {
   eval: 'Model evaluation',
@@ -26,6 +33,9 @@ export const SUBJECT_LABELS = {
   monitoring: 'Monitoring',
   production: 'Production / serving',
   system_design: 'System design',
+  classical_ml: 'Classical ML',
+  data: 'Data & features',
+  time_series: 'Time series',
 }
 
 const SEED = [
@@ -182,4 +192,11 @@ export const DRILL_POOL = [
   ...CAUSAL_DRILLS,
   ...DL_DRILLS,
   ...SYSDESIGN_DRILLS,
+  ...PRODUCTION_DRILLS,
+  ...CLASSICAL_DRILLS,
+  ...DATA_DRILLS,
+  ...TIMESERIES_DRILLS,
+  ...MONITORING_DRILLS,
+  ...SPOTFLAW_DRILLS,
+  ...AUTHORED_DRILLS,
 ]
