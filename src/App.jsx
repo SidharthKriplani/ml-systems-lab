@@ -433,7 +433,7 @@ const NAV_SECTIONS = [
       {
         label: 'DRILLS',
         items: [
-          { id: 'judge_browser', label: 'Judgment drills', desc: '425 drills across 10 subjects — filter by subject and level, junior → staff.' },
+          { id: 'judge_browser', label: 'Judgment drills', desc: '440 drills across 10 subjects incl. multi-step case-chains — filter by subject and level, junior → staff.' },
         ],
       },
       {

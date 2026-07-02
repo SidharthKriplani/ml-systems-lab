@@ -1,16 +1,19 @@
 import { useState } from 'react'
 import InterviewPrepTab from './InterviewPrepTab.jsx'
 import { BehavioralBankTab } from './BehavioralBankTab.jsx'
+import SpokenPracticeTab from './SpokenPracticeTab.jsx'
 
-// Unified open-ended interview-question bank. One entry, two modes people
+// Unified open-ended interview-question bank. One entry, three modes people
 // actually use, each rendered by its native engine:
 //   Q&A        → filterable question bank + model answers (InterviewPrepTab)
 //   Behavioral → STAR-scaffolded behavioral (BehavioralBankTab)
+//   Speak      → tiered spoken drill: 30s / 2-min / pushback / reason-aloud
 // Timed practice / fluency → Drill; design judgment → JUDGE (not duplicated here).
 
 const MODES = [
   { id: 'qa',        label: 'Q&A',        hint: 'Senior/staff questions with model answers — filter by topic, company, and level.' },
   { id: 'behavioral', label: 'Behavioral', hint: 'STAR-scaffolded behavioral questions — what each round is testing.' },
+  { id: 'speak',     label: 'Speak',      hint: 'Answer out loud under time — 30-second, 2-minute, interviewer pushback, and reason-when-unsure.' },
 ]
 
 export default function InterviewQuestionsTab({ onNavigate }) {
@@ -48,6 +51,7 @@ export default function InterviewQuestionsTab({ onNavigate }) {
       </div>
       {mode === 'qa'         && <InterviewPrepTab onNavigate={onNavigate} />}
       {mode === 'behavioral' && <BehavioralBankTab />}
+      {mode === 'speak'      && <SpokenPracticeTab onNavigate={onNavigate} />}
     </div>
   )
 }

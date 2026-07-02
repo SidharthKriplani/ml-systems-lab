@@ -3,6 +3,8 @@ import TabHeader from '../components/TabHeader.jsx'
 import FidelityBadge from '../components/FidelityBadge.jsx'
 import HowToStrip from '../components/HowToStrip.jsx'
 import { markActivity } from '../utils/activity.js'
+import { CompanyLogoRow } from '../components/CompanyLogoRow.jsx'
+import { companiesForIncident } from '../data/questionCompanies.js'
 
 const LS_KEY = 'msl_score:incidentroom'
 
@@ -740,6 +742,7 @@ function IncidentCard({ incident, completed, onComplete, onNavigate, autoExpand 
               <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>~{incident.readMin} min</span>
             )}
             <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--rose)', background: 'rgba(244,63,94,0.1)', border: '1px solid rgba(244,63,94,0.25)', borderRadius: '4px', padding: '1px 6px' }}>senior</span>
+            <CompanyLogoRow companies={companiesForIncident(incident)} size={14} />
           </div>
           <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', lineHeight: 1.4 }}>
             {incident.title}

@@ -29,6 +29,7 @@ import { RECSYS_DRILLS } from './recsys.js'
 import { RECSYS_ADV_DRILLS } from './recsysAdvanced.js'
 import { GAPFILL_DRILLS } from './gapfill.js'
 import { GAPFILL2_DRILLS } from './gapfill2.js'
+import { CASE_CHAIN_DRILLS } from './caseChains.js'
 
 export const SUBJECT_LABELS = {
   eval: 'Model evaluation',
@@ -208,4 +209,5 @@ export const DRILL_POOL = [
   ...RECSYS_ADV_DRILLS,
   ...GAPFILL_DRILLS,
   ...GAPFILL2_DRILLS,
+  ...CASE_CHAIN_DRILLS,
 ]
