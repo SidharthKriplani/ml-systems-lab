@@ -852,6 +852,8 @@ export const SYSTEM_DESIGN_MODULES = [
   },
   {
     id: 'sequential_recsys',
+    interactiveId: 'attention_viz',
+    interactivePrompt: 'SASRec is self-attention over a session. Watch how each position attends back to earlier items — the mechanism that keeps early-session signal alive where a GRU would decay it.',
     title: 'Sequential & Session-Based RecSys',
     subtitle: 'GRU4Rec, SASRec, next-item prediction, short vs long-term intent',
     difficulty: 'advanced',
@@ -936,6 +938,8 @@ export const SYSTEM_DESIGN_MODULES = [
   },
   {
     id: 'embeddings_ann',
+    interactiveId: 'neighbor_explosion_viz',
+    interactivePrompt: 'Nearest-neighbour search is what ANN approximates. Turn the knob and watch how many candidates you scan versus how much recall you keep — the efSearch/nprobe recall–latency tradeoff, made visible.',
     title: 'Embeddings + ANN Serving Deep-Dive',
     subtitle: 'HNSW vs IVF-PQ, the recall–latency knob, index build/refresh, quantization',
     difficulty: 'advanced',
@@ -1017,6 +1021,8 @@ export const SYSTEM_DESIGN_MODULES = [
   },
   {
     id: 'reranking_diversity',
+    interactiveId: 'value_model_mixer_viz',
+    interactivePrompt: 'Re-ranking blends competing objectives — relevance, diversity, freshness. Mix the weights and watch the served slate reshuffle; there is no single right blend, only a product operating point.',
     title: 'Re-Ranking for Diversity & Freshness',
     subtitle: 'MMR, DPP, business-rule mixing, why the ranker alone over-concentrates',
     difficulty: 'advanced',
@@ -1095,6 +1101,8 @@ export const SYSTEM_DESIGN_MODULES = [
   },
   {
     id: 'recsys_feedback_loops',
+    interactiveId: 'exploration_exploitation_viz',
+    interactivePrompt: 'Pure exploitation is what causes the popularity death-spiral: you only ever show what already won, so nothing else gets a chance to prove itself. Trade off exploration vs exploitation and watch the loop break.',
     title: 'Feedback Loops & Popularity Bias',
     subtitle: 'Exposure bias, self-reinforcing popularity, IPW / randomisation, echo chambers',
     difficulty: 'advanced',

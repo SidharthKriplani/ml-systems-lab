@@ -26,7 +26,9 @@ import { MONITORING_DRILLS } from './monitoring.js'
 import { SPOTFLAW_DRILLS } from './spotFlaw.js'
 import { AUTHORED_DRILLS } from './authored.js'
 import { RECSYS_DRILLS } from './recsys.js'
+import { RECSYS_ADV_DRILLS } from './recsysAdvanced.js'
 import { GAPFILL_DRILLS } from './gapfill.js'
+import { GAPFILL2_DRILLS } from './gapfill2.js'
 
 export const SUBJECT_LABELS = {
   eval: 'Model evaluation',
@@ -203,5 +205,7 @@ export const DRILL_POOL = [
   ...SPOTFLAW_DRILLS,
   ...AUTHORED_DRILLS,
   ...RECSYS_DRILLS,
+  ...RECSYS_ADV_DRILLS,
   ...GAPFILL_DRILLS,
+  ...GAPFILL2_DRILLS,
 ]
