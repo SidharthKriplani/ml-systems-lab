@@ -336,17 +336,6 @@ const INTERVIEW_TOOLS = [
 // KNOW (foundations + library) → DO → BUILD → JUDGE → PREP & ASSESS → EXTRAS
 const NAV_SECTIONS = [
   {
-    id: 'you',
-    label: 'YOU',
-    icon: 'user',
-    items: [
-      { id: 'home',        label: 'Home',         desc: 'Your dashboard — readiness snapshot, streak, and what to do next.' },
-      { id: 'progress',    label: 'My Progress',  desc: 'Readiness score, heatmap, room progress bars, and study plan.' },
-      { id: 'my_tracks',   label: 'My Tracks',    desc: 'Custom study tracks — group modules and items for focused review.' },
-      { id: 'leaderboard', label: 'Leaderboard',  desc: 'Ranked by total problems and modules solved across every room.' },
-    ],
-  },
-  {
     id: 'know',
     label: 'KNOW',
     icon: 'layers',
@@ -878,6 +867,9 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked, 
         {/* TRACK (top, always visible) */}
         <SidebarNavItem id="home" label="Home" {...navProps} />
         <SidebarNavItem id="profile" label="Profile" {...navProps} />
+        <SidebarNavItem id="progress" label="My Progress" {...navProps} />
+        <SidebarNavItem id="my_tracks" label="My Tracks" {...navProps} />
+        <SidebarNavItem id="leaderboard" label="Leaderboard" {...navProps} />
         <SidebarNavItem id="start_here" label="Start Here" {...navProps} />
         <SidebarNavItem id="plans" label="Plans & Access" {...navProps} />
         <SidebarNavItem id="resources" label="Resources" {...navProps} />
