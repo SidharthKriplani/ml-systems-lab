@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
 import FidelityBadge from '../components/FidelityBadge.jsx'
 
