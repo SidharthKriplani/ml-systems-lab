@@ -14,6 +14,11 @@
 //   source                                     // provenance (which old tab it came from)
 // }
 
+import { EVAL_DRILLS } from './eval.js'
+import { CAUSAL_DRILLS } from './causal.js'
+import { DL_DRILLS } from './deepLearning.js'
+import { SYSDESIGN_DRILLS } from './systemDesign.js'
+
 export const SUBJECT_LABELS = {
   eval: 'Model evaluation',
   causal: 'Causal inference',
@@ -23,7 +28,7 @@ export const SUBJECT_LABELS = {
   system_design: 'System design',
 }
 
-export const DRILL_POOL = [
+const SEED = [
   {
     id: 'eval-calib-overconfident',
     subject: 'eval', subtopic: 'calibration', level: 'senior', type: 'mcq',
@@ -169,4 +174,12 @@ def predict(request_data: dict) -> float:
     fix: 'Reorder explicitly: `df = pd.DataFrame([request_data])[FEATURE_COLUMNS]`. Better, validate the schema at the boundary.',
     source: 'Bug Hunt · SD1 (→ DO)',
   },
+]
+
+export const DRILL_POOL = [
+  ...SEED,
+  ...EVAL_DRILLS,
+  ...CAUSAL_DRILLS,
+  ...DL_DRILLS,
+  ...SYSDESIGN_DRILLS,
 ]

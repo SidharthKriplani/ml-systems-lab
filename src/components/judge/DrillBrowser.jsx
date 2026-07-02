@@ -51,13 +51,25 @@ function LevelFraming({ levels }) {
       </button>
       {open && (
         <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {['ic3', 'ic5', 'staff'].map(k => levels[k] && (
+          {Object.keys(levels).map(k => levels[k] && (
             <div key={k} style={{ fontSize: '0.78rem', color: 'var(--ink-mid)', lineHeight: 1.55 }}>
               <span style={{ ...pill('var(--prime-faint)', 'var(--prime)'), textTransform: 'uppercase', marginRight: 7 }}>{k}</span>{levels[k]}
             </div>
           ))}
         </div>
       )}
+    </div>
+  )
+}
+
+function TierList({ levels }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {Object.keys(levels).map(k => levels[k] && (
+        <div key={k} style={{ fontSize: '0.8rem', color: 'var(--ink-mid)', lineHeight: 1.55 }}>
+          <span style={{ ...pill('var(--prime-faint)', 'var(--prime)'), textTransform: 'uppercase', marginRight: 7 }}>{k}</span>{levels[k]}
+        </div>
+      ))}
     </div>
   )
 }
@@ -112,13 +124,21 @@ function DrillCard({ d }) {
           <Ctx context={d.context} />
           {d.code && <pre style={{ background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: 8, padding: '11px 13px', fontSize: '0.76rem', color: 'var(--ink-mid)', overflowX: 'auto', margin: 0, fontFamily: 'var(--font-mono)', lineHeight: 1.55 }}>{d.code}</pre>}
           {d.question && <div style={{ fontSize: '0.88rem', color: 'var(--ink-hi)', fontWeight: 600 }}>{d.question}</div>}
-          {d.type === 'multistep'
-            ? <MultiStep steps={d.steps} />
-            : <>
-                <Options options={d.options} answer={d.answer} picked={picked} revealed={revealed} onPick={(i) => { setPicked(i); setRevealed(true) }} />
-                {revealed && <Reveal d={d} />}
-              </>}
-          {d.levels && <LevelFraming levels={d.levels} />}
+          {d.type === 'multistep' && Array.isArray(d.steps) && <MultiStep steps={d.steps} />}
+          {d.type === 'rubric' && (
+            <>
+              <div style={{ fontSize: '0.76rem', color: 'var(--ink-low)', fontStyle: 'italic' }}>No single right answer — how each level would respond:</div>
+              {d.levels && <TierList levels={d.levels} />}
+              {(d.diagnosis || d.explanation || d.fix) && <Reveal d={d} />}
+            </>
+          )}
+          {(d.type === 'mcq' || d.type === 'code') && Array.isArray(d.options) && (
+            <>
+              <Options options={d.options} answer={d.answer} picked={picked} revealed={revealed} onPick={(i) => { setPicked(i); setRevealed(true) }} />
+              {revealed && <Reveal d={d} />}
+              {d.levels && <LevelFraming levels={d.levels} />}
+            </>
+          )}
           {d.source && <div style={{ fontSize: '0.66rem', color: 'var(--ink-ghost)' }}>from {d.source}</div>}
         </div>
       )}
