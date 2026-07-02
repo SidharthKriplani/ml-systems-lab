@@ -37,6 +37,7 @@ const DataModelingTab   = lazy(() => import('./tabs/DataModelingTab.jsx'))
 const TakeHomeTab    = lazy(() => import('./tabs/TakeHomeTab.jsx'))
 const TrainerTab     = lazy(() => import('./tabs/TrainerTab.jsx'))
 const CombinatorTab  = lazy(() => import('./tabs/CombinatorTab.jsx'))
+const DrillTab       = lazy(() => import('./tabs/DrillTab.jsx'))
 const CodeBugsTab    = lazy(() => import('./tabs/CodeBugsTab.jsx'))
 const CaseStudiesTab = lazy(() => import('./tabs/CaseStudiesTab.jsx'))
 const StaffLayerTab  = lazy(() => import('./tabs/StaffLayerTab.jsx'))
@@ -113,6 +114,7 @@ const ALL_TABS = [
   { id: 'takehome',    component: TakeHomeTab },
   { id: 'trainer',     component: TrainerTab },
   { id: 'combinator',  component: CombinatorTab },
+  { id: 'drill',       component: DrillTab },
   { id: 'codebugs',    component: CodeBugsTab },
   { id: 'casestudies', component: CaseStudiesTab },
   { id: 'stafflayer',  component: StaffLayerTab },
@@ -450,8 +452,7 @@ const NAV_SECTIONS = [
       {
         label: 'DRILL & TEST',
         items: [
-          { id: 'trainer',     label: 'Drill · untimed',   desc: 'Spaced-repetition MCQ over the question bank + weakness heatmap.' },
-          { id: 'combinator',  label: 'Drill · timed exam', desc: 'Same bank under a clock — mixed-domain timed mock with interview pressure.' },
+          { id: 'drill',       label: 'Drill',             desc: 'One bank, two modes — untimed spaced-rep practice or a timed mock exam.' },
         ],
       },
       {
