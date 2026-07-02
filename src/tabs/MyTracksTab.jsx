@@ -413,6 +413,7 @@ export function MyTracksTab({ onNavigate }) {
         onSelect={id => { setOpenNote(null); setSelectedId(id) }}
         onCreate={name => { const t = createTrack(name); refresh(); setSelectedId(t.id) }}
         onDelete={id => {
+          if (!window.confirm('Delete this track? This cannot be undone.')) return
           deleteTrack(id)
           refresh()
           if (selectedId === id) { setSelectedId(null); setOpenNote(null) }
@@ -435,7 +436,7 @@ export function MyTracksTab({ onNavigate }) {
             onRename={name => { renameTrack(selectedTrack.id, name); refresh() }}
             onNewNote={handleNewNote}
             onOpenNote={handleOpenNote}
-            onDeleteNote={noteId => { deleteNote(selectedTrack.id, noteId); refresh() }}
+            onDeleteNote={noteId => { if (!window.confirm('Delete this note? This cannot be undone.')) return; deleteNote(selectedTrack.id, noteId); refresh() }}
             onRemoveItem={idx => { removeItem(selectedTrack.id, idx); refresh() }}
             onReorderItems={(from, to) => { reorderItems(selectedTrack.id, from, to); refresh() }}
           />
