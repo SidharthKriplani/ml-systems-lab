@@ -185,6 +185,143 @@ const TYPE_TAB = {
   bug:        'codebugs',
 }
 
+// ── Item grouping helper ──────────────────────────────────────────────────────
+
+function itemGroup(item) {
+  if (item.type === 'module') {
+    return { key: `module:${item.tabId}`, label: TAB_LABELS[item.tabId] || item.tabId }
+  }
+  if (item.type === 'note') {
+    return { key: 'note', label: 'Notes' }
+  }
+  return { key: item.type, label: ITEM_TYPE_LABEL[item.type] || item.type }
+}
+
+// ── TrackItemRow ──────────────────────────────────────────────────────────────
+
+function TrackItemRow({ item, idx, onNavigate, onRemoveItem, onOpenNote, onDeleteNote, dragFrom, setDragFrom, onReorderItems }) {
+  return (
+    <div
+      key={idx}
+      draggable
+      onDragStart={() => setDragFrom(idx)}
+      onDragOver={e => e.preventDefault()}
+      onDrop={() => { if (dragFrom !== null && dragFrom !== idx) { onReorderItems(dragFrom, idx); setDragFrom(null) } }}
+      onDragEnd={() => setDragFrom(null)}
+      style={{
+        display: 'flex', alignItems: 'flex-start', gap: '0.6rem',
+        padding: '0.7rem 0.85rem', borderRadius: '8px',
+        background: dragFrom === idx ? 'var(--prime-faint)' : 'var(--surface)',
+        border: `1px solid ${dragFrom === idx ? 'var(--prime)' : 'var(--rim)'}`,
+        cursor: 'grab', transition: 'all 0.1s',
+      }}
+    >
+      <span style={{ color: 'var(--ink-ghost)', fontSize: '0.7rem', marginTop: '3px', userSelect: 'none', flexShrink: 0 }}>⠿</span>
+
+      {item.type === 'module' && (
+        <>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap', marginBottom: '0.2rem' }}>
+              <span style={{ fontSize: '0.62rem', fontWeight: 600, color: 'var(--prime)', background: 'var(--prime-faint)', border: '1px solid var(--prime)', borderRadius: '4px', padding: '0.05rem 0.35rem' }}>
+                {TAB_LABELS[item.tabId] || item.tabId}
+              </span>
+              <DiffBadge d={item.difficulty} />
+            </div>
+            <div style={{ fontSize: '0.87rem', fontWeight: 600, color: 'var(--ink-hi)', lineHeight: 1.3 }}>{item.label}</div>
+          </div>
+          <button
+            onClick={() => onNavigate(item.tabId, item.moduleId)}
+            style={{
+              background: 'none', border: '1px solid var(--rim)', borderRadius: '5px',
+              cursor: 'pointer', color: 'var(--ink-mid)', fontSize: '0.75rem',
+              padding: '0.2rem 0.5rem', flexShrink: 0, whiteSpace: 'nowrap', transition: 'all 0.12s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--prime)'; e.currentTarget.style.color = 'var(--prime)' }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--rim)'; e.currentTarget.style.color = 'var(--ink-mid)' }}
+          >Open →</button>
+          <button onClick={() => onRemoveItem(idx)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-ghost)', fontSize: '0.72rem', padding: '0.1rem 0.2rem', flexShrink: 0 }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#e05050' }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--ink-ghost)' }}
+          >✕</button>
+        </>
+      )}
+
+      {item.type === 'note' && (
+        <>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.2rem' }}>
+              <span style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>📝 Note</span>
+              <span style={{ fontSize: '0.65rem', color: 'var(--ink-ghost)' }}>{noteBlockSummary(item)}</span>
+            </div>
+            <div style={{ fontSize: '0.87rem', fontWeight: 600, color: 'var(--ink-hi)', marginBottom: '0.15rem' }}>
+              {item.title || 'Untitled note'}
+            </div>
+            {notePreview(item) && (
+              <div style={{ fontSize: '0.78rem', color: 'var(--ink-low)', lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {notePreview(item)}
+              </div>
+            )}
+          </div>
+          <button
+            onClick={() => onOpenNote(item)}
+            style={{
+              background: 'none', border: '1px solid var(--rim)', borderRadius: '5px',
+              cursor: 'pointer', color: 'var(--ink-mid)', fontSize: '0.75rem',
+              padding: '0.2rem 0.5rem', flexShrink: 0, whiteSpace: 'nowrap', transition: 'all 0.12s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--prime)'; e.currentTarget.style.color = 'var(--prime)' }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--rim)'; e.currentTarget.style.color = 'var(--ink-mid)' }}
+          >Open →</button>
+          <button
+            onClick={() => onDeleteNote(item.id)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-ghost)', fontSize: '0.72rem', padding: '0.1rem 0.2rem', flexShrink: 0 }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#e05050' }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--ink-ghost)' }}
+          >✕</button>
+        </>
+      )}
+
+      {!['module', 'note'].includes(item.type) && (
+        <>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap', marginBottom: '0.2rem' }}>
+              <span style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--prime)', background: 'var(--prime-faint)', border: '1px solid var(--prime)', borderRadius: '4px', padding: '0.05rem 0.35rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                {ITEM_TYPE_LABEL[item.type] || item.type}
+              </span>
+              {item.meta?.cat && <span style={{ fontSize: '0.62rem', color: 'var(--ink-ghost)' }}>{item.meta.cat}</span>}
+              {item.meta?.group && <span style={{ fontSize: '0.62rem', color: 'var(--ink-ghost)' }}>{item.meta.group}</span>}
+              {item.meta?.company && item.type !== 'case' && <span style={{ fontSize: '0.62rem', color: 'var(--ink-ghost)' }}>{item.meta.company}</span>}
+              {item.meta?.domain && <span style={{ fontSize: '0.62rem', color: 'var(--ink-ghost)' }}>{item.meta.domain}</span>}
+              {item.meta?.level && <span style={{ fontSize: '0.62rem', color: 'var(--ink-ghost)' }}>{item.meta.level}</span>}
+              {item.meta?.category && <span style={{ fontSize: '0.62rem', color: 'var(--ink-ghost)' }}>{item.meta.category}</span>}
+            </div>
+            <div style={{ fontSize: '0.87rem', fontWeight: 600, color: 'var(--ink-hi)', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {item.label}
+            </div>
+          </div>
+          {TYPE_TAB[item.type] && (
+            <button
+              onClick={() => onNavigate(TYPE_TAB[item.type], item.itemId)}
+              style={{
+                background: 'none', border: '1px solid var(--rim)', borderRadius: '5px',
+                cursor: 'pointer', color: 'var(--ink-mid)', fontSize: '0.75rem',
+                padding: '0.2rem 0.5rem', flexShrink: 0, whiteSpace: 'nowrap', transition: 'all 0.12s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--prime)'; e.currentTarget.style.color = 'var(--prime)' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--rim)'; e.currentTarget.style.color = 'var(--ink-mid)' }}
+            >Open →</button>
+          )}
+          <button onClick={() => onRemoveItem(idx)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-ghost)', fontSize: '0.72rem', padding: '0.1rem 0.2rem', flexShrink: 0 }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#e05050' }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--ink-ghost)' }}
+          >✕</button>
+        </>
+      )}
+    </div>
+  )
+}
+
 // ── TrackDetail ───────────────────────────────────────────────────────────────
 
 function TrackDetail({ track, onNavigate, onRename, onNewNote, onOpenNote, onDeleteNote, onRemoveItem, onReorderItems }) {
@@ -257,127 +394,41 @@ function TrackDetail({ track, onNavigate, onRename, onNewNote, onOpenNote, onDel
           Open any foundation tab and hit the + button on a module to add it here, or create a note above.
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-          {track.items.map((item, idx) => (
-            <div
-              key={idx}
-              draggable
-              onDragStart={() => setDragFrom(idx)}
-              onDragOver={e => e.preventDefault()}
-              onDrop={() => { if (dragFrom !== null && dragFrom !== idx) { onReorderItems(dragFrom, idx); setDragFrom(null) } }}
-              onDragEnd={() => setDragFrom(null)}
-              style={{
-                display: 'flex', alignItems: 'flex-start', gap: '0.6rem',
-                padding: '0.7rem 0.85rem', borderRadius: '8px',
-                background: dragFrom === idx ? 'var(--prime-faint)' : 'var(--surface)',
-                border: `1px solid ${dragFrom === idx ? 'var(--prime)' : 'var(--rim)'}`,
-                cursor: 'grab', transition: 'all 0.1s',
-              }}
-            >
-              <span style={{ color: 'var(--ink-ghost)', fontSize: '0.7rem', marginTop: '3px', userSelect: 'none', flexShrink: 0 }}>⠿</span>
-
-              {item.type === 'module' && (
-                <>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap', marginBottom: '0.2rem' }}>
-                      <span style={{ fontSize: '0.62rem', fontWeight: 600, color: 'var(--prime)', background: 'var(--prime-faint)', border: '1px solid var(--prime)', borderRadius: '4px', padding: '0.05rem 0.35rem' }}>
-                        {TAB_LABELS[item.tabId] || item.tabId}
-                      </span>
-                      <DiffBadge d={item.difficulty} />
-                    </div>
-                    <div style={{ fontSize: '0.87rem', fontWeight: 600, color: 'var(--ink-hi)', lineHeight: 1.3 }}>{item.label}</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+          {(() => {
+            // Group items by natural source, preserving first-appearance order.
+            const order = []
+            const groups = {}
+            track.items.forEach((item, idx) => {
+              const { key, label } = itemGroup(item)
+              if (!groups[key]) { groups[key] = { label, entries: [] }; order.push(key) }
+              groups[key].entries.push({ item, idx })
+            })
+            return order.map(key => {
+              const g = groups[key]
+              return (
+                <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.07em', padding: '0 0.1rem' }}>
+                    {g.label} · {g.entries.length}
                   </div>
-                  <button
-                    onClick={() => onNavigate(item.tabId, item.moduleId)}
-                    style={{
-                      background: 'none', border: '1px solid var(--rim)', borderRadius: '5px',
-                      cursor: 'pointer', color: 'var(--ink-mid)', fontSize: '0.75rem',
-                      padding: '0.2rem 0.5rem', flexShrink: 0, whiteSpace: 'nowrap', transition: 'all 0.12s',
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--prime)'; e.currentTarget.style.color = 'var(--prime)' }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--rim)'; e.currentTarget.style.color = 'var(--ink-mid)' }}
-                  >Open →</button>
-                  <button onClick={() => onRemoveItem(idx)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-ghost)', fontSize: '0.72rem', padding: '0.1rem 0.2rem', flexShrink: 0 }}
-                    onMouseEnter={e => { e.currentTarget.style.color = '#e05050' }}
-                    onMouseLeave={e => { e.currentTarget.style.color = 'var(--ink-ghost)' }}
-                  >✕</button>
-                </>
-              )}
-
-              {item.type === 'note' && (
-                <>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.2rem' }}>
-                      <span style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>📝 Note</span>
-                      <span style={{ fontSize: '0.65rem', color: 'var(--ink-ghost)' }}>{noteBlockSummary(item)}</span>
-                    </div>
-                    <div style={{ fontSize: '0.87rem', fontWeight: 600, color: 'var(--ink-hi)', marginBottom: '0.15rem' }}>
-                      {item.title || 'Untitled note'}
-                    </div>
-                    {notePreview(item) && (
-                      <div style={{ fontSize: '0.78rem', color: 'var(--ink-low)', lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {notePreview(item)}
-                      </div>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => onOpenNote(item)}
-                    style={{
-                      background: 'none', border: '1px solid var(--rim)', borderRadius: '5px',
-                      cursor: 'pointer', color: 'var(--ink-mid)', fontSize: '0.75rem',
-                      padding: '0.2rem 0.5rem', flexShrink: 0, whiteSpace: 'nowrap', transition: 'all 0.12s',
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--prime)'; e.currentTarget.style.color = 'var(--prime)' }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--rim)'; e.currentTarget.style.color = 'var(--ink-mid)' }}
-                  >Open →</button>
-                  <button
-                    onClick={() => onDeleteNote(item.id)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-ghost)', fontSize: '0.72rem', padding: '0.1rem 0.2rem', flexShrink: 0 }}
-                    onMouseEnter={e => { e.currentTarget.style.color = '#e05050' }}
-                    onMouseLeave={e => { e.currentTarget.style.color = 'var(--ink-ghost)' }}
-                  >✕</button>
-                </>
-              )}
-
-              {!['module', 'note'].includes(item.type) && (
-                <>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap', marginBottom: '0.2rem' }}>
-                      <span style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--prime)', background: 'var(--prime-faint)', border: '1px solid var(--prime)', borderRadius: '4px', padding: '0.05rem 0.35rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                        {ITEM_TYPE_LABEL[item.type] || item.type}
-                      </span>
-                      {item.meta?.cat && <span style={{ fontSize: '0.62rem', color: 'var(--ink-ghost)' }}>{item.meta.cat}</span>}
-                      {item.meta?.group && <span style={{ fontSize: '0.62rem', color: 'var(--ink-ghost)' }}>{item.meta.group}</span>}
-                      {item.meta?.company && item.type !== 'case' && <span style={{ fontSize: '0.62rem', color: 'var(--ink-ghost)' }}>{item.meta.company}</span>}
-                      {item.meta?.domain && <span style={{ fontSize: '0.62rem', color: 'var(--ink-ghost)' }}>{item.meta.domain}</span>}
-                      {item.meta?.level && <span style={{ fontSize: '0.62rem', color: 'var(--ink-ghost)' }}>{item.meta.level}</span>}
-                      {item.meta?.category && <span style={{ fontSize: '0.62rem', color: 'var(--ink-ghost)' }}>{item.meta.category}</span>}
-                    </div>
-                    <div style={{ fontSize: '0.87rem', fontWeight: 600, color: 'var(--ink-hi)', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {item.label}
-                    </div>
-                  </div>
-                  {TYPE_TAB[item.type] && (
-                    <button
-                      onClick={() => onNavigate(TYPE_TAB[item.type], item.itemId)}
-                      style={{
-                        background: 'none', border: '1px solid var(--rim)', borderRadius: '5px',
-                        cursor: 'pointer', color: 'var(--ink-mid)', fontSize: '0.75rem',
-                        padding: '0.2rem 0.5rem', flexShrink: 0, whiteSpace: 'nowrap', transition: 'all 0.12s',
-                      }}
-                      onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--prime)'; e.currentTarget.style.color = 'var(--prime)' }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--rim)'; e.currentTarget.style.color = 'var(--ink-mid)' }}
-                    >Open →</button>
-                  )}
-                  <button onClick={() => onRemoveItem(idx)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-ghost)', fontSize: '0.72rem', padding: '0.1rem 0.2rem', flexShrink: 0 }}
-                    onMouseEnter={e => { e.currentTarget.style.color = '#e05050' }}
-                    onMouseLeave={e => { e.currentTarget.style.color = 'var(--ink-ghost)' }}
-                  >✕</button>
-                </>
-              )}
-            </div>
-          ))}
+                  {g.entries.map(({ item, idx }) => (
+                    <TrackItemRow
+                      key={idx}
+                      item={item}
+                      idx={idx}
+                      onNavigate={onNavigate}
+                      onRemoveItem={onRemoveItem}
+                      onOpenNote={onOpenNote}
+                      onDeleteNote={onDeleteNote}
+                      dragFrom={dragFrom}
+                      setDragFrom={setDragFrom}
+                      onReorderItems={onReorderItems}
+                    />
+                  ))}
+                </div>
+              )
+            })
+          })()}
         </div>
       )}
     </div>

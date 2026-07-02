@@ -58,11 +58,11 @@ export const SYSTEM_DESIGN_MODULES = [
       },
     ],
     recap: [
-      `**6 steps:** clarify → frame → data → model → serving → monitoring. Skipping to "model" is the classic junior tell.`,
-      `**Steps 1–3 are constraints, not preamble:** QPS, latency SLA, label availability, error-cost asymmetry disqualify architectures up front.`,
-      `**Model + serving are coupled:** a 200ms model dies against a 50ms SLA; a 50GB model dies on one box. Solve them together.`,
-      `**Monitoring is step 6, not an afterthought:** a model can't signal its own decay — define the retraining trigger pre-launch.`,
-      `**Cost asymmetry shapes the whole design:** FP≫FN can force two-stage + human-in-the-loop, decided before modeling.`,
+      `**The 6 steps in order:** clarify requirements → frame as an ML problem → data strategy → model → serving → monitoring. Jumping straight to "model" (step 4) is the single most common interview failure — the classic junior tell.`,
+      `**Steps 1–3 are load-bearing constraints, not preamble:** QPS, latency SLA, label availability, and the FP-vs-FN cost asymmetry disqualify most architectures up front. A 200ms transformer dies the instant the SLA turns out to be 50ms; a supervised model dies the instant you learn there are no labels coming. Elicit these in the first five minutes, not after weeks of work.`,
+      `**Model and serving are coupled, solve them together:** a 200ms model can't serve real-time, a 50GB-RAM model can't run on one box. Choose the model first and you discover the serving wall after the most expensive weeks are spent.`,
+      `**Monitoring (step 6) is not optional:** a deployed model has no built-in signal for its own decay, so without monitoring input distributions, prediction distributions, and the business metric, the first symptom of failure is a revenue drop days after the damage began. Define the retraining trigger before launch.`,
+      `**Cost asymmetry shapes the whole design, not just training:** if a false positive (blocking a legit transaction) costs far more than a false negative, you may need a two-stage design (cheap model auto-approves, expensive model reviews the rest) plus a human-in-the-loop — architectural choices that must be decided before modeling, not tuned as class weights inside it.`,
     ],
     figures: {
       framework: `<svg viewBox="0 0 360 70" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
@@ -138,11 +138,11 @@ export const SYSTEM_DESIGN_MODULES = [
       },
     ],
     recap: [
-      `**One model can't do scale + quality:** 10M items × 1ms ≫ 50ms. Hence the funnel.`,
-      `**Funnel = retrieval (recall, cheap, millions) → ranking (precision, costly, hundreds) → re-rank (diversity/business).**`,
-      `**Retrieval recall is a hard ceiling:** an item retrieval drops can never be ranked back. Audit retrieval first when "great ranker, bad results."`,
-      `**Data flywheel:** users→data→models→engagement→users. New entrants can't do collaborative filtering cold.`,
-      `**Exploration is not optional:** pure exploitation shrinks the catalog and starves signal on new items.`,
+      `**One model can't do scale AND quality at once:** scoring 10M items with a good model at ~1ms each is ~10,000s — five orders of magnitude past a 50ms budget. That impossibility is why every large recommender is a funnel, not a single model.`,
+      `**The funnel is three stages, each a different tradeoff:** retrieval (candidate generation) cheaply narrows millions → thousands optimising *recall*; ranking runs an expensive precise model over the survivors optimising *precision*; re-ranking layers diversity, freshness, and business rules on top. The cheap stage must run over everything; the expensive stage only over what the cheap stage kept.`,
+      `**Retrieval recall is a ceiling you can never raise downstream:** an item retrieval drops is gone — no ranker can score an item it never received, so if recall@1000 is 0.7, 30% of items the user would have loved are already lost. Tell: "great ranker, mediocre results" → audit retrieval recall first, before touching the ranker.`,
+      `**The data flywheel is why incumbents are hard to displace:** more users → more interaction data → better models → more engagement → more users. A cold platform has no interaction history, so it can't run collaborative filtering at all and must limp along on content features until it accrues a base.`,
+      `**Exploration is a deliberate, non-optional cost:** pure exploitation (always serve the highest predicted-engagement item) collapses onto a shrinking set of popular items, starves the model of signal on new/long-tail items, and narrows users — coverage falls even as short-term clicks look fine. Exploration trades a little engagement now to keep the flywheel fed.`,
     ],
     figures: {
       funnel: `<svg viewBox="0 0 360 96" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
@@ -216,11 +216,11 @@ export const SYSTEM_DESIGN_MODULES = [
       },
     ],
     recap: [
-      `**4 stages, not 3:** retrieval (10M→5k) → pre-rank (5k→500) → rank (500→50) → re-rank (50→10).`,
-      `**Pre-ranking exists** because the heavy ranker can't score thousands in-budget; tune pre-rank/rank consistency so good candidates survive.`,
-      `**Latency is a hard per-stage budget, measured end-to-end.** One overrun cascades; feature fetch usually dominates, not inference.`,
-      `**Stages are independently trained/deployed** → teams iterate on one without re-testing all.`,
-      `**Feedback loop is the core correctness bug:** train on raw clicks → learn position, not relevance. Fix with IPW + randomization.`,
+      `**Production RecSys is a 4-stage funnel, not 3:** retrieval (10M→5k, ~1ms) → pre-rank (5k→500, ~5ms) → rank (500→50, ~20ms) → re-rank (50→10, ~5ms). The gap between a *prototype* and a *system* is this entire stack — serving millions inside ~100ms, A/B-testing each stage, degrading gracefully, correcting position bias.`,
+      `**Pre-ranking (coarse-ranking) is the stage interviews forget:** a lightweight model (small two-tower or GBM) trims thousands → hundreds so the heavy ranker fits its budget — without it the ranker either blows latency or scores too few candidates. Its own tuning problem is *pre-rank/rank consistency*: if the two disagree wildly, good candidates get cut before the ranker ever sees them.`,
+      `**Latency is allocated, not hoped for — a hard per-stage budget measured end-to-end.** One overrunning stage cascades: if feature fetch slips 10ms→25ms, ranking loses 15ms and must drop candidates or simplify. Profile the whole request path in production; the bottleneck is usually feature retrieval, not inference.`,
+      `**Each stage is independently trained, monitored, and deployed** — an organizational choice as much as technical, letting a small team improve retrieval this week without re-testing ranking. Blur the boundaries and the pipeline becomes one un-shippable unit.`,
+      `**The feedback loop is the hardest correctness bug:** the ranker trains on interactions shaped by what the *previous* ranker showed, and position 1 gets clicks regardless of quality — train on raw clicks and you learn position effects, not relevance. Fix with inverse-propensity weighting (weight by 1/P(click|position)) plus occasional randomization for unbiased data.`,
     ],
     figures: {
       fourstage: `<svg viewBox="0 0 360 78" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
@@ -293,11 +293,11 @@ export const SYSTEM_DESIGN_MODULES = [
       },
     ],
     recap: [
-      `**Joint (cross-attention) scoring is most accurate but O(all items)/query → impossible at retrieval scale.**`,
-      `**Two-tower:** encode user & item separately → dot-product similarity → item embeddings precomputed + ANN-indexed → ~10ms over 100M.`,
-      `**Cost:** loses fine user×item interactions → handed to the downstream cross-encoder ranker over ~100s of candidates.`,
-      `**Training:** in-batch softmax + hard negatives (random negatives are too easy).`,
-      `**Ops:** ANN staleness scales with catalog churn → delta re-embed volatile items, full rebuild the stable ones.`,
+      `**Joint (cross-attention) scoring is most accurate but impossible at retrieval scale:** scoring every user against every item is O(all items)/query — 10M items × 1000 users/s = 10B joint forward passes/second, an overnight warehouse job, not real-time retrieval.`,
+      `**The two-tower trick — encode separately, compare with a dot product:** a user tower and item tower map into the same space; similarity is just u·v. Because an item's embedding no longer depends on who's asking, you compute *all* item embeddings offline once and ANN-index them; at query time you encode one user and look up neighbors — ~10ms across 100M items.`,
+      `**What you give up, and who restores it:** encoding the two sides apart loses fine user×item feature interactions — exactly what the joint model was good at. That job is handed downstream to the cross-attention *ranker*, which only scores the few hundred candidates retrieval already narrowed. Two-tower for recall, cross-encoder for precision.`,
+      `**Training recipe = in-batch softmax + hard-negative mining:** other items in the batch serve as negatives; explicitly mining high-scoring-but-unclicked items forces fine distinctions. Random negatives are too easy — separating a clicked video from a random one gives near-zero gradient and teaches nothing subtle.`,
+      `**Ops: ANN staleness scales with catalog volatility.** When item features change, the indexed embedding is stale. Fast-changing catalogs (price, inventory) need delta re-embedding of changed items; stable catalogs tolerate weekly full rebuilds. Staleness is a continuous freshness-vs-cost tradeoff, not a corner case.`,
     ],
     figures: {
       twotower: `<svg viewBox="0 0 360 110" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
@@ -378,11 +378,11 @@ export const SYSTEM_DESIGN_MODULES = [
       },
     ],
     recap: [
-      `**Keyword (BM25) fails on vocabulary mismatch; embeddings match on meaning.**`,
-      `**Cross-encoder = accurate but O(N)/query → re-ranking only. Bi-encoder = precompute + ANN → retrieval.**`,
-      `**Production = bi-encoder retrieve (100s from millions) → cross-encoder re-rank (the 100s).**`,
-      `**Embedding quality = pretraining objective:** raw BERT (MLM) is poor; SBERT/E5/BGE (contrastive + hard negatives) work.`,
-      `**ANN knob (ef_search/nprobe) trades recall vs latency — calibrate on tail queries, not benchmarks.**`,
+      `**Keyword (BM25) breaks on vocabulary mismatch; embeddings match on meaning:** "heart attack symptoms" misses "myocardial infarction presentation" — same meaning, zero shared tokens. Semantic search maps queries and documents into a space where meaning, not token overlap, decides similarity.`,
+      `**Cross-encoder vs bi-encoder is forced by scale, not preference:** a cross-encoder feeds query and document in together (most accurate) but reruns per query-document pair → O(N)/query, so it caps at a few hundred docs = re-ranking only. A bi-encoder (two-tower) encodes each side separately (slightly less precise) so document embeddings are query-independent → precompute offline + ANN over billions = retrieval.`,
+      `**Production uses both in sequence:** bi-encoder retrieves the top few hundred from millions (fast), cross-encoder re-ranks just those hundreds (slow but precise, where the cost is affordable). The same recall-then-precision split as RecSys.`,
+      `**Embedding quality is set by the pretraining objective:** raw BERT trained with masked-LM makes poor similarity embeddings that don't cluster by meaning; SBERT adds pooling + contrastive fine-tuning, and E5/BGE trained with hard negatives push recall much higher. Don't reach for raw \`bert-base\` and expect recall.`,
+      `**Every ANN index has a recall-vs-latency knob** (HNSW's ef_search, IVF's nprobe) — calibrate it on *tail* queries, not benchmarks. A 15ms P99 met on head queries breaks on the tail, because rare/poorly-covered queries need deeper traversal to reach the same recall.`,
     ],
     figures: {
       encoders: `<svg viewBox="0 0 360 104" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
@@ -461,11 +461,11 @@ export const SYSTEM_DESIGN_MODULES = [
       },
     ],
     recap: [
-      `**Rank by a value model, not one metric:** score = Σ wᵢ·p(outcomeᵢ) − w·p(harm).`,
-      `**Multi-task model = many heads (click/dwell/share/report); value model = the weighted combination.**`,
-      `**Shared-bottom** is cheap but negative-transfers on conflicting tasks; **MMoE/PLE** gates route them to separate experts.`,
-      `**Weights are a business decision, tuned by online A/B vs a north-star (retention), not offline loss.**`,
-      `**Heads must be calibrated** or the weights don't mean what they say. **Guardrails = negative weights** on harm signals.`,
+      `**Real feeds rank by a value model, not one metric:** "rank by engagement" is not a design; "rank by 1.0·p(click) + 1.2·p(dwell) + 0.5·p(share) − 3.0·p(report)" is. A staff-level ranker predicts several outcomes, then the value model combines them into the single score that decides order.`,
+      `**Multi-task ≠ multi-objective — keep them separate:** the *multi-task model* learns multiple heads (p(click), p(dwell), p(share), p(report)); the *value model* is the weighted combination of those heads. Heads are learned; combination weights are chosen.`,
+      `**Shared-bottom is cheap but negative-transfers when tasks conflict:** one trunk feeding all heads gets pulled in opposite directions (clickbait maximizes clicks but minimizes dwell), so every task suffers. Tell of negative transfer: adding a task *lowers* another's metric vs training it alone. **MMoE/PLE** fixes it — several expert sub-networks with per-task gates that route conflicting tasks to different experts.`,
+      `**Value-model weights are a business decision, tuned online, not a learned parameter:** they encode what a share is worth vs a click, how hard to penalize a report — and no weight vector maxes every objective (pushing CTR up promotes clickbait). Tune them by online A/B against a north-star (long-term retention), not offline loss.`,
+      `**Heads must be calibrated or the weights lie:** the weighted sum treats each pᵢ as a real probability with comparable scale — an uncalibrated head that outputs 2× true probability has its effective weight doubled. **Guardrails ride the same score as negative weights** on harm signals (report, "see fewer", hide), so harmful-but-clicky content is demoted at ranking time, not filtered after.`,
     ],
     figures: {
       mmoe: `<svg viewBox="0 0 360 116" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
@@ -534,11 +534,11 @@ export const SYSTEM_DESIGN_MODULES = [
       },
     ],
     recap: [
-      `**Problem:** N teams reimplement the same feature → training-serving skew + duplicated debugging.`,
-      `**Feature store:** compute once, register, consume with point-in-time correctness (prevents future-leakage).`,
-      `**Model registry + lineage:** links model ↔ run ↔ data ↔ metrics → rollback = one API call.`,
-      `**Break-even ~5–10 models.** Below that, hand-rolled (MLflow + FastAPI + git features) is simpler.`,
-      `**Classic failure:** building the platform before any model ships — abstraction with no users.`,
+      `**The problem a platform fixes is coordination, not modeling:** N teams each reimplement "user purchase history" in Spark, Python, SQL with subtly different null-handling and timezone logic — so their models see *different* values for the "same" feature at training time, drift further apart at serving, and each team debugs its own copy of one problem.`,
+      `**The feature store makes the feature the shared thing:** computed once, registered centrally, consumed by any model. Training pulls point-in-time-correct history; serving pulls the identical computation at low latency — one definition, one source of truth, no three-way skew. Point-in-time joins specifically prevent future-leakage (a 7-day aggregate that includes days after the label).`,
+      `**A model registry with versioning + lineage makes rollback one API call:** it links the deployed model to its training run, data, and eval metrics. Without it, the first production degradation becomes a multi-day manual hunt for the last-good artifact.`,
+      `**It only amortizes past ~5–10 models across teams:** for 1–2 models and a couple of data scientists, MLflow/W&B + FastAPI + Docker + git-versioned SQL features + manual dashboards is genuinely simpler and faster.`,
+      `**The classic failure is building the platform before any model ships** — abstraction with no users to amortize it. The skill is knowing which side of the break-even line you're on.`,
     ],
     figures: {
       platform: `<svg viewBox="0 0 360 96" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
@@ -606,11 +606,11 @@ export const SYSTEM_DESIGN_MODULES = [
       },
     ],
     recap: [
-      `**Sorting a classifier ≠ ranking.** Ranking is relative; per-item accuracy can still misorder the pairs that matter.`,
-      `**Pointwise (scores alone) → pairwise (A>B) → listwise (whole list).** Cost and fidelity rise together.`,
-      `**LambdaMART:** GBM with gradients weighted by |ΔNDCG| → top swaps pushed hardest, no differentiable NDCG needed.`,
-      `**Position bias:** pos-1 ≈ 10× clicks regardless of relevance → raw-click training self-reinforces. Fix = IPW (1/P(click|pos)) + randomization.`,
-      `**Online distillation:** big teacher (expensive features, offline) → small fast student. Watch for train/serve distribution shift.`,
+      `**Sorting a classifier ≠ training a ranker:** ranking is *relative* — what matters is which item beats which, not the exact score on each. A classifier tuned for per-item accuracy can get every absolute score right and still misorder the few hard, high-value pairs near the top.`,
+      `**Three ways to train for order, cost and fidelity rising together:** *pointwise* scores each item alone (misses the relative point); *pairwise* learns "A ranks above B" (fixes pairs but treats a rank-1 swap like a rank-100 swap); *listwise* optimizes the whole list (what you want, but expensive and label-noise sensitive).`,
+      `**LambdaMART is the tabular workhorse:** gradient-boosted trees whose gradients are weighted by |ΔNDCG| — a swap near the top gets a far bigger push than one near the bottom, injecting a ranking-aware signal without needing NDCG to be differentiable (it's sorting-based, zero-gradient almost everywhere).`,
+      `**Position bias is a correctness bug loss choice alone can't fix:** position 1 gets ~10× the clicks of position 10 regardless of relevance, so raw-click training reproduces the prior model's ranking in a self-reinforcing loop. Break it with inverse-propensity weighting (weight each example by 1/P(click|position)) plus occasional randomization — not a better loss.`,
+      `**Online distillation decouples quality from serving latency:** a large teacher with expensive features (cross-attention, full history) trains offline; a small student matches its rankings without those features and serves fast. The standard pattern when the most accurate model is too slow — watch for train/serve distribution shift as live traffic drifts from the distillation set.`,
     ],
     figures: {
       ltr: `<svg viewBox="0 0 360 92" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
@@ -677,11 +677,11 @@ export const SYSTEM_DESIGN_MODULES = [
       },
     ],
     recap: [
-      `**Cold start = no interaction history.** Three flavors: new user, new item, new platform.`,
-      `**New user:** context + onboarding + popularity prior → fast real-time embedding update.`,
-      `**New item:** content-based / two-tower item tower embeds from features → lands near similar known items.`,
-      `**New platform:** content-based until the flywheel ignites.`,
-      `**Exploration ends cold start** (ε-greedy/UCB/Thompson) — a real cost: spend engagement now to buy signal. Cold start *is* explore/exploit.`,
+      `**Cold start = the systematic failure of every recommender when there's no interaction history** — collaborative filtering learns from interactions, so it has nothing to say about a just-signed-up user or a minute-old item. The naive design silently serves garbage to exactly the users and creators you most want to keep.`,
+      `**New user (no history):** fall back to context (device, geo, time), onboarding signals (a quick interest picker), and demographic/popularity priors, then rapidly update a real-time user embedding from the first few interactions within the session.`,
+      `**New item (no interactions):** lean on content features (text, image, audio, creator) via a content-based or two-tower item tower that embeds from features alone — so a brand-new item lands near similar known items and is retrievable before any interaction. This is the single most important architectural choice for item cold start.`,
+      `**New platform (no data at all):** content-based until enough interactions accrue to bootstrap collaborative signal — the flywheel's ignition problem.`,
+      `**Exploration is the engine that ends cold start, and it's a measurable cost:** pure exploitation never shows a new item enough to learn if it's good, so deliberately allocate impressions (ε-greedy/UCB/Thompson) — spending some engagement now to buy the signal future ranking needs. Framed as a bandit, cold start *is* the explore/exploit tradeoff.`,
     ],
     figures: {
       coldstart: `<svg viewBox="0 0 360 92" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
@@ -754,11 +754,11 @@ export const SYSTEM_DESIGN_MODULES = [
       },
     ],
     recap: [
-      `**Order-only is a myth at scale:** the score feeds auctions (pCTR×bid), value models (Σwᵢpᵢ), thresholds → magnitude matters.`,
-      `**Calibration = the number is a probability.** Measure ECE / reliability diagram; fix with Platt / isotonic. Deep nets are overconfident.`,
-      `**Guardrail metrics = the veto:** define harm/latency/diversity pre-launch; primary can win while a guardrail breaks.`,
-      `**Counterfactual (off-policy) eval:** IPW-reweight old logs to estimate new-policy value → kill bad rankers pre-traffic.`,
-      `**IPW risk = variance** when new policy diverges from logged; clip or use doubly-robust estimators.`,
+      `**"Order-only" breaks the moment the score becomes a number:** the second it feeds an ad auction (expected value = pCTR × bid), a value model (weighted sum of heads), or a threshold ("auto-approve if fraud prob < 0.01"), the *magnitude* matters, not just the order. An uncalibrated 0.9 that's really 0.6 systematically overbids, mis-weights, and mis-thresholds.`,
+      `**Calibration means the number is a probability:** of all items scored 0.7, about 70% should be positive. Measure it with a reliability diagram and Expected Calibration Error; fix it with Platt scaling or isotonic regression on a held-out set. Deep rankers are systematically overconfident, so calibration is a required post-processing step whenever the score is consumed as a probability.`,
+      `**Guardrail metrics are the veto, not the goal:** you *optimize* engagement but *guard* the metrics that must not regress — latency, harmful-content rate, creator diversity, complaint rate. A launch that lifts engagement 2% but raises the report rate 15% should not ship, no matter how the primary metric looks.`,
+      `**Counterfactual (off-policy) evaluation estimates online lift from logs before serving:** because logs were collected under the *old* policy, reweight each outcome by inverse propensity (1/P(old policy showed this item)) to estimate what the *new* policy would have earned — the tool for killing bad rankers before they touch live traffic.`,
+      `**IPW's failure mode is variance:** when the new policy diverges far from the logged one, rarely-shown actions get huge 1/P weights and a single record dominates. Clipped or doubly-robust estimators tame it — but extreme propensities still force a real A/B test.`,
     ],
     figures: {
       calib: `<svg viewBox="0 0 360 108" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
@@ -839,11 +839,11 @@ export const SYSTEM_DESIGN_MODULES = [
       },
     ],
     recap: [
-      `**Real-time = the answer must beat the user's patience.** Batch never faces this.`,
-      `**Budget in ms, not vibes:** e.g., 50ms fraud = features 5–10 + inference 10–20 + net 2–5 + serialize 1–2.`,
-      `**Async fan-out = max, not sum:** 4×8ms parallel = 8ms; serial = 32ms. Add timeouts → default on slow source.`,
-      `**Precompute + cache:** stream aggregates so serving = lookup + light adjust.`,
-      `**Fallback + circuit breaker are design, not ops:** define the degraded response (popularity/rule/cache) before the incident.`,
+      `**Real-time ML has one hard constraint batch never faces:** the prediction must arrive before the user's patience runs out. A fraud model answering in 500ms is useless when the transaction clears in 200ms; a 2-second recommender has already lost the session.`,
+      `**Budget milliseconds like money, not vibes:** everything that makes the model better (more features, more layers) makes it slower, so design in numbers — "this adds 15ms, the SLA is 50ms, so 35ms is left." A 50ms fraud budget: features 5–10ms, inference 10–20ms, network 2–5ms, serialization 1–2ms. Profile end-to-end in production; the bottleneck is usually feature retrieval, not inference.`,
+      `**Async fan-out turns a sum into a max:** issue all feature-store requests in parallel and wait for the *max*, not the *sum* — four 8ms features cost 8ms in parallel, 32ms in serial. Pair each with a timeout that returns a default rather than blocking past the SLA.`,
+      `**Precompute and cache what you can:** stream user aggregates into a cache so serving is a lookup plus a light adjustment, not a heavy recompute.`,
+      `**Fallback + circuit breaker are design, not ops:** every real-time system needs a documented answer to "what happens when the model endpoint is slow or down" — a popularity response, rule-based score, or last cached prediction, behind a circuit breaker that trips automatically when error rate crosses a threshold. Define it before the incident, and make the budget explicit so accuracy and serving teams don't each optimize only half.`,
     ],
     figures: {
       latency: `<svg viewBox="0 0 360 84" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
@@ -918,11 +918,11 @@ export const SYSTEM_DESIGN_MODULES = [
       },
     ],
     recap: [
-      `**Order = intent:** [tent→bag→boots] predicts a headlamp; the unordered set doesn't. MF/two-tower discard order, sequential models keep it.`,
-      `**GRU4Rec** = recurrence (one decaying hidden state); **SASRec / transformers4rec** = self-attention (each position attends to any earlier one).`,
-      `**Self-attention beats GRU on long sessions** — no vanishing-gradient decay of early items.`,
-      `**Fuse short-term (session) + long-term (profile):** current binge can override lifetime taste for the next slot, profile survives for tomorrow.`,
-      `**Cheap:** O(L²·d) ≈ 320k FLOPs at L=50, d=128 → sub-ms → usable as a ranking feature, not just retrieval.`,
+      `**Order carries intent that a bag-of-items loses:** two-tower and matrix-factorization treat a user as a static bag — they know *what* you clicked but throw away order. [tent → sleeping bag → boots] is mid-mission and predicts a headlamp; the same three reshuffled tells a different story. Use sequential features when the *next action* depends on the *recent trajectory*.`,
+      `**Session-based models predict the next item from the ordered history:** GRU4Rec runs a recurrent net carrying a hidden state that summarizes everything seen; SASRec / transformers4rec replaces recurrence with self-attention so each position can look back at any earlier item directly.`,
+      `**Self-attention beats GRU on long sessions:** a GRU compresses the whole history into one recurrently-updated hidden state, so early items decay through vanishing gradients; self-attention lets position t attend directly to position 1, keeping early signal alive over a 50-event session.`,
+      `**Fuse short-term (session) and long-term (profile) — neither alone is enough:** your long-term profile says "indie films," but 4 straight cooking videos means you want a fifth *now*. Concatenate both into the ranker so the in-session state can override lifetime taste for the next slot, without erasing the profile that survives for tomorrow.`,
+      `**Sequence encoders are cheap enough for ranking, not just retrieval:** one self-attention layer at L=50, d=128 costs O(L²·d) ≈ 320k multiply-adds — sub-millisecond — so the encoded session becomes just another embedding the funnel already knows how to consume.`,
     ],
     figures: {
       seq: `<svg viewBox="0 0 360 108" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
@@ -1004,11 +1004,11 @@ export const SYSTEM_DESIGN_MODULES = [
       },
     ],
     recap: [
-      `**Exact NN is hopeless at scale:** 100M × 256-dim ≈ 25.6B MACs/query. ANN trades a little recall for 100–1000× speed.`,
-      `**HNSW** = greedy graph walk, ~log N hops, high recall, but full floats in RAM (~100GB @ 100M×256).`,
-      `**IVF-PQ** = cluster into cells (scan nearest few) + product-quantize (1024B→32B, ~32×) → ~3GB, mildly lossy.`,
-      `**Recall–latency is one knob** (efSearch / nprobe), set at query time — pick an operating point, not an index.`,
-      `**Build is costly, PQ is lossy:** high-churn → rebuild or side "fresh" index; quantization loss OK at retrieval (ranker re-scores), never in final ranking.`,
+      `**Once retrieval is a dot product, the bottleneck is search, not the model:** exact NN over 100M vectors of dim 256 is 100M·256 ≈ 25.6B multiply-adds/query — hopeless in 10ms. ANN (approximate nearest-neighbor) trades a sliver of recall for 100–1000× speedup; it's not an optimization, it's the only way retrieval runs in real time.`,
+      `**HNSW builds a navigable graph:** each vector links to a few neighbors across layered graphs, so a query greedily walks from an entry point to its neighborhood in ~log(N) hops — very fast, very high recall, but the full float vectors sit in RAM (100M × 256 × 4B ≈ 100GB).`,
+      `**IVF-PQ partitions and compresses:** cluster vectors into ~4096 cells (search only the nearest few), and product-quantize each — splitting 256 dims into 32 sub-vectors, each mapped to one of 256 centroids — so a vector shrinks 1024B → 32B (32×), fitting 100M vectors in ~3GB, mildly lossy. Choose HNSW vs IVF-PQ by whether recall or RAM is the binding constraint.`,
+      `**Recall and latency are one knob, turned at query time:** HNSW's efSearch and IVF's nprobe both trade recall for latency continuously (nprobe=8 → 0.92 recall at 3ms; nprobe=64 → 0.99 at 12ms). You don't pick "an index," you pick an operating point on its recall–latency curve — a product decision about how many good candidates the funnel can afford to lose.`,
+      `**Build cost and quantization loss are the operational tax:** HNSW graphs are O(N·log N) to build and expensive to mutate, so high-churn catalogs use periodic rebuilds or a small "fresh" index searched alongside the main one. PQ's compression is lossy — acceptable at retrieval (the ranker re-scores anyway), never in the final ranker.`,
     ],
     figures: {
       ann: `<svg viewBox="0 0 360 118" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
@@ -1087,11 +1087,11 @@ export const SYSTEM_DESIGN_MODULES = [
       },
     ],
     recap: [
-      `**Ranker scores items independently → top-k is often a redundant set.** "Best 10 items" ≠ "best set of 10".`,
-      `**MMR:** greedy pick of λ·rel − (1−λ)·max-sim-to-chosen; λ knob trades relevance vs diversity. Cheap default.`,
-      `**DPP:** set probability ∝ determinant (spanned volume) of a quality×similarity kernel → suppresses whole redundant sets, not just pairs.`,
-      `**Freshness/exploration slots** counter the ranker's under-scoring of thin-history new items.`,
-      `**Hard business rules** ("≤2 per creator", quotas, followed-account guarantees) are set-level → applied post-scoring in re-rank, not in the ranker.`,
+      `**The ranker scores each item independently, so the top-k by score is often a redundant set:** it answers "how good is this item for this user?" one at a time, with no notion that #2 adds nothing after #1 if they're near-duplicates. "Best 10 items" ≠ "best set of 10" — diversity is a *set* property the per-item ranker structurally cannot express, so it must be imposed after scoring.`,
+      `**MMR trades relevance against redundancy greedily:** pick items one at a time to maximize λ·relevance(i) − (1−λ)·max-similarity(i, already-chosen). λ high → mostly follow the ranker; λ low → aggressively diversify. Concretely, a 0.88-relevance item that's 0.95-similar to an already-picked item collapses in marginal value, letting a less-similar 0.80 item leapfrog it. Cheap, tunable — the default production diversifier.`,
+      `**DPP models diversity as spanned volume, not pairwise patching:** a Determinantal Point Process gives a set probability ∝ the determinant of a quality×similarity kernel = the squared volume the item vectors span. Redundant items are near-parallel vectors spanning ~0 volume, so DPP down-weights whole redundant *sets*, not just adjacent pairs — the principled cousin of MMR, at higher compute.`,
+      `**Freshness/exploration slots counter the ranker's under-scoring of new items:** thin engagement history makes an engagement-trained ranker systematically under-score fresh items (a cold-start feedback trap), so a freshness boost or explicit exploration slot in re-ranking counteracts it.`,
+      `**Hard business rules are set-level, so they ride the same re-rank stage after scoring:** "no more than 2 items per creator in the top 10," quotas, "at least 1 from a followed account" — these constrain the *set*, which the per-item ranker cannot enforce, so they're applied post-scoring, not in the ranker.`,
     ],
     figures: {
       rerank: `<svg viewBox="0 0 360 110" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
@@ -1167,11 +1167,11 @@ export const SYSTEM_DESIGN_MODULES = [
       },
     ],
     recap: [
-      `**The recommender makes its own data:** logs are conditioned on the old policy — naive training just reproduces it.`,
-      `**Popularity self-reinforces:** exposure → clicks → higher score → more exposure. Equal-quality items diverge; the long tail starves.`,
-      `**Exposure bias → IPW:** reweight each example by 1/P(shown) to recover relevance, not exposure. Needs logged propensities.`,
-      `**IPW is high-variance** when P(shown) is tiny → pair with **randomization / ε-greedy exploration** to inject unbiased signal.`,
-      `**Uncorrected loops → filter bubbles / echo chambers:** narrowing is misread as preference. Same fix: de-bias + explore.`,
+      `**A recommender manufactures its own training data:** you can only click what you were shown, and what you were shown was yesterday's model's choice — so logs aren't a neutral sample of preference, they're preference *conditioned on the old policy*. Train naively and the system teaches itself to keep doing what it already did.`,
+      `**Popularity self-reinforces into a rich-get-richer spiral:** a popular item is shown more → gets more clicks (partly *because* shown more, not better) → the model reads clicks as quality → shows it even more. Two equally-good items where one starts with 2× exposure diverge every cycle (2× → 3× → 5× clicks) even though true quality never differed. The long tail starves.`,
+      `**Exposure bias is the formal name; IPW is the standard correction:** Inverse-Propensity Weighting reweights each logged example by 1/P(shown) — an item shown 10% of the time counts 10× when clicked, one shown 90% counts ~1.1× — un-doing the exposure imbalance so the model estimates *relevance*, not *what got shown*. Requires logged propensities.`,
+      `**IPW is high-variance when P(shown) is tiny** (1/P blows up), so it's paired with **randomization / ε-greedy exploration** — a small traffic slice serving items uniformly injects unbiased exposure the model can learn from, keeping propensities bounded away from zero.`,
+      `**Left uncorrected, the loop produces filter bubbles and echo chambers:** a user shown one viewpoint clicks it → the model infers preference → shows more → the world narrows, and the *narrowing itself* is misread as stronger preference. Short-term engagement rises while coverage collapses. Same fix as popularity: propensity de-biasing plus deliberate exploration/diversity injection.`,
     ],
     figures: {
       loop: `<svg viewBox="0 0 360 120" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">

@@ -53,11 +53,28 @@ function uid() {
 
 // ── Auto-fetch link metadata ──────────────────────────────────────────────────
 
+// A readable title derived from the URL itself — used when the OG-tag fetch fails
+// (the proxy is flaky/rate-limited), so a saved link is NEVER left title-less.
+function fallbackTitle(url) {
+  try {
+    const u = new URL(url)
+    const host = u.hostname.replace(/^www\./, '')
+    const seg = u.pathname.replace(/\/+$/, '').split('/').filter(Boolean).pop() || ''
+    const clean = decodeURIComponent(seg)
+      .replace(/\.[a-z0-9]{1,5}$/i, '')     // strip extension
+      .replace(/[-_+]+/g, ' ')
+      .trim()
+    return clean ? `${clean} · ${host}` : host
+  } catch { return url }
+}
+
 async function fetchMeta(url) {
-  // Try allorigins proxy to get og tags
+  const fallback = fallbackTitle(url)
+  // Try allorigins proxy to get og tags; on any failure fall back to a URL-derived title.
   try {
     const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`
     const res = await fetch(proxy, { signal: AbortSignal.timeout(6000) })
+    if (!res.ok) return { title: fallback, summary: '' }
     const json = await res.json()
     const html = json.contents || ''
     const titleMatch = html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i)
@@ -67,11 +84,11 @@ async function fetchMeta(url) {
       || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:description["']/i)
       || html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i)
     return {
-      title: titleMatch ? titleMatch[1].trim().slice(0, 120) : '',
+      title: titleMatch ? titleMatch[1].trim().slice(0, 120) : fallback,
       summary: descMatch ? descMatch[1].trim().slice(0, 300) : '',
     }
   } catch {
-    return { title: '', summary: '' }
+    return { title: fallback, summary: '' }
   }
 }
 
