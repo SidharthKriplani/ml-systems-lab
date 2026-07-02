@@ -49,6 +49,7 @@ const ProjectLabTab     = lazy(() => import('./tabs/ProjectLabTab.jsx'))
 const LoanDefaultTab = lazy(() => import('./tabs/LoanDefaultTab.jsx'))
 const FraudDetectionTab = lazy(() => import('./tabs/FraudDetectionTab.jsx'))
 const StartHereTab      = lazy(() => import('./tabs/StartHereTab.jsx'))
+const DrillBrowser      = lazy(() => import('./components/judge/DrillBrowser.jsx'))
 const PlansTab          = lazy(() => import('./tabs/PlansTab.jsx'))
 const ProfilePage       = lazy(() => import('./tabs/ProfilePage.jsx'))
 const ResourcesTab      = lazy(() => import('./tabs/ResourcesTab.jsx'))
@@ -148,6 +149,7 @@ const ALL_TABS = [
   { id: 'data_foundation',             component: DataFoundationTab },
   { id: 'my_tracks',                   component: MyTracksTab },
   { id: 'start_here',                  component: StartHereTab },
+  { id: 'judge_browser',               component: DrillBrowser },
 ]
 
 // ── Freemium gate ─────────────────────────────────────────────────────────────
@@ -407,6 +409,12 @@ const NAV_SECTIONS = [
     label: 'JUDGE',
     icon: 'scale',
     groups: [
+      {
+        label: 'NEW · PREVIEW',
+        items: [
+          { id: 'judge_browser', label: 'Judgment drills (preview)', desc: 'Tag-driven drill pool — the rebuild, on real content.' },
+        ],
+      },
       {
         label: 'DRILLS · BY SUBJECT',
         items: [
