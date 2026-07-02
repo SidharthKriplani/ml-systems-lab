@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { AddToTrackPopover } from '../../components/tracks/AddToTrackPopover.jsx'
+import { getTracksForModule } from '../../utils/tracks.js'
 import { renderMd } from '../../utils/renderMd'
 import { UNSUPERVISED_MODULES } from '../../data/foundations/unsupervisedModules.js'
 import { InteractivePanel } from '../../components/interactive/InteractivePanel'
@@ -8,6 +10,8 @@ const DOMAIN = 'unsupervised'
 const COLOR = 'var(--prime)'
 
 const MODULES = UNSUPERVISED_MODULES
+
+const TAB_ID = \'unsupervised_foundation\'
 
 function difficultyBadge(d) {
   const map = {
@@ -28,12 +32,17 @@ function difficultyBadge(d) {
 export function UnsupervisedFoundationTab({ onNavigate }) {
   const [selectedId, setSelectedId] = useState(null)
   const [tick, setTick] = useState(0)
+  const [trackPopoverOpen, setTrackPopoverOpen] = useState(false)
+  const trackBtnRef = useRef(null)
 
   useEffect(() => {
     const h = () => setTick(t => t + 1)
     window.addEventListener('msl_progress', h)
     return () => window.removeEventListener('msl_progress', h)
   }, [])
+
+  // Close track popover when module selection changes
+  useEffect(() => { setTrackPopoverOpen(false) }, [selectedId])
 
   const doneCount = getDoneCount(MODULES)
   const selected = MODULES.find(m => m.id === selectedId)
@@ -131,6 +140,33 @@ export function UnsupervisedFoundationTab({ onNavigate }) {
                 <span key={t} style={{ fontSize: '0.65rem', color: 'var(--ink-ghost)', background: 'var(--surface)',
                   border: '1px solid var(--rim)', borderRadius: '4px', padding: '0.1rem 0.35rem' }}>{t}</span>
               ))}
+              <div style={{ marginLeft: 'auto', position: 'relative', flexShrink: 0 }}>
+                <button
+                  ref={trackBtnRef}
+                  onClick={() => setTrackPopoverOpen(o => !o)}
+                  title="Add to Track"
+                  style={{
+                    background: getTracksForModule(TAB_ID, selected.id).length > 0 ? 'var(--prime)' : 'var(--surface)',
+                    color: getTracksForModule(TAB_ID, selected.id).length > 0 ? '#fff' : 'var(--ink-low)',
+                    border: '1px solid var(--rim)', borderRadius: '4px',
+                    width: 22, height: 22, cursor: 'pointer', fontSize: '0.8rem',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0, transition: 'background 0.15s',
+                  }}
+                >
+                  {getTracksForModule(TAB_ID, selected.id).length > 0 ? '✓' : '+'}
+                </button>
+                {trackPopoverOpen && (
+                  <AddToTrackPopover
+                    tabId={TAB_ID}
+                    moduleId={selected.id}
+                    label={selected.title}
+                    difficulty={selected.difficulty}
+                    onClose={() => setTrackPopoverOpen(false)}
+                    anchorRef={trackBtnRef}
+                  />
+                )}
+              </div>
             </div>
             <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--ink-hi)', margin: '0 0 0.4rem', letterSpacing: '-0.025em' }}>
               {selected.title}
