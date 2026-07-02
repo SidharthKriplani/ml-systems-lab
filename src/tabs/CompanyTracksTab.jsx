@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { COMPANIES, ROLES, LEVELS, getCompanyTrackItems } from '../data/companyTracks.js'
+import { CompanyLogo } from '../components/CompanyLogo.jsx'
 
 // Company-specific curated prep tracks (SKELETON). Pick a company → role → level
 // and get an ordered list of items that open directly via onNavigate(tabId, target).
@@ -34,18 +35,22 @@ export default function CompanyTracksTab({ onNavigate }) {
           <div key={c} onClick={() => setCompany(c)}
             style={{
               padding: '7px 10px', borderRadius: 7, cursor: 'pointer', fontSize: '0.85rem', marginBottom: 2,
+              display: 'flex', alignItems: 'center', gap: 8,
               background: c === company ? 'var(--prime-faint)' : 'transparent',
               border: `1px solid ${c === company ? 'var(--prime)' : 'transparent'}`,
               color: c === company ? 'var(--ink-hi)' : 'var(--ink-mid)', fontWeight: c === company ? 700 : 500,
             }}>
-            {c}
+            <CompanyLogo company={c} size={18} />
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c}</span>
           </div>
         ))}
       </div>
 
       {/* Track detail */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem 2rem', background: 'var(--depth)', minWidth: 0 }}>
-        <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--ink-hi)', margin: '0 0 4px' }}>{company}</h2>
+        <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--ink-hi)', margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <CompanyLogo company={company} size={28} />{company}
+        </h2>
         <p style={{ fontSize: 13, color: 'var(--ink-low)', margin: '0 0 18px', lineHeight: 1.5 }}>
           Curated prep for {company} — pick a role and seniority. Items open the exact module, drill, or question set.
         </p>

@@ -116,12 +116,41 @@ export const ARIMAViz = forwardRef(function ARIMAViz(props, ref) {
   // Fit AR on differenced
   const { coefs: arCoefs, mean: arMean } = fitAR(diffSeries, p);
 
-  // Fitted values on diff series
-  const fittedDiff = diffSeries.map((_, i) => {
+  // AR-only fitted value + residual at each index of the differenced series
+  const arFittedDiff = diffSeries.map((_, i) => {
     if (i < p) return diffSeries[i];
     let val = arMean;
     for (let lag = 0; lag < p; lag++) {
       val += arCoefs[lag] * (diffSeries[i - 1 - lag] - arMean);
+    }
+    return val;
+  });
+  const arResiduals = diffSeries.map((v, i) => v - arFittedDiff[i]);
+
+  // ── MA(q): estimate a moving-average coefficient from residual lag-1 autocorr,
+  // then correct the fitted value with a geometrically-decaying sum of the last q
+  // residuals. q=0 → no correction (pure AR); larger q → residual structure is
+  // absorbed, visibly changing the fit and lowering MSE when residuals autocorrelate.
+  function estimateMATheta(resid) {
+    const n = resid.length;
+    if (n < 3) return 0;
+    let num = 0, den = 0;
+    for (let i = 1; i < n; i++) { num += resid[i] * resid[i - 1]; }
+    for (let i = 0; i < n; i++) { den += resid[i] * resid[i]; }
+    const r1 = den > 1e-10 ? num / den : 0;
+    // clamp to an invertible-ish range
+    return Math.max(-0.9, Math.min(0.9, r1));
+  }
+  const maTheta = q > 0 ? estimateMATheta(arResiduals) : 0;
+  const maWeights = Array.from({ length: q }, (_, k) => maTheta * Math.pow(0.6, k));
+
+  // Fitted values on diff series = AR term + MA correction from recent residuals
+  const fittedDiff = diffSeries.map((_, i) => {
+    if (i < p) return diffSeries[i];
+    let val = arFittedDiff[i];
+    for (let k = 0; k < q; k++) {
+      const ri = i - 1 - k;
+      if (ri >= 0) val += maWeights[k] * arResiduals[ri];
     }
     return val;
   });
@@ -140,8 +169,30 @@ export const ARIMAViz = forwardRef(function ARIMAViz(props, ref) {
 
   const fittedOriginal = reconstructFromDiff(trainRaw, fittedDiff, d);
 
-  // Forecast: forecast on diff scale, then integrate
-  const forecastDiff = forecast(diffSeries, arCoefs, FORECAST_STEPS, arMean);
+  // Forecast: AR recursion on diff scale, plus an MA correction that only reaches
+  // q steps into the future (future shocks are unknown → treated as 0).
+  function forecastWithMA(series, coefs, steps, mean, resid, weights) {
+    const pLags = coefs.length;
+    const history = [...series];
+    const preds = [];
+    for (let i = 0; i < steps; i++) {
+      let next = mean;
+      for (let lag = 0; lag < pLags; lag++) {
+        next += coefs[lag] * (history[history.length - 1 - lag] - mean);
+      }
+      // MA correction: only the last observed residuals influence the first q steps
+      for (let k = 0; k < weights.length; k++) {
+        const residIdx = resid.length - 1 - (k - i);
+        if (i <= k && residIdx >= 0 && residIdx < resid.length) {
+          next += weights[k] * resid[residIdx];
+        }
+      }
+      preds.push(next);
+      history.push(next);
+    }
+    return preds;
+  }
+  const forecastDiff = forecastWithMA(diffSeries, arCoefs, FORECAST_STEPS, arMean, arResiduals, maWeights);
 
   function integrateForecast(lastOrig, forecastDiffArr, dVal) {
     if (dVal === 0) return forecastDiffArr;
@@ -547,7 +598,7 @@ export const ARIMAViz = forwardRef(function ARIMAViz(props, ref) {
       {/* Stats */}
       <div style={{ fontSize: '0.78rem', color: 'var(--ink-ghost)', marginBottom: '0.5rem', fontFamily: 'monospace' }}>
         ARIMA({p},{d},{q}) &nbsp;|&nbsp; Training MSE: <span style={{ color: 'var(--prime)', fontWeight: 700 }}>{mse.toFixed(2)}</span>
-        &nbsp;|&nbsp; q={q} is visual only (shown in label)
+        &nbsp;|&nbsp; MA θ̂: <span style={{ color: 'var(--prime)', fontWeight: 700 }}>{q > 0 ? maTheta.toFixed(2) : '—'}</span>
       </div>
 
       {/* Canvas */}

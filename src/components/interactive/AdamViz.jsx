@@ -117,6 +117,7 @@ const MAX_STEPS = 200
 export const AdamViz = forwardRef(function AdamViz(props, ref) {
   const canvasRef = useRef(null)
   const animRef   = useRef(null)
+  const lastStepTimeRef = useRef(0)
 
   const [step,    setStep]    = useState(50)
   const [visible, setVisible] = useState({ sgd: true, momentum: true, rmsprop: true, adam: true })
@@ -322,18 +323,27 @@ export const AdamViz = forwardRef(function AdamViz(props, ref) {
     ctx.setTransform(1, 0, 0, 1, 0, 0)
   }, [visible, worldToCanvas])
 
-  // Animate
+  // Animate — time-gated so a full 200-step run takes ~5s and is observable.
+  const STEP_INTERVAL = 150 // ms between gated advances
+  const STEPS_PER_TICK = 6  // steps advanced each gated tick (200/6 ≈ 33 ticks × 150ms ≈ 5s)
+
   const startAnimation = useCallback(() => {
     if (running) return
     setRunning(true)
     let s = 0
-    const tick = () => {
-      s++
-      setStep(s)
-      draw(s)
+    lastStepTimeRef.current = performance.now()
+    const tick = (now) => {
+      const t = typeof now === 'number' ? now : performance.now()
+      if (t - lastStepTimeRef.current >= STEP_INTERVAL) {
+        lastStepTimeRef.current = t
+        s = Math.min(s + STEPS_PER_TICK, MAX_STEPS)
+        setStep(s)
+        draw(s)
+      }
       if (s < MAX_STEPS) {
         animRef.current = requestAnimationFrame(tick)
       } else {
+        animRef.current = null
         setRunning(false)
       }
     }
@@ -361,10 +371,15 @@ export const AdamViz = forwardRef(function AdamViz(props, ref) {
   const play = useCallback(() => {
     if (animRef.current) return;
     let s = step;
-    const tick = () => {
-      s++;
-      setStep(s);
-      draw(s);
+    lastStepTimeRef.current = performance.now();
+    const tick = (now) => {
+      const t = typeof now === 'number' ? now : performance.now();
+      if (t - lastStepTimeRef.current >= STEP_INTERVAL) {
+        lastStepTimeRef.current = t;
+        s = Math.min(s + STEPS_PER_TICK, MAX_STEPS);
+        setStep(s);
+        draw(s);
+      }
       if (s < MAX_STEPS) {
         animRef.current = requestAnimationFrame(tick);
       } else {

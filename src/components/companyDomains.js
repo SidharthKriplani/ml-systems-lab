@@ -79,6 +79,8 @@ export const COMPANY_DOMAINS = {
   'Fortinet': 'fortinet.com',
   'Akamai': 'akamai.com',
   'Nutanix': 'nutanix.com',
+  'Walmart Global Tech': 'walmart.com',
+  'Pocket FM': 'pocketfm.com',
   'AppLovin': 'applovin.com',
   'The Trade Desk': 'thetradedesk.com',
   'Criteo': 'criteo.com',

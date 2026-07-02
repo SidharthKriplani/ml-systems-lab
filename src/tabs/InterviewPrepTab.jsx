@@ -7,6 +7,7 @@ import { recordInterviewSessionMastery } from '../utils/progress.js'
 import { toggleBookmark, isBookmarked, getBookmarks } from '../utils/bookmarks.js'
 import { AddTrackBtn } from '../components/tracks/AddToTrackPopover.jsx'
 import { EXTRA_QUESTIONS } from '../data/interviewExtra.js'
+import { CompanyLogo } from '../components/CompanyLogo.jsx'
 
 const QUESTIONS = [
   ...EXTRA_QUESTIONS,
@@ -969,7 +970,7 @@ export default function InterviewPrepTab({ onNavigate }) {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '6px', alignItems: 'center' }}>
                         <span style={{ fontSize: '10px', fontWeight: 600, padding: '2px 8px', borderRadius: '999px', background: cc.bg, color: cc.text, border: `1px solid ${cc.border}`, fontFamily: 'var(--font-sans)' }}>{q.cat}</span>
-                        {q.company !== 'Any' && <span className="badge badge-ghost" style={{ fontSize: '10px' }}>{q.company}</span>}
+                        {q.company !== 'Any' && <span className="badge badge-ghost" style={{ fontSize: '10px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><CompanyLogo company={q.company} size={13} />{q.company}</span>}
                         <span className={`badge ${q.level === 'Staff' ? 'badge-rose' : q.level === 'Senior' ? 'badge-ember' : 'badge-ghost'}`} style={{ fontSize: '10px' }}>{q.level}</span>
                       </div>
                       <p style={{ fontSize: '14px', color: 'var(--ink-hi)', lineHeight: 1.6, margin: 0 }}>{q.q}</p>

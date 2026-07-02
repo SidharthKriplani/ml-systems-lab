@@ -285,34 +285,34 @@ export const GradientDescentDemo = forwardRef(function GradientDescentDemo(props
       background: `var(--surface, #1a1a1a)`,
       border: `1px solid var(--rim, #333)`,
       borderRadius: 10,
-      padding: '20px',
+      padding: '14px 16px',
       maxWidth: 700,
       color: `var(--ink-hi, #eee)`,
     },
     title: {
-      margin: '0 0 4px 0',
-      fontSize: 17,
+      margin: '0 0 2px 0',
+      fontSize: 15,
       fontWeight: 700,
       color: `var(--ink-hi, #eee)`,
     },
     subtitle: {
-      margin: '0 0 16px 0',
-      fontSize: 13,
+      margin: '0 0 10px 0',
+      fontSize: 12,
       color: `var(--ink-low, #888)`,
       fontFamily: `var(--font-mono, monospace)`,
     },
     canvas: {
       display: 'block',
       width: '100%',
-      height: 220,
+      height: 150,
       borderRadius: 6,
       border: `1px solid var(--rim, #333)`,
     },
     controls: {
       display: 'flex',
       alignItems: 'center',
-      gap: 12,
-      marginTop: 14,
+      gap: 10,
+      marginTop: 10,
       flexWrap: 'wrap',
     },
     sliderLabel: {
@@ -354,8 +354,8 @@ export const GradientDescentDemo = forwardRef(function GradientDescentDemo(props
     },
     statsRow: {
       display: 'flex',
-      gap: 20,
-      marginTop: 14,
+      gap: 16,
+      marginTop: 10,
       fontSize: 12,
       color: `var(--ink-mid, #aaa)`,
       fontFamily: `var(--font-mono, monospace)`,
@@ -364,47 +364,47 @@ export const GradientDescentDemo = forwardRef(function GradientDescentDemo(props
     statItem: {
       display: 'flex',
       flexDirection: 'column',
-      gap: 2,
+      gap: 1,
     },
     statLabel: {
       color: `var(--ink-low, #888)`,
-      fontSize: 10,
+      fontSize: 9,
       textTransform: 'uppercase',
       letterSpacing: '0.05em',
     },
     statVal: {
       color: `var(--ink-hi, #eee)`,
-      fontSize: 14,
+      fontSize: 13,
     },
     stepPanel: {
-      marginTop: 14,
+      marginTop: 10,
       background: `var(--depth, #111)`,
       border: `1px solid var(--rim, #333)`,
       borderRadius: 8,
-      padding: '14px 16px',
-      fontSize: 13,
+      padding: '9px 12px',
+      fontSize: 12,
     },
     stepTitle: {
-      fontSize: 11,
+      fontSize: 10,
       textTransform: 'uppercase',
       letterSpacing: '0.08em',
       color: `var(--ink-low, #888)`,
-      marginBottom: 10,
+      marginBottom: 6,
     },
     mathRow: {
       display: 'flex',
       flexDirection: 'column',
-      gap: 7,
+      gap: 4,
       fontFamily: `var(--font-mono, monospace)`,
-      fontSize: 12.5,
+      fontSize: 11.5,
       color: `var(--ink-mid, #aaa)`,
     },
     highlight: {
       color: `var(--prime, #F0A500)`,
     },
     note: {
-      marginTop: 2,
-      fontSize: 11.5,
+      marginTop: 1,
+      fontSize: 11,
       color: `var(--ink-low, #888)`,
       fontStyle: 'italic',
       fontFamily: `var(--font-sans, sans-serif)`,
@@ -412,7 +412,7 @@ export const GradientDescentDemo = forwardRef(function GradientDescentDemo(props
     divider: {
       border: 'none',
       borderTop: `1px solid var(--rim, #333)`,
-      margin: '8px 0',
+      margin: '5px 0',
     },
   };
 
@@ -424,7 +424,7 @@ export const GradientDescentDemo = forwardRef(function GradientDescentDemo(props
       <canvas
         ref={canvasRef}
         width={640}
-        height={220}
+        height={150}
         style={styles.canvas}
       />
 
@@ -494,80 +494,37 @@ export const GradientDescentDemo = forwardRef(function GradientDescentDemo(props
         </div>
       </div>
 
-      <div style={styles.stepPanel}>
-        <div style={styles.stepTitle}>{`Step math (step ${step})`}</div>
-        <div style={styles.mathRow}>
-          <div>
-            <span style={{ color: `var(--ink-low)` }}>Current: </span>
-            <span style={styles.highlight}>{`w = ${w.toFixed(4)}`}</span>
-            <span style={{ color: `var(--ink-low)` }}>{`  →  L(w) = ${loss.toFixed(4)}`}</span>
-          </div>
-
-          <hr style={styles.divider} />
-
-          <div>
-            <span style={{ color: `var(--ink-low)` }}>{`Gradient: ∂L/∂w = 2(w − 3) = 2(${w.toFixed(4)} − 3) = `}</span>
-            <span style={styles.highlight}>{grad.toFixed(4)}</span>
-            <span style={{ color: `var(--ink-low)` }}>{`  [${gradSign}]`}</span>
-          </div>
-
-          <div style={styles.note}>{`ℹ️  ${dirNote}`}</div>
-
-          <hr style={styles.divider} />
-
-          <div>
-            <span style={{ color: `var(--ink-low)` }}>{`Update: w ← w − α × ∂L/∂w`}</span>
-          </div>
-          <div>
-            <span style={{ color: `var(--ink-low)` }}>{`       = ${w.toFixed(4)} − ${alpha.toFixed(2)} × ${grad.toFixed(4)} = `}</span>
-            <span style={styles.highlight}>{newW.toFixed(4)}</span>
-          </div>
-
-          <div>
-            <span style={{ color: `var(--ink-low)` }}>{`New loss: L(${newW.toFixed(4)}) = `}</span>
-            <span style={styles.highlight}>{LOSS(newW).toFixed(4)}</span>
-            {lossPct != null && (
-              <span style={{ color: '#4ade80' }}>{`  (−${lossPct}% reduction)`}</span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Convergence rate panel */}
       {(() => {
-        // For L(w)=(w-3)^2, L=2 (Lipschitz constant of gradient), optimum lr = 1/L = 0.5
-        // Contraction ratio per step: |1 - 2α| (distance to optimum shrinks by this factor)
+        // For L(w)=(w-3)^2, L=2, optimum lr = 1/L = 0.5, contraction ρ = |1 - 2α|
         const rho = Math.abs(1 - 2 * alpha);
         const converges = alpha < 1.0;
         const stepsToHalve = converges && rho > 0 ? Math.ceil(Math.log(0.5) / Math.log(rho)) : null;
         return (
-          <div style={{ ...styles.stepPanel, marginTop: 10, borderColor: converges ? 'var(--rim,#333)' : '#ef4444' }}>
-            <div style={styles.stepTitle}>Convergence Analysis</div>
-            <div style={{ ...styles.mathRow, gap: 6 }}>
+          <div style={{ ...styles.stepPanel, borderColor: converges ? 'var(--rim,#333)' : '#ef4444' }}>
+            <div style={styles.stepTitle}>{`Step math + convergence (step ${step})`}</div>
+            <div style={styles.mathRow}>
               <div>
-                <span style={{ color: 'var(--ink-low)' }}>Condition: α {'<'} 2/L = 2/(2) = </span>
-                <span style={styles.highlight}>1.0</span>
-                <span style={{ color: 'var(--ink-low)' }}> for this parabola (L=2)</span>
+                <span style={{ color: `var(--ink-low)` }}>{`∂L/∂w = 2(${w.toFixed(3)}−3) = `}</span>
+                <span style={styles.highlight}>{grad.toFixed(3)}</span>
+                <span style={{ color: `var(--ink-low)` }}>{`  ·  w ← ${w.toFixed(3)} − ${alpha.toFixed(2)}×${grad.toFixed(3)} = `}</span>
+                <span style={styles.highlight}>{newW.toFixed(3)}</span>
               </div>
               <div>
-                <span style={{ color: 'var(--ink-low)' }}>Contraction ratio: ρ = |1 − 2α| = |1 − {(2*alpha).toFixed(2)}| = </span>
+                <span style={{ color: `var(--ink-low)` }}>{`L(w): ${loss.toFixed(3)} → ${LOSS(newW).toFixed(3)}`}</span>
+                {lossPct != null && <span style={{ color: '#4ade80' }}>{`  (−${lossPct}%)`}</span>}
+                <span style={{ color: `var(--ink-low)` }}>{`   ${dirNote.startsWith('gradient is negative') ? '→ w moves right' : dirNote.startsWith('gradient is positive') ? '→ w moves left' : '→ at minimum'}`}</span>
+              </div>
+              <hr style={styles.divider} />
+              <div>
+                <span style={{ color: 'var(--ink-low)' }}>ρ = |1 − 2α| = </span>
                 <span style={{ color: converges ? '#4ade80' : '#ef4444', fontWeight: 700 }}>{rho.toFixed(3)}</span>
-                <span style={{ color: 'var(--ink-low)' }}> {converges ? '< 1 → converges' : '≥ 1 → DIVERGES'}</span>
+                <span style={{ color: 'var(--ink-low)' }}>{converges ? ' < 1 → converges' : ' ≥ 1 → DIVERGES'}</span>
+                {converges && stepsToHalve !== null && (
+                  <span style={{ color: 'var(--ink-low)' }}>{`  ·  ~${stepsToHalve} steps to halve error`}</span>
+                )}
               </div>
-              {converges && stepsToHalve !== null && (
-                <div>
-                  <span style={{ color: 'var(--ink-low)' }}>Steps to halve error: ≈ </span>
-                  <span style={styles.highlight}>{stepsToHalve}</span>
-                  <span style={{ color: 'var(--ink-low)' }}> (strongly convex: O(ρᵗ) = geometric decay)</span>
-                </div>
-              )}
-              {!converges && (
-                <div style={{ color: '#ef4444' }}>
-                  α ≥ 1/L: gradient step overshoots the minimum. Each step moves further away. Try α ≤ 0.5 for this loss.
-                </div>
-              )}
-              <div style={{ ...styles.note, marginTop: 4 }}>
-                Optimal α = 1/L = 0.5 (fastest convergence). α → 0 = slow but safe. α ≥ 2/L = diverges.
+              <div style={styles.note}>
+                Optimal α = 1/L = 0.5 (fastest). α → 0 slow but safe. α ≥ 2/L = 1.0 diverges.
               </div>
             </div>
           </div>

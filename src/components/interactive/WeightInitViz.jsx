@@ -380,45 +380,15 @@ export const WeightInitViz = forwardRef(function WeightInitViz(props, ref) {
   const [fan, setFan] = useState(FAN_DEFAULT);
   const [scale, setScale] = useState(1.0);
   const canvasRef = useRef(null);
-  const animRef = useRef(null);
-
-  const INIT_IDS = ['zeros', 'large', 'xavier', 'he'];
-
-  const play = useCallback(() => {
-    if (animRef.current) return;
-    animRef.current = setInterval(() => {
-      setInitId(prev => {
-        const idx = INIT_IDS.indexOf(prev);
-        return INIT_IDS[(idx + 1) % INIT_IDS.length];
-      });
-    }, 1000);
-  }, []);
-
-  const pause = useCallback(() => {
-    if (animRef.current) { clearInterval(animRef.current); animRef.current = null; }
-  }, []);
 
   const reset = useCallback(() => {
-    pause();
     setInitId('he');
     setActivationId('relu');
     setFan(FAN_DEFAULT);
     setScale(1.0);
-  }, [pause]);
-
-  const step = useCallback(() => {
-    pause();
-    setInitId(prev => {
-      const idx = INIT_IDS.indexOf(prev);
-      return INIT_IDS[(idx + 1) % INIT_IDS.length];
-    });
-  }, [pause]);
-
-  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step]);
-
-  useEffect(() => {
-    return () => { if (animRef.current) clearInterval(animRef.current); };
   }, []);
+
+  useImperativeHandle(ref, () => ({ reset }), [reset]);
 
   // Recompute simulation when inputs change
   const layerStats = (() => {

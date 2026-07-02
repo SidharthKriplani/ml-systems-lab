@@ -160,7 +160,6 @@ export const StationarityViz = forwardRef(function StationarityViz(props, ref) {
   const [window_size, setWindowSize] = useState(20);
 
   const canvasRef = useRef(null);
-  const animRef = useRef(null);
 
   const config = SERIES_CONFIG[seriesIdx];
 
@@ -451,29 +450,12 @@ export const StationarityViz = forwardRef(function StationarityViz(props, ref) {
 
   const cfg = SERIES_CONFIG[seriesIdx];
 
-  const play = useCallback(() => {
-    if (animRef.current) return;
-    animRef.current = setInterval(() => {
-      setSeriesIdx(i => (i + 1) % SERIES_CONFIG.length);
-    }, 1000);
-  }, []);
-
-  const pause = useCallback(() => {
-    if (animRef.current) { clearInterval(animRef.current); animRef.current = null; }
-  }, []);
-
   const reset = useCallback(() => {
-    pause();
     setSeriesIdx(0);
     setShowDiff(false);
-  }, [pause]);
+  }, []);
 
-  const step = useCallback(() => {
-    pause();
-    setSeriesIdx(i => (i + 1) % SERIES_CONFIG.length);
-  }, [pause]);
-
-  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step]);
+  useImperativeHandle(ref, () => ({ reset }), [reset]);
 
   return (
     <div style={{ fontFamily: 'system-ui, sans-serif' }}>

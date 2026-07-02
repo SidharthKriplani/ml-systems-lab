@@ -190,6 +190,7 @@ export const LossLandscapeViz = forwardRef(function LossLandscapeViz(props, ref)
   const rafRef = useRef(null)
   const runningRef = useRef(false)
   const speedRef = useRef(2)
+  const lastStepTimeRef = useRef(0)
   const heatmapCacheRef = useRef(null)
   const primColorRef = useRef('#c9a227')
 
@@ -389,20 +390,24 @@ export const LossLandscapeViz = forwardRef(function LossLandscapeViz(props, ref)
     })
   }, [])
 
-  const animate = useCallback(() => {
-    const n = speedRef.current
+  const animate = useCallback((now) => {
     const s = optStateRef.current
     const allDone =
       s.sgd.step >= MAX_STEPS &&
       s.momentum.step >= MAX_STEPS &&
       s.adam.step >= MAX_STEPS
 
-    if (!allDone) {
-      advanceAll(s, n)
+    // Time-gate: advance a batch of steps only every STEP_INTERVAL ms so a full
+    // 200-step run takes ~5s and is actually observable. speed slider scales the
+    // number of steps taken per gated tick.
+    const STEP_INTERVAL = 140
+    const t = typeof now === 'number' ? now : performance.now()
+    if (!allDone && t - lastStepTimeRef.current >= STEP_INTERVAL) {
+      lastStepTimeRef.current = t
+      advanceAll(s, speedRef.current * 3)
+      drawFrame()
+      updateStats()
     }
-
-    drawFrame()
-    updateStats()
 
     if (!allDone && runningRef.current) {
       rafRef.current = requestAnimationFrame(animate)
@@ -422,6 +427,7 @@ export const LossLandscapeViz = forwardRef(function LossLandscapeViz(props, ref)
     if (runningRef.current) return
     runningRef.current = true
     setRunning(true)
+    lastStepTimeRef.current = performance.now()
     rafRef.current = requestAnimationFrame(animate)
   }, [animate])
 

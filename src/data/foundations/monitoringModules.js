@@ -196,11 +196,12 @@ It's distribution-free and notices shifts anywhere, not just in the mean. The tr
   <text x="167" y="52" text-anchor="middle" fill="var(--ink-mid)" font-size="7.5">investigate</text>
   <text x="284" y="38" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">&gt; 0.2</text>
   <text x="284" y="52" text-anchor="middle" fill="var(--ink-mid)" font-size="7.5">act</text>
-  <line x1="8" y1="78" x2="352" y2="78" stroke="var(--rim)" stroke-width="1"/>
-  <path d="M20,102 q40,-2 70,-6 q40,-4 90,4 q40,8 90,-2 q35,-8 62,-4" fill="none" stroke="var(--prime)" stroke-width="1.5"/>
-  <path d="M20,104 q40,4 70,10 q40,6 90,-6 q40,-14 90,2 q35,10 62,4" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3 2"/>
-  <text x="24" y="94" fill="var(--prime)" font-size="7">train dist</text>
-  <text x="24" y="115" fill="#ef4444" font-size="7">new dist (income 55K→70K → PSI &gt; 0.2)</text>
+  <line x1="8" y1="108" x2="352" y2="108" stroke="var(--rim)" stroke-width="1"/>
+  <path d="M40,108 C90,108 100,76 140,76 C180,76 190,108 240,108" fill="none" stroke="var(--prime)" stroke-width="1.5"/>
+  <path d="M150,108 C200,108 210,76 250,76 C290,76 300,108 350,108" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3 2"/>
+  <text x="140" y="72" text-anchor="middle" fill="var(--prime)" font-size="7">train (55K)</text>
+  <text x="250" y="72" text-anchor="middle" fill="#ef4444" font-size="7">new (70K)</text>
+  <text x="180" y="117" text-anchor="middle" fill="var(--ink-low)" font-size="7">income distribution shifts right → PSI &gt; 0.2</text>
 </svg>`,
     },
     recap: [

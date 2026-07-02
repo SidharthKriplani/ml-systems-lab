@@ -68,7 +68,7 @@ const ISOLATION_SPLITS = [
 ];
 
 const CANVAS_W = 420;
-const CANVAS_H = 240;
+const CANVAS_H = 190;
 
 function drawCanvas(canvas, threshold, showSplits, visibleCount = ALL_POINTS.length) {
   const dpr = window.devicePixelRatio || 1;
@@ -202,39 +202,39 @@ export const AnomalyDetectionViz = forwardRef(function AnomalyDetectionViz(props
     wrapper: {
       fontFamily: `var(--font-sans, sans-serif)`,
       color: `var(--ink-hi)`,
-      padding: '16px',
+      padding: '12px 14px',
       background: `var(--depth)`,
       borderRadius: '12px',
       maxWidth: '900px',
     },
     heading: {
-      fontSize: '16px',
+      fontSize: '15px',
       fontWeight: 700,
       color: `var(--prime)`,
-      marginBottom: '2px',
+      marginBottom: '1px',
     },
     subheading: {
-      fontSize: '12px',
+      fontSize: '11px',
       color: `var(--ink-mid)`,
-      marginBottom: '12px',
+      marginBottom: '8px',
     },
     mainRow: {
       display: 'flex',
-      gap: '16px',
+      gap: '12px',
       alignItems: 'stretch',
       flexWrap: 'wrap',
     },
     sidebar: {
-      flex: '0 0 190px',
+      flex: '1 1 180px',
       display: 'flex',
       flexDirection: 'column',
-      gap: '8px',
+      gap: '6px',
     },
     conceptBox: {
       background: `var(--surface)`,
       border: `1px solid var(--rim)`,
       borderRadius: '8px',
-      padding: '8px 10px',
+      padding: '6px 9px',
     },
     conceptTitle: {
       fontSize: '10px',
@@ -242,7 +242,7 @@ export const AnomalyDetectionViz = forwardRef(function AnomalyDetectionViz(props
       color: `var(--ink-mid)`,
       textTransform: 'uppercase',
       letterSpacing: '0.06em',
-      marginBottom: '5px',
+      marginBottom: '4px',
     },
     splitLines: {
       display: 'flex',
@@ -263,13 +263,13 @@ export const AnomalyDetectionViz = forwardRef(function AnomalyDetectionViz(props
       display: 'flex',
       alignItems: 'center',
       gap: '10px',
-      marginBottom: '10px',
+      marginBottom: '8px',
       flexWrap: 'wrap',
     },
     statsRow: {
       display: 'flex',
-      gap: '8px',
-      marginTop: '10px',
+      gap: '6px',
+      marginTop: '2px',
       flexWrap: 'wrap',
     },
     statBox: {
@@ -287,10 +287,10 @@ export const AnomalyDetectionViz = forwardRef(function AnomalyDetectionViz(props
       fontFamily: `var(--font-mono, monospace)`,
     },
     note: {
-      fontSize: '11px',
+      fontSize: '10.5px',
       color: `var(--ink-low)`,
-      lineHeight: 1.5,
-      marginTop: '10px',
+      lineHeight: 1.45,
+      marginTop: '8px',
     },
   };
 

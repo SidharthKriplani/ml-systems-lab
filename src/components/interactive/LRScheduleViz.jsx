@@ -161,40 +161,15 @@ export const LRScheduleViz = forwardRef(function LRScheduleViz(props, ref) {
     drawChart(canvas, schedules, alpha0);
   }, [schedules, alpha0]);
 
-  const [currentEpoch, setCurrentEpoch] = useState(0)
-  const autoPlayRef = useRef(null)
+  // Slider-only viz: base LR and warmup are driven entirely by the two sliders,
+  // there is no time-based animation to play. Expose only reset (restores the
+  // default slider values) — no dead play/pause.
+  const reset = useCallback(() => {
+    setAlpha0(0.5)
+    setWarmupPct(10)
+  }, [])
 
-  useImperativeHandle(ref, () => ({
-    play: () => {
-      if (autoPlayRef.current) return
-      autoPlayRef.current = setInterval(() => {
-        setCurrentEpoch(e => {
-          if (e >= T - 1) {
-            clearInterval(autoPlayRef.current)
-            autoPlayRef.current = null
-            return e
-          }
-          return e + 1
-        })
-      }, 80)
-    },
-    pause: () => {
-      if (autoPlayRef.current) {
-        clearInterval(autoPlayRef.current)
-        autoPlayRef.current = null
-      }
-    },
-    reset: () => {
-      if (autoPlayRef.current) {
-        clearInterval(autoPlayRef.current)
-        autoPlayRef.current = null
-      }
-      setCurrentEpoch(0)
-    },
-    step: () => {
-      setCurrentEpoch(e => Math.min(T - 1, e + 1))
-    },
-  }), [])
+  useImperativeHandle(ref, () => ({ reset }), [reset])
 
   const sliderStyle = {
     accentColor: 'var(--prime)',

@@ -214,38 +214,20 @@ function drawBetaCanvas(canvas, alphas, betas, primeColor) {
       else ctx.lineTo(cx, cy);
     });
     ctx.stroke();
-
-    // Peak label: find max
-    let peakX = 0.5, peakY = 0;
-    pts.forEach(({ x, y }) => {
-      if (isFinite(y) && y > peakY) { peakY = y; peakX = x; }
-    });
-    const labelX = toX(peakX);
-    const labelY = Math.max(PT + 8, toY(peakY) - 6);
-    ctx.fillStyle = color;
-    ctx.font = `9px var(--font-mono, monospace)`;
-    ctx.textAlign = 'center';
-    ctx.fillText(`A${i}`, labelX, labelY);
   });
 
-  // Legend top-right
+  // Compact legend top-right (arm chips only — α/β shown below the chart)
   const legendX = PL + cW - 4;
-  const legendY = PT + 4;
+  const legendY = PT + 6;
   alphas.forEach((a, i) => {
     const color = getArmColor(i, prime);
-    const ly = legendY + i * 16;
+    const ly = legendY + i * 13;
     ctx.fillStyle = color;
-    ctx.fillRect(legendX - 52, ly, 8, 8);
+    ctx.fillRect(legendX - 26, ly, 8, 8);
     ctx.font = `9px var(--font-mono, monospace)`;
     ctx.textAlign = 'left';
-    ctx.fillText(`A${i} α=${a} β=${betas[i]}`, legendX - 40, ly + 7);
+    ctx.fillText(`A${i}`, legendX - 15, ly + 7);
   });
-
-  // Title
-  ctx.fillStyle = inkMid;
-  ctx.font = `10px var(--font-sans, sans-serif)`;
-  ctx.textAlign = 'left';
-  ctx.fillText('Thompson Sampling: Beta posteriors per arm', PL + 2, PT - 4);
 }
 
 // ── Draw: Cumulative regret chart ─────────────────────────────────────────────
@@ -353,21 +335,15 @@ function drawRegretCanvas(canvas, thompsonRegret, epsilonRegret, ucbRegret) {
     { label: 'UCB1', color: ALGO_COLORS.ucb },
   ];
   legend.forEach(({ label, color }, i) => {
-    const lx = PL + 10 + i * 88;
-    const ly = PT + 6;
+    const lx = PL + 8 + i * 82;
+    const ly = PT + 4;
     ctx.fillStyle = color;
-    ctx.fillRect(lx, ly, 16, 3);
+    ctx.fillRect(lx, ly, 14, 3);
     ctx.fillStyle = inkMid;
-    ctx.font = `10px var(--font-sans, sans-serif)`;
+    ctx.font = `9px var(--font-sans, sans-serif)`;
     ctx.textAlign = 'left';
-    ctx.fillText(label, lx + 20, ly + 4);
+    ctx.fillText(label, lx + 18, ly + 4);
   });
-
-  // Title
-  ctx.fillStyle = inkMid;
-  ctx.font = `10px var(--font-sans, sans-serif)`;
-  ctx.textAlign = 'left';
-  ctx.fillText('Cumulative regret (lower = better)', PL + 2, PT - 4);
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────

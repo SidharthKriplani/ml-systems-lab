@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useCallback, useImperativeHandle, forwardRef } from 'react';
+import React, { useState, useMemo, useCallback, useImperativeHandle, forwardRef } from 'react';
 
 const SCENARIOS = [
   { label: 'Healthy init', values: [-0.8, 0.3, 1.1, -0.4, 0.7, -1.2, 0.5, 0.2] },
@@ -149,21 +149,8 @@ export const BatchNormViz = forwardRef(function BatchNormViz(props, ref) {
   const [bnOn, setBnOn] = useState(true);        // BatchNorm on/off
   const [batchMean, setBatchMean] = useState(3.0);   // custom batch center
   const [batchSpread, setBatchSpread] = useState(2.0); // custom batch spread
-  const animRef = useRef(null);
-
-  const pause = useCallback(() => {
-    if (animRef.current) { clearInterval(animRef.current); animRef.current = null; }
-  }, []);
-
-  const play = useCallback(() => {
-    if (animRef.current) return;
-    animRef.current = setInterval(() => {
-      setScenario(s => (s + 1) % SCENARIOS.length);
-    }, 1000);
-  }, []);
 
   const reset = useCallback(() => {
-    pause();
     setScenario(0);
     setGamma(1.0);
     setBeta(0.0);
@@ -171,14 +158,9 @@ export const BatchNormViz = forwardRef(function BatchNormViz(props, ref) {
     setBnOn(true);
     setBatchMean(3.0);
     setBatchSpread(2.0);
-  }, [pause]);
+  }, []);
 
-  const step = useCallback(() => {
-    pause();
-    setScenario(s => (s + 1) % SCENARIOS.length);
-  }, [pause]);
-
-  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step]);
+  useImperativeHandle(ref, () => ({ reset }), [reset]);
 
   const isCustom = !!SCENARIOS[scenario].custom;
 

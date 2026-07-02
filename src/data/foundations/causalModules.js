@@ -797,28 +797,28 @@ What mediation analysis is not: controlling for the mediator in a regression. Co
       `**Always run Imai-Keele-Tingley sensitivity analysis** (ACME) for unmeasured M-Y confounding.`,
     ],
     figures: {
-      mediationdag: `<svg viewBox="0 0 360 108" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
-  <defs><marker id="mh" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="var(--ink-low)"/></marker></defs>
-  <text x="4" y="12" fill="var(--ink-low)" font-size="7.5">Total = Direct (T→Y) + Indirect (T→M→Y)</text>
-  <circle cx="180" cy="30" r="14" fill="var(--prime-faint)" stroke="var(--prime)"/>
-  <text x="180" y="34" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">M</text>
-  <text x="180" y="18" text-anchor="middle" fill="var(--ink-low)" font-size="6.5">employment</text>
-  <circle cx="55" cy="78" r="14" fill="var(--depth)" stroke="var(--rim)"/>
-  <text x="55" y="82" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">T</text>
-  <text x="55" y="102" text-anchor="middle" fill="var(--ink-low)" font-size="6.5">training</text>
-  <circle cx="305" cy="78" r="14" fill="var(--depth)" stroke="var(--rim)"/>
-  <text x="305" y="82" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">Y</text>
-  <text x="305" y="102" text-anchor="middle" fill="var(--ink-low)" font-size="6.5">earnings</text>
-  <path d="M68,68 L167,40" stroke="var(--prime)" stroke-width="1.5" marker-end="url(#mh)"/>
-  <path d="M193,40 L292,68" stroke="var(--prime)" stroke-width="1.5" marker-end="url(#mh)"/>
-  <path d="M69,80 L290,80" stroke="var(--ink-mid)" stroke-width="1.5" marker-end="url(#mh)"/>
-  <text x="180" y="93" text-anchor="middle" fill="var(--ink-mid)" font-size="7">NDE (direct)</text>
-  <text x="112" y="50" text-anchor="middle" fill="var(--prime)" font-size="7">NIE (indirect)</text>
-  <circle cx="240" cy="50" r="11" fill="none" stroke="#f59e0b" stroke-dasharray="2 2"/>
-  <text x="240" y="53" text-anchor="middle" fill="#f59e0b" font-size="7" font-weight="700">U</text>
-  <path d="M232,42 L200,36" stroke="#f59e0b" stroke-width="1.1" marker-end="url(#mh)"/>
-  <path d="M247,58 L296,68" stroke="#f59e0b" stroke-width="1.1" marker-end="url(#mh)"/>
-  <text x="4" y="105" fill="#f59e0b" font-size="7">RCT randomises T, not M — a hidden M–Y confounder U survives.</text>
+      mediationdag: `<svg viewBox="0 0 360 122" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <defs><marker id="mh" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="var(--ink-low)"/></marker><marker id="mhU" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#f59e0b"/></marker></defs>
+  <text x="4" y="12" fill="var(--ink-low)" font-size="8">Total = Direct (T→Y) + Indirect (T→M→Y)</text>
+  <circle cx="180" cy="42" r="15" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="180" y="46" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">M</text>
+  <text x="180" y="27" text-anchor="middle" fill="var(--ink-low)" font-size="7">employment</text>
+  <circle cx="50" cy="88" r="15" fill="var(--depth)" stroke="var(--rim)"/>
+  <text x="50" y="92" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">T</text>
+  <text x="50" y="112" text-anchor="middle" fill="var(--ink-low)" font-size="7">training</text>
+  <circle cx="310" cy="88" r="15" fill="var(--depth)" stroke="var(--rim)"/>
+  <text x="310" y="92" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">Y</text>
+  <text x="310" y="112" text-anchor="middle" fill="var(--ink-low)" font-size="7">earnings</text>
+  <path d="M63,78 L166,51" stroke="var(--prime)" stroke-width="1.5" marker-end="url(#mh)"/>
+  <path d="M194,51 L297,78" stroke="var(--prime)" stroke-width="1.5" marker-end="url(#mh)"/>
+  <path d="M65,90 L293,90" stroke="var(--ink-mid)" stroke-width="1.5" marker-end="url(#mh)"/>
+  <text x="180" y="103" text-anchor="middle" fill="var(--ink-mid)" font-size="7.5">NDE (direct)</text>
+  <text x="105" y="58" text-anchor="middle" fill="var(--prime)" font-size="7.5">NIE (indirect)</text>
+  <circle cx="248" cy="40" r="12" fill="none" stroke="#f59e0b" stroke-dasharray="2 2"/>
+  <text x="248" y="44" text-anchor="middle" fill="#f59e0b" font-size="8" font-weight="700">U</text>
+  <path d="M236,44 L200,50" stroke="#f59e0b" stroke-width="1.1" marker-end="url(#mhU)"/>
+  <path d="M256,50 L300,74" stroke="#f59e0b" stroke-width="1.1" marker-end="url(#mhU)"/>
+  <text x="180" y="120" text-anchor="middle" fill="#f59e0b" font-size="7">RCT randomises T, not M — a hidden M–Y confounder U survives.</text>
 </svg>`,
     },
   },

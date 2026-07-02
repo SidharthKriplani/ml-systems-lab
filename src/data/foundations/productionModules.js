@@ -188,18 +188,16 @@ Here is the subtle one. When you build a training row for a fraud event at time 
     ],
     takeaway: `Training-serving skew is not discovered through monitoring — it is prevented by building a single feature computation path that makes two diverging implementations structurally impossible.`,
     figures: {
-      pit: `<svg viewBox="0 0 360 92" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
-  <text x="6" y="12" fill="var(--ink-low)" font-size="7.5">building a training row for event T — join only what existed before T</text>
-  <line x1="10" y1="56" x2="350" y2="56" stroke="var(--ink-low)" stroke-width="1"/>
-  <rect x="40" y="46" width="140" height="20" rx="3" fill="var(--prime-faint)" stroke="var(--prime)"/>
-  <text x="110" y="60" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5" font-weight="700">7-day window (≤ T) ✓</text>
-  <rect x="180" y="46" width="80" height="20" rx="3" fill="#ef4444" fill-opacity="0.25" stroke="#ef4444"/>
-  <text x="220" y="60" text-anchor="middle" fill="#ef4444" font-size="7.5" font-weight="700">after T ✗ leak</text>
-  <line x1="180" y1="38" x2="180" y2="72" stroke="var(--amber)" stroke-width="2"/>
-  <text x="180" y="32" text-anchor="middle" fill="var(--amber)" font-size="8" font-weight="700">event T</text>
-  <line x1="260" y1="42" x2="260" y2="72" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3 2"/>
-  <text x="260" y="82" text-anchor="middle" fill="#ef4444" font-size="7">backfill ran later</text>
-  <text x="6" y="90" fill="var(--ink-low)" font-size="7">grab a value from T+1h and the future leaks into the past → offline AUC is a mirage</text>
+      pit: `<svg viewBox="0 0 360 96" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="8" y="13" fill="var(--ink-low)" font-size="8">building a training row for event T — join only what existed before T</text>
+  <line x1="12" y1="50" x2="348" y2="50" stroke="var(--ink-low)" stroke-width="1"/>
+  <rect x="40" y="40" width="140" height="20" rx="3" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="110" y="54" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">7-day window (≤ T) ✓</text>
+  <rect x="180" y="40" width="120" height="20" rx="3" fill="#ef4444" fill-opacity="0.22" stroke="#ef4444"/>
+  <text x="240" y="54" text-anchor="middle" fill="#ef4444" font-size="8" font-weight="700">after T ✗ leak</text>
+  <line x1="180" y1="32" x2="180" y2="68" stroke="var(--amber)" stroke-width="2"/>
+  <text x="180" y="27" text-anchor="middle" fill="var(--amber)" font-size="8.5" font-weight="700">event T</text>
+  <text x="8" y="88" fill="var(--ink-low)" font-size="7.5">grab a value from T+1h and the future leaks into the past → offline AUC is a mirage</text>
 </svg>`,
     },
     recap: [
@@ -789,19 +787,18 @@ The orchestrator you pick (Airflow, Prefect, Kubeflow, Metaflow) matters far les
     ],
     takeaway: `A pipeline that reports success tells you nothing about whether it produced correct data — the gap between "ran without errors" and "produced correct outputs" is exactly where silent bugs live, and only data quality assertions on pipeline outputs close it.`,
     figures: {
-      stages: `<svg viewBox="0 0 360 92" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
-  <text x="6" y="12" fill="var(--ink-low)" font-size="7.5">eight stages — training + deploy are only two of them</text>
+      stages: `<svg viewBox="0 0 360 96" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="6" y="12" fill="var(--ink-low)" font-size="8">eight stages — training + deploy are only two of them</text>
   ${['Ingest', 'Features', 'Train', 'Eval'].map((t, i) => `
-  <rect x="${6 + i * 88}" y="20" width="78" height="22" rx="4" fill="var(--prime-faint)" stroke="var(--prime)"/>
-  <text x="${45 + i * 88}" y="34" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5" font-weight="700">${t}</text>
-  ${i < 3 ? `<path d="M${84 + i * 88},31 l4,0" stroke="var(--ink-low)" stroke-width="1.5"/>` : ''}`).join('')}
+  <rect x="${6 + i * 88}" y="20" width="76" height="22" rx="4" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="${44 + i * 88}" y="34" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">${t}</text>
+  ${i < 3 ? `<line x1="${82 + i * 88}" y1="31" x2="${94 + i * 88}" y2="31" stroke="var(--ink-low)" stroke-width="1.5"/>` : ''}`).join('')}
   ${['Gate', 'Serve', 'Monitor', 'Retrain'].map((t, i) => `
-  <rect x="${6 + i * 88}" y="52" width="78" height="22" rx="4" fill="var(--prime-faint)" stroke="var(--prime)"/>
-  <text x="${45 + i * 88}" y="66" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5" font-weight="700">${t}</text>
-  ${i < 3 ? `<path d="M${84 + i * 88},63 l4,0" stroke="var(--ink-low)" stroke-width="1.5"/>` : ''}`).join('')}
-  <path d="M320,42 C338,44 338,50 320,52" fill="none" stroke="var(--ink-low)" stroke-width="1"/>
-  <path d="M45,74 C20,84 20,84 6,74" fill="none" stroke="var(--amber)" stroke-width="1" stroke-dasharray="3 2"/>
-  <text x="180" y="90" text-anchor="middle" fill="var(--ink-low)" font-size="7">idempotent · fast-fail on bad data · complete lineage — retrain loops back to ingest</text>
+  <rect x="${6 + i * 88}" y="54" width="76" height="22" rx="4" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="${44 + i * 88}" y="68" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">${t}</text>
+  ${i < 3 ? `<line x1="${82 + i * 88}" y1="65" x2="${94 + i * 88}" y2="65" stroke="var(--ink-low)" stroke-width="1.5"/>` : ''}`).join('')}
+  <line x1="332" y1="42" x2="332" y2="54" stroke="var(--ink-low)" stroke-width="1.5"/>
+  <text x="180" y="92" text-anchor="middle" fill="var(--ink-low)" font-size="7.5">idempotent · fast-fail on bad data · complete lineage — retrain loops back to ingest</text>
 </svg>`,
     },
     recap: [

@@ -40,6 +40,8 @@ const CombinatorTab  = lazy(() => import('./tabs/CombinatorTab.jsx'))
 const DrillTab       = lazy(() => import('./tabs/DrillTab.jsx'))
 const InterviewQuestionsTab = lazy(() => import('./tabs/InterviewQuestionsTab.jsx'))
 const CompanyTracksTab = lazy(() => import('./tabs/CompanyTracksTab.jsx'))
+const ReviewTab = lazy(() => import('./tabs/ReviewTab.jsx'))
+const AboutTab = lazy(() => import('./tabs/AboutTab.jsx'))
 const CodeBugsTab    = lazy(() => import('./tabs/CodeBugsTab.jsx'))
 const CaseStudiesTab = lazy(() => import('./tabs/CaseStudiesTab.jsx'))
 const StaffLayerTab  = lazy(() => import('./tabs/StaffLayerTab.jsx'))
@@ -119,6 +121,8 @@ const ALL_TABS = [
   { id: 'drill',       component: DrillTab },
   { id: 'interview_questions', component: InterviewQuestionsTab },
   { id: 'company_tracks', component: CompanyTracksTab },
+  { id: 'review', component: ReviewTab },
+  { id: 'about', component: AboutTab },
   { id: 'codebugs',    component: CodeBugsTab },
   { id: 'casestudies', component: CaseStudiesTab },
   { id: 'stafflayer',  component: StaffLayerTab },
@@ -870,11 +874,13 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked, 
         <SidebarNavItem id="home" label="Home" {...navProps} />
         <SidebarNavItem id="profile" label="Profile" {...navProps} />
         <SidebarNavItem id="progress" label="My Progress" {...navProps} />
+        <SidebarNavItem id="review" label="Review" {...navProps} />
         <SidebarNavItem id="my_tracks" label="My Tracks" {...navProps} />
         <SidebarNavItem id="leaderboard" label="Leaderboard" {...navProps} />
         <SidebarNavItem id="start_here" label="Start Here" {...navProps} />
         <SidebarNavItem id="plans" label="Plans & Access" {...navProps} />
         <SidebarNavItem id="resources" label="Resources" {...navProps} />
+        <SidebarNavItem id="about" label="About" {...navProps} />
 
         {NAV_SECTIONS.map(section => {
           const frameOpen = openFrame === section.id
@@ -1342,6 +1348,9 @@ export default function App() {
           <BrandMark variant='wordmark' size={13} />
           <span style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', letterSpacing: '0.04em' }}>· ML Systems · part of BreakLabs</span>
         </div>
+        <p style={{ margin: '0 0 8px', fontSize: '11px' }}>
+          <a href="https://chat.whatsapp.com/JbIaqV87fwh8Ym3ufH5CFx?mode=gi_t" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--prime)', textDecoration: 'underline', textUnderlineOffset: '3px', fontWeight: 600 }}>Join the community →</a>
+        </p>
         <p style={{ margin: 0, fontSize: '11px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-sans)', lineHeight: 1.6 }}>
           Also by the same team:{' '}
           <a href="https://genai-systems-lab-ivory.vercel.app" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--ink-ghost)', textDecoration: 'underline', textUnderlineOffset: '3px' }}>GenAI Systems Lab</a>
