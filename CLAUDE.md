@@ -4,6 +4,27 @@ Read this first, every session.
 
 ---
 
+## ✅ LATEST (2026-07-03) — Product restructure → complete "interview gym"; state logged in `docs/BACKLOG.md`
+
+**All work is LOCAL; push commands were provided each step (Sidharth runs on Mac).** A large multi-session pass took MSL from a "scrapyard of overlapping tabs" to a coherent, gym-complete product. Full leftover work is in **`docs/BACKLOG.md`**; the reusable audit framework is in **`docs/DRILL_SYSTEM_RUBRIC.md`**.
+
+### What changed (high level)
+- **Nav / structure:** four assessment pillars kept separate (KNOW recall/depth · DO fluency · BUILD ownership · JUDGE judgment) + PREP & ASSESS rehearsal layer. Top personal strip (Home · Profile · My Progress · Review · My Tracks · Leaderboard · Start Here · Plans · Resources · About). Landscape retired; EXTRAS dissolved.
+- **JUDGE:** tag-driven **440-drill** browser (`judge_browser`) — mcq 386 · **multistep 24** · code 17 · rubric 13; 10 subjects; junior→staff. Incident Room = 14 multi-step incidents. Old scenario/spot-the-flaw/case tabs dissolved into the pool.
+- **PREP & ASSESS:** collapsed 8 overlapping tabs → **Interview Questions** (Q&A 210 + Behavioral 24 + **Speak** tiered spoken drill) · **Drill** (MCQ) · **Company Tracks** (scaffold). Verbal/Defense/Take-home/Mock cut.
+- **P0 gym gaps closed:** Speak mode (30s/2-min/pushback/reason-aloud, Web-Speech) + **15 L2 case-chain drills** (the two dimensions that gate interview conversion).
+- **Interview Qs + Incidents:** multi-company logo attribution (`questionCompanies.js` + `CompanyLogoRow`) — 3 logos + "+N more", research-informed.
+- **Readiness:** PAL-style capped-breadth score + "work next: weakest"; streak excluded. Home = readiness front door. **Review room** = spaced-rep over completed modules.
+- **My Tracks:** deep-opens items to the exact module (`goTo(tabId, moduleId)` + `openModuleId` across 17 foundation tabs), groups items by source, URL-title fallback for non-video links.
+- **Interactives:** capability-aware shell (kills dead Play buttons), all flagged play/throttle/contrast/fit/clutter issues fixed, `--amber`/`--teal` tokens defined (figures were rendering black), neural interactives made genuinely manipulable, Backprop runs live gradient descent, GNN black-screen TDZ crash fixed.
+- **Content:** recaps deepened for 5 high-weight rooms (57 modules). Company logo system (`CompanyLogo` + ~200-domain map) reused on Interview Qs + Company Tracks.
+- **New docs:** `docs/DRILL_SYSTEM_RUBRIC.md`, `docs/BACKLOG.md`.
+
+### State
+**MSL is done "for now."** Nothing conversion-critical remains. Deferred backlog (P1 drill-tracking, recaps for lower-weight rooms, beginner text, BUILD notebooks, Company Tracks curation, LinkedIn/profile) is fully enumerated in `docs/BACKLOG.md`. Next focus: **GSL** — run `DRILL_SYSTEM_RUBRIC.md` on it first.
+
+---
+
 ## ✅ LATEST (2026-07-01, later) — Interview-depth gap-fill across 5 foundation content files + mobile fix
 
 **All work is LOCAL and uncommitted. Push commands below — Sidharth runs on Mac.** Owner-directed content-quality pass (enrichment of *existing* foundation modules, not new surfaces).
