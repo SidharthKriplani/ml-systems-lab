@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { AddTrackBtn } from '../components/tracks/AddToTrackPopover.jsx';
 
 const QUESTIONS = [
   // 1. Conflict & disagreement
@@ -568,8 +569,12 @@ export function BehavioralBankTab() {
                 border: '1px solid var(--rim)',
                 borderRadius: 12,
                 overflow: 'hidden',
+                position: 'relative',
               }}
             >
+              <div style={{ position: 'absolute', top: 10, right: 12, zIndex: 2 }}>
+                <AddTrackBtn itemType="behavioral" itemId={String(q.id)} label={q.question.slice(0, 80)} itemMeta={{ category: q.category }} />
+              </div>
               {/* Card header — clickable */}
               <button
                 onClick={() => toggleExpanded(q.id)}

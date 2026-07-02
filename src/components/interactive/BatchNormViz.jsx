@@ -4,7 +4,15 @@ const SCENARIOS = [
   { label: 'Healthy init', values: [-0.8, 0.3, 1.1, -0.4, 0.7, -1.2, 0.5, 0.2] },
   { label: 'Large activations', values: [8.5, -12.3, 6.1, -9.8, 11.2, -7.4, 4.6, -10.1] },
   { label: 'Covariate shift', values: [4.2, 5.1, 3.8, 6.0, 4.7, 5.5, 3.9, 5.8] },
+  { label: 'Custom batch', custom: true },
 ];
+
+// Fixed z-score "shape" for the custom batch; sliders re-center (mean) and
+// re-scale (spread) it, so the raw distribution genuinely moves pre-norm.
+const CUSTOM_SHAPE = [-1.35, -0.6, -0.2, 0.15, 0.15, 0.55, 0.95, 1.55];
+function buildCustomBatch(mean, spread) {
+  return CUSTOM_SHAPE.map(z => mean + z * spread);
+}
 
 const S = {
   root: { fontFamily: `var(--font-sans, sans-serif)`, color: `var(--ink-hi, #eee)`, maxWidth: 700 },
@@ -138,6 +146,9 @@ export const BatchNormViz = forwardRef(function BatchNormViz(props, ref) {
   const [gamma, setGamma] = useState(1.0);
   const [beta, setBeta] = useState(0.0);
   const [showGB, setShowGB] = useState(false);
+  const [bnOn, setBnOn] = useState(true);        // BatchNorm on/off
+  const [batchMean, setBatchMean] = useState(3.0);   // custom batch center
+  const [batchSpread, setBatchSpread] = useState(2.0); // custom batch spread
   const animRef = useRef(null);
 
   const pause = useCallback(() => {
@@ -157,6 +168,9 @@ export const BatchNormViz = forwardRef(function BatchNormViz(props, ref) {
     setGamma(1.0);
     setBeta(0.0);
     setShowGB(false);
+    setBnOn(true);
+    setBatchMean(3.0);
+    setBatchSpread(2.0);
   }, [pause]);
 
   const step = useCallback(() => {
@@ -166,8 +180,10 @@ export const BatchNormViz = forwardRef(function BatchNormViz(props, ref) {
 
   useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step]);
 
+  const isCustom = !!SCENARIOS[scenario].custom;
+
   const computed = useMemo(() => {
-    const vals = SCENARIOS[scenario].values;
+    const vals = isCustom ? buildCustomBatch(batchMean, batchSpread) : SCENARIOS[scenario].values;
     const n = vals.length;
 
     const mu = vals.reduce((a, b) => a + b, 0) / n;
@@ -175,8 +191,9 @@ export const BatchNormViz = forwardRef(function BatchNormViz(props, ref) {
     const sigma = Math.sqrt(variance);
     const eps = 1e-5;
 
-    const normalized = vals.map((v) => (v - mu) / Math.sqrt(variance + eps));
-    const withGB = normalized.map((x) => gamma * x + beta);
+    // BN off → pass raw values straight through (no normalisation at all).
+    const normalized = bnOn ? vals.map((v) => (v - mu) / Math.sqrt(variance + eps)) : [...vals];
+    const withGB = bnOn ? normalized.map((x) => gamma * x + beta) : [...vals];
 
     const afterVals = showGB ? withGB : normalized;
     const afterMu = afterVals.reduce((a, b) => a + b, 0) / n;
@@ -187,23 +204,23 @@ export const BatchNormViz = forwardRef(function BatchNormViz(props, ref) {
     const rawMax = Math.max(...vals);
     const rawPad = Math.max((rawMax - rawMin) * 0.15, 0.5);
 
-    const afterRange = showGB ? Math.max(4, gamma * 3.5) : 3;
+    // When BN is off the "after" panel shares the raw scale so the (lack of) shift is visible.
+    let afterMin, afterMax;
+    if (!bnOn) {
+      afterMin = rawMin - rawPad;
+      afterMax = rawMax + rawPad;
+    } else {
+      const afterRange = showGB ? Math.max(4, gamma * 3.5) : 3;
+      afterMin = -afterRange;
+      afterMax = afterRange;
+    }
 
     return {
-      vals,
-      mu,
-      sigma,
-      normalized,
-      withGB,
-      afterVals,
-      afterMu,
-      afterSigma,
-      rawMin: rawMin - rawPad,
-      rawMax: rawMax + rawPad,
-      afterMin: -afterRange,
-      afterMax: afterRange,
+      vals, mu, sigma, normalized, withGB, afterVals, afterMu, afterSigma,
+      rawMin: rawMin - rawPad, rawMax: rawMax + rawPad,
+      afterMin, afterMax,
     };
-  }, [scenario, gamma, beta, showGB]);
+  }, [scenario, gamma, beta, showGB, bnOn, isCustom, batchMean, batchSpread]);
 
   return (
     <div style={S.root}>
@@ -242,7 +259,7 @@ export const BatchNormViz = forwardRef(function BatchNormViz(props, ref) {
         {/* After panel */}
         <div style={S.panel}>
           <div style={S.panelTitle}>
-            {showGB ? `After BatchNorm + γ,β` : `After BatchNorm`}
+            {!bnOn ? `BatchNorm OFF (raw passes through)` : showGB ? `After BatchNorm + γ,β` : `After BatchNorm`}
           </div>
           <DotPlot
             values={computed.afterVals}
@@ -291,9 +308,31 @@ export const BatchNormViz = forwardRef(function BatchNormViz(props, ref) {
         )}
       </div>
 
+      {/* Custom-batch generators — only for the Custom scenario */}
+      {isCustom && (
+        <div style={S.controls}>
+          <label style={S.sliderLabel}>
+            <span style={S.mono}>{`batch μ = ${batchMean.toFixed(2)}`}</span>
+            <input type="range" min={-10} max={10} step={0.1} value={batchMean}
+              onChange={(e) => setBatchMean(parseFloat(e.target.value))} style={S.slider} />
+          </label>
+          <label style={S.sliderLabel}>
+            <span style={S.mono}>{`batch spread = ${batchSpread.toFixed(2)}`}</span>
+            <input type="range" min={0.2} max={8} step={0.1} value={batchSpread}
+              onChange={(e) => setBatchSpread(parseFloat(e.target.value))} style={S.slider} />
+          </label>
+          <span style={{ fontSize: 11, color: 'var(--ink-low)', fontFamily: `var(--font-mono, monospace)` }}>
+            move μ/spread → the Before distribution shifts; BatchNorm re-centers it every time
+          </span>
+        </div>
+      )}
+
       {/* Controls */}
       <div style={S.controls}>
-        <label style={S.sliderLabel}>
+        <button style={bnOn ? S.btnActive : S.btn} onClick={() => setBnOn((v) => !v)}>
+          {bnOn ? 'BatchNorm: ON' : 'BatchNorm: OFF'}
+        </button>
+        <label style={{ ...S.sliderLabel, opacity: bnOn ? 1 : 0.4 }}>
           <span style={S.mono}>{`γ = ${gamma.toFixed(2)}`}</span>
           <input
             type="range"
@@ -301,11 +340,12 @@ export const BatchNormViz = forwardRef(function BatchNormViz(props, ref) {
             max={3.0}
             step={0.05}
             value={gamma}
+            disabled={!bnOn}
             onChange={(e) => setGamma(parseFloat(e.target.value))}
             style={S.slider}
           />
         </label>
-        <label style={S.sliderLabel}>
+        <label style={{ ...S.sliderLabel, opacity: bnOn ? 1 : 0.4 }}>
           <span style={S.mono}>{`β = ${beta.toFixed(2)}`}</span>
           <input
             type="range"
@@ -313,12 +353,14 @@ export const BatchNormViz = forwardRef(function BatchNormViz(props, ref) {
             max={2}
             step={0.05}
             value={beta}
+            disabled={!bnOn}
             onChange={(e) => setBeta(parseFloat(e.target.value))}
             style={S.slider}
           />
         </label>
         <button
           style={showGB ? S.btnActive : S.btn}
+          disabled={!bnOn}
           onClick={() => setShowGB((v) => !v)}
         >
           {showGB ? `Hide γ,β effect` : `Show γ,β effect`}

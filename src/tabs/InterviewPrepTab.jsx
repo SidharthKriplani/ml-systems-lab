@@ -352,7 +352,7 @@ const BEHAVIORAL_SCENARIOS = [
 
 const CATEGORIES = ['All', 'System Design', 'Features', 'Evaluation', 'Spark', 'Statistics', 'Trees & Ensembles', 'SQL', 'Regression', 'Coding', 'Architecture', 'Behavioral']
 const COMPANIES  = ['All', 'Meta', 'Spotify', 'Google', 'Airbnb', 'Uber', 'Netflix', 'Amazon', 'Any']
-const LEVELS     = ['All', 'Mid', 'Senior', 'Staff']
+const LEVELS     = ['All', 'Junior', 'Mid', 'Senior', 'Staff']
 
 const CAT_COLORS = {
   'System Design':      { bg: 'var(--prime-bg-light)', text: 'var(--prime)', border: 'rgba(240,165,0,0.20)' },

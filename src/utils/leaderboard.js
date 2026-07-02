@@ -28,35 +28,10 @@
 
 import { supabase } from './supabase.js';
 
-// ─── Practice-module key space ────────────────────────────────────────────────
-// Format: msl_done_<tabId>_<moduleKey>  → value '1' means done.
-// The complete set of (tabId, moduleKey) pairs is taken from progress.js TRACK_MODULES.
-// We enumerate them explicitly here so this file is self-contained.
-
-const PRACTICE_TRACK_MODULES = {
-  models:       ['pca', 'svd', 'pipeline', 'regularization', 'numpy', 'calibration'],
-  features:     ['skew_sim', 'feature_store'],
-  eval:         ['metric', 'ab_test', 'shadow'],
-  design:       ['incident_room', 'canvas', 'two_tower'],
-  classical:    [], // no explicit module keys yet — scanned generically via prefix
-  spark:        ['shuffle', 'skew', 'partition'],
-  airflow:      [], // scanned generically
-  dbt:          [], // scanned generically
-  modeling:     [], // scanned generically
-  dl:           [], // scanned generically
-  dl_finetune:  [], // scanned generically
-  dl_serving:   [], // scanned generically
-  causal:       [], // scanned generically
-  ts:           [], // scanned generically
-  monitor:      ['drift_dash', 'psi_lab'],
-  mlops_deploy: [], // scanned generically
-  mlops_pipes:  [], // scanned generically
-  interview:    ['system_design', 'features', 'eval', 'spark', 'coding'],
-  gradient:     [
-    'post1','post2','post3','post4','post5','post6','post7',
-    'post8','post9','post10','post11','post12','post13',
-  ],
-};
+// Completion counting is done by a GENERIC scan of every `msl_done_<tabId>_<moduleKey>`
+// key (value '1') plus the foundation blobs below — so any room that writes a done
+// flag is counted automatically, current or future. (An older hardcoded module map
+// lived here; it was unused dead code and referenced retired tabs, so it was removed.)
 
 // ─── Foundation completion key space ─────────────────────────────────────────
 // Each key maps to a JSON blob: { [moduleId]: { completedAt: <iso-string> } }

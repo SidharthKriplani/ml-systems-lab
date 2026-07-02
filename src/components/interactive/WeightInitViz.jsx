@@ -37,11 +37,13 @@ function makeNormal(rng) {
 // ---------------------------------------------------------------------------
 // Simulation constants
 // ---------------------------------------------------------------------------
-const FAN = 512;
+const FAN_DEFAULT = 512;
 const N_LAYERS = 10;
 const N_SAMPLES = 200; // per-sample batch
 const N_HIST_BINS = 30;
 
+// weightStd is now a function of fan (fan_in = fan_out) so the fan-in slider
+// actually changes the initialisation std, not just a label.
 const INIT_STRATEGIES = [
   {
     id: `zeros`,
@@ -53,18 +55,18 @@ const INIT_STRATEGIES = [
     id: `large`,
     label: `Large Normal`,
     weightStd: () => 1.0,
-    desc: `Weights ~ N(0, 1). Each layer multiplies std by √fan_in ≈ 22.6, causing exponential explosion. Activations become ±∞ within a few layers.`,
+    desc: `Weights ~ N(0, 1). Each layer multiplies std by √fan_in, causing exponential explosion. Activations become ±∞ within a few layers.`,
   },
   {
     id: `xavier`,
     label: `Xavier`,
-    weightStd: () => Math.sqrt(2 / (FAN + FAN)), // sqrt(2 / (fan_in + fan_out))
+    weightStd: (fan) => Math.sqrt(2 / (fan + fan)), // sqrt(2 / (fan_in + fan_out))
     desc: `Weights ~ N(0, √(2/(fan_in+fan_out))). Designed for tanh: keeps variance stable across layers. Slightly shrinks under ReLU (ReLU kills ~50% of neurons).`,
   },
   {
     id: `he`,
     label: `He / Kaiming`,
-    weightStd: () => Math.sqrt(2 / FAN), // sqrt(2 / fan_in)
+    weightStd: (fan) => Math.sqrt(2 / fan), // sqrt(2 / fan_in)
     desc: `Weights ~ N(0, √(2/fan_in)). Accounts for ReLU zeroing half of neurons. Keeps variance stable under ReLU. Slight over-shoot for tanh.`,
   },
 ];
@@ -77,13 +79,15 @@ const ACTIVATIONS = [
 // ---------------------------------------------------------------------------
 // Compute simulation: returns array of N_LAYERS objects with { std, histBins }
 // ---------------------------------------------------------------------------
-function runSimulation(initId, activationId) {
+function runSimulation(initId, activationId, fan, scale) {
   const rng = mulberry32(0xdeadbeef);
   const randn = makeNormal(rng);
 
   const strategy = INIT_STRATEGIES.find((s) => s.id === initId);
   const activation = ACTIVATIONS.find((a) => a.id === activationId);
-  const wStd = strategy.weightStd();
+  const FAN = fan;
+  // init-scale multiplier lets the user over-/under-shoot any strategy's std.
+  const wStd = strategy.weightStd(FAN) * scale;
 
   // Initialize batch: N_SAMPLES × FAN (first layer input is N(0,1))
   let batch = [];
@@ -373,6 +377,8 @@ const S = {
 export const WeightInitViz = forwardRef(function WeightInitViz(props, ref) {
   const [initId, setInitId] = useState(`he`);
   const [activationId, setActivationId] = useState(`relu`);
+  const [fan, setFan] = useState(FAN_DEFAULT);
+  const [scale, setScale] = useState(1.0);
   const canvasRef = useRef(null);
   const animRef = useRef(null);
 
@@ -396,6 +402,8 @@ export const WeightInitViz = forwardRef(function WeightInitViz(props, ref) {
     pause();
     setInitId('he');
     setActivationId('relu');
+    setFan(FAN_DEFAULT);
+    setScale(1.0);
   }, [pause]);
 
   const step = useCallback(() => {
@@ -414,7 +422,7 @@ export const WeightInitViz = forwardRef(function WeightInitViz(props, ref) {
 
   // Recompute simulation when inputs change
   const layerStats = (() => {
-    try { return runSimulation(initId, activationId); }
+    try { return runSimulation(initId, activationId, fan, scale); }
     catch { return null; }
   })();
 
@@ -448,7 +456,7 @@ export const WeightInitViz = forwardRef(function WeightInitViz(props, ref) {
     <div style={S.root}>
       <div>
         <p style={S.title}>Weight Initialization</p>
-        <p style={S.subtitle}>{`How init strategy shapes activation distributions through a 10-layer MLP (fan_in = fan_out = 512)`}</p>
+        <p style={S.subtitle}>{`How init strategy shapes activation distributions through a 10-layer MLP (fan_in = fan_out = ${fan})`}</p>
       </div>
 
       {/* Controls */}
@@ -466,6 +474,30 @@ export const WeightInitViz = forwardRef(function WeightInitViz(props, ref) {
             {a.label}
           </button>
         ))}
+      </div>
+
+      {/* Fan-in + init-scale sliders */}
+      <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', alignItems: 'center',
+        background: 'var(--depth, #111)', border: '1px solid var(--rim, #333)', borderRadius: 8, padding: '10px 14px' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 10, flex: '1 1 240px' }}>
+          <span style={{ fontSize: 12, fontFamily: 'var(--font-mono, monospace)', color: 'var(--ink-mid, #aaa)', minWidth: 118 }}>
+            {`fan_in = `}<span style={{ color: 'var(--prime, #F0A500)' }}>{fan}</span>
+          </span>
+          <input type="range" min={4} max={2048} step={4} value={fan}
+            onChange={(e) => setFan(parseInt(e.target.value, 10))}
+            style={{ flex: 1, accentColor: 'var(--prime, #F0A500)', cursor: 'pointer' }} />
+        </label>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 10, flex: '1 1 240px' }}>
+          <span style={{ fontSize: 12, fontFamily: 'var(--font-mono, monospace)', color: 'var(--ink-mid, #aaa)', minWidth: 118 }}>
+            {`init scale = `}<span style={{ color: 'var(--prime, #F0A500)' }}>{scale.toFixed(2)}×</span>
+          </span>
+          <input type="range" min={0.25} max={4} step={0.05} value={scale}
+            onChange={(e) => setScale(parseFloat(e.target.value))}
+            style={{ flex: 1, accentColor: 'var(--prime, #F0A500)', cursor: 'pointer' }} />
+        </label>
+        <span style={{ fontSize: 11, color: 'var(--ink-low, #888)', fontFamily: 'var(--font-mono, monospace)', flexBasis: '100%' }}>
+          effective weight std = strategy(fan) × scale = {(INIT_STRATEGIES.find(s => s.id === initId).weightStd(fan) * scale).toExponential(2)}
+        </span>
       </div>
 
       {/* Canvas grid */}

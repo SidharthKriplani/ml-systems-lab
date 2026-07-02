@@ -46,11 +46,25 @@ function readActivityScore() {
 export function computeReadiness() {
   const foundations = overallCompletion(readFoundationsRead())
   const pathPct = foundations.total > 0 ? (foundations.read / foundations.total) * 100 : 0
-  const { practiceScore, accuracyScore, attempted } = readPracticeScore()
-  const activityScore = readActivityScore()
+  const { practiceScore, accuracyScore, attempted, correct } = readPracticeScore()
+  const activityScore = readActivityScore() // kept for the breakdown display only
 
-  // Weighted blend
-  const score = Math.round(0.5 * pathPct + 0.3 * practiceScore + 0.2 * activityScore)
+  // PAL-style readiness: mean of capped per-area coverage. Each area contributes
+  // at most 100%, so over-grinding one area can't mask a gap in another — the score
+  // rewards breadth across what interviews actually test. Streak/activity is
+  // deliberately EXCLUDED from the score: interview prep is a cram-to-a-date goal,
+  // not a forever-streak app (learned from Product Analytics Lab).
+  const foundationCov = Math.min(pathPct / 100, 1)
+  const practiceCov   = Math.min(practiceScore / 100, 1)
+
+  const areas = [
+    { key: 'foundations', label: 'Foundations (KNOW)', cov: foundationCov },
+    { key: 'practice',    label: 'Practice (drills & questions)', cov: practiceCov },
+  ]
+  const score = Math.round((areas.reduce((s, a) => s + a.cov, 0) / areas.length) * 100)
+
+  // Weakest area that still has headroom — the "work next" pointer.
+  const weakest = areas.filter(a => a.cov < 1).sort((a, b) => a.cov - b.cov)[0] || null
 
   let level = 'novice'
   if (score >= 80) level = 'interview-ready'
@@ -61,12 +75,14 @@ export function computeReadiness() {
   return {
     score,
     level,
+    weakest,
     breakdown: {
       path: Math.round(pathPct),
       practice: practiceScore,
       activity: activityScore,
       accuracy: accuracyScore,
       attempted,
+      correct,
       pathRead: foundations.read,
       pathTotal: foundations.total,
     },

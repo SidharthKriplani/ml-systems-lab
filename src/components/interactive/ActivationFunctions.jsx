@@ -1,39 +1,45 @@
 import { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react'
 
-// ── Activation function definitions ──────────────────────────────────────────
+// ── Activation function definitions (parameterised) ──────────────────────────
+// leak  → slope of Leaky ReLU for z < 0
+// temp  → temperature T for sigmoid/tanh: f(z) = base(z / T). Lower T ⇒ sharper.
 
-function sigmoid(z) { return 1 / (1 + Math.exp(-z)) }
-function tanhF(z)   { return Math.tanh(z) }
-function relu(z)    { return Math.max(0, z) }
-function leakyRelu(z) { return z >= 0 ? z : 0.1 * z }
+function sigmoid(z, T) { return 1 / (1 + Math.exp(-z / T)) }
+function tanhF(z, T)   { return Math.tanh(z / T) }
+function relu(z)       { return Math.max(0, z) }
+function leakyRelu(z, leak) { return z >= 0 ? z : leak * z }
 function gelu(z) {
   return 0.5 * z * (1 + Math.tanh(Math.sqrt(2 / Math.PI) * (z + 0.044715 * z ** 3)))
 }
 
 // Derivatives
-function dSigmoid(z) { const s = sigmoid(z); return s * (1 - s) }
-function dTanh(z)    { const t = Math.tanh(z); return 1 - t * t }
-function dRelu(z)    { return z >= 0 ? 1 : 0 }
-function dLeakyRelu(z) { return z >= 0 ? 1 : 0.1 }
+function dSigmoid(z, T) { const s = sigmoid(z, T); return s * (1 - s) / T }
+function dTanh(z, T)    { const t = Math.tanh(z / T); return (1 - t * t) / T }
+function dRelu(z)       { return z >= 0 ? 1 : 0 }
+function dLeakyRelu(z, leak) { return z >= 0 ? 1 : leak }
 function dGelu(z) {
-  // Numerical derivative
   const h = 1e-5
   return (gelu(z + h) - gelu(z - h)) / (2 * h)
 }
 
-const FUNCTIONS = [
-  { name: 'Sigmoid', fn: sigmoid, dfn: dSigmoid, color: '#f0a500' },   // amber (prime)
-  { name: 'Tanh',    fn: tanhF,   dfn: dTanh,    color: '#4EA8DE' },   // blue
-  { name: 'ReLU',    fn: relu,    dfn: dRelu,     color: '#4CAF50' },   // teal/green
-  { name: 'Leaky ReLU', fn: leakyRelu, dfn: dLeakyRelu, color: '#F4845F' }, // coral
-  { name: 'GELU',    fn: gelu,    dfn: dGelu,     color: '#A78BFA' },   // purple
-]
+// Each entry closes over the current params (leak, temp) so the curve recomputes live.
+function buildFunctions(leak, temp) {
+  return [
+    { id: 'sigmoid', name: 'Sigmoid',    fn: z => sigmoid(z, temp),      dfn: z => dSigmoid(z, temp), color: '#f0a500' },
+    { id: 'tanh',    name: 'Tanh',       fn: z => tanhF(z, temp),        dfn: z => dTanh(z, temp),    color: '#4EA8DE' },
+    { id: 'relu',    name: 'ReLU',       fn: relu,                       dfn: dRelu,                  color: '#4CAF50' },
+    { id: 'leaky',   name: 'Leaky ReLU', fn: z => leakyRelu(z, leak),    dfn: z => dLeakyRelu(z, leak), color: '#F4845F' },
+    { id: 'gelu',    name: 'GELU',       fn: gelu,                       dfn: dGelu,                  color: '#A78BFA' },
+  ]
+}
 
 const X_MIN = -4, X_MAX = 4
 const Y_MIN = -1.2, Y_MAX = 1.5
 const N_POINTS = 300
 
-function drawActivations(canvas, showDerivative) {
+// Draws the selected functions (curve + optional derivative overlay) and a
+// vertical marker at the chosen input x with dots at f(x)/f'(x).
+function drawActivations(canvas, funcs, activeIds, overlayDeriv, xInput) {
   if (!canvas) return
   const ctx = canvas.getContext('2d')
   const W = canvas.width
@@ -46,7 +52,6 @@ function drawActivations(canvas, showDerivative) {
   const rimColor  = style.getPropertyValue('--rim').trim()      || '#333'
   const inkMid    = style.getPropertyValue('--ink-mid').trim()  || '#aaa'
   const fontMono  = style.getPropertyValue('--font-mono').trim() || 'monospace'
-  const bgDepth   = style.getPropertyValue('--depth').trim()    || 'transparent'
 
   ctx.clearRect(0, 0, W, H)
 
@@ -74,23 +79,18 @@ function drawActivations(canvas, showDerivative) {
   // Axes
   ctx.strokeStyle = rimColor
   ctx.lineWidth = 1
-  // Y-axis (at x=0)
   const zeroX = toX(0)
   ctx.beginPath(); ctx.moveTo(zeroX, PT); ctx.lineTo(zeroX, PT + cH); ctx.stroke()
-  // X-axis (at y=0)
   const zeroY = toY(0)
   ctx.beginPath(); ctx.moveTo(PL, zeroY); ctx.lineTo(PL + cW, zeroY); ctx.stroke()
-  // Border
   ctx.beginPath(); ctx.moveTo(PL, PT); ctx.lineTo(PL, PT + cH); ctx.stroke()
   ctx.beginPath(); ctx.moveTo(PL, PT + cH); ctx.lineTo(PL + cW, PT + cH); ctx.stroke()
 
-  // X-axis tick labels
+  // X tick labels
   ctx.fillStyle = inkMid
   ctx.font = `10px ${fontMono}`
   ctx.textAlign = 'center'
   xGrids.forEach(g => { ctx.fillText(g.toString(), toX(g), PT + cH + 14) })
-
-  // Y-axis tick labels
   ctx.textAlign = 'right'
   yGrids.forEach(g => {
     const y = toY(g)
@@ -98,45 +98,75 @@ function drawActivations(canvas, showDerivative) {
     ctx.fillText(g.toFixed(1), PL - 4, y + 3)
   })
 
-  // Draw each function
   const xs = Array.from({ length: N_POINTS + 1 }, (_, i) => X_MIN + (X_MAX - X_MIN) * i / N_POINTS)
 
-  FUNCTIONS.forEach(({ fn, dfn, color }) => {
-    const fToUse = showDerivative ? dfn : fn
+  const drawCurve = (fToUse, color, dashed) => {
     ctx.beginPath()
     ctx.strokeStyle = color
     ctx.lineWidth = 2.5
     ctx.lineJoin = 'round'
     ctx.lineCap  = 'round'
-
+    if (dashed) ctx.setLineDash([5, 4]); else ctx.setLineDash([])
     let firstPoint = true
     xs.forEach(x => {
-      const rawY = fToUse(x)
-      const y = clampY(rawY)
+      const y = clampY(fToUse(x))
       const cx = toX(x)
       const cy = toY(y)
-      if (firstPoint) {
-        ctx.moveTo(cx, cy)
-        firstPoint = false
-      } else {
-        ctx.lineTo(cx, cy)
-      }
+      if (firstPoint) { ctx.moveTo(cx, cy); firstPoint = false } else ctx.lineTo(cx, cy)
     })
     ctx.stroke()
+    ctx.setLineDash([])
+  }
+
+  const shown = funcs.filter(f => activeIds.includes(f.id))
+  shown.forEach(({ fn, dfn, color }) => {
+    drawCurve(fn, color, false)
+    if (overlayDeriv) drawCurve(dfn, color, true)   // dashed = derivative
+  })
+
+  // Vertical input marker + value dots at x = xInput
+  const mx = toX(xInput)
+  ctx.strokeStyle = inkMid
+  ctx.globalAlpha = 0.5
+  ctx.setLineDash([3, 3])
+  ctx.beginPath(); ctx.moveTo(mx, PT); ctx.lineTo(mx, PT + cH); ctx.stroke()
+  ctx.setLineDash([])
+  ctx.globalAlpha = 1
+
+  shown.forEach(({ fn, dfn, color }) => {
+    const fy = toY(clampY(fn(xInput)))
+    ctx.fillStyle = color
+    ctx.beginPath(); ctx.arc(mx, fy, 4, 0, Math.PI * 2); ctx.fill()
+    if (overlayDeriv) {
+      const dy = toY(clampY(dfn(xInput)))
+      ctx.beginPath(); ctx.arc(mx, dy, 3.2, 0, Math.PI * 2)
+      ctx.strokeStyle = color; ctx.lineWidth = 1.6; ctx.stroke()
+    }
   })
 }
 
 export const ActivationFunctions = forwardRef(function ActivationFunctions(props, ref) {
-  const [showDerivative, setShowDerivative] = useState(false)
+  const [overlayDeriv, setOverlayDeriv] = useState(false)
+  const [activeIds, setActiveIds] = useState(['sigmoid', 'tanh', 'relu', 'leaky', 'gelu'])
+  const [xInput, setXInput] = useState(1.0)
+  const [leak, setLeak] = useState(0.1)
+  const [temp, setTemp] = useState(1.0)
   const canvasRef = useRef(null)
+
+  const funcs = buildFunctions(leak, temp)
+
+  const toggleFn = (id) => setActiveIds(prev =>
+    prev.includes(id) ? (prev.length > 1 ? prev.filter(f => f !== id) : prev) : [...prev, id]
+  )
 
   const redraw = useCallback(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     canvas.width  = canvas.clientWidth  || 550
     canvas.height = canvas.clientHeight || 220
-    drawActivations(canvas, showDerivative)
-  }, [showDerivative])
+    drawActivations(canvas, funcs, activeIds, overlayDeriv, xInput)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [overlayDeriv, activeIds, xInput, leak, temp])
 
   useEffect(() => {
     redraw()
@@ -147,78 +177,101 @@ export const ActivationFunctions = forwardRef(function ActivationFunctions(props
   useImperativeHandle(ref, () => ({
     play: () => {},
     pause: () => {},
-    reset: () => setShowDerivative(false),
-    step: () => setShowDerivative(s => !s),
+    reset: () => { setOverlayDeriv(false); setActiveIds(['sigmoid', 'tanh', 'relu', 'leaky', 'gelu']); setXInput(1.0); setLeak(0.1); setTemp(1.0) },
+    step: () => setOverlayDeriv(s => !s),
   }), [])
+
+  // Live evaluated values for the readout table
+  const rows = funcs.filter(f => activeIds.includes(f.id)).map(f => ({
+    name: f.name, color: f.color, fx: f.fn(xInput), dfx: f.dfn(xInput),
+  }))
+
+  const showsTemp = activeIds.includes('sigmoid') || activeIds.includes('tanh')
+  const showsLeak = activeIds.includes('leaky')
+
+  const chip = (active, color) => ({
+    padding: '4px 12px', fontSize: '11px', fontFamily: 'var(--font-mono)',
+    fontWeight: active ? 700 : 400,
+    background: active ? color : 'transparent',
+    color: active ? '#000' : 'var(--ink-mid)',
+    border: '1px solid', borderColor: active ? color : 'var(--rim)',
+    borderRadius: '6px', cursor: 'pointer', transition: 'all 0.15s',
+  })
+
+  const sliderStyle = { flex: 1, accentColor: 'var(--prime)', cursor: 'pointer' }
+  const sliderLabel = { fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', minWidth: 78 }
+  const monoVal = { fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--prime)', minWidth: 46, textAlign: 'right' }
 
   return (
     <div style={{ fontFamily: 'var(--font-sans)' }}>
-      {/* Toggle */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', alignItems: 'center' }}>
-        {['Function', 'Derivative'].map((label, i) => {
-          const active = showDerivative === (i === 1)
-          return (
-            <button
-              key={label}
-              onClick={() => setShowDerivative(i === 1)}
-              style={{
-                padding: '5px 16px',
-                fontSize: '12px',
-                fontFamily: 'var(--font-mono)',
-                fontWeight: active ? 700 : 400,
-                background: active ? 'var(--prime)' : 'transparent',
-                color: active ? '#000' : 'var(--ink-mid)',
-                border: '1px solid',
-                borderColor: active ? 'var(--prime)' : 'var(--rim)',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                transition: 'all 0.15s',
-              }}
-            >
-              {label}
-            </button>
-          )
-        })}
-        <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', marginLeft: '4px' }}>
-          {showDerivative ? `f'(z)` : 'f(z)'}  · x ∈ [-4, 4]
-        </span>
+      {/* Function picker (multi-select) */}
+      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '10px', alignItems: 'center' }}>
+        <span style={{ fontSize: '11px', color: 'var(--ink-low)', marginRight: 2 }}>show:</span>
+        {funcs.map(f => (
+          <button key={f.id} onClick={() => toggleFn(f.id)} style={chip(activeIds.includes(f.id), f.color)}>
+            {f.name}
+          </button>
+        ))}
+        <span style={{ flex: 1 }} />
+        <button onClick={() => setOverlayDeriv(v => !v)} style={chip(overlayDeriv, 'var(--prime)')}>
+          {overlayDeriv ? "f'(x) overlay: on" : "overlay f'(x)"}
+        </button>
       </div>
 
       {/* Canvas */}
       <canvas
         ref={canvasRef}
         style={{
-          width: '100%',
-          height: '220px',
-          display: 'block',
-          borderRadius: '6px',
-          border: '1px solid var(--rim)',
-          background: 'transparent',
+          width: '100%', height: '220px', display: 'block',
+          borderRadius: '6px', border: '1px solid var(--rim)', background: 'transparent',
         }}
       />
 
-      {/* Legend */}
+      {/* Input + parameter sliders */}
       <div style={{
-        display: 'flex',
-        gap: '16px',
-        flexWrap: 'wrap',
-        marginTop: '10px',
-        padding: '8px 14px',
-        background: 'var(--depth)',
-        border: '1px solid var(--rim)',
-        borderRadius: '6px',
+        marginTop: '10px', padding: '10px 14px', background: 'var(--depth)',
+        border: '1px solid var(--rim)', borderRadius: '6px',
+        display: 'flex', flexDirection: 'column', gap: '8px',
       }}>
-        {FUNCTIONS.map(({ name, color }) => (
-          <div key={name} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <div style={{
-              width: '18px',
-              height: '3px',
-              background: color,
-              borderRadius: '2px',
-              flexShrink: 0,
-            }} />
-            <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)' }}>
-              {name}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={sliderLabel}>input x</span>
+          <input type="range" min={-4} max={4} step={0.05} value={xInput}
+            onChange={e => setXInput(parseFloat(e.target.value))} style={sliderStyle} />
+          <span style={monoVal}>{xInput.toFixed(2)}</span>
+        </div>
+        {showsTemp && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={sliderLabel}>temp T</span>
+            <input type="range" min={0.2} max={3} step={0.05} value={temp}
+              onChange={e => setTemp(parseFloat(e.target.value))} style={sliderStyle} />
+            <span style={monoVal}>{temp.toFixed(2)}</span>
+          </div>
+        )}
+        {showsLeak && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={sliderLabel}>leak α</span>
+            <input type="range" min={0} max={0.5} step={0.01} value={leak}
+              onChange={e => setLeak(parseFloat(e.target.value))} style={sliderStyle} />
+            <span style={monoVal}>{leak.toFixed(2)}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Live readout at x */}
+      <div style={{
+        marginTop: '10px', padding: '8px 14px', background: 'var(--depth)',
+        border: '1px solid var(--rim)', borderRadius: '6px',
+      }}>
+        <div style={{ fontSize: '10px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          values at x = {xInput.toFixed(2)}
+        </div>
+        {rows.map(r => (
+          <div key={r.name} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+            <div style={{ width: 14, height: 3, background: r.color, borderRadius: 2, flexShrink: 0 }} />
+            <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', minWidth: 78 }}>{r.name}</span>
+            <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-hi)' }}>f(x) = {r.fx.toFixed(3)}</span>
+            <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: Math.abs(r.dfx) < 0.02 ? '#ef4444' : 'var(--ink-mid)' }}>
+              f&apos;(x) = {r.dfx.toFixed(3)}{Math.abs(r.dfx) < 0.02 ? '  ← ~0 (saturated)' : ''}
             </span>
           </div>
         ))}
@@ -226,19 +279,13 @@ export const ActivationFunctions = forwardRef(function ActivationFunctions(props
 
       {/* Annotation note */}
       <div style={{
-        marginTop: '10px',
-        padding: '8px 12px',
-        background: 'rgba(240,165,0,0.06)',
-        border: '1px solid rgba(240,165,0,0.18)',
-        borderRadius: '6px',
-        fontSize: '11px',
-        fontFamily: 'var(--font-mono)',
-        color: 'var(--ink-mid)',
-        lineHeight: 1.6,
+        marginTop: '10px', padding: '8px 12px',
+        background: 'rgba(240,165,0,0.06)', border: '1px solid rgba(240,165,0,0.18)',
+        borderRadius: '6px', fontSize: '11px', fontFamily: 'var(--font-mono)',
+        color: 'var(--ink-mid)', lineHeight: 1.6,
       }}>
-        {showDerivative
-          ? `Sigmoid & tanh gradients → 0 for |z| > 2 (vanishing gradient). ReLU gradient = 1 for z > 0.`
-          : `Sigmoid & tanh saturate for large |z|, causing vanishing gradients in deep nets. ReLU avoids this — gradient = 1 for z > 0.`}
+        Drag <b>input x</b> and watch each f(x) and f&apos;(x) update. Push x past ±2 on Sigmoid/Tanh — f&apos;(x) collapses toward 0 (vanishing gradient).
+        Lower <b>temp T</b> sharpens the sigmoid/tanh toward a step; raise the <b>leak α</b> and Leaky ReLU stops zeroing negative gradients.
       </div>
     </div>
   )

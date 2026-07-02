@@ -1,15 +1,18 @@
 import { useState, useMemo, useRef, useImperativeHandle, forwardRef, useCallback } from 'react';
 
-// Fixed weights
-const W1 = [[0.5, -0.3], [0.2, 0.8]];
-const b1 = [0.1, -0.1];
-const W2 = [[0.7, -0.5]];
-const b2 = [0.0];
+// Default weights — now live in state so the user can edit them.
+const DEFAULT_W = {
+  W1: [[0.5, -0.3], [0.2, 0.8]],
+  b1: [0.1, -0.1],
+  W2: [[0.7, -0.5]],
+  b2: [0.0],
+};
 
 function sigmoid(x) { return 1 / (1 + Math.exp(-x)); }
 function relu(x) { return Math.max(0, x); }
 
-function forwardPass(x1, x2) {
+function forwardPass(x1, x2, W) {
+  const { W1, b1, W2, b2 } = W;
   const z1 = [
     W1[0][0] * x1 + W1[0][1] * x2 + b1[0],
     W1[1][0] * x1 + W1[1][1] * x2 + b1[1],
@@ -20,7 +23,8 @@ function forwardPass(x1, x2) {
   return { z1, a1, z2, output };
 }
 
-function backwardPass(x1, x2, fwd, target) {
+function backwardPass(x1, x2, fwd, target, W) {
+  const { W2 } = W;
   const { z1, a1, z2, output } = fwd;
   const dLoss_dout = 2 * (output - target);
   const dout_dz2 = sigmoid(z2) * (1 - sigmoid(z2));
@@ -62,9 +66,28 @@ export const BackpropViz = forwardRef(function BackpropViz(props, ref) {
   const [x2, setX2] = useState(0.5);
   const [target, setTarget] = useState(1.0);
   const [mode, setMode] = useState('forward'); // 'forward' | 'backward'
+  // Editable weights — deep-cloned from defaults so edits recompute both passes.
+  const [W, setW] = useState(() => ({
+    W1: DEFAULT_W.W1.map(r => [...r]),
+    b1: [...DEFAULT_W.b1],
+    W2: DEFAULT_W.W2.map(r => [...r]),
+    b2: [...DEFAULT_W.b2],
+  }));
+  const { W1, b1, W2, b2 } = W;
 
-  const fwd = useMemo(() => forwardPass(x1, x2), [x1, x2]);
-  const bwd = useMemo(() => backwardPass(x1, x2, fwd, target), [x1, x2, fwd, target]);
+  const setWeight = useCallback((path, val) => {
+    setW(prev => {
+      const next = {
+        W1: prev.W1.map(r => [...r]), b1: [...prev.b1],
+        W2: prev.W2.map(r => [...r]), b2: [...prev.b2],
+      };
+      path(next, val);
+      return next;
+    });
+  }, []);
+
+  const fwd = useMemo(() => forwardPass(x1, x2, W), [x1, x2, W]);
+  const bwd = useMemo(() => backwardPass(x1, x2, fwd, target, W), [x1, x2, fwd, target, W]);
   const loss = (fwd.output - target) ** 2;
 
   // SVG layout
@@ -142,7 +165,14 @@ export const BackpropViz = forwardRef(function BackpropViz(props, ref) {
   useImperativeHandle(ref, () => ({
     play: () => {},
     pause: () => {},
-    reset: () => setMode('forward'),
+    reset: () => {
+      setMode('forward');
+      setX1(1.0); setX2(0.5); setTarget(1.0);
+      setW({
+        W1: DEFAULT_W.W1.map(r => [...r]), b1: [...DEFAULT_W.b1],
+        W2: DEFAULT_W.W2.map(r => [...r]), b2: [...DEFAULT_W.b2],
+      });
+    },
     step: () => setMode(m => m === 'forward' ? 'backward' : 'forward'),
   }), [])
 
@@ -269,6 +299,36 @@ export const BackpropViz = forwardRef(function BackpropViz(props, ref) {
               onChange={e => set(parseFloat(e.target.value))} style={sliderStyle} />
           </div>
         ))}
+      </div>
+
+      {/* Editable weights */}
+      <div style={{ background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: 8, padding: '12px 14px', marginBottom: 16 }}>
+        <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--prime)', fontWeight: 700, marginBottom: 10 }}>
+          Weights (editable) — drag to change the network, both passes recompute
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '10px 16px' }}>
+          {[
+            { label: 'W1[0][0]', val: W1[0][0], set: v => setWeight((n, x) => { n.W1[0][0] = x }, v) },
+            { label: 'W1[0][1]', val: W1[0][1], set: v => setWeight((n, x) => { n.W1[0][1] = x }, v) },
+            { label: 'W1[1][0]', val: W1[1][0], set: v => setWeight((n, x) => { n.W1[1][0] = x }, v) },
+            { label: 'W1[1][1]', val: W1[1][1], set: v => setWeight((n, x) => { n.W1[1][1] = x }, v) },
+            { label: 'b1[0]',    val: b1[0],    set: v => setWeight((n, x) => { n.b1[0] = x }, v) },
+            { label: 'b1[1]',    val: b1[1],    set: v => setWeight((n, x) => { n.b1[1] = x }, v) },
+            { label: 'W2[0]',    val: W2[0][0], set: v => setWeight((n, x) => { n.W2[0][0] = x }, v) },
+            { label: 'W2[1]',    val: W2[0][1], set: v => setWeight((n, x) => { n.W2[0][1] = x }, v) },
+            { label: 'b2',       val: b2[0],    set: v => setWeight((n, x) => { n.b2[0] = x }, v) },
+          ].map(({ label, val, set }) => (
+            <div key={label}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
+                <label style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)' }}>{label}</label>
+                <span style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--prime)' }}>{val.toFixed(2)}</span>
+              </div>
+              <input type="range" min={-2} max={2} step={0.05} value={val}
+                onChange={e => set(parseFloat(e.target.value))}
+                style={{ width: '100%', accentColor: 'var(--prime)', cursor: 'pointer' }} />
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Data table */}
