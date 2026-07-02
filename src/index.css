@@ -30,6 +30,8 @@
   --violet: #a78bfa;
   --gold:   var(--prime-hi);
   --green:  #4ade80;
+  --amber:  #f5a623;   /* figure accent — residuals, highlights (must be defined or SVGs fall back to black) */
+  --teal:   #2dd4bf;   /* figure accent — secondary highlight */
 
   /* Legacy compat */
   --mint-bright: var(--prime-hi);
@@ -97,6 +99,8 @@
   --rose:   #b8223a;
   --violet: #6b45d0;
   --green:  #1a7a3a;
+  --amber:  #b8730a;   /* figure accent (light theme) */
+  --teal:   #0d7d70;   /* figure accent (light theme) */
 
   --ink-hi:    #1a1008;   /* headings, primary labels          */
   --ink-mid:   #2e200f;   /* body text, explanations           */

@@ -770,6 +770,8 @@ The catch is cost: comparing every word with every other word is **O(n²)** — 
   },
   {
     id: 'transformers',
+    interactiveId: 'attention_viz',
+    interactivePrompt: 'A transformer block is stacked self-attention + feed-forward, repeated N times. Explore the attention step — the core operation the whole block is built around.',
     title: 'Transformer Architecture',
     subtitle: 'Self-attention, positional encoding, encoder vs decoder, pre-norm vs post-norm',
     difficulty: 'intermediate',

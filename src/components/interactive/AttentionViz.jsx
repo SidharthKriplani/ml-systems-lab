@@ -104,7 +104,7 @@ export const AttentionViz = forwardRef(function AttentionViz(props, ref) {
                     const masked = causal && j > i
                     return <td key={j} title={`${TOKENS[i]}→${TOKENS[j]}: ${w.toFixed(2)}`} style={{
                       width: 34, height: 26, textAlign: 'center', fontSize: '0.6rem', fontFamily: 'var(--font-mono)',
-                      color: w > 0.35 ? '#000' : 'var(--ink-hi)', background: masked ? 'transparent' : heat(w),
+                      color: w > 0.5 ? '#000' : 'var(--ink-hi)', background: masked ? 'transparent' : heat(w),
                       border: i === qi ? '1px solid var(--prime)' : '1px solid var(--rim)' }}>{masked ? '·' : w.toFixed(2)}</td>
                   })}
                 </tr>

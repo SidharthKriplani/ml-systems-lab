@@ -175,8 +175,6 @@ export const ActivationFunctions = forwardRef(function ActivationFunctions(props
   }, [redraw])
 
   useImperativeHandle(ref, () => ({
-    play: () => {},
-    pause: () => {},
     reset: () => { setOverlayDeriv(false); setActiveIds(['sigmoid', 'tanh', 'relu', 'leaky', 'gelu']); setXInput(1.0); setLeak(0.1); setTemp(1.0) },
     step: () => setOverlayDeriv(s => !s),
   }), [])

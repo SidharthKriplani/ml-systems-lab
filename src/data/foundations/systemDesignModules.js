@@ -236,6 +236,8 @@ export const SYSTEM_DESIGN_MODULES = [
   },
   {
     id: 'two_tower',
+    interactiveId: 'retrieval_funnel_viz',
+    interactivePrompt: 'Two-tower models power the retrieval stage — watch the funnel narrow millions of candidates to the shortlist the ranker can afford to score.',
     title: 'Two-Tower Models',
     subtitle: 'Encode separately, compare cheaply — the retrieval workhorse',
     difficulty: 'advanced',
@@ -315,6 +317,8 @@ export const SYSTEM_DESIGN_MODULES = [
   },
   {
     id: 'semantic_search',
+    interactiveId: 'neighbor_explosion_viz',
+    interactivePrompt: 'Semantic search is nearest-neighbor over embeddings — turn the knob and see the recall–latency tradeoff of scanning more neighbors.',
     title: 'Semantic Search & Embeddings',
     subtitle: 'Bi-encoder vs cross-encoder, ANN indexes: FAISS / ScaNN / HNSW',
     difficulty: 'advanced',
