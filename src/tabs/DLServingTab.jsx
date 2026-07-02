@@ -173,7 +173,7 @@ function getQuantRecommendation(sensitivity, hardware, latency) {
   }
 }
 
-function QuantModule() {
+export function QuantModule() {
   const [sensitivity, setSensitivity] = useState('Medium')
   const [hardware, setHardware] = useState('GPU 16–40GB')
   const [latency, setLatency] = useState('Moderate (100–500ms)')
@@ -329,7 +329,7 @@ function fmtGB(bytes) {
   return (bytes / 1e9).toFixed(2) + ' GB'
 }
 
-function MemoryModule() {
+export function MemoryModule() {
   const [paramPreset, setParamPreset] = useState('7B')
   const [customParams, setCustomParams] = useState('')
   const [precision, setPrecision] = useState('FP16/BF16')
@@ -653,7 +653,7 @@ const SCENARIOS = [
   },
 ]
 
-function ServingModule() {
+export function ServingModule() {
   const [selected, setSelected] = useState(null)
   const [picks, setPicks] = useState({})
   const [revealed, setRevealed] = useState({})
@@ -902,7 +902,7 @@ const SRV_LAYOUT = {
   response:    [5, 2],
 }
 
-function MLServingArchitecture() {
+export function MLServingArchitecture() {
   const [selected, setSelected] = useState(null)
   const node = SRV_NODES.find(n => n.id === selected)
 

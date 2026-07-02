@@ -1,93 +1,75 @@
 import React, { useState, useCallback, useImperativeHandle, forwardRef } from 'react'
 
-// Teaches: training-serving skew is silent and NOT uniform. The serving path
-// approximates a count; the error grows with volume, so it lands hardest on the
-// high-volume users who are the most likely to be fraud. Aggregate accuracy barely
-// moves; accuracy on the tail collapses. Sharing one codepath (approxError=0) fixes it.
+// Reactive skew: an SVG bar chart of Offline vs Bulk vs Tail vs Production AUC.
+// Skew hits the high-volume tail hardest; aggregate barely moves because the tail
+// is small — which is exactly why it hides. Shared codepath (toggle) zeroes it.
 
-const DEFAULTS = {
-  approxErrPct: 8,   // % error the serving-side approximation introduces at high volume
-  tailShare: 15,     // % of traffic that is "high-volume" (where the approx error bites)
-  sharedPath: false, // one shared feature-computation path -> zero skew
-}
-
-// crude but honest: accuracy loss scales with the effective error the model sees.
-// low-volume users see ~0 error; high-volume (tail) users see the full approxErr.
+const DEFAULTS = { approxErrPct: 8, tailShare: 15, sharedPath: false }
 function scores(s) {
   const err = s.sharedPath ? 0 : s.approxErrPct
   const tail = s.tailShare / 100
-  const tailDrop = Math.min(30, err * 1.6)   // tail users hit hard
-  const bulkDrop = Math.min(4, err * 0.12)   // bulk users barely move
-  const baseline = 94
-  const tailAcc = baseline - tailDrop
-  const bulkAcc = baseline - bulkDrop
+  const tailAcc = 94 - Math.min(30, err * 1.6)
+  const bulkAcc = 94 - Math.min(4, err * 0.12)
   const aggAcc = bulkAcc * (1 - tail) + tailAcc * tail
-  return { baseline, tailAcc, bulkAcc, aggAcc, err }
+  return { baseline: 94, tailAcc, bulkAcc, aggAcc }
 }
 
 export const TrainServeSkewViz = forwardRef(function TrainServeSkewViz(props, ref) {
   const [s, setS] = useState({ ...DEFAULTS })
   useImperativeHandle(ref, () => ({ reset: () => setS({ ...DEFAULTS }) }))
-  const set = useCallback((k, v) => setS(prev => ({ ...prev, [k]: v })), [])
+  const set = useCallback((k, v) => setS(p => ({ ...p, [k]: v })), [])
 
   const { baseline, tailAcc, bulkAcc, aggAcc } = scores(s)
   const bad = aggAcc < baseline - 3 || tailAcc < baseline - 8
-
-  const Bar = ({ label, val, hi }) => {
-    const pct = Math.max(0, Math.min(100, val))
-    const color = hi ? (val < 80 ? '#ef4444' : val < 90 ? '#f59e0b' : '#22c55e') : 'var(--prime)'
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
-        <div style={{ width: 148, fontSize: '0.64rem', color: 'var(--ink-low)', textAlign: 'right' }}>{label}</div>
-        <div style={{ flex: 1, background: 'var(--depth)', borderRadius: 4, height: 15, position: 'relative' }}>
-          <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 4, opacity: 0.85 }} />
-        </div>
-        <div style={{ width: 42, fontSize: '0.64rem', color: 'var(--ink-hi)', fontWeight: 700 }}>{val.toFixed(1)}</div>
-      </div>
-    )
-  }
+  const bars = [
+    { label: 'Offline (train)', v: baseline, c: 'var(--ink-low)' },
+    { label: 'Bulk (low-vol)', v: bulkAcc, c: 'var(--prime)' },
+    { label: 'Tail (high-vol)', v: tailAcc, c: tailAcc < 80 ? '#ef4444' : tailAcc < 90 ? '#f59e0b' : '#22c55e' },
+    { label: 'Production (agg)', v: aggAcc, c: aggAcc < 88 ? '#ef4444' : aggAcc < 92 ? '#f59e0b' : '#22c55e' },
+  ]
+  const W = 360, H = 130, base = H - 22, top = 12, yMin = 60
+  const sy = v => base - ((v - yMin) / (baseline - yMin)) * (base - top)
+  const bw = 62, gap = (W - bars.length * bw) / (bars.length + 1)
 
   return (
     <div style={{ fontFamily: 'var(--font-sans)', fontSize: '0.8rem', color: 'var(--ink-mid)' }}>
-      <div style={{ marginBottom: 8 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem' }}>
-          <span>Serving-side approximation error (high-volume users)</span>
-          <span style={{ color: 'var(--ink-hi)', fontWeight: 700 }}>{s.sharedPath ? '0 (shared path)' : `${s.approxErrPct}%`}</span>
-        </div>
-        <input type="range" min={0} max={15} value={s.approxErrPct} disabled={s.sharedPath}
-          onChange={e => set('approxErrPct', +e.target.value)} style={{ width: '100%', opacity: s.sharedPath ? 0.4 : 1 }} />
-      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', maxWidth: 460, display: 'block', margin: '0 auto 6px' }}>
+        <line x1="0" y1={sy(baseline)} x2={W} y2={sy(baseline)} stroke="var(--ink-low)" strokeDasharray="3 3" opacity="0.5" />
+        <text x={W - 2} y={sy(baseline) - 3} textAnchor="end" fontSize="7.5" fill="var(--ink-ghost)">offline {baseline}</text>
+        {bars.map((b, i) => {
+          const x = gap + i * (bw + gap), y = sy(b.v)
+          return (
+            <g key={i}>
+              <rect x={x} y={y} width={bw} height={base - y} fill={b.c} opacity="0.85" rx="2" />
+              <text x={x + bw / 2} y={y - 3} textAnchor="middle" fontSize="9" fontWeight="700" fill="var(--ink-hi)">{b.v.toFixed(1)}</text>
+              <text x={x + bw / 2} y={base + 12} textAnchor="middle" fontSize="7.3" fill="var(--ink-low)">{b.label}</text>
+            </g>
+          )
+        })}
+      </svg>
 
       <div style={{ marginBottom: 8 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem' }}>
-          <span>Share of traffic that is high-volume (the fraud-prone tail)</span>
-          <span style={{ color: 'var(--ink-hi)', fontWeight: 700 }}>{s.tailShare}%</span>
-        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem' }}><span>serving approximation error (high-vol)</span><span style={{ color: 'var(--ink-hi)', fontWeight: 700 }}>{s.sharedPath ? '0 (shared)' : s.approxErrPct + '%'}</span></div>
+        <input type="range" min={0} max={15} value={s.approxErrPct} disabled={s.sharedPath} onChange={e => set('approxErrPct', +e.target.value)} style={{ width: '100%', opacity: s.sharedPath ? 0.4 : 1 }} />
+      </div>
+      <div style={{ marginBottom: 8 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem' }}><span>high-volume tail share (fraud-prone)</span><span style={{ color: 'var(--ink-hi)', fontWeight: 700 }}>{s.tailShare}%</span></div>
         <input type="range" min={2} max={40} value={s.tailShare} onChange={e => set('tailShare', +e.target.value)} style={{ width: '100%' }} />
       </div>
-
-      <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12, fontSize: '0.72rem', cursor: 'pointer' }}>
+      <label style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 10, fontSize: '0.72rem', cursor: 'pointer' }}>
         <input type="checkbox" checked={s.sharedPath} onChange={e => set('sharedPath', e.target.checked)} />
-        One shared feature-computation path (feature store) — training and serving run the <em>same</em> code
+        one shared feature codepath (feature store) → train & serve run the same code
       </label>
 
-      <Bar label="Offline AUC (training path)" val={baseline} />
-      <Bar label="Bulk users (low volume)" val={bulkAcc} hi />
-      <Bar label="Tail users (high volume)" val={tailAcc} hi />
-      <Bar label="Production AUC (aggregate)" val={aggAcc} hi />
-
-      <div style={{ marginTop: 10, background: 'var(--depth)', border: `1px solid ${bad ? '#ef4444' : 'var(--rim)'}`, borderRadius: 8, padding: '8px 12px' }}>
+      <div style={{ background: 'var(--depth)', border: `1px solid ${bad ? '#ef4444' : 'var(--rim)'}`, borderRadius: 8, padding: '8px 12px' }}>
         <div style={{ fontSize: '0.72rem', color: bad ? '#ef4444' : '#22c55e', fontWeight: 700 }}>
-          {s.sharedPath
-            ? 'Shared path → offline = production. No skew to detect.'
-            : bad
-              ? `Silent skew: offline says ${baseline}, production is ${aggAcc.toFixed(1)} — and it is ${(baseline - tailAcc).toFixed(1)} pts worse on exactly the users most likely to be fraud.`
-              : 'Small error → aggregate looks fine, but note the tail is already sliding.'}
+          {s.sharedPath ? 'Shared path → offline = production. No skew to detect.'
+            : bad ? `Silent skew: offline ${baseline}, production ${aggAcc.toFixed(1)} — and ${(baseline - tailAcc).toFixed(1)} pts worse on exactly the users most likely to be fraud.`
+            : 'Small error → aggregate looks fine, but the tail bar is already sliding.'}
         </div>
       </div>
       <div style={{ fontSize: '0.66rem', color: 'var(--ink-low)', marginTop: 8, lineHeight: 1.5 }}>
-        No exception is ever thrown. The aggregate AUC barely moves because the tail is small — which is
-        exactly why skew hides. Turn on the shared path and the two numbers become identical by construction.
+        No exception is ever thrown. The Production bar barely dips below Offline because the tail is small — that's why skew hides. Toggle the shared path and Offline = Production by construction.
       </div>
     </div>
   )

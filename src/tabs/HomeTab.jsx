@@ -250,14 +250,23 @@ export default function HomeTab({ onNavigate }) {
   const strongest  = rankedSections.reduce((best, s) => (s.pct > (best?.pct || -1) ? s : best), null)
   const notStarted = rankedSections.find(s => s.pct === 0)
 
-  // ── Quiz mode — brand-new users see only the 2-question card ────────────
+  // ── Brand-new users are handed to Start Here (the onboarding owner) ──────
   if (homeMode === 'quiz') {
     return (
       <div style={{ maxWidth: '660px', margin: '0 auto', paddingTop: '60px', paddingBottom: '48px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
           <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--prime)' }}>ML Systems Lab</div>
         </div>
-        <QuizCard onComplete={handleQuizComplete} />
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: 12, padding: '1.6rem 1.6rem' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--ink-hi)', margin: '0 0 0.5rem', letterSpacing: '-0.02em' }}>New here?</h2>
+          <p style={{ fontSize: '0.9rem', color: 'var(--ink-mid)', margin: '0 0 1.2rem', lineHeight: 1.6 }}>
+            Start Here walks you through the lab's six layers and points you at a concrete first read and practice room based on your level and timeline.
+          </p>
+          <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+            <button onClick={() => onNavigate('start_here')} style={{ background: 'var(--prime)', color: '#000', fontWeight: 700, fontSize: '0.85rem', border: 'none', borderRadius: 8, padding: '0.65rem 1.3rem', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>Go to Start Here →</button>
+            <button onClick={() => setHomeMode('dashboard')} style={{ background: 'var(--depth)', color: 'var(--ink-mid)', fontWeight: 600, fontSize: '0.85rem', border: '1px solid var(--rim)', borderRadius: 8, padding: '0.65rem 1.3rem', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>Skip to dashboard</button>
+          </div>
+        </div>
       </div>
     )
   }

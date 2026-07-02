@@ -94,6 +94,8 @@ const registry = {
   // Data & Features
   feature_scaling_viz:         lazy(() => import('./FeatureScalingViz').then(m => ({ default: m.FeatureScalingViz }))),
   leakage_split_viz:           lazy(() => import('./LeakageSplitViz').then(m => ({ default: m.LeakageSplitViz }))),
+  // Deep Learning
+  cnn_convolution_viz:         lazy(() => import('./CNNConvolutionViz').then(m => ({ default: m.CNNConvolutionViz }))),
 }
 
 export function InteractivePanel({ interactiveId }) {

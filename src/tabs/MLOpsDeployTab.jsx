@@ -3,6 +3,7 @@ import { WarningMark, CrossMark } from '../components/Icons'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
 import FidelityBadge from '../components/FidelityBadge.jsx'
 import { Icon } from '../components/Icon.jsx'
+import { CiCdGates, InfraDecision, RegistryPatterns, ModelRegistryPatterns, SchemaCascade } from './MLOpsPipelinesTab.jsx'
 
 function BookmarkButton({ tabId, moduleId, label }) {
   const [saved, setSaved] = useState(() => isBookmarked(tabId, moduleId))
@@ -755,6 +756,12 @@ const MODULES = [
   { id: 'deploy',    label: 'Deployment Strategy',  icon: '', component: DeployStrategy },
   { id: 'champion',  label: 'Champion-Challenger',  icon: '', component: ChampionChallenger },
   { id: 'rollback',  label: 'Rollback Decision',    icon: '', component: RollbackDecision },
+  // ── Merged from Pipelines ──
+  { id: 'cicd',           label: 'CI/CD Gate Design',       icon: '', component: CiCdGates },
+  { id: 'infra',          label: 'Infrastructure Decision', icon: '', component: InfraDecision },
+  { id: 'registry',       label: 'Model Registry Patterns', icon: '', component: RegistryPatterns },
+  { id: 'model_registry', label: 'Model Registry',          icon: '', component: ModelRegistryPatterns },
+  { id: 'schema_cascade', label: 'Schema Cascade',          icon: '', component: SchemaCascade },
 ]
 
 export default function MLOpsDeployTab({ onNavigate }) {
@@ -767,7 +774,7 @@ export default function MLOpsDeployTab({ onNavigate }) {
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
           <h1 style={{ ...grotesk, fontSize: '28px', fontWeight: 900, letterSpacing: '-0.05em', margin: 0, background: 'linear-gradient(135deg, var(--prime) 0%, var(--ink-hi) 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-            MLOps: Deploy & Promote
+            MLOps: Deploy, Pipelines & Registry
           </h1>
           <span style={{ ...pill('var(--prime)'), fontSize: '12px' }}>MLOps</span>
           <FidelityBadge tier="conceptual" />

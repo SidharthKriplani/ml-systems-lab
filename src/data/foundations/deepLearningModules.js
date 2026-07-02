@@ -449,6 +449,8 @@ Here is the twist. On image-classification benchmarks, a well-tuned **SGD with m
   },
   {
     id: 'cnns',
+    interactiveId: 'cnn_convolution_viz',
+    interactivePrompt: `Before you touch the controls: predict which kernel lights up the left and right sides of the square but stays dark along its flat top — and why one 3×3 filter can find that feature anywhere in the image with just 9 shared weights.`,
     title: 'Convolutional Neural Networks',
     subtitle: 'Convolution mechanics, pooling, receptive field, translation equivariance',
     difficulty: 'intermediate',

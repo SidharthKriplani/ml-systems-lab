@@ -3,6 +3,8 @@ import TabHeader from '../components/TabHeader.jsx'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
 import { CheckMark, CrossMark } from '../components/Icons'
 import FidelityBadge from '../components/FidelityBadge.jsx'
+import { FreezeLoRAModule, LRStrategyModule, PEFTComparisonModule } from './DLFineTuningTab.jsx'
+import { QuantModule, MemoryModule, ServingModule, MLServingArchitecture } from './DLServingTab.jsx'
 
 // ── Shared accordion MCQ ──────────────────────────────────────────────────────
 function AccordionMCQ({ scenarios, accentColor = 'var(--prime)', contextLabel = 'Context', storageKey = null }) {
@@ -982,6 +984,15 @@ const DL_MODULES = [
   { id: 'transformer',    label: 'Transformer Architecture',  icon: '', component: TransformerArchitecture,   fidelityTier: 'conceptual' },
   { id: 'attention',      label: 'Attention Head Visualizer', icon: '', component: AttentionHeadVisualizer,   fidelityTier: 'simplified' },
   { id: 'arch_decisions', label: 'Architecture Decision Lab', icon: '', component: ArchDecisionLab,           fidelityTier: 'conceptual' },
+  // ── Merged from Fine-tuning ──
+  { id: 'ft_freeze', label: 'Freeze vs LoRA',       icon: '', component: FreezeLoRAModule,    fidelityTier: 'conceptual' },
+  { id: 'ft_lr',     label: 'LR Strategy',          icon: '', component: LRStrategyModule,     fidelityTier: 'conceptual' },
+  { id: 'ft_peft',   label: 'PEFT Comparison',      icon: '', component: PEFTComparisonModule, fidelityTier: 'conceptual' },
+  // ── Merged from Serving ──
+  { id: 'sv_quant',  label: 'Quantization Tradeoff', icon: '', component: QuantModule,           fidelityTier: 'conceptual' },
+  { id: 'sv_memory', label: 'GPU Memory Calculator', icon: '', component: MemoryModule,          fidelityTier: 'conceptual' },
+  { id: 'sv_serving',label: 'Serving Architecture',  icon: '', component: ServingModule,         fidelityTier: 'conceptual' },
+  { id: 'sv_arch',   label: 'Pipeline Diagram',      icon: '◈', component: MLServingArchitecture, fidelityTier: 'conceptual' },
 ]
 
 // ── Coming Soon ───────────────────────────────────────────────────────────────

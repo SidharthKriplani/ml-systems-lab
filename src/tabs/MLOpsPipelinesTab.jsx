@@ -241,7 +241,7 @@ const GATES = [
   },
 ]
 
-function CiCdGates() {
+export function CiCdGates() {
   const [config, setConfig] = useState(() =>
     Object.fromEntries(GATES.map(g => [g.id, { include: true, severity: 'block' }]))
   )
@@ -450,7 +450,7 @@ const INFRA_PARAMS = {
   ],
 }
 
-function InfraDecision() {
+export function InfraDecision() {
   const [params, setParams] = useState({ request: 'realtime', scale: 'mid', model: 'medium', team: 'mid' })
 
   const ranked = useMemo(() => {
@@ -618,7 +618,7 @@ const REGISTRY_SCENARIOS = [
   },
 ]
 
-function RegistryPatterns() {
+export function RegistryPatterns() {
   const [picks, setPicks] = useState({})
   const [revealed, setRevealed] = useState({})
   const [active, setActive] = useState(0)
@@ -804,7 +804,7 @@ const MODEL_REGISTRY_SCENARIOS = [
   },
 ]
 
-function ModelRegistryPatterns() {
+export function ModelRegistryPatterns() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
@@ -874,7 +874,7 @@ const SCHEMA_CASCADE_SCENARIOS = [
   },
 ]
 
-function SchemaCascade() {
+export function SchemaCascade() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>

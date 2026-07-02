@@ -1,25 +1,18 @@
 import React, { useState, useCallback, useImperativeHandle, forwardRef } from 'react'
 
-// Teaches: ablation is the empirical partial derivative of a system. Toggle
-// components off and watch AUC drop. Leave-one-out reads each solo contribution
-// — but the interaction trap is only visible when you remove two together:
-// {interactions, temporal} drop MORE than the sum of their individual effects,
-// so neither is truly vestigial.
+// Reactive ablation: toggle components off; an SVG bar chart shows each one's
+// leave-one-out AUC drop, and the {interactions, temporal} pair drops MORE than
+// the sum of the solos — the synergy the empirical partial derivative misses.
 
-const BASE = 0.83 // AUC of the bare system (graph embeddings + scaling backbone)
-
-// Each component's independent (solo) marginal contribution to AUC.
+const BASE = 0.83
 const COMPONENTS = [
-  { key: 'graph',        label: 'Graph embeddings',     solo: 0.06 },
+  { key: 'graph',        label: 'Graph embeddings',      solo: 0.06 },
   { key: 'temporal',     label: 'Temporal aggregations', solo: 0.02 },
   { key: 'interactions', label: 'Feature interactions',  solo: 0.00 },
   { key: 'scaling',      label: 'Scaling',               solo: 0.01 },
   { key: 'clipping',     label: 'Outlier clipping',      solo: 0.00 },
 ]
-
-// Synergy bonus: only realised when BOTH members of the pair are present.
 const SYNERGY = { pair: ['interactions', 'temporal'], bonus: 0.03 }
-
 const DEFAULTS = { graph: true, temporal: true, interactions: true, scaling: true, clipping: true }
 
 function computeAUC(on) {
@@ -29,76 +22,66 @@ function computeAUC(on) {
   return auc
 }
 
-const barColor = (drop) => (drop > 0.03 ? 'var(--prime)' : drop > 0 ? '#f59e0b' : 'var(--ink-low)')
-
 export const AblationViz = forwardRef(function AblationViz(props, ref) {
   const [on, setOn] = useState({ ...DEFAULTS })
-
   useImperativeHandle(ref, () => ({ reset: () => setOn({ ...DEFAULTS }) }))
-
-  const toggle = useCallback((k) => setOn(prev => ({ ...prev, [k]: !prev[k] })), [])
+  const toggle = useCallback(k => setOn(p => ({ ...p, [k]: !p[k] })), [])
 
   const fullAUC = computeAUC(DEFAULTS)
   const currentAUC = computeAUC(on)
+  const loo = COMPONENTS.map(c => ({ ...c, drop: fullAUC - computeAUC({ ...DEFAULTS, [c.key]: false }) }))
+  const bothOff = !on.interactions && !on.temporal
+  const pairDrop = fullAUC - computeAUC({ ...DEFAULTS, interactions: false, temporal: false })
+  const soloSum = loo.find(c => c.key === 'interactions').drop + loo.find(c => c.key === 'temporal').drop
 
-  // Per-component leave-one-out drop measured against the FULL system.
-  const looRows = COMPONENTS.map(c => {
-    const withoutOne = computeAUC({ ...DEFAULTS, [c.key]: false })
-    return { ...c, drop: fullAUC - withoutOne }
-  })
-
-  // Detect the interaction trap: are exactly the two synergy members currently off?
-  const [a, b] = SYNERGY.pair
-  const pairOff = !on[a] && !on[b] && COMPONENTS.every(c => c.key === a || c.key === b || on[c.key])
-  const soloSum = looRows.find(r => r.key === a).drop + looRows.find(r => r.key === b).drop
-  const pairDrop = fullAUC - computeAUC({ ...DEFAULTS, [a]: false, [b]: false })
-
+  const W = 360, rowH = 22, maxDrop = 0.1, bx = 150, bw = W - bx - 44
   return (
     <div style={{ fontFamily: 'var(--font-sans)', fontSize: '0.8rem', color: 'var(--ink-mid)' }}>
-      <div style={{ fontSize: '0.68rem', color: 'var(--ink-low)', marginBottom: '8px' }}>
-        Toggle components off to ablate them. Bars show each component's leave-one-out drop vs the full system.
+      <svg viewBox={`0 0 ${W} ${COMPONENTS.length * rowH + 24}`} style={{ width: '100%', maxWidth: 460, display: 'block', margin: '0 auto 6px' }}>
+        <text x="4" y="10" fill="var(--ink-low)" fontSize="8">leave-one-out AUC drop — click a row to toggle it</text>
+        {loo.map((c, i) => {
+          const y = 18 + i * rowH, w = Math.max(1, (c.drop / maxDrop) * bw)
+          const col = !on[c.key] ? 'var(--ink-low)' : c.drop > 0.03 ? 'var(--prime)' : c.drop > 0 ? 'var(--amber)' : 'var(--rim)'
+          return (
+            <g key={c.key} style={{ cursor: 'pointer' }} onClick={() => toggle(c.key)}>
+              <text x={bx - 6} y={y + 11} textAnchor="end" fontSize="8.5" fill={on[c.key] ? 'var(--ink-mid)' : 'var(--ink-ghost)'} style={{ textDecoration: on[c.key] ? 'none' : 'line-through' }}>{c.label}</text>
+              <rect x={bx} y={y + 2} width={bw} height={rowH - 8} fill="var(--depth)" rx="2" />
+              <rect x={bx} y={y + 2} width={w} height={rowH - 8} fill={col} opacity="0.85" rx="2" />
+              <text x={bx + w + 5} y={y + 11} fontSize="8" fill="var(--ink-low)">−{c.drop.toFixed(2)}</text>
+            </g>
+          )
+        })}
+      </svg>
+
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+        {COMPONENTS.map(c => (
+          <button key={c.key} onClick={() => toggle(c.key)} style={{
+            padding: '4px 8px', borderRadius: 6, cursor: 'pointer', fontSize: '0.68rem', fontFamily: 'var(--font-sans)',
+            fontWeight: on[c.key] ? 700 : 500, background: on[c.key] ? 'var(--prime)' : 'var(--depth)',
+            color: on[c.key] ? '#000' : 'var(--ink-low)', border: `1px solid ${on[c.key] ? 'var(--prime)' : 'var(--rim)'}` }}>
+            {on[c.key] ? '✓ ' : '✕ '}{c.label}
+          </button>
+        ))}
       </div>
 
-      {looRows.map(r => {
-        const pct = Math.min(100, (r.drop / 0.08) * 100)
-        return (
-          <div key={r.key} style={{ marginBottom: '7px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-              <input type="checkbox" checked={on[r.key]} onChange={() => toggle(r.key)} />
-              <div style={{ width: 132, fontSize: '0.7rem', color: on[r.key] ? 'var(--ink-hi)' : 'var(--ink-ghost)' }}>
-                {r.label}{!on[r.key] && ' (ablated)'}
-              </div>
-              <div style={{ flex: 1, background: 'var(--depth)', borderRadius: 4, height: 13, position: 'relative' }}>
-                <div style={{ width: `${pct}%`, height: '100%', background: barColor(r.drop), borderRadius: 4, opacity: 0.82 }} />
-              </div>
-              <div style={{ width: 42, fontSize: '0.64rem', color: 'var(--ink-mid)', textAlign: 'right' }}>
-                {r.drop > 0 ? '−' : ' '}{r.drop.toFixed(2)}
-              </div>
-            </label>
+      <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ flex: 1, background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: 8, padding: '8px 10px' }}>
+          <div style={{ fontSize: '0.6rem', color: 'var(--ink-low)', textTransform: 'uppercase' }}>current AUC</div>
+          <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--prime)' }}>{currentAUC.toFixed(3)}</div>
+          <div style={{ fontSize: '0.58rem', color: 'var(--ink-ghost)' }}>full = {fullAUC.toFixed(3)}</div>
+        </div>
+        <div style={{ flex: 2, background: 'var(--depth)', border: `1px solid ${bothOff ? '#ef4444' : 'var(--rim)'}`, borderRadius: 8, padding: '8px 10px' }}>
+          <div style={{ fontSize: '0.6rem', color: 'var(--ink-low)', textTransform: 'uppercase' }}>the interaction trap</div>
+          <div style={{ fontSize: '0.7rem', color: bothOff ? '#ef4444' : 'var(--ink-mid)', lineHeight: 1.4 }}>
+            {bothOff
+              ? `Dropping interactions + temporal together loses ${pairDrop.toFixed(2)} — more than the ${soloSum.toFixed(2)} their solos predict. Neither looked important alone.`
+              : 'Turn OFF both "Feature interactions" and "Temporal" to expose the synergy leave-one-out hides.'}
           </div>
-        )
-      })}
-
-      <div style={{ marginTop: '10px', background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: 8, padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: '0.7rem', color: 'var(--ink-low)' }}>Current system AUC (full = {fullAUC.toFixed(2)})</span>
-        <span style={{ fontSize: '1.15rem', fontWeight: 800, color: currentAUC >= fullAUC - 0.005 ? '#22c55e' : currentAUC < 0.85 ? '#ef4444' : 'var(--amber)' }}>
-          {currentAUC.toFixed(2)}
-        </span>
+        </div>
       </div>
-
-      {pairOff ? (
-        <div style={{ marginTop: '8px', background: 'rgba(245,158,11,0.12)', border: '1px solid var(--amber)', borderRadius: 8, padding: '8px 12px', fontSize: '0.68rem', color: 'var(--ink-mid)', lineHeight: 1.5 }}>
-          <strong style={{ color: 'var(--ink-hi)' }}>Interaction trap.</strong> Feature interactions read −0.00 solo and temporal −0.02 solo
-          (sum {soloSum.toFixed(2)}). Yet removing <em>both</em> drops AUC by {pairDrop.toFixed(2)} —
-          more than the sum. Neither is vestigial; each depends on the other. Leave-one-out alone would have
-          told you to delete interactions.
-        </div>
-      ) : (
-        <div style={{ fontSize: '0.68rem', color: 'var(--ink-low)', marginTop: '8px', lineHeight: 1.5 }}>
-          Graph embeddings carry −0.06 of the signal — invest there. Interactions read −0.00 solo, so they
-          look like dead weight. Now ablate <em>both</em> interactions and temporal at once and watch what happens.
-        </div>
-      )}
+      <div style={{ fontSize: '0.68rem', color: 'var(--ink-low)', marginTop: 8, lineHeight: 1.5 }}>
+        Ablation is the empirical partial derivative of the system. Leave-one-out reads each solo contribution — but two components that only help <i>together</i> both look vestigial alone. Ablate pairs before deleting anything.
+      </div>
     </div>
   )
 })

@@ -208,7 +208,7 @@ model.print_trainable_parameters()
   }
 }
 
-function FreezeLoRAModule() {
+export function FreezeLoRAModule() {
   const [modelSize, setModelSize] = useState(null)
   const [taskSim,   setTaskSim]   = useState(null)
   const [dataSize,  setDataSize]  = useState(null)
@@ -401,7 +401,7 @@ const LR_OPTIONS = [
   { id: 7, label: 'Different LR per component (embedding vs dense)' },
 ]
 
-function LRStrategyModule() {
+export function LRStrategyModule() {
   const [idx,      setIdx]      = useState(0)
   const [picked,   setPicked]   = useState(null)
   const [revealed, setRevealed] = useState(false)
@@ -589,7 +589,7 @@ function renderScoreLabel(score) {
   return labels[score]
 }
 
-function PEFTComparisonModule() {
+export function PEFTComparisonModule() {
   const [constraint, setConstraint] = useState(null)
 
   const ranked = useMemo(() => {
