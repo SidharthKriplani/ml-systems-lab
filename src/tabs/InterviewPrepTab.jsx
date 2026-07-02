@@ -6,8 +6,10 @@ import { Icon } from '../components/Icon.jsx'
 import { recordInterviewSessionMastery } from '../utils/progress.js'
 import { toggleBookmark, isBookmarked, getBookmarks } from '../utils/bookmarks.js'
 import { AddTrackBtn } from '../components/tracks/AddToTrackPopover.jsx'
+import { EXTRA_QUESTIONS } from '../data/interviewExtra.js'
 
 const QUESTIONS = [
+  ...EXTRA_QUESTIONS,
   // ─── ML System Design ────────────────────────────────────────────────────
   { id: 1,  cat: 'System Design', company: 'Meta',    level: 'Senior',   q: 'Design a feed ranking system for a social network with 1B users.', framework: ['Problem framing: relevance? engagement? diversity?', 'Data: user events, item metadata, social graph', 'Features: user–item interaction, freshness, social signals', 'Model: two-stage (retrieval → ranking), GBDT or neural ranker', 'Serving: <100ms P99, feature store for online features', 'Monitoring: CTR, dwell time, diversity metrics, position bias'], whatsTested: 'Whether you know to separate retrieval from ranking, and whether you think about latency, monitoring, and position bias — not just the model itself.', antiPattern: 'Jumping straight to "I\'d train a neural network on all user interactions." A one-stage model at 1B users scale is a serving latency failure. The interviewer is listening for two-stage architecture and production constraints before model choice.', staffFraming: 'Frame it as constraints first, architecture second: "At 1B users the first constraint is latency — that forces a two-stage pipeline. Retrieval narrows a billion items to a few thousand in <20ms using ANN on embeddings; ranking scores those candidates with a richer model. The production questions I\'d nail down are: what\'s the feature freshness SLA for the online store, how do we instrument position bias correction in offline eval, and what does the novelty effect do to our first-week A/B metrics?" This signals you\'ve shipped ranking systems, not just studied them.' },
   { id: 2,  cat: 'System Design', company: 'Spotify', level: 'Senior',   q: 'Design a music recommendation system that personalises the home screen.', framework: ['Candidate generation: collaborative filtering + content-based', 'Two-tower model: user embedding + track embedding', 'Negative sampling: in-batch vs hard negatives', 'Freshness: re-rank for new releases, mood signals', 'A/B testing: metric choice (stream rate vs skip rate)', 'Cold start: popularity + genre for new users'], whatsTested: 'Whether you address cold start explicitly and whether you choose metrics that reflect user value (stream rate, completion) rather than vanity metrics (clicks).', antiPattern: 'Proposing only collaborative filtering without addressing cold start. CF fails for new users and new tracks — not mentioning a content-based fallback signals you haven\'t thought past the warm-state case.', staffFraming: '"The two systems I\'d design in parallel are the warm-state model and the cold-start fallback, with an explicit warmup gate between them. For warm users: two-tower with in-batch negatives, stream rate as the training signal. For cold: audio embeddings from the track itself plus genre/mood metadata — no interaction data needed. The metric I\'d push back on is CTR: Spotify\'s data shows high-CTR tracks have lower completion rates. I\'d train and evaluate on stream-to-completion rate, not clicks." This framing shows you know the cold-state problem is a product problem, not a modelling afterthought.' },
@@ -940,14 +942,16 @@ export default function InterviewPrepTab({ onNavigate }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search questions…"
               style={{ width: '100%', maxWidth: '400px' }} type="search" />
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-              {CATEGORIES.map(c => <button key={c} onClick={() => setCat(c)} className={`sub-tab ${cat === c ? 'active' : 'inactive'}`} style={{ fontSize: '12px' }}>{c}</button>)}
-            </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-              {COMPANIES.map(c => <button key={c} onClick={() => setCompany(c)} className={`sub-tab ${company === c ? 'active' : 'inactive'}`} style={{ fontSize: '12px' }}>{c}</button>)}
-            </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-              {LEVELS.map(c => <button key={c} onClick={() => setLevel(c)} className={`sub-tab ${level === c ? 'active' : 'inactive'}`} style={{ fontSize: '12px' }}>{c}</button>)}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+              <select value={cat} onChange={e => setCat(e.target.value)} style={{ padding: '7px 12px', fontSize: '13px', background: 'var(--depth)', color: 'var(--ink-hi)', border: '1px solid var(--rim)', borderRadius: '7px', fontFamily: 'var(--font-sans)', cursor: 'pointer' }}>
+                {CATEGORIES.map(c => <option key={c} value={c}>{c === 'All' ? 'All topics' : c}</option>)}
+              </select>
+              <select value={company} onChange={e => setCompany(e.target.value)} style={{ padding: '7px 12px', fontSize: '13px', background: 'var(--depth)', color: 'var(--ink-hi)', border: '1px solid var(--rim)', borderRadius: '7px', fontFamily: 'var(--font-sans)', cursor: 'pointer' }}>
+                {COMPANIES.map(c => <option key={c} value={c}>{c === 'All' ? 'All companies' : c}</option>)}
+              </select>
+              <select value={level} onChange={e => setLevel(e.target.value)} style={{ padding: '7px 12px', fontSize: '13px', background: 'var(--depth)', color: 'var(--ink-hi)', border: '1px solid var(--rim)', borderRadius: '7px', fontFamily: 'var(--font-sans)', cursor: 'pointer' }}>
+                {LEVELS.map(c => <option key={c} value={c}>{c === 'All' ? 'All levels' : c}</option>)}
+              </select>
             </div>
           </div>
 
