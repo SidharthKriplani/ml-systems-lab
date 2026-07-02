@@ -39,6 +39,7 @@ const TrainerTab     = lazy(() => import('./tabs/TrainerTab.jsx'))
 const CombinatorTab  = lazy(() => import('./tabs/CombinatorTab.jsx'))
 const DrillTab       = lazy(() => import('./tabs/DrillTab.jsx'))
 const InterviewQuestionsTab = lazy(() => import('./tabs/InterviewQuestionsTab.jsx'))
+const CompanyTracksTab = lazy(() => import('./tabs/CompanyTracksTab.jsx'))
 const CodeBugsTab    = lazy(() => import('./tabs/CodeBugsTab.jsx'))
 const CaseStudiesTab = lazy(() => import('./tabs/CaseStudiesTab.jsx'))
 const StaffLayerTab  = lazy(() => import('./tabs/StaffLayerTab.jsx'))
@@ -117,6 +118,7 @@ const ALL_TABS = [
   { id: 'combinator',  component: CombinatorTab },
   { id: 'drill',       component: DrillTab },
   { id: 'interview_questions', component: InterviewQuestionsTab },
+  { id: 'company_tracks', component: CompanyTracksTab },
   { id: 'codebugs',    component: CodeBugsTab },
   { id: 'casestudies', component: CaseStudiesTab },
   { id: 'stafflayer',  component: StaffLayerTab },
@@ -445,6 +447,7 @@ const NAV_SECTIONS = [
     items: [
       { id: 'interview_questions', label: 'Interview Questions', desc: 'One open-ended bank — Q&A, Behavioral/STAR, system-design take-homes, and the defend-your-project round.' },
       { id: 'drill',               label: 'Drill',               desc: 'Self-test the MCQ bank — untimed spaced-rep practice or a timed mock exam.' },
+      { id: 'company_tracks',      label: 'Company Tracks',      desc: 'Curated prep by company × role × seniority — items open the exact module or drill. (Scaffold.)' },
     ],
   },
 ]
@@ -1025,8 +1028,10 @@ export default function App() {
   }, [])
 
   // Navigate to any tabId from anywhere
-  const goTo = useCallback((tabId) => {
+  const [pendingOpen, setPendingOpen] = useState(null)
+  const goTo = useCallback((tabId, openTarget = null) => {
     setActiveTab(tabId)
+    setPendingOpen(openTarget)
     setSearchOpen(false)
     setSidebarOpen(false)
     trackTabSwitch(tabId)
@@ -1175,14 +1180,14 @@ export default function App() {
       const Component = ALL_TABS.find(t => t.id === activeTab)?.component
       return Component ? (
         <Suspense fallback={<LoadingSpinner />}>
-          <Component onNavigate={goTo} user={user} onShowAuth={() => setShowAuth(true)} />
+          <Component onNavigate={goTo} openModuleId={pendingOpen} user={user} onShowAuth={() => setShowAuth(true)} />
         </Suspense>
       ) : null
     }
     const Component = ALL_TABS.find(t => t.id === activeTab)?.component
     return Component ? (
       <Suspense fallback={<LoadingSpinner />}>
-        <Component onNavigate={goTo} />
+        <Component onNavigate={goTo} openModuleId={pendingOpen} />
       </Suspense>
     ) : (
       <Suspense fallback={<LoadingSpinner />}>

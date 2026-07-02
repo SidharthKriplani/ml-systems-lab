@@ -26,8 +26,14 @@ function difficultyBadge(d) {
   )
 }
 
-export function DataFoundationTab({ onNavigate }) {
+export function DataFoundationTab({ onNavigate, openModuleId }) {
   const [selectedId, setSelectedId] = useState(null)
+
+  useEffect(() => {
+    if (openModuleId && MODULES.some(m => m.id === openModuleId)) {
+      setSelectedId(openModuleId)
+    }
+  }, [openModuleId])
   const [tick, setTick] = useState(0)
   const [trackPopoverOpen, setTrackPopoverOpen] = useState(false)
   const [recapMode, setRecapMode] = useState(false)

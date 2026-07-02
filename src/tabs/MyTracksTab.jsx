@@ -176,6 +176,15 @@ const ITEM_TYPE_LABEL = {
   bug: 'Code Bug',
 }
 
+// Where each generic item type opens (current rooms after the restructure).
+const TYPE_TAB = {
+  interview:  'interview_questions',
+  flashcard:  'cheatsheet',
+  case:       'incidentroom',
+  flaw:       'judge_browser',
+  bug:        'codebugs',
+}
+
 // ── TrackDetail ───────────────────────────────────────────────────────────────
 
 function TrackDetail({ track, onNavigate, onRename, onNewNote, onOpenNote, onDeleteNote, onRemoveItem, onReorderItems }) {
@@ -279,7 +288,7 @@ function TrackDetail({ track, onNavigate, onRename, onNewNote, onOpenNote, onDel
                     <div style={{ fontSize: '0.87rem', fontWeight: 600, color: 'var(--ink-hi)', lineHeight: 1.3 }}>{item.label}</div>
                   </div>
                   <button
-                    onClick={() => onNavigate(item.tabId)}
+                    onClick={() => onNavigate(item.tabId, item.moduleId)}
                     style={{
                       background: 'none', border: '1px solid var(--rim)', borderRadius: '5px',
                       cursor: 'pointer', color: 'var(--ink-mid)', fontSize: '0.75rem',
@@ -348,6 +357,18 @@ function TrackDetail({ track, onNavigate, onRename, onNewNote, onOpenNote, onDel
                       {item.label}
                     </div>
                   </div>
+                  {TYPE_TAB[item.type] && (
+                    <button
+                      onClick={() => onNavigate(TYPE_TAB[item.type], item.itemId)}
+                      style={{
+                        background: 'none', border: '1px solid var(--rim)', borderRadius: '5px',
+                        cursor: 'pointer', color: 'var(--ink-mid)', fontSize: '0.75rem',
+                        padding: '0.2rem 0.5rem', flexShrink: 0, whiteSpace: 'nowrap', transition: 'all 0.12s',
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--prime)'; e.currentTarget.style.color = 'var(--prime)' }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--rim)'; e.currentTarget.style.color = 'var(--ink-mid)' }}
+                    >Open →</button>
+                  )}
                   <button onClick={() => onRemoveItem(idx)}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-ghost)', fontSize: '0.72rem', padding: '0.1rem 0.2rem', flexShrink: 0 }}
                     onMouseEnter={e => { e.currentTarget.style.color = '#e05050' }}
