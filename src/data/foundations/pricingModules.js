@@ -1,18 +1,13 @@
-// Pricing Analytics — KNOW foundation track (SKELETON).
+// Pricing Analytics — KNOW foundation track (AUTHORED).
 //
-// This track is SPECCED but NOT YET AUTHORED. Each entry is a module *outline*:
-// a real title, subtitle, tags, and a 1–2 line spec of what the authored module
-// will teach. Every module carries `skeleton: true` so the runner renders an
-// explicit "in development" state instead of fake full content.
+// All 7 modules are fully authored to S-tier depth: summary / keyPoints /
+// takeaway / checkQuestions / recap / figures, matching the schema and voice of
+// recsysModules.js. No module carries `skeleton: true`.
 //
-// To ship a module: author summary / keyPoints / takeaway / checkQuestions /
-// recap / interactiveId exactly as the recsysModules.js modules do, then flip
-// `skeleton` to false (or remove it). The runner auto-detects the flag.
-//
-// Canon covered: price elasticity of demand, dynamic/surge pricing, price
-// optimization under constraints, causal price experiments (A/B + geo +
-// switchback), promotion/discount uplift, competitive/willingness-to-pay
-// modeling, revenue-vs-margin objective design.
+// Canon covered: price elasticity of demand, revenue-vs-margin objective design,
+// price optimization under constraints, dynamic/surge pricing, causal price
+// experiments (A/B + geo + switchback), promotion/discount uplift, and
+// willingness-to-pay / competitive modeling.
 
 export const PRICING_MODULES = [
   {
@@ -22,8 +17,81 @@ export const PRICING_MODULES = [
     difficulty: 'foundational',
     estimatedMin: 24,
     tags: ['Pricing', 'elasticity', 'demand curve', 'log-log'],
-    skeleton: true,
-    spec: `Define elasticity ε = %ΔQ / %ΔP and the log-log demand model where the coefficient IS the elasticity. Show why observational price/quantity data is endogenous (prices rise when demand is high → upward-biased, sometimes positive, "elasticity"), motivating experiments/instruments. Cover the elastic (|ε|>1) vs inelastic (|ε|<1) regimes and what each implies for whether a price cut grows or shrinks revenue.`,
+    summary: `Every pricing decision reduces to one number: if I move price by 1%, how much does quantity move? That number is the **elasticity** ε, and almost every mistake in pricing analytics is either not knowing ε or estimating it from data that cannot possibly reveal it.
+
+[FIGURE: elasticity]
+
+---
+
+**Elasticity is a ratio of percent changes, and that is deliberate.** ε = %ΔQ / %ΔP. Using percentages instead of raw units makes ε unit-free: it doesn't matter whether Q is in cups of coffee or gigawatt-hours, or whether P is in dollars or rupees. Demand curves slope down, so ε is negative; people quote |ε|. |ε| > 1 is **elastic** (quantity reacts more than price — a 1% cut lifts volume more than 1%), |ε| < 1 is **inelastic** (quantity barely moves), |ε| = 1 is **unit elastic**.
+
+---
+
+**The clean way to estimate it is a log-log demand model, where the coefficient IS the elasticity.** Fit log Q = α + β·log P. Then β = d(log Q)/d(log P) = %ΔQ / %ΔP = ε — a *constant* elasticity across the range, which is why log-log is the workhorse specification. A linear Q = a − b·P instead gives an elasticity that changes at every point (ε = −b·P/Q), which is fine but less interpretable. The log-log slope reads off directly as the master parameter.
+
+---
+
+**The trap: regressing observed quantity on observed price estimates the wrong thing.** Firms *raise* prices exactly when demand is high (peak season, hot product) and cut them when demand is soft. So in observational data, high prices coincide with high quantities — the naive regression can return a *shallow, even positive* "elasticity," implying "raise price to sell more." That is **endogeneity**: price is correlated with the demand shocks in the error term. This is why real elasticity comes from **experiments or instruments** (a supply-side cost shock that moves price but not demand), not from a scatterplot of what happened.`,
+    interactivePrompt: `Before you touch the controls: you fit log Q on log P from a year of sales and get a slope of +0.2 — implying higher prices sell more. Which real mechanism produces that sign, and why does it mean your estimate is not the elasticity?`,
+    keyPoints: [
+      `**Elasticity is the unit-free master parameter: ε = %ΔQ / %ΔP.** Percent changes make it comparable across products and currencies. |ε| > 1 = elastic (volume reacts strongly), |ε| < 1 = inelastic (volume barely moves). It is negative for normal goods; people quote the magnitude.`,
+      `**The log-log model makes the coefficient the elasticity.** Fit log Q = α + β·log P and β = ε directly, constant across the price range. A linear demand curve has a *changing* elasticity (ε = −b·P/Q), which is harder to reason about — log-log is the default because the slope IS the answer.`,
+      `**Observational price/quantity data is endogenous.** Firms raise price when demand is high, so high prices and high quantities co-occur in the record. A naive regression absorbs that and returns a biased, sometimes positive, "elasticity." Price is correlated with the demand shock — the textbook endogeneity failure.`,
+      `**Unbiased elasticity needs experiments or instruments.** Randomize price (geo/switchback tests) or use an instrument that shifts price for a reason unrelated to demand (a cost or tax shock). Both break the price↔demand-shock correlation so the estimated %ΔQ / %ΔP is causal.`,
+    ],
+    takeaway: `Elasticity ε = %ΔQ / %ΔP is the single number that decides whether a price move grows or shrinks volume, and the log-log demand model reads it off as a slope. But you cannot regress observed quantity on observed price — firms set price in response to demand, so that estimate is endogenously biased (even positive). Real elasticity comes from an experiment or an instrument that moves price independently of demand.`,
+    checkQuestions: [
+      {
+        q: `A product has estimated |ε| = 1.6. You are asked whether cutting price by 5% will raise or lower total revenue. What is the correct answer and reason?`,
+        options: [
+          `A) Revenue falls: a lower price always reduces revenue because you earn less per unit.`,
+          `B) Revenue rises: with |ε| = 1.6 > 1 the good is elastic, so a 5% price cut raises quantity by ~8% — the volume gain outweighs the per-unit loss, so revenue increases.`,
+          `C) Revenue is unchanged: elasticity only affects units sold, not total revenue.`,
+          `D) Cannot tell without the marginal cost: revenue direction depends on cost, not elasticity.`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `You regress log(units) on log(price) across a year of store data and get a slope of +0.3. What is the most likely explanation?`,
+        options: [
+          `A) The good is a Giffen good, so demand genuinely rises with price.`,
+          `B) Endogeneity: the store raised prices during high-demand periods and cut them during slow ones, so price is correlated with unobserved demand shocks. The +0.3 reflects that co-movement, not a causal elasticity — you need an experiment or instrument.`,
+          `C) The log-log specification is wrong; refit as linear and the sign will correct itself.`,
+          `D) Measurement error in price has attenuated the estimate toward zero and flipped its sign.`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `Why is a log-log demand model usually preferred over a linear one when the goal is to report a single elasticity number?`,
+        options: [
+          `A) Log-log always fits sales data with higher R² than a linear model.`,
+          `B) In log-log, the slope coefficient is itself the elasticity and is constant across the price range, so one number summarizes demand; a linear demand curve has an elasticity that changes at every price point (ε = −b·P/Q).`,
+          `C) Linear models cannot represent downward-sloping demand.`,
+          `D) Log-log removes endogeneity, so the estimate is automatically causal.`,
+        ],
+        answer: `B`,
+      },
+    ],
+    recap: [
+      `**ε = %ΔQ / %ΔP is the master parameter:** unit-free, negative for normal goods. |ε| > 1 elastic (volume reacts strongly), |ε| < 1 inelastic, |ε| = 1 unit elastic.`,
+      `**Log-log demand makes the coefficient the elasticity:** fit log Q = α + β·log P → β = ε, constant across the range. Linear demand has a changing elasticity ε = −b·P/Q.`,
+      `**Observational data is endogenous:** firms raise price when demand is high, so high prices co-occur with high quantities → naive regression returns a biased, even positive, "elasticity." Price correlates with the demand shock.`,
+      `**Causal ε needs an experiment or instrument:** randomize price (geo/switchback) or use a supply-side cost/tax shock that moves price but not demand. That breaks the price↔demand correlation.`,
+      `**Elasticity decides the revenue direction of a price move:** elastic → a cut grows revenue; inelastic → a cut shrinks it. Getting the sign of this decision wrong is the costliest pricing error.`,
+    ],
+    figures: {
+      elasticity: `<svg viewBox="0 0 360 120" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <line x1="34" y1="14" x2="34" y2="96" stroke="var(--ink-low)" stroke-width="1"/>
+  <line x1="34" y1="96" x2="346" y2="96" stroke="var(--ink-low)" stroke-width="1"/>
+  <text x="30" y="12" text-anchor="end" fill="var(--ink-mid)" font-size="8">P</text>
+  <text x="346" y="108" text-anchor="end" fill="var(--ink-mid)" font-size="8">Q</text>
+  <line x1="46" y1="22" x2="180" y2="90" stroke="var(--prime)" stroke-width="2"/>
+  <text x="70" y="34" fill="var(--prime)" font-size="8" font-weight="700">elastic |ε|&gt;1</text>
+  <line x1="210" y1="26" x2="340" y2="90" stroke="var(--ink-mid)" stroke-width="2" stroke-dasharray="4 3"/>
+  <text x="250" y="38" fill="var(--ink-mid)" font-size="8" font-weight="700">inelastic |ε|&lt;1</text>
+  <text x="34" y="115" fill="var(--ink-low)" font-size="7.5">ε = %ΔQ / %ΔP · log-log slope = ε · steep = big volume response to price</text>
+</svg>`,
+    },
   },
   {
     id: 'revenue_vs_margin_objective',
@@ -32,8 +100,85 @@ export const PRICING_MODULES = [
     difficulty: 'foundational',
     estimatedMin: 22,
     tags: ['Pricing', 'objective design', 'contribution margin', 'unit economics'],
-    skeleton: true,
-    spec: `Contrast the profit-maximizing price (marginal revenue = marginal cost) with the revenue-maximizing price (|ε|=1) and show they only coincide at zero marginal cost. Walk the contribution-margin identity (p − c) × Q and why maximizing revenue can destroy margin. Frame objective choice as a product/strategy decision (share grab vs harvest), the pricing analog of RecSys value-model weighting.`,
+    summary: `Before any elasticity math, someone has to answer a question that feels like a formality but decides everything downstream: *what are we maximizing?* Revenue and profit peak at **different prices**, and a model that quietly optimizes the wrong one will look successful while destroying value.
+
+[FIGURE: objective]
+
+---
+
+**The two optimal prices are different, and the gap is the marginal cost.** Revenue is P·Q, maximized where marginal revenue = 0, which happens exactly at **|ε| = 1** — the unit-elastic point. Profit is (P − c)·Q, maximized where **marginal revenue = marginal cost (MR = MC)**. These coincide *only when c = 0*. With any positive unit cost, the profit-maximizing price is strictly **higher** than the revenue-maximizing price (you don't want to sell cheap units that barely clear cost). So "we grew revenue" and "we grew profit" can be the results of opposite price moves.
+
+---
+
+**Contribution margin is the identity that exposes the trap.** Contribution = (P − c) × Q. A price cut can raise Q enough to grow revenue P·Q while the per-unit margin (P − c) collapses — so revenue is up but contribution is down. Example: c = 6. At P = 10, margin 4 × 1000 units = 4,000. Cut to P = 8, sell 1,400 units: revenue jumps 10,000 → 11,200 (looks great), but contribution 2 × 1,400 = 2,800 — you sold 40% more and made 30% *less* money. Revenue is a vanity target when c is meaningful.
+
+---
+
+**So objective choice is a strategy decision, not a math default.** Maximizing revenue/share makes sense in a land-grab (network effects, near-zero marginal cost, winner-take-most). Maximizing contribution makes sense in a harvest phase or a cost-heavy business. And often the true objective is **long-term customer value** — a low intro price that loses margin now but raises retention and lifetime value. This is the pricing analog of RecSys value-model weighting: the *weights on the objective* are a product decision the model then optimizes faithfully. Pick them wrong and every downstream number is precisely optimized toward the wrong destination.`,
+    interactivePrompt: `Before you touch the controls: your unit cost is $6. You find the revenue-maximizing price and ship it. Why is the profit-maximizing price necessarily higher, and what does shipping the revenue-max price do to contribution margin?`,
+    keyPoints: [
+      `**Revenue and profit peak at different prices.** Revenue P·Q is maximal at |ε| = 1 (MR = 0); profit (P − c)·Q is maximal at MR = MC. They coincide only when marginal cost c = 0. With c > 0 the profit-maximizing price is strictly higher, so revenue-max and profit-max can be opposite moves.`,
+      `**Contribution = (P − c) × Q is the identity that catches the trap.** A price cut can raise revenue while margin (P − c) collapses. Selling 40% more units at a thin margin routinely yields *less* total contribution — revenue growth with margin destruction is a common and dangerous outcome.`,
+      `**Objective choice is strategy, not a default.** Revenue/share-max fits a land-grab (near-zero cost, network effects, winner-take-most). Contribution-max fits a harvest phase or cost-heavy unit economics. Long-term customer value (LTV) can justify losing margin now for retention later.`,
+      `**This is the pricing analog of value-model weighting.** The objective's weights are a product decision; the optimizer then faithfully drives toward whatever you specified. Choose revenue when you meant profit and the model will "succeed" while quietly eroding the business.`,
+    ],
+    takeaway: `The most consequential pricing choice is the objective itself: revenue P·Q peaks at |ε| = 1 while profit (P − c)·Q peaks at MR = MC, and they coincide only at zero marginal cost — so with real costs the two optimal prices differ. A price cut that grows revenue can shrink contribution (P − c)×Q, so revenue is a vanity metric whenever c matters. Picking revenue vs margin vs LTV is a strategy decision the model then optimizes faithfully.`,
+    checkQuestions: [
+      {
+        q: `Unit cost c = $6. Cutting price from $10 to $8 raises volume from 1,000 to 1,400 units. Which objective improved and which got worse?`,
+        options: [
+          `A) Both revenue and contribution improved, so the cut is unambiguously good.`,
+          `B) Revenue improved (10,000 → 11,200) but contribution fell (4×1,000 = 4,000 → 2×1,400 = 2,800) — the classic revenue-up, margin-down outcome; a profit-maximizer would reject this cut.`,
+          `C) Contribution improved but revenue fell, so the cut is good only if you optimize margin.`,
+          `D) Both fell, so the price cut was strictly dominated.`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `Under what condition does the revenue-maximizing price equal the profit-maximizing price?`,
+        options: [
+          `A) When demand is perfectly inelastic (|ε| = 0).`,
+          `B) When marginal cost c = 0, because profit (P − c)·Q then reduces to revenue P·Q, so MR = MC = 0 collapses onto the |ε| = 1 revenue peak. With any positive cost the profit-max price is strictly higher.`,
+          `C) When elasticity is exactly |ε| = 2, the midpoint of the elastic range.`,
+          `D) Never — the two prices are always different regardless of cost.`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `A subscription startup deliberately prices below the contribution-maximizing point in its first two years. What objective is this most consistent with, and is it necessarily irrational?`,
+        options: [
+          `A) It is irrational — any price below contribution-max destroys value by definition.`,
+          `B) It is optimizing long-term customer value / market share: a low intro price sacrifices near-term margin to raise acquisition and retention, which can maximize LTV under network effects or high switching costs. Whether it is rational depends on whether the retained-value gain exceeds the foregone margin.`,
+          `C) It is maximizing revenue, which is always the correct objective for startups.`,
+          `D) It is a pricing bug; the model minimized the objective by mistake.`,
+        ],
+        answer: `B`,
+      },
+    ],
+    recap: [
+      `**Revenue and profit peak at different prices:** revenue P·Q maxes at |ε| = 1 (MR = 0); profit (P − c)·Q maxes at MR = MC. They coincide only when c = 0.`,
+      `**Positive marginal cost → profit-max price is strictly higher** than the revenue-max price. "Grew revenue" and "grew profit" can be opposite price moves.`,
+      `**Contribution = (P − c) × Q exposes the trap:** a cut can raise revenue while (P − c) collapses. Selling 40% more units at a thin margin can yield 30% *less* money.`,
+      `**Objective choice is a strategy decision:** revenue/share for a land-grab (near-zero cost, network effects), contribution for a harvest or cost-heavy business, LTV when retention pays back the margin.`,
+      `**It is the pricing analog of value-model weighting:** the weights are a product decision; the optimizer faithfully drives toward whatever you specify — so a wrong objective "succeeds" while destroying value.`,
+    ],
+    figures: {
+      objective: `<svg viewBox="0 0 360 120" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <line x1="34" y1="14" x2="34" y2="96" stroke="var(--ink-low)" stroke-width="1"/>
+  <line x1="34" y1="96" x2="346" y2="96" stroke="var(--ink-low)" stroke-width="1"/>
+  <text x="30" y="12" text-anchor="end" fill="var(--ink-mid)" font-size="8">$</text>
+  <text x="346" y="108" text-anchor="end" fill="var(--ink-mid)" font-size="8">price</text>
+  <path d="M40,90 Q150,20 200,44 T340,90" fill="none" stroke="var(--prime)" stroke-width="2"/>
+  <text x="120" y="30" fill="var(--prime)" font-size="8" font-weight="700">revenue P·Q</text>
+  <path d="M120,90 Q220,34 250,52 T340,84" fill="none" stroke="var(--ink-mid)" stroke-width="2" stroke-dasharray="4 3"/>
+  <text x="255" y="42" fill="var(--ink-mid)" font-size="8" font-weight="700">profit (P−c)·Q</text>
+  <line x1="150" y1="26" x2="150" y2="96" stroke="var(--ink-low)" stroke-width="0.8" stroke-dasharray="2 2"/>
+  <line x1="228" y1="40" x2="228" y2="96" stroke="var(--ink-low)" stroke-width="0.8" stroke-dasharray="2 2"/>
+  <text x="150" y="115" text-anchor="middle" fill="var(--ink-low)" font-size="7">|ε|=1</text>
+  <text x="228" y="115" text-anchor="middle" fill="var(--ink-low)" font-size="7">MR=MC</text>
+  <text x="300" y="115" text-anchor="end" fill="var(--ink-low)" font-size="7">gap = marginal cost c</text>
+</svg>`,
+    },
   },
   {
     id: 'price_optimization_under_constraints',
@@ -42,8 +187,84 @@ export const PRICING_MODULES = [
     difficulty: 'intermediate',
     estimatedMin: 26,
     tags: ['Pricing', 'optimization', 'constraints', 'price bounds'],
-    skeleton: true,
-    spec: `Set up argmax over price of expected profit given an estimated demand function, then layer real constraints: price floors/ceilings, min-margin guarantees, price-consistency across a catalog, capacity/inventory limits, and no-surge-above-X regulatory caps. Show why the unconstrained optimum is rarely shippable and how Lagrangian/bounded search handles it.`,
+    summary: `Once you have a demand curve and an objective, "find the best price" looks like one line of calculus: argmax over P of (P − c)·Q(P). In production it almost never is, because the unconstrained optimum is usually a price you are **not allowed to ship**. The real problem is a *constrained* optimization, and the constraints are where the engineering lives.
+
+[FIGURE: constrained]
+
+---
+
+**Start with the clean unconstrained problem.** Given estimated demand Q(P) and cost c, maximize expected profit π(P) = (P − c)·Q(P). Set dπ/dP = 0 → this recovers the standard markup rule P* = c·|ε| / (|ε| − 1) when elasticity is constant. That P* is the textbook answer — and it is frequently outside the feasible set: too high to be fair or legal, too low to protect margin, or inconsistent with sibling products.
+
+---
+
+**Then layer the constraints that make it shippable — this is the actual job.** Real optimizers add: **price floors/ceilings** (regulatory caps, MAP agreements, brand-minimum prices); a **min-margin guarantee** (P ≥ c·(1 + m), never sell below a floor markup); **catalog consistency** (a 500ml pack can't cost more per-ml than the 1L; variants must order sensibly); **capacity/inventory limits** (if you can only fulfill K units, don't set a price whose Q(P) far exceeds K); and **no-surge-above-X** legal caps in regulated markets. Each turns the free argmax into a bounded/constrained one.
+
+---
+
+**Mechanically, you handle it with bounded search or Lagrangian methods.** If the constraint is a simple box (P ∈ [P_min, P_max]), clip: the constrained optimum is the unconstrained P* if it's inside the box, else the nearer boundary (profit is concave, so the best feasible price is the closest allowed one to P*). For coupled constraints (a total-inventory or catalog-consistency limit spanning many prices), use a **Lagrangian**: add λ·(constraint) to the objective, and λ is the *shadow price* — how much profit one more unit of slack (one more unit of inventory, one more dollar of allowed ceiling) would buy. The headline lesson: the unconstrained optimum is a starting point, not the answer, and the binding constraints — not the calculus — usually determine the shipped price.`,
+    interactivePrompt: `Before you touch the controls: your unconstrained profit-maximizing price is $14, but a regulatory cap forbids charging above $11. Because profit is concave in price, where does the best *feasible* price land, and why isn't it somewhere in the middle?`,
+    keyPoints: [
+      `**The unconstrained problem is argmax over P of (P − c)·Q(P).** With constant elasticity this gives the markup rule P* = c·|ε|/(|ε| − 1). That P* is the textbook answer and is frequently outside the feasible set — too high, too low, or inconsistent with sibling SKUs.`,
+      `**Constraints are the real job: floors/ceilings, min-margin, catalog consistency, capacity, legal caps.** A min-margin guarantee (P ≥ c·(1+m)), a per-unit consistency rule across pack sizes, an inventory limit K, and regulatory no-surge caps each shrink the feasible region — and the binding one usually sets the shipped price.`,
+      `**For box constraints, clip to the boundary.** Profit is concave in P, so if the unconstrained P* violates [P_min, P_max], the best feasible price is the nearer boundary — not an interior compromise. Moving toward P* is always improving until you hit the wall.`,
+      `**For coupled constraints, use a Lagrangian and read λ as a shadow price.** Adding λ·(constraint) to the objective, λ tells you the marginal profit of relaxing the constraint by one unit — the value of one more unit of inventory or one more dollar of allowed ceiling. It converts "what's the price" into "what's the constraint worth."`,
+    ],
+    takeaway: `Choosing a price is a constrained optimization, not a one-line argmax: the unconstrained profit-maximizer P* = c·|ε|/(|ε|−1) is a starting point that usually violates floors, ceilings, min-margin, catalog-consistency, capacity, or legal caps. Because profit is concave, box constraints resolve by clipping to the nearer boundary; coupled constraints resolve with a Lagrangian whose multiplier λ is the shadow price of relaxing the constraint. The binding constraint, not the calculus, typically determines the shipped price.`,
+    checkQuestions: [
+      {
+        q: `Your unconstrained profit-maximizing price is $14, but a regulatory ceiling caps price at $11. Where is the best feasible price?`,
+        options: [
+          `A) At $11 — profit is concave in price, so on the feasible interval [P_min, $11] profit is still rising as you approach $14; the closest allowed price to the unconstrained optimum, $11, is best.`,
+          `B) At the midpoint $12.50, splitting the difference between the optimum and the cap.`,
+          `C) At $14 — you should ignore the cap since it reduces profit.`,
+          `D) At P_min, because a binding ceiling forces you to the opposite bound.`,
+        ],
+        answer: `A`,
+      },
+      {
+        q: `In a Lagrangian formulation π(P) + λ·(K − Q(P)) for an inventory limit K, what does the multiplier λ represent at the optimum?`,
+        options: [
+          `A) The elasticity of demand at the chosen price.`,
+          `B) The shadow price of capacity: the marginal profit gained from one additional unit of inventory (relaxing K by one). λ = 0 when the capacity constraint is slack, positive when it binds.`,
+          `C) The regularization strength that prevents the price from overfitting demand noise.`,
+          `D) The probability that the constraint is violated in production.`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `Why is a catalog-consistency constraint (a 1L pack must not cost more per-ml than a 500ml pack) harder to handle than a simple price ceiling?`,
+        options: [
+          `A) It isn't — it's just another box constraint on each price independently.`,
+          `B) It couples multiple prices together, so you can't optimize each SKU independently; the feasible region is a joint constraint across variants, which requires a Lagrangian or joint constrained solve rather than per-item clipping.`,
+          `C) Consistency constraints make the profit function non-concave, so no optimum exists.`,
+          `D) It requires a separate demand curve per milliliter, which is infeasible to estimate.`,
+        ],
+        answer: `B`,
+      },
+    ],
+    recap: [
+      `**Unconstrained problem:** argmax over P of (P − c)·Q(P). Constant elasticity → markup rule P* = c·|ε|/(|ε| − 1). This P* is a starting point, not the shipped price.`,
+      `**Constraints are the real job:** price floors/ceilings, min-margin (P ≥ c·(1+m)), catalog consistency across pack sizes, capacity/inventory K, and legal no-surge caps. The binding one usually sets the price.`,
+      `**Box constraints → clip to the boundary:** profit is concave in P, so a violated optimum resolves to the nearer allowed bound, never an interior compromise.`,
+      `**Coupled constraints → Lagrangian:** add λ·(constraint); λ is the shadow price — the marginal profit of relaxing the constraint by one unit (one more unit of inventory, one more dollar of ceiling).`,
+      `**Headline:** the unconstrained optimum is where you start; the binding constraint — not the calculus — is usually what determines the price you actually ship.`,
+    ],
+    figures: {
+      constrained: `<svg viewBox="0 0 360 120" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <line x1="34" y1="14" x2="34" y2="96" stroke="var(--ink-low)" stroke-width="1"/>
+  <line x1="34" y1="96" x2="346" y2="96" stroke="var(--ink-low)" stroke-width="1"/>
+  <text x="30" y="12" text-anchor="end" fill="var(--ink-mid)" font-size="8">profit</text>
+  <text x="346" y="108" text-anchor="end" fill="var(--ink-mid)" font-size="8">price</text>
+  <path d="M50,92 Q200,10 330,92" fill="none" stroke="var(--prime)" stroke-width="2"/>
+  <circle cx="230" cy="30" r="3" fill="var(--prime)"/>
+  <text x="238" y="26" fill="var(--prime)" font-size="8" font-weight="700">unconstrained P*</text>
+  <rect x="50" y="14" width="120" height="82" fill="var(--prime-faint)" opacity="0.5"/>
+  <line x1="170" y1="14" x2="170" y2="96" stroke="var(--amber,#d97706)" stroke-width="1.5"/>
+  <circle cx="170" cy="44" r="3" fill="var(--amber,#d97706)"/>
+  <text x="118" y="112" text-anchor="middle" fill="var(--ink-low)" font-size="7">feasible: P ≤ cap</text>
+  <text x="176" y="58" fill="var(--amber,#d97706)" font-size="8" font-weight="700">best feasible = boundary</text>
+</svg>`,
+    },
   },
   {
     id: 'dynamic_and_surge_pricing',
@@ -52,8 +273,85 @@ export const PRICING_MODULES = [
     difficulty: 'intermediate',
     estimatedMin: 26,
     tags: ['Pricing', 'dynamic pricing', 'surge', 'market clearing'],
-    skeleton: true,
-    spec: `Frame surge as a market-clearing controller: raise price to suppress demand and pull in supply until the imbalance closes (rideshare, hotels, airlines). Cover the feedback loop (price → demand → price) and its instability, the fairness/PR failure modes (disaster surge), and why caps + smoothing + explainability are load-bearing. Contrast personalized dynamic pricing with segment-level dynamic pricing.`,
+    summary: `Surge pricing looks like greed and is often defended as revenue extraction, but the correct mental model is a **controller**: price is the actuator a marketplace uses to close a real-time gap between demand and supply. When 500 riders want a car and 200 drivers are online, *something* has to ration the 200 cars — surge is the mechanism that does it with price instead of a random queue.
+
+[FIGURE: surge]
+
+---
+
+**Surge is a market-clearing feedback loop, not a static price.** Raise price → some riders drop out (demand falls) and more drivers log on to chase the higher fare (supply rises) → the imbalance shrinks. The system nudges price up until demand ≈ supply at the new price. The same logic runs hotels (raise rates when occupancy nears full), airlines (fare buckets that rise as seats sell), and any capacity-constrained marketplace. The goal is **matching** — clearing the market so the people who most value a ride get one — not simply charging more.
+
+---
+
+**The feedback loop is also where it breaks.** Price → demand → price is a closed loop, and closed loops can oscillate: a surge suppresses demand, price drops, demand floods back, price spikes again — a control-instability problem, not a pricing problem. The fixes are control-theory fixes: **smoothing** (rate-limit how fast the multiplier moves), **hysteresis/deadbands** (don't re-price on noise), and **caps** to bound the actuator. Without them the multiplier flaps and the user experience whipsaws.
+
+---
+
+**And the failure modes are as much social as technical.** A surge that is *economically correct* during a disaster or emergency is a reputational catastrophe — "10× fares during a hurricane" is efficient market clearing and an unforgivable headline. So real systems bolt on **regulatory caps**, **surge disablement** in emergencies, and **explainability** ("prices are higher due to demand") because an opaque 3.4× multiplier reads as exploitation. A final design axis: **personalized** dynamic pricing (a price tuned to *this user's* WTP) is powerful but legally and ethically fraught — it edges toward discrimination — so most marketplaces surge at the **segment/geo level** (this area, this time), not per individual.`,
+    interactivePrompt: `Before you touch the controls: you wire price directly to the live demand/supply ratio with no smoothing. Describe the oscillation that results, and name the two control-theory fixes that damp it.`,
+    keyPoints: [
+      `**Surge is a market-clearing controller, not pure extraction.** Price is the actuator that rations scarce supply: raise it to suppress demand and attract more supply until demand ≈ supply. The objective is matching the highest-value riders to the available cars, the same mechanism hotels and airlines use as occupancy fills.`,
+      `**The price → demand → price feedback loop can oscillate.** A closed control loop with no damping whipsaws: surge kills demand, price drops, demand floods back, price spikes again. This is a control-stability problem — fix it with smoothing (rate limits), hysteresis/deadbands (ignore noise), and caps that bound the actuator.`,
+      `**Fairness/PR failure modes are load-bearing, not cosmetic.** Economically correct disaster surge is a reputational catastrophe. Systems add regulatory caps, emergency surge disablement, and explainability ("higher due to demand") because an opaque multiplier reads as exploitation regardless of its efficiency.`,
+      `**Personalized dynamic pricing is powerful but fraught; segment/geo pricing is the norm.** Pricing to an individual's WTP edges toward discrimination and legal risk, so most marketplaces vary price by area and time (segment level) rather than per user — a deliberate ethical/legal guardrail, not a modeling limitation.`,
+    ],
+    takeaway: `Surge pricing is best understood as a controller that uses price to clear a real-time supply/demand imbalance — raising price suppresses demand and pulls in supply until the market matches, which is efficient rationing, not just extraction. But the price→demand→price loop can oscillate, so smoothing, hysteresis, and caps are required for stability; and because economically-correct surge (e.g., during a disaster) is a reputational disaster, regulatory caps, emergency disablement, explainability, and segment-level (not personalized) pricing are essential guardrails.`,
+    checkQuestions: [
+      {
+        q: `Which framing best captures why a rideshare app raises fares when many riders and few drivers are online?`,
+        options: [
+          `A) It is pure profit extraction — the app charges more simply because riders are desperate.`,
+          `B) It is market clearing: the higher price rations scarce cars to the riders who value them most and simultaneously pulls more drivers online, closing the supply/demand gap. Extraction is a side effect; matching is the function.`,
+          `C) It is a bug in the pricing model that should be smoothed away entirely.`,
+          `D) It is price discrimination against individual riders based on their history.`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `You wire the surge multiplier directly to the instantaneous demand/supply ratio with no damping. What is the most likely failure?`,
+        options: [
+          `A) The price converges instantly to the market-clearing level with no issues.`,
+          `B) Oscillation: the multiplier spikes, demand drops, the multiplier collapses, demand returns, and it spikes again — a closed-loop instability. Damp it with rate-limiting/smoothing and hysteresis (deadbands) so it doesn't re-price on noise.`,
+          `C) The multiplier will monotonically increase forever regardless of demand.`,
+          `D) Nothing — surge systems are open-loop and cannot oscillate.`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `Why do most marketplaces surge at the geo/segment level rather than personalizing price to each user's estimated willingness-to-pay?`,
+        options: [
+          `A) Segment-level pricing is more profitable than personalized pricing in every case.`,
+          `B) Personalized pricing to individual WTP edges toward price discrimination with serious legal, ethical, and reputational risk, so pricing by area and time is a deliberate guardrail — it clears the market without charging two people different prices for the same trip based on who they are.`,
+          `C) Marketplaces cannot technically estimate individual WTP.`,
+          `D) Personalized pricing violates SUTVA and biases the elasticity estimate.`,
+        ],
+        answer: `B`,
+      },
+    ],
+    recap: [
+      `**Surge is a market-clearing controller:** price is the actuator that rations scarce supply — raise it to suppress demand and attract supply until demand ≈ supply. Matching, not just extraction.`,
+      `**Same mechanism everywhere:** rideshare surge, hotel rates rising with occupancy, airline fare buckets. All use price to clear a capacity-constrained market in real time.`,
+      `**The price→demand→price loop can oscillate:** a closed loop with no damping whipsaws. Fix with smoothing (rate limits), hysteresis/deadbands (ignore noise), and caps that bound the actuator.`,
+      `**Fairness/PR failure modes are load-bearing:** economically correct disaster surge is a reputational catastrophe → regulatory caps, emergency disablement, and explainability are required, not optional.`,
+      `**Segment/geo pricing, not personalized:** pricing to an individual's WTP risks discrimination and legal exposure, so most systems vary price by area and time — a deliberate ethical guardrail.`,
+    ],
+    figures: {
+      surge: `<svg viewBox="0 0 360 118" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <rect x="24" y="20" width="70" height="24" rx="5" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="59" y="35" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">price ↑</text>
+  <rect x="145" y="20" width="70" height="24" rx="5" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="180" y="32" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5" font-weight="700">demand ↓</text>
+  <text x="180" y="41" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5" font-weight="700">supply ↑</text>
+  <rect x="266" y="20" width="76" height="24" rx="5" fill="none" stroke="var(--ink-mid)"/>
+  <text x="304" y="35" text-anchor="middle" fill="var(--ink-mid)" font-size="7.5" font-weight="700">gap closes</text>
+  <path d="M94,32 L143,32" stroke="var(--ink-low)" stroke-width="1" marker-end="url(#a)"/>
+  <path d="M215,32 L264,32" stroke="var(--ink-low)" stroke-width="1" marker-end="url(#a)"/>
+  <path d="M304,44 Q304,72 180,72 Q59,72 59,46" fill="none" stroke="var(--amber,#d97706)" stroke-width="1" stroke-dasharray="3 3" marker-end="url(#a)"/>
+  <text x="180" y="84" text-anchor="middle" fill="var(--amber,#d97706)" font-size="7.5">feedback loop — needs smoothing + caps or it oscillates</text>
+  <text x="24" y="108" fill="var(--ink-low)" font-size="7.5">controller clears the market; disaster surge → add caps + explainability + geo (not personal)</text>
+  <defs><marker id="a" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="var(--ink-low)"/></marker></defs>
+</svg>`,
+    },
   },
   {
     id: 'causal_price_experiments',
@@ -62,8 +360,90 @@ export const PRICING_MODULES = [
     difficulty: 'advanced',
     estimatedMin: 28,
     tags: ['Pricing', 'experimentation', 'geo experiments', 'switchback'],
-    skeleton: true,
-    spec: `Explain why per-user price randomization is often illegal/unfair and leaks (users compare prices), breaking SUTVA. Introduce geo-level experiments (randomize price by market, difference-in-differences / synthetic control readout) and switchback designs (randomize price over time windows) for marketplaces with strong interference. Tie back to elasticity: the experiment is how you get the unbiased %ΔQ / %ΔP.`,
+    summary: `You cannot read elasticity off observational data — so you experiment. But price is the one variable where the obvious experiment, randomizing the price *per user*, is usually the wrong design: it is often unfair or illegal, and even when allowed it **leaks and interferes**, quietly breaking the assumptions that make an A/B test valid.
+
+[FIGURE: geoswitch]
+
+---
+
+**Per-user price randomization violates SUTVA and invites legal risk.** A clean A/B test assumes the Stable Unit Treatment Value Assumption: one user's treatment doesn't affect another's outcome. Prices break this because **users talk and compare** — showing person A $9 and person B $12 for the identical item means B can see A's price, feel cheated, and change behavior (churn, screenshot, complain). The treatment leaks across units. On top of the interference, charging different people different prices for the same good is a fairness and often a **legal** problem. So the per-user RCT is frequently off the table before the stats even matter.
+
+---
+
+**Geo experiments randomize the market, not the person.** Assign whole cities/regions to treatment (new price) or control (old price), then read the effect with **difference-in-differences** (compare the treated-vs-control change over the pre/post window) or **synthetic control** (build a weighted combination of control cities that tracks the treated city pre-period, then measure the divergence after). Everyone *in* a market sees the same price, so it's fair and consistent; randomization is at the market level, so there are usually few units — the key limitation is statistical power and needing good matched controls.
+
+---
+
+**Switchback designs randomize price over *time* — the fix for strong interference.** In a marketplace where supply and demand slosh across the whole system (rideshare, food delivery), even a geo split interferes: a price change in one zone spills into neighbors. Switchbacks turn the *entire market's* price on and off in short randomized time windows (e.g., 30-minute blocks alternating high/low) and compare outcomes across windows. Because the whole market is treated at once, cross-unit spillover within a window is absorbed rather than contaminating a control group. The catch is temporal autocorrelation (adjacent windows aren't independent) and carryover, which the analysis must account for. Whichever design you pick, the payoff is the same: an **unbiased %ΔQ / %ΔP** — the causal elasticity that observational data could never give you.`,
+    interactivePrompt: `Before you touch the controls: you propose showing a random 50% of users a 10% higher price to measure elasticity. Name the two distinct reasons this design fails, and which alternative design fixes marketplace spillover specifically.`,
+    keyPoints: [
+      `**Per-user price randomization breaks SUTVA and courts legal risk.** Users compare prices, so one person's price affects another's behavior (interference/leakage) — and charging different people different prices for the same item is a fairness and often legal problem. The obvious A/B test is usually off the table.`,
+      `**Geo experiments randomize markets, not people.** Assign whole cities to old vs new price; everyone in a market sees the same price (fair, consistent). Read the effect with difference-in-differences or synthetic control. The trade-off is few randomization units → limited power and a need for well-matched controls.`,
+      `**Switchback designs randomize price over time to handle strong interference.** In marketplaces where supply/demand slosh system-wide, even geo splits spill over. Turning the whole market's price high/low in short randomized windows absorbs within-window spillover; the cost is temporal autocorrelation and carryover the analysis must model.`,
+      `**All three designs exist to recover an unbiased %ΔQ / %ΔP.** The experiment is how you get the causal elasticity that observational data cannot: it forces price to vary for reasons unrelated to demand, breaking the endogeneity that biases naive regressions.`,
+    ],
+    takeaway: `You experiment on price because observational data is endogenous, but the naive per-user A/B test usually fails twice: it violates SUTVA (users compare prices, so treatments leak) and it is unfair/illegal to charge different people different prices for the same good. Geo experiments randomize whole markets (read via diff-in-diff or synthetic control) and switchback designs randomize the whole market's price over short time windows (the fix for system-wide marketplace spillover) — both trading power/complexity for an unbiased causal elasticity.`,
+    checkQuestions: [
+      {
+        q: `Why is randomizing price at the individual-user level usually a poor experimental design for measuring elasticity?`,
+        options: [
+          `A) It has too few units to reach statistical significance.`,
+          `B) It violates SUTVA because users compare prices — one person's price affects another's behavior (interference/leakage) — and it is a fairness/legal problem to charge different people different prices for the same item. Both issues undermine the test before the statistics matter.`,
+          `C) Individual randomization biases the estimate toward zero via measurement error.`,
+          `D) It works fine; per-user price A/B tests are the industry standard.`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `A rideshare company wants to test a fare change but worries that a change in one zone spills into neighboring zones. Which design best isolates the effect?`,
+        options: [
+          `A) A per-user A/B test, since randomizing individuals removes all spillover.`,
+          `B) A switchback design: turn the whole market's price high/low in short randomized time windows and compare across windows, so system-wide supply/demand spillover is absorbed within each window rather than contaminating a separate control group. Account for temporal autocorrelation and carryover.`,
+          `C) A simple pre/post comparison in one city, which needs no control at all.`,
+          `D) A geo experiment is the only valid design; switchbacks cannot measure fare effects.`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `In a geo price experiment, why is synthetic control often used to read out the effect rather than a raw treated-minus-control difference?`,
+        options: [
+          `A) Synthetic control eliminates the need for randomization entirely.`,
+          `B) With few markets, no single control city matches the treated city well; synthetic control builds a weighted combination of control cities that tracks the treated city's pre-period trend, giving a credible counterfactual to measure post-period divergence against.`,
+          `C) Synthetic control converts the geo experiment into a per-user test, raising power.`,
+          `D) It removes temporal autocorrelation, which is the main threat in geo designs.`,
+        ],
+        answer: `B`,
+      },
+    ],
+    recap: [
+      `**Per-user price randomization usually fails twice:** it breaks SUTVA (users compare prices → treatment leaks across users) and it is unfair/illegal to charge different people different prices for the same good. Off the table before the stats matter.`,
+      `**Geo experiments randomize markets, not people:** whole cities get old vs new price (fair, consistent within a market). Read via difference-in-differences or synthetic control. Cost: few units → limited power, needs matched controls.`,
+      `**Switchback designs randomize price over time:** flip the whole market high/low in short randomized windows; within-window system-wide spillover is absorbed rather than contaminating a control group. Cost: temporal autocorrelation and carryover to model.`,
+      `**Choose by interference:** clean markets → geo; strong system-wide marketplace spillover → switchback. Per-user only in the rare fair/legal, no-comparison case.`,
+      `**The payoff is a causal %ΔQ / %ΔP:** the experiment forces price to move independently of demand, breaking the endogeneity that biases observational elasticity.`,
+    ],
+    figures: {
+      geoswitch: `<svg viewBox="0 0 360 128" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="14" y="16" fill="var(--ink-hi)" font-size="8.5" font-weight="700">Geo: randomize markets</text>
+  <rect x="14" y="24" width="30" height="22" rx="3" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <rect x="48" y="24" width="30" height="22" rx="3" fill="none" stroke="var(--ink-mid)"/>
+  <rect x="82" y="24" width="30" height="22" rx="3" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <rect x="116" y="24" width="30" height="22" rx="3" fill="none" stroke="var(--ink-mid)"/>
+  <text x="80" y="60" text-anchor="middle" fill="var(--ink-low)" font-size="7">treat / control cities → diff-in-diff or synthetic control</text>
+  <text x="200" y="16" fill="var(--ink-hi)" font-size="8.5" font-weight="700">Switchback: randomize time</text>
+  <rect x="200" y="24" width="22" height="22" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <rect x="223" y="24" width="22" height="22" fill="none" stroke="var(--ink-mid)"/>
+  <rect x="246" y="24" width="22" height="22" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <rect x="269" y="24" width="22" height="22" fill="none" stroke="var(--ink-mid)"/>
+  <rect x="292" y="24" width="22" height="22" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="200" y="60" fill="var(--ink-low)" font-size="7">whole market flips high/low per 30-min window →</text>
+  <text x="200" y="70" fill="var(--ink-low)" font-size="7">absorbs system-wide spillover</text>
+  <line x1="14" y1="86" x2="346" y2="86" stroke="var(--ink-low)" stroke-width="0.6"/>
+  <text x="14" y="102" fill="var(--ink-hi)" font-size="8" font-weight="700">Per-user A/B ✗</text>
+  <text x="14" y="114" fill="var(--ink-low)" font-size="7.5">users compare prices → SUTVA broken + fairness/legal risk</text>
+  <text x="14" y="126" fill="var(--prime)" font-size="7.5" font-weight="700">All three aim at one prize: unbiased %ΔQ / %ΔP</text>
+</svg>`,
+    },
   },
   {
     id: 'promotion_and_discount_uplift',
@@ -72,8 +452,82 @@ export const PRICING_MODULES = [
     difficulty: 'advanced',
     estimatedMin: 26,
     tags: ['Pricing', 'uplift modeling', 'incrementality', 'cannibalization'],
-    skeleton: true,
-    spec: `Define discount uplift as incremental units caused by the promo, not gross units sold at the discounted price. Cover the three leakages that inflate naive ROI: baseline sales (would-have-bought), pull-forward (borrowing future demand), and cannibalization (stealing from full-price SKUs). Introduce uplift/heterogeneous-treatment-effect modeling to target discounts only at persuadable buyers.`,
+    summary: `Run a 20%-off promo, watch units sold jump 40%, and declare victory — that is how most promotions are "measured," and it is almost always wrong. The number that matters is not units sold at the discount, it is **incremental units caused by the discount**: the sales that would not have happened otherwise. Everything else is money handed to buyers who needed no persuasion.
+
+[FIGURE: uplift]
+
+---
+
+**Uplift is a causal quantity: units *because of* the promo, not units *during* it.** Gross redemptions = baseline (would-have-bought) + incremental (persuaded). The whole discount is spent on both groups, but only the incremental group is a return. If 40% more units sold and 30 of those 40 points were people who'd have bought at full price, your real uplift is 10 points and you paid a discount on all of them. This is why naive promo ROI — (revenue during promo) ÷ (discount cost) — systematically overstates value.
+
+---
+
+**Three leakages inflate the naive number, and each needs a different correction.** (1) **Baseline sales** — buyers who would have purchased anyway; the discount is pure margin given away. (2) **Pull-forward** — you didn't create demand, you *borrowed it from next month*; sales spike then dip, and a window that ends at the spike books a phantom win. (3) **Cannibalization** — the discounted SKU steals sales from your own full-price products; category-level units are flat while you've traded margin for mix. Measuring only the promoted SKU over only the promo window hides all three.
+
+---
+
+**The fix is a control group plus uplift (heterogeneous-treatment-effect) modeling.** A holdout that *doesn't* see the promo gives the baseline directly: incremental = treated − control, over a window long enough to catch pull-forward payback and wide enough (whole category) to catch cannibalization. Then go further: an **uplift model** estimates each customer's *individual* treatment effect and sorts them into persuadables (buy only if discounted — the real target), sure things (buy anyway — discounting them is waste), lost causes (won't buy regardless), and sleeping dogs (the promo *reduces* their purchase). Targeting discounts only at persuadables is where uplift modeling pays for itself: same promo budget, far more incremental margin.`,
+    interactivePrompt: `Before you touch the controls: a 20%-off promo shows units up 40% and you book it as a big win. Name the three leakages that could make the true incremental uplift far smaller, and the one measurement change that exposes all three.`,
+    keyPoints: [
+      `**Uplift is incremental units caused by the promo, not gross units at the discount.** Gross = baseline (would-have-bought) + incremental (persuaded). The discount is paid on both, but only the incremental group is a return. Naive ROI = revenue-during ÷ discount-cost systematically overstates value.`,
+      `**Three leakages inflate the naive number.** Baseline sales (buyers who'd have purchased anyway — pure margin given away), pull-forward (demand borrowed from next month; sales spike then dip), and cannibalization (the promoted SKU steals from your own full-price SKUs). Measuring one SKU over the promo window alone hides all three.`,
+      `**A control group is the fix for baseline; window/scope are the fix for pull-forward and cannibalization.** A holdout that doesn't see the promo gives incremental = treated − control. Extend the window past the payback dip to catch pull-forward, and measure the whole category (not just the promoted SKU) to catch cannibalization.`,
+      `**Uplift modeling targets only persuadables.** A heterogeneous-treatment-effect model sorts customers into persuadables (buy only if discounted — the target), sure things (waste), lost causes (won't buy), and sleeping dogs (promo backfires). Discounting only persuadables converts the same budget into far more incremental margin.`,
+    ],
+    takeaway: `A promotion's value is incremental units caused by the discount, not units sold at the discount — and the naive "units jumped 40%" number is inflated by baseline buyers (would have bought anyway), pull-forward (demand borrowed from the future), and cannibalization (stealing from your own full-price SKUs). A no-promo control group over a long-enough, category-wide window measures true uplift = treated − control, and uplift/HTE modeling goes further by discounting only the persuadable customers instead of the sure things.`,
+    checkQuestions: [
+      {
+        q: `A 20%-off promo raises units sold by 40%. Why is "40% uplift" likely a large overstatement of the promo's value?`,
+        options: [
+          `A) Because discounts always reduce revenue, so any positive number is suspect.`,
+          `B) Because gross units = baseline (buyers who'd have purchased anyway) + incremental (persuaded). Much of the 40% may be baseline buyers you discounted for free, plus pull-forward and cannibalization — true incremental uplift is treated − control, usually far below 40%.`,
+          `C) Because 40% is below the elasticity threshold of |ε| = 1.`,
+          `D) Because units sold is never a valid measure of anything.`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `After a promo ends, sales drop below their normal level for several weeks. What is this, and how should it change measurement?`,
+        options: [
+          `A) Cannibalization — the promo permanently reduced demand; no measurement change needed.`,
+          `B) Pull-forward — the promo borrowed demand from the future rather than creating it, so the post-promo dip offsets much of the spike. The measurement window must extend past the payback dip, or you'll book a phantom win from the spike alone.`,
+          `C) A seasonal artifact unrelated to the promo; ignore it.`,
+          `D) Baseline drift — recalibrate the baseline and the dip disappears.`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `An uplift (HTE) model classifies a segment of customers as "sure things." What is the correct action, and why?`,
+        options: [
+          `A) Target them heavily with discounts — sure things convert best.`,
+          `B) Do NOT discount them — sure things buy at full price regardless, so any discount to them is pure margin given away with zero incremental effect. Redirect the budget to persuadables, whose purchase actually depends on the discount.`,
+          `C) Discount them modestly to hedge against a wrong classification.`,
+          `D) Exclude them from all future campaigns entirely, including full-price ones.`,
+        ],
+        answer: `B`,
+      },
+    ],
+    recap: [
+      `**Uplift = incremental units caused by the promo,** not gross units at the discount. Gross = baseline + incremental; the discount is paid on both but only incremental is a return. Naive ROI overstates value.`,
+      `**Three leakages inflate the naive number:** baseline (would-have-bought — free margin given away), pull-forward (demand borrowed from the future; spike then dip), and cannibalization (stealing from your own full-price SKUs).`,
+      `**A no-promo control gives the baseline:** incremental = treated − control. Extend the window past the payback dip (pull-forward) and measure the whole category (cannibalization), not one SKU over the promo window.`,
+      `**Uplift/HTE modeling sorts customers:** persuadables (buy only if discounted — the target), sure things (waste), lost causes (won't buy), sleeping dogs (promo backfires).`,
+      `**Target only persuadables:** same discount budget, far more incremental margin. Discounting sure things is pure margin donation.`,
+    ],
+    figures: {
+      uplift: `<svg viewBox="0 0 360 124" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="14" y="14" fill="var(--ink-hi)" font-size="8.5" font-weight="700">Gross redemptions during promo</text>
+  <rect x="14" y="22" width="200" height="20" fill="var(--ink-mid)" opacity="0.35"/>
+  <rect x="14" y="22" width="150" height="20" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="90" y="36" text-anchor="middle" fill="var(--ink-hi)" font-size="7.5" font-weight="700">baseline (would-have-bought)</text>
+  <text x="270" y="36" fill="var(--prime)" font-size="7.5" font-weight="700">incremental ← the only return</text>
+  <text x="14" y="60" fill="var(--ink-low)" font-size="7.5">leakages that shrink true uplift:</text>
+  <text x="24" y="74" fill="var(--ink-mid)" font-size="7.5">• baseline — discount given to buyers who'd have bought</text>
+  <text x="24" y="86" fill="var(--ink-mid)" font-size="7.5">• pull-forward — demand borrowed from next month (spike then dip)</text>
+  <text x="24" y="98" fill="var(--ink-mid)" font-size="7.5">• cannibalization — steals from your own full-price SKUs</text>
+  <text x="14" y="116" fill="var(--prime)" font-size="7.5" font-weight="700">uplift = treated − control · target persuadables, not sure things</text>
+</svg>`,
+    },
   },
   {
     id: 'willingness_to_pay_and_competition',
@@ -82,7 +536,85 @@ export const PRICING_MODULES = [
     difficulty: 'advanced',
     estimatedMin: 26,
     tags: ['Pricing', 'willingness-to-pay', 'competitive response', 'segmentation'],
-    skeleton: true,
-    spec: `Cover WTP estimation (surveys/Van Westendorp, choice models/conjoint, revealed-preference from experiments) and segment-level demand curves enabling differential pricing. Then add competition: reaction functions, price-matching dynamics, and why a naive local optimum ignores that competitors re-price. Frame competitive equilibrium vs one-shot optimization and the reputational cost of price wars.`,
+    summary: `Elasticity tells you how a *market* reacts to price. Two harder questions decide real pricing: how much will *this segment* pay (their **willingness-to-pay**), and what happens when a **competitor re-prices** in response to your move? Ignore the first and you leave money on the table; ignore the second and your carefully optimized price triggers a war that erases the gain.
+
+[FIGURE: wtp]
+
+---
+
+**Willingness-to-pay is the reservation price — and you estimate it three ways.** WTP is the most a buyer will pay before walking away; a segment's demand curve is the distribution of WTPs. You estimate it by: **stated preference** — surveys like Van Westendorp ("at what price is this too expensive / a bargain?"), cheap but biased by what people *say* vs *do*; **choice modeling / conjoint** — show realistic bundles and infer the price coefficient from actual choices, more robust; and **revealed preference** — the gold standard, reading WTP from real behavior in a price experiment (they *paid*, so it's real). Segment-level WTP curves are what enable **differential pricing** — student vs enterprise tiers, geographic pricing — capturing more of each segment's surplus than one flat price can.
+
+---
+
+**The second-order trap: your optimum assumes competitors stand still.** A naive price optimizer maximizes profit against *today's* competitor prices — a one-shot best response. But competitors have their own optimizers. Cut price to win share and a rival matches you; now both of you sell at the lower price with the *same* share split — you've moved to a worse equilibrium for both. The correct object isn't a one-shot optimum, it's a **reaction function**: my best price *given how you'll respond*, solved to a **competitive (Nash) equilibrium** where neither side wants to deviate.
+
+---
+
+**Which is why price wars are a strategic failure, not a modeling win.** A local optimizer that ignores reactions will happily walk both firms down to marginal cost — every step looks locally profitable, the destination is ruinous. Real competitive pricing weighs the **reputational and equilibrium cost** of a move: matching a rival's cut may be rational defense, *initiating* one rarely is. The senior instinct is to model the competitor as a *player*, not a fixed constant — ask "and then what do they do?" before shipping the price. The math that maximizes profit against a frozen competitor is precisely the math that starts the war.`,
+    interactivePrompt: `Before you touch the controls: your optimizer says cut price 10% to grab share, and it's locally profit-improving. What does it assume about the competitor, and what actually happens to both firms' profits once that assumption fails?`,
+    keyPoints: [
+      `**WTP is the reservation price; a segment's demand curve is the distribution of WTPs.** Estimate it via stated preference (Van Westendorp surveys — cheap, biased by say-vs-do), choice modeling/conjoint (infer the price coefficient from realistic choices — more robust), and revealed preference (read WTP from a real price experiment — the gold standard).`,
+      `**Segment-level WTP enables differential pricing.** Student vs enterprise tiers and geographic pricing capture more of each segment's surplus than a single flat price. The finer and more credible your WTP estimates, the more surplus you convert — bounded by fairness and legal limits on discrimination.`,
+      `**A one-shot optimum assumes competitors stand still — they don't.** Maximizing profit against today's competitor prices is a best response to a frozen opponent. Real competitors re-price, so the correct object is a reaction function solved to a competitive (Nash) equilibrium where neither side wants to deviate.`,
+      `**Price wars are a strategic failure a local optimizer walks you into.** Every step of "cut to win share" looks locally profitable while a matching rival drives both firms toward marginal cost. Matching a rival's cut can be rational defense; initiating one rarely is. Model the competitor as a player, not a constant.`,
+    ],
+    takeaway: `Willingness-to-pay is a segment's reservation price — estimated by stated preference (surveys), choice/conjoint modeling, or revealed preference from experiments — and segment-level WTP curves are what let differential pricing capture more surplus than a flat price. But a profit optimizer that treats competitor prices as fixed computes a one-shot best response that ignores retaliation; the correct object is a reaction function solved to a competitive equilibrium, because the same math that maximizes profit against a frozen competitor is what starts a price war down to marginal cost.`,
+    checkQuestions: [
+      {
+        q: `Which method of estimating willingness-to-pay is most credible, and why?`,
+        options: [
+          `A) Van Westendorp survey — asking directly is the most accurate way to learn WTP.`,
+          `B) Revealed preference from a real price experiment — buyers actually paid (or didn't) at the tested prices, so it measures behavior rather than stated intent, avoiding the say-vs-do gap that biases surveys. Conjoint is a strong middle ground; surveys are cheapest but most biased.`,
+          `C) Whichever method is cheapest, since all WTP estimates are equally reliable.`,
+          `D) Conjoint analysis, because it requires no data collection.`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `Your optimizer recommends a 10% price cut that is locally profit-improving. What critical assumption is it making, and what is the likely real outcome?`,
+        options: [
+          `A) It assumes elasticity is constant; the cut will simply raise volume as predicted.`,
+          `B) It assumes competitors hold their prices fixed. In reality a rival matches the cut, so both firms end up at the lower price with roughly the same share split — a worse equilibrium for both. The correct analysis solves a reaction function to a competitive equilibrium, not a one-shot best response.`,
+          `C) It assumes marginal cost is zero; with positive cost the cut is always safe.`,
+          `D) It assumes the promo window is long enough; extend it and the risk disappears.`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `When is matching a competitor's price cut a defensible move, versus initiating one?`,
+        options: [
+          `A) Initiating a cut is always superior because first movers capture share.`,
+          `B) Matching a rival's cut can be rational defense (failing to match cedes share at the new market price), whereas initiating a cut usually triggers retaliation that walks both firms toward marginal cost — a locally profitable step with a ruinous destination. Model the competitor as a player and ask "and then what?"`,
+          `C) Both are equally good; competitive response doesn't affect the outcome.`,
+          `D) Neither — any price change in a competitive market is irrational.`,
+        ],
+        answer: `B`,
+      },
+    ],
+    recap: [
+      `**WTP is the reservation price;** a segment's demand curve is the distribution of WTPs across its buyers.`,
+      `**Estimate WTP three ways:** stated preference (Van Westendorp surveys — cheap, say-vs-do biased), choice/conjoint (infer the price coefficient from realistic choices — robust), revealed preference (read WTP from a real price experiment — gold standard).`,
+      `**Segment-level WTP → differential pricing:** student/enterprise tiers, geographic pricing capture more surplus than one flat price, bounded by fairness/legal limits.`,
+      `**A one-shot optimum assumes competitors stand still — they don't:** the correct object is a reaction function solved to a competitive (Nash) equilibrium where neither side wants to deviate.`,
+      `**Price wars are a strategic failure a local optimizer walks you into:** every "cut to win share" step looks locally profitable while a matching rival drives both to marginal cost. Match in defense; rarely initiate. Model the competitor as a player, not a constant.`,
+    ],
+    figures: {
+      wtp: `<svg viewBox="0 0 360 124" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="14" y="14" fill="var(--ink-hi)" font-size="8.5" font-weight="700">WTP distribution → segment demand</text>
+  <line x1="20" y1="66" x2="180" y2="66" stroke="var(--ink-low)" stroke-width="1"/>
+  <path d="M20,64 C60,20 90,24 110,44 C130,64 160,64 180,64" fill="var(--prime-faint)" stroke="var(--prime)" stroke-width="1.5"/>
+  <line x1="70" y1="24" x2="70" y2="66" stroke="var(--amber,#d97706)" stroke-width="1" stroke-dasharray="2 2"/>
+  <text x="70" y="80" text-anchor="middle" fill="var(--ink-low)" font-size="7">reservation price</text>
+  <text x="20" y="96" fill="var(--ink-mid)" font-size="7">surveys · conjoint · revealed preference (gold)</text>
+  <line x1="200" y1="18" x2="200" y2="100" stroke="var(--ink-low)" stroke-width="0.6"/>
+  <text x="214" y="14" fill="var(--ink-hi)" font-size="8.5" font-weight="700">Competitor responds</text>
+  <text x="214" y="30" fill="var(--ink-mid)" font-size="7.5">you cut →</text>
+  <text x="214" y="42" fill="var(--ink-mid)" font-size="7.5">rival matches →</text>
+  <text x="214" y="54" fill="var(--amber,#d97706)" font-size="7.5" font-weight="700">same share, lower price (both worse)</text>
+  <text x="214" y="72" fill="var(--ink-low)" font-size="7">one-shot optimum ✗ · reaction function → Nash eq.</text>
+  <text x="214" y="90" fill="var(--prime)" font-size="7.5" font-weight="700">ask: "and then what do they do?"</text>
+  <text x="14" y="118" fill="var(--ink-low)" font-size="7.5">the math that maxes profit vs a frozen rival is what starts the price war</text>
+</svg>`,
+    },
   },
 ]
