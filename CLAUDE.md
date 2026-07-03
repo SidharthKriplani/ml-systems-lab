@@ -4,6 +4,15 @@ Read this first, every session.
 
 ---
 
+## ✅ LATEST (2026-07-03 pm) — Market-gap program: SD Drills + graded coding + pricing→S-tier; full state in `docs/BACKLOG.md`
+
+**All LOCAL, staged, approve-first push (Sidharth runs on Mac). Sandbox esbuild: use `npx -y esbuild@0.21.5`.** Part of a cross-lab GSL+MSL program (system-design trainer · runnable coding · depth-audit). MSL pieces:
+- **System Design Drills** — new "Design Drills" section in `src/tabs/SystemDesignTab.jsx` (`MODULES` array). `src/tabs/SystemDesignDrills.jsx` (staged attempt→reveal + 7-dim rubric scorecard) + 6 scenarios `src/data/foundations/sdScenariosMSL-{a,b}.js` → `sdScenariosMSL.js` (credit-default, feed-ranking, fraud, realtime-serving/feature-store, search-LTR, forecasting).
+- **Auto-graded Implement drills** — MSL already ran Python (`python.js`+`PythonCell`) but never graded; added `src/components/GradedCell.jsx` (Run + Check-vs-hidden-asserts) + a "Coding rounds | Implement drills" toggle in `MLCodingTab.jsx`. 8 classical-ML numpy exercises `src/data/mlCodeExercisesList.js` (via `mlCodeExercises.js`), sandbox-verified (solution passes / starter fails).
+- **Depth-audit → 203/203 at bar** — scanned all ~203 modules; 196 already S-tier; the only gap (7 `pricingModules.js` skeletons) now fully authored to the recsys schema (0 skeleton flags). MSL content is now uniformly at bar.
+
+---
+
 ## ✅ LATEST (2026-07-03) — Product restructure → complete "interview gym"; state logged in `docs/BACKLOG.md`
 
 **All work is LOCAL; push commands were provided each step (Sidharth runs on Mac).** A large multi-session pass took MSL from a "scrapyard of overlapping tabs" to a coherent, gym-complete product. Full leftover work is in **`docs/BACKLOG.md`**; the reusable audit framework is in **`docs/DRILL_SYSTEM_RUBRIC.md`**.
