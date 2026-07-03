@@ -274,13 +274,13 @@ const WEEK_PLAN = [
   {
     day: 'Day 3 — RecSys + Search',
     focus: 'Retrieval, ranking, IR systems',
-    tasks: ['Read: Two-Tower (70), LTR (71), RecSys Stack (72)', 'Read: BM25/TF-IDF (79), Semantic Search (80), RAG (90)', 'Do all FeatureEng tab scenarios (RecSys domain)', 'Do 5 Cross-Domain Incidents scenarios'],
+    tasks: ['Read: Two-Tower (70), LTR (71), RecSys Stack (72)', 'Read: BM25/TF-IDF (79), Semantic Search (80), RAG (90)', 'Do all FeatureEng tab scenarios (RecSys domain)', 'Do 5 Cross-Domain Challenges scenarios'],
     tip: 'For Flipkart Search and Meesho/Walmart RecSys loops — the system design round is the hardest. Practice drawing the full two-stage funnel with latency budgets per component.',
   },
   {
     day: 'Day 4 — Fraud + Anomaly + Forecasting',
     focus: 'Fintech niche depth',
-    tasks: ['Read: Anomaly Detection (95), Concept Drift (94)', 'Read: Time Series (88), PCA (86), Clustering (87)', 'Do FraudDetection project lab (phases 1-3)', 'Practice 3 Cross-Domain Incidents scenarios'],
+    tasks: ['Read: Anomaly Detection (95), Concept Drift (94)', 'Read: Time Series (88), PCA (86), Clustering (87)', 'Do FraudDetection project lab (phases 1-3)', 'Practice 3 Cross-Domain Challenges scenarios'],
     tip: 'PhonePe, Razorpay, Juspay, and CRED all give a take-home dataset before the interview. The catch: they care about your thinking process more than your AUC. Write up your assumptions explicitly.',
   },
   {
@@ -292,7 +292,7 @@ const WEEK_PLAN = [
   {
     day: 'Day 6 — Systems + Production',
     focus: 'ML system design and production judgment',
-    tasks: ['Do ALL 12 Cross-Domain Incidents scenarios', 'Do all System Design tab scenarios', 'Read: Distillation (78), Contrastive/CLIP (69)', 'Read: DL posts — Backprop (51), Transformer (55), Optimisation (56)'],
+    tasks: ['Do ALL 12 Cross-Domain Challenges scenarios', 'Do all System Design tab scenarios', 'Read: Distillation (78), Contrastive/CLIP (69)', 'Read: DL posts — Backprop (51), Transformer (55), Optimisation (56)'],
     tip: 'In senior system design rounds, the interviewer will keep narrowing scope until you\'re uncomfortable. Practice saying "given the constraint of X, I would choose Y because Z" — not just describing what exists.',
   },
   {

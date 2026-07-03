@@ -71,7 +71,7 @@ export const COMPANY_TRACK_ITEMS = {
     // 6) Prove you can code the primitives live.
     { tabId: 'mlcoding', target: null, label: 'ML Coding — live Python (ranking, custom loss, k-fold)', kind: 'coding' },
     // 7) Judgment under pressure — cross-domain incident diagnosis.
-    { tabId: 'incidentroom', target: null, label: 'Cross-Domain Incidents — multi-step diagnosis', kind: 'drill' },
+    { tabId: 'incidentroom', target: null, label: 'Cross-Domain Challenges — multi-step diagnosis', kind: 'drill' },
     { tabId: 'judge_browser', target: null, label: 'JUDGE — ranking & production judgment drills', kind: 'drill' },
     // 8) Ground it in real systems, then simulate the loop.
     { tabId: 'casestudies', target: null, label: 'Case Studies — Netflix, Uber, Spotify recommenders', kind: 'case' },

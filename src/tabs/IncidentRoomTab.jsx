@@ -888,7 +888,7 @@ export default function IncidentRoomTab({ onNavigate }) {
       <div style={{ marginBottom: '28px' }}>
         <div className="section-eyebrow" style={{ marginBottom: '8px' }}>Interview zone</div>
         <TabHeader title="
-          Cross-Domain Incidents
+          Cross-Domain Challenges
         " style={{ margin: '0 0 10px' }} />
         <p style={{ fontSize: '14px', color: 'var(--ink-low)', lineHeight: 1.7, maxWidth: '580px', margin: '0 0 4px' }}>
           Cross-domain production incidents — each requires reasoning across Feature Engineering, Monitoring, Serving, and Experimentation simultaneously. This is the judgment interviewers test when they ask "what would you check first?"
@@ -919,7 +919,7 @@ export default function IncidentRoomTab({ onNavigate }) {
         <div style={{ marginBottom: '20px', padding: '16px 18px', borderRadius: '10px', background: 'rgba(240,165,0,0.08)', border: '1px dashed rgba(240,165,0,0.30)' }}>
           <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px', fontWeight: 700 }}>Start here</div>
           <div style={{ fontSize: '13px', color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)', lineHeight: 1.6 }}>
-            New to Cross-Domain Incidents? Start with <strong style={{ color: 'var(--ink-hi)' }}>incident #1 — Recommender CTR drop</strong>. It introduces the cross-domain diagnostic pattern: production symptom → upstream signal → root cause. Once it clicks, the other 11 incidents take 8-10 minutes each.
+            New to Cross-Domain Challenges? Start with <strong style={{ color: 'var(--ink-hi)' }}>incident #1 — Recommender CTR drop</strong>. It introduces the cross-domain diagnostic pattern: production symptom → upstream signal → root cause. Once it clicks, the other 11 incidents take 8-10 minutes each.
           </div>
         </div>
       )}
