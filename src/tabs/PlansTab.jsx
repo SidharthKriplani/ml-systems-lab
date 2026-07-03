@@ -63,7 +63,7 @@ const TABLE_ROWS = [
   { label: 'Interview Q&A — 128 questions',  guest: null,            free: null,             full: true },
   { label: 'Combinator timed exam',          guest: null,            free: null,             full: true },
   { label: 'Verbal Practice',               guest: null,            free: null,             full: true },
-  { label: 'Incident Room (12 cases)',       guest: null,            free: null,             full: true },
+  { label: 'Cross-Domain Incidents (12 cases)', guest: null,         free: null,             full: true },
   { label: 'ML Coding — live Pyodide',      guest: null,            free: null,             full: true },
   { label: 'Project Labs (3 notebooks)',    guest: null,            free: null,             full: true },
   { label: 'Staff Layer reveals',           guest: null,            free: null,             full: true },

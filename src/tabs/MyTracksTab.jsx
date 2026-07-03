@@ -14,6 +14,8 @@ const TAB_LABELS = {
   production_foundation:       'Feature Eng & Prod',
   monitoring_foundation:       'Monitoring',
   system_design_foundation:    'ML System Design',
+  recsys_foundation:           'Recommender Systems',
+  pricing_foundation:          'Pricing Analytics',
   dl_foundation:               'Deep Learning',
   rl_foundation:               'Reinforcement Learning',
   time_series_foundation:      'Time Series',

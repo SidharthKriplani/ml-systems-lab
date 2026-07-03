@@ -44,7 +44,7 @@ export default function AboutTab({ onNavigate }) {
       <h2 style={s.h2}>How to use it</h2>
       <p style={s.p}>
         Start at <button onClick={() => onNavigate && onNavigate('start_here')} style={{ ...s.link, background: 'none', border: 'none', cursor: 'pointer', padding: 0, font: 'inherit' }}>Start Here</button> for
-        a guided path, or jump straight into <strong>KNOW</strong> foundations to learn, <strong>JUDGE</strong> for judgment drills and the Incident Room,
+        a guided path, or jump straight into <strong>KNOW</strong> foundations to learn, <strong>JUDGE</strong> for judgment drills and Cross-Domain Incidents,
         and <strong>PREP &amp; ASSESS</strong> to rehearse interview questions. <strong>My Progress</strong> tracks your readiness and points you at your weakest area.
       </p>
 

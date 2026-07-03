@@ -14,6 +14,8 @@ import { RL_MODULES }             from '../data/foundations/rlModules.js'
 import { PRODUCTION_MODULES }     from '../data/foundations/productionModules.js'
 import { MONITORING_MODULES }     from '../data/foundations/monitoringModules.js'
 import { SYSTEM_DESIGN_MODULES }  from '../data/foundations/systemDesignModules.js'
+import { RECSYS_MODULES }         from '../data/foundations/recsysModules.js'
+import { PRICING_MODULES }        from '../data/foundations/pricingModules.js'
 import { TIME_SERIES_MODULES }    from '../data/foundations/timeSeriesModules.js'
 import { GRAPH_ML_MODULES }       from '../data/foundations/graphMLModules.js'
 import { BANDITS_MODULES }        from '../data/foundations/banditsModules.js'
@@ -36,6 +38,8 @@ const DOMAINS = [
   { lsKey: 'msl-production-foundation-v1',       tabId: 'production_foundation',       label: 'Production',          modules: PRODUCTION_MODULES },
   { lsKey: 'msl-monitoring-foundation-v1',       tabId: 'monitoring_foundation',       label: 'Monitoring',          modules: MONITORING_MODULES },
   { lsKey: 'msl-system-design-foundation-v1',    tabId: 'system_design_foundation',    label: 'System Design',       modules: SYSTEM_DESIGN_MODULES },
+  { lsKey: 'msl-recsys-foundation-v1',           tabId: 'recsys_foundation',           label: 'Recommender Systems', modules: RECSYS_MODULES },
+  { lsKey: 'msl-pricing-foundation-v1',          tabId: 'pricing_foundation',          label: 'Pricing Analytics',   modules: PRICING_MODULES },
   { lsKey: 'msl-time-series-foundation-v1',      tabId: 'time_series_foundation',      label: 'Time Series',         modules: TIME_SERIES_MODULES },
   { lsKey: 'msl-graph-ml-foundation-v1',         tabId: 'graph_ml_foundation',         label: 'Graph ML',            modules: GRAPH_ML_MODULES },
   { lsKey: 'msl-bandits-foundation-v1',          tabId: 'bandits_foundation',          label: 'Bandits',             modules: BANDITS_MODULES },

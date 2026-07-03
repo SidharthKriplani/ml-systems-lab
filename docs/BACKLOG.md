@@ -9,6 +9,44 @@ Companion docs: `docs/DRILL_SYSTEM_RUBRIC.md` (the portable interview-gym rubric
 
 ---
 
+## New KNOW track — Recommender Systems — 2026-07-03
+
+Promoted RecSys from a *subtopic* of `system_design_foundation` to its own dedicated KNOW foundation, `recsys_foundation` (additive; the existing System Design RecSys modules were left intact and are the shared home for two-tower/funnel detail, this new track is the deep first-principles home). 8 staff-level causal-chain modules matching the exact foundation module schema (`{ id, interactiveId?, interactivePrompt?, title, subtitle, difficulty, estimatedMin, tags[], summary (markdown + [FIGURE:] refs), keyPoints[], takeaway, checkQuestions[{q,options,answer}], recap[], figures{} }`).
+
+**Modules (`src/data/foundations/recsysModules.js`):**
+1. `two_stage_architecture` — candidate generation → ranking exists because a precise ranker over 10M items (~1ms each = 10,000s) blows a ~100ms budget by 100,000×, forcing a cheap recall stage then an expensive precision stage; retrieval recall is an unraiseable ceiling.
+2. `candidate_generation` — joint scoring ties an item's vector to the querying user (impossible at scale) → two-tower decouples it → precompute item embeddings offline + ANN lookup; trained with in-batch negatives + hard-negative mining + logQ popularity correction.
+3. `learning_to_rank` — pointwise optimizes absolute score (order-blind) → pairwise minimizes inversions (LambdaMART weights pairs by NDCG delta) → listwise optimizes the whole list (NDCG-aligned); the loss must match the ranking objective.
+4. `features_and_freshness` — batch vs real-time features matched to signal decay → train/serve skew (one feature, two implementations) and non-point-in-time joins both hide behind good offline metrics; feature store + as-of joins close both.
+5. `cold_start` — user cold start (popularity/context/onboarding/real-time embedding) vs item cold start (content features make a new item embeddable day 1); exploration is the bridge that turns cold items warm.
+6. `feedback_loops_bias` — a recommender trains on logs it generated → position bias + popularity bias contaminate raw clicks → closed-loop causal trap → IPS (weight by 1/P(shown|position)) fed by randomization recovers unbiased relevance (doubly-robust / counterfactual LTR same family).
+7. `offline_online_eval` — recall@k/NDCG@k/MAP/AUC on biased logs diverge structurally from CTR/dwell/retention (biased logs, counterfactual blindness, metric≠objective, system effects); offline filters, online A/B decides.
+8. `multi_objective_tradeoffs` — any single short-term signal has a pathological maximum (CTR→clickbait) → value model fuses calibrated heads with weights tuned online vs a long-term north-star; engagement-vs-quality is a delayed-feedback trap (Netflix/YouTube objective redesign); guardrails ride as negative weights.
+
+Interactives reused (not new): `retrieval_funnel_viz` (modules 1–2), `value_model_mixer_viz` (modules 3, 8). Modules 4–7 are prose-only by design (freshness/skew/cold-start/bias/eval have no clean existing viz).
+
+**Wiring (all additive; no existing ids/routes/hashes/localStorage keys changed):**
+- `App.jsx` — lazy import `RecSysFoundationTab`; TAB registry entry `{ id:'recsys_foundation', component:RecSysFoundationTab }` (after system_design); ZONE map `recsys_foundation: 'know'`; NAV KNOW → SYSTEMS & APPLIED group entry `label:'Recommender Systems'` (after ML System Design).
+- `src/tabs/foundations/RecSysFoundationTab.jsx` — mirrors ClassicalMLFoundationTab exactly (TAB_ID `recsys_foundation`).
+- `src/utils/foundations/recsysFoundationProgress.js` — localStorage key `msl-recsys-foundation-v1`.
+- Aggregate registries: `ProgressTab.jsx` FOUNDATION_STORES, `ReviewTab.jsx` import + DOMAINS (spaced-rep), `MyTracksTab.jsx` TAB_LABELS.
+
+Verify: all 5 JSX files acorn-jsx OK; `recsysModules.js` + progress util `node --check` OK; ESM import confirms 8 modules, all required fields present, every checkQuestion has 4 options + a valid A–D answer. (Caught + fixed one unescaped backtick code-span `` `score = …` `` inside a template-literal summary — the known GradientTab-class hazard — by switching to bold/plain text.)
+
+---
+
+## Nav/naming fixes — 2026-07-03
+
+Three surgical display-only nav fixes (no ids/routes/hashes/localStorage keys touched):
+
+1. **JUDGE → Drills nesting collapsed.** The single-child "Drills" wrapper (only child = `judge_browser`) now renders directly as a leaf labelled **"Judgment Drills"**. Added a `flattenWhenSingle: true` flag on the group + a conditional in the sidebar group renderer (`App.jsx` ~line 912): when the flag is set and `items.length === 1`, render the lone item as a bare `SidebarNavItem`. Re-nests automatically if a second drill type is added. `judge_browser` id/route/hash/desc preserved.
+2. **"Capstone" framing removed.** MSL's BUILD/tab arcs are parallel modules, not one capstone. Renamed the two user-facing devBrief macros: `AirflowTab.jsx` ("Capstone AirflowTab module" → "Airflow at Scale — the final module in the arc") and `dbtTab.jsx` ("Capstone dbt module" → "dbt at Scale — the final module in the arc"). Wording only; no functionality changed.
+3. **"Incident Room" → "Cross-Domain Incidents"** (display label/copy only; id `incidentroom`, route, hash, component filename, and all localStorage keys unchanged). Changed in: `App.jsx` NAV_SECTIONS JUDGE item + JUDGE group label (CAPSTONE → INCIDENTS) + onboarding-step object; `IncidentRoomTab.jsx` TabHeader title + "New to…" body line; `AboutTab.jsx` reference. (Gate-copy object at ~line 200 already reads "Production incident diagnosis" — no user-facing "Incident Room" string there.)
+
+All 5 edited files parse clean (acorn-jsx, 2022/module): App.jsx, IncidentRoomTab.jsx, AboutTab.jsx, AirflowTab.jsx, dbtTab.jsx.
+
+---
+
 ## Current state snapshot (for quick context)
 
 - **Nav:** top personal strip (Home · Profile · My Progress · Review · My Tracks · Leaderboard · Start Here · Plans · Resources · About) → frames **KNOW · DO · BUILD · JUDGE · PREP & ASSESS**. Landscape retired; EXTRAS dissolved.
@@ -53,3 +91,55 @@ Companion docs: `docs/DRILL_SYSTEM_RUBRIC.md` (the portable interview-gym rubric
 ## Next session
 If continuing MSL: start at **P1** (drill tracking → Review-to-drills). If moving to GSL: run
 `DRILL_SYSTEM_RUBRIC.md` against GSL as step one, expect the same L2/spoken weakness, fix those first.
+
+---
+
+## 2026-07-03 — Pricing skeleton + first company track + Incident-Room prose rename
+
+### Task A — Pricing Analytics as a premium-niche KNOW track (SKELETON, shipped as in-development)
+New files:
+- `src/data/foundations/pricingModules.js` — 7 module OUTLINES, each `skeleton: true` with a
+  `spec` (1–2 line summary). Canon: price_elasticity_of_demand, revenue_vs_margin_objective,
+  price_optimization_under_constraints, dynamic_and_surge_pricing, causal_price_experiments,
+  promotion_and_discount_uplift, willingness_to_pay_and_competition.
+- `src/utils/foundations/pricingFoundationProgress.js` — mirrors recsysFoundationProgress.js;
+  KEY = `msl-pricing-foundation-v1`.
+- `src/tabs/foundations/PricingFoundationTab.jsx` — clone of RecSysFoundationTab runner. When a
+  module has `skeleton: true` it renders `<SkeletonBody>` (amber "In development" banner +
+  "What this module will cover" from `spec` + "Planned components" checklist) INSTEAD of authored
+  content. The header also carries an "In development" badge. Add-to-Track + Mark-as-reviewed still work.
+  To ship a module: author summary/keyPoints/etc. and drop the `skeleton` flag — runner auto-switches.
+
+Wiring (mirrors recsys_foundation EXACTLY, additive):
+- `App.jsx`: lazy import `PricingFoundationTab`; registry `{ id: 'pricing_foundation' }`;
+  `TAB_TO_ZONE.pricing_foundation = 'know'`; KNOW nav entry under SYSTEMS & APPLIED
+  (label "Pricing Analytics", desc marked "(In development.)").
+- `ProgressTab.jsx`: FOUNDATION_STORES row (total 7).
+- `ReviewTab.jsx`: import PRICING_MODULES + DOMAINS row.
+- `MyTracksTab.jsx`: TAB_LABELS `pricing_foundation: 'Pricing Analytics'`.
+Did NOT add an interactive (skeleton modules have no interactiveId).
+
+### Task B — First populated company track: Meta · ML Engineer · Senior
+`src/data/companyTracks.js` — `COMPANY_TRACK_ITEMS['Meta|ML Engineer|Senior']` = 23 ordered items,
+all REAL tab ids + verified deep-link module ids. Arc: RecSys mental model (recsys_foundation ×5) →
+ML system design (system_design_foundation ×4) → production (production_foundation ×2) →
+eval (eval_foundation ×3) → monitoring (monitoring_foundation ×2) → mlcoding → incidentroom +
+judge_browser → casestudies → ranking_project → interview → mock_interview. Every other grid cell
+stays clean coming-soon. (Note: ranking_project is itself a wip skeleton tab — real & registered,
+renders its own in-development state.)
+
+### Task C — Finished "Incident Room" → "Cross-Domain Incidents" user-facing prose rename
+Renamed (display text only, all point to the JUDGE `incidentroom` tab):
+- `HomeTab.jsx` JUDGE card desc.
+- `MLCodingTab.jsx` ×2 CTAs ("Cross-Domain Incidents →", "Try multi-step diagnosis in Cross-Domain Incidents").
+- `CheatsheetTab.jsx` ×3 study-task strings (Day 3, Day 4, Day 6).
+- `PlansTab.jsx` feature-table label ("Cross-Domain Incidents (12 cases)").
+Deliberately LEFT (distinct surfaces / internal, per spec): SystemDesignTab "ML Incident Room"
+sub-module + its GradientTab post label + searchIndex entry + _legacy GlobalSearch; StaffLayer
+"Multi-Team Incident Room"; all drill `source:` strings and comments in systemDesign.js / drillPool.js;
+id `incidentroom`, routes, hashes, localStorage keys.
+
+### Verify
+acorn-jsx parse OK on every new/edited file (pricingModules.js, pricingFoundationProgress.js,
+PricingFoundationTab.jsx, App.jsx, ProgressTab.jsx, ReviewTab.jsx, MyTracksTab.jsx, companyTracks.js,
+HomeTab.jsx, MLCodingTab.jsx, CheatsheetTab.jsx, PlansTab.jsx). No npm build (Mac-only).

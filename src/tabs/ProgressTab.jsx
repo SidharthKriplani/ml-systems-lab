@@ -27,6 +27,8 @@ const FOUNDATION_STORES = [
   { lsKey: 'msl-production-foundation-v1',       tabId: 'production_foundation',        label: 'Production Foundations',         total: 11 },
   { lsKey: 'msl-monitoring-foundation-v1',       tabId: 'monitoring_foundation',        label: 'Monitoring Foundations',         total:  8 },
   { lsKey: 'msl-system-design-foundation-v1',    tabId: 'system_design_foundation',     label: 'System Design Foundations',      total:  8 },
+  { lsKey: 'msl-recsys-foundation-v1',           tabId: 'recsys_foundation',            label: 'Recommender Systems Foundations', total:  8 },
+  { lsKey: 'msl-pricing-foundation-v1',          tabId: 'pricing_foundation',           label: 'Pricing Analytics Foundations',  total:  7 },
   { lsKey: 'msl-time-series-foundation-v1',      tabId: 'time_series_foundation',       label: 'Time Series Foundations',        total:  9 },
   { lsKey: 'msl-graph-ml-foundation-v1',         tabId: 'graph_ml_foundation',          label: 'Graph ML Foundations',           total:  9 },
   { lsKey: 'msl-bandits-foundation-v1',          tabId: 'bandits_foundation',           label: 'Bandits & Exploration Foundations', total:  9 },

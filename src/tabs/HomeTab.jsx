@@ -41,7 +41,7 @@ const FRAMES = [
     id: 'judge',
     label: 'JUDGE',
     sub: 'Judgment',
-    desc: '425 judgment drills across 10 subjects, plus the Incident Room for production diagnosis under pressure.',
+    desc: '425 judgment drills across 10 subjects, plus Cross-Domain Incidents for production diagnosis under pressure.',
     tab: 'judge_browser',
     cta: 'Open drills →',
   },

@@ -1664,7 +1664,7 @@ function ProblemCard({ problem, done, onComplete, onNavigate, autoExpand }) {
               <span style={{ fontSize: '12px', color: 'var(--ink-low)', fontFamily: 'var(--font-sans)' }}>What to do next</span>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 <button onClick={() => onNavigate('incidentroom')} style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', background: 'rgba(240,165,0,0.08)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '6px', padding: '5px 12px', cursor: 'pointer' }}>
-                  Incident Room →
+                  Cross-Domain Incidents →
                 </button>
                 <button onClick={() => onNavigate('combinator')} style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '6px', padding: '5px 12px', cursor: 'pointer' }}>
                   Combinator →
@@ -1776,7 +1776,7 @@ export default function MLCodingTab({ onNavigate }) {
             onClick={() => onNavigate('incidentroom')}
             style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: '6px' }}
           >
-            <span style={{ fontSize: '12px', color: 'var(--prime)', fontFamily: 'var(--font-sans)', fontWeight: 600 }}>Try cross-domain diagnosis in Incident Room</span>
+            <span style={{ fontSize: '12px', color: 'var(--prime)', fontFamily: 'var(--font-sans)', fontWeight: 600 }}>Try multi-step diagnosis in Cross-Domain Incidents</span>
             <span style={{ fontSize: '12px', color: 'var(--prime)' }}>→</span>
           </button>
         </div>
