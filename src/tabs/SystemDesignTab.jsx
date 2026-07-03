@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { toggleBookmark, isBookmarked } from '../utils/bookmarks.js'
 import FidelityBadge from '../components/FidelityBadge.jsx'
 import { Icon } from '../components/Icon.jsx'
+import SystemDesignDrills from './SystemDesignDrills.jsx'
 
 function BookmarkButton({ tabId, moduleId, label }) {
   const [saved, setSaved] = useState(() => isBookmarked(tabId, moduleId))
@@ -2163,6 +2164,7 @@ function RetrievalFailures() {
 
 // ─── Tab shell ────────────────────────────────────────────────────────────────
 const MODULES = [
+  { id: 'drills',     label: 'Design Drills',       component: SystemDesignDrills },
   { id: 'incident',   label: 'ML Incident Room',    component: IncidentRoom },
   { id: 'ownership',  label: 'DS Ownership Chain',  component: DSOwnershipChain },
   { id: 'scenarios',  label: 'Incident Scenarios',  component: IncidentScenarios },

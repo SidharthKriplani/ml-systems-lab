@@ -9,6 +9,12 @@ Companion docs: `docs/DRILL_SYSTEM_RUBRIC.md` (the portable interview-gym rubric
 
 ---
 
+## System Design Drills (staged trainer) — 2026-07-03
+
+Added a staged, rubric-scored ML-system-design **drill** — the interview-simulation the SD surface lacked (existing SD modules teach + quiz, but there was no attempt-each-stage-then-reveal + self-score drill). New section `Design Drills` inside `SystemDesignTab.jsx` (`MODULES` array, placed first; `import SystemDesignDrills from './SystemDesignDrills.jsx'`). Component `src/tabs/SystemDesignDrills.jsx` — MSL-native styling (inline styles + `--prime`/`--ink-*`/`--rim`/`--mint`/`--rose`, no Tailwind/cyan): scenario picker → per-stage attempt-first `considerations` checklist → "reveal model coverage" (strong=mint / traps=rose / probes) → final 7-dim rubric self-scorecard with readiness verdict + focus areas; localStorage remembers last scenario. 6 scenarios in `src/data/foundations/sdScenariosMSL-a.js` (credit-default-scoring, feed-ranking-recsys, fraud-detection) + `sdScenariosMSL-b.js` (realtime-serving-feature-store, search-ranking-ltr, demand-forecasting), combined via `sdScenariosMSL.js`. Each = 5 stages (requirements → architecture → deep-dive → evaluation → tradeoffs) with {ask, 6-9 considerations, 5-7 strong, 3-4 traps, 2-3 probes} + a 7-dim rubric. Verify (sandbox esbuild@0.21.5): index + SystemDesignDrills + SystemDesignTab bundle clean; node check = 6/6 full-standard. Mirrors the GSL SystemDesignTrainer built same day (shared program to close the #1 senior-signal gap in both labs). NOT pushed — macOS build + approve-first commit.
+
+---
+
 ## New KNOW track — Recommender Systems — 2026-07-03
 
 Promoted RecSys from a *subtopic* of `system_design_foundation` to its own dedicated KNOW foundation, `recsys_foundation` (additive; the existing System Design RecSys modules were left intact and are the shared home for two-tower/funnel detail, this new track is the deep first-principles home). 8 staff-level causal-chain modules matching the exact foundation module schema (`{ id, interactiveId?, interactivePrompt?, title, subtitle, difficulty, estimatedMin, tags[], summary (markdown + [FIGURE:] refs), keyPoints[], takeaway, checkQuestions[{q,options,answer}], recap[], figures{} }`).
