@@ -410,7 +410,7 @@ const NAV_SECTIONS = [
         items: [
           { id: 'mlcoding', label: 'ML Coding',            desc: 'ML-specific Python problems — implement/debug/optimise/design, live Pyodide.' },
           { id: 'codebugs', label: 'Bug Hunt',             desc: 'Read code, find the buried bug — ML/DL/pipeline debugging.' },
-          { id: 'ext_python', label: 'Python fluency → PL ↗', external: true, href: 'https://programming-lab.vercel.app', desc: 'General Python & DSA fluency lives in Programming Lab (sibling lab).' },
+          { id: 'ext_python', label: 'Python fluency → PL ↗', external: true, href: 'https://programming-lab.vercel.app/#/pylab', desc: 'General Python & DSA fluency lives in Programming Lab (sibling lab).' },
           { id: 'ext_sql',    label: 'SQL fluency → PAL ↗', external: true, href: 'https://product-analytics-lab.vercel.app/#/sql-lab', desc: 'The canonical SQL problem bank lives in Product Analytics Lab (sibling lab).' },
         ],
       },
