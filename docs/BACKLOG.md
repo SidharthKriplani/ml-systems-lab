@@ -143,3 +143,30 @@ id `incidentroom`, routes, hashes, localStorage keys.
 acorn-jsx parse OK on every new/edited file (pricingModules.js, pricingFoundationProgress.js,
 PricingFoundationTab.jsx, App.jsx, ProgressTab.jsx, ReviewTab.jsx, MyTracksTab.jsx, companyTracks.js,
 HomeTab.jsx, MLCodingTab.jsx, CheatsheetTab.jsx, PlansTab.jsx). No npm build (Mac-only).
+
+---
+
+## 2026-07-03 — BUILD frame: navigate to a landing page instead of accordion-expanding
+
+**What changed.** Clicking **BUILD** in the left sidebar no longer opens the accordion to list the
+6 Project Labs inline; it now navigates to a right-pane **BUILD landing page** (`src/tabs/BuildHubTab.jsx`)
+that renders the same 6 labs as a card grid. Each card deep-links to its project tab. Only BUILD changed —
+KNOW / DO / JUDGE / PREP keep their accordion behavior.
+
+**Implementation (additive/surgical).**
+- New `src/tabs/BuildHubTab.jsx` — exports `BUILD_PROJECTS` (single source of truth: projectlab/Telco,
+  loan_default/Loans, fraud_detection/Fraud, ranking_project/Ranking [wip], forecast_project/Forecasting [wip],
+  nlp_content_project/NLP-Content [wip]) + default `BuildHubTab` component (green `#22c55e` BUILD accent,
+  StartHere-style cards, "In development" pill on `wip:true`, `onNavigate` per card).
+- `App.jsx`:
+  - lazy `BuildHubTab` + static `import { BUILD_PROJECTS }` (plain array, safe to import eagerly).
+  - registered `{ id: 'build', component: BuildHubTab }` in `ALL_TABS`; added `build: 'build'` to `TAB_TO_ZONE`.
+  - NAV_SECTIONS `build` entry: added `landing: 'build'` and set `items: BUILD_PROJECTS` (DRY — mirrors the hub).
+  - DesktopSidebar frame-header: `onClick={() => { if (isLanding) goToClose(section.landing); else toggleFrame(section.id) }}`.
+    Accordion suppressed for landing frames: `const isLanding = !!section.landing; const frameOpen = isLanding ? false : …`,
+    the `SidebarCollapsible` block is wrapped in `{!isLanding && ( … )}` (items never rendered as a sidebar list),
+    and the chevron is swapped for a → arrow. `frameActive` also lights when `activeTabId === section.landing`.
+- Preserved: all 6 project ids/routes/hashes/localStorage — still directly routable via `ALL_TABS`; only reached
+  through the landing now. BUILD landing is not gated (the projects themselves stay in `PREMIUM_TABS`).
+
+**Verify.** acorn-jsx parse OK on `src/App.jsx` + `src/tabs/BuildHubTab.jsx`. No npm build (Mac-only).

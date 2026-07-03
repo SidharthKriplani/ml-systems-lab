@@ -11,6 +11,7 @@ import { ACCESS_CODE, STORAGE_KEY, isUnlocked as checkUnlocked } from './utils/u
 import { authEnabled, onAuthStateChange } from './utils/supabase.js'
 import { pullProgressFromSupabase } from './utils/syncProgress.js'
 import StudyRoom from './study/StudyRoom.jsx'
+import { BUILD_PROJECTS } from './tabs/BuildHubTab.jsx'
 
 
 const HomeTab           = lazy(() => import('./tabs/HomeTab.jsx'))
@@ -58,6 +59,7 @@ const RankingProjectTab = lazy(() => import('./tabs/RankingProjectTab.jsx'))
 const ForecastProjectTab = lazy(() => import('./tabs/ForecastProjectTab.jsx'))
 const NLPContentProjectTab = lazy(() => import('./tabs/NLPContentProjectTab.jsx'))
 const StartHereTab      = lazy(() => import('./tabs/StartHereTab.jsx'))
+const BuildHubTab       = lazy(() => import('./tabs/BuildHubTab.jsx'))
 const DrillBrowser      = lazy(() => import('./components/judge/DrillBrowser.jsx'))
 const PlansTab          = lazy(() => import('./tabs/PlansTab.jsx'))
 const ProfilePage       = lazy(() => import('./tabs/ProfilePage.jsx'))
@@ -139,6 +141,7 @@ const ALL_TABS = [
   { id: 'ranking_project', component: RankingProjectTab },
   { id: 'forecast_project', component: ForecastProjectTab },
   { id: 'nlp_content_project', component: NLPContentProjectTab },
+  { id: 'build',     component: BuildHubTab },
   { id: 'plans',     component: PlansTab },
   { id: 'profile',   component: ProfilePage },
   { id: 'resources',   component: ResourcesTab },
@@ -255,6 +258,8 @@ const TAB_TO_ZONE = {
   optimization_foundation: 'know', data_foundation: 'know',
   // Library also lives under KNOW
   gradient: 'know', cheatsheet: 'know',
+  // BUILD landing (projects grid) — its own frame, routed directly from the sidebar
+  build: 'build',
 }
 const ZONE_DEFAULTS = {
   today: 'home', practice: null, read: 'gradient', interview: null, ask: 'ask',
@@ -424,14 +429,13 @@ const NAV_SECTIONS = [
     id: 'build',
     label: 'BUILD',
     icon: 'hammer',
-    items: [
-      { id: 'projectlab',      label: 'Project Lab · Telco', desc: 'End-to-end churn notebook (Pyodide) with 5 judgment checkpoints.' },
-      { id: 'loan_default',    label: 'Project Lab · Loans', desc: 'Loan-default notebook — fairness audit, ECOA, disparate impact.' },
-      { id: 'fraud_detection', label: 'Project Lab · Fraud', desc: 'Fraud notebook — 1:200 imbalance, precision@K, ops capacity.' },
-      { id: 'ranking_project', label: 'Project Lab · Ranking', desc: 'Retrieve→rank→serve recommender — LTR, NDCG, online A/B. In development.', wip: true },
-      { id: 'forecast_project', label: 'Project Lab · Forecasting', desc: 'Demand forecasting with walk-forward backtesting and intervals. In development.', wip: true },
-      { id: 'nlp_content_project', label: 'Project Lab · NLP/Content', desc: 'Content-embedding cold-start for a new catalog. In development.', wip: true },
-    ],
+    // landing: clicking the BUILD frame header navigates to this tab (the projects
+    // grid on the right) instead of toggling the accordion open. `items` are still
+    // the source-of-truth list (mirrored from BuildHubTab.BUILD_PROJECTS) so
+    // getTabSection / getNavLabel keep resolving each project to the BUILD frame,
+    // but they are NOT rendered as a sidebar accordion (see DesktopSidebar).
+    landing: 'build',
+    items: BUILD_PROJECTS,
   },
   {
     id: 'judge',
@@ -897,13 +901,18 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked, 
         <SidebarNavItem id="about" label="About" {...navProps} />
 
         {NAV_SECTIONS.map(section => {
-          const frameOpen = openFrame === section.id
-          const frameActive = activeSection === section.id
+          // Landing frames (BUILD): the header navigates to a right-pane landing
+          // tab instead of toggling the accordion. Its items stay routable (they're
+          // still in NAV_SECTIONS for getTabSection/getNavLabel) but are never
+          // rendered as a sidebar list — the collapsible is forced closed.
+          const isLanding = !!section.landing
+          const frameOpen = isLanding ? false : openFrame === section.id
+          const frameActive = activeSection === section.id || (isLanding && activeTabId === section.landing)
           return (
             <div key={section.id} style={{ marginTop: '3px' }}>
               <button
-                onClick={() => toggleFrame(section.id)}
-                aria-expanded={frameOpen}
+                onClick={() => { if (isLanding) { goToClose(section.landing) } else { toggleFrame(section.id) } }}
+                aria-expanded={isLanding ? undefined : frameOpen}
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   width: '100%', textAlign: 'left', padding: '9px 10px 5px',
@@ -918,9 +927,12 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked, 
                     transition: 'color var(--t-fast)',
                   }}>{section.label}</span>
                 </span>
-                <SidebarChevron open={frameOpen} active={frameActive} />
+                {isLanding
+                  ? <span aria-hidden="true" style={{ fontSize: '11px', flexShrink: 0, color: frameActive ? 'var(--prime)' : 'var(--ink-ghost)' }}>&#8594;</span>
+                  : <SidebarChevron open={frameOpen} active={frameActive} />}
               </button>
 
+              {!isLanding && (
               <SidebarCollapsible open={frameOpen}>
                 {section.groups ? (
                   section.groups.map(group => {
@@ -970,6 +982,7 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked, 
                   ))
                 )}
               </SidebarCollapsible>
+              )}
             </div>
           )
         })}
