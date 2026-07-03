@@ -3,6 +3,10 @@ import TabHeader from '../components/TabHeader.jsx'
 import PythonCell from '../components/PythonCell.jsx'
 import FidelityBadge from '../components/FidelityBadge.jsx'
 import HowToStrip from '../components/HowToStrip.jsx'
+import GradedCell, { MLImplementBrowser } from '../components/GradedCell.jsx'
+import { ML_CODE_EXERCISES } from '../data/mlCodeExercises.js'
+
+const EX_LS_KEY = 'msl_ml_code_exercises_done'
 import { markActivity } from '../utils/activity.js'
 
 const LS_KEY = 'msl_score:mlcoding'
@@ -1697,6 +1701,16 @@ export default function MLCodingTab({ onNavigate }) {
 
   const [activeType, setActiveType] = useState(0)  // 0 = All
 
+  // Implement-drills mode (auto-graded from-scratch exercises)
+  const [mode, setMode] = useState('rounds')  // 'rounds' | 'drills'
+  const [activeExId, setActiveExId] = useState(null)
+  const [exDone, setExDone] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(EX_LS_KEY) || '[]') } catch { return [] }
+  })
+  useEffect(() => { localStorage.setItem(EX_LS_KEY, JSON.stringify(exDone)) }, [exDone])
+  const markExSolved = (id) => setExDone(prev => prev.includes(id) ? prev : [...prev, id])
+  const activeEx = activeExId ? ML_CODE_EXERCISES.find(e => e.id === activeExId) : null
+
   const filtered = activeType === 0 ? PROBLEMS : PROBLEMS.filter(p => p.type === activeType)
   const done  = completedIds.length
   const total = PROBLEMS.length
@@ -1721,6 +1735,31 @@ export default function MLCodingTab({ onNavigate }) {
         steps={['Read the problem and constraints', 'Write your solution in the live editor', 'Answer the judgment checkpoint — what breaks in production?']}
       />
 
+      {/* Mode toggle: Coding rounds (curated problems) vs Implement drills (auto-graded from-scratch) */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+        {[['rounds', 'Coding rounds', 'Curated senior/staff problems + judgment checkpoints'],
+          ['drills', 'Implement drills', 'Write it from scratch — runs and auto-grades in your browser']].map(([id, label, sub]) => {
+          const on = mode === id
+          return (
+            <button key={id} onClick={() => setMode(id)} style={{
+              flex: 1, textAlign: 'left', padding: '10px 14px', borderRadius: '10px', cursor: 'pointer',
+              border: on ? '1px solid var(--prime)' : '1px solid var(--rim)',
+              background: on ? 'rgba(240,165,0,0.10)' : 'rgba(0,0,0,0.25)', transition: 'all 0.12s',
+            }}>
+              <div style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'var(--font-sans)', color: on ? 'var(--prime)' : 'var(--ink-hi)' }}>{label}</div>
+              <div style={{ fontSize: '11px', color: 'var(--ink-low)', marginTop: '2px' }}>{sub}</div>
+            </button>
+          )
+        })}
+      </div>
+
+      {mode === 'drills' && (
+        activeEx
+          ? <GradedCell exercise={activeEx} onBack={() => setActiveExId(null)} onSolved={() => markExSolved(activeEx.id)} />
+          : <MLImplementBrowser exercises={ML_CODE_EXERCISES} doneSet={new Set(exDone)} onOpen={setActiveExId} />
+      )}
+
+      {mode === 'rounds' && (<>
       {/* Type filter */}
       <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '20px' }}>
         {[{ id: 0, label: 'All Types' }, ...Object.entries(TYPE_META).map(([k, v]) => ({ id: parseInt(k), label: v.short, color: v.color }))].map(t => (
@@ -1769,6 +1808,7 @@ export default function MLCodingTab({ onNavigate }) {
           />
         ))}
       </div>
+      </>)}
 
       {onNavigate && (
         <div style={{ marginTop: '28px', paddingTop: '16px', borderTop: '1px solid var(--rim)' }}>
