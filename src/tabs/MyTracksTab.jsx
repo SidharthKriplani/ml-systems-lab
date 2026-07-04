@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import {
   getTracks, createTrack, renameTrack, deleteTrack,
-  createNote, deleteNote, removeItem, reorderItems, moveItem,
+  createNote, deleteNote, removeItem, reorderItems, moveItem, seedTierTracks,
 } from '../utils/tracks.js'
 import { NoteEditor } from '../components/tracks/NoteEditor.jsx'
 
@@ -68,7 +68,7 @@ function noteBlockSummary(note) {
 
 // ── TrackList sidebar ─────────────────────────────────────────────────────────
 
-function TrackList({ tracks, selectedId, onSelect, onCreate, onDelete, onMoveItem }) {
+function TrackList({ tracks, selectedId, onSelect, onCreate, onDelete, onMoveItem, onBuildTiers }) {
   const [hoverId, setHoverId] = useState(null)
   const [dropId, setDropId] = useState(null)
   const [newName, setNewName] = useState('')
@@ -101,6 +101,20 @@ function TrackList({ tracks, selectedId, onSelect, onCreate, onDelete, onMoveIte
           style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--prime)', fontSize: '1.1rem', lineHeight: 1, padding: '0 0.2rem' }}
         >+</button>
       </div>
+
+      {onBuildTiers && (
+        <button
+          onClick={onBuildTiers}
+          title="Create the S / A / B tier tracks from every Foundation module, ranked by interview frequency"
+          style={{
+            margin: '0 0.5rem 0.75rem', padding: '0.4rem 0.5rem', borderRadius: '7px',
+            fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer',
+            color: 'var(--prime)', background: 'var(--prime-faint)', border: '1px solid var(--prime)',
+          }}
+        >
+          Build S / A / B tier tracks
+        </button>
+      )}
 
       {creating && (
         <form onSubmit={handleCreate} style={{ padding: '0 0.5rem', marginBottom: '0.5rem', display: 'flex', gap: '0.35rem' }}>
@@ -519,6 +533,18 @@ export function MyTracksTab({ onNavigate }) {
           if (selectedId === id) { setSelectedId(null); setOpenNote(null) }
         }}
         onMoveItem={(fromTrackId, toTrackId, index) => { moveItem(fromTrackId, toTrackId, index); refresh() }}
+        onBuildTiers={() => {
+          if (!window.confirm('Build the S / A / B tier tracks? This creates (or rebuilds) three tracks — S Tier, A Tier, B Tier — from every Foundation module, ranked by senior-MLE interview frequency.')) return
+          const res = seedTierTracks()
+          const next = getTracks()
+          setTracks(next)
+          setOpenNote(null)
+          const sTrack = next.find(t => t.name === 'S Tier')
+          if (sTrack) setSelectedId(sTrack.id)
+          const get = n => res.find(r => r.name === n)?.count ?? 0
+          const total = res.reduce((n, r) => n + r.count, 0)
+          window.alert(`Done: S (${get('S Tier')}), A (${get('A Tier')}), B (${get('B Tier')}) — ${total} modules across 3 tracks.`)
+        }}
       />
 
       <div style={{ flex: 1, overflow: 'hidden', background: 'var(--depth)', display: 'flex', flexDirection: 'column' }}>

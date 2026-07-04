@@ -57,5 +57,6 @@ export const FOUNDATION_MODULE_INDEX = FAMILIES.flatMap(f =>
     label: m.title || m.id,
     desc: (m.subtitle || m.summary || '').toString().slice(0, 140),
     domain: f.label + ' Foundations',
+    difficulty: m.difficulty || m.level || 'foundational',
   }))
 )

@@ -8,6 +8,9 @@
 //     { id, type: 'video', url, videoId, platform, title }
 //     { id, type: 'link',  url, domain, title, summary }
 
+import { FOUNDATION_MODULE_INDEX } from '../data/foundationsModuleIndex.js'
+import { tierOf } from '../data/moduleTiers.js'
+
 const KEY = 'msl-tracks-v1'
 const LAST_KEY = 'msl-tracks-last-v1'      // id of the most-recently-added-to track
 const QUICK_KEY = 'msl-tracks-quickadd-v1' // '1' = skip the picker, add straight to last track
@@ -42,6 +45,36 @@ export function renameTrack(id, name) {
 
 export function deleteTrack(id) {
   save(getTracks().filter(t => t.id !== id))
+}
+
+// One-click: (re)build the S / A / B tier tracks from every Foundation module,
+// tagged by interview frequency (moduleTiers.js). Rebuilds cleanly on re-run —
+// any existing S/A/B Tier tracks are replaced. Returns [{ name, count }].
+export function seedTierTracks() {
+  const names = { S: 'S Tier', A: 'A Tier', B: 'B Tier' }
+  const now = Date.now()
+  const buckets = { S: [], A: [], B: [] }
+  const seen = { S: new Set(), A: new Set(), B: new Set() }
+  for (const m of FOUNDATION_MODULE_INDEX) {
+    const t = tierOf(m.moduleId)
+    const key = m.id + '::' + m.moduleId
+    if (seen[t].has(key)) continue
+    seen[t].add(key)
+    buckets[t].push({
+      type: 'module',
+      tabId: m.id,
+      moduleId: m.moduleId,
+      label: m.label,
+      difficulty: m.difficulty,
+      meta: { category: m.domain, tier: t },
+      tier: t,
+      addedAt: now,
+    })
+  }
+  const kept = getTracks().filter(t => !['S Tier', 'A Tier', 'B Tier'].includes(t.name))
+  const tierTracks = ['S', 'A', 'B'].map(t => ({ id: uid(), name: names[t], createdAt: now, items: buckets[t] }))
+  save([...kept, ...tierTracks])
+  return tierTracks.map(t => ({ name: t.name, count: t.items.length }))
 }
 
 export function addModule(trackId, tabId, moduleId, label, difficulty) {

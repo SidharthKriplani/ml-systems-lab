@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { tierOf, TIER_STYLE } from '../../data/moduleTiers.js'
 import { AddToTrackPopover } from '../../components/tracks/AddToTrackPopover.jsx'
 import { getTracksForModule } from '../../utils/tracks.js'
 import { renderMd } from '../../utils/renderMd'
@@ -176,9 +177,7 @@ export function ProductionFoundationTab({ onNavigate, openModuleId }) {
                 background: done ? 'var(--prime)' : 'transparent',
                 border: `2px solid ${done ? 'var(--prime)' : 'var(--rim)'}` }} />
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: '0.83rem', fontWeight: 600, color: done ? 'var(--ink-mid)' : 'var(--ink-hi)', lineHeight: 1.3 }}>
-                  {m.title}
-                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><div style={{ fontSize: '0.83rem', fontWeight: 600, color: done ? 'var(--ink-mid)' : 'var(--ink-hi)', lineHeight: 1.3, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.title}</div>{(() => { const _s = TIER_STYLE[tierOf(m.id)]; return (<span title={tierOf(m.id) + ' tier — interview frequency'} style={{ fontSize: '0.58rem', fontWeight: 800, fontFamily: 'var(--font-mono, monospace)', color: _s.color, background: _s.bg, border: `1px solid ${_s.border}`, borderRadius: '3px', padding: '0.02rem 0.28rem', flexShrink: 0, lineHeight: 1.2 }}>{_s.label}</span>); })()}</div>
                 <div style={{ fontSize: '0.72rem', color: 'var(--ink-low)', marginTop: '0.15rem' }}>
                   {m.estimatedMin} min · {m.difficulty}
                 </div>
