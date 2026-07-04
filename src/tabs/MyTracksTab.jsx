@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import {
   getTracks, createTrack, renameTrack, deleteTrack,
-  createNote, deleteNote, removeItem, reorderItems,
+  createNote, deleteNote, removeItem, reorderItems, moveItem,
 } from '../utils/tracks.js'
 import { NoteEditor } from '../components/tracks/NoteEditor.jsx'
 
@@ -68,8 +68,9 @@ function noteBlockSummary(note) {
 
 // ── TrackList sidebar ─────────────────────────────────────────────────────────
 
-function TrackList({ tracks, selectedId, onSelect, onCreate, onDelete }) {
+function TrackList({ tracks, selectedId, onSelect, onCreate, onDelete, onMoveItem }) {
   const [hoverId, setHoverId] = useState(null)
+  const [dropId, setDropId] = useState(null)
   const [newName, setNewName] = useState('')
   const [creating, setCreating] = useState(false)
   const inputRef = useRef(null)
@@ -139,11 +140,23 @@ function TrackList({ tracks, selectedId, onSelect, onCreate, onDelete }) {
           onClick={() => onSelect(t.id)}
           onMouseEnter={() => setHoverId(t.id)}
           onMouseLeave={() => setHoverId(null)}
+          onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; if (dropId !== t.id) setDropId(t.id) }}
+          onDragLeave={() => setDropId(prev => prev === t.id ? null : prev)}
+          onDrop={e => {
+            e.preventDefault()
+            setDropId(null)
+            try {
+              const d = JSON.parse(e.dataTransfer.getData('application/x-track-item'))
+              if (d && d.fromTrackId && d.fromTrackId !== t.id && Number.isInteger(d.index)) {
+                onMoveItem(d.fromTrackId, t.id, d.index)
+              }
+            } catch (err) {}
+          }}
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             padding: '0.5rem 0.75rem', borderRadius: '7px', cursor: 'pointer',
-            background: t.id === selectedId ? 'var(--prime-faint)' : hoverId === t.id ? 'var(--surface)' : 'transparent',
-            border: `1px solid ${t.id === selectedId ? 'var(--prime)' : 'transparent'}`,
+            background: dropId === t.id ? 'var(--prime-faint)' : t.id === selectedId ? 'var(--prime-faint)' : hoverId === t.id ? 'var(--surface)' : 'transparent',
+            border: `1px solid ${dropId === t.id ? 'var(--prime)' : t.id === selectedId ? 'var(--prime)' : 'transparent'}`,
             marginBottom: '0.2rem', transition: 'all 0.12s',
           }}
         >
@@ -201,12 +214,16 @@ function itemGroup(item) {
 
 // ── TrackItemRow ──────────────────────────────────────────────────────────────
 
-function TrackItemRow({ item, idx, onNavigate, onRemoveItem, onOpenNote, onDeleteNote, dragFrom, setDragFrom, onReorderItems }) {
+function TrackItemRow({ item, idx, trackId, onNavigate, onRemoveItem, onOpenNote, onDeleteNote, dragFrom, setDragFrom, onReorderItems }) {
   return (
     <div
       key={idx}
       draggable
-      onDragStart={() => setDragFrom(idx)}
+      onDragStart={e => {
+        setDragFrom(idx)
+        e.dataTransfer.effectAllowed = 'move'
+        e.dataTransfer.setData('application/x-track-item', JSON.stringify({ fromTrackId: trackId, index: idx }))
+      }}
       onDragOver={e => e.preventDefault()}
       onDrop={() => { if (dragFrom !== null && dragFrom !== idx) { onReorderItems(dragFrom, idx); setDragFrom(null) } }}
       onDragEnd={() => setDragFrom(null)}
@@ -418,6 +435,7 @@ function TrackDetail({ track, onNavigate, onRename, onNewNote, onOpenNote, onDel
                       key={idx}
                       item={item}
                       idx={idx}
+                      trackId={track.id}
                       onNavigate={onNavigate}
                       onRemoveItem={onRemoveItem}
                       onOpenNote={onOpenNote}
@@ -492,6 +510,7 @@ export function MyTracksTab({ onNavigate }) {
           refresh()
           if (selectedId === id) { setSelectedId(null); setOpenNote(null) }
         }}
+        onMoveItem={(fromTrackId, toTrackId, index) => { moveItem(fromTrackId, toTrackId, index); refresh() }}
       />
 
       <div style={{ flex: 1, overflow: 'hidden', background: 'var(--depth)', display: 'flex', flexDirection: 'column' }}>

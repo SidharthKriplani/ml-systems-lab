@@ -130,6 +130,19 @@ export function reorderItems(trackId, fromIndex, toIndex) {
   }))
 }
 
+// Move an item from one track to another (drag-and-drop across tracks).
+export function moveItem(fromTrackId, toTrackId, index) {
+  if (fromTrackId === toTrackId) return
+  const src = getTracks().find(t => t.id === fromTrackId)
+  if (!src || index < 0 || index >= src.items.length) return
+  const item = src.items[index]
+  save(getTracks().map(t => {
+    if (t.id === fromTrackId) return { ...t, items: t.items.filter((_, i) => i !== index) }
+    if (t.id === toTrackId) return { ...t, items: [...t.items, item] }
+    return t
+  }))
+}
+
 // Returns array of track IDs containing this module
 export function getTracksForModule(tabId, moduleId) {
   return getTracks()
