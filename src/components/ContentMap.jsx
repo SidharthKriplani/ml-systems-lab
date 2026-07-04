@@ -183,12 +183,25 @@ export default function ContentMap({ onClose, onNavigate, isUnlocked, practiceDo
   const checkPro = id => premiumTabs.has(id) && !isUnlocked
 
   const q = query.trim().toLowerCase()
-  const filtered = q
-    ? allItems.filter(i =>
-        i.label.toLowerCase().includes(q) ||
-        i.desc.toLowerCase().includes(q) ||
-        i.domain.toLowerCase().includes(q)
-      )
+  const tokens = q.split(/\s+/).filter(Boolean)
+  // Ranked token search: an item matches only if EVERY query token appears somewhere
+  // (label/desc/domain); results are then ranked so exact/prefix/whole-phrase label
+  // matches surface first (so "data quality audit" → the Data Quality Audit module).
+  const filtered = tokens.length
+    ? allItems
+        .map(i => {
+          const label = (i.label || '').toLowerCase()
+          const hay = (label + ' ' + (i.desc || '') + ' ' + (i.domain || '')).toLowerCase()
+          if (!tokens.every(t => hay.includes(t))) return null
+          let score = tokens.filter(t => label.includes(t)).length
+          if (label.includes(q)) score += 25
+          if (label.startsWith(q)) score += 50
+          if (label === q) score += 100
+          return { i, score }
+        })
+        .filter(Boolean)
+        .sort((a, b) => b.score - a.score)
+        .map(x => x.i)
     : null
 
   function go(itemOrId) {

@@ -1051,6 +1051,12 @@ export default function App() {
     return () => subscription.unsubscribe()
   }, [])
 
+  // Reactive redirect: a signed-in user lands on Progress, not the marketing Home
+  // (uniform with PAL/GSL — Home is the signed-out surface).
+  useEffect(() => {
+    if (user && activeTab === 'home') setActiveTab('progress')
+  }, [user, activeTab])
+
   // Reactive: if auth is enabled and user is null, show signed-out home
   const [guestMode, setGuestMode] = useState(false)
   const showSignedOut = authEnabled && !user && !guestMode
