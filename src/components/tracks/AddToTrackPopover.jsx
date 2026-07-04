@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { getTracks, createTrack, addModule, getTracksForModule, addItem, getTracksForItem, getQuickAdd, setQuickAdd, getLastTrack, quickAddItem } from '../../utils/tracks.js'
+import { getTracks, createTrack, addModule, getTracksForModule, addItem, getTracksForItem, getQuickAdd, setQuickAdd, getLastTrack, quickAddItem, removeModuleFromTrack, removeGenericFromTrack } from '../../utils/tracks.js'
 
 /**
  * Popover for adding content to a track.
@@ -25,6 +25,11 @@ export function AddToTrackPopover({
   const doAdd = (trackId) => {
     if (isGeneric) addItem(trackId, itemType, String(itemId), label || '', itemMeta || {})
     else addModule(trackId, tabId, moduleId, label || '', difficulty)
+  }
+
+  const doRemove = (trackId) => {
+    if (isGeneric) removeGenericFromTrack(trackId, itemType, String(itemId))
+    else removeModuleFromTrack(trackId, tabId, moduleId)
   }
 
   const [tracks, setTracks]   = useState(() => getTracks())
@@ -57,7 +62,8 @@ export function AddToTrackPopover({
   }
 
   function handleToggle(trackId) {
-    if (!inTracks.includes(trackId)) doAdd(trackId)
+    if (inTracks.includes(trackId)) doRemove(trackId)
+    else doAdd(trackId)
     refresh()
   }
 
@@ -101,14 +107,15 @@ export function AddToTrackPopover({
           <button
             key={t.id}
             onClick={() => handleToggle(t.id)}
+            title={added ? 'In this track — click to remove' : 'Add to this track'}
             style={{
               display: 'flex', alignItems: 'center', gap: '0.55rem',
               width: '100%', textAlign: 'left', background: 'none', border: 'none',
-              cursor: added ? 'default' : 'pointer', padding: '0.45rem 0.85rem',
+              cursor: 'pointer', padding: '0.45rem 0.85rem',
               color: added ? 'var(--prime)' : 'var(--ink-hi)', fontWeight: added ? 600 : 400,
               fontSize: '0.83rem', transition: 'background 0.12s',
             }}
-            onMouseEnter={e => { if (!added) e.currentTarget.style.background = 'var(--surface-2)' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface-2)' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'none' }}
           >
             <span style={{

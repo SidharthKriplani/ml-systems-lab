@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { FOUNDATION_MODULE_INDEX } from '../data/foundationsModuleIndex.js'
 
 // ── Tree components ────────────────────────────────────────────────────────────
 
@@ -106,7 +107,7 @@ function SearchRow({ item, isPro, onNav, isSelected }) {
   const [hov, setHov] = useState(false)
   return (
     <button
-      onClick={() => onNav(item.id)}
+      onClick={() => onNav(item)}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
@@ -175,6 +176,8 @@ export default function ContentMap({ onClose, onNavigate, isUnlocked, practiceDo
     ),
     ...interviewTools.map(t => ({ id: t.id, label: t.label, desc: t.desc || '', domain: 'Interview' })),
     ...STATIC_TABS,
+    // Every foundation module — so search finds modules by title/subtitle, not just tabs.
+    ...FOUNDATION_MODULE_INDEX,
   ]
 
   const checkPro = id => premiumTabs.has(id) && !isUnlocked
@@ -188,7 +191,12 @@ export default function ContentMap({ onClose, onNavigate, isUnlocked, practiceDo
       )
     : null
 
-  function go(id) {
+  function go(itemOrId) {
+    const item = (itemOrId && typeof itemOrId === 'object') ? itemOrId : null
+    const id = item ? item.id : itemOrId
+    if (item && item.moduleId) {
+      try { localStorage.setItem('msl_goto_module', item.moduleId) } catch { /* ignore */ }
+    }
     if (id === 'foundations-path') {
       onNavigate('gradient')
       setTimeout(() => window.dispatchEvent(new CustomEvent('msl-open-foundations-path')), 50)
@@ -244,7 +252,7 @@ export default function ContentMap({ onClose, onNavigate, isUnlocked, practiceDo
         onKeyDown={e => {
           if (e.key === 'ArrowDown') { e.preventDefault(); setSelectedIdx(idx => idx < (filtered?.length ?? 0) - 1 ? idx + 1 : idx) }
           else if (e.key === 'ArrowUp') { e.preventDefault(); setSelectedIdx(idx => idx > 0 ? idx - 1 : -1) }
-          else if (e.key === 'Enter' && filtered && filtered.length > 0 && selectedIdx >= 0) { e.preventDefault(); go(filtered[selectedIdx].id) }
+          else if (e.key === 'Enter' && filtered && filtered.length > 0 && selectedIdx >= 0) { e.preventDefault(); go(filtered[selectedIdx]) }
           else if (e.key === 'Escape') { onClose() }
         }}
             placeholder="Jump to any tab..."

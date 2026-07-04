@@ -9,6 +9,12 @@ Companion docs: `docs/DRILL_SYSTEM_RUBRIC.md` (the portable interview-gym rubric
 
 ---
 
+## Content Map search indexes all modules + track add/remove toggle — 2026-07-03
+
+(1) **Search bug (reported: "data quality audit" returns nothing):** the Cmd+K Content Map (`ContentMap.jsx`) searched `SEARCH_INDEX` (196 curated tab-level entries) + tabs — NOT the ~203 foundation modules, so module titles like "Data Quality Audit" never surfaced. Built `src/data/foundationsModuleIndex.js` (`FOUNDATION_MODULE_INDEX` — flat {id:tabId, moduleId, label, desc, domain} over all 19 module families, mirrors the ReviewTab FAMILIES registry). Imported into `ContentMap.jsx`, appended to `allItems`; `go()` now sets `localStorage['msl_goto_module']` when a result carries `moduleId` so the family tab opens that exact module; `SearchRow`/Enter pass the full item. Verify: 203 modules indexed, "data quality"→found; ContentMap + App bundle clean. (2) **Track remove:** Add-to-Track popover could only add; added `removeItemRef`/`removeModuleFromTrack`/`removeGenericFromTrack` to `utils/tracks.js` and made `AddToTrackPopover.handleToggle` remove-when-already-added (untick ✓), rows always clickable with tooltip. Verify: tracks.js + popover + App bundle clean.
+
+---
+
 ## Depth-audit + Pricing track authored — 2026-07-03
 
 Ran a full structural depth-audit over all ~203 MSL foundation modules (bundled each `*Modules.js`, checked summary length / keyPoints / checkQuestions / recap / takeaway per module). Result: **196/203 already at the S-tier bar** — the earlier "≈190 unaudited/uneven" worry was wrong; MSL content is strong. The ONLY gap was `pricingModules.js` (7 modules), which were honest `skeleton: true` outlines (spec-only, runner showed "in development"). Authored all 7 to full S-tier depth matching `recsysModules.js` (summary w/ [FIGURE], keyPoints, takeaway, checkQuestions, recap, inline SVG figures; removed skeleton/spec): price_elasticity_of_demand, revenue_vs_margin_objective, price_optimization_under_constraints, dynamic_and_surge_pricing, causal_price_experiments (A/B + geo/diff-in-diff + switchback), promotion_and_discount_uplift, willingness_to_pay_and_competition. Verify: bundle clean; field check = 7/7 at bar, 0 skeleton flags left. MSL is now effectively 203/203 at the S-tier bar. NOT pushed.

@@ -103,6 +103,23 @@ export function removeItem(trackId, index) {
   }))
 }
 
+// Remove the first item in a track matching `pred` (used to untick/remove an item
+// straight from the Add-to-Track popover).
+export function removeItemRef(trackId, pred) {
+  const t = getTracks().find(x => x.id === trackId)
+  if (!t) return
+  const idx = t.items.findIndex(pred)
+  if (idx >= 0) removeItem(trackId, idx)
+}
+
+export function removeModuleFromTrack(trackId, tabId, moduleId) {
+  removeItemRef(trackId, i => i.type === 'module' && i.tabId === tabId && i.moduleId === moduleId)
+}
+
+export function removeGenericFromTrack(trackId, type, itemId) {
+  removeItemRef(trackId, i => i.type === type && String(i.itemId) === String(itemId))
+}
+
 export function reorderItems(trackId, fromIndex, toIndex) {
   save(getTracks().map(t => {
     if (t.id !== trackId) return t
