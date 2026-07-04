@@ -1923,6 +1923,230 @@ export const TRAINER_QUESTIONS = [
     "whatsTested": "Generalization gap between large and small batch training: sharp vs. flat minima.",
     "antiPattern": "Large batches do not overfit in the traditional sense (option D) — they achieve lower training loss. The problem is the geometry of the solution found, not the amount of data processed.",
     "staffFraming": "Practical implication: if you must use large batches (for GPU utilization), increase LR proportionally (linear scaling rule: LR *= batch_size / reference_batch_size) and add warmup. Gradient noise from small batches is not always a bug — sometimes it is the regularizer."
+  },
+  {
+    "id": 121,
+    "domain": "Recommender Systems",
+    "q": "In a deep RecSys ranker with dense features plus high-cardinality categoricals (user_id ~100M, item_id ~10M), where does almost all the parameter count and memory live?",
+    "options": [
+      "In the MLP hidden layers — deep nets are parameter-heavy",
+      "In the embedding tables — a 100M-id feature at d=64 is ~6.4B params (~25GB fp32), dwarfing the MLP",
+      "In the attention layers, which scale quadratically with feature count",
+      "In the output softmax over items, requiring hierarchical softmax"
+    ],
+    "correct": 1,
+    "explanation": "Each categorical id indexes a learned (num_ids x d) matrix; the tables, not the dense MLP, dominate parameters. A 100M-id feature at d=64 is ~6.4B params (~25GB in fp32). This is why DLRM-scale systems shard embedding tables across many hosts while keeping the small dense compute replicated.",
+    "whatsTested": "Whether you understand that embedding tables (not the MLP) are the memory reality of deep RecSys, driving the model-parallel sharding pattern.",
+    "antiPattern": "Blaming the MLP layers and reaching for hidden-unit pruning — the MLP is tiny relative to the tables.",
+    "staffFraming": "Deep RecSys is a sparse-memory problem, not a dense-compute one: shard the tables (model parallel), replicate the dense net (data parallel)."
+  },
+  {
+    "id": 122,
+    "domain": "Recommender Systems",
+    "q": "What does DeepFM give you over Wide & Deep?",
+    "options": [
+      "It adds a wide linear path that Wide & Deep lacks",
+      "It replaces Wide & Deep's hand-crafted cross features with a Factorization Machine that learns all 2nd-order feature crosses automatically via shared embeddings",
+      "It removes embedding tables, so it needs far less memory",
+      "It applies attention over the user's history, which Wide & Deep cannot"
+    ],
+    "correct": 1,
+    "explanation": "Wide & Deep's wide side needs a human to specify which cross-product features matter. DeepFM swaps that manual step for a Factorization Machine that learns every pairwise (2nd-order) interaction automatically through the shared embeddings, keeping a deep MLP for higher-order patterns. It eliminates cross engineering, not embedding tables.",
+    "whatsTested": "Whether you can articulate that DeepFM automates the feature-cross engineering that Wide & Deep requires by hand.",
+    "antiPattern": "Thinking DeepFM removes embeddings or adds a wide path — it removes the manual cross-engineering step.",
+    "staffFraming": "The axis is 'who engineers the crosses': Wide & Deep = the human; DeepFM/DLRM = the model, via FM or explicit dot products."
+  },
+  {
+    "id": 123,
+    "domain": "Recommender Systems",
+    "q": "A user's history has running shoes, a cookbook, and a phone case. Scoring a sneaker vs a blender, what does DIN's local-activation attention do that a fixed pooled user vector cannot?",
+    "options": [
+      "It concatenates the full history into the MLP, giving both candidates the same richer input",
+      "It attends over the history w.r.t. each candidate — up-weighting running shoes for the sneaker, ignoring it for the blender — making the user representation candidate-dependent",
+      "It truncates the history to the most recent item",
+      "It applies bidirectional attention, which is what distinguishes DIN from SASRec"
+    ],
+    "correct": 1,
+    "explanation": "DIN's local activation runs attention over the behaviour history relative to the candidate: the same history contributes different signal per item, so the effective user vector changes with the candidate. A single pooled vector is identical for both candidates and cannot express 'relevant to a sneaker but not a blender'.",
+    "whatsTested": "Whether you grasp candidate-dependent user representation (local activation) as DIN's core mechanism.",
+    "antiPattern": "Confusing DIN's per-candidate attention with recency truncation or with BERT4Rec's bidirectionality.",
+    "staffFraming": "The tell for reaching for DIN: the recent-history-vs-candidate interaction is the dominant signal that a pooled two-tower vector destroys."
+  },
+  {
+    "id": 124,
+    "domain": "Recommender Systems",
+    "q": "You want a sequential recommender you can also run autoregressively to predict the next item from a prefix. SASRec or BERT4Rec, and why?",
+    "options": [
+      "BERT4Rec — bidirectional attention gives the strongest representations, so it is always preferred",
+      "SASRec — unidirectional (causal) self-attention trained to predict the next item is naturally autoregressive; BERT4Rec's masked-cloze objective is not a pure left-to-right generator",
+      "Either — the only difference is BERT4Rec trains faster",
+      "Neither — sequence models can't do next-item prediction"
+    ],
+    "correct": 1,
+    "explanation": "SASRec uses causal left-to-right self-attention to predict the next item, so it is directly usable autoregressively. BERT4Rec uses bidirectional self-attention with a masked-item (cloze) objective, seeing future context in training for stronger representations, but that objective is not a pure next-item generator.",
+    "whatsTested": "Whether you know the unidirectional (SASRec) vs bidirectional-masked (BERT4Rec) distinction and its consequence for autoregressive next-item prediction.",
+    "antiPattern": "Assuming 'bidirectional = strictly better', ignoring that it forfeits clean autoregressive generation.",
+    "staffFraming": "Match the training objective to the serving need: causal for next-item generation, masked/bidirectional for representation quality."
+  },
+  {
+    "id": 125,
+    "domain": "Recommender Systems",
+    "q": "In a two-tower retriever trained with sampled softmax / InfoNCE, why is the choice of negatives often more decisive for recall than making the encoder deeper?",
+    "options": [
+      "Deeper encoders always overfit, so negatives are irrelevant",
+      "Positives are fixed by the data, so the entire learning signal is shaped by which negatives sit in the softmax denominator; wrong negatives (too easy, or popularity-biased) cap recall regardless of encoder depth",
+      "Encoder depth only affects latency, never accuracy",
+      "Negatives only change the ANN index geometry"
+    ],
+    "correct": 1,
+    "explanation": "The contrastive gradient pulls the user toward the positive and pushes it away from each negative. The positives are given by the data, so the negatives in the denominator define what the model is pushed away from. A better encoder refines a signal the negatives define; too-easy or popularity-biased negatives cap recall no matter how deep the tower is.",
+    "whatsTested": "Whether you understand that the negative-sampling scheme, not encoder architecture, is the first-order lever on retrieval recall.",
+    "antiPattern": "Reaching for a deeper tower to fix recall before auditing the negative distribution.",
+    "staffFraming": "Fix the negatives before deepening the encoder — sampling scheme dominates recall."
+  },
+  {
+    "id": 126,
+    "domain": "Recommender Systems",
+    "q": "Trace the in-batch popularity-collapse failure. Why does naive in-batch training over-suppress popular items?",
+    "options": [
+      "Popular items have larger embeddings that saturate the softmax",
+      "Popular items are positives for many users, so in any batch they appear as negatives for everyone else; the gradient pushes nearly all users away from them, the model learns 'popular = negative', and recall on the most-wanted items collapses",
+      "Popular items are sampled less often, so they stay under-trained and random",
+      "The ANN index deprioritises high-degree nodes at query time"
+    ],
+    "correct": 1,
+    "explanation": "In-batch negatives are drawn from the interaction distribution, so a popular item shows up as a negative for almost every user whose positive it isn't. The contrastive gradient then pushes almost all users' embeddings away from it, including users who would love it. The model learns 'popular = negative' and head recall craters.",
+    "whatsTested": "Whether you can mechanistically trace in-batch popularity collapse rather than just name it.",
+    "antiPattern": "Attributing the collapse to embedding magnitude or the ANN index instead of the sampling distribution.",
+    "staffFraming": "The bug is causal-in-the-sampler: in-batch sampling correlates 'is a negative' with 'is popular'."
+  },
+  {
+    "id": 127,
+    "domain": "Recommender Systems",
+    "q": "What does the logQ (sampled-softmax) correction do, and why is it more than a nicety for in-batch training?",
+    "options": [
+      "It normalises embedding magnitudes into [-1, 1]",
+      "It subtracts each item's log sampling probability from its logit (u·v - log Q(j)), undoing in-batch over-representation of popular items as negatives — which is what prevents popularity collapse",
+      "It adds L2 regularisation to the embedding tables",
+      "It replaces the softmax with a sigmoid for implicit feedback"
+    ],
+    "correct": 1,
+    "explanation": "In-batch sampling over-represents popular items as negatives, systematically over-penalising them. Subtracting log Q(j) from each logit de-biases the objective back toward an unbiased estimate, which is exactly what stops the popularity-collapse feedback loop. It is load-bearing, not a marginal tweak.",
+    "whatsTested": "Whether you know the logQ correction's mechanism and that it is the fix for in-batch popularity collapse.",
+    "antiPattern": "Treating logQ as an optional regulariser rather than the debiasing step in-batch training needs.",
+    "staffFraming": "logQ is what keeps in-batch training from eating itself; expect it probed whenever you mention in-batch negatives."
+  },
+  {
+    "id": 128,
+    "domain": "Recommender Systems",
+    "q": "Your team runs a solid two-tower retriever plus a GBDT ranker on tabular features. When is switching the ranker to DLRM or DIN actually justified?",
+    "options": [
+      "Always — deep architectures strictly dominate GBDTs on tabular ranking",
+      "When there's a concrete signal a GBDT captures poorly: many high-cardinality categorical crosses you don't want to hand-engineer (DLRM), or a dominant recent-history-vs-candidate interaction (DIN); absent that, the DL model mostly adds serving cost and embedding-table memory",
+      "Whenever offline AUC is below 0.9",
+      "Only when the catalog exceeds 1M items"
+    ],
+    "correct": 1,
+    "explanation": "GBDTs are a strong tabular default. DLRM earns its cost when un-engineered high-cardinality crosses dominate (explicit pairwise interactions over embeddings); DIN earns it when the history-vs-candidate interaction dominates (local activation). Without such a signal, the heavier architecture buys cost and embedding-table memory, not accuracy.",
+    "whatsTested": "Whether you apply when-each-fits judgement rather than cargo-culting deep RecSys over a strong GBDT baseline.",
+    "antiPattern": "Assuming DL strictly dominates GBDTs on tabular ranking and switching without a concrete signal.",
+    "staffFraming": "Name the specific interaction the GBDT misses before proposing DLRM/DIN — otherwise you're spending latency and memory for nothing."
+  },
+  {
+    "id": 129,
+    "domain": "Experimentation",
+    "q": "A challenger model shows +3% AUC offline. Your manager wants to ship on that number alone. Best response?",
+    "options": [
+      "Ship it — a 3% offline AUC lift is a large, reliable launch signal.",
+      "Offline AUC is measured on data the old model shaped and ignores product impact; run a live champion/challenger A/B sized for the MDE that matters, and judge on the real product metric plus guardrails.",
+      "Ship to 100% with a fast rollback ready — that is equivalent to an A/B test.",
+      "Retrain until offline AUC exceeds +5%, then ship without a live test."
+    ],
+    "correct": 1,
+    "explanation": "Offline metrics are computed on logs the incumbent shaped (feedback/exposure bias) and do not measure product impact. Only a live A/B on the product metric, with guardrails, licenses a launch.",
+    "whatsTested": "Offline-vs-online gap; why AUC does not launch a model.",
+    "antiPattern": "Treating an offline metric lift as a ship decision.",
+    "staffFraming": "A staff engineer reframes 'is the model better?' as 'is the product better, measured live, without tripping a guardrail?'"
+  },
+  {
+    "id": 130,
+    "domain": "Experimentation",
+    "q": "A 50/50 experiment logs 50.1% control and 47.9% treatment across 2M users after a day. What should you conclude?",
+    "options": [
+      "A 2-point gap is normal randomization noise at this scale; proceed.",
+      "This is a sample-ratio mismatch — at 2M users that split is astronomically unlikely by chance, so randomization or logging is broken; every downstream metric is untrustworthy. Chi-square to confirm, then stop and fix the plumbing.",
+      "Treatment is simply less popular — log it as a negative engagement finding.",
+      "Re-randomize only the treatment arm to rebalance, then continue."
+    ],
+    "correct": 1,
+    "explanation": "SRM is a chi-square goodness-of-fit on the observed split vs intended ratio. A significant deviation means broken assignment/logging (a crashing arm dropping users, failed redirects), making the arms non-comparable — so no metric is trustworthy until fixed.",
+    "whatsTested": "SRM as the first plumbing sanity check.",
+    "antiPattern": "Reading the treatment effect before validating the assignment split.",
+    "staffFraming": "The first thing a senior person checks is the split, not the lift."
+  },
+  {
+    "id": 131,
+    "domain": "Experimentation",
+    "q": "A new ranker lifts session clicks +2.1% (p<0.01), but p99 latency rose 80→130ms and revenue/session dropped 0.8%. Launch?",
+    "options": [
+      "Yes — the target metric won decisively; latency and revenue are secondary.",
+      "No — latency and revenue are guardrail metrics the launch must not harm; a +2.1% click win that adds 50ms p99 and drops revenue is a guardrail breach, not a ship. Investigate the tradeoff first.",
+      "Yes, but only for mobile users, since latency only matters on slow connections.",
+      "Re-run without logging latency so the guardrail cannot block a significant win."
+    ],
+    "correct": 1,
+    "explanation": "Guardrails (latency, error rate, revenue, crash/report rates) are non-negotiables. ML-specific failure modes (heavier network → p99 latency, feedback loops) surface in guardrails, not the headline metric. A target win that trips one is not a launch.",
+    "whatsTested": "Guardrail metrics gating a launch.",
+    "antiPattern": "Shipping on a significant target-metric win while ignoring guardrail regressions.",
+    "staffFraming": "Define the guardrails and their thresholds before the test starts, not after a win."
+  },
+  {
+    "id": 132,
+    "domain": "Experimentation",
+    "q": "A noisy metric needs six weeks of traffic for a 1% MDE and you do not have it. What does CUPED do and why does it help?",
+    "options": [
+      "It increases the treatment effect so the same effect is easier to detect.",
+      "It uses each user pre-experiment behavior as a covariate to subtract predictable baseline variance (Y_adj = Y − θ(X − E[X])); the effect stays unbiased because X is pre-treatment, but variance drops by ~ the squared pre/post correlation — shrinking the MDE or runtime at the same n.",
+      "It raises alpha from 0.05 to 0.10, making significance easier without more data.",
+      "It replaces the metric with a lower-variance proxy by definition."
+    ],
+    "correct": 1,
+    "explanation": "CUPED regresses out pre-period variance. Since X is pre-treatment it cannot be affected by assignment, so the effect estimate is unbiased; variance falls ~ρ², commonly 30–50%, cutting required n proportionally — free power from a join to historical data.",
+    "whatsTested": "CUPED mechanism: reduces variance (noise), not the effect.",
+    "antiPattern": "Believing CUPED changes the effect estimate or the alpha level.",
+    "staffFraming": "CUPED is the cheapest lever to finish a test sooner — a covariate join, no extra traffic."
+  },
+  {
+    "id": 133,
+    "domain": "Experimentation",
+    "q": "A PM wants to stop a fixed-horizon A/B test 'the moment it hits p<0.05,' refreshing the dashboard daily. Why is this dangerous and what is the fix?",
+    "options": [
+      "It is fine — p<0.05 means 95% confidence whenever observed, so early stopping is valid.",
+      "Each extra look is another chance for noise to cross alpha, so repeated peeking inflates the true false-positive rate well above 5% (toward 100% with continuous peeking). Use sequential testing / always-valid p-values / group-sequential boundaries that spend the error budget across looks.",
+      "The only harm is a smaller sample size; peeking itself does not affect the FPR, so plan a larger n.",
+      "Switch to a one-sided test, which halves the p-value and makes early stopping safe."
+    ],
+    "correct": 1,
+    "explanation": "Fixed-horizon significance is only valid at one pre-planned look. Multiple looks multiply the chances of a spurious crossing; ~20 daily peeks push the real FPR from 5% toward ~64%. Always-valid/sequential methods maintain the guarantee under continuous monitoring.",
+    "whatsTested": "The peeking problem and sequential/always-valid remedies.",
+    "antiPattern": "Stopping a fixed-horizon test early the instant p<0.05.",
+    "staffFraming": "If you must watch the dashboard, use a method built to be peeked at."
+  },
+  {
+    "id": 134,
+    "domain": "Experimentation",
+    "q": "You need to detect a 0.5% lift instead of 1%, holding alpha and power fixed. Roughly how does required sample size change, and cheapest offset?",
+    "options": [
+      "It roughly doubles (n ∝ 1/MDE); the only fix is to wait twice as long.",
+      "It roughly quadruples (n ∝ 1/MDE², halving MDE squares the factor); the cheapest offset is CUPED — cutting variance 30–50% with pre-period data lowers required n without extra traffic or runtime.",
+      "It stays the same — MDE affects only power, not sample size.",
+      "It roughly halves, because a smaller effect is easier to detect."
+    ],
+    "correct": 1,
+    "explanation": "Required n per arm ∝ variance/MDE², so halving the MDE quadruples n. Reducing the numerator (variance) via CUPED is the cheapest lever when you cannot add traffic.",
+    "whatsTested": "The n ∝ 1/MDE² relationship and the variance lever.",
+    "antiPattern": "Assuming sample size scales linearly (not quadratically) with the effect you want to detect.",
+    "staffFraming": "Power math has a quadratic wall in MDE; the practical escape is variance reduction, not just more users."
   }
 ];
 

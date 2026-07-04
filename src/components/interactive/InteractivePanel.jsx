@@ -58,6 +58,9 @@ const registry = {
   retrieval_funnel_viz:        lazy(() => import('./RetrievalFunnelViz').then(m => ({ default: m.RetrievalFunnelViz }))),
   latency_budget_viz:          lazy(() => import('./LatencyBudgetViz').then(m => ({ default: m.LatencyBudgetViz }))),
   value_model_mixer_viz:       lazy(() => import('./ValueModelMixerViz').then(m => ({ default: m.ValueModelMixerViz }))),
+  dl_recsys_arch_viz:          lazy(() => import('./DLRecSysArchViz').then(m => ({ default: m.DLRecSysArchViz }))),
+  negative_sampling_viz:       lazy(() => import('./NegativeSamplingViz').then(m => ({ default: m.NegativeSamplingViz }))),
+  experiment_power_viz:        lazy(() => import('./ExperimentPowerViz').then(m => ({ default: m.ExperimentPowerViz }))),
   // Causal
   confounding_bias_viz:        lazy(() => import('./ConfoundingBiasViz').then(m => ({ default: m.ConfoundingBiasViz }))),
   parallel_trends_viz:         lazy(() => import('./ParallelTrendsViz').then(m => ({ default: m.ParallelTrendsViz }))),

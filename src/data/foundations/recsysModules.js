@@ -660,22 +660,253 @@ export const RECSYS_MODULES = [
   },
   {
     id: 'recsys_dl_architectures',
+    interactiveId: 'dl_recsys_arch_viz',
     title: 'Deep-Learning RecSys Architectures',
-    subtitle: 'Wide & Deep, DeepFM, DLRM, DIN, and sequence models (SASRec/BERT4Rec) — when each fits.',
+    subtitle: 'Wide & Deep, DeepFM, DLRM, DIN, and sequence models (SASRec/BERT4Rec) — what each models and when it fits',
     difficulty: 'advanced',
     estimatedMin: 26,
     tags: ['RecSys', 'deep learning', 'DLRM', 'DIN', 'sequence models'],
-    skeleton: true,
-    spec: `Cover the named DL recsys architectures interviewers ask for: Wide & Deep (memorisation + generalisation), DeepFM (FM feature crosses), DLRM (embedding tables + interaction), DIN (attention over user history), and sequence models SASRec/BERT4Rec (self-attention over interaction sequences). Explain embedding tables, feature crosses, and when each beats a plain two-tower + GBDT ranker.`,
+    summary: `Once retrieval has handed the ranker a few hundred candidates, the interesting modelling question becomes: *how do you turn a pile of categorical features — user id, item id, category, device, hour, the user's last 50 clicks — into a score?* The named architectures interviewers reach for are all answers to that one question, and each one is defined by *which interactions it can represent*.
+
+[FIGURE: embtable]
+
+---
+
+**Everything starts with embedding tables.** A categorical feature like item_id with 10M values can't go into a network as a one-hot vector — that's a 10M-wide input. Instead each id indexes into an **embedding table**: a learned matrix of shape (num_ids × d), where a lookup returns a dense d-vector (d ≈ 16–128). This is the memory reality of deep RecSys: the tables, not the MLP, dominate the parameter count — a single 100M-id feature at d=64 is 6.4B parameters (~25GB in fp32), which is exactly why industrial systems (DLRM) shard embedding tables across many hosts while the dense compute stays small. A **feature cross** is the other primitive: the signal "this *user* likes this *category*" isn't in either feature alone; it lives in their conjunction, and an architecture is largely characterised by whether it learns crosses automatically or needs them hand-engineered.
+
+[FIGURE: archgrid]
+
+---
+
+**Wide & Deep and DeepFM: memorisation plus generalisation.** *Wide & Deep* (Google) runs two paths in parallel: a **wide** linear model over hand-crafted cross-product features (memorises specific "user_X installed app_Y" combinations seen in training) and a **deep** MLP over embeddings (generalises to unseen combinations via dense similarity). The wide side needs a human to specify which crosses matter. *DeepFM* removes that manual step: it replaces the wide part with a **Factorization Machine** that learns *all* pairwise (2nd-order) feature interactions automatically through shared embeddings, then adds a deep MLP for higher-order patterns — same embeddings feed both, no cross engineering.
+
+---
+
+**DLRM, DIN, and sequence models.** *DLRM* (Meta) is the industrial workhorse: embed every categorical, take **explicit pairwise dot products** between all embedding pairs (2nd-order interaction), concatenate with dense features, and pass through an MLP — its identity is the embedding-table-memory reality above. *DIN* (Alibaba) adds **local activation**: instead of pooling a user's behaviour history into one fixed vector, it runs **attention over the history with respect to the candidate item**, so a user's past interest in *running shoes* is up-weighted when scoring a *sneaker* and ignored when scoring a *blender* — the user representation becomes candidate-dependent. *Sequence models* go further and model *order*: **SASRec** uses **unidirectional (causal) self-attention** over the interaction sequence to predict the next item (left-to-right, like a language model); **BERT4Rec** uses **bidirectional** self-attention with a **masked-item** ("cloze") objective, seeing both past and future context during training — stronger representations, but it can't be used autoregressively for pure next-item prediction the way SASRec can. The judgement call: a plain **two-tower + GBDT** ranker is an excellent, cheap default; you reach for these when *feature crosses matter and you don't want to hand-engineer them* (DeepFM/DLRM), when *the recent-history-vs-candidate interaction is the dominant signal* (DIN), or when *sequential order carries the intent* (SASRec/BERT4Rec).`,
+    interactivePrompt: `Before you pick an architecture: on the same user (id, category, and a click history), which architectures make the user's representation *depend on the candidate item*, and which produce one fixed user vector regardless of what you're scoring? That distinction is DIN's whole reason to exist.`,
+    keyPoints: [
+      `**Embedding tables are the memory reality of deep RecSys.** Each categorical id indexes a learned (num_ids × d) matrix; the tables — not the MLP — dominate parameters (100M ids × d=64 ≈ 6.4B params, ~25GB). This is why DLRM-scale systems shard embedding tables across hosts while dense compute stays small.`,
+      `**Wide & Deep vs DeepFM = the cost of feature crosses.** Wide & Deep memorises via hand-crafted cross-product features (wide) + generalises via an embedding MLP (deep); DeepFM replaces the manual wide part with a Factorization Machine that learns *all* 2nd-order crosses automatically through shared embeddings — no cross engineering.`,
+      `**DLRM makes the interaction explicit; DIN makes the user representation candidate-dependent.** DLRM takes pairwise dot products between all embedding pairs, then an MLP. DIN runs attention over the user's behaviour history *w.r.t. the candidate* (local activation), so relevant past behaviour is up-weighted per candidate instead of pooled into one fixed vector.`,
+      `**SASRec vs BERT4Rec = unidirectional vs bidirectional sequence modelling.** SASRec uses causal (left-to-right) self-attention to predict the next item, so it's naturally autoregressive; BERT4Rec uses bidirectional self-attention with a masked-item (cloze) objective, seeing future context in training for stronger representations but not usable for pure autoregressive next-item generation.`,
+      `**A two-tower + GBDT ranker is the right default; reach for DL architectures for a specific reason.** DeepFM/DLRM when un-engineered feature crosses matter; DIN when the history-vs-candidate interaction dominates; SASRec/BERT4Rec when sequential order carries intent. Adopting a heavier architecture without one of those reasons buys cost, not accuracy.`,
+    ],
+    takeaway: `Deep-learning RecSys architectures are all answers to "how do you turn categorical features into a score," and each is defined by which interactions it represents: Wide & Deep (hand-crafted crosses + embedding MLP), DeepFM (FM learns all 2nd-order crosses automatically), DLRM (explicit pairwise dot products, with embedding tables as the memory reality), DIN (attention over history w.r.t. the candidate → candidate-dependent user vector), and SASRec/BERT4Rec (unidirectional vs bidirectional self-attention over the interaction sequence). A two-tower + GBDT ranker is the cheap strong default; you upgrade only when crosses, history-vs-candidate, or order is the dominant signal.`,
+    checkQuestions: [
+      {
+        q: `In a deep RecSys ranker with a few dense features and several high-cardinality categorical features (user_id ~100M, item_id ~10M), where does almost all the parameter count and memory live, and what is the standard consequence?`,
+        options: [
+          `A) In the MLP layers — deep networks are parameter-heavy, so the fix is to prune hidden units.`,
+          `B) In the embedding tables — a 100M-id feature at d=64 is ~6.4B parameters (~25GB fp32), dwarfing the dense MLP. Industrial systems (DLRM) therefore shard embedding tables across many hosts while keeping the dense compute small and replicated.`,
+          `C) In the attention layers, which scale quadratically with the number of features.`,
+          `D) In the output softmax over items, which is why hierarchical softmax is required.`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `What precisely does DeepFM give you over Wide & Deep?`,
+        options: [
+          `A) It adds a wide linear path that Wide & Deep lacks, improving memorisation of rare combinations.`,
+          `B) It replaces Wide & Deep's manually hand-crafted cross-product features with a Factorization Machine that learns *all* pairwise (2nd-order) feature interactions automatically through the shared embeddings — removing the human cross-engineering step while keeping a deep MLP for higher-order patterns.`,
+          `C) It removes embedding tables entirely, so it needs far less memory than Wide & Deep.`,
+          `D) It uses attention over the user's history, which Wide & Deep cannot do.`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `A user's click history contains running shoes, a cookbook, and a phone case. DIN scores two candidates: a sneaker and a blender. What does DIN's local-activation attention do that a fixed pooled user vector cannot?`,
+        options: [
+          `A) It concatenates the whole history into the MLP, giving both candidates the same richer input.`,
+          `B) It attends over the history *with respect to each candidate*: for the sneaker it up-weights the running-shoes interaction (relevant) and for the blender it largely ignores it — making the user's effective representation candidate-dependent, so the same history contributes different signal per item. A single pooled vector is the same for both candidates and can't do this.`,
+          `C) It sorts the history by recency and truncates to the last item, which is all that matters.`,
+          `D) It applies bidirectional attention over the history, which is what distinguishes DIN from SASRec.`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `You want a sequential recommender you can also run autoregressively to predict the *next* item given a prefix. Between SASRec and BERT4Rec, which fits and why?`,
+        options: [
+          `A) BERT4Rec — its bidirectional attention gives the strongest representations, so it is always preferred for next-item prediction.`,
+          `B) SASRec — it uses unidirectional (causal, left-to-right) self-attention trained to predict the next item, so it is naturally autoregressive. BERT4Rec's bidirectional masked-item (cloze) objective sees future context in training and yields strong representations, but it is not a pure left-to-right next-item generator.`,
+          `C) Either works identically; the only difference is BERT4Rec is faster to train.`,
+          `D) Neither — sequence models can't do next-item prediction; you need a two-tower retriever for that.`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `Your team runs a solid two-tower retriever plus a GBDT ranker on tabular features. When is switching the ranker to DLRM or DIN actually justified, rather than cargo-culting?`,
+        options: [
+          `A) Always — deep architectures strictly dominate GBDTs on tabular ranking, so any switch is an upgrade.`,
+          `B) When there's a concrete signal a GBDT captures poorly: many high-cardinality categorical *crosses* you don't want to hand-engineer (DLRM's explicit pairwise interactions over embeddings), or a dominant recent-history-vs-candidate interaction (DIN's local activation). Absent such a signal, the DL model mostly adds serving cost and embedding-table memory for marginal gain.`,
+          `C) Whenever offline AUC is below 0.9, since DL models are the only way past that threshold.`,
+          `D) Only when the catalog exceeds 1M items, which is the point GBDTs stop training.`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `Which statement about feature crosses across these architectures is correct?`,
+        options: [
+          `A) Wide & Deep and DeepFM both require the engineer to specify which crosses to model.`,
+          `B) A raw MLP over concatenated embeddings does *not* automatically learn explicit low-order feature crosses well, which is exactly why DeepFM (FM component) and DLRM (explicit pairwise dot products) add a dedicated interaction mechanism — the "user × category" conjunction lives in neither feature alone and must be modelled explicitly to be captured reliably.`,
+          `C) DLRM avoids feature crosses entirely and relies solely on its MLP, which is why it needs so many layers.`,
+          `D) Factorization Machines can only model 3rd-order and higher interactions, never pairwise ones.`,
+        ],
+        answer: `B`,
+      },
+    ],
+    recap: [
+      `**Embedding tables are the memory reality:** each categorical id indexes a learned (num_ids × d) matrix; tables dominate params (100M ids × d=64 ≈ 6.4B, ~25GB), so DLRM-scale systems shard tables across hosts while dense compute stays small. A feature cross ("user × category") lives in the conjunction, not either feature alone.`,
+      `**Wide & Deep vs DeepFM:** Wide & Deep = hand-crafted cross features (wide, memorises) + embedding MLP (deep, generalises). DeepFM replaces the manual wide part with a Factorization Machine that learns *all* 2nd-order crosses automatically via shared embeddings — no cross engineering — plus a deep MLP.`,
+      `**DLRM vs DIN:** DLRM embeds every categorical, takes explicit pairwise dot products (2nd-order interaction), then an MLP. DIN adds local activation — attention over the user's behaviour history *w.r.t. the candidate item* — making the user representation candidate-dependent instead of a single pooled vector.`,
+      `**SASRec vs BERT4Rec:** both model *order* via self-attention over the interaction sequence. SASRec = unidirectional/causal (next-item, naturally autoregressive); BERT4Rec = bidirectional with a masked-item (cloze) objective (stronger representations from future context in training, not a pure autoregressive generator).`,
+      `**Default and upgrade rule:** two-tower + GBDT is the cheap strong default. Upgrade to DeepFM/DLRM for un-engineered crosses, DIN for a dominant history-vs-candidate interaction, SASRec/BERT4Rec when sequential order carries intent — otherwise you buy cost, not accuracy.`,
+    ],
+    figures: {
+      embtable: `<svg viewBox="0 0 360 104" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="6" y="12" fill="var(--ink-low)" font-size="7.5">categorical id → embedding-table lookup → dense d-vector (tables dominate memory)</text>
+  <rect x="14" y="22" width="70" height="22" rx="4" fill="var(--depth)" stroke="var(--rim)"/>
+  <text x="49" y="36" text-anchor="middle" fill="var(--ink-hi)" font-size="8">item_id = 7318</text>
+  <path d="M84,33 L120,33" stroke="var(--ink-low)" stroke-width="1" marker-end="url(#a1)"/>
+  <rect x="122" y="18" width="70" height="60" rx="4" fill="var(--prime-faint)" stroke="var(--prime)"/>
+  <text x="157" y="14" text-anchor="middle" fill="var(--ink-mid)" font-size="7">table (10M × d)</text>
+  ${[0,1,2,3].map(i=>`<rect x="130" y="${24+i*13}" width="54" height="9" rx="1.5" fill="${i===2?'var(--amber)':'var(--rim)'}" opacity="${i===2?'0.9':'0.4'}"/>`).join('')}
+  <path d="M192,48 L228,48" stroke="var(--ink-low)" stroke-width="1" marker-end="url(#a1)"/>
+  <rect x="230" y="38" width="124" height="20" rx="4" fill="none" stroke="var(--amber)"/>
+  <text x="292" y="51" text-anchor="middle" fill="var(--amber)" font-size="8" font-weight="700">dense vector (d=64)</text>
+  <text x="6" y="96" fill="var(--ink-low)" font-size="7.5">100M ids × d=64 ≈ 6.4B params (~25GB) → DLRM shards tables across hosts</text>
+  <defs><marker id="a1" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="var(--ink-low)"/></marker></defs>
+</svg>`,
+      archgrid: `<svg viewBox="0 0 360 116" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  ${[['Wide & Deep','crosses (manual) + deep'],['DeepFM','FM learns all 2nd-order'],['DLRM','explicit pairwise dot-prod'],['DIN','attention over history / candidate'],['SASRec','unidirectional sequence'],['BERT4Rec','bidirectional / masked']].map((s,i)=>{const c=i%3,r=Math.floor(i/3);const seq=i>=4;return `
+  <rect x="${8+c*116}" y="${16+r*44}" width="108" height="36" rx="6" fill="${seq?'none':'var(--prime-faint)'}" stroke="${seq?'var(--amber)':'var(--prime)'}"/>
+  <text x="${62+c*116}" y="${31+r*44}" text-anchor="middle" fill="${seq?'var(--amber)':'var(--ink-hi)'}" font-size="8.5" font-weight="700">${s[0]}</text>
+  <text x="${62+c*116}" y="${43+r*44}" text-anchor="middle" fill="var(--ink-mid)" font-size="6.6">${s[1]}</text>`}).join('')}
+  <text x="8" y="112" fill="var(--ink-low)" font-size="7.5">each is defined by which interaction it can represent — crosses, history-vs-candidate, or order</text>
+</svg>`,
+    },
   },
   {
     id: 'recsys_representation_learning',
+    interactiveId: 'negative_sampling_viz',
     title: 'Representation Learning for RecSys',
-    subtitle: 'Negative sampling (in-batch, hard, popularity-corrected) and two-tower objectives — why sampling dominates retrieval quality.',
+    subtitle: 'Two-tower objectives, negative sampling (in-batch, hard, popularity-corrected) — why sampling dominates retrieval quality',
     difficulty: 'advanced',
     estimatedMin: 24,
-    tags: ['RecSys', 'embeddings', 'negative sampling', 'contrastive'],
-    skeleton: true,
-    spec: `How retrieval embeddings are actually trained: the two-tower objective (sampled softmax / contrastive), negative-sampling schemes (in-batch, hard, popularity/log-Q correction), and embedding regularisation. Show why the negative-sampling choice dominates retrieval recall more than the encoder architecture, and the classic failure of naive in-batch negatives under popularity skew.`,
+    tags: ['RecSys', 'embeddings', 'negative sampling', 'contrastive', 'logQ correction'],
+    summary: `The counter-intuitive lesson of retrieval training is that the *encoder architecture* is rarely what limits recall — the **negative-sampling scheme** is. You can swap a deeper tower in for a shallower one and move recall a point or two; change how you pick negatives and recall can move ten points. This module is about why that is, and about the single most famous failure mode in the field: naive in-batch negatives collapsing under popularity skew.
+
+[FIGURE: objective]
+
+---
+
+**The two-tower objective is contrastive: pull the positive together, push negatives apart.** You have positives (user *u* clicked item *i⁺*) but no labelled negatives. Training frames it as a **softmax over items**: maximise the probability of *i⁺* against a set of sampled negatives, i.e. **sampled softmax** — equivalently the **InfoNCE / contrastive** loss L = −log( exp(u·v⁺) / (exp(u·v⁺) + Σⱼ exp(u·vⱼ⁻)) ). The gradient literally *pulls* u toward v⁺ and *pushes* it away from each negative vⱼ⁻. So the whole learning signal is shaped by **which negatives you put in that denominator** — the positives are fixed by the data; the negatives are your design choice, and they are where retrieval quality is won or lost.
+
+---
+
+**The three negative-sampling schemes, and their tradeoffs.** (1) **In-batch negatives** — the cheap default: within a batch of B (user, item) pairs, use every *other* user's positive as a negative, giving B×(B−1) negatives for free with no extra lookups. The problem: batches are sampled from the *interaction* distribution, so **popular items appear as negatives far more often** than rare ones. (2) **Hard negatives** — mined items that score *high but weren't clicked* (near-misses). Random in-batch negatives are usually trivially easy (a cooking video vs a random car part → near-zero gradient, nothing learned); hard negatives sit right on the decision boundary and produce the gradient that actually sharpens fine distinctions, which is what lifts recall. (3) **Popularity / logQ correction** — because in-batch sampling over-represents popular items as negatives, they get systematically *over-penalised*; the fix is to subtract each item's **log sampling probability** from its logit (u·vⱼ − log Q(j)), the sampled-softmax correction, restoring an unbiased objective.
+
+[FIGURE: collapse]
+
+---
+
+**The classic failure: in-batch popularity collapse.** Follow the mechanism. Popular items are positives for *many* users, so in any batch they show up as *negatives* for everyone whose positive they aren't. The contrastive gradient therefore pushes almost every user's embedding *away* from popular items — even users who would love them. The model learns "popular = negative," over-suppresses head items, and in the pathological case the popular-item embeddings get pushed into a degenerate region and retrieval **collapses**: recall on exactly the items most users want craters. This is why **the logQ correction isn't a nicety — it's what keeps in-batch training from eating itself**, and why an interviewer probing retrieval will ask about it. The takeaway that separates levels: *before you deepen the encoder, fix the negatives* — sampling scheme dominates recall.`,
+    interactivePrompt: `Before you touch the controls: with a strong popularity skew and pure in-batch negatives, predict what happens to the *most popular* item's embedding — does it get pulled toward users or pushed away, and why does that tank recall on the very items most users want?`,
+    keyPoints: [
+      `**The two-tower objective is contrastive (sampled softmax / InfoNCE):** maximise exp(u·v⁺) against a denominator of sampled negatives. The positives are fixed by the data; the *negatives in the denominator* are the design choice, so retrieval quality is decided by the sampling scheme, not mainly by encoder depth.`,
+      `**In-batch negatives are free but popularity-biased.** A batch of B pairs yields B×(B−1) negatives with no extra lookups — but batches follow the interaction distribution, so popular items appear as negatives disproportionately and get over-penalised.`,
+      `**Hard negatives supply the gradient that lifts recall.** Random negatives (a cooking video vs a random car part) are trivially separable → near-zero gradient → nothing learned. Hard negatives (high-scoring non-clicks near the boundary) produce real gradient that sharpens fine distinctions — the actual recall driver.`,
+      `**The logQ / popularity correction de-biases the objective.** Subtract each item's log sampling probability from its logit (u·vⱼ − log Q(j)); this sampled-softmax correction removes the systematic over-suppression of popular items that in-batch sampling introduces.`,
+      `**In-batch popularity collapse is the classic failure.** Popular items appear as negatives for nearly everyone, so the gradient pushes almost all users away from them; the model learns "popular = negative," over-suppresses head items, and recall on the most-wanted items collapses. The logQ correction is what prevents this — sampling scheme, not encoder, dominates recall.`,
+    ],
+    takeaway: `Retrieval embeddings are trained with a contrastive (sampled-softmax / InfoNCE) objective, and the negative-sampling scheme — not the encoder architecture — dominates recall. In-batch negatives are free but follow the interaction distribution, so popular items appear as negatives for nearly everyone; naive in-batch training therefore pushes almost every user away from popular items ("popular = negative"), over-suppressing the head until retrieval collapses. Hard negatives supply the boundary gradient that lifts recall, and a logQ / popularity correction (subtract log sampling probability) de-biases the objective and is what keeps in-batch training from eating itself.`,
+    checkQuestions: [
+      {
+        q: `In a two-tower retriever trained with sampled softmax / InfoNCE, why is the choice of negatives often more decisive for recall than making the encoder deeper?`,
+        options: [
+          `A) Deeper encoders overfit, so shallow encoders always win; negatives are irrelevant.`,
+          `B) The positives are fixed by the data, so the entire learning signal is shaped by which negatives sit in the softmax denominator — they determine what the model is pushed away from. A better encoder refines a signal that the negatives define; wrong negatives (too easy, or popularity-biased) cap recall no matter how deep the tower is.`,
+          `C) Encoder depth only affects latency, never accuracy, in two-tower models.`,
+          `D) Negatives change the ANN index geometry, which is the only thing that affects recall.`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `Why do purely random in-batch negatives often produce near-zero gradient and fail to lift recall, and what fixes it?`,
+        options: [
+          `A) Random negatives cause exploding gradients; gradient clipping fixes recall.`,
+          `B) A random negative (e.g., a cooking video as a negative for a car-parts query) is trivially far from the positive, so the contrastive loss is already near zero and its gradient is tiny — the model learns nothing subtle. Hard negatives (high-scoring non-clicks near the decision boundary) produce meaningful gradient that sharpens fine distinctions, which is what actually raises recall.`,
+          `C) Random negatives are too few; increasing batch size alone always solves it.`,
+          `D) They don't — random negatives are optimal, and hard negatives only help ranking, not retrieval.`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `Trace the in-batch popularity-collapse failure mode. Why does naive in-batch training over-suppress popular items?`,
+        options: [
+          `A) Popular items have larger embeddings, so their dot products saturate the softmax.`,
+          `B) Popular items are positives for many users, so in any batch they appear as *negatives* for every other user in that batch. The contrastive gradient pushes nearly all users' embeddings away from popular items — including users who would love them — so the model learns "popular = negative," over-suppresses the head, and in the pathological case retrieval collapses on the very items most users want.`,
+          `C) Popular items are sampled less often, so they are under-trained and their embeddings stay random.`,
+          `D) The ANN index deprioritises high-degree nodes, dropping popular items at query time.`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `What does the logQ (sampled-softmax) correction do, and why is it more than a nicety for in-batch training?`,
+        options: [
+          `A) It normalises embedding magnitudes so dot products lie in [-1, 1].`,
+          `B) It subtracts each item's log sampling probability from its logit (u·vⱼ − log Q(j)), undoing the fact that in-batch sampling over-represents popular items as negatives. Without it, popular items are systematically over-penalised, which drives the popularity-collapse failure — so the correction is what keeps in-batch training from eating itself, not a marginal tweak.`,
+          `C) It adds L2 regularisation to the embedding tables to prevent overfitting.`,
+          `D) It replaces the softmax with a sigmoid, which is required for implicit feedback.`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `A retriever trained with in-batch negatives under-recommends genuinely relevant popular items, while a colleague's model with the same encoder does not. What is the most likely difference, and the cross-cutting lesson?`,
+        options: [
+          `A) The colleague used a deeper encoder; deepen yours to match.`,
+          `B) The colleague applied a logQ / popularity correction (or a mixed sampling scheme), de-biasing the over-representation of popular items as in-batch negatives. Same encoder, different sampling — which illustrates the general rule that the negative-sampling scheme dominates retrieval recall more than the encoder architecture.`,
+          `C) The colleague used a larger embedding dimension, which always fixes popularity bias.`,
+          `D) The colleague trained longer; more epochs alone removes popularity bias.`,
+        ],
+        answer: `B`,
+      },
+      {
+        q: `Where does embedding regularisation fit relative to the negative-sampling story?`,
+        options: [
+          `A) Regularisation replaces negative sampling — with enough L2 you don't need negatives.`,
+          `B) It is complementary and secondary: L2 / normalisation (e.g., unit-norm embeddings) and temperature control the embedding geometry and stabilise training, but they don't fix a biased or too-easy negative distribution. The negatives determine *what* the model learns to separate; regularisation only shapes *how tightly* — so sampling is the first-order lever and regularisation the second-order one.`,
+          `C) Regularisation is what causes popularity collapse, so it should be removed from retrieval training.`,
+          `D) Embedding regularisation is only relevant to the ranking stage, never retrieval.`,
+        ],
+        answer: `B`,
+      },
+    ],
+    recap: [
+      `**Two-tower objective is contrastive (sampled softmax / InfoNCE):** maximise exp(u·v⁺) against a denominator of sampled negatives; the gradient pulls u toward v⁺ and pushes it from each negative. Positives are fixed by data — the *negatives in the denominator* are the design choice that decides recall.`,
+      `**In-batch negatives:** free (B×(B−1) per batch, no extra lookups) but sampled from the interaction distribution, so popular items appear as negatives disproportionately and get over-penalised.`,
+      `**Hard negatives:** random negatives are trivially easy (near-zero gradient, nothing learned); mined high-scoring non-clicks sit on the boundary and supply the gradient that sharpens fine distinctions — the real recall driver.`,
+      `**logQ / popularity correction:** subtract each item's log sampling probability from its logit (u·vⱼ − log Q(j)) to undo in-batch over-representation of popular items — restoring an unbiased objective.`,
+      `**In-batch popularity collapse (the classic failure):** popular items appear as negatives for nearly everyone → gradient pushes almost all users away from them → model learns "popular = negative," over-suppresses the head, and recall on the most-wanted items collapses. The logQ correction is what prevents it. Bottom line: fix the negatives before deepening the encoder — sampling dominates recall.`,
+    ],
+    figures: {
+      objective: `<svg viewBox="0 0 360 100" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="6" y="12" fill="var(--ink-low)" font-size="7.5">contrastive: pull u → v⁺, push u away from every negative vⱼ⁻</text>
+  <circle cx="80" cy="56" r="9" fill="var(--prime)"/><text x="80" y="59" text-anchor="middle" fill="var(--depth)" font-size="8" font-weight="700">u</text>
+  <circle cx="150" cy="40" r="8" fill="var(--amber)"/><text x="150" y="43" text-anchor="middle" fill="var(--depth)" font-size="7" font-weight="700">v⁺</text>
+  <path d="M92,53 L140,43" stroke="var(--prime)" stroke-width="1.6" marker-end="url(#p1)"/>
+  <text x="112" y="40" fill="var(--prime)" font-size="7">pull</text>
+  ${[[220,32],[250,66],[210,78]].map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="7" fill="none" stroke="#ef4444"/><text x="${p[0]}" y="${p[1]+2.5}" text-anchor="middle" fill="#ef4444" font-size="6">v⁻</text><path d="M90,${54+i*2} L${p[0]-8},${p[1]}" stroke="#ef4444" stroke-width="0.8" stroke-dasharray="2 2" marker-end="url(#r1)"/>`).join('')}
+  <text x="228" y="18" fill="#ef4444" font-size="7">push (which negatives? = the design choice)</text>
+  <text x="6" y="94" fill="var(--ink-low)" font-size="7.5">L = −log exp(u·v⁺) / (exp(u·v⁺) + Σⱼ exp(u·vⱼ⁻))  · negatives shape the whole signal</text>
+  <defs><marker id="p1" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="var(--prime)"/></marker><marker id="r1" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#ef4444"/></marker></defs>
+</svg>`,
+      collapse: `<svg viewBox="0 0 360 100" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+  <text x="6" y="12" fill="var(--ink-low)" font-size="7.5">in-batch collapse: a popular item is a negative for nearly every user in the batch</text>
+  <circle cx="180" cy="54" r="11" fill="#ef4444" opacity="0.85"/><text x="180" y="57" text-anchor="middle" fill="var(--depth)" font-size="7" font-weight="700">popular</text>
+  ${[40,80,120,240,280,320].map((x,i)=>`<circle cx="${x}" cy="${i%2?38:72}" r="6" fill="var(--prime)"/><path d="${i<3?`M${x+7},${i%2?40:70} L169,54`:`M${x-7},${i%2?40:70} L191,54`}" stroke="#ef4444" stroke-width="0.8" stroke-dasharray="2 2" marker-end="url(#r2)"/>`).join('')}
+  <text x="6" y="92" fill="var(--amber)" font-size="7.5">every user pushed away from it → "popular = negative" → head collapses. logQ correction prevents this.</text>
+  <defs><marker id="r2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#ef4444"/></marker></defs>
+</svg>`,
+    },
   },
 ]
