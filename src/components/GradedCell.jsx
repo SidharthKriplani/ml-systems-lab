@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { loadPython, runPython } from '../python.js'
+import { sortByDifficulty } from '../utils/foundations/sortByDifficulty.js'
 
 /**
  * GradedCell — auto-graded runnable coding exercise for MSL.
@@ -105,7 +106,7 @@ export function MLImplementBrowser({ exercises = [], doneSet, onOpen }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-      {exercises.map(ex => {
+      {sortByDifficulty(exercises).map(ex => {
         const done = isDone(ex.id)
         return (
           <button

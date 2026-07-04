@@ -77,6 +77,63 @@ function getFoundationDone(lsKey) {
   } catch { return 0 }
 }
 
+// ── Company → domain map (for logos via Google favicon service) ──────────────
+// Covers every entry in COMPANIES (companyTracks.js). Used by <CompanyLogo/>.
+const COMPANY_DOMAINS = {
+  'Google': 'google.com',
+  'Meta': 'meta.com',
+  'Amazon': 'amazon.com',
+  'Microsoft': 'microsoft.com',
+  'Netflix': 'netflix.com',
+  'Uber': 'uber.com',
+  'LinkedIn': 'linkedin.com',
+  'Adobe': 'adobe.com',
+  'Salesforce': 'salesforce.com',
+  'Walmart Global Tech': 'walmart.com',
+  'Flipkart': 'flipkart.com',
+  'Swiggy': 'swiggy.com',
+  'Zomato': 'zomato.com',
+  'Myntra': 'myntra.com',
+  'PhonePe': 'phonepe.com',
+  'Razorpay': 'razorpay.com',
+  'CRED': 'cred.club',
+  'Meesho': 'meesho.com',
+  'ShareChat': 'sharechat.com',
+  'Ola': 'olacabs.com',
+  'Paytm': 'paytm.com',
+  'Dream11': 'dream11.com',
+  'Sprinklr': 'sprinklr.com',
+  'Atlassian': 'atlassian.com',
+  'Navi': 'navi.com',
+  'Groww': 'groww.in',
+  'Pocket FM': 'pocketfm.com',
+  'Nutanix': 'nutanix.com',
+}
+
+// Small company logo (Google favicon service + initial fallback). Amber theme.
+function CompanyLogo({ company, size = 20 }) {
+  const [failed, setFailed] = useState(false)
+  const domain = COMPANY_DOMAINS[company] || null
+  const initial = (String(company || '').trim()[0] || '?').toUpperCase()
+  const radius = Math.max(3, Math.round(size * 0.22))
+  if (!domain || failed) {
+    return (
+      <span aria-hidden="true"
+        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          fontWeight: 800, width: size, height: size, borderRadius: radius,
+          background: 'var(--surface)', border: '1px solid var(--rim)', color: 'var(--prime)',
+          fontSize: Math.max(9, Math.round(size * 0.5)), lineHeight: 1 }}>
+        {initial}
+      </span>
+    )
+  }
+  return (
+    <img src={'https://www.google.com/s2/favicons?domain=' + domain + '&sz=64'} alt={company}
+      onError={() => setFailed(true)}
+      style={{ flexShrink: 0, objectFit: 'contain', width: size, height: size, borderRadius: radius }} />
+  )
+}
+
 // ── Company target (mirror ReadinessWidget) ──────────────────────────────────
 const TARGET_KEY = 'msl-readiness-target'
 function readTarget() {
@@ -416,8 +473,9 @@ export default function ProfilePage({ user, onNavigate, onShowAuth }) {
       <Card>
         <CardLabel>Company target</CardLabel>
         <div style={{ marginBottom: '16px' }}>
-          <div style={{ fontFamily: 'var(--font-sans)', fontSize: '16px', fontWeight: 800, color: 'var(--ink-hi)' }}>
-            {companyLabel || 'Set a target company'}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'var(--font-sans)', fontSize: '16px', fontWeight: 800, color: 'var(--ink-hi)' }}>
+            {companyLabel && <CompanyLogo company={companyLabel} size={22} />}
+            <span>{companyLabel || 'Set a target company'}</span>
           </div>
           <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', fontWeight: 600, color: days != null && days >= 0 ? 'var(--prime)' : 'var(--ink-ghost)', marginTop: '2px' }}>
             {countdownText}{days != null && days >= 0 && companyLabel ? ' · ' + companyLabel : ''}

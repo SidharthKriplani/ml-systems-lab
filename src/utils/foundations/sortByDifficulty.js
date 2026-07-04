@@ -1,7 +1,11 @@
 // Order a family's foundation modules by difficulty for display:
 // foundational → intermediate → advanced, stable within each band
 // (same-difficulty modules keep their authored order).
-const RANK = { foundational: 0, beginner: 0, intermediate: 1, advanced: 2 };
+const RANK = {
+  foundational: 0, beginner: 0, easy: 0, intro: 0,
+  intermediate: 1, medium: 1, core: 1,
+  advanced: 2, hard: 2,
+};
 
 export function sortByDifficulty(modules) {
   return (modules || [])
