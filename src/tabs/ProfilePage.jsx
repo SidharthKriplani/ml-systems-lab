@@ -205,58 +205,20 @@ export default function ProfilePage({ user, onNavigate, onShowAuth }) {
         )
       })()}
 
-      {/* Card 2 — The MLE Path progress + badge + cert/share on completion */}
+      {/* Card 2 — The MLE Path progress */}
       {foundationsProg.read > 0 && (
         <Card style={{ borderColor: foundationsComplete ? 'rgba(52,211,153,0.3)' : 'var(--rim)', background: foundationsComplete ? 'rgba(52,211,153,0.04)' : 'var(--depth)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '14px', flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: '200px' }}>
               <CardLabel>The MLE Path</CardLabel>
               {foundationsComplete ? (
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--mint)', background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.3)', borderRadius: '999px', padding: '4px 12px', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                      <Icon name="check" size={11} /> Complete
-                    </span>
-                    <span style={{ fontSize: '13px', color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)' }}>
-                      All {foundationsProg.total} MLE Path posts read.
-                    </span>
-                  </div>
-                  {(() => {
-                    let issuedAt = null
-                    try {
-                      issuedAt = localStorage.getItem('msl_cert_issued_at')
-                      if (!issuedAt) { issuedAt = String(Date.now()); localStorage.setItem('msl_cert_issued_at', issuedAt) }
-                    } catch {}
-                    const issuedDate = issuedAt ? new Date(parseInt(issuedAt, 10)).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : ''
-                    const shareUrl = 'https://ml-systems-lab-v9xe.vercel.app/?path=foundations#gradient'
-                    const shareText = `I just completed The MLE Path — 54 posts across 11 tiers of senior MLE preparation: observation discipline, math, classical ML, evaluation, production engineering, MLOps, system design, interview bridge.\n\nThe deepest free senior MLE curriculum on the internet.`
-                    const linkedinShareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`
-                    return (
-                      <div style={{ padding: '14px 16px', borderRadius: '10px', background: 'rgba(52,211,153,0.06)', border: '1px dashed rgba(52,211,153,0.30)' }}>
-                        <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--mint)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px', fontWeight: 700 }}>Certificate</div>
-                        <div style={{ fontSize: '13px', color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)', marginBottom: '4px' }}>
-                          <strong>{user.user_metadata?.full_name || user.email}</strong> completed The MLE Path on {issuedDate}.
-                        </div>
-                        <div style={{ fontSize: '11px', color: 'var(--ink-low)', fontFamily: 'var(--font-mono)', marginBottom: '12px' }}>
-                          Certificate ID: msl-mle-{(issuedAt || '').slice(-8)}
-                        </div>
-                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                          <a href={linkedinShareUrl} target="_blank" rel="noopener noreferrer"
-                            onClick={() => { try { navigator.clipboard.writeText(shareText) } catch {} }}
-                            style={{ padding: '8px 14px', borderRadius: '7px', background: '#0a66c2', color: '#ffffff', fontSize: '12px', fontFamily: 'var(--font-sans)', fontWeight: 600, textDecoration: 'none' }}>
-                            Share on LinkedIn
-                          </a>
-                          <button onClick={() => { try { navigator.clipboard.writeText(shareText + '\n\n' + shareUrl) } catch {} }}
-                            style={{ padding: '8px 14px', borderRadius: '7px', background: 'transparent', border: '1px solid var(--rim)', color: 'var(--ink-mid)', fontSize: '12px', fontFamily: 'var(--font-sans)', cursor: 'pointer' }}>
-                            Copy text + URL
-                          </button>
-                        </div>
-                        <div style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', marginTop: '10px', fontStyle: 'italic' }}>
-                          LinkedIn share opens with the URL pre-filled. The text auto-copies to your clipboard — paste it as the post body.
-                        </div>
-                      </div>
-                    )
-                  })()}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--mint)', background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.3)', borderRadius: '999px', padding: '4px 12px', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <Icon name="check" size={11} /> Complete
+                  </span>
+                  <span style={{ fontSize: '13px', color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)' }}>
+                    All {foundationsProg.total} MLE Path posts read.
+                  </span>
                 </div>
               ) : (
                 <>

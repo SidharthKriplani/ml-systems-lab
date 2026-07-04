@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { computeReadiness, readinessLabel, readinessColor } from '../utils/readiness.js'
+import ReadinessWidget from '../components/shared/ReadinessWidget.jsx'
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -409,6 +410,9 @@ export function ProgressTab({ user, onNavigate }) {
           {grandDone} of {grandTotal} modules completed across all rooms
         </p>
       </div>
+
+      {/* Readiness widget — score + target-interview countdown + weakest-area CTA */}
+      <ReadinessWidget onNavigate={onNavigate} />
 
       {/* Summary bar */}
       <div style={{

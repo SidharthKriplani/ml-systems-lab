@@ -8,6 +8,7 @@ import {
 import { track } from '../analytics.js'
 import { computeReadiness, readinessLabel, readinessColor } from '../utils/readiness.js'
 import Next30Card from '../components/Next30Card.jsx'
+import ReadinessWidget from '../components/shared/ReadinessWidget.jsx'
 
 // ── The five frames of the current app ───────────────────────────────────────
 // Each maps to its representative launch tab. This is the ground truth for Home —
@@ -231,30 +232,8 @@ export default function HomeTab({ onNavigate }) {
           </button>
         </div>
       ) : (
-        <div style={{ marginBottom: '28px', padding: '18px 20px', borderRadius: '12px', background: 'var(--depth)', border: '1px solid var(--rim)' }}>
-          <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '8px', fontWeight: 700 }}>Interview readiness</div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '10px' }}>
-            <span style={{ fontFamily: 'var(--font-sans)', fontSize: '44px', fontWeight: 900, letterSpacing: '-0.04em', color: readinessColor(r.level), lineHeight: 1 }}>
-              {r.score}%
-            </span>
-            <span style={{ fontSize: '13px', fontFamily: 'var(--font-mono)', color: readinessColor(r.level), fontWeight: 600 }}>
-              {readinessLabel(r.level)}
-            </span>
-          </div>
-          <div style={{ width: '100%', height: '4px', background: 'var(--rim)', borderRadius: '2px', overflow: 'hidden', marginBottom: r.weakest ? '14px' : '0' }}>
-            <div style={{ width: `${r.score}%`, height: '100%', background: readinessColor(r.level), transition: 'width 0.5s' }} />
-          </div>
-          {r.weakest && (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '14px', flexWrap: 'wrap' }}>
-              <div style={{ fontSize: '13px', fontFamily: 'var(--font-sans)', color: 'var(--ink-mid)' }}>
-                Work next: <span style={{ fontWeight: 700, color: 'var(--ink-hi)' }}>{r.weakest.label}</span>
-              </div>
-              <button onClick={() => onNavigate(weakTab)}
-                style={{ flexShrink: 0, fontSize: '12px', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--prime)', background: 'rgba(240,165,0,0.12)', border: '1px solid rgba(240,165,0,0.35)', borderRadius: '6px', padding: '7px 14px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                Work on it →
-              </button>
-            </div>
-          )}
+        <div style={{ marginBottom: '28px' }}>
+          <ReadinessWidget onNavigate={onNavigate} />
         </div>
       )}
 

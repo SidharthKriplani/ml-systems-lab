@@ -100,6 +100,97 @@ export function computeTotalSolved() {
   return total;
 }
 
+// ─── Difficulty weighting ─────────────────────────────────────────────────────
+// The completion keys (msl_done_<tabId>_<moduleKey> and the foundation blobs)
+// carry NO per-item difficulty. The cleanly-reachable difficulty signal is the
+// ROOM / DOMAIN a completion belongs to — so we weight each solved item by the
+// difficulty tier of its room. This makes the leaderboard reward depth (system
+// design, optimization, RL/causal) over grinding easy foundational modules.
+//
+//   foundational (×1) : math, classical ML, eval, unsupervised, data, basic practice
+//   intermediate (×3) : DL, probabilistic, self-supervised, RL, time-series, graph,
+//                       bandits, causal, monitoring, production, recsys, pricing, eval practice
+//   staff / hard (×6) : system design, optimization, interview design/coding
+//
+// Anything unmapped falls back to ×1 (never zero), so future rooms still count.
+const WEIGHT_FOUNDATIONAL = 1
+const WEIGHT_INTERMEDIATE = 3
+const WEIGHT_STAFF = 6
+
+// tabId (practice) → weight
+const PRACTICE_ROOM_WEIGHT = {
+  models: WEIGHT_FOUNDATIONAL,
+  features: WEIGHT_INTERMEDIATE,
+  eval: WEIGHT_INTERMEDIATE,
+  spark: WEIGHT_INTERMEDIATE,
+  monitor: WEIGHT_INTERMEDIATE,
+  classical: WEIGHT_FOUNDATIONAL,
+  gradient: WEIGHT_FOUNDATIONAL,
+  ts: WEIGHT_INTERMEDIATE,
+  causal: WEIGHT_INTERMEDIATE,
+  design: WEIGHT_STAFF,
+  interview: WEIGHT_STAFF,
+}
+
+// foundation id (from FOUNDATION_KEYS) → weight
+const FOUNDATION_WEIGHT = {
+  'math-stats': WEIGHT_FOUNDATIONAL,
+  'classical-ml': WEIGHT_FOUNDATIONAL,
+  'eval': WEIGHT_INTERMEDIATE,
+  'unsupervised': WEIGHT_FOUNDATIONAL,
+  'data': WEIGHT_FOUNDATIONAL,
+  'causal': WEIGHT_INTERMEDIATE,
+  'production': WEIGHT_INTERMEDIATE,
+  'monitoring': WEIGHT_INTERMEDIATE,
+  'dl': WEIGHT_INTERMEDIATE,
+  'rl': WEIGHT_INTERMEDIATE,
+  'time-series': WEIGHT_INTERMEDIATE,
+  'self-supervised': WEIGHT_INTERMEDIATE,
+  'graph-ml': WEIGHT_INTERMEDIATE,
+  'bandits': WEIGHT_INTERMEDIATE,
+  'probabilistic-ml': WEIGHT_INTERMEDIATE,
+  'system-design': WEIGHT_STAFF,
+  'optimization': WEIGHT_STAFF,
+}
+
+function practiceWeight(tabId) {
+  return PRACTICE_ROOM_WEIGHT[tabId] != null ? PRACTICE_ROOM_WEIGHT[tabId] : WEIGHT_FOUNDATIONAL
+}
+function foundationWeight(id) {
+  return FOUNDATION_WEIGHT[id] != null ? FOUNDATION_WEIGHT[id] : WEIGHT_INTERMEDIATE
+}
+
+// ─── computeWeightedScore ─────────────────────────────────────────────────────
+// Same completion scan as computeTotalSolved, but each solved item is weighted by
+// its room's difficulty tier (see above). This is the value the leaderboard now
+// ranks on — a better proxy for interview readiness than a plain count.
+export function computeWeightedScore() {
+  let score = 0
+
+  // 1. Practice modules — weight by the tabId extracted from the key.
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i)
+      if (!k || !k.startsWith(PRACTICE_PREFIX)) continue
+      try {
+        if (localStorage.getItem(k) !== '1') continue
+      } catch { continue }
+      const rest = k.slice(PRACTICE_PREFIX.length) // '<tabId>_<moduleKey>'
+      const sep = rest.indexOf('_')
+      const tabId = sep === -1 ? rest : rest.slice(0, sep)
+      score += practiceWeight(tabId)
+    }
+  } catch { /* localStorage unavailable */ }
+
+  // 2. Foundation completions — weight each foundation's completed entries.
+  for (const { id, key } of FOUNDATION_KEYS) {
+    const n = countFoundationKey(key)
+    if (n > 0) score += n * foundationWeight(id)
+  }
+
+  return score
+}
+
 // ─── computeRoomBreakdown ─────────────────────────────────────────────────────
 // Returns { [roomId]: count } for every room that has at least one completion.
 // roomId for practice tracks  = the tabId (e.g. 'spark', 'models', …)
@@ -167,7 +258,7 @@ export async function upsertLeaderboardRow(user, extra = {}) {
   const base = {
     user_id:      user.id,
     display_name: getDisplayName(user),
-    total_solved: computeTotalSolved(),
+    total_solved: computeWeightedScore(),
     updated_at:   new Date().toISOString(),
   };
   const full = {
@@ -202,7 +293,7 @@ export async function touchLastActive(user) {
   const row = {
     user_id:        user.id,
     display_name:   getDisplayName(user),
-    total_solved:   computeTotalSolved(),
+    total_solved:   computeWeightedScore(),
     last_active_at: now,
     updated_at:     now,
   };
@@ -293,7 +384,7 @@ export async function updateMyLinkedin(user, url) {
   const row = {
     user_id:      user.id,
     display_name: getDisplayName(user),
-    total_solved: computeTotalSolved(),
+    total_solved: computeWeightedScore(),
     linkedin_url: url || null,
     updated_at:   new Date().toISOString(),
   };
@@ -334,7 +425,7 @@ export async function updateMyEmployment(user, { company, role } = {}) {
   const row = {
     user_id:            user.id,
     display_name:       getDisplayName(user),
-    total_solved:       computeTotalSolved(),
+    total_solved:       computeWeightedScore(),
     current_company:    company || null,
     current_role:       role    || null,
     company_updated_at: now,
@@ -365,7 +456,7 @@ export async function confirmMyEmployment(user) {
   const row = {
     user_id:            user.id,
     display_name:       getDisplayName(user),
-    total_solved:       computeTotalSolved(),
+    total_solved:       computeWeightedScore(),
     company_updated_at: now,
     updated_at:         now,
   };
