@@ -1674,4 +1674,14 @@ At scale dozens of tests run at once, and they can **interact** — test A chang
 </svg>`,
     },
   },
+  {
+    id: 'online_experimentation_ml',
+    title: 'Online Experimentation for ML Launches',
+    subtitle: 'Power/MDE, SRM, guardrails, CUPED, sequential/peeking — applied to model rollouts.',
+    difficulty: 'intermediate',
+    estimatedMin: 24,
+    tags: ['evaluation', 'A/B testing', 'experimentation', 'MDE', 'CUPED'],
+    skeleton: true,
+    spec: `The A/B machinery a DS/MLE needs to launch a model safely: statistical power and minimum detectable effect (sizing the test), sample-ratio-mismatch detection, guardrail metrics, variance reduction with CUPED, and sequential testing / peeking without inflating false positives. Framed around model rollouts (champion/challenger, holdouts). Note: the deep experimentation theory lives in PAL — this is the ML-launch subset.`,
+  },
 ]
