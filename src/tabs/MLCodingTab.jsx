@@ -5,6 +5,7 @@ import FidelityBadge from '../components/FidelityBadge.jsx'
 import HowToStrip from '../components/HowToStrip.jsx'
 import GradedCell, { MLImplementBrowser } from '../components/GradedCell.jsx'
 import { ML_CODE_EXERCISES } from '../data/mlCodeExercises.js'
+import { AddTrackBtn } from '../components/tracks/AddToTrackPopover.jsx'
 
 const EX_LS_KEY = 'msl_ml_code_exercises_done'
 import { markActivity } from '../utils/activity.js'
@@ -1579,9 +1580,10 @@ function ProblemCard({ problem, done, onComplete, onNavigate, autoExpand }) {
 
   return (
     <div style={{ border: `1px solid ${done ? 'var(--mint)' : 'var(--rim)'}`, borderLeft: `3px solid ${done ? 'var(--mint)' : 'var(--prime)'}`, borderRadius: '10px', overflow: 'hidden', background: 'var(--surface)' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '0 20px 0 0' }}>
       <button
         onClick={() => setExpanded(e => !e)}
-        style={{ width: '100%', textAlign: 'left', padding: '16px 20px', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}
+        style={{ flex: 1, textAlign: 'left', padding: '16px 4px 16px 20px', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}
       >
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
@@ -1596,6 +1598,10 @@ function ProblemCard({ problem, done, onComplete, onNavigate, autoExpand }) {
           {done ? '✓ done' : expanded ? '▲' : '▼'}
         </span>
       </button>
+        <span onClick={e => e.stopPropagation()} style={{ flexShrink: 0, marginTop: '16px' }}>
+          <AddTrackBtn itemType="ml_code" itemId={problem.id} label={problem.title} itemMeta={{ type: problem.type }} />
+        </span>
+      </div>
 
       {expanded && (
         <div style={{ padding: '0 20px 20px' }}>

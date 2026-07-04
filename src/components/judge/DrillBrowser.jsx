@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { DRILL_POOL, SUBJECT_LABELS } from '../../data/drills/drillPool.js'
+import { AddTrackBtn } from '../tracks/AddToTrackPopover.jsx'
 
 const LEVEL_ORDER = ['junior', 'mid', 'senior', 'staff']
 const TYPE_ICON = { mcq: '◧', code: '⌘', multistep: '⑃', open: '✎', rubric: '▤' }
@@ -112,13 +113,18 @@ function DrillCard({ d }) {
   const lvlColor = { junior: 'var(--ink-low)', mid: 'var(--prime)', senior: '#f59e0b', staff: '#a78bfa' }[d.level] || 'var(--ink-low)'
   return (
     <div style={{ border: '1px solid var(--rim)', borderRadius: 10, overflow: 'hidden', background: 'var(--surface)' }}>
-      <button onClick={() => setOpen(o => !o)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
-        <span style={{ color: 'var(--ink-low)', fontSize: '0.9rem', width: 16 }}>{TYPE_ICON[d.type] || '•'}</span>
-        <span style={{ flex: 1, fontSize: '0.9rem', fontWeight: 600, color: 'var(--ink-hi)', lineHeight: 1.35 }}>{d.title}</span>
-        <span style={pill('var(--prime-faint)', 'var(--prime)')}>{SUBJECT_LABELS[d.subject] || d.subject}</span>
-        <span style={{ fontSize: '0.62rem', color: lvlColor, border: `1px solid ${lvlColor}`, borderRadius: 20, padding: '1px 8px' }}>{d.level}</span>
-        <span style={{ color: 'var(--ink-ghost)', fontSize: '0.7rem' }}>{open ? '▲' : '▼'}</span>
-      </button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 14px 0 0' }}>
+        <button onClick={() => setOpen(o => !o)} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 4px 12px 14px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
+          <span style={{ color: 'var(--ink-low)', fontSize: '0.9rem', width: 16 }}>{TYPE_ICON[d.type] || '•'}</span>
+          <span style={{ flex: 1, fontSize: '0.9rem', fontWeight: 600, color: 'var(--ink-hi)', lineHeight: 1.35 }}>{d.title}</span>
+          <span style={pill('var(--prime-faint)', 'var(--prime)')}>{SUBJECT_LABELS[d.subject] || d.subject}</span>
+          <span style={{ fontSize: '0.62rem', color: lvlColor, border: `1px solid ${lvlColor}`, borderRadius: 20, padding: '1px 8px' }}>{d.level}</span>
+          <span style={{ color: 'var(--ink-ghost)', fontSize: '0.7rem' }}>{open ? '▲' : '▼'}</span>
+        </button>
+        <span onClick={e => e.stopPropagation()} style={{ flexShrink: 0 }}>
+          <AddTrackBtn itemType="drill" itemId={d.id} label={d.title} itemMeta={{ subject: d.subject, level: d.level }} />
+        </span>
+      </div>
       {open && (
         <div style={{ padding: '0 14px 14px', display: 'flex', flexDirection: 'column', gap: 11 }}>
           <Ctx context={d.context} />

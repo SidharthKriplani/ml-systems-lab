@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { SD_SCENARIOS_MSL } from '../data/foundations/sdScenariosMSL.js'
+import { AddTrackBtn } from '../components/tracks/AddToTrackPopover.jsx'
 
 const LS_KEY = 'msl-sd-drills-last'
 
@@ -42,15 +43,23 @@ function ScenarioPicker({ scenarios, onPick }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {scenarios.map(sc => (
-          <button
+          <div
             key={sc.id}
+            role="button"
+            tabIndex={0}
             onClick={() => onPick(sc.id)}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onPick(sc.id) } }}
             className="card"
             style={{ textAlign: 'left', cursor: 'pointer', width: '100%', padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: '10px', transition: 'border-color 0.12s' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
               <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '15px', color: 'var(--ink-hi)' }}>{sc.title}</span>
-              <span style={{ fontSize: '12px', color: 'var(--prime)', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>{(sc.stages || []).length} stages →</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+                <span style={{ fontSize: '12px', color: 'var(--prime)', fontFamily: 'var(--font-mono)' }}>{(sc.stages || []).length} stages →</span>
+                <span onClick={e => e.stopPropagation()}>
+                  <AddTrackBtn itemType="sd_drill" itemId={sc.id} label={sc.title} itemMeta={{ tag: (sc.tags || [])[0] }} />
+                </span>
+              </div>
             </div>
             <p style={{ fontSize: '13px', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }}>{sc.prompt}</p>
             {sc.tags && sc.tags.length > 0 && (
@@ -60,7 +69,7 @@ function ScenarioPicker({ scenarios, onPick }) {
                 ))}
               </div>
             )}
-          </button>
+          </div>
         ))}
       </div>
     </div>

@@ -9,6 +9,12 @@ Companion docs: `docs/DRILL_SYSTEM_RUBRIC.md` (the portable interview-gym rubric
 
 ---
 
+## Add-to-track sweep completed — 2026-07-03
+
+Added `AddTrackBtn` to the 3 MSL content surfaces that still lacked it: the JUDGE drill browser (`src/components/judge/DrillBrowser.jsx`, type `drill` → tab `judge_browser`), ML Coding rounds (`src/tabs/MLCodingTab.jsx`, `ml_code` → `mlcoding`), and System Design → Design Drills (`src/tabs/SystemDesignDrills.jsx`, `sd_drill` → `design`). Registered the 3 new types in `src/tabs/MyTracksTab.jsx` (ITEM_TYPE_LABEL + TYPE_TAB with Open→ nav). Button-in-button avoided via flex-wrapper / role="button" restructures. MSL foundations (all 19 families) + the 6 interview/content tabs already had it, so + coverage is now complete across MSL. Verify: all edited files + whole App bundle clean (esbuild@0.21.5).
+
+---
+
 ## Content Map search indexes all modules + track add/remove toggle — 2026-07-03
 
 (1) **Search bug (reported: "data quality audit" returns nothing):** the Cmd+K Content Map (`ContentMap.jsx`) searched `SEARCH_INDEX` (196 curated tab-level entries) + tabs — NOT the ~203 foundation modules, so module titles like "Data Quality Audit" never surfaced. Built `src/data/foundationsModuleIndex.js` (`FOUNDATION_MODULE_INDEX` — flat {id:tabId, moduleId, label, desc, domain} over all 19 module families, mirrors the ReviewTab FAMILIES registry). Imported into `ContentMap.jsx`, appended to `allItems`; `go()` now sets `localStorage['msl_goto_module']` when a result carries `moduleId` so the family tab opens that exact module; `SearchRow`/Enter pass the full item. Verify: 203 modules indexed, "data quality"→found; ContentMap + App bundle clean. (2) **Track remove:** Add-to-Track popover could only add; added `removeItemRef`/`removeModuleFromTrack`/`removeGenericFromTrack` to `utils/tracks.js` and made `AddToTrackPopover.handleToggle` remove-when-already-added (untick ✓), rows always clickable with tooltip. Verify: tracks.js + popover + App bundle clean.

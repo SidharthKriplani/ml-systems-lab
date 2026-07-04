@@ -189,6 +189,9 @@ const ITEM_TYPE_LABEL = {
   case: 'Case Study',
   flaw: 'Flaw Hunt',
   bug: 'Code Bug',
+  drill: 'Judgment Drill',
+  ml_code: 'ML Coding',
+  sd_drill: 'Design Drill',
 }
 
 // Where each generic item type opens (current rooms after the restructure).
@@ -198,6 +201,9 @@ const TYPE_TAB = {
   case:       'incidentroom',
   flaw:       'judge_browser',
   bug:        'codebugs',
+  drill:      'judge_browser',
+  ml_code:    'mlcoding',
+  sd_drill:   'design',
 }
 
 // ── Item grouping helper ──────────────────────────────────────────────────────
@@ -313,6 +319,8 @@ function TrackItemRow({ item, idx, trackId, onNavigate, onRemoveItem, onOpenNote
               {item.meta?.domain && <span style={{ fontSize: '0.62rem', color: 'var(--ink-ghost)' }}>{item.meta.domain}</span>}
               {item.meta?.level && <span style={{ fontSize: '0.62rem', color: 'var(--ink-ghost)' }}>{item.meta.level}</span>}
               {item.meta?.category && <span style={{ fontSize: '0.62rem', color: 'var(--ink-ghost)' }}>{item.meta.category}</span>}
+              {item.meta?.subject && <span style={{ fontSize: '0.62rem', color: 'var(--ink-ghost)' }}>{item.meta.subject}</span>}
+              {item.meta?.tag && <span style={{ fontSize: '0.62rem', color: 'var(--ink-ghost)' }}>{item.meta.tag}</span>}
             </div>
             <div style={{ fontSize: '0.87rem', fontWeight: 600, color: 'var(--ink-hi)', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {item.label}
