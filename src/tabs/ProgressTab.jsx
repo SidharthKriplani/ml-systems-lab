@@ -480,43 +480,12 @@ export function ProgressTab({ user, onNavigate }) {
           </div>
         </div>
 
-        {/* Room progress bars — Practice */}
+        {/* Heatmap — canonical section 2 (after readiness, before completion by area) */}
         <div style={{
           border: '1px solid var(--rim)',
           borderRadius: '10px',
           padding: '1.25rem',
           marginBottom: '1.25rem',
-        }}>
-          <div style={{
-            fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase',
-            letterSpacing: '0.09em', color: 'var(--ink-ghost)', marginBottom: '1rem',
-          }}>Practice Rooms</div>
-          {practiceRooms.map(r => (
-            <RoomBar key={r.tabId} label={r.label} done={r.done} total={r.total} />
-          ))}
-        </div>
-
-        {/* Room progress bars — Foundations */}
-        <div style={{
-          border: '1px solid var(--rim)',
-          borderRadius: '10px',
-          padding: '1.25rem',
-          marginBottom: '1.25rem',
-        }}>
-          <div style={{
-            fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase',
-            letterSpacing: '0.09em', color: 'var(--ink-ghost)', marginBottom: '1rem',
-          }}>Foundation Rooms</div>
-          {foundationRooms.map(f => (
-            <RoomBar key={f.lsKey} label={f.label} done={f.done} total={f.total} />
-          ))}
-        </div>
-
-        {/* Heatmap */}
-        <div style={{
-          border: '1px solid var(--rim)',
-          borderRadius: '10px',
-          padding: '1.25rem',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.9rem' }}>
             <div style={{
@@ -558,6 +527,38 @@ export function ProgressTab({ user, onNavigate }) {
           <div style={{ marginTop: '0.5rem', fontSize: '0.68rem', color: 'var(--ink-ghost)' }}>
             Last 52 weeks
           </div>
+        </div>
+
+        {/* Room progress bars — Practice */}
+        <div style={{
+          border: '1px solid var(--rim)',
+          borderRadius: '10px',
+          padding: '1.25rem',
+          marginBottom: '1.25rem',
+        }}>
+          <div style={{
+            fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase',
+            letterSpacing: '0.09em', color: 'var(--ink-ghost)', marginBottom: '1rem',
+          }}>Practice Rooms</div>
+          {practiceRooms.map(r => (
+            <RoomBar key={r.tabId} label={r.label} done={r.done} total={r.total} />
+          ))}
+        </div>
+
+        {/* Room progress bars — Foundations */}
+        <div style={{
+          border: '1px solid var(--rim)',
+          borderRadius: '10px',
+          padding: '1.25rem',
+          marginBottom: '1.25rem',
+        }}>
+          <div style={{
+            fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase',
+            letterSpacing: '0.09em', color: 'var(--ink-ghost)', marginBottom: '1rem',
+          }}>Foundation Rooms</div>
+          {foundationRooms.map(f => (
+            <RoomBar key={f.lsKey} label={f.label} done={f.done} total={f.total} />
+          ))}
         </div>
       </SectionCard>
 

@@ -1,43 +1,153 @@
+// src/tabs/ProfilePage.jsx — MSL profile. Standardized 5-CARD layout (cross-lab parity).
+// The 5 canonical cards (same set + order in every lab), each filled with MSL's OWN data:
+//   1. Readiness score          — computeReadiness() (readiness.js, capped-breadth model)
+//   2. Company target + countdown — msl-readiness-target {company,date} + COMPANIES list
+//   3. Streak + activity        — msl_activity_<date> heatmap-derived streak + recent completions
+//   4. Leaderboard / vs-average — leaderboard (Supabase) rank + vs-average of total_solved
+//   5. Completion by area       — foundation + practice room completion (ProgressTab sources)
+// Identity / practice stats / sync / study plan / settings are preserved alongside.
 import { useState, useEffect } from 'react'
 import { signOut } from '../utils/auth.js'
 import { pushProgressToSupabase, pullProgressFromSupabase } from '../utils/syncProgress.js'
-import { authEnabled } from '../utils/supabase.js'
+import { authEnabled, supabase } from '../utils/supabase.js'
 import { downloadProgressJSON } from '../utils/export.js'
 import { Icon } from '../components/Icon.jsx'
 import { readFoundationsRead, overallCompletion } from '../data/foundationsPath.js'
 import { computeReadiness, readinessLabel, readinessColor } from '../utils/readiness.js'
+import { computeWeightedScore, fetchLeaderboard } from '../utils/leaderboard.js'
+import { COMPANIES } from '../data/companyTracks.js'
 
-// ── ProfilePage — 5 cards (PAL pattern) ──────────────────────────────────────
-
-function Card({ children, style }) {
-  return (
-    <div style={{
-      background: 'var(--depth)', border: '1px solid var(--rim)',
-      borderRadius: '14px', padding: '24px 28px',
-      ...style,
-    }}>
-      {children}
-    </div>
-  )
+// ── Completion-by-area sources (mirror ProgressTab) ──────────────────────────
+const TRACK_MODULES = {
+  spark:     ['shuffle', 'skew', 'partition'],
+  features:  ['skew_sim', 'feature_store'],
+  eval:      ['metric', 'ab_test', 'shadow'],
+  models:    ['pca', 'svd', 'pipeline', 'regularization', 'numpy', 'calibration'],
+  design:    ['incident_room', 'canvas', 'two_tower'],
+  monitor:   ['drift_dash', 'psi_lab'],
+  interview: ['system_design', 'features', 'eval', 'spark', 'coding'],
+  gradient:  ['post1','post2','post3','post4','post5','post6','post7','post8','post9','post10','post11','post12','post13'],
 }
 
-function CardLabel({ children }) {
-  return (
-    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--ink-ghost)', textTransform: 'uppercase', letterSpacing: '0.13em', marginBottom: '14px' }}>
-      {children}
-    </div>
-  )
+const FOUNDATION_STORES = [
+  { lsKey: 'msl-math-stats-foundation-v1',       tabId: 'math_stats_foundation',       label: 'Math & Stats',       total: 18 },
+  { lsKey: 'msl-classical-ml-foundation-v1',     tabId: 'classical_ml_foundation',     label: 'Classical ML',       total: 14 },
+  { lsKey: 'msl-probabilistic-ml-foundation-v1', tabId: 'probabilistic_ml_foundation', label: 'Probabilistic ML',   total:  9 },
+  { lsKey: 'msl-eval-foundation-v1',             tabId: 'eval_foundation',             label: 'Eval',               total: 10 },
+  { lsKey: 'msl-unsupervised-foundation-v1',     tabId: 'unsupervised_foundation',     label: 'Unsupervised',       total: 10 },
+  { lsKey: 'msl-causal-foundation-v1',           tabId: 'causal_foundation',           label: 'Causal',             total: 10 },
+  { lsKey: 'msl-dl-foundation-v1',               tabId: 'dl_foundation',               label: 'Deep Learning',      total: 14 },
+  { lsKey: 'msl-self-supervised-foundation-v1',  tabId: 'self_supervised_foundation',  label: 'Self-supervised',    total:  9 },
+  { lsKey: 'msl-rl-foundation-v1',               tabId: 'rl_foundation',               label: 'RL',                 total: 10 },
+  { lsKey: 'msl-production-foundation-v1',       tabId: 'production_foundation',       label: 'Production',         total: 11 },
+  { lsKey: 'msl-monitoring-foundation-v1',       tabId: 'monitoring_foundation',       label: 'Monitoring',         total:  8 },
+  { lsKey: 'msl-system-design-foundation-v1',    tabId: 'system_design_foundation',    label: 'System Design',      total:  8 },
+  { lsKey: 'msl-recsys-foundation-v1',           tabId: 'recsys_foundation',           label: 'Recommender Systems',total:  8 },
+  { lsKey: 'msl-pricing-foundation-v1',          tabId: 'pricing_foundation',          label: 'Pricing Analytics',  total:  7 },
+  { lsKey: 'msl-time-series-foundation-v1',      tabId: 'time_series_foundation',      label: 'Time Series',        total:  9 },
+  { lsKey: 'msl-graph-ml-foundation-v1',         tabId: 'graph_ml_foundation',         label: 'Graph ML',           total:  9 },
+  { lsKey: 'msl-bandits-foundation-v1',          tabId: 'bandits_foundation',          label: 'Bandits',            total:  9 },
+  { lsKey: 'msl-optimization-foundation-v1',     tabId: 'optimization_foundation',     label: 'Optimization',       total: 12 },
+  { lsKey: 'msl-data-foundation-v1',             tabId: 'data_foundation',             label: 'Data',               total: 11 },
+]
+
+const PRACTICE_ROOMS = [
+  { tabId: 'models',    keys: TRACK_MODULES.models,    label: 'Math Practice' },
+  { tabId: 'features',  keys: TRACK_MODULES.features,  label: 'Feature Eng' },
+  { tabId: 'eval',      keys: TRACK_MODULES.eval,      label: 'Model Eval' },
+  { tabId: 'design',    keys: TRACK_MODULES.design,    label: 'System Design Drills' },
+  { tabId: 'spark',     keys: TRACK_MODULES.spark,     label: 'Spark Lab' },
+  { tabId: 'monitor',   keys: TRACK_MODULES.monitor,   label: 'Monitoring' },
+  { tabId: 'interview', keys: TRACK_MODULES.interview, label: 'Interview Q&A' },
+  { tabId: 'gradient',  keys: TRACK_MODULES.gradient,  label: 'Gradient Reading' },
+]
+
+function countTabProgress(tabId, moduleKeys) {
+  let done = 0
+  for (const k of moduleKeys) {
+    if (localStorage.getItem(`msl_done_${tabId}_${k}`) === '1') done++
+  }
+  return done
 }
 
-function MetricTile({ label, value }) {
-  return (
-    <div style={{ textAlign: 'center', padding: '12px', background: 'var(--surface)', borderRadius: '10px', minWidth: '80px' }}>
-      <div style={{ fontFamily: 'var(--font-sans)', fontSize: '24px', fontWeight: 900, color: 'var(--prime)', letterSpacing: '-0.04em', lineHeight: 1 }}>{value}</div>
-      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--ink-ghost)', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: '4px' }}>{label}</div>
-    </div>
-  )
+function getFoundationDone(lsKey) {
+  try {
+    const data = JSON.parse(localStorage.getItem(lsKey) || '{}')
+    return Object.values(data).filter(v => v?.completedAt).length
+  } catch { return 0 }
 }
 
+// ── Company target (mirror ReadinessWidget) ──────────────────────────────────
+const TARGET_KEY = 'msl-readiness-target'
+function readTarget() {
+  try {
+    const raw = localStorage.getItem(TARGET_KEY)
+    if (!raw) return { company: '', date: '' }
+    const v = JSON.parse(raw)
+    return { company: v.company || '', date: v.date || '' }
+  } catch { return { company: '', date: '' } }
+}
+function writeTarget(next) {
+  try {
+    if (next && (next.company || next.date)) localStorage.setItem(TARGET_KEY, JSON.stringify(next))
+    else localStorage.removeItem(TARGET_KEY)
+  } catch { /* ignore */ }
+}
+function daysUntil(isoDate) {
+  if (!isoDate) return null
+  const target = new Date(isoDate + 'T00:00:00')
+  if (isNaN(target.getTime())) return null
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  return Math.round((target.getTime() - today.getTime()) / 86400000)
+}
+
+// ── Streak + activity (heatmap-derived, read-only) ───────────────────────────
+function readStreakInfo() {
+  try {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    // Consecutive days ending today
+    let streak = 0
+    for (let i = 0; i < 364; i++) {
+      const d = new Date(today)
+      d.setDate(today.getDate() - i)
+      const ds = d.toISOString().slice(0, 10)
+      if (localStorage.getItem(`msl_activity_${ds}`)) streak++
+      else break
+    }
+    // Active days in last 28
+    let activeDays = 0
+    for (let i = 0; i < 28; i++) {
+      const ds = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10)
+      if (localStorage.getItem(`msl_activity_${ds}`)) activeDays++
+    }
+    return { streak, activeDays }
+  } catch { return { streak: 0, activeDays: 0 } }
+}
+
+// Recent completions across foundation stores (timestamped).
+function readRecentCompletions() {
+  const entries = []
+  for (const f of FOUNDATION_STORES) {
+    try {
+      const data = JSON.parse(localStorage.getItem(f.lsKey) || '{}')
+      for (const [id, val] of Object.entries(data)) {
+        if (val?.completedAt) entries.push({ ts: val.completedAt, room: f.label, id })
+      }
+    } catch { /* skip */ }
+  }
+  return entries
+    .sort((a, b) => new Date(b.ts) - new Date(a.ts))
+    .slice(0, 6)
+}
+
+function fmtDate(iso) {
+  try { return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) }
+  catch { return '' }
+}
+
+// ── Practice stats ────────────────────────────────────────────────────────────
 function readAllScores() {
   const tabs = new Set()
   let total = 0, attempted = 0
@@ -61,11 +171,62 @@ function readAllScores() {
   return { tabCount: tabs.size, total, attempted }
 }
 
+// ── Primitives ────────────────────────────────────────────────────────────────
+function Card({ children, style }) {
+  return (
+    <div style={{
+      background: 'var(--depth)', border: '1px solid var(--rim)',
+      borderRadius: '14px', padding: '24px 28px',
+      ...style,
+    }}>
+      {children}
+    </div>
+  )
+}
+
+function CardLabel({ children }) {
+  return (
+    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--ink-ghost)', textTransform: 'uppercase', letterSpacing: '0.13em', marginBottom: '14px', fontWeight: 700 }}>
+      {children}
+    </div>
+  )
+}
+
+function MetricTile({ label, value }) {
+  return (
+    <div style={{ textAlign: 'center', padding: '12px', background: 'var(--surface)', borderRadius: '10px', minWidth: '80px' }}>
+      <div style={{ fontFamily: 'var(--font-sans)', fontSize: '24px', fontWeight: 900, color: 'var(--prime)', letterSpacing: '-0.04em', lineHeight: 1 }}>{value}</div>
+      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--ink-ghost)', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: '4px' }}>{label}</div>
+    </div>
+  )
+}
+
 export default function ProfilePage({ user, onNavigate, onShowAuth }) {
   const [syncState, setSyncState] = useState('idle') // idle | syncing | done | error
   const [theme, setTheme] = useState(() => { try { return localStorage.getItem('msl_theme') || 'dark' } catch { return 'dark' } })
   const scores = readAllScores()
   const bookmarks = (() => { try { return JSON.parse(localStorage.getItem('msl_bookmarks') || '[]').length } catch { return 0 } })()
+
+  // ── Card 2 — company target state ──
+  const [target, setTarget] = useState(readTarget)
+  function setTargetField(patch) {
+    const next = { ...target, ...patch }
+    setTarget(next)
+    writeTarget(next)
+  }
+
+  // ── Card 4 — leaderboard rank + vs-average ──
+  const [board, setBoard] = useState(null) // { rows, myScore } | null
+  useEffect(() => {
+    let cancelled = false
+    if (!supabase || !user) return;
+    (async () => {
+      const rows = await fetchLeaderboard(200)
+      if (cancelled) return
+      setBoard({ rows: rows || [], myScore: computeWeightedScore() })
+    })()
+    return () => { cancelled = true }
+  }, [user])
 
   // Signed-out state
   if (!user) {
@@ -90,11 +251,9 @@ export default function ProfilePage({ user, onNavigate, onShowAuth }) {
     )
   }
 
-  // Provider label
+  // Provider label + avatar
   const provider = user.app_metadata?.provider
   const providerLabel = provider === 'google' ? 'Google' : provider === 'github' ? 'GitHub' : 'Email'
-
-  // Avatar
   const avatar = user.user_metadata?.avatar_url
   const name   = user.user_metadata?.full_name || user.user_metadata?.name || user.user_metadata?.user_name || ''
   const initials = name ? name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : user.email?.[0]?.toUpperCase() || 'U'
@@ -127,7 +286,7 @@ export default function ProfilePage({ user, onNavigate, onShowAuth }) {
       try {
         const data = JSON.parse(ev.target.result)
         Object.entries(data).forEach(([k, v]) => {
-          if (k.startsWith('msl_')) localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v))
+          if (k.startsWith('msl_') || k.startsWith('msl-')) localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v))
         })
         window.location.reload()
       } catch {}
@@ -148,10 +307,57 @@ export default function ProfilePage({ user, onNavigate, onShowAuth }) {
     setTimeout(() => window.dispatchEvent(new CustomEvent('msl-open-foundations-path')), 50)
   }
 
+  // ── Card 1 + weakest — readiness ──
+  const readiness = computeReadiness()
+  const rLabel = readinessLabel(readiness.level)
+  const rColor = readinessColor(readiness.level)
+  const WEAKEST_TAB = { foundations: 'gradient', practice: 'interview_questions' }
+  const weakTab = readiness.weakest ? (WEAKEST_TAB[readiness.weakest.key] || 'gradient') : null
+
+  // ── Card 2 derived ──
+  const days = daysUntil(target.date)
+  const companyLabel = target.company && target.company !== 'Other / Not listed' ? target.company : null
+  let countdownText
+  if (days == null)      countdownText = 'No target set'
+  else if (days < 0)     countdownText = 'Interview date passed'
+  else if (days === 0)   countdownText = 'Interview is today'
+  else                   countdownText = days + ' day' + (days === 1 ? '' : 's') + ' to go'
+
+  // ── Card 3 derived — streak + activity ──
+  const { streak, activeDays } = readStreakInfo()
+  const recentCompletions = readRecentCompletions()
+
+  // ── Card 4 derived — rank + vs-average ──
+  let rank = null, cohortSize = 0, avgScore = 0, myScore = 0
+  if (board) {
+    const rows = board.rows
+    myScore = board.myScore
+    cohortSize = rows.length
+    if (rows.length) {
+      avgScore = Math.round(rows.reduce((s, r) => s + (r.total_solved || 0), 0) / rows.length)
+      const mine = rows.filter(r => r.user_id === user.id)
+      if (mine.length) rank = rows.findIndex(r => r.user_id === user.id) + 1
+      else rank = rows.filter(r => (r.total_solved || 0) > myScore).length + 1 // provisional if not yet synced
+    }
+  }
+
+  // ── Card 5 derived — completion by area (rooms that have any progress) ──
+  const areaRows = [
+    ...FOUNDATION_STORES.map(f => {
+      const done = getFoundationDone(f.lsKey)
+      return { id: f.lsKey, label: f.label, done, total: f.total, pct: f.total ? Math.round((done / f.total) * 100) : 0 }
+    }),
+    ...PRACTICE_ROOMS.map(r => {
+      const done = countTabProgress(r.tabId, r.keys)
+      return { id: r.tabId, label: r.label, done, total: r.keys.length, pct: r.keys.length ? Math.round((done / r.keys.length) * 100) : 0 }
+    }),
+  ]
+  const startedAreas = areaRows.filter(a => a.done > 0).sort((a, b) => b.pct - a.pct)
+
   return (
     <div style={{ maxWidth: '680px', margin: '0 auto', padding: '32px 20px 80px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
-      {/* Card 1 — Identity */}
+      {/* ── Identity ─────────────────────────────────────────────────────── */}
       <Card>
         <CardLabel>Account</CardLabel>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
@@ -176,36 +382,160 @@ export default function ProfilePage({ user, onNavigate, onShowAuth }) {
         </button>
       </Card>
 
-      {/* Card 1.5 — Interview readiness */}
-      {(() => {
-        const r = computeReadiness()
-        return (
-          <Card>
-            <CardLabel>Interview readiness</CardLabel>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '14px', marginBottom: '10px' }}>
-              <span style={{ fontFamily: 'var(--font-sans)', fontSize: '36px', fontWeight: 900, letterSpacing: '-0.04em', color: readinessColor(r.level) }}>
-                {r.score}%
-              </span>
-              <span style={{ fontSize: '13px', fontFamily: 'var(--font-mono)', color: readinessColor(r.level), fontWeight: 600 }}>
-                {readinessLabel(r.level)}
-              </span>
-            </div>
-            <div style={{ width: '100%', height: '4px', background: 'var(--rim)', borderRadius: '2px', overflow: 'hidden', marginBottom: '10px' }}>
-              <div style={{ width: `${r.score}%`, height: '100%', background: readinessColor(r.level), transition: 'width 0.5s' }} />
-            </div>
-            <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)' }}>
-              <span title="The MLE Path — 50% of readiness">Path {r.breakdown.path}%</span>
-              <span title="Practice scenarios (target: 80) — 30% of readiness">Practice {r.breakdown.practice}%</span>
-              <span title="Active days in last 28 — 20% of readiness">Activity {r.breakdown.activity}%</span>
-            </div>
-            <div style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', marginTop: '10px', fontStyle: 'italic' }}>
-              Aggregate of MLE Path progress + practice scenarios attempted + recent activity. Calibrated against senior MLE interview bar.
-            </div>
-          </Card>
-        )
-      })()}
+      {/* ── Card 1 — Readiness score ─────────────────────────────────────── */}
+      <Card>
+        <CardLabel>Readiness score</CardLabel>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '14px', marginBottom: '10px' }}>
+          <span style={{ fontFamily: 'var(--font-sans)', fontSize: '36px', fontWeight: 900, letterSpacing: '-0.04em', color: rColor }}>
+            {readiness.score}%
+          </span>
+          <span style={{ fontSize: '13px', fontFamily: 'var(--font-mono)', color: rColor, fontWeight: 600 }}>
+            {rLabel}
+          </span>
+        </div>
+        <div style={{ width: '100%', height: '4px', background: 'var(--rim)', borderRadius: '2px', overflow: 'hidden', marginBottom: '10px' }}>
+          <div style={{ width: `${readiness.score}%`, height: '100%', background: rColor, transition: 'width 0.5s' }} />
+        </div>
+        <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-low)' }}>
+          <span title="MLE Path progress">Path {readiness.breakdown.path}%</span>
+          <span title="Practice scenarios attempted">Practice {readiness.breakdown.practice}%</span>
+          <span title="Active days in last 28">Activity {readiness.breakdown.activity}%</span>
+        </div>
+        <div style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', marginTop: '10px', fontStyle: 'italic' }}>
+          Capped-mean of Foundations coverage + practice attempted, so breadth — not grinding one area — moves the score.
+        </div>
+        {readiness.weakest && weakTab && (
+          <button onClick={() => onNavigate && onNavigate(weakTab)}
+            style={{ marginTop: '12px', background: 'none', border: 'none', padding: 0, fontFamily: 'var(--font-mono)', fontSize: '12px', fontWeight: 700, color: 'var(--prime)', cursor: 'pointer' }}>
+            Work next: {readiness.weakest.label} →
+          </button>
+        )}
+      </Card>
 
-      {/* Card 2 — The MLE Path progress */}
+      {/* ── Card 2 — Company target + countdown ──────────────────────────── */}
+      <Card>
+        <CardLabel>Company target</CardLabel>
+        <div style={{ marginBottom: '16px' }}>
+          <div style={{ fontFamily: 'var(--font-sans)', fontSize: '16px', fontWeight: 800, color: 'var(--ink-hi)' }}>
+            {companyLabel || 'Set a target company'}
+          </div>
+          <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', fontWeight: 600, color: days != null && days >= 0 ? 'var(--prime)' : 'var(--ink-ghost)', marginTop: '2px' }}>
+            {countdownText}{days != null && days >= 0 && companyLabel ? ' · ' + companyLabel : ''}
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '12px', alignItems: 'flex-end' }}>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--ink-low)' }}>Target company</span>
+            <select value={target.company} onChange={e => setTargetField({ company: e.target.value })}
+              style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '7px', padding: '7px 9px', fontSize: '13px', color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }}>
+              <option value="">No company set</option>
+              {COMPANIES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </label>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--ink-low)' }}>Interview date</span>
+            <input type="date" value={target.date} onChange={e => setTargetField({ date: e.target.value })}
+              style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '7px', padding: '7px 9px', fontSize: '13px', color: 'var(--ink-hi)', fontFamily: 'var(--font-sans)' }} />
+          </label>
+        </div>
+        {(target.company || target.date) ? (
+          <button onClick={() => setTargetField({ company: '', date: '' })}
+            style={{ marginTop: '12px', background: 'none', border: 'none', padding: 0, fontSize: '11px', color: 'var(--ink-ghost)', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
+            Clear target
+          </button>
+        ) : (
+          <p style={{ marginTop: '12px', fontSize: '11px', color: 'var(--ink-ghost)', lineHeight: 1.5 }}>
+            Set a target company and interview date to turn prep into a countdown. MSL works best as a cram-to-a-date plan.
+          </p>
+        )}
+      </Card>
+
+      {/* ── Card 3 — Streak + activity ───────────────────────────────────── */}
+      <Card>
+        <CardLabel>Streak &amp; activity</CardLabel>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
+          <MetricTile label="Day streak" value={streak} />
+          <MetricTile label="Active days / 28" value={activeDays} />
+          <MetricTile label="Attempted" value={scores.attempted} />
+        </div>
+        {recentCompletions.length > 0 ? (
+          <>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--ink-ghost)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>Recent completions</div>
+            <div style={{ borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--rim)' }}>
+              {recentCompletions.map((a, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', padding: '9px 14px', background: 'var(--surface)', borderBottom: i < recentCompletions.length - 1 ? '1px solid var(--rim)' : 'none' }}>
+                  <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', minWidth: '52px' }}>{fmtDate(a.ts)}</span>
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--prime)', flexShrink: 0 }}>{a.room}</span>
+                  <span style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--ink-mid)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, textAlign: 'right' }}>{a.id}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <p style={{ fontSize: '12px', color: 'var(--ink-ghost)' }}>No activity yet — complete a module to start a streak.</p>
+        )}
+      </Card>
+
+      {/* ── Card 4 — Leaderboard / vs-average ────────────────────────────── */}
+      <Card>
+        <CardLabel>Leaderboard</CardLabel>
+        {!supabase ? (
+          <p style={{ fontSize: '12px', color: 'var(--ink-ghost)', lineHeight: 1.5 }}>Leaderboard needs a backend connection. Not configured in this build.</p>
+        ) : board == null ? (
+          <p style={{ fontSize: '12px', color: 'var(--ink-ghost)' }}>Loading your rank…</p>
+        ) : cohortSize === 0 ? (
+          <p style={{ fontSize: '12px', color: 'var(--ink-ghost)', lineHeight: 1.5 }}>No ranked players yet. Complete modules and sync to appear on the board.</p>
+        ) : (
+          <>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '12px' }}>
+              <MetricTile label="Your rank" value={rank ? '#' + rank : '—'} />
+              <MetricTile label="Your score" value={myScore} />
+              <MetricTile label="Cohort" value={cohortSize} />
+            </div>
+            <div style={{ borderRadius: '10px', padding: '11px 14px', fontSize: '12px', background: 'var(--surface)', border: '1px solid var(--rim)' }}>
+              <span style={{ color: 'var(--ink-low)' }}>vs cohort average </span>
+              <span style={{ fontWeight: 900, color: 'var(--ink-hi)' }}>{avgScore}</span>
+              <span style={{ fontWeight: 700, marginLeft: '8px', color: myScore >= avgScore ? 'var(--mint)' : 'var(--prime)' }}>
+                {myScore >= avgScore ? '+' : ''}{myScore - avgScore} pts {myScore >= avgScore ? 'above' : 'below'} average
+              </span>
+            </div>
+            <button onClick={() => onNavigate && onNavigate('leaderboard')}
+              style={{ marginTop: '12px', background: 'none', border: 'none', padding: 0, fontFamily: 'var(--font-mono)', fontSize: '12px', fontWeight: 700, color: 'var(--prime)', cursor: 'pointer' }}>
+              View full leaderboard →
+            </button>
+          </>
+        )}
+      </Card>
+
+      {/* ── Card 5 — Completion by area ──────────────────────────────────── */}
+      <Card>
+        <CardLabel>Completion by area</CardLabel>
+        {startedAreas.length === 0 ? (
+          <p style={{ fontSize: '12px', color: 'var(--ink-ghost)', lineHeight: 1.5 }}>
+            No areas started yet. Complete modules and they will appear here, weighted by coverage.
+          </p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {startedAreas.map(a => (
+              <div key={a.id}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--ink-mid)', fontFamily: 'var(--font-sans)' }}>{a.label}</span>
+                  <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)' }}>{a.done}/{a.total} · {a.pct}%</span>
+                </div>
+                <div style={{ width: '100%', height: '5px', background: 'var(--rim)', borderRadius: '3px', overflow: 'hidden' }}>
+                  <div style={{ width: `${a.pct}%`, height: '100%', background: 'var(--prime)', transition: 'width 0.4s' }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        <button onClick={() => onNavigate && onNavigate('home')}
+          style={{ marginTop: '16px', background: 'none', border: 'none', padding: 0, fontFamily: 'var(--font-mono)', fontSize: '12px', fontWeight: 700, color: 'var(--prime)', cursor: 'pointer' }}>
+          View full progress →
+        </button>
+      </Card>
+
+      {/* ── The MLE Path progress (MSL-specific, preserved) ──────────────── */}
       {foundationsProg.read > 0 && (
         <Card style={{ borderColor: foundationsComplete ? 'rgba(52,211,153,0.3)' : 'var(--rim)', background: foundationsComplete ? 'rgba(52,211,153,0.04)' : 'var(--depth)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '14px', flexWrap: 'wrap' }}>
@@ -239,7 +569,7 @@ export default function ProfilePage({ user, onNavigate, onShowAuth }) {
         </Card>
       )}
 
-      {/* Card 3 — Practice stats */}
+      {/* ── Practice stats (preserved) ───────────────────────────────────── */}
       <Card>
         <CardLabel>Practice stats</CardLabel>
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
@@ -252,7 +582,7 @@ export default function ProfilePage({ user, onNavigate, onShowAuth }) {
         </button>
       </Card>
 
-      {/* Card 3 — Cross-device sync */}
+      {/* ── Cross-device sync (preserved) ────────────────────────────────── */}
       <Card>
         <CardLabel>Cross-device sync</CardLabel>
         <p style={{ fontSize: '13px', color: 'var(--ink-low)', fontFamily: 'var(--font-sans)', lineHeight: 1.6, margin: '0 0 16px' }}>
@@ -271,7 +601,7 @@ export default function ProfilePage({ user, onNavigate, onShowAuth }) {
         </button>
       </Card>
 
-      {/* Card 4 — Study plans */}
+      {/* ── Study plan (preserved) ───────────────────────────────────────── */}
       <Card>
         <CardLabel>Study plan</CardLabel>
         {activeGuidedPath ? (
@@ -292,7 +622,7 @@ export default function ProfilePage({ user, onNavigate, onShowAuth }) {
         )}
       </Card>
 
-      {/* Card 5 — Settings */}
+      {/* ── Settings (preserved) ─────────────────────────────────────────── */}
       <Card>
         <CardLabel>Settings</CardLabel>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
