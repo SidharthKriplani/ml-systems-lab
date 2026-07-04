@@ -7,7 +7,8 @@ import { GRAPH_ML_MODULES } from '../../data/foundations/graphMLModules.js'
 import { InteractivePanel } from '../../components/interactive/InteractivePanel'
 import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '../../utils/foundations/graphMLFoundationProgress.js'
 
-const MODULES = GRAPH_ML_MODULES
+import { sortByDifficulty } from '../../utils/foundations/sortByDifficulty.js'
+const MODULES = sortByDifficulty(GRAPH_ML_MODULES)
 
 const TAB_ID = 'graph_ml_foundation'
 

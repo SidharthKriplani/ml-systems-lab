@@ -7,7 +7,8 @@ import { DEEP_LEARNING_MODULES } from '../../data/foundations/deepLearningModule
 import { InteractivePanel } from '../../components/interactive/InteractivePanel'
 import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '../../utils/foundations/dlFoundationProgress.js'
 
-const MODULES = DEEP_LEARNING_MODULES
+import { sortByDifficulty } from '../../utils/foundations/sortByDifficulty.js'
+const MODULES = sortByDifficulty(DEEP_LEARNING_MODULES)
 
 const TAB_ID = 'dl_foundation'
 

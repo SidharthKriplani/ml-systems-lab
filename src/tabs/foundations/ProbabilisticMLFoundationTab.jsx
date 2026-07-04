@@ -7,7 +7,8 @@ import { PROBABILISTIC_ML_MODULES } from '../../data/foundations/probabilisticML
 import { InteractivePanel } from '../../components/interactive/InteractivePanel'
 import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '../../utils/foundations/probabilisticMLFoundationProgress.js'
 
-const MODULES = PROBABILISTIC_ML_MODULES
+import { sortByDifficulty } from '../../utils/foundations/sortByDifficulty.js'
+const MODULES = sortByDifficulty(PROBABILISTIC_ML_MODULES)
 
 const TAB_ID = 'probabilistic_ml_foundation'
 

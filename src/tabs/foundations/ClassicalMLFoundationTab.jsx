@@ -10,7 +10,8 @@ import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '..
 const DOMAIN = 'classical-ml'
 const COLOR = 'var(--prime)'
 
-const MODULES = CLASSICAL_ML_MODULES
+import { sortByDifficulty } from '../../utils/foundations/sortByDifficulty.js'
+const MODULES = sortByDifficulty(CLASSICAL_ML_MODULES)
 
 const TAB_ID = 'classical_ml_foundation'
 

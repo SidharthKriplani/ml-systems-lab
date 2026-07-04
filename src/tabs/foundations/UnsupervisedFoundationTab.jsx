@@ -10,7 +10,8 @@ import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '..
 const DOMAIN = 'unsupervised'
 const COLOR = 'var(--prime)'
 
-const MODULES = UNSUPERVISED_MODULES
+import { sortByDifficulty } from '../../utils/foundations/sortByDifficulty.js'
+const MODULES = sortByDifficulty(UNSUPERVISED_MODULES)
 
 const TAB_ID = 'unsupervised_foundation'
 

@@ -7,7 +7,8 @@ import { SELF_SUPERVISED_MODULES } from '../../data/foundations/selfSupervisedMo
 import { InteractivePanel } from '../../components/interactive/InteractivePanel'
 import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '../../utils/foundations/selfSupervisedFoundationProgress.js'
 
-const MODULES = SELF_SUPERVISED_MODULES
+import { sortByDifficulty } from '../../utils/foundations/sortByDifficulty.js'
+const MODULES = sortByDifficulty(SELF_SUPERVISED_MODULES)
 
 const TAB_ID = 'self_supervised_foundation'
 

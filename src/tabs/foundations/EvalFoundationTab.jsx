@@ -10,7 +10,8 @@ import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '..
 const DOMAIN = 'eval'
 const COLOR = 'var(--prime)'
 
-const MODULES = EVAL_MODULES
+import { sortByDifficulty } from '../../utils/foundations/sortByDifficulty.js'
+const MODULES = sortByDifficulty(EVAL_MODULES)
 
 const TAB_ID = 'eval_foundation'
 

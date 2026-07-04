@@ -10,7 +10,8 @@ import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '..
 const DOMAIN = 'causal'
 const COLOR = 'var(--prime)'
 
-const MODULES = CAUSAL_MODULES
+import { sortByDifficulty } from '../../utils/foundations/sortByDifficulty.js'
+const MODULES = sortByDifficulty(CAUSAL_MODULES)
 
 const TAB_ID = 'causal_foundation'
 

@@ -7,7 +7,8 @@ import { RECSYS_MODULES } from '../../data/foundations/recsysModules.js'
 import { InteractivePanel } from '../../components/interactive/InteractivePanel'
 import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '../../utils/foundations/recsysFoundationProgress.js'
 
-const MODULES = RECSYS_MODULES
+import { sortByDifficulty } from '../../utils/foundations/sortByDifficulty.js'
+const MODULES = sortByDifficulty(RECSYS_MODULES)
 
 const TAB_ID = 'recsys_foundation'
 

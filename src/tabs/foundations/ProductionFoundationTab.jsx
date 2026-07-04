@@ -7,7 +7,8 @@ import { PRODUCTION_MODULES } from '../../data/foundations/productionModules.js'
 import { InteractivePanel } from '../../components/interactive/InteractivePanel'
 import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '../../utils/foundations/productionFoundationProgress.js'
 
-const MODULES = PRODUCTION_MODULES
+import { sortByDifficulty } from '../../utils/foundations/sortByDifficulty.js'
+const MODULES = sortByDifficulty(PRODUCTION_MODULES)
 
 const TAB_ID = 'production_foundation'
 

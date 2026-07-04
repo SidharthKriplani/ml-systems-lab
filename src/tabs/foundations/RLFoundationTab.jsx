@@ -7,7 +7,8 @@ import { RL_MODULES } from '../../data/foundations/rlModules.js'
 import { InteractivePanel } from '../../components/interactive/InteractivePanel'
 import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '../../utils/foundations/rlFoundationProgress.js'
 
-const MODULES = RL_MODULES
+import { sortByDifficulty } from '../../utils/foundations/sortByDifficulty.js'
+const MODULES = sortByDifficulty(RL_MODULES)
 
 const TAB_ID = 'rl_foundation'
 

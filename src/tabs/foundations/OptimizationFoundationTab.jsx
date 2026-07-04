@@ -7,7 +7,8 @@ import { OPTIMIZATION_MODULES } from '../../data/foundations/optimizationModules
 import { InteractivePanel } from '../../components/interactive/InteractivePanel'
 import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '../../utils/foundations/optimizationFoundationProgress.js'
 
-const MODULES = OPTIMIZATION_MODULES
+import { sortByDifficulty } from '../../utils/foundations/sortByDifficulty.js'
+const MODULES = sortByDifficulty(OPTIMIZATION_MODULES)
 
 const TAB_ID = 'optimization_foundation'
 

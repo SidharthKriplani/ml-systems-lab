@@ -10,7 +10,8 @@ import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '..
 const DOMAIN = 'math-stats'
 const COLOR = 'var(--prime)'
 
-const MODULES = MATH_STATS_MODULES
+import { sortByDifficulty } from '../../utils/foundations/sortByDifficulty.js'
+const MODULES = sortByDifficulty(MATH_STATS_MODULES)
 
 const TAB_ID = 'math_stats_foundation'
 

@@ -7,7 +7,8 @@ import { BANDITS_MODULES } from '../../data/foundations/banditsModules.js'
 import { InteractivePanel } from '../../components/interactive/InteractivePanel'
 import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '../../utils/foundations/banditsFoundationProgress.js'
 
-const MODULES = BANDITS_MODULES
+import { sortByDifficulty } from '../../utils/foundations/sortByDifficulty.js'
+const MODULES = sortByDifficulty(BANDITS_MODULES)
 
 const TAB_ID = 'bandits_foundation'
 

@@ -7,7 +7,8 @@ import { MONITORING_MODULES } from '../../data/foundations/monitoringModules.js'
 import { InteractivePanel } from '../../components/interactive/InteractivePanel'
 import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '../../utils/foundations/monitoringFoundationProgress.js'
 
-const MODULES = MONITORING_MODULES
+import { sortByDifficulty } from '../../utils/foundations/sortByDifficulty.js'
+const MODULES = sortByDifficulty(MONITORING_MODULES)
 
 const TAB_ID = 'monitoring_foundation'
 

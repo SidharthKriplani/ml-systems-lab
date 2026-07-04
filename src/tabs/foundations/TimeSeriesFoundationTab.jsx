@@ -7,7 +7,8 @@ import { TIME_SERIES_MODULES } from '../../data/foundations/timeSeriesModules.js
 import { InteractivePanel } from '../../components/interactive/InteractivePanel'
 import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '../../utils/foundations/timeSeriesFoundationProgress.js'
 
-const MODULES = TIME_SERIES_MODULES
+import { sortByDifficulty } from '../../utils/foundations/sortByDifficulty.js'
+const MODULES = sortByDifficulty(TIME_SERIES_MODULES)
 
 const TAB_ID = 'time_series_foundation'
 

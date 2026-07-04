@@ -7,7 +7,8 @@ import { SYSTEM_DESIGN_MODULES } from '../../data/foundations/systemDesignModule
 import { InteractivePanel } from '../../components/interactive/InteractivePanel'
 import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '../../utils/foundations/systemDesignFoundationProgress.js'
 
-const MODULES = SYSTEM_DESIGN_MODULES
+import { sortByDifficulty } from '../../utils/foundations/sortByDifficulty.js'
+const MODULES = sortByDifficulty(SYSTEM_DESIGN_MODULES)
 
 const TAB_ID = 'system_design_foundation'
 

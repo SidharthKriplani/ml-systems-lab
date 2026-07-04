@@ -7,7 +7,8 @@ import { PRICING_MODULES } from '../../data/foundations/pricingModules.js'
 import { InteractivePanel } from '../../components/interactive/InteractivePanel'
 import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '../../utils/foundations/pricingFoundationProgress.js'
 
-const MODULES = PRICING_MODULES
+import { sortByDifficulty } from '../../utils/foundations/sortByDifficulty.js'
+const MODULES = sortByDifficulty(PRICING_MODULES)
 
 const TAB_ID = 'pricing_foundation'
 
