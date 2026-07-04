@@ -88,7 +88,7 @@ function TrackList({ tracks, selectedId, onSelect, onCreate, onDelete, onMoveIte
   }
 
   return (
-    <div style={{
+    <div className="mytracks-list" style={{
       width: '240px', flexShrink: 0, borderRight: '1px solid var(--rim)',
       overflowY: 'auto', padding: '1rem 0.5rem',
       background: 'var(--depth)', display: 'flex', flexDirection: 'column',
@@ -365,7 +365,7 @@ function TrackItemRow({ item, idx, trackId, onNavigate, onRemoveItem, onOpenNote
 
 // ── TrackDetail ───────────────────────────────────────────────────────────────
 
-function TrackDetail({ track, onNavigate, onRename, onNewNote, onOpenNote, onDeleteNote, onRemoveItem, onReorderItems }) {
+function TrackDetail({ track, onNavigate, onRename, onNewNote, onOpenNote, onDeleteNote, onRemoveItem, onReorderItems, onBack }) {
   const [editingName, setEditingName] = useState(false)
   const [draftName, setDraftName] = useState(track.name)
   const [dragFrom, setDragFrom] = useState(null)
@@ -388,7 +388,20 @@ function TrackDetail({ track, onNavigate, onRename, onNewNote, onOpenNote, onDel
   }
 
   return (
-    <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem 2rem', minWidth: 0 }}>
+    <div className="mytracks-detail-inner" style={{ flex: 1, overflowY: 'auto', padding: '1.5rem 2rem', minWidth: 0 }}>
+
+      {/* Mobile-only: back to the track list */}
+      {onBack && (
+        <button
+          className="mytracks-back"
+          onClick={onBack}
+          style={{
+            display: 'none', alignItems: 'center', gap: '0.35rem', marginBottom: '1rem',
+            background: 'none', border: '1px solid var(--rim)', borderRadius: '6px',
+            color: 'var(--ink-mid)', fontSize: '0.8rem', padding: '0.3rem 0.6rem', cursor: 'pointer',
+          }}
+        >← All tracks</button>
+      )}
 
       {/* Track title row */}
       <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
@@ -490,8 +503,16 @@ export function MyTracksTab({ onNavigate }) {
     return () => window.removeEventListener('msl_tracks', h)
   }, [])
 
+  // Auto-select the first track only on desktop. On phones the list is the
+  // master view — leaving selectedId null keeps the user on the list until they
+  // tap a track (and lets the "← All tracks" back button actually return here).
+  const didAutoSelect = useRef(false)
   useEffect(() => {
-    if (!selectedId && tracks.length > 0) setSelectedId(tracks[0].id)
+    if (didAutoSelect.current) return
+    if (!selectedId && tracks.length > 0) {
+      const isMobile = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(max-width: 700px)').matches
+      if (!isMobile) { setSelectedId(tracks[0].id); didAutoSelect.current = true }
+    }
   }, [tracks, selectedId])
 
   function refresh() { setTracks(getTracks()) }
@@ -519,8 +540,13 @@ export function MyTracksTab({ onNavigate }) {
     setOpenNote(null)
   }
 
+  // On phones this two-pane view becomes master-detail: the track list is the
+  // "master"; once a track is selected (or a note is open) the detail pane takes
+  // over full-width. data-open drives the CSS collapse in index.css.
+  const detailOpen = !!(selectedTrack || (openNote && liveNote))
+
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 48px)', fontFamily: 'var(--font-sans)', overflow: 'hidden' }}>
+    <div className="mytracks-split" data-open={detailOpen ? '1' : '0'} style={{ display: 'flex', height: 'calc(100vh - 48px)', fontFamily: 'var(--font-sans)', overflow: 'hidden' }}>
       <TrackList
         tracks={tracks}
         selectedId={selectedId}
@@ -547,7 +573,7 @@ export function MyTracksTab({ onNavigate }) {
         }}
       />
 
-      <div style={{ flex: 1, overflow: 'hidden', background: 'var(--depth)', display: 'flex', flexDirection: 'column' }}>
+      <div className="mytracks-detail" style={{ flex: 1, overflow: 'hidden', background: 'var(--depth)', display: 'flex', flexDirection: 'column' }}>
         {/* Note editor — full pane */}
         {openNote && liveNote ? (
           <NoteEditor
@@ -566,6 +592,7 @@ export function MyTracksTab({ onNavigate }) {
             onDeleteNote={noteId => { if (!window.confirm('Delete this note? This cannot be undone.')) return; deleteNote(selectedTrack.id, noteId); refresh() }}
             onRemoveItem={idx => { removeItem(selectedTrack.id, idx); refresh() }}
             onReorderItems={(from, to) => { reorderItems(selectedTrack.id, from, to); refresh() }}
+            onBack={() => { setOpenNote(null); setSelectedId(null) }}
           />
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--ink-ghost)', fontSize: '0.9rem' }}>

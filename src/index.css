@@ -799,6 +799,27 @@ pre { max-width: 100%; overflow-x: auto; }
   .foundation-split { overflow-wrap: break-word; }
 }
 
+/* ── My Tracks split-pane: master-detail on mobile ───────────────────────────
+   Desktop: 240px track-list sidebar + detail pane side by side (unchanged).
+   Phones (<=700px): the fixed 240px list squeezes the detail into a sliver, so
+   show ONE pane at a time — the list until a track is picked, then the detail
+   full-width with a "← All tracks" back button. !important beats inline widths. */
+@media (max-width: 700px) {
+  .mytracks-list   { width: 100% !important; }
+  .mytracks-split[data-open="1"] .mytracks-list   { display: none !important; }
+  .mytracks-split[data-open="0"] .mytracks-detail { display: none !important; }
+  .mytracks-detail-inner { padding: 1.25rem 1rem !important; }
+  .mytracks-back { display: inline-flex !important; }
+}
+
+/* ── Generic fixed-grid collapses for phones ─────────────────────────────────
+   Opt-in helpers for hard multi-column grids that overflow a ~380px phone.
+   Desktop keeps the inline gridTemplateColumns; only <=700px is overridden. */
+@media (max-width: 700px) {
+  .grid-cols-1-mobile { grid-template-columns: 1fr !important; }
+  .grid-cols-2-mobile { grid-template-columns: repeat(2, 1fr) !important; }
+}
+
 @keyframes orb-pulse {
   0%,100% { opacity: 0.7; transform: scale(1); }
   50%     { opacity: 1;   transform: scale(1.12); }

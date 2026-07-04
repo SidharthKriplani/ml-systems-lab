@@ -943,7 +943,7 @@ function Comparisons() {
               {isOpen && (
                 <div>
                   {/* options grid */}
-                  <div style={{ display: 'grid', gridTemplateColumns: `repeat(${comp.options.length}, 1fr)`, borderTop: '1px solid var(--rim)' }}>
+                  <div className="grid-cols-1-mobile" style={{ display: 'grid', gridTemplateColumns: `repeat(${comp.options.length}, 1fr)`, borderTop: '1px solid var(--rim)' }}>
                     {comp.options.map((opt, oi) => (
                       <div key={oi} style={{ padding: '14px 16px', borderRight: oi < comp.options.length - 1 ? '1px solid var(--rim)' : 'none' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', flexWrap: 'wrap' }}>
@@ -1014,7 +1014,7 @@ export default function CheatsheetTab({ onNavigate }) {
       </div>
 
       {/* tier selector */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '36px' }}>
+      <div className="grid-cols-2-mobile" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '36px' }}>
         {TIERS.map(t => (
           <button key={t.id} onClick={() => selectTier(t.id)}
             style={{ padding: '14px 12px', borderRadius: '12px', cursor: 'pointer', border: '1px solid', textAlign: 'left', transition: 'all var(--t-fast)',
