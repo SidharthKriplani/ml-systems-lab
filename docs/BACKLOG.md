@@ -200,3 +200,27 @@ KNOW / DO / JUDGE / PREP keep their accordion behavior.
   through the landing now. BUILD landing is not gated (the projects themselves stay in `PREMIUM_TABS`).
 
 **Verify.** acorn-jsx parse OK on `src/App.jsx` + `src/tabs/BuildHubTab.jsx`. No npm build (Mac-only).
+
+## 2026-07-05 — MEGA-SESSION (full detail in root CLAUDE.md)
+- 3 modules finished + 3 new InteractivePanel interactives + 14 TRAINER_QUESTIONS (ids 121-134, domains Recommender Systems + Experimentation).
+- Difficulty ordering: `utils/foundations/sortByDifficulty.js` (user hand-extended RANK — keep) wraps all 19 `tabs/foundations/*FoundationTab.jsx` + GradedCell MLImplementBrowser.
+- Mobile: MyTracksTab `.mytracks-*` master-detail + Cheatsheet `.grid-cols-N-mobile` (index.css). App shell + family tabs already had `.foundation-split`+drawer.
+- Wave 3: ProfilePage 5-card + company logos (CompanyLogo + COMPANY_DOMAINS, 28); ProgressTab canonical section reorder.
+- NEXT = SEO (root HANDOFF-SEO.md): port GSL's build-time prerender to MSL public content.
+- Fixed same session: `computeReadiness()` was sourcing "Foundations" coverage from a dead legacy
+  tracker (`msl_foundations_read`, only written by GradientTab's blog-post reader) instead of the
+  real per-family module trackers — see `src/utils/readiness.js`. Also `upsertLeaderboardRow` was
+  defined but never called anywhere (dead export) — signed-in users never got a leaderboard row
+  regardless of activity; wired into `App.jsx` on sign-in and `LeaderboardTab.jsx` on mount.
+
+## LOGGED 2026-07-05 — content-quality feedback: end-of-section takeaway MCQs too easy
+A real user (friend of the account owner, engaged enough with MSL to notice this) reported that the
+takeaway/recap MCQs at the end of foundation sections are too easy to answer correctly — the phrasing
+or length of the correct option gives it away without needing to actually reason through the content
+(e.g. the right answer is noticeably longer/more complete, or uses more precise technical language than
+the distractors). This is a **content-writing problem, not a code bug** — same category as the GSL
+from-zero pedagogy rewrite already done (see root CLAUDE.md, "MEGA-SESSION 2026-07-04/05"). Needs a
+real difficulty pass across the takeaway-question banks: shorter/more parallel-structured distractors,
+remove length/precision tells, consider near-miss distractors that require real discrimination. Scope:
+all `checkQuestions`/takeaway MCQ arrays across the 19 `*FoundationTab.jsx` families' data files
+(`src/data/foundations/*Modules.js`). Not started — queued for next content work.
