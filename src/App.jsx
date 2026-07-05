@@ -6,6 +6,7 @@ import { Icon }    from './components/Icon.jsx'
 import { BrandMark } from './components/BrandMark.jsx'
 import FeedbackChip from './components/FeedbackChip.jsx'
 import LoadingSpinner from './components/LoadingSpinner.jsx'
+import { ErrorBoundary } from './components/ErrorBoundary.jsx'
 import AuthModal    from './components/auth/AuthModal.jsx'
 import { ACCESS_CODE, STORAGE_KEY, isUnlocked as checkUnlocked } from './utils/unlock.js'
 import { authEnabled, onAuthStateChange } from './utils/supabase.js'
@@ -1253,9 +1254,11 @@ export default function App() {
   if (showSignedOut) {
     return (
       <>
-        <Suspense fallback={<LoadingSpinner />}>
-          <SignedOutHome onShowAuth={() => setShowAuth(true)} onNavigate={goTo} onExplore={() => { setGuestMode(true); goTo('classical') }} />
-        </Suspense>
+        <ErrorBoundary resetKey="signed-out">
+          <Suspense fallback={<LoadingSpinner />}>
+            <SignedOutHome onShowAuth={() => setShowAuth(true)} onNavigate={goTo} onExplore={() => { setGuestMode(true); goTo('classical') }} />
+          </Suspense>
+        </ErrorBoundary>
         <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
       </>
     )
@@ -1384,7 +1387,9 @@ export default function App() {
           padding: '32px 20px 80px',
           boxSizing: 'border-box',
         }}>
-        {renderContent()}
+        <ErrorBoundary resetKey={activeTab}>
+          {renderContent()}
+        </ErrorBoundary>
       </main>
 
       {/* Bottom nav removed — mobile navigation now uses the drawer (hamburger in topbar). */}
