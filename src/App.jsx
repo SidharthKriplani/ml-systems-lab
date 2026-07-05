@@ -828,7 +828,7 @@ function SidebarNavItem({ id, label, desc, href, external, indent = false, activ
   )
 }
 
-function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked, open = false, onClose }) {
+function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked, open = false, onClose, user }) {
   const activeSection = getTabSection(activeTabId)
   // On mobile this sidebar is a drawer — navigating anywhere should close it.
   const goToClose = (tabId) => { goTo(tabId); if (onClose) onClose() }
@@ -891,7 +891,12 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked, 
       <nav style={{ flex: 1, padding: '2px 8px 10px', overflowY: 'auto', scrollbarWidth: 'none' }}>
 
         {/* TRACK (top, always visible) */}
-        <SidebarNavItem id="home" label="Home" {...navProps} />
+        {/* Home is only a real destination signed out — App.jsx redirects any
+            signed-in visit to 'home' straight to 'progress' (the landing page
+            doesn't make sense once you're already using the product). Signed
+            in, this row and "My Progress" below it point at the exact same
+            page — a duplicate, dead-click nav item. Only show it signed out. */}
+        {!user && <SidebarNavItem id="home" label="Home" {...navProps} />}
         <SidebarNavItem id="profile" label="Profile" {...navProps} />
         <SidebarNavItem id="progress" label="My Progress" {...navProps} />
         <SidebarNavItem id="review" label="Review" {...navProps} />
@@ -1268,7 +1273,7 @@ export default function App() {
     <div style={{ minHeight: '100vh', background: 'var(--void)' }}>
 
       {/* ── Sidebar — fixed rail on desktop, off-canvas drawer on mobile ── */}
-      <DesktopSidebar activeTabId={activeTab} goTo={goTo} onSearch={() => setSearchOpen(true)} tabProgress={tabProgress} isUnlocked={isUnlocked} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <DesktopSidebar activeTabId={activeTab} goTo={goTo} onSearch={() => setSearchOpen(true)} tabProgress={tabProgress} isUnlocked={isUnlocked} open={sidebarOpen} onClose={() => setSidebarOpen(false)} user={user} />
 
       {/* ── Scrim behind the open drawer (mobile only, via CSS) ── */}
       <div
