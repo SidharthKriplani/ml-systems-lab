@@ -2,7 +2,54 @@
 // Combines MLE Path progress (50%) + practice scores (30%) + recent activity (20%).
 // Output: { score: 0–100, level: 'novice'|'building'|'competent'|'strong'|'interview-ready', breakdown }.
 
-import { readFoundationsRead, overallCompletion } from '../data/foundationsPath.js'
+// NOTE: computeReadiness() used to source "Foundations" coverage from
+// readFoundationsRead()/overallCompletion() (below) — a legacy tracker keyed on
+// `msl_foundations_read`, populated ONLY by GradientTab.jsx's "mark as read" on its
+// 57 blog-post ids. Finishing modules in any of the 19 real Foundation families
+// (MathStatsFoundationTab, ClassicalMLFoundationTab, etc.) never touched that key,
+// so a user who fully completed e.g. Stat Foundations but never read Gradient posts
+// would see readiness stuck at whatever fraction of Gradient posts she'd read —
+// completely disconnected from her actual module progress. Fixed below by summing
+// the same per-family localStorage trackers ProgressTab.jsx/ProfilePage.jsx use.
+// Mirrors FOUNDATION_STORES in ProgressTab.jsx/ProfilePage.jsx (kept in sync
+// manually — see note above on why this can't stay sourced from foundationsPath.js).
+const FOUNDATION_STORES = [
+  { lsKey: 'msl-math-stats-foundation-v1',       total: 18 },
+  { lsKey: 'msl-classical-ml-foundation-v1',     total: 14 },
+  { lsKey: 'msl-probabilistic-ml-foundation-v1', total:  9 },
+  { lsKey: 'msl-eval-foundation-v1',              total: 10 },
+  { lsKey: 'msl-unsupervised-foundation-v1',      total: 10 },
+  { lsKey: 'msl-causal-foundation-v1',            total: 10 },
+  { lsKey: 'msl-dl-foundation-v1',                total: 14 },
+  { lsKey: 'msl-self-supervised-foundation-v1',   total:  9 },
+  { lsKey: 'msl-rl-foundation-v1',                total: 10 },
+  { lsKey: 'msl-production-foundation-v1',        total: 11 },
+  { lsKey: 'msl-monitoring-foundation-v1',        total:  8 },
+  { lsKey: 'msl-system-design-foundation-v1',     total:  8 },
+  { lsKey: 'msl-recsys-foundation-v1',            total:  8 },
+  { lsKey: 'msl-pricing-foundation-v1',           total:  7 },
+  { lsKey: 'msl-time-series-foundation-v1',       total:  9 },
+  { lsKey: 'msl-graph-ml-foundation-v1',          total:  9 },
+  { lsKey: 'msl-bandits-foundation-v1',           total:  9 },
+  { lsKey: 'msl-optimization-foundation-v1',      total: 12 },
+  { lsKey: 'msl-data-foundation-v1',              total: 11 },
+]
+
+function getFoundationDone(lsKey) {
+  try {
+    const data = JSON.parse(localStorage.getItem(lsKey) || '{}')
+    return Object.values(data).filter(v => v?.completedAt).length
+  } catch { return 0 }
+}
+
+function readRealFoundationCompletion() {
+  let done = 0, total = 0
+  for (const f of FOUNDATION_STORES) {
+    done += Math.min(getFoundationDone(f.lsKey), f.total)
+    total += f.total
+  }
+  return { read: done, total }
+}
 
 function readPracticeScore() {
   let attempted = 0, correct = 0, totalKeys = 0
@@ -44,7 +91,7 @@ function readActivityScore() {
 }
 
 export function computeReadiness() {
-  const foundations = overallCompletion(readFoundationsRead())
+  const foundations = readRealFoundationCompletion()
   const pathPct = foundations.total > 0 ? (foundations.read / foundations.total) * 100 : 0
   const { practiceScore, accuracyScore, attempted, correct } = readPracticeScore()
   const activityScore = readActivityScore() // kept for the breakdown display only

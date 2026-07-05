@@ -10,6 +10,7 @@ import AuthModal    from './components/auth/AuthModal.jsx'
 import { ACCESS_CODE, STORAGE_KEY, isUnlocked as checkUnlocked } from './utils/unlock.js'
 import { authEnabled, onAuthStateChange } from './utils/supabase.js'
 import { pullProgressFromSupabase } from './utils/syncProgress.js'
+import { upsertLeaderboardRow } from './utils/leaderboard.js'
 import StudyRoom from './study/StudyRoom.jsx'
 import { BUILD_PROJECTS } from './tabs/BuildHubTab.jsx'
 
@@ -1042,6 +1043,10 @@ export default function App() {
           // Pull remote progress on fresh sign-in (may overwrite local — intentional)
           await pullProgressFromSupabase(session.user)
           setIsUnlocked(checkUnlocked()) // re-check after pull
+          // upsertLeaderboardRow was never actually called anywhere in the app —
+          // signed-in users with real progress never got a leaderboard row written,
+          // so they'd never appear on the board no matter how much they'd done.
+          upsertLeaderboardRow(session.user)
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null)

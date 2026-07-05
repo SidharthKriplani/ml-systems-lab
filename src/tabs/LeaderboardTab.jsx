@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { fetchLeaderboard, computeWeightedScore, getDisplayName } from '../utils/leaderboard.js';
+import { fetchLeaderboard, computeWeightedScore, getDisplayName, upsertLeaderboardRow } from '../utils/leaderboard.js';
 import { supabase } from '../utils/supabase.js';
 
 function rankColor(rank) {
@@ -41,13 +41,18 @@ export function LeaderboardTab({ user, onOpenProfile }) {
 
   useEffect(() => {
     let cancelled = false;
+    // upsertLeaderboardRow was never actually wired up anywhere (dead export) —
+    // opening the Leaderboard was documented as one of its two triggers but never
+    // called it, so a signed-in user with real progress could open this page
+    // repeatedly and still never get a row written for herself to appear in.
+    if (user) upsertLeaderboardRow(user);
     fetchLeaderboard(100).then(data => {
       if (cancelled) return;
       if (data === null) setError(true);
       setRows(data || []);
     });
     return () => { cancelled = true; };
-  }, []);
+  }, [user]);
 
   const myIndex = (rows && user) ? rows.findIndex(r => r.user_id === user.id) : -1;
   const myRank  = myIndex >= 0 ? myIndex + 1 : null;
