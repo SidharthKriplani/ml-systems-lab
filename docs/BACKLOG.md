@@ -249,3 +249,65 @@ only lab with this flaw (PAL pushes via `history.pushState` App.jsx:1110; GSL/PL
 gives every tab-level navigation (sidebar, search, practice cards) working browser Back for free. Module
 selection *within* a foundation tab is still not hash-encoded (Back from module B inside a tab goes to the
 previous tab, not module A) — acceptable for now; full module-level routing is the SEO/prerender workstream.
+
+## 2026-07-08 — SEO prerender shipped + LAB-STANDARDS residual contract fixes (C4/C5/C8)
+
+**SEO/prerender.** `scripts/prerender-modules.cjs` (new) — 206 foundation modules (all 19
+`src/data/foundations/*Modules.js` families, confirmed uniform schema) → `public/modules/<id>.html`,
+title/summary/keyPoints/takeaway/recap rendered as real HTML, CTA to the owning family tab (moduleId→tabId
+map built from each `*FoundationTab.jsx`'s `TAB_ID`). 5 ids collide across tracks (e.g. `calibration` in 3
+tracks) — disambiguated with a `--<tabId>` suffix rather than dropping content; 206/206 generated, 0
+skipped. Also discovered and FIXED two pre-existing, unwired prerender scripts
+(`scripts/build-prerendered-posts.mjs` for the 182-post Gradient blog, `scripts/build-sitemap.mjs`):
+their regex-based extraction silently dropped 8 posts with double-quoted titles/excerpts and mis-handled 2
+real duplicate slugs. Replaced the regex with the same balanced-bracket/string-aware `vm` scanner used for
+prerender-modules — all 8 recovered, dupes cleanly deduped. `package.json` `"build"` now runs
+prerender-modules → build-prerendered-posts → build-sitemap → generate-rss → `vite build`; `"prerender"`
+added for sandbox-only verification. Final: 206 modules + 180 unique posts + 10 static = 396 sitemap URLs.
+`public/robots.txt` created (didn't exist). BASE_URL `https://ml-systems-lab-v9xe.vercel.app`,
+parameterized via `SITE_BASE_URL`. Verify: `node`-ran the full chain in-sandbox, sample HTML has real
+prose + correct CTAs, sitemap XML-valid (396 `<url>` entries).
+
+**C4 (stale params) — real bug, fixed.** `setHash(tabId)` passed a bare `#${tabId}` on the `push:false`
+path (browser hashchange, the auth reactive redirect) — a hash-only relative URL, which browsers resolve
+against the CURRENT address INCLUDING its query string. A stale `?scenario=`/`?tier=`/`?problem=` from
+whatever tab you'd just been on could survive into the next tab's URL (e.g.
+`?scenario=stf03#classical_ml_foundation`), later wrongly re-triggering that tab's own read-once
+URL-param auto-open logic on refresh. Fixed: `setHash` now always writes the explicit
+`window.location.pathname + '#' + tabId`, mirroring `goTo`'s existing query-stripping `targetUrl`
+construction.
+
+**C5 (auth transitions bypass goTo) — fixed.** `SIGNED_OUT` (`App.jsx` ~1057) and the reactive
+signed-in-lands-on-Progress redirect (~1067) both called raw `setActiveTab(...)`, skipping `goTo` entirely
+— no history entry, and stale `pendingOpen`/`navOrigin` from whatever the user was viewing survived past
+sign-out. Both now route through `goTo`: `SIGNED_OUT` → `goTo('home')` (real user action → real push,
+preserves the pre-signout trail on Back); the reactive redirect → `goTo('progress', null, { push: false })`
+(a corrective bounce, not a user nav — `push:false` avoids a Home↔Progress back-button loop while still
+getting goTo's stale-state cleanup for free). Required hoisting `pendingOpen`/`navOrigin`/`goTo` above the
+auth effect (was declared later in the component body — the auth effect referencing it directly in a
+dependency array would have hit a TDZ error at render time, not just async).
+
+**C8 (Tracks/Review-Queue launchers don't consume openModuleId) — re-confirmed via grep, then fixed in
+all 6 flagged tabs.** `grep -n "openModuleId" src/tabs/{Interview,Cheatsheet,CaseStudies,SpotTheFlaw,
+CodeBugs,MLCoding}Tab.jsx` → 0 matches in all 6 before this fix, despite every tab receiving the prop
+generically from `App.jsx`. Fixed:
+- `InterviewPrepTab.jsx` — new effect matches `openModuleId` against `QUESTIONS` (loose id match), resets
+  filters + `setOpen(match.id)`.
+- `CheatsheetTab.jsx` — two bugs, one fix: `Flashcards`' `AddTrackBtn itemId={String(i)}` used the index
+  into the FILTERED `cards` array (shifts per group filter, so the same card got a different id depending
+  on which filter was active when added) — switched both the add-side id AND the openModuleId-consuming
+  effect to the STABLE index into the full `FLASHCARDS` array. Top-level `CheatsheetTab` forces `tier=0`
+  when `openModuleId` is set so `Flashcards` mounts at all.
+- `CaseStudiesTab.jsx` — straightforward, `openCase` already keys off `c.id` directly.
+- `SpotTheFlawTab.jsx` — the existing `?scenario=` URL-param open only ran in the `useState` initializer
+  (once, at mount) — added a reactive effect mirroring `handlePick`'s toggle-open + `replaceState` call so
+  a prop change on an already-mounted tab is picked up too.
+- `CodeBugsTab.jsx` — each `BugCard` owned local `open` state with zero external control; added a
+  `forceOpen` prop + effect, parent resets the domain filter and passes `forceOpen={bug.id === openModuleId}`.
+- `MLCodingTab.jsx` — `autoExpand` (on `ProblemCard`) was a `useState` initializer only, same
+  non-reactivity issue as CodeBugsTab; added the same effect pattern + a `forceOpenId` state that also
+  forces `mode='rounds'` + `activeType=0` (All) so the target problem can't be hidden behind the wrong
+  mode/filter.
+
+**Verify:** all 8 touched files (App.jsx + 6 tabs + this entry's prerender scripts) esbuild@0.21.5-clean;
+only pre-existing unrelated duplicate-key warnings in App.jsx. NOT pushed.

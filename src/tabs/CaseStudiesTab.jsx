@@ -273,13 +273,22 @@ function initProgress() {
   return {}
 }
 
-export default function CaseStudiesTab({ onNavigate }) {
+export default function CaseStudiesTab({ onNavigate, openModuleId }) {
   const [openCase, setOpenCase] = useState(null)
   const [progress, setProgress] = useState(initProgress)
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(progress))
   }, [progress])
+
+  // C8 fix (2026-07-08 LAB-STANDARDS audit): opening a case from My Tracks
+  // (type 'case', itemId = c.id) never actually opened the case — the prop
+  // was passed by App.jsx but this component ignored it.
+  useEffect(() => {
+    if (openModuleId != null && CASES.some(c => c.id === openModuleId)) {
+      setOpenCase(openModuleId)
+    }
+  }, [openModuleId])
 
   function getQ(caseId, qIdx) {
     return progress[caseId]?.[qIdx] || { answer: '', revealed: false, selfRating: 3 }

@@ -524,7 +524,17 @@ function getTabFromHash() {
   return ALL_TABS.find(t => t.id === hash)?.id ?? null
 }
 function setHash(tabId) {
-  window.history.replaceState(null, '', tabId === 'home' ? window.location.pathname : `#${tabId}`)
+  // C4 fix (2026-07-08 LAB-STANDARDS audit, "verify" flag re-confirmed real):
+  // this used to pass a bare `#${tabId}` — a hash-ONLY relative URL, which
+  // browsers resolve against the CURRENT address including its query string.
+  // On the push:false path (browser hashchange / the auth reactive redirect,
+  // both of which skip goTo's explicit query-stripping pushState branch),
+  // this let a stale ?scenario=/?tier=/?problem= from whatever tab you were
+  // just on survive into the new tab's URL — e.g. ?scenario=stf03#classical_ml
+  // — which then wrongly re-triggers that tab's own read-once URL-param
+  // auto-open logic on a later refresh. Always writing the explicit pathname
+  // mirrors goTo's targetUrl construction and guarantees the query is gone.
+  window.history.replaceState(null, '', tabId === 'home' ? window.location.pathname : `${window.location.pathname}#${tabId}`)
 }
 
 // ── ProgressRing ──────────────────────────────────────────────────────────────
@@ -1037,56 +1047,10 @@ export default function App() {
   const [showAuth,  setShowAuth]  = useState(false)
   const [studyOpen, setStudyOpen] = useState(false)
 
-  useEffect(() => {
-    const { data: { subscription } } = onAuthStateChange(async (event, session) => {
-      if (
-        (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED')
-        && session?.user
-      ) {
-        setUser(session.user)
-        setShowAuth(false)
-        if (event === 'SIGNED_IN') {
-          // Pull remote progress on fresh sign-in (may overwrite local — intentional)
-          await pullProgressFromSupabase(session.user)
-          setIsUnlocked(checkUnlocked()) // re-check after pull
-          // upsertLeaderboardRow was never actually called anywhere in the app —
-          // signed-in users with real progress never got a leaderboard row written,
-          // so they'd never appear on the board no matter how much they'd done.
-          upsertLeaderboardRow(session.user)
-        }
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null)
-        setActiveTab('home')
-      }
-    })
-    return () => subscription.unsubscribe()
-  }, [])
-
-  // Reactive redirect: a signed-in user lands on Progress, not the marketing Home
-  // (uniform with PAL/GSL — Home is the signed-out surface).
-  useEffect(() => {
-    if (user && activeTab === 'home') setActiveTab('progress')
-  }, [user, activeTab])
-
-  // Reactive: if auth is enabled and user is null, show signed-out home
-  const [guestMode, setGuestMode] = useState(false)
-  const showSignedOut = authEnabled && !user && !guestMode
-
-  function handleUnlock(code) {
-    if (code?.trim().toUpperCase() === ACCESS_CODE) {
-      try { localStorage.setItem(STORAGE_KEY, ACCESS_CODE) } catch {}
-      setIsUnlocked(true)
-    }
-  }
-
-  // Listen for msl-unlock fired by AccessGate (including scenario-level gates in free tabs)
-  useEffect(() => {
-    function onUnlockEvent() { setIsUnlocked(true) }
-    window.addEventListener('msl-unlock', onUnlockEvent)
-    return () => window.removeEventListener('msl-unlock', onUnlockEvent)
-  }, [])
-
-  // Navigate to any tabId from anywhere
+  // Navigate to any tabId from anywhere. Declared here (moved up from its
+  // original spot below, 2026-07-08 C5 fix) because the auth-transition
+  // effects right below now call goTo directly — they need it defined first,
+  // not referenced through a TDZ.
   const [pendingOpen, setPendingOpen] = useState(null)
   // Where the navigation came from (e.g. { tab: 'my_tracks', trackId }) so the
   // destination tab can offer a "back to where you came from" affordance.
@@ -1111,6 +1075,67 @@ export default function App() {
     setSidebarOpen(false)
     trackTabSwitch(tabId)
     window.scrollTo(0, 0)
+  }, [])
+
+  useEffect(() => {
+    const { data: { subscription } } = onAuthStateChange(async (event, session) => {
+      if (
+        (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED')
+        && session?.user
+      ) {
+        setUser(session.user)
+        setShowAuth(false)
+        if (event === 'SIGNED_IN') {
+          // Pull remote progress on fresh sign-in (may overwrite local — intentional)
+          await pullProgressFromSupabase(session.user)
+          setIsUnlocked(checkUnlocked()) // re-check after pull
+          // upsertLeaderboardRow was never actually called anywhere in the app —
+          // signed-in users with real progress never got a leaderboard row written,
+          // so they'd never appear on the board no matter how much they'd done.
+          upsertLeaderboardRow(session.user)
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null)
+        // C5 fix (2026-07-08 LAB-STANDARDS audit): this used to be a raw
+        // setActiveTab('home'), which bypassed goTo entirely — no history
+        // entry, and stale pendingOpen/navOrigin from whatever the user was
+        // viewing survived the sign-out. Routing through goTo (real user
+        // action → real push) preserves the pre-signout trail on Back and
+        // clears that stale nav state.
+        goTo('home')
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+
+  // Reactive redirect: a signed-in user lands on Progress, not the marketing Home
+  // (uniform with PAL/GSL — Home is the signed-out surface).
+  // C5 fix: routed through goTo (push:false) instead of a raw setActiveTab —
+  // this is a corrective bounce, not a user navigation, so it must NOT push a
+  // history entry (a push here would make Back from Progress land on Home,
+  // which immediately re-bounces to Progress via this same effect — a
+  // back-button loop). push:false still gets goTo's other cleanup (clears
+  // stale pendingOpen/navOrigin, closes search/sidebar) for free.
+  useEffect(() => {
+    if (user && activeTab === 'home') goTo('progress', null, { push: false })
+  }, [user, activeTab, goTo])
+
+  // Reactive: if auth is enabled and user is null, show signed-out home
+  const [guestMode, setGuestMode] = useState(false)
+  const showSignedOut = authEnabled && !user && !guestMode
+
+  function handleUnlock(code) {
+    if (code?.trim().toUpperCase() === ACCESS_CODE) {
+      try { localStorage.setItem(STORAGE_KEY, ACCESS_CODE) } catch {}
+      setIsUnlocked(true)
+    }
+  }
+
+  // Listen for msl-unlock fired by AccessGate (including scenario-level gates in free tabs)
+  useEffect(() => {
+    function onUnlockEvent() { setIsUnlocked(true) }
+    window.addEventListener('msl-unlock', onUnlockEvent)
+    return () => window.removeEventListener('msl-unlock', onUnlockEvent)
   }, [])
 
   // Hash + localStorage sync

@@ -924,7 +924,7 @@ function ScenarioCard({ scenario, state, onPick }) {
   )
 }
 
-export default function SpotTheFlawTab({ onNavigate }) {
+export default function SpotTheFlawTab({ onNavigate, openModuleId }) {
   const [states, setStates] = useState(() => {
     const urlTarget = new URLSearchParams(window.location.search).get('scenario')
     const targetIdx = urlTarget ? SCENARIOS.findIndex(s => s.id === urlTarget) : -1
@@ -941,6 +941,19 @@ export default function SpotTheFlawTab({ onNavigate }) {
   useEffect(() => {
     localStorage.setItem('msl_spot_the_flaw', JSON.stringify(states))
   }, [states])
+
+  // C8 fix (2026-07-08 LAB-STANDARDS audit): the ?scenario= URL param only
+  // gets read once, in the useState initializer above — a track item (type
+  // 'flaw', itemId = scenario.id) opened via openModuleId changing on an
+  // ALREADY-MOUNTED tab was never picked up. Mirrors handlePick's toggle-open
+  // behavior instead of duplicating the replaceState call.
+  useEffect(() => {
+    if (openModuleId == null) return
+    const targetIdx = SCENARIOS.findIndex(s => s.id === openModuleId)
+    if (targetIdx === -1) return
+    setStates(prev => prev.map((s, i) => i === targetIdx ? { ...s, open: true } : s))
+    window.history.replaceState(null, '', `?scenario=${openModuleId}#spottheflaw`)
+  }, [openModuleId])
 
   function handlePick(idx, action) {
     setStates(prev => prev.map((s, i) => {

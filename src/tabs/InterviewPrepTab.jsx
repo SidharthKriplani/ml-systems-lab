@@ -907,7 +907,7 @@ function SystemDesignJudgment() {
 }
 
 // ─── Main tab ────────────────────────────────────────────────────────────────
-export default function InterviewPrepTab({ onNavigate }) {
+export default function InterviewPrepTab({ onNavigate, openModuleId }) {
   const [mode,    setMode]    = useState('bank')   // 'bank' | 'practice' | 'fluency' | 'design' | 'behavioral'
   const [cat,     setCat]     = useState('All')
   const [company, setCompany] = useState('All')
@@ -915,6 +915,21 @@ export default function InterviewPrepTab({ onNavigate }) {
   const [open,    setOpen]    = useState(null)
   const [search,  setSearch]  = useState('')
   const [, forceUpdate] = useState(0)
+
+  // C8 fix (2026-07-08 LAB-STANDARDS audit): this tab received openModuleId as
+  // a prop (every tab does, generically, from App.jsx) but never read it — a
+  // "+ Add to Track" item (type 'interview', itemId = String(q.id)) opened
+  // from My Tracks landed on the plain question list, not the question.
+  // Reset filters too, since a stale filter could hide the target question.
+  useEffect(() => {
+    if (openModuleId == null) return
+    const match = QUESTIONS.find(q => String(q.id) === String(openModuleId))
+    if (match) {
+      setMode('bank')
+      setCat('All'); setCompany('All'); setLevel('All'); setSearch('')
+      setOpen(match.id)
+    }
+  }, [openModuleId])
 
   const filtered = useMemo(() => QUESTIONS.filter(q => {
     if (cat !== 'All' && q.cat !== cat) return false

@@ -1575,6 +1575,13 @@ function ProblemCard({ problem, done, onComplete, onNavigate, autoExpand }) {
   const [cpRevealed, setCpRevealed] = useState(false)
   const [cpPick, setCpPick]         = useState(null)
 
+  // autoExpand as a useState initializer only fires on first mount — it
+  // won't react to a track-launch id arriving after this card already
+  // exists. Re-run whenever it flips true (C8 fix, 2026-07-08).
+  useEffect(() => {
+    if (autoExpand) setExpanded(true)
+  }, [autoExpand])
+
   const DIFF_COLOR = { junior: 'var(--mint)', mid: 'var(--prime)', senior: 'var(--rose)', staff: 'var(--violet)' }
   const typeMeta = problem.type ? TYPE_META[problem.type] : null
 
@@ -1689,8 +1696,15 @@ function ProblemCard({ problem, done, onComplete, onNavigate, autoExpand }) {
 }
 
 // ── Main tab ──────────────────────────────────────────────────────────────────
-export default function MLCodingTab({ onNavigate }) {
+export default function MLCodingTab({ onNavigate, openModuleId }) {
   const urlProblem = new URLSearchParams(window.location.search).get('problem')
+
+  // C8 fix (2026-07-08 LAB-STANDARDS audit): a problem opened from My Tracks
+  // (type 'ml_code', itemId = problem.id) never actually opened the problem
+  // — the existing autoExpand mechanism only reads the ?problem= URL param
+  // ONCE (it's not reactive to a prop changing on an already-mounted tab),
+  // and could additionally be hidden behind the type filter or "drills" mode.
+  const [forceOpenId, setForceOpenId] = useState(null)
 
   const [completedIds, setCompletedIds] = useState(() => {
     try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]') }
@@ -1716,6 +1730,14 @@ export default function MLCodingTab({ onNavigate }) {
   useEffect(() => { localStorage.setItem(EX_LS_KEY, JSON.stringify(exDone)) }, [exDone])
   const markExSolved = (id) => setExDone(prev => prev.includes(id) ? prev : [...prev, id])
   const activeEx = activeExId ? ML_CODE_EXERCISES.find(e => e.id === activeExId) : null
+
+  useEffect(() => {
+    if (openModuleId != null && PROBLEMS.some(p => p.id === openModuleId)) {
+      setMode('rounds')
+      setActiveType(0)
+      setForceOpenId(openModuleId)
+    }
+  }, [openModuleId])
 
   const filtered = activeType === 0 ? PROBLEMS : PROBLEMS.filter(p => p.type === activeType)
   const done  = completedIds.length
@@ -1810,7 +1832,7 @@ export default function MLCodingTab({ onNavigate }) {
             done={completedIds.includes(p.id)}
             onComplete={handleComplete}
             onNavigate={onNavigate}
-            autoExpand={urlProblem === p.id}
+            autoExpand={urlProblem === p.id || forceOpenId === p.id}
           />
         ))}
       </div>

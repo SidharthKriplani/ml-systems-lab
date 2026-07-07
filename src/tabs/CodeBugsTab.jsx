@@ -859,10 +859,18 @@ function CodeBlock({ code }) {
   )
 }
 
-function BugCard({ bug, answer, onAnswer }) {
+function BugCard({ bug, answer, onAnswer, forceOpen }) {
   const [open, setOpen] = useState(false)
   const answered = answer !== undefined
   const isCorrect = answered && answer === bug.correct
+
+  // C8 fix (2026-07-08 LAB-STANDARDS audit): forceOpen is set by the parent
+  // when this bug's id matches openModuleId (a track item opened via
+  // "Open →"). Each card owns its own collapsed state with no external
+  // control before this, so a track launch landed on the plain list.
+  useEffect(() => {
+    if (forceOpen) setOpen(true)
+  }, [forceOpen])
 
   const optionExtraStyle = (key) => {
     if (answered && key !== bug.correct && key !== answer) {
@@ -1061,13 +1069,21 @@ function BugCard({ bug, answer, onAnswer }) {
 // devBrief fields are internal build guidance only — not rendered to users.
 const COMING_SOON = []
 
-export default function CodeBugsTab({ onNavigate }) {
+export default function CodeBugsTab({ onNavigate, openModuleId }) {
   const [answers, setAnswers] = useState(loadAnswers)
   const [filter, setFilter] = useState('All')
 
   useEffect(() => {
     saveAnswers(answers)
   }, [answers])
+
+  // C8 fix: reset the domain filter so a bug opened from a track isn't
+  // hidden behind whatever filter happened to be selected.
+  useEffect(() => {
+    if (openModuleId != null && BUGS.some(b => b.id === openModuleId)) {
+      setFilter('All')
+    }
+  }, [openModuleId])
 
   const handleAnswer = (bugId, option) => {
     setAnswers(prev => ({ ...prev, [bugId]: option }))
@@ -1218,6 +1234,7 @@ export default function CodeBugsTab({ onNavigate }) {
             bug={bug}
             answer={answers[bug.id]}
             onAnswer={handleAnswer}
+            forceOpen={bug.id === openModuleId}
           />
         ))}
       </div>

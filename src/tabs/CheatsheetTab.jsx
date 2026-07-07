@@ -612,11 +612,28 @@ const COMPARISONS = [
 
 // ─── Components ──────────────────────────────────────────────────────────────
 
-function Flashcards() {
+function Flashcards({ openModuleId }) {
   const [openIdx, setOpenIdx] = useState(null)
   const [filter, setFilter] = useState('All')
   const groups = ['All', ...Array.from(new Set(FLASHCARDS.map(f => f.group)))]
   const cards = filter === 'All' ? FLASHCARDS : FLASHCARDS.filter(f => f.group === filter)
+
+  // C8 fix (2026-07-08 LAB-STANDARDS audit): a flashcard added to a track via
+  // AddTrackBtn stores itemId = String(i) — but "i" was the index into the
+  // FILTERED `cards` array, which shifts depending on which group filter was
+  // active when it was added. Two bugs, one fix: (1) openModuleId was never
+  // consumed at all, so opening from a track landed on the plain list; (2)
+  // even if consumed, a filtered index can't reliably identify a card. Both
+  // the id used here AND in the AddTrackBtn below now key off the STABLE
+  // index into the full FLASHCARDS array, not the filtered view.
+  useEffect(() => {
+    if (openModuleId == null) return
+    const stableIdx = parseInt(openModuleId, 10)
+    if (!Number.isNaN(stableIdx) && FLASHCARDS[stableIdx]) {
+      setFilter('All')
+      setOpenIdx(stableIdx)
+    }
+  }, [openModuleId])
 
   return (
     <div>
@@ -637,30 +654,33 @@ function Flashcards() {
       </div>
       {/* cards */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        {cards.map((card, i) => (
-          <div key={i} style={{ border: '1px solid var(--rim)', borderRadius: '10px', overflow: 'hidden',
-            background: openIdx === i ? 'rgba(240,165,0,0.05)' : 'transparent', transition: 'background var(--t-fast)' }}>
+        {cards.map((card) => {
+          const stableIdx = FLASHCARDS.indexOf(card)
+          return (
+          <div key={stableIdx} style={{ border: '1px solid var(--rim)', borderRadius: '10px', overflow: 'hidden',
+            background: openIdx === stableIdx ? 'rgba(240,165,0,0.05)' : 'transparent', transition: 'background var(--t-fast)' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-            <button onClick={() => setOpenIdx(openIdx === i ? null : i)}
+            <button onClick={() => setOpenIdx(openIdx === stableIdx ? null : stableIdx)}
               style={{ flex: 1, textAlign: 'left', padding: '14px 18px', background: 'transparent', border: 'none', cursor: 'pointer',
                 display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px' }}>
               <div>
                 <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', marginRight: '10px' }}>{card.group}</span>
                 <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--ink)' }}>{card.q}</span>
               </div>
-              <span style={{ color: 'var(--prime)', fontSize: '11px', flexShrink: 0, fontFamily: 'var(--font-mono)', marginTop: '2px' }}>{openIdx === i ? '▲' : '▼'}</span>
+              <span style={{ color: 'var(--prime)', fontSize: '11px', flexShrink: 0, fontFamily: 'var(--font-mono)', marginTop: '2px' }}>{openIdx === stableIdx ? '▲' : '▼'}</span>
             </button>
             <div style={{ padding: '14px 14px 14px 0', flexShrink: 0 }}>
-              <AddTrackBtn itemType="flashcard" itemId={String(i)} label={card.q.slice(0, 80)} itemMeta={{ group: card.group }} />
+              <AddTrackBtn itemType="flashcard" itemId={String(stableIdx)} label={card.q.slice(0, 80)} itemMeta={{ group: card.group }} />
             </div>
             </div>
-            {openIdx === i && (
+            {openIdx === stableIdx && (
               <div style={{ padding: '0 18px 16px', fontSize: '13.5px', color: 'var(--ink-mid)', lineHeight: 1.75, borderTop: '1px solid var(--rim)', paddingTop: '12px' }}>
                 {card.a}
               </div>
             )}
           </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )
@@ -989,11 +1009,17 @@ const TIERS = [
   { id: 3, label: '1 Week', sub: 'Full plan + company profiles' },
 ]
 
-export default function CheatsheetTab({ onNavigate }) {
+export default function CheatsheetTab({ onNavigate, openModuleId }) {
   const params = new URLSearchParams(window.location.search)
   const urlTier = parseInt(params.get('tier') ?? '', 10)
   const urlSection = params.get('section') || null
   const [tier, setTier] = useState(!isNaN(urlTier) && urlTier >= 0 && urlTier <= 3 ? urlTier : 0)
+
+  // C8 fix: a flashcard opened from My Tracks needs Tier 0 (Flashcards)
+  // selected before Flashcards' own effect can reveal the specific card.
+  useEffect(() => {
+    if (openModuleId != null) setTier(0)
+  }, [openModuleId])
 
   function selectTier(id) {
     setTier(id)
@@ -1028,7 +1054,7 @@ export default function CheatsheetTab({ onNavigate }) {
       </div>
 
       {/* tier content */}
-      {tier === 0 && <Flashcards />}
+      {tier === 0 && <Flashcards openModuleId={openModuleId} />}
       {tier === 1 && <LastDay initSection={urlSection} />}
       {tier === 2 && <ThreeDays onNavigate={onNavigate} />}
       {tier === 3 && <OneWeek />}
