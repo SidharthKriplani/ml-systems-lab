@@ -224,3 +224,28 @@ real difficulty pass across the takeaway-question banks: shorter/more parallel-s
 remove length/precision tells, consider near-miss distractors that require real discrimination. Scope:
 all `checkQuestions`/takeaway MCQ arrays across the 19 `*FoundationTab.jsx` families' data files
 (`src/data/foundations/*Modules.js`). Not started — queued for next content work.
+
+## 2026-07-07 — browser-back fix: tracks→module Back landed in Foundations
+**Bug (user report):** open a module from My Tracks → browser Back went into the Foundations tab, not back
+to the track. **Root cause:** MSL navigation never created history entries — `setHash()` in `App.jsx` used
+`history.replaceState` exclusively; `goTo()` was pure React state. Back popped whatever stale real entry
+existed (typically an old `?module=…#<tab>` URL), and the `hashchange` listener routed there. MSL was the
+only lab with this flaw (PAL pushes via `history.pushState` App.jsx:1110; GSL/PL assign `location.hash`).
+
+**Fix (root-level, app-wide):**
+- `App.jsx` `goTo(tabId, openTarget, opts)`: pushes a real history entry on user navigation (strips stale
+  query); `hashchange` handler calls `goTo(t, null, { push: false })` so browser moves never double-push;
+  bare-URL (no hash) now routes home; unknown hashes (`#/u/…`) untouched. Sync effect keeps `replaceState`.
+- New `navOrigin` state (`{ tab: 'my_tracks', trackId }`) set via `opts.origin`, passed to all tab
+  components alongside `openModuleId`.
+- `MyTracksTab.jsx`: selection synced to URL (`?track=<id>#my_tracks`, `syncTrackUrl()`) — browser Back from
+  a module restores the SAME track; new `openTrackId` prop for explicit reopen; `onNavigate` wrapped to
+  carry origin from `TrackDetail`.
+- All 19 `tabs/foundations/*FoundationTab.jsx`: accept `navOrigin`; the "← All modules" button becomes
+  "← Back to My Tracks" (→ `onNavigate('my_tracks', trackId)`) while viewing the module opened from a track;
+  reverts to normal once the user browses to another module.
+
+**Verify:** esbuild bundle pass on all 21 touched files (npx esbuild@0.21.5). Real build Mac-only. Also
+gives every tab-level navigation (sidebar, search, practice cards) working browser Back for free. Module
+selection *within* a foundation tab is still not hash-encoded (Back from module B inside a tab goes to the
+previous tab, not module A) — acceptable for now; full module-level routing is the SEO/prerender workstream.

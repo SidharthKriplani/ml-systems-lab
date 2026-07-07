@@ -1088,9 +1088,25 @@ export default function App() {
 
   // Navigate to any tabId from anywhere
   const [pendingOpen, setPendingOpen] = useState(null)
-  const goTo = useCallback((tabId, openTarget = null) => {
+  // Where the navigation came from (e.g. { tab: 'my_tracks', trackId }) so the
+  // destination tab can offer a "back to where you came from" affordance.
+  const [navOrigin, setNavOrigin] = useState(null)
+  const goTo = useCallback((tabId, openTarget = null, opts = {}) => {
+    // User-initiated navigation pushes a REAL history entry so the browser
+    // Back button walks the in-app trail. Navigation triggered BY the browser
+    // (hashchange/popstate) passes { push: false } — pushing there would
+    // corrupt the history stack. The push strips any stale query string
+    // (?module=… / ?track=…) left over from the previous tab.
+    if (opts.push !== false) {
+      const targetUrl = tabId === 'home'
+        ? window.location.pathname
+        : window.location.pathname + '#' + tabId
+      const currentUrl = window.location.pathname + window.location.search + window.location.hash
+      if (currentUrl !== targetUrl) window.history.pushState(null, '', targetUrl)
+    }
     setActiveTab(tabId)
     setPendingOpen(openTarget)
+    setNavOrigin(opts.origin || null)
     setSearchOpen(false)
     setSidebarOpen(false)
     trackTabSwitch(tabId)
@@ -1109,7 +1125,10 @@ export default function App() {
   useEffect(() => {
     function onHashChange() {
       const t = getTabFromHash()
-      if (t) goTo(t)
+      // push:false — this IS a browser history move; pushing would corrupt the stack.
+      if (t) goTo(t, null, { push: false })
+      // Bare URL (no hash) = home. Leave unknown hashes (e.g. '#/u/…') alone.
+      else if (!window.location.hash) goTo('home', null, { push: false })
     }
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
@@ -1229,7 +1248,7 @@ export default function App() {
     if (activeTab === 'my_tracks') {
       return (
         <Suspense fallback={<LoadingSpinner />}>
-          <MyTracksTab onNavigate={goTo} />
+          <MyTracksTab onNavigate={goTo} openTrackId={pendingOpen} />
         </Suspense>
       )
     }
@@ -1239,14 +1258,14 @@ export default function App() {
       const Component = ALL_TABS.find(t => t.id === activeTab)?.component
       return Component ? (
         <Suspense fallback={<LoadingSpinner />}>
-          <Component onNavigate={goTo} openModuleId={pendingOpen} user={user} onShowAuth={() => setShowAuth(true)} />
+          <Component onNavigate={goTo} openModuleId={pendingOpen} navOrigin={navOrigin} user={user} onShowAuth={() => setShowAuth(true)} />
         </Suspense>
       ) : null
     }
     const Component = ALL_TABS.find(t => t.id === activeTab)?.component
     return Component ? (
       <Suspense fallback={<LoadingSpinner />}>
-        <Component onNavigate={goTo} openModuleId={pendingOpen} />
+        <Component onNavigate={goTo} openModuleId={pendingOpen} navOrigin={navOrigin} />
       </Suspense>
     ) : (
       <Suspense fallback={<LoadingSpinner />}>

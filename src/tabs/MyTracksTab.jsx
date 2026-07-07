@@ -492,9 +492,25 @@ function TrackDetail({ track, onNavigate, onRename, onNewNote, onOpenNote, onDel
 
 // ── Root component ────────────────────────────────────────────────────────────
 
-export function MyTracksTab({ onNavigate }) {
+// Keep the selected track in the URL (?track=<id>#my_tracks) so browser Back
+// from a module lands on the SAME track, and deep links to a track work.
+function syncTrackUrl(id) {
+  try {
+    window.history.replaceState(null, '', id ? `?track=${id}#my_tracks` : window.location.pathname + '#my_tracks')
+  } catch {}
+}
+
+export function MyTracksTab({ onNavigate, openTrackId }) {
   const [tracks, setTracks] = useState(() => getTracks())
-  const [selectedId, setSelectedId] = useState(null)
+  const [selectedId, setSelectedId] = useState(() => {
+    // Restore selection from URL (set on track select + preserved across
+    // browser Back from a module opened out of this track).
+    try {
+      const t = new URLSearchParams(window.location.search).get('track')
+      if (t && getTracks().some(tr => tr.id === t)) return t
+    } catch {}
+    return null
+  })
   const [openNote, setOpenNote] = useState(null) // { trackId, note }
 
   useEffect(() => {
@@ -503,12 +519,23 @@ export function MyTracksTab({ onNavigate }) {
     return () => window.removeEventListener('msl_tracks', h)
   }, [])
 
+  // Explicit "open this track" request (e.g. a module's "← Back to My Tracks")
+  useEffect(() => {
+    if (openTrackId && getTracks().some(tr => tr.id === openTrackId)) {
+      setOpenNote(null)
+      setSelectedId(openTrackId)
+      syncTrackUrl(openTrackId)
+    }
+  }, [openTrackId])
+
   // Auto-select the first track only on desktop. On phones the list is the
   // master view — leaving selectedId null keeps the user on the list until they
   // tap a track (and lets the "← All tracks" back button actually return here).
   const didAutoSelect = useRef(false)
   useEffect(() => {
     if (didAutoSelect.current) return
+    // Selection already restored (URL / explicit open) — don't auto-override later.
+    if (selectedId) { didAutoSelect.current = true; return }
     if (!selectedId && tracks.length > 0) {
       const isMobile = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(max-width: 700px)').matches
       if (!isMobile) { setSelectedId(tracks[0].id); didAutoSelect.current = true }
@@ -550,13 +577,13 @@ export function MyTracksTab({ onNavigate }) {
       <TrackList
         tracks={tracks}
         selectedId={selectedId}
-        onSelect={id => { setOpenNote(null); setSelectedId(id) }}
-        onCreate={name => { const t = createTrack(name); refresh(); setSelectedId(t.id) }}
+        onSelect={id => { setOpenNote(null); setSelectedId(id); syncTrackUrl(id) }}
+        onCreate={name => { const t = createTrack(name); refresh(); setSelectedId(t.id); syncTrackUrl(t.id) }}
         onDelete={id => {
           if (!window.confirm('Delete this track? This cannot be undone.')) return
           deleteTrack(id)
           refresh()
-          if (selectedId === id) { setSelectedId(null); setOpenNote(null) }
+          if (selectedId === id) { setSelectedId(null); setOpenNote(null); syncTrackUrl(null) }
         }}
         onMoveItem={(fromTrackId, toTrackId, index) => { moveItem(fromTrackId, toTrackId, index); refresh() }}
         onBuildTiers={() => {
@@ -566,7 +593,7 @@ export function MyTracksTab({ onNavigate }) {
           setTracks(next)
           setOpenNote(null)
           const sTrack = next.find(t => t.name === 'S Tier')
-          if (sTrack) setSelectedId(sTrack.id)
+          if (sTrack) { setSelectedId(sTrack.id); syncTrackUrl(sTrack.id) }
           const get = n => res.find(r => r.name === n)?.count ?? 0
           const total = res.reduce((n, r) => n + r.count, 0)
           window.alert(`Done: S (${get('S Tier')}), A (${get('A Tier')}), B (${get('B Tier')}) — ${total} modules across 3 tracks.`)
@@ -585,14 +612,16 @@ export function MyTracksTab({ onNavigate }) {
           <TrackDetail
             key={selectedTrack.id}
             track={selectedTrack}
-            onNavigate={onNavigate}
+            // Carry the origin so the destination tab's back button can return
+            // to THIS track (in-app), and browser Back restores it via ?track=.
+            onNavigate={(tabId, target) => onNavigate(tabId, target, { origin: { tab: 'my_tracks', trackId: selectedTrack.id } })}
             onRename={name => { renameTrack(selectedTrack.id, name); refresh() }}
             onNewNote={handleNewNote}
             onOpenNote={handleOpenNote}
             onDeleteNote={noteId => { if (!window.confirm('Delete this note? This cannot be undone.')) return; deleteNote(selectedTrack.id, noteId); refresh() }}
             onRemoveItem={idx => { removeItem(selectedTrack.id, idx); refresh() }}
             onReorderItems={(from, to) => { reorderItems(selectedTrack.id, from, to); refresh() }}
-            onBack={() => { setOpenNote(null); setSelectedId(null) }}
+            onBack={() => { setOpenNote(null); setSelectedId(null); syncTrackUrl(null) }}
           />
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--ink-ghost)', fontSize: '0.9rem' }}>

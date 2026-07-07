@@ -31,7 +31,7 @@ function difficultyBadge(d) {
   )
 }
 
-export function CausalFoundationTab({ onNavigate, openModuleId }) {
+export function CausalFoundationTab({ onNavigate, openModuleId, navOrigin }) {
   const [selectedId, setSelectedId] = useState(null)
 
   useEffect(() => {
@@ -131,11 +131,11 @@ export function CausalFoundationTab({ onNavigate, openModuleId }) {
       {selected && (
         <div style={{ flex: 1, overflowY: 'auto', padding: '1.75rem 2rem', background: 'var(--depth)', minWidth: 0 }}>
           <button
-            onClick={() => setSelectedId(null)}
+            onClick={() => (navOrigin?.tab === 'my_tracks' && openModuleId && selectedId === openModuleId) ? onNavigate('my_tracks', navOrigin.trackId || null) : setSelectedId(null)}
             style={{ fontSize: '0.78rem', color: 'var(--ink-low)', background: 'none', border: 'none', cursor: 'pointer',
               fontFamily: 'var(--font-sans)', padding: '0 0 1rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
           >
-            ← All modules
+            {(navOrigin?.tab === 'my_tracks' && openModuleId && selectedId === openModuleId) ? '← Back to My Tracks' : '← All modules'}
           </button>
 
           {/* Module header */}
