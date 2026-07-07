@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neural Forecasting | ML Systems Lab</title>
+  <meta name="description" content="N-BEATS, N-HiTS, TFT, PatchTST, when transformers lose to MLPs, foundation models">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/neural_forecasting.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/neural_forecasting.html">
+  <meta property="og:title" content="Neural Forecasting | ML Systems Lab">
+  <meta property="og:description" content="N-BEATS, N-HiTS, TFT, PatchTST, when transformers lose to MLPs, foundation models">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Neural Forecasting">
+  <meta name="twitter:description" content="N-BEATS, N-HiTS, TFT, PatchTST, when transformers lose to MLPs, foundation models">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Neural Forecasting",
+  "description": "N-BEATS, N-HiTS, TFT, PatchTST, when transformers lose to MLPs, foundation models",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/neural_forecasting.html",
+  "keywords": "N-BEATS, N-HiTS, TFT, PatchTST, transformer, neural forecasting, TimeGPT, MOIRAI"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#time_series_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">60 min read</span>
+      <span class="tag">N-BEATS</span><span class="tag">N-HiTS</span><span class="tag">TFT</span><span class="tag">PatchTST</span><span class="tag">transformer</span>
+    </div>
+    <h1>Neural Forecasting</h1>
+    <p class="subtitle">N-BEATS, N-HiTS, TFT, PatchTST, when transformers lose to MLPs, foundation models</p>
+
+    <p>Electricity demand forecasting is the benchmark problem for neural time series methods: 1-year history, predict 24 hours ahead. A sequence of Transformer-based papers — Informer, Autoformer, FEDformer — each claimed state-of-the-art on this benchmark. Then a 2023 paper (Zeng et al.) showed that a single linear layer applied to the flattened lookback window outperforms all of them. The reason exposes a structural flaw: Transformer attention is permutation-equivariant. Attention scores are computed from pairwise content similarity — dot products of embeddings — not from temporal position. Shuffle the timestamps and performance barely changes. A model that ignores temporal order cannot model autocorrelation, trend, or seasonality.</p>
+    <p>Positional encodings are added but don't fix this — they make position part of the content, which still allows position-insensitive mixing.</p>
+    <p>N-BEATS and N-HiTS sidestep this entirely. N-BEATS uses MLP stacks with a doubly-residual architecture: each block produces a backcast (reconstruction of its input) and a forecast; the backcast is subtracted before the next block, so each block models only what previous blocks couldn't explain. N-HiTS extends this with hierarchical multi-rate sampling — a coarse stack captures trends from downsampled series, a fine stack captures high-frequency variation — which is the right inductive bias for the 24-hour-ahead problem where trend and daily cycle operate at different timescales.</p>
+    <p>The Temporal Fusion Transformer (TFT) is competitive despite using attention because it preserves temporal structure everywhere else. An LSTM encoder processes the sequence before attention, variable selection networks gate which features matter per timestep, and attention operates on LSTM outputs rather than raw timestamps. TFT wins when rich covariates exist — static entity features, known future inputs — and N-HiTS wins without them.</p>
+    <p><strong>NOT this.</strong> &quot;Transformer-based models always outperform ARIMA and classical methods.&quot; N-BEATS, TFT, and other deep learning methods win on long-horizon multi-step forecasting with many series. On short, well-behaved univariate series with fewer than 2 years of history, ARIMA with seasonal decomposition frequently wins. The M4 and M5 competitions showed that feature-engineering with LightGBM beats most neural methods on the aggregate leaderboard. The right question is not which neural architecture to use but whether any neural model beats a well-tuned statistical baseline — that comparison must include DLinear.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Transformer self-attention is permutation-equivariant: it computes scores from content similarity, not temporal position, so shuffling timestamps barely changes performance on ETT benchmarks.</strong>
+
+This is why DLinear — a single linear layer on the flattened lookback window — outperforms Informer, Autoformer, and FEDformer. The architectural complexity of these Transformers does not compensate for discarding temporal order. DLinear is the mandatory baseline for any neural forecasting paper claim. If a proposed model does not beat DLinear, the complexity is not justified.</li><li><strong>N-BEATS's doubly-residual architecture gives each MLP block a smaller, well-defined task: model only what prior blocks failed to explain.</strong>
+
+Each block produces a backcast (reconstruction of its input window) and a forecast. The backcast is subtracted via a residual connection before the next block sees the input — subsequent blocks work on harder residuals. N-HiTS extends this with hierarchical multi-rate sampling: coarse stacks downsample the input to capture slow trends; fine stacks operate at full resolution for high-frequency patterns. N-HiTS outperforms N-BEATS on horizons beyond 96 steps and handles the daily-plus-weekly double seasonality of the electricity problem naturally.</li><li><strong>Foundation models (TimeGPT, MOIRAI) win exactly one scenario: cold start with fewer than 30 observations per series.</strong>
+
+With 2+ years of in-domain history, local statistical or global neural models trained on your data dominate zero-shot foundation models. Foundation models are calibrated to their pretraining distribution — pharmaceutical sales patterns (approval spikes, generic entry cliffs), industrial sensor data, or niche domain series that differ from the training corpus show degraded zero-shot performance. The global-vs-local decision is separate: global models (N-BEATS, TFT) train across series jointly and benefit from cross-series patterns, but only when series are related enough for transfer to help.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Transformer self-attention ignores temporal order by design, which is why DLinear outperforms Informer on standard benchmarks — always include DLinear as a baseline before claiming any neural forecasting win. N-HiTS retains temporal inductive bias through hierarchical multi-rate MLP stacks and beats N-BEATS on long horizons; TFT is competitive only when rich covariates exist. Foundation models win exactly one scenario: cold start with fewer than 30 observations per series.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Transformer attention is permutation-equivariant</strong> — ignores temporal order; shuffling timestamps barely changes MSE.</li><li><strong>DLinear (one linear layer) beats Informer/Autoformer/FEDformer</strong> — mandatory baseline before any neural claim.</li><li><strong>N-BEATS doubly-residual:</strong> each block backcasts + forecasts, subtracts before next → smaller task per block.</li><li><strong>N-HiTS adds hierarchical multi-rate sampling</strong> — beats N-BEATS beyond 96-step horizons, handles double seasonality.</li><li><strong>TFT competitive only with rich covariates.</strong></li><li><strong>Foundation models (TimeGPT, MOIRAI) win exactly one case:</strong> cold start, &lt;30 obs/series.</li><li><strong>With 2+ years of in-domain data, local/global models trained on your data dominate zero-shot.</strong></li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> A colleague trains an Informer model on your ETT dataset and reports 15% lower MSE than ARIMA. You are sceptical. What do you do before trusting this result?</p>
+      <ul class="check-opts"><li>A) Accept the result immediately — a 15% MSE reduction is large enough to be practically significant and unlikely to be explained by evaluation methodology differences.</li><li class="correct">B) Compare against DLinear (single linear layer on flattened lookback), which Zeng et al. showed outperforms Informer on ETT. Also check NLinear, verify both models use identical lookback windows and horizons, confirm the test split was not used for Informer tuning, and verify ARIMA was evaluated rolling-origin not single-fit.</li><li>C) Replicate the result using a different random seed; if the 15% gap is consistent across 3 seeds, the Informer result is trustworthy without further analysis.</li><li>D) The Informer result is impossible — Zeng et al. definitively proved that Transformers cannot outperform linear models on any time series benchmark, so the colleague made an error.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> You need to forecast hourly electricity demand for 1000 substations, 168 hours ahead (one week). You have 3 years of historical data per substation. TFT vs N-HiTS vs SARIMA — which do you use and why?</p>
+      <ul class="check-opts"><li>A) SARIMA per-substation is the correct choice; 3 years of hourly data provides sufficient history for reliable parameter estimation, and statistical methods are more interpretable for utility operators than neural models.</li><li>B) TFT is always the best choice for multi-step forecasting with multiple series because its variable selection network automatically identifies the most informative features without manual feature engineering.</li><li class="correct">C) N-HiTS is the strongest starting point: hierarchical pooling handles the 168-hour horizon well, a global model across 1000 series is more efficient than 1000 SARIMA models, and SARIMA cannot natively handle double seasonality (daily + weekly). Use TFT if meaningful covariates exist; always fit a SARIMA baseline and prefer it if N-HiTS does not beat it by &gt;5% MASE.</li><li>D) Ensemble all three equally; with 3 years of data per substation the computation cost of fitting all three models is negligible and ensemble always outperforms any individual model.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> You train a TimeGPT zero-shot model on a new domain (pharmaceutical sales) without fine-tuning. It performs worse than Holt-Winters. When would you expect a foundation model to outperform statistical methods, and what limits them?</p>
+      <ul class="check-opts"><li>A) Foundation models always outperform statistical methods given enough compute; the underperformance here indicates a bug in the TimeGPT API call rather than a genuine model limitation.</li><li class="correct">B) Foundation models outperform when: cold start (&lt;30 observations), heterogeneous portfolio where per-series fitting is infeasible, or target domain is well-represented in pretraining corpus. Limits here: pharmaceutical patterns (approval spikes, generic entry cliffs) differ from pretraining; no fine-tuning mechanism; with 3 years of data Holt-Winters fitting is reliable.</li><li>C) Foundation models outperform only on univariate series; with multivariate pharmaceutical sales data the zero-shot performance will always be degraded compared to univariate statistical methods.</li><li>D) Fine-tune TimeGPT on all 3 years of pharmaceutical data; zero-shot performance is always poor, but after fine-tuning foundation models uniformly outperform statistical methods regardless of domain.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> What is the doubly residual architecture in N-BEATS and why does it improve forecasting over a plain deep MLP?</p>
+      <ul class="check-opts"><li>A) Doubly residual means N-BEATS uses two separate residual streams — one for the AR component and one for the MA component — analogous to ARMA, which is why it outperforms plain MLPs on time series.</li><li>B) Doubly residual refers to using dropout twice per block (once after each FC layer), which provides stronger regularisation than standard single-dropout MLPs and reduces overfitting on short series.</li><li class="correct">C) Each N-BEATS block produces a backcast b̂_t (reconstruction of its input) and a forecast f̂_{t+h}. The residual connection subtracts the backcast before the next block (x_{t+1} = x_t − b̂_t), and forecasts are summed across blocks. Each block focuses on what prior blocks could not explain; the backcast acts as a self-supervised signal forcing meaningful representations; residual connections improve gradient flow. This outperforms plain MLP because each block is constrained to a smaller hypothesis class.</li><li>D) Doubly residual means N-BEATS applies a residual connection at both the block level and the stack level; the block-level connection handles short-range patterns while the stack-level connection handles long-range trends, a decomposition that plain MLPs cannot achieve.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#time_series_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sequential &amp; Session-Based RecSys | ML Systems Lab</title>
+  <meta name="description" content="GRU4Rec, SASRec, next-item prediction, short vs long-term intent">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/sequential_recsys.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/sequential_recsys.html">
+  <meta property="og:title" content="Sequential &amp; Session-Based RecSys | ML Systems Lab">
+  <meta property="og:description" content="GRU4Rec, SASRec, next-item prediction, short vs long-term intent">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Sequential &amp; Session-Based RecSys">
+  <meta name="twitter:description" content="GRU4Rec, SASRec, next-item prediction, short vs long-term intent">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Sequential & Session-Based RecSys",
+  "description": "GRU4Rec, SASRec, next-item prediction, short vs long-term intent",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/sequential_recsys.html",
+  "keywords": "sequential, session-based, SASRec, GRU4Rec, RecSys"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#system_design_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">24 min read</span>
+      <span class="tag">sequential</span><span class="tag">session-based</span><span class="tag">SASRec</span><span class="tag">GRU4Rec</span><span class="tag">RecSys</span>
+    </div>
+    <h1>Sequential &amp; Session-Based RecSys</h1>
+    <p class="subtitle">GRU4Rec, SASRec, next-item prediction, short vs long-term intent</p>
+
+    <p>Two-tower and matrix-factorization models treat a user as a static bag of past items — they know *what* you clicked but throw away the *order*. That's wrong for intent. A shopper who viewed [tent, sleeping bag, hiking boots] in that order is mid-mission; the same three items reshuffled tells a different story, and the *next* item (a headlamp) is predictable only from the sequence.</p>
+    <hr>
+    <p><strong>Session-based models predict the next item from the ordered history.</strong> GRU4Rec runs a recurrent network over the session, carrying a hidden state that summarizes everything seen so far; SASRec (and transformers4rec) replaces recurrence with self-attention so each position can look back at any earlier item directly. Self-attention wins at scale because it captures long-range dependencies without the vanishing-gradient decay a GRU suffers over a 50-event session.</p>
+    <hr>
+    <p><strong>Short-term vs long-term intent are two different signals that must be fused.</strong> Your *long-term* profile says you love indie films; your *current session* is 4 straight cooking videos — right now you want a fifth cooking video, not an indie trailer. A pure long-term model ignores the session; a pure session model forgets you the moment you leave. Production systems concatenate a long-term user embedding with a session-encoded state, letting the ranker weigh &quot;who you are&quot; against &quot;what you're doing now.&quot;</p>
+    <hr>
+    <p><strong>Worked scale:</strong> a session of length L=50 in a d=128 model costs O(L²·d) ≈ 50²·128 ≈ 320k multiply-adds for one self-attention layer — trivial per request. That cheapness is why SASRec-style models moved from retrieval-only into ranking features: the sequence encoder runs in a few hundred microseconds and its output is just another embedding the funnel already knows how to consume.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Order carries intent that a bag-of-items loses.</strong> [tent → sleeping bag → boots] implies a camping trip and a predictable next item; the same set unordered does not. Sequential models keep the order; MF/two-tower discard it. Use sequential features when the *next action* depends on the *recent trajectory*, not just the lifetime aggregate.</li><li><strong>GRU4Rec (recurrence) vs SASRec (self-attention): attention wins on long sessions.</strong> A GRU compresses history into one hidden state and decays old items via vanishing gradients; self-attention lets position t attend directly to position 1, so a 50-event session keeps early signal. transformers4rec is the productionized transformer variant.</li><li><strong>Fuse short-term (session) and long-term (profile) — neither alone is enough.</strong> The session captures *what you're doing now*; the long-term embedding captures *who you are*. Concatenate both into the ranker so a 4-video cooking binge can override a lifetime indie-film preference for the next slot, without erasing the profile.</li><li><strong>Sequence encoders are cheap enough to sit in ranking, not just retrieval.</strong> O(L²·d) for L=50, d=128 is ~320k FLOPs — sub-millisecond — so the encoded session becomes just another feature the funnel consumes.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Sequential recommenders (GRU4Rec, SASRec/transformers4rec) predict the next item from the *ordered* session rather than a bag of past items, and production systems fuse a session-encoded short-term state with a long-term profile embedding so &quot;what you're doing now&quot; can override &quot;who you are&quot; for the next slot.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Order carries intent that a bag-of-items loses:</strong> two-tower and matrix-factorization treat a user as a static bag — they know *what* you clicked but throw away order. [tent → sleeping bag → boots] is mid-mission and predicts a headlamp; the same three reshuffled tells a different story. Use sequential features when the *next action* depends on the *recent trajectory*.</li><li><strong>Session-based models predict the next item from the ordered history:</strong> GRU4Rec runs a recurrent net carrying a hidden state that summarizes everything seen; SASRec / transformers4rec replaces recurrence with self-attention so each position can look back at any earlier item directly.</li><li><strong>Self-attention beats GRU on long sessions:</strong> a GRU compresses the whole history into one recurrently-updated hidden state, so early items decay through vanishing gradients; self-attention lets position t attend directly to position 1, keeping early signal alive over a 50-event session.</li><li><strong>Fuse short-term (session) and long-term (profile) — neither alone is enough:</strong> your long-term profile says &quot;indie films,&quot; but 4 straight cooking videos means you want a fifth *now*. Concatenate both into the ranker so the in-session state can override lifetime taste for the next slot, without erasing the profile that survives for tomorrow.</li><li><strong>Sequence encoders are cheap enough for ranking, not just retrieval:</strong> one self-attention layer at L=50, d=128 costs O(L²·d) ≈ 320k multiply-adds — sub-millisecond — so the encoded session becomes just another embedding the funnel already knows how to consume.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> A retail model recommends from a lifetime-aggregate user embedding. A user who just viewed [running shoes → socks → shorts] gets recommended a blender (their most-clicked lifetime category). What's the root cause?</p>
+      <ul class="check-opts"><li>A) The embedding dimension is too small to hold both the running and blender interests; increase it.</li><li class="correct">B) The model aggregates history into an order-less profile, so it can't see the in-session running-gear trajectory that predicts the next item; a session/sequential encoder that consumes the ordered recent events fixes it.</li><li>C) The blender category is over-sampled in training; down-weight it and the running items win.</li><li>D) The ANN index is stale, returning yesterday's candidates; rebuild the index more frequently.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> On sessions averaging 60 events, a GRU4Rec model under-weights items from early in the session versus a SASRec model. Why does self-attention help here?</p>
+      <ul class="check-opts"><li>A) Self-attention uses more parameters, so it simply memorizes longer sessions.</li><li>B) SASRec ignores order entirely, which coincidentally helps on long sessions.</li><li class="correct">C) The GRU compresses the whole history into a single recurrently-updated hidden state, so early items decay through vanishing gradients; self-attention lets each position attend directly to any earlier position, preserving long-range signal.</li><li>D) GRUs cannot process sessions longer than 32 events, truncating the early ones.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> A team fuses a long-term user embedding with a session encoder. A user with a strong lifetime &quot;documentary&quot; profile is mid-session on 5 comedy clips. The system correctly serves a 6th comedy clip. Which design choice made this possible?</p>
+      <ul class="check-opts"><li>A) The long-term embedding was zeroed out at session start so only recent behavior counts.</li><li class="correct">B) Both signals are concatenated into the ranker, letting the strong in-session comedy state outweigh the profile for the next slot without deleting the profile — so tomorrow's fresh session can lean documentary again.</li><li>C) The model retrained online on the 5 comedy clips, permanently overwriting the documentary profile.</li><li>D) A business rule hard-codes comedy after any 3 consecutive comedy views.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#system_design_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

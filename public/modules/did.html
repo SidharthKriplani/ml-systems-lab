@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Difference-in-Differences | ML Systems Lab</title>
+  <meta name="description" content="Parallel trends, event studies, staggered DiD, DiD failures">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/did.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/did.html">
+  <meta property="og:title" content="Difference-in-Differences | ML Systems Lab">
+  <meta property="og:description" content="Parallel trends, event studies, staggered DiD, DiD failures">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Difference-in-Differences">
+  <meta name="twitter:description" content="Parallel trends, event studies, staggered DiD, DiD failures">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Difference-in-Differences",
+  "description": "Parallel trends, event studies, staggered DiD, DiD failures",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/did.html",
+  "keywords": "DiD, difference-in-differences, parallel trends, event study, staggered DiD"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#causal_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">30 min read</span>
+      <span class="tag">DiD</span><span class="tag">difference-in-differences</span><span class="tag">parallel trends</span><span class="tag">event study</span><span class="tag">staggered DiD</span>
+    </div>
+    <h1>Difference-in-Differences</h1>
+    <p class="subtitle">Parallel trends, event studies, staggered DiD, DiD failures</p>
+
+    <p>A city passes a minimum wage law in 2020. You want to know if it reduced employment. Treated group: businesses in the city. Control group: businesses in a neighboring city without the law. Pre-period: 2018–2019. Post-period: 2020–2021. Simple before-after comparison for the treated city would confound the policy effect with COVID-related employment drops that hit both cities.</p>
+    <p>DiD subtracts the control city's change from the treated city's change: (treated post − treated pre) − (control post − control pre). This removes the common time trend, leaving only the differential change that appeared when treatment was administered.</p>
+    <p>The parallel trends assumption is the key identifying assumption. In the absence of treatment, the treated group's outcomes would have followed the same trend as the control group. This is untestable in the post-period — the treated city's counterfactual employment trend under no policy is never observed. It can be tested in pre-periods: if treated and control trends were parallel in 2017 and 2018, they were likely to remain parallel in 2020 absent the intervention. Non-zero pre-period effects in an event study are evidence against parallel trends.</p>
+    <p>Two-way fixed effects (TWFE) regression formalizes this: Y_it = α_i + λ_t + β D_it + ε_it. Unit fixed effects absorb permanent group differences; time fixed effects absorb common trends; β is the DiD estimate. This handles multiple periods and multiple treatment groups simultaneously.</p>
+    <p>Staggered treatment timing: when different units receive treatment at different times, TWFE produces biased estimates if treatment effects are heterogeneous across groups or time. Early-treated units act as implicit controls for later-treated units during periods when both are treated — but the early-treated units' outcomes already include treatment effects. The Callaway-Sant'Anna and Sun-Abraham estimators restrict the control group to not-yet-treated or never-treated units for each treatment cohort, producing unbiased estimates in staggered designs.</p>
+    <p>What parallel trends is not: a weak assumption that is always satisfied. Parallel trends fails when treatment was assigned based on pre-period trends (units selected for treatment because their outcomes were deteriorating), when confounding trends affect treated and control groups differently, or when the groups are fundamentally different in character. Always plot pre-period trends and test formally with an event study before reporting a DiD estimate.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Always plot an event study before reporting the DiD estimate — treatment effect estimated separately for each time period relative to treatment.</strong> The pre-period estimates should be near zero. This is the parallel trends diagnostic. Systematic non-zero pre-period estimates mean the treated and control groups were already diverging before the treatment, and the DiD estimate is confounded by that pre-existing divergence.</li><li><strong>Trap: using TWFE with staggered treatment timing when treatment effects vary over time or across cohorts.</strong> TWFE produces a weighted average of treatment effects that can be negative even when all individual effects are positive (Goodman-Bacon decomposition). Use Callaway-Sant'Anna for staggered designs — it constructs clean 2×2 DiDs for each treatment cohort using only not-yet-treated or never-treated units as controls.</li><li><strong>Diagnostic: if your DiD estimate changes substantially when you change the control group or the comparison period, the parallel trends assumption is fragile.</strong> Run placebo tests using outcome variables that should not be affected by the treatment. If there is a significant &quot;effect&quot; on placebo outcomes, something correlated with treatment is also driving the outcome — the DiD is picking up a confounded association, not the policy's causal effect.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>DiD requires parallel trends — untestable post-treatment — and in staggered designs TWFE is biased even when parallel trends holds for every cohort, because early-treated units contaminate the control group for later-treated units.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>DiD = (treated post − treated pre) − (control post − control pre):</strong> subtracting the control group's change from the treated group's change removes the common time trend (e.g. a COVID drop hitting both cities), leaving only the differential change that appeared with treatment.</li><li><strong>Parallel trends is the key identifying assumption:</strong> absent treatment, the treated group's outcomes would have followed the same trend as the control's — the treated counterfactual is never observed, so this is untestable in the post-period.</li><li><strong>But you can test it in the pre-periods with an event study:</strong> estimate the effect for each period relative to treatment; pre-treatment coefficients should cluster near zero, and systematic non-zero ones are evidence the groups were already diverging (the estimate is confounded).</li><li><strong>TWFE formalises DiD:</strong> Y_it = α_i + λ_t + β D_it — unit fixed effects absorb permanent group differences, time fixed effects absorb common trends, and β is the DiD estimate across many periods and groups at once.</li><li><strong>Staggered treatment timing breaks TWFE when effects are heterogeneous:</strong> already-treated units act as *implicit controls* for later-treated ones while their own outcomes already include treatment effects, so TWFE can return the wrong sign even when every individual effect is positive (Goodman-Bacon decomposition).</li><li><strong>The fix — Callaway-Sant'Anna / Sun-Abraham:</strong> build clean 2×2 DiDs for each treatment cohort using *only* not-yet-treated or never-treated units as controls, then aggregate — unbiased in staggered designs.</li><li><strong>Placebo test:</strong> run the DiD on an outcome the treatment logically can't affect; a &quot;significant&quot; effect there means something correlated with treatment is driving the outcome — you're picking up a confounded association, not the causal effect.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Your DiD estimate shows minimum wage increase reduced employment by 3%. A critic says the two groups had different pre-trends. How do you respond?</p>
+      <ul class="check-opts"><li>A) Acknowledge the critic's concern and report sensitivity to parallel trends by varying the control group definition; if the -3% estimate is consistent across control group choices, parallel trends is confirmed</li><li class="correct">B) Run formal pre-trend test: in TWFE regression, add interactions of treated indicator with each pre-treatment time period. These should be near zero and jointly insignificant under parallel trends. Visualize in event study plot — if pre-treatment coefficients are systematically trending, parallel trends violated and DiD is confounded. If pre-trends diverge: (a) control for county-specific linear time trends (unit × time interactions), (b) use synthetic control to match treated counties' pre-treatment trajectory, (c) triple difference if third dimension available. Report pre-trend test alongside main estimate.</li><li>C) Re-run the DiD with a shorter pre-period window; pre-trend tests based on many pre-periods are overpowered and will always reject parallel trends even when the assumption approximately holds</li><li>D) The -3% estimate is valid if treatment assignment was as-good-as-random conditional on county and time fixed effects; pre-trends are irrelevant once fixed effects are included in the TWFE regression</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> You are evaluating a product feature rolled out to user cohorts in January, March, and May. You plan TWFE DiD with January as treatment group and March/May as controls. Why is this problematic?</p>
+      <ul class="check-opts"><li>A) TWFE requires a never-treated control group; since March and May cohorts are eventually treated, the design violates TWFE assumptions and no valid DiD estimate exists for staggered rollouts</li><li>B) The January cohort is too small to serve as the treatment group; DiD requires balanced treatment and control group sizes for the TWFE estimator to produce unbiased estimates</li><li>C) Using January as treatment requires a pre-period before January; without pre-treatment data, the parallel trends assumption cannot be tested and the DiD estimate is unreliable</li><li class="correct">D) Staggered DiD contamination. March/May cohorts will eventually be treated — using them as controls for January is invalid when they receive treatment. TWFE uses early-treated units as implicit controls for later-treated and vice versa. With heterogeneous treatment effects, this can produce estimates with wrong sign. Fix: use staggered-DiD-robust estimator — Callaway-Sant'Anna (clean 2x2 DiD for each cohort using only not-yet-treated/never-treated controls, then aggregate), or Sun-Abraham within TWFE framework using interactions.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> A policy raising fuel efficiency standards was adopted by California in 2005 and no other state. You want to estimate the effect on vehicle emissions using DiD with other US states as controls. What are the threats to parallel trends?</p>
+      <ul class="check-opts"><li class="correct">A) Threats: (1) California is fundamentally different (unique geography, demographics, political environment — other states had systematically different emissions trends unrelated to the policy); (2) anticipation (auto manufacturers and consumers in California started adjusting before 2005 if policy anticipated); (3) simultaneous confounders (California had other environmental regulations around same time). Strengthening: synthetic control matching California pre-2005 on emissions/income/urbanisation; pre-trend check across many years before 2005; placebo test using outcomes policy shouldn't affect (water pollution); restrict controls to geographically similar states.</li><li>B) The main threat is reverse causality — California's worsening emissions problem may have caused the policy adoption, meaning the policy is endogenous to pre-existing emissions trends</li><li>C) There are no threats to parallel trends because the policy was exogenous to other states; California's adoption decision was driven by political factors unrelated to national emissions trajectories</li><li>D) The only threat to parallel trends is the small number of control units (49 states); increasing the number of treated states would eliminate parallel trends concerns by improving statistical power</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#causal_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

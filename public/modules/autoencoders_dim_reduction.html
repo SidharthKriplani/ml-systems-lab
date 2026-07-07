@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Autoencoders for Dimensionality Reduction | ML Systems Lab</title>
+  <meta name="description" content="Encoder-decoder mechanics, bottleneck, VAE, anomaly detection via reconstruction error">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/autoencoders_dim_reduction.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/autoencoders_dim_reduction.html">
+  <meta property="og:title" content="Autoencoders for Dimensionality Reduction | ML Systems Lab">
+  <meta property="og:description" content="Encoder-decoder mechanics, bottleneck, VAE, anomaly detection via reconstruction error">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Autoencoders for Dimensionality Reduction">
+  <meta name="twitter:description" content="Encoder-decoder mechanics, bottleneck, VAE, anomaly detection via reconstruction error">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Autoencoders for Dimensionality Reduction",
+  "description": "Encoder-decoder mechanics, bottleneck, VAE, anomaly detection via reconstruction error",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/autoencoders_dim_reduction.html",
+  "keywords": "autoencoder, VAE, dimensionality reduction, anomaly detection"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#unsupervised_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">38 min read</span>
+      <span class="tag">autoencoder</span><span class="tag">VAE</span><span class="tag">dimensionality reduction</span><span class="tag">anomaly detection</span>
+    </div>
+    <h1>Autoencoders for Dimensionality Reduction</h1>
+    <p class="subtitle">Encoder-decoder mechanics, bottleneck, VAE, anomaly detection via reconstruction error</p>
+
+    <p>Think about describing a friend's face to a sketch artist. You cannot list every pixel — you compress it into a handful of essentials (&quot;round face, thick eyebrows, crooked smile&quot;), and from those few words the artist rebuilds something recognisable. An <strong>autoencoder</strong> is a neural network that learns to do exactly this on its own: squeeze data through a narrow middle, then rebuild it from the squeezed version.</p>
+    <p>Take 28×28 MNIST digit images — that is 784 numbers each. An autoencoder has two halves. The <strong>encoder</strong> funnels those 784 numbers down through shrinking layers (784 → 256 → 64 → 32) into a tiny 32-number <strong>code</strong>. The <strong>decoder</strong> takes those 32 numbers and expands them back out (32 → 64 → 256 → 784), trying to reproduce the original image. You train the whole thing on a single goal: make the rebuilt image match the original as closely as possible.</p>
+    <p>The magic is in the squeeze. Because everything has to pass through that 32-number <strong>bottleneck</strong>, the network cannot just copy the input across — it is forced to keep only what matters for rebuilding, and throw the rest away. Those 32 numbers become a compact summary of the digit. And unlike PCA, which can only compress along straight lines, an autoencoder is a neural net, so it can learn *curved* structure — which is why its codes separate MNIST digits far better than PCA's do.</p>
+    <hr>
+    <h3>Three flavours worth knowing</h3>
+    <p>A <strong>denoising autoencoder</strong> makes the job harder on purpose: it feeds in a *corrupted* input (add noise, or blank out some pixels) and asks the network to reconstruct the *clean* original. To pull that off, the encoder has to learn the real underlying structure rather than memorise surface detail — which makes it a popular way to pre-train representations when you have lots of unlabelled data.</p>
+    <p>A <strong>variational autoencoder (VAE)</strong> changes what the encoder outputs. Instead of one fixed code per input, it encodes to a little *cloud* of possible codes (a distribution), and adds a term to the loss that keeps those clouds tidy and continuous. That continuity is what makes a VAE *generative*: you can sample a fresh point from the latent space and the decoder turns it into a brand-new, plausible image. A plain autoencoder cannot do this — sample a random point from its latent space and you usually get garbage, because it never learned to fill the gaps between training examples. That is the key difference: VAEs are generative, plain autoencoders are not.</p>
+    <hr>
+    <h3>A bonus use: catching anomalies</h3>
+    <p>Here is a neat trick that falls out of the design. Train an autoencoder only on *normal* data — normal transactions, healthy sensor readings. It becomes very good at rebuilding normal things. Now feed it something weird: because it never learned to compress that pattern, the rebuild comes out badly and the <strong>reconstruction error</strong> spikes. So a high reconstruction error flags an anomaly, for free.</p>
+    <p>But it only works if the bottleneck is sized right, and this is the whole game. Too *narrow* and the network cannot even rebuild normal data well, so everything looks anomalous. Too *wide* and the network has enough room to memorise *everything* — including the weird stuff — so nothing looks anomalous. The bottleneck has to be tight enough to force real compression, yet loose enough to reconstruct genuine normal data. Get that balance wrong and the anomaly detector fails silently.</p>
+    <hr>
+    <h3>The reconstruction loss must match the data</h3>
+    <p>&quot;Make the rebuild match the original&quot; needs a *specific* loss, and the choice depends on the data. <strong>MSE</strong> (squared error) fits continuous real-valued data — sensor readings, standardised features. <strong>Binary cross-entropy (BCE)</strong> fits data in [0,1] like normalised pixel intensities or binary features. For images where pixel-perfect error misses perceptual quality, a <strong>perceptual loss</strong> (distance in a pretrained network's feature space) matches human judgement better. Use MSE on a [0,1] pixel target and it under-penalises blur; use BCE on unbounded sensor values and it's meaningless. Match the loss to the data type first.</p>
+    <hr>
+    <h3>The reparameterisation trick, properly</h3>
+    <p>The VAE encodes to a distribution and then *samples* a code z ~ N(μ, σ²) — but sampling is random, and you can't backpropagate gradients through a random draw. The <strong>reparameterisation trick</strong> rewrites the sample as <strong>z = μ + σ·ε</strong>, with ε ~ N(0,1) drawn *outside* the computation graph. Now the randomness sits in ε (a constant for that step), while μ and σ are ordinary differentiable outputs, so gradients flow back to the encoder. This one rewrite is what makes VAEs trainable by gradient descent — worth being able to state, not just recognise.</p>
+    <hr>
+    <h3>The VAE loss, and where it breaks</h3>
+    <p>A VAE's loss has <strong>two terms</strong>: a <strong>reconstruction loss</strong> (rebuild the input) plus a <strong>KL-divergence</strong> term that pulls each input's latent cloud toward a standard normal, keeping the latent space continuous and sampleable. The failure mode to name is <strong>posterior collapse</strong>: if the decoder is powerful enough to reconstruct without using the latent code, the KL term wins and the encoder outputs the prior for everything — the latent variables carry no information. <strong>β-VAE</strong> exposes a knob β on the KL term: β &gt; 1 pushes toward more disentangled (but blurrier) codes, β &lt; 1 toward sharper reconstruction with a messier latent space. Tuning β trades reconstruction against latent structure.</p>
+    <hr>
+    <h3>Setting the anomaly threshold</h3>
+    <p>A reconstruction-error detector is useless without a cutoff, and you don't get one for free. The standard approach: after training on normal data, compute the reconstruction-error distribution on a <strong>held-out normal</strong> set and set the threshold at a high <strong>percentile</strong> (say the 95th or 99th) — accepting that percentage as your expected false-positive rate. If you have even a few <strong>labeled anomalies</strong>, tune the threshold on the precision/recall trade-off they give you instead. Either way, the cutoff is a deliberate business choice about false-positive rate versus miss rate, not a default.</p>
+    <hr>
+    <h3>The silent killer: contaminated training data</h3>
+    <p>The whole method assumes training data is *pure normal*. If real anomalies hide in your &quot;normal&quot; training set, the autoencoder learns to reconstruct <strong>them too</strong> — so at inference they produce low error and slip through, and the detector fails without any warning. This is the most common reason a reconstruction detector misses known defects. Guard against it: clean the training set as best you can, or use robust training that down-weights high-error examples during training.</p>
+    <hr>
+    <h3>Low error isn't proof of normal (and high error isn't proof of anomaly)</h3>
+    <p>Reconstruction error is a noisy signal in both directions. <strong>Low</strong> error can occur for a genuine anomaly the model happened to memorise, or one that's small relative to MSE dominated by other dimensions. <strong>High</strong> error can come from plain input noise, a scaling/preprocessing mismatch, a sensor dropout, or a rare-but-perfectly-valid sample — none of which are true anomalies. So treat reconstruction error as evidence to investigate, not a verdict, and always sanity-check flagged cases.</p>
+    <hr>
+    <h3>Architecture choices</h3>
+    <p>The encoder/decoder shape should match the data. <strong>Dense</strong> (fully-connected) autoencoders suit tabular data; <strong>convolutional</strong> autoencoders suit images (they respect spatial locality); <strong>sequence</strong> autoencoders (LSTM or Transformer encoder-decoder) suit time series and text. Beyond the <strong>bottleneck size</strong> (the main knob), you regularise with <strong>dropout</strong>, <strong>weight decay</strong>, or an explicit <strong>sparsity penalty</strong> on the code (a sparse autoencoder). Reaching for a dense AE on images, or an oversized bottleneck with no regularisation, is a common way to get a detector that quietly memorises everything.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>A denoising autoencoder can pretrain representations when unlabeled data is abundant and labels are scarce — but it's not automatically the winner.</strong>
+
+The denoising objective forces more robust representations, and fine-tuning on the labeled subset *can* beat training from scratch when unlabeled data is plentiful — but &quot;consistently outperforms&quot; is too strong: modern contrastive/self-supervised methods (SimCLR-style, masked modeling) often produce better representations than a vanilla autoencoder. Treat AE pretraining as one option to benchmark, not a guaranteed win. The corruption level is a hyperparameter — start with 20–30% masking and tune on the labeled validation set.</li><li><strong>Trap: the reconstruction loss can be minimized by memorizing training examples rather than learning compact representations.</strong>
+
+Check that the latent space clusters by meaningful categories (not just by individual examples) using visualization before using the representations downstream. A latent space that looks like a random cloud when colored by class label has not learned useful structure.</li><li><strong>Diagnostic: if reconstruction loss is low but downstream task performance is poor, the autoencoder is encoding reconstruction-irrelevant information.</strong>
+
+Add a classification loss or explicit invariance (contrastive learning) to align the representation with the downstream task. Low reconstruction loss is a necessary but not sufficient condition for useful representations.</li><li><strong>Match the loss and architecture to the data, and know the VAE's two terms and its failure mode.</strong>
+
+Use MSE for continuous data, BCE for [0,1] data, perceptual loss for image quality; use dense AEs for tabular, convolutional for images, sequence (LSTM/Transformer) for time series/text, and regularise with dropout, weight decay, or a sparsity penalty. A VAE's loss is reconstruction + KL-to-prior, trained via the reparameterisation trick z = μ + σ·ε; watch for posterior collapse (decoder ignores the code) and use β-VAE's β to trade disentanglement against reconstruction.</li><li><strong>For anomaly detection, set the threshold deliberately and distrust contaminated data and raw error.</strong>
+
+Set the cutoff from the held-out normal error distribution (a high percentile = your false-positive budget), or tune on precision/recall if you have labeled anomalies. The method assumes pure-normal training data — real anomalies hiding in it get learned and reconstructed well, so they slip through silently; clean the data or down-weight high-error examples. And low error isn't proof of normal (memorised or MSE-swamped anomalies) nor is high error proof of anomaly (noise, scaling bugs, rare-but-valid samples) — investigate flagged cases, don't trust the score blindly.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Autoencoders compress input through a bottleneck and flag anything the decoder cannot reconstruct well — but only if the bottleneck is sized right: too wide and the model memorizes everything including anomalies, too narrow and normal samples also fail to reconstruct.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Encoder squeezes to a bottleneck, decoder rebuilds;</strong> trained to minimize reconstruction error.</li><li><strong>Bottleneck forces keeping only what matters</strong> — nonlinear compression, beats PCA on curved structure.</li><li><strong>Denoising AE:</strong> reconstruct clean from corrupted input → learns real structure.</li><li><strong>VAE is generative:</strong> encodes to a distribution + KL term; sample new points; plain AE cannot.</li><li><strong>Reparameterisation trick:</strong> $z=\mu+\sigma\cdot\varepsilon$ makes sampling differentiable; posterior collapse is the failure mode.</li><li><strong>Anomaly detection via reconstruction error</strong> — bottleneck sizing is the whole game (too wide memorizes, too narrow rejects normal).</li><li><strong>Match loss to data:</strong> MSE continuous, BCE [0,1], perceptual for images; contaminated &quot;normal&quot; training fails silently.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You train an autoencoder for anomaly detection and find that reconstruction error is high for both normal and anomalous samples. What might be wrong?</p>
+      <ul class="check-opts"><li>A) High reconstruction error on all samples means the bottleneck is too large — reduce it to force the model to discriminate</li><li>B) The training data must be contaminated with anomalies — retrain with a cleaner dataset</li><li class="correct">C) High reconstruction error on normal samples means the autoencoder is underfitting — bottleneck too small, model too shallow, or features not standardised; separately, if error is low for anomalies, the bottleneck is too large and the model is memorising</li><li>D) Autoencoders always have high reconstruction error initially — the anomaly threshold should be set relative to the training error distribution regardless of its absolute level</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> What is the reparameterisation trick in a VAE and why is it necessary?</p>
+      <ul class="check-opts"><li>A) It replaces the KL divergence term with a simpler L2 penalty, making the loss function differentiable</li><li>B) It is optional — modern autograd frameworks can differentiate through sampling operations directly</li><li>C) It removes the need for a decoder by sampling directly from the prior distribution at inference time</li><li class="correct">D) Sampling z ~ N(μ, σ²) is non-differentiable, so the trick rewrites z = μ + σ·ε with ε ~ N(0,1) drawn outside the computation graph — making μ and σ differentiable paths so gradients flow to the encoder</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> An autoencoder trained on manufacturing sensor readings is being used for anomaly detection. A maintenance engineer reports that known defective sensors are not flagged. What could cause this and how do you debug?</p>
+      <ul class="check-opts"><li>A) The bottleneck is definitely too small — always increase bottleneck size when known anomalies are not flagged</li><li class="correct">B) Known defects not flagged means reconstruction error is low for them — possible causes are training data contamination (defective patterns in training), bottleneck too large (memorisation), low-amplitude defects swamped by MSE on other sensors, or wrong reconstruction metric for the defect type</li><li>C) Autoencoders cannot detect sensor anomalies — use Isolation Forest instead for manufacturing data</li><li>D) The model needs more training epochs — defective patterns are only detected after full convergence</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> Compare using a VAE latent space versus using PCA components for anomaly detection. What are the trade-offs?</p>
+      <ul class="check-opts"><li>A) PCA is always better for anomaly detection because it has a closed-form solution and never suffers from training instability</li><li>B) VAE is always better because non-linear manifold structure is universal in real-world sensor data</li><li class="correct">C) PCA is fast, interpretable, and works well on approximately Gaussian linear data; VAE captures non-linear manifold structure but requires careful training — use PCA for quick baselines and interpretability, autoencoders/VAEs when normal data has complex non-linear dependencies</li><li>D) They produce identical anomaly scores when the VAE bottleneck size matches the number of PCA components retained</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> Your reconstruction-error anomaly detector was trained on a &quot;normal&quot; dataset, but a small fraction of those training samples were actually undetected anomalies. How does this hurt the detector, and what's the fix?</p>
+      <ul class="check-opts"><li>A) It doesn't hurt — a few anomalies in training are averaged out and have no effect on the learned normal manifold.</li><li class="correct">B) The autoencoder learns to reconstruct the contaminating anomalies too, so at inference those (and similar) anomalies produce low reconstruction error and slip through undetected — the detector fails silently. Fix by cleaning the training set as much as possible, or using robust training that down-weights high-error examples so the model doesn't fit the contaminants.</li><li>C) The contamination makes reconstruction error high for everything, so the detector flags all samples as anomalies and the fix is a larger bottleneck.</li><li>D) It only affects the KL term in a VAE, so switching from a VAE to a plain autoencoder removes the problem entirely.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q6.</strong> You're building a VAE for anomaly detection on multivariate time-series sensor data. What reconstruction loss and encoder/decoder architecture fit best, and what VAE-specific failure should you watch for?</p>
+      <ul class="check-opts"><li>A) Use binary cross-entropy with a dense (fully-connected) autoencoder, and don't worry about any VAE-specific issues since VAEs always train cleanly.</li><li class="correct">B) Use MSE (the readings are continuous real values) with a sequence architecture (LSTM or Transformer encoder-decoder that respects temporal order rather than a dense net), and watch for posterior collapse — if the decoder is strong enough to reconstruct without the latent code, the KL term drives the encoder to the prior and the latent variables become uninformative; β-VAE's β knob helps balance it.</li><li>C) Use a convolutional autoencoder with perceptual loss, since sensor time series are essentially images, and posterior collapse can't happen in anomaly-detection VAEs.</li><li>D) Any loss and architecture work identically for time series, and the only concern is making the bottleneck as small as possible.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#unsupervised_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

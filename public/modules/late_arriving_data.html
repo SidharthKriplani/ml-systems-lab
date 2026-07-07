@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Late-Arriving Data | ML Systems Lab</title>
+  <meta name="description" content="Watermarking, streaming late data handling, impact on labels, remediation">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/late_arriving_data.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/late_arriving_data.html">
+  <meta property="og:title" content="Late-Arriving Data | ML Systems Lab">
+  <meta property="og:description" content="Watermarking, streaming late data handling, impact on labels, remediation">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Late-Arriving Data">
+  <meta name="twitter:description" content="Watermarking, streaming late data handling, impact on labels, remediation">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Late-Arriving Data",
+  "description": "Watermarking, streaming late data handling, impact on labels, remediation",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/late_arriving_data.html",
+  "keywords": "late data, streaming, watermark, label quality"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#production_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">29 min read</span>
+      <span class="tag">late data</span><span class="tag">streaming</span><span class="tag">watermark</span><span class="tag">label quality</span>
+    </div>
+    <h1>Late-Arriving Data</h1>
+    <p class="subtitle">Watermarking, streaming late data handling, impact on labels, remediation</p>
+
+    <p>A fraud system scores an order the instant it is placed — call that T+0. The truth about that order arrives much later: a fraudulent chargeback gets filed 7 days on. That chargeback *is* the label. But your training job runs daily and can only trust labels that have had time to settle. So the most recent week of your training data shows almost no fraud — not because fraud stopped, but because the evidence hasn't shown up yet. This is <strong>label delay,</strong> and it is everywhere that the truth arrives after the thing you're predicting.</p>
+    <hr>
+    <h3>Don't guess the wait — measure it</h3>
+    <p>The lazy fix is &quot;just wait longer before training.&quot; It works, but it throws away recency. The real fix is to learn the *shape* of the delay: for your data, what fraction of chargebacks are in by day 1, day 3, day 7? That's the <strong>completeness curve.</strong> At 50% completeness you have half the labels; at 95%, nearly all. Set your incubation period — how long before you call a label final — at the 99th percentile of that curve, not at some round number that felt about right.</p>
+    <hr>
+    <h3>Late data wrecks features too, not just labels</h3>
+    <p>&quot;Transactions in the last 5 minutes,&quot; computed at 14:02, should cover 13:57–14:02. But a phone that dropped signal for three minutes uploads its events at 14:04 — after the window closed. The feature was computed on incomplete data. And the miss isn't random: it systematically undercounts users with flaky connectivity, which tracks with geography and device. Bias, not noise.</p>
+    <hr>
+    <h3>Watermarks and event time</h3>
+    <p>A *watermark* is how a streaming system announces &quot;every event up to time T is now in.&quot; You set it by measuring the real lateness of your source: too tight and you throw away real events, too loose and every result waits on stragglers that may never come. The deeper rule underneath all of this: use <strong>event time</strong> (when it happened), never <strong>processing time</strong> (when your system received it). In real distributed systems — retries, clock skew, phones uploading hours later — events *always* arrive out of order. Design for out-of-order arrival from the start, because assuming order silently distorts every aggregate, every label, and every model built on them.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Design your training pipeline around label delay from day one — decide the label cutoff window empirically and build a consistent data split that respects it.</strong>
+
+Models trained with inconsistent label windows give unreliable offline metrics. If chargebacks arrive over 7 days, your training data from the last 7 days has systematically under-labeled positives. Either exclude that window entirely or weight labels by expected completeness at training time. The completeness curve — fraction of expected labels received as a function of days since the event — tells you exactly where to draw the line.</li><li><strong>Trap: using processing time instead of event time for feature windows produces features that drift with pipeline latency.</strong>
+
+&quot;Transactions in the last hour&quot; computed from processing time expands and contracts as pipeline throughput varies. Use event timestamps for all business logic. This requires watermarks that account for the actual lateness distribution of your data source — measure the 99th percentile of event arrival lag and set your watermark tolerance accordingly.</li><li><strong>Diagnostic: plot the distribution of event arrival lag (event time vs processing time) for your specific data source.</strong>
+
+If the 99th percentile lag is greater than 5 minutes and your feature windows are shorter than 1 hour, you need watermarks with at least 5-minute tolerance. Re-measure this distribution whenever upstream systems change — a new mobile OS version, a new attribution pipeline, or a new data collection method can shift the completeness curve significantly.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Label delay and late-arriving events are not edge cases — they are structural properties of asynchronous systems, and the only safe design measures the actual completeness curve for your specific data source rather than assuming any default.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Label delay:</strong> truth arrives after the event — chargeback filed 7 days on. Recent week looks fraud-free because evidence hasn't shown up.</li><li><strong>Don't guess the wait, measure it:</strong> the completeness curve = fraction of labels in by day 1/3/7. Set incubation at the 99th percentile.</li><li><strong>Late data wrecks features too:</strong> &quot;txns last 5 min&quot; at 14:02 misses a phone uploading at 14:04. Bias, not noise — undercounts flaky connectivity.</li><li><strong>Watermark = &quot;everything up to T is in.&quot;</strong> Too tight drops real events, too loose waits on stragglers.</li><li><strong>Use event time (when it happened), never processing time (when received).</strong></li><li><strong>Events always arrive out of order</strong> — retries, clock skew, delayed uploads. Design for it from the start.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You are training a click model for mobile ads. Labels are generated 1 hour after impression. You find the model has much lower precision on mobile than desktop. Why?</p>
+      <ul class="check-opts"><li>A) Mobile users inherently have lower CTR than desktop users due to smaller screen size reducing click accuracy</li><li class="correct">B) Mobile devices batch-upload events when reconnected, so clicks arrive 2-12 hours after the 1-hour cutoff and are labeled as no-clicks; the model learns a spuriously low mobile CTR; fix by measuring click lateness by platform and extending mobile label incubation to 24-48h</li><li>C) The model's features are desktop-optimized; adding mobile-specific features like screen size will equalize precision</li><li>D) Label generation should never use a fixed cutoff — use an infinite window and retrain when all events have arrived</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> A Flink streaming job computes &quot;user_session_click_count&quot; in a 30-minute tumbling window with 5-minute allowed lateness. An event arrives 8 minutes late. What happens to the feature?</p>
+      <ul class="check-opts"><li>A) Flink automatically extends the allowed_lateness to accommodate the late event and recomputes the window</li><li>B) The event is buffered and incorporated into the next window's computation</li><li class="correct">C) The event falls outside the 5-minute allowed_lateness window and is dropped (or routed to a side output); the session click count underestimates by at least one click; increasing allowed_lateness to 15 minutes would capture it but delay all window outputs</li><li>D) The window remains open indefinitely until all late events arrive, then closes with the complete count</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Your fraud model trains on features at transaction time with labels available 7 days later (when chargebacks are processed). The last 7 days of data in your training set have systematically lower fraud rates than older data. Why?</p>
+      <ul class="check-opts"><li>A) Fraud rates are genuinely lower in recent data because the model's production deployment has reduced fraud</li><li class="correct">B) This is delayed feedback bias — transactions from the last 7 days have not yet received chargebacks, so they show near-zero positive labels; the model learns recent traffic is inherently safe; fix by excluding data newer than the chargeback resolution time from training labels</li><li>C) Recent data is lower quality because the data pipeline has not had time to process it fully; exclude the last 7 days from all features, not just labels</li><li>D) The lower fraud rate in recent data is correct — fraudsters adapt and become less detectable over time, which the training set accurately reflects</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> Design a label generation system for a recommender model where user engagement signals arrive with varying latency (watch completion: 0-2h, like: 0-7d, share: 0-30d).</p>
+      <ul class="check-opts"><li>A) Wait 30 days for all signals before generating any labels — using incomplete data corrupts the model more than the training delay costs</li><li>B) Use only watch completion as the label since it arrives quickly and is the most reliable signal; discard likes and shares</li><li class="correct">C) Define per-signal incubation periods (watch at t+4h, like at t+10d, share at t+35d); generate multi-stage labels or use completeness-weighted labels for real-time retraining; monitor completeness curves quarterly</li><li>D) Use a single 24-hour cutoff for all signals and apply equal weight — this balances recency and completeness</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#production_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

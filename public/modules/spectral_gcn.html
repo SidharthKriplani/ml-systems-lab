@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spectral Graph Convolution | ML Systems Lab</title>
+  <meta name="description" content="Graph Laplacian, ChebNet, Kipf &amp; Welling GCN, renormalization trick, transductive limitation">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/spectral_gcn.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/spectral_gcn.html">
+  <meta property="og:title" content="Spectral Graph Convolution | ML Systems Lab">
+  <meta property="og:description" content="Graph Laplacian, ChebNet, Kipf &amp; Welling GCN, renormalization trick, transductive limitation">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Spectral Graph Convolution">
+  <meta name="twitter:description" content="Graph Laplacian, ChebNet, Kipf &amp; Welling GCN, renormalization trick, transductive limitation">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Spectral Graph Convolution",
+  "description": "Graph Laplacian, ChebNet, Kipf & Welling GCN, renormalization trick, transductive limitation",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/spectral_gcn.html",
+  "keywords": "spectral, Laplacian, ChebNet, GCN, eigendecomposition, graph signal processing"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#graph_ml_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">50 min read</span>
+      <span class="tag">spectral</span><span class="tag">Laplacian</span><span class="tag">ChebNet</span><span class="tag">GCN</span><span class="tag">eigendecomposition</span>
+    </div>
+    <h1>Spectral Graph Convolution</h1>
+    <p class="subtitle">Graph Laplacian, ChebNet, Kipf &amp; Welling GCN, renormalization trick, transductive limitation</p>
+
+    <p>A citation network has 2708 papers across 7 fields — machine learning, databases, and five others. Each paper has 1433 binary features encoding word presence. A plain MLP on those features achieves 56% accuracy at field classification. The problem: a paper's field is determined not just by its own words but by what it cites and who cites it. Machine learning papers cite other machine learning papers. The graph structure carries signal the MLP ignores.</p>
+    <p>Standard convolution is defined for regular grids — the same kernel slides over every pixel position. Graphs have no grid, no canonical node ordering, and variable neighborhood sizes. You cannot slide a fixed-size kernel over a graph. Spectral methods provided the first principled definition of graph convolution by grounding it in signal processing: the graph Laplacian L = D - A acts as the frequency operator, and filtering in spectral space multiplies signal components in eigenspace.</p>
+    <p>The problem is that eigendecomposition of the Laplacian costs O(N³) — infeasible for any real graph. ChebNet avoids explicit eigendecomposition by approximating spectral filters with Chebyshev polynomials of degree K, reducing convolution to sparse matrix multiplications that scale with edge count. Kipf &amp; Welling (2017) simplified further to K=1 with a self-loop trick, giving one sparse matrix multiply per layer: H^{(l+1)} = σ(D̃^{-1/2} Ã D̃^{-1/2} H^{(l)} W^{(l)}). This GCN achieves 81% accuracy on the citation network versus 56% for the feature-only MLP — the graph structure accounts for 25 percentage points of accuracy.</p>
+    <p>But spectral GCNs carry a fundamental limitation that no hyperparameter can fix: the learned filter weights are defined in the eigenspace of a specific graph's Laplacian. A new graph has a different Laplacian with different eigenvectors. The model cannot generalize. This is why every production GNN system uses spatial methods.</p>
+    <p><strong>NOT this.</strong> &quot;GCN is just convolution applied to graphs.&quot; Image convolution is defined for regular grids with fixed-size neighborhoods — the same kernel applies at every position because the grid is uniform. Graph convolution operates on irregular, variable-size neighborhoods with no canonical ordering. The spectral formulation connected graph operations to signal processing theory, but it gave way to spatial formulations because spectral filters cannot transfer to new graphs. Spatial message-passing GNNs — which aggregate over explicit neighborhoods — generalize inductively. Spectral GCNs do not.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Graph Laplacian: L = D - A where D is the diagonal degree matrix.</strong> Normalized: L̃ = D^{-1/2} L D^{-1/2} = I - D^{-1/2} A D^{-1/2}. Eigendecomposition: L = UΛU^T, columns of U are eigenvectors, Λ diagonal with eigenvalues λᵢ ∈ [0, 2]. The eigenvectors form the graph Fourier basis — analogous to Fourier basis functions for regular grids, but dependent on the specific graph topology.</li><li><strong>Spectral filtering requires eigendecomposition first: x̂ = U^T x (graph Fourier transform), apply filter ĝ(Λ) pointwise to eigenvalues, inverse transform x = Ux̂.</strong> The full pipeline costs O(N³) for decomposition plus O(N²) to store U. At N=10,000 nodes: already expensive. At N=1M: completely infeasible. The solution is polynomial approximation — if ĝ(λ) = Σ_k θ_k λ^k, then U ĝ(Λ) U^T = Σ_k θ_k L^k, reducing convolution to sparse matrix multiplications that never require U.</li><li><strong>ChebNet (Defferrard et al., 2016): approximate spectral filters with Chebyshev polynomials T_k(λ̃) where λ̃ = 2λ/λ_max - 1 ∈ [-1,1].</strong> K-th order ChebNet considers K-hop neighborhoods — wider than K=1 but still local. Chebyshev polynomials are chosen for numerical stability (min-max optimal approximation) and efficient recurrence T_k(x) = 2xT_{k-1}(x) - T_{k-2}(x), avoiding explicit computation of eigenvectors entirely.</li><li><strong>Kipf &amp; Welling GCN (2017): simplify ChebNet to K=1 (first-order), approximate λ_max ≈ 2.</strong> This collapses the two-parameter filter to a single parameter per feature. Adding self-loops (Ã = A + I) before normalization gives the propagation rule: H^{(l+1)} = σ(D̃^{-1/2} Ã D̃^{-1/2} H^{(l)} W^{(l)}). A single sparse matrix multiply per layer — tractable on large graphs. The simplification was what made GCNs widely adopted.</li><li><strong>Renormalization trick: adding self-loops (A → A + I = Ã) before degree normalization prevents numerical instability for degree-zero nodes and ensures each node's own features contribute to its update.</strong> Without self-loops, an isolated node receives a zero vector regardless of its features. The trick also shifts the spectral range to approximately [0,1], improving gradient flow through deep networks.</li><li><strong>Spectral methods cannot transfer to new graphs.</strong> The learned filter weights are defined in terms of polynomial coefficients applied to L — and L is specific to the training graph. A new graph has a different L with different eigenvectors. Even though ChebNet doesn't explicitly compute eigenvectors, its polynomial coefficients were optimized for the specific spectral profile of the training graph. Inference on a new graph produces meaningless results. PinSage at Pinterest uses spatial methods for exactly this reason.</li><li><strong>Over-smoothing from a spectral perspective: each GCN layer applies D̃^{-1/2} Ã D̃^{-1/2}, a low-pass filter with eigenvalues in [0,1].</strong> With L layers, eigenvalues are raised to the L-th power — high-frequency components (small eigenvalues) vanish exponentially, leaving only the dominant eigenvector, which corresponds to the stationary distribution of the graph's random walk. After many layers, all node embeddings converge to a constant times the degree sequence, losing all discriminative power.</li><li><strong>Even the first-order approximation requires the full adjacency matrix for the matrix-vector product ÃH at each layer.</strong> Mini-batching requires carefully handling multi-hop neighborhoods to avoid the neighbor explosion problem — not naturally addressed by spectral formulations. This is another reason spatial methods dominate production: neighbor sampling (GraphSAGE) and subgraph sampling (GraphSAINT) require explicit neighborhood control that spectral methods don't support.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>The Kipf &amp; Welling GCN is a first-order Chebyshev polynomial approximation that avoids eigendecomposition — this is what made spectral GCNs tractable. But the approximation doesn't fix the transductive limitation: spectral filters are defined in the eigenspace of a specific graph's Laplacian and cannot transfer to graphs not seen during training. This is why all production GNN systems use spatial message-passing methods — inductive generalization to new nodes and graphs is a hard requirement, not an optimization, and spectral methods cannot satisfy it.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Graph structure carries signal:</strong> citation net → MLP 56% vs GCN 81%, +25pp from structure alone.</li><li><strong>Spectral convolution = filter in Laplacian eigenspace:</strong> $L = D - A$, eigenvectors are the graph Fourier basis.</li><li><strong>Eigendecomposition is O(N³) — infeasible.</strong> ChebNet approximates filters with degree-K Chebyshev polynomials → sparse matmuls, no eigenvectors.</li><li><strong>Kipf &amp; Welling GCN = K=1 ChebNet:</strong> $H^{(l+1)} = \sigma(\tilde{D}^{-1/2}\tilde{A}\tilde{D}^{-1/2}H^{(l)}W^{(l)})$ — one sparse matmul/layer.</li><li><strong>Renormalization trick:</strong> self-loops ($\tilde{A}=A+I$) before normalization fix degree-zero nodes and improve gradient flow.</li><li><strong>Spectral filters can't transfer:</strong> weights tied to the training graph's Laplacian → transductive only.</li><li><strong>Over-smoothing:</strong> low-pass filter to the L-th power collapses embeddings to the dominant eigenvector.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Derive the GCN propagation rule from spectral filtering. Why does Kipf &amp; Welling set K=1 and approximate λ_max=2?</p>
+      <ul class="check-opts"><li>A) K=1 is set to limit the receptive field to 1 hop; λ_max=2 is the exact maximum eigenvalue of any normalized Laplacian</li><li class="correct">B) Start from ChebNet K=2, set θ₀=-θ₁=θ, add self-loops (Ã=A+I), normalize with D̃ — this yields H^{l+1} = σ(D̃^{-1/2}ÃD̃^{-1/2} H^l W^l); K=1 reduces parameters and overfitting; λ_max≈2 is an approximation that avoids computing the exact spectral radius per graph</li><li>C) K=1 is the minimum value that enables multi-hop aggregation; λ_max=2 is set empirically based on ImageNet benchmarks</li><li>D) λ_max=2 is exact for all graphs by definition of the normalized Laplacian; K=1 is chosen because higher orders provide no additional expressiveness</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> A teammate proposes to train a spectral GCN on a protein-protein interaction network and then apply it to a new PPI network with different proteins. What is the fundamental problem and how do you fix it?</p>
+      <ul class="check-opts"><li>A) The problem is different node feature dimensions between networks; fix by padding features to the same dimension</li><li class="correct">B) Spectral GCN filters are defined in the eigenspace of the training graph's Laplacian; the new graph has a different Laplacian with different eigenvectors — the filter literally cannot transfer; fix by switching to a spatial/message-passing GNN (GraphSAGE, GAT) that learns aggregation functions over neighborhoods, not eigenspace</li><li>C) The problem is that PPI networks are too dense for spectral methods; use a sparse subsampling strategy before training</li><li>D) There is no fundamental problem — spectral GCN polynomial coefficients transfer across graphs because they are graph-agnostic scalars</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> What is over-smoothing in GCNs, and what is its formal spectral interpretation?</p>
+      <ul class="check-opts"><li>A) Over-smoothing is when a GCN memorizes training node features; spectral interpretation is that the training loss converges to a degenerate minimum</li><li class="correct">B) Over-smoothing: all node embeddings converge to the same vector after many layers; spectral interpretation: each GCN layer applies a low-pass filter with eigenvalues in [0,1]; raising them to the L-th power makes high-frequency components vanish exponentially, leaving only the dominant eigenvector (the random walk stationary distribution) — all nodes look alike</li><li>C) Over-smoothing occurs only in heterophilic graphs; in homophilic graphs deep GCNs always improve with more layers</li><li>D) Over-smoothing is a gradient vanishing problem; its spectral interpretation is that small eigenvalues cause gradients to become zero before reaching the lower layers</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#graph_ml_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

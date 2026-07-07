@@ -38,8 +38,8 @@
       "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
     }
   },
-  "datePublished": "2026-06-20",
-  "dateModified": "2026-06-20",
+  "datePublished": "2026-07-07",
+  "dateModified": "2026-07-07",
   "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/pca-intuition.html",
   "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
   "keywords": "PCA, Dimensionality Reduction, SVD, Math, sklearn"
@@ -79,11 +79,11 @@
 <h2>The covariance matrix view:</h2>
 <p>Compute Σ = (1/n) × XᵀX (on mean-centered, standardised data). SVD: Σ = UΛUᵀ. The columns of U are the principal components. The diagonal of Λ contains the variances. This is why you always standardise before PCA — features on different scales will have their variance dominated by the highest-magnitude features, and PCA will find them first regardless of information content.</p>
 <h2>When PCA hurts:</h2>
-<p>When your task is classification. PCA maximises variance, not class separability. A feature with high variance might be pure noise. LDA (Linear Discriminant Analysis) maximises class separability instead — that\'s what you want for supervised dimensionality reduction.</p>
+<p>When your task is classification. PCA maximises variance, not class separability. A feature with high variance might be pure noise. LDA (Linear Discriminant Analysis) maximises class separability instead — that's what you want for supervised dimensionality reduction.</p>
 <p>When interpretability matters. PC1 = 0.4×age - 0.3×income + 0.7×account_age ... is not something you can explain to a product team or a regulator. If your features need to remain interpretable, use feature selection (RFE, SHAP-based) instead of PCA.</p>
 <p>When your data is sparse. PCA is dense by construction. For text (TF-IDF matrices), image features, or any high-dimensional sparse data, truncated SVD (LSA) or sparse PCA will work better.</p>
 <h2>The scree plot and the elbow rule:</h2>
-<p>Plot eigenvalues in descending order. The "elbow" — where the curve flattens — is typically a good cutoff. But rules of thumb vary by domain: "keep 90% of variance" is common but arbitrary. Better: keep enough components that cross-validation performance on your downstream task doesn\'t degrade significantly when you add more.</p>
+<p>Plot eigenvalues in descending order. The "elbow" — where the curve flattens — is typically a good cutoff. But rules of thumb vary by domain: "keep 90% of variance" is common but arbitrary. Better: keep enough components that cross-validation performance on your downstream task doesn't degrade significantly when you add more.</p>
 
     <div class="cta">
       <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>

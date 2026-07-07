@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Auction Theory for Ads ML: GSP, Truthfulness, and What pCTR Actually Does — ML Systems Lab</title>
+  <meta name="description" content="The recommendation model drives engagement. The ranking model orders candidates. But nothing generates revenue without the auction. How pCTR enters the bid calculation, why second-price auctions work,…" />
+  <meta name="keywords" content="Ads ML, Auction Theory, pCTR, GSP, VCG, Revenue Optimisation, Calibration, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/auction-theory-ads-ml-gsp-vcg-pctr.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/auction-theory-ads-ml-gsp-vcg-pctr.html" />
+  <meta property="og:title" content="Auction Theory for Ads ML: GSP, Truthfulness, and What pCTR Actually Does" />
+  <meta property="og:description" content="The recommendation model drives engagement. The ranking model orders candidates. But nothing generates revenue without the auction. How pCTR enters the bid calculation, why second-price auctions work,…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="ML System Design" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Auction Theory for Ads ML: GSP, Truthfulness, and What pCTR Actually Does" />
+  <meta name="twitter:description" content="The recommendation model drives engagement. The ranking model orders candidates. But nothing generates revenue without the auction. How pCTR enters the bid calculation, why second-price auctions work,…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Auction Theory for Ads ML: GSP, Truthfulness, and What pCTR Actually Does",
+  "description": "The recommendation model drives engagement. The ranking model orders candidates. But nothing generates revenue without the auction. How pCTR enters the bid calculation, why second-price auctions work,…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-07-07",
+  "dateModified": "2026-07-07",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/auction-theory-ads-ml-gsp-vcg-pctr.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Ads ML, Auction Theory, pCTR, GSP, VCG, Revenue Optimisation, Calibration"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=auction-theory-ads-ml-gsp-vcg-pctr#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">ML System Design &middot; ML Systems Lab</div>
+    <h1>Auction Theory for Ads ML: GSP, Truthfulness, and What pCTR Actually Does</h1>
+    <p class="excerpt">The recommendation model drives engagement. The ranking model orders candidates. But nothing generates revenue without the auction. How pCTR enters the bid calculation, why second-price auctions work, and what miscalibration actually costs — this is what separates senior ads ML engineers.</p>
+    <p>The recommendation model drives engagement. The ranking model orders candidates. But none of it generates revenue without the auction mechanism that converts model scores into prices. Understanding auction theory is what separates a senior ads ML engineer from a junior one.</p>
+<h2>The core auction problem</h2>
+<p>Multiple advertisers want to show an ad to a user. The platform must decide: who wins the impression, and how much they pay. Objectives: maximise platform revenue (short-term) and advertiser value (long-term — advertisers who get good ROI keep spending).</p>
+<p>The inputs: each advertiser i submits a bid b_i (their value per click, per impression, or per conversion). The platform knows (or estimates) the quality of each ad — specifically, the probability it gets clicked (pCTR_i) and the user experience impact.</p>
+<h2>Effective CPM: the auction ranking signal</h2>
+<p>In a cost-per-click (CPC) auction, advertisers pay per click. But the platform earns per impression shown. To compare a $2 bidder with 10% pCTR against a $10 bidder with 1% pCTR:</p>
+<p>eCPM_i = b_i × pCTR_i</p>
+<p>$2 × 0.10 = $0.20 eCPM $10 × 0.01 = $0.10 eCPM</p>
+<p>The $2 bidder wins. Expected revenue per impression is higher from the high-quality, lower-bidding ad.</p>
+<p>This is the central insight: ranking by raw bid is wrong. Ranking by expected revenue (bid × predicted click probability) is correct. The ML model that predicts pCTR is therefore directly in the revenue calculation — not just a quality signal.</p>
+<h2>Second-price auctions and why they work</h2>
+<p>In a first-price auction, you pay what you bid. Rational advertisers shade bids below their true value, requiring constant recalibration as competitors change strategies. Revenue is volatile and hard to predict.</p>
+<p>In a second-price auction, the winner pays the second-highest bid (or, in multi-slot auctions, the minimum bid required to maintain their rank). The dominant strategy is simple: bid your true value. You can't benefit from bidding higher (you'd just pay more if you already win) or lower (you'd lose auctions you'd have profited from). Truthful bidding is optimal regardless of competitor strategies.</p>
+<p>For CPC auctions with quality scores (GSP), the payment rule extends: winner i in position k pays (b_{k+1} × q_{k+1}) / q_i — enough to maintain rank above the next ad, adjusted for relative quality scores.</p>
+<h2>GSP vs VCG</h2>
+<p>GSP (Generalised Second Price) is used by Google Ads, Bing Ads, and most programmatic exchanges. It's simple, explainable, and approximates truthfulness in practice even though it's not theoretically truthful. Sophisticated advertisers learn to bid near their true values.</p>
+<p>VCG (Vickrey-Clarke-Groves) is theoretically optimal. Each winner pays the externality they impose — the loss in value to other advertisers caused by occupying a slot. VCG is truthful: all advertisers simultaneously have incentive to bid their true values. Facebook/Meta historically used a form of VCG. Complexity: computing VCG payments requires running the auction N+1 times (once with each bidder removed). Explanation is harder: "you pay the harm you cause to others" is harder to communicate than "you pay the second-highest bid."</p>
+<p>At scale, the revenue and allocation differences between GSP and VCG are small — sophisticated advertisers converge toward truthful bidding in both. The practical differences emerge in long-tail advertisers and complex multi-format auctions.</p>
+<h2>The pCTR calibration problem</h2>
+<p>pCTR is doing two jobs in the auction: ranking (determining who wins) and pricing (determining what the winner pays). Miscalibration in either direction has revenue consequences.</p>
+<p>Systematic overestimation: model predicts 5% CTR, true rate is 2%. The ad's eCPM appears 2.5× higher than it should. It wins auctions it should lose. The payment per click is lower than the platform should charge (because the denominator in the payment formula is inflated). Platform revenue falls; advertiser gets cheap clicks — until they stop converting.</p>
+<p>Systematic underestimation: model predicts 0.5% CTR, true rate is 2%. The ad's eCPM appears 4× lower. It loses auctions it should win. A lower-quality ad with higher raw bid wins instead. User experience degrades; long-term revenue falls.</p>
+<p>This is why calibration is a revenue-critical ML problem, not just an accuracy problem. A model with 0.80 AUC but poor calibration can be worse for revenue than a model with 0.75 AUC that is well calibrated.</p>
+<h2>Reserve prices and floor price optimisation</h2>
+<p>A reserve price (floor price) is the minimum an impression sells for. Below the floor, the impression is not sold. Reserve prices serve two purposes: prevent underselling premium inventory to low-value advertisers in low-competition auctions, and filter out low-quality ads.</p>
+<p>Static floors are suboptimal. A $0.50 floor is too high for a low-intent user on a remnant publisher, too low for a high-intent user on a premium publisher. Dynamic floor optimisation: train a model that predicts the revenue-maximising floor for each auction context. If bid distributions are predictable from context features (user value, publisher, time of day), the optimal floor is a function of those distribution parameters.</p>
+<p>The revenue-maximising floor for a single-bidder auction: if bid B ~ F(b), the optimal reserve r* satisfies: r* = (1 - F(r*)) / f(r*) (the Myerson optimal reserve). In practice, this is approximated by the empirical bid distribution. The ML model learns to predict this distribution from context features.</p>
+<h2>Explore-exploit in auctions</h2>
+<p>A cold-start advertiser has no click history — pCTR is estimated from limited data. The model may underestimate their quality, placing them below their true eCPM rank and reducing their chance to accumulate feedback. The exploration problem: occasionally slot cold-start advertisers into positions above their estimated eCPM, observe click rates, update pCTR. This has a direct revenue cost (you're serving a lower-eCPM ad). The platform bears this cost in exchange for better long-term advertiser quality estimates.</p>
+<p>UCB and Thompson Sampling (from multi-armed bandits, post 96) apply here: maintain a posterior distribution over each advertiser's true pCTR, sample from that posterior when allocating slots. Advertisers with uncertain pCTR get more exploration. Advertisers with reliable estimates get allocated by eCPM.</p>
+<p><strong>Try on Colab:</strong> simulate a 10-advertiser, 3-slot GSP auction. Give each advertiser a random bid and a random true CTR. Your pCTR model estimates CTR with some calibration noise (multiply true CTR by a random factor 0.7–1.3 per advertiser). Compute: (1) auction allocation under GSP with your miscalibrated pCTR, (2) auction allocation under GSP with true pCTR, (3) platform revenue difference, (4) which advertiser benefited most from miscalibration. Run 10,000 simulations. Show that systematic pCTR overestimation for one advertiser reduces platform revenue by X%.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=auction-theory-ads-ml-gsp-vcg-pctr#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

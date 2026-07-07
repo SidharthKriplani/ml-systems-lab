@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AdaGrad and RMSProp | ML Systems Lab</title>
+  <meta name="description" content="Per-parameter learning rates, why AdaGrad dies on dense problems, and RMSProp's fix.">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/adagrad_rmsprop.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/adagrad_rmsprop.html">
+  <meta property="og:title" content="AdaGrad and RMSProp | ML Systems Lab">
+  <meta property="og:description" content="Per-parameter learning rates, why AdaGrad dies on dense problems, and RMSProp's fix.">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="AdaGrad and RMSProp">
+  <meta name="twitter:description" content="Per-parameter learning rates, why AdaGrad dies on dense problems, and RMSProp's fix.">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "AdaGrad and RMSProp",
+  "description": "Per-parameter learning rates, why AdaGrad dies on dense problems, and RMSProp's fix.",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/adagrad_rmsprop.html",
+  "keywords": "adagrad, rmsprop, adaptive, per-parameter, sparse"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#optimization_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">45 min read</span>
+      <span class="tag">adagrad</span><span class="tag">rmsprop</span><span class="tag">adaptive</span><span class="tag">per-parameter</span><span class="tag">sparse</span>
+    </div>
+    <h1>AdaGrad and RMSProp</h1>
+    <p class="subtitle">Per-parameter learning rates, why AdaGrad dies on dense problems, and RMSProp's fix.</p>
+
+    <p>SGD and momentum apply the same learning rate α to every parameter. This breaks as soon as parameters operate at different scales — which they always do in real networks. Word embeddings exposed the problem most clearly. The embedding for &quot;the&quot; appears in nearly every training sentence and accumulates gradients continuously. The embedding for &quot;quasar&quot; appears rarely and receives gradients in sparse bursts. A fixed α that is large enough to meaningfully update &quot;quasar&quot; when it finally appears is too large for &quot;the,&quot; which has already converged. You need different effective learning rates for different parameters based on how often and how strongly they are updated. AdaGrad (Duchi et al., 2011) invented this: maintain a running sum of squared gradients</p>
+    <p>$G_i = Σ g_{i,t}² per parameter, then scale each step by α/√G_i. Parameters with large historical gr$</p>
+    <p>adients get smaller steps; parameters with sparse or small gradients get larger steps. For sparse NLP embeddings, this is exactly right — rare words finally get appropriately large updates when they appear. The fatal flaw: G_i only ever grows. For a dense convolutional layer that receives a gradient on every example, G_i grows without bound, and the effective learning rate collapses toward zero.</p>
+    <p>Training stalls long before convergence. RMSProp fixes this with one change: replace the cumulative sum with an exponential moving average. G_i now reflects recent gradient magnitude rather than all-time total, so it can stabilize or decrease. Dense parameters stop dying.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>The problem AdaGrad solved was sparse gradients at wildly different scales.</strong> SGD with a fixed learning rate was applying the same update size to frequently-updated parameters (which had already converged) and rarely-updated parameters (which needed large updates when they finally appeared). Per-parameter learning rates proportional to gradient history were the solution.</li><li><strong>AdaGrad update: G_i ← G_i + g_i²; θ_i ← θ_i − (α/√(G_i + ε))·g_i.</strong> The running sum G_i records how much gradient has flowed through parameter i in total. Parameters with large cumulative gradient history get smaller steps; parameters with small history get larger ones. For word embeddings, this automatically assigns large effective learning rates to rare words and small ones to common words — exactly what manual tuning would have done.</li><li><strong>AdaGrad's fatal failure for dense networks: in a convolutional layer, every filter parameter receives a nonzero gradient on every training example.</strong> G_i grows linearly with the number of training steps T. The effective learning rate α/√G_i ≈ α/√T → 0. After 100,000 training steps, the effective learning rate is 316 times smaller than at initialization. The network stops learning long before it converges. This is not a tuning failure — it is a structural flaw in the algorithm.</li><li><strong>RMSProp patches the flaw with one change: replace the cumulative sum with an exponential moving average.</strong> G_i ← ρG_i + (1−ρ)g_i². With ρ=0.9, G_i tracks the recent (≈10-step window) mean squared gradient rather than the all-time total. If gradients stabilize, G_i stabilizes, and the effective learning rate stabilizes instead of decaying to zero. Dense-gradient parameters stay trainable throughout training.</li><li><strong>The connection to curvature: squared gradient magnitude g_i² approximates the diagonal of the Fisher information matrix — a proxy for how steeply the loss curves in the direction of parameter i.</strong> Dividing by √G_i approximates a diagonal Newton step, adapting the update to local curvature without the O(n²) cost of computing the full Hessian. AdaGrad and RMSProp are cheap approximate second-order methods.</li><li><strong>RMSProp was invented to train RNNs (proposed by Hinton in an unpublished lecture, 2012).</strong> RNNs have wildly variable gradient magnitudes across timesteps — gradients explode on some timesteps and vanish on others. The exponential moving average smooths out spikes while adapting to the typical gradient scale at each point in training, which made RNNs significantly more trainable than with fixed-rate SGD.</li><li><strong>The ρ hyperparameter sets the memory window. ρ=0.9 gives a 10-step window — responds quickly to changes in gradient scale. ρ=0.99 gives 100 steps — more stable but slow to adapt.</strong> For highly non-stationary gradient environments (reinforcement learning, tasks with phase transitions), lower ρ is better. For stable supervised learning, ρ=0.9–0.99 both work and the choice matters little.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>AdaGrad was invented to solve the sparse-gradient scaling problem that SGD could not handle. It worked, then killed itself: its cumulative accumulation meant every dense-gradient parameter's learning rate decayed to zero. RMSProp swapped the cumulative sum for an exponential moving average — a single structural change that preserved the per-parameter adaptation while making the algorithm viable for dense networks.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>One global LR fails when parameters update at different scales:</strong> the embedding for &quot;the&quot; gets a gradient every step, &quot;quasar&quot; once in thousands — a single rate is too big for one and too small for the other.</li><li><strong>AdaGrad gives each parameter its own learning rate:</strong> accumulate G_i ← G_i + g_i² and scale the step by α/√(G_i+ε) — parameters with small/rare gradients get big steps, those with large frequent ones get small steps.</li><li><strong>It shines on sparse NLP embeddings:</strong> rare words finally receive appropriately large updates instead of being starved by a shared rate tuned for common words.</li><li><strong>AdaGrad's fatal flaw is a monotone accumulator:</strong> G_i only ever grows, so on dense layers the effective rate decays like α/√T → 0 and training grinds to a halt long before convergence.</li><li><strong>RMSProp fixes it with one structural change:</strong> swap the cumulative *sum* for an exponential moving average, G_i ← ρG_i + (1−ρ)g_i², so the denominator stabilizes at the recent gradient scale instead of decaying to zero — keeping the per-parameter adaptation viable for dense networks.</li><li><strong>The curvature link:</strong> g_i² approximates the diagonal of the Fisher information, so dividing the step by √G_i is a cheap stand-in for a diagonal Newton step — borrowing a little of Newton's curvature wisdom without the Hessian's cost.</li><li><strong>RMSProp was built for RNNs</strong> (Hinton's 2012 course); ρ=0.9 gives a ~10-step window, ρ=0.99 a ~100-step one — lower ρ for non-stationary settings (RL, phase transitions), either is fine for stable supervised learning.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> AdaGrad is used to train word embeddings for a 100,000-word vocabulary. After 500,000 training steps, what happens to the learning rate for the embedding of &quot;the&quot; vs the embedding of &quot;platypus&quot;? Which converges more correctly?</p>
+      <ul class="check-opts"><li>`A) Both embeddings converge at the same rate because AdaGrad normalizes each parameter by the same global learning rate α. The word frequency difference affects how often each embedding is updated, not how large each update is — &quot;the&quot; simply receives more total updates, so it converges first. &quot;Platypus&quot; will converge correctly given enough time.`</li><li>`B) AdaGrad assigns a larger learning rate to &quot;the&quot; because it has appeared more times, giving it more gradient signal. More gradient accumulation means AdaGrad has a better estimate of the correct update direction, so it applies larger steps to parameters it has observed more. &quot;Platypus&quot; converges slowly because AdaGrad lacks sufficient gradient history for it.`</li><li>`C) Both embeddings freeze simultaneously after AdaGrad's global accumulator G crosses a fixed threshold. AdaGrad uses a single shared accumulator for all parameters, so frequent words and rare words both see their learning rates decay at the same rate as training proceeds. The difference between &quot;the&quot; and &quot;platypus&quot; is only in the magnitude of the gradients, not the speed of learning rate decay.`</li><li>`D) &quot;The&quot; appears in nearly every training sentence — its embedding receives a gradient on almost every step. After 500,000 steps, G_the ≈ 500,000 × (average squared gradient), so effective lr_the ≈ α/√500,000 — extremely small. &quot;Platypus&quot; might appear 100 times total — G_platypus ≈ 100 × (average squared gradient), so effective lr_platypus ≈ α/√100 = α/10. The platypus embedding still has a substantial effective learning rate and will continue updating if it ever appears. &quot;The&quot; embedding has essentially frozen. This is actually the correct behavior for a converged model: &quot;the&quot; has been seen enough times that its embedding should be well-estimated and needs little further updating. The failure mode is if the model has not converged for &quot;the&quot; and the frozen lr prevents further improvement.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Why does AdaGrad fail for a convolutional network trained on ImageNet for 90 epochs, but RMSProp does not? Describe the mechanism precisely.</p>
+      <ul class="check-opts"><li>`A) AdaGrad fails for convolutional networks because it is designed for convex optimization and convolutional networks have highly non-convex loss surfaces. The per-parameter accumulation in AdaGrad assumes the gradient direction is consistent over time, which holds for convex problems. In non-convex landscapes, the gradient direction changes frequently, causing AdaGrad's accumulator to grow without bound as it counts contradictory gradients. RMSProp's exponential moving average ignores old contradictory gradients, which is why it works for non-convex problems.`</li><li>`B) In a convolutional layer, every filter receives a gradient from every training image — the gradient is dense. With N=1.2M images and 90 epochs, a parameter receives approximately 90×1.2M/batch_size gradient updates. For batch_size=256, that is ~420,000 gradient updates. AdaGrad's G_i ≈ 420,000 × avg(g²), so effective lr ≈ α/√420,000 ≈ α/648. If α=0.01, effective lr ≈ 0.000015 — far too small for meaningful updates in later epochs. AdaGrad's G_i never decreases, so once it has grown large (after the first few epochs), learning stalls. RMSProp's G_i ← 0.9×G_i + 0.1×g_i² stays near the recent average of squared gradients. If the gradient scale is roughly constant (say, g² ≈ c throughout training), then G_i converges to approximately c. The effective lr is α/√c — constant throughout training, not decaying. This is why RMSProp can train convolutional networks to convergence while AdaGrad cannot.`</li><li>`C) AdaGrad and RMSProp both eventually fail for convolutional networks on large datasets. RMSProp appears to succeed only because its default hyperparameters (ρ=0.9) are well-tuned for ImageNet, while AdaGrad's α must be manually scaled inversely with dataset size to achieve the same result. With properly tuned hyperparameters, AdaGrad and RMSProp converge to the same final accuracy.`</li><li>`D) AdaGrad fails on ImageNet because convolutional networks require synchronizing learning rates across layers — a filter in layer 1 and a filter in layer 5 must update at compatible rates for the gradients to remain interpretable across layers. AdaGrad's per-parameter adaptation breaks this synchronization, while RMSProp's shared decay factor ρ implicitly maintains the relative learning rate ratios across layers.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> What is the connection between AdaGrad's per-parameter update and Newton's method? Why is this connection &quot;approximate&quot; rather than exact?</p>
+      <ul class="check-opts"><li>`A) Newton's method uses the Hessian H to take curvature-aware steps: θ ← θ − H⁻¹∇L. For a parameter i, the Newton step is −(1/H_ii)·g_i (using only the diagonal of the Hessian). H_ii is the second derivative of the loss with respect to θ_i — a measure of curvature in that direction. AdaGrad uses G_i = Σg_i² ≈ E[g_i²] as a proxy for H_ii. The approximation is the Fisher information matrix identity: for a probabilistic model, E[g_i²] = H_ii at the optimum (under certain regularity conditions). So AdaGrad is approximately performing diagonal Newton steps. It is approximate for three reasons: (1) we use the time-average of g² rather than the current expectation; (2) the identity only holds exactly at the optimum, not throughout training; (3) the diagonal Hessian ignores cross-parameter interactions (off-diagonal Hessian terms). Despite these approximations, the intuition holds: parameters with larger curvature (larger H_ii ≈ larger E[g_i²]) get smaller effective learning rates.`</li><li>`B) AdaGrad connects to Newton's method by estimating the full Hessian matrix from the outer product of the gradient with itself: G ≈ g·gᵀ. This rank-1 approximation is exact when all parameters are uncorrelated. The connection is approximate because the rank-1 outer product is a very rough estimate of the true Hessian — Newton's method requires the true second-order matrix, while AdaGrad only computes the diagonal.`</li><li>`C) AdaGrad has no connection to Newton's method — it is a first-order method that only uses gradient information. The comparison is sometimes made pedagogically but is mathematically incorrect. Newton's method requires second derivatives (Hessian), which AdaGrad never computes or approximates. The per-parameter scaling in AdaGrad is a heuristic for handling sparse gradients, not a curvature-based adaptation.`</li><li>`D) AdaGrad approximates Newton's method by using the inverse of the cumulative gradient magnitude as a proxy for the inverse Hessian. The connection is exact if the gradient is constant over training, because in that case G_i = T·g_i² and the AdaGrad step equals the Newton step scaled by T. It is approximate in practice because the gradient changes as parameters change, so the time-average of g² is not the same as the current Hessian diagonal.`</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#optimization_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

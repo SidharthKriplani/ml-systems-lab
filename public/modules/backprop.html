@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Backpropagation | ML Systems Lab</title>
+  <meta name="description" content="Forward pass, chain rule, computational graph, vanishing gradients">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/backprop.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/backprop.html">
+  <meta property="og:title" content="Backpropagation | ML Systems Lab">
+  <meta property="og:description" content="Forward pass, chain rule, computational graph, vanishing gradients">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Backpropagation">
+  <meta name="twitter:description" content="Forward pass, chain rule, computational graph, vanishing gradients">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Backpropagation",
+  "description": "Forward pass, chain rule, computational graph, vanishing gradients",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/backprop.html",
+  "keywords": "backpropagation, chain rule, gradients, computational graph"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#dl_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">30 min read</span>
+      <span class="tag">backpropagation</span><span class="tag">chain rule</span><span class="tag">gradients</span><span class="tag">computational graph</span>
+    </div>
+    <h1>Backpropagation</h1>
+    <p class="subtitle">Forward pass, chain rule, computational graph, vanishing gradients</p>
+
+    <p>You have a network with a hundred million weights, and one training example. Running it forward to get a prediction is fast. But now you need to nudge *every one* of those hundred million weights in the right direction to make the prediction better. How? The naive idea — tweak one weight a hair, re-run the whole forward pass, see if the loss went down, put it back, move to the next weight — costs a full forward pass *per weight*. A hundred million forward passes for a single training step. At that price, deep networks would be untrainable, and for decades people were not sure they could be trained at all.</p>
+    <p><strong>Backpropagation</strong> is the trick that makes it cheap. The key realisation: the forward pass already computed everything you need to work out *all* the gradients — you just have to reuse those cached values, walking backward through the network. One forward pass, one backward pass, and you have the gradient for every weight at once, no matter how many there are.</p>
+    <hr>
+    <h3>Watch it work (a tiny example)</h3>
+    <p>Take a 2-layer network with input x = 2.0, weights w₁ = 0.5 and w₂ = 0.3, and target y = 1.0. Forward: compute the first hidden value, squash it with a sigmoid to get h₁ = 0.75 (cache it), carry on to the prediction ŷ = 0.556, and the loss comes out to 0.197. Now go backward, layer by layer, multiplying the local slopes together (that is the chain rule): the gradient for w₂ works out to about −0.164, and the gradient for w₁ to about −0.025. Notice something — w₁'s gradient is already <strong>6.6× smaller</strong> than w₂'s, and the only reason is that reaching one layer deeper multiplied it by the sigmoid's slope (about 0.19). One extra layer, one shrink.</p>
+    <hr>
+    <h3>Why deep networks stalled: vanishing gradients</h3>
+    <p>That shrink is the whole vanishing-gradient story. A sigmoid's slope is *at most* 0.25, and usually less. Multiply that in at every layer and after 10 layers the gradient reaching the first layer is scaled by roughly 0.25¹⁰ — about one in a million; after 20 layers, essentially zero. The early layers get no signal and never learn, so your &quot;20-layer network&quot; quietly behaves like a 2-layer one. The fix is <strong>ReLU</strong>, whose slope is a clean 1 for active neurons, so nothing shrinks. (ReLU's own catch is the *dead neuron* — one whose input is always negative outputs zero forever; Leaky ReLU and GELU keep a trickle of gradient to prevent that.)</p>
+    <p>The mirror-image failure is <strong>exploding gradients</strong>, common in recurrent networks that multiply the same weights over and over: if that factor is even slightly above 1, the gradient blows up to NaN. The fix is <strong>gradient clipping</strong> — if the gradient's overall size exceeds a cap, scale it back down while keeping its direction. And <strong>residual connections</strong> fix vanishing structurally: add a shortcut (output = layer + input) and the gradient gets a direct path back that skips the shrinking multiplications, which is why ResNets train hundreds of layers deep.</p>
+    <hr>
+    <h3>One practical cost: memory</h3>
+    <p>Because the backward pass reuses the forward pass's intermediate values, they all have to be *stored* until the backward pass runs — which for a big model is a lot of memory. <strong>Gradient checkpointing</strong> is the standard trade: keep only a few of those intermediates and recompute the rest on the fly during the backward pass, spending about 30% extra compute to slash memory. It is what lets large models train on limited GPUs. (And for the curious: backprop is often called &quot;just the chain rule,&quot; but the magic is applying it in *reverse* order — that reverse direction is exactly what makes the whole thing cost one forward pass instead of one-per-parameter.)</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>When your network has more than one layer and you need to update weights end-to-end.</strong> That is always. Backprop is the only practical algorithm for computing exact gradients in deep networks. You do not implement it yourself — every modern framework (PyTorch, JAX, TensorFlow) runs it automatically. What you do need to understand: the forward pass must cache intermediate activations, gradient checkpointing trades 30% extra compute for O(√depth) memory (mandatory for large models on limited GPU), and the gradient accumulates by summation when multiple paths lead to the same node.</li><li><strong>The production trap: ignoring gradient norms.</strong> Backprop produces the correct gradient mathematically, but &quot;correct&quot; can be a gradient of 10⁻¹² — numerically zero. Early layers in deep sigmoid networks receive no learning signal, and training proceeds as if those layers do not exist. Always log gradient norms per layer during the first training run. A ratio of 1000:1 between last-layer and first-layer norms means the depth is wasted. The fix is ReLU activations or residual connections, not more data or a different learning rate.</li><li><strong>The diagnostic: verify gradient flow before anything else.</strong> Register a backward hook on each layer and log the mean absolute gradient at each step. For a 10-layer network with healthy gradient flow, the norms should decay by at most ~10× from output to input — not 10⁶×. If you see exponential decay, the activation function is saturating. If you see exponential growth, gradient clipping (max_norm=1.0) is missing. Both symptoms are visible before the first epoch completes.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Backprop computes every parameter gradient in roughly one forward pass by caching intermediates and applying the chain rule in reverse — without caching, each gradient would cost a separate forward pass, making large-scale training impossible.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Naive gradient = one forward pass per weight:</strong> tweak a weight, re-run the whole forward pass, see if loss dropped, repeat — with 100M weights that's 100M forward passes for a *single* training step. At that price deep nets are untrainable, which is why for decades people doubted they could be trained at all.</li><li><strong>Backprop = one forward + one backward pass total:</strong> the forward pass already computed everything the gradients need, so you cache those intermediate values and walk backward once, recovering the gradient for *every* weight at once — no matter how many there are.</li><li><strong>The chain rule in reverse is the magic:</strong> backprop is &quot;just the chain rule,&quot; but applying it in *reverse* order (output back to input) is what collapses the cost to one pass instead of one-per-parameter. Gradients also *sum* when multiple paths reach the same node.</li><li><strong>Vanishing gradients:</strong> a sigmoid's slope is at most 0.25, multiplied in at every layer → ~0.25¹⁰ ≈ one-in-a-million after 10 layers, essentially zero after 20. Early layers get no signal and never learn, so a &quot;20-layer net&quot; behaves like a 2-layer one. Fix: ReLU (slope 1 for active neurons) and residual connections (a shortcut that skips the shrinking multiplications).</li><li><strong>Exploding gradients:</strong> the mirror failure — common in RNNs that multiply the same weights repeatedly. If the factor is even slightly above 1, the gradient blows up to NaN. Fix: gradient clipping — if the gradient's overall size exceeds a cap, scale it back down while keeping its direction.</li><li><strong>Memory cost:</strong> because the backward pass reuses the forward pass's intermediate activations, they must all be *stored* until it runs — a lot of memory for a big model. Gradient checkpointing keeps only a few and recomputes the rest on the fly: ~30% extra compute for O(√depth) memory, which is what lets large models train on limited GPUs.</li><li><strong>Diagnostic — log per-layer gradient norms on the first run:</strong> a healthy 10-layer network's norms decay by at most ~10× from output to input. A 10⁶× (1000:1+) ratio means the activation is saturating and the depth is wasted; exponential *growth* means clipping (max_norm=1.0) is missing. Both are visible before the first epoch finishes.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Derive the gradient of the loss with respect to the bias in a single hidden layer: L = (σ(wx + b) - y)². Compute ∂L/∂b step by step.</p>
+      <ul class="check-opts"><li>A) ∂L/∂b = 2(h - y) · σ'(a) · w, because b and w both appear in a = wx + b, so ∂a/∂b = w (the same coefficient as ∂a/∂w). The bias gradient always equals the weight gradient scaled by x, making ∂L/∂b = 2(h - y) · h(1 - h) · w.</li><li>B) ∂L/∂b = 2(h - y) directly, because the bias term b adds a constant to the pre-activation a = wx + b, and the derivative of a constant with respect to itself is 1. The sigmoid derivative cancels out because the bias is downstream of the activation rather than upstream.</li><li class="correct">C) Let a = wx + b (pre-activation), h = σ(a) (activation), L = (h - y)². Chain rule: ∂L/∂b = ∂L/∂h · ∂h/∂a · ∂a/∂b. ∂L/∂h = 2(h - y). ∂h/∂a = σ'(a) = σ(a)(1 - σ(a)) for sigmoid. ∂a/∂b = 1 (since a = wx + b, ∂a/∂b = 1). So ∂L/∂b = 2(h - y) · σ(a)(1 - σ(a)) · 1 = 2(h - y) · h(1 - h). This is the backpropagated error δ multiplied by the local Jacobian of the activation, then multiplied by 1 (the Jacobian of the linear transformation with respect to b). Note: with MSE loss, the factor of 2 is often absorbed into the learning rate; with cross-entropy loss, the form changes but the chain rule structure is the same.</li><li>D) ∂L/∂b = 2(h - y) · h(1 - h) · x, because a = wx + b means ∂a/∂b = x (the same local Jacobian as ∂a/∂w = x). The bias is multiplied by 1 in the linear equation but its gradient accumulates across the batch by summing over the x values.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> What is the vanishing gradient problem in a 10-layer network with sigmoid activations? How does it affect early vs late layers?</p>
+      <ul class="check-opts"><li class="correct">A) Sigmoid derivative: σ'(z) = σ(z)(1-σ(z)) ≤ 0.25. Backpropagation multiplies gradients across layers: ∂L/∂W₁ = (∂L/∂a₁₀)·(∂a₁₀/∂a₉)·...·(∂a₂/∂a₁)·(∂a₁/∂W₁). Each layer contributes a factor ≤ 0.25, so the product across 9 layers is ≤ 0.25⁹ ≈ 3.8×10⁻⁶. Layer 10 (last): receives gradient ≈ ∂L/∂a₁₀ — full magnitude, trains well. Layer 1 (first): receives gradient multiplied by ≤3.8×10⁻⁶ of the original — essentially zero. The first layers receive no useful gradient signal; their weights barely update. Network effectively trains only the last few layers, losing the benefit of depth. Solutions: ReLU activations (gradient 1 or 0, no compression), batch normalization (keeps activations in non-saturated range), residual connections (bypass vanishing paths).</li><li>B) The vanishing gradient problem occurs when the learning rate is too high — sigmoid outputs become saturated (near 0 or 1), and a saturated output means the network has converged that layer. Early layers saturate first because they receive higher-magnitude gradient updates, while late layers remain unsaturated and continue training.</li><li>C) Sigmoid compresses gradients by a factor of at most 4 per layer (since max sigmoid derivative is 0.25, the reciprocal is 4, meaning gradients are amplified going backward). This causes the early layers to receive larger gradients than late layers — the opposite of the typical characterisation — which is why early layer weights update more aggressively and tend to overfit first.</li><li>D) The vanishing gradient problem only affects networks where sigmoid is used in conjunction with weight initialisation that produces very small weights. The sigmoid derivative of 0.25 is only problematic when multiplied by small weight values — with proper initialisation (weights scaled to produce unit variance), 10-layer sigmoid networks train without vanishing gradients.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> You compute gradient ∂L/∂W at batch size 32 vs batch size 1. How do the gradient magnitudes compare, and does this affect parameter updates?</p>
+      <ul class="check-opts"><li>A) Batch size 32 produces gradients that are 32× larger than batch size 1, because the batch gradient is the SUM (not average) of individual gradients. With batch size 32, each parameter update is 32× larger in magnitude, requiring the learning rate to be divided by 32 to maintain equivalent training dynamics.</li><li>B) Batch size 32 produces gradients with 32× lower variance because more samples are averaged, making the estimate more stable. The magnitude is also 32× larger because batch gradients sum individual losses — this is why large-batch training requires 32× smaller learning rates to match small-batch convergence behavior.</li><li>C) Batch size 32 produces near-zero gradients for many parameters because averaging 32 samples causes opposing gradient directions to cancel. Batch size 1 gives noisy but higher-magnitude gradients. This is why very large batches converge to sharper minima — the gradient cancellation prevents exploration of the loss landscape.</li><li class="correct">D) Both compute the average loss gradient over the batch: for B=32, ∂L/∂W = (1/32)Σᵢ₌₁³² ∂Lᵢ/∂W; for B=1, ∂L/∂W = ∂L₁/∂W. The gradient magnitudes are expected to be approximately the same (both estimate E[∂L/∂W]), but B=32 has lower variance. The parameter update δW = −α × ∂L/∂W is the same order of magnitude for both batch sizes. What changes: B=32 makes fewer updates per epoch (n/32 vs n/1 steps), but each update has lower variance. B=1 has noisier updates but explores more per epoch. The key implication for hyperparameters: if you change from B=32 to B=256 (8x larger batch), you should scale learning rate by 8 (linear scaling rule) to keep the effective update magnitude consistent across batches.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#dl_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

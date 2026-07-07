@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Quality for ML | ML Systems Lab</title>
+  <meta name="description" content="Schema drift, distribution shift in features, null rates, automated validation">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/data_quality.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/data_quality.html">
+  <meta property="og:title" content="Data Quality for ML | ML Systems Lab">
+  <meta property="og:description" content="Schema drift, distribution shift in features, null rates, automated validation">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Data Quality for ML">
+  <meta name="twitter:description" content="Schema drift, distribution shift in features, null rates, automated validation">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Data Quality for ML",
+  "description": "Schema drift, distribution shift in features, null rates, automated validation",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/data_quality.html",
+  "keywords": "data quality, schema drift, validation, Great Expectations"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#production_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">29 min read</span>
+      <span class="tag">data quality</span><span class="tag">schema drift</span><span class="tag">validation</span><span class="tag">Great Expectations</span>
+    </div>
+    <h1>Data Quality for ML</h1>
+    <p class="subtitle">Schema drift, distribution shift in features, null rates, automated validation</p>
+
+    <p>It is 3am. An alert fires: the fraud model has stopped returning high-confidence positives. Nothing was deployed in the last two days. The model? Running fine. The feature pipeline? Reported success. The upstream transaction table? Zero rows for the last two hours — an ingestion outage upstream. No error was ever thrown. The pipeline happily ran on empty windows, produced all-zero feature vectors, and the model scored every transaction as low-risk. Thousands of fraudulent orders sailed through unflagged.</p>
+    <hr>
+    <h3>The one asymmetry that makes data quality hard: bad data doesn't raise exceptions</h3>
+    <p>An empty table returns in 5 milliseconds. A feature that nulls out because a join failed hands you a number, not an error. A model fed all zeros returns a confident score. At every layer the system reports *success* while quietly producing garbage. That is why &quot;did the pipeline run?&quot; tells you almost nothing — you have to actively *check the data itself.*</p>
+    <hr>
+    <h3>So you check it at every stage</h3>
+    <p>At *ingestion:* does the data even exist, in the expected volume, with the expected schema? At *feature computation:* are null rates in bounds, are distributions close to training? At *training:* does the label rate match history, has any feature's mean drifted more than 2σ? At *serving:* does the live feature schema still match training, are values in range?</p>
+    <hr>
+    <h3>The five checks that catch the most</h3>
+    <p>*Freshness* — is data arriving on time (alert when nothing new for longer than expected). *Completeness* — null rates within bounds, per feature. *Validity* — values in range, categories from the known set. *Volume* — row count within ±30% of the rolling weekly average. *Schema consistency* — no surprise column renames or type changes from upstream. Tools like Great Expectations and TensorFlow Data Validation turn these into assertions that *fail the pipeline loudly* — not dashboards someone has to remember to open.</p>
+    <p>And the mindset that ties it together: data quality is never &quot;done at launch.&quot; Upstream teams change schemas, inject nulls, and shift distributions all the time, and they will not tell you. The real question isn't &quot;is our data clean today?&quot; — it's &quot;will our monitoring catch the problem before the model does?&quot; A pipeline that screams on day one of a schema change beats one that silently retrains on corrupted features for six weeks.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Add freshness and volume checks first — they catch 80% of data pipeline failures and take 30 minutes to implement.</strong>
+
+A table that should have 10,000 rows but has 0 is an emergency. Catching it before the feature pipeline runs is the difference between a 30-minute incident and a 6-hour one. Alert when no new rows have arrived for more than the expected latency, and alert when record count falls below 70% of the rolling 7-day average. These two checks are the floor, not the ceiling.</li><li><strong>Trap: monitoring aggregate statistics but not per-slice quality hides the failures that matter most.</strong>
+
+A table with 10,000 rows and 0.1% overall null rate can have 100% null rate for iOS users — exactly the segment most affected by a specific data pipeline bug. Always monitor data quality stratified by the key business dimensions your model cares about: platform, geography, user segment, device type. Aggregate metrics pass; per-slice checks catch the real failures.</li><li><strong>Diagnostic: set up a daily data quality report that diffs current column statistics against a snapshot from training time.</strong>
+
+Any column whose mean shifts more than 2σ from the training distribution is a drift candidate requiring investigation. This check costs one SQL query per feature and catches the silent degradation pattern — upstream changes the data, the pipeline reports success, the model retrains on shifted features, and no one notices until a business metric moves six weeks later.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Bad data throws no exceptions — the only thing that distinguishes &quot;pipeline ran&quot; from &quot;pipeline ran on data the model was trained to handle&quot; is data quality assertions you wrote before the incident happened.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>The asymmetry:</strong> bad data raises no exceptions. Empty table returns in 5ms, failed join returns a number, all-zeros model returns a confident score.</li><li><strong>&quot;Did the pipeline run?&quot; tells you almost nothing</strong> — you must check the data itself.</li><li><strong>Check at every stage:</strong> ingestion (exists? schema?), features (nulls, distribution), training (label rate, 2σ drift), serving (schema, range).</li><li><strong>Five checks:</strong> freshness, completeness (null rate), validity (range/categories), volume (±30% of weekly avg), schema consistency.</li><li><strong>Tools (Great Expectations, TFDV) fail the pipeline loudly</strong> — assertions, not dashboards someone must remember to open.</li><li><strong>Watch per-slice, not just aggregate:</strong> 0.1% overall null can hide 100% null for iOS users — the exact segment a bug hit.</li><li><strong>The real question isn't &quot;is data clean today?&quot; but &quot;will monitoring catch it before the model does?&quot;</strong></li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Your training pipeline runs successfully every day, but model performance has been slowly degrading over 3 weeks with no code changes. How do you diagnose this?</p>
+      <ul class="check-opts"><li>A) Three weeks of gradual degradation with no code changes is expected model decay; redeploy the same model to reset the staleness counter</li><li class="correct">B) Check per-feature PSI over time, null rate trends, label distribution shifts, data volume changes, and upstream schema changes over the 3-week period — gradual degradation without spikes points to distribution drift, not a sudden failure</li><li>C) Rerun the pipeline with verbose logging to capture any silent exceptions that must be causing the degradation</li><li>D) Gradual degradation is always caused by concept drift; retrain immediately on the most recent 7 days of data</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> You add a new upstream data source to your feature pipeline. How do you validate data quality before using it in training?</p>
+      <ul class="check-opts"><li>A) If the pipeline runs without exceptions, the data source is valid — schema errors would fail the job</li><li class="correct">B) Validate schema and non-null constraints, verify row counts by date for continuity, inspect distributions against domain expectations, measure join quality with the main entity table, and validate historical backfill PSI against any overlapping period</li><li>C) Run a sample of 100 rows through the feature pipeline; if output looks reasonable, approve the data source</li><li>D) Data quality validation is only needed for existing data sources; new sources are assumed clean until proven otherwise</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> A feature pipeline runs successfully but produces the wrong values — all &quot;user_account_age&quot; values are approximately 365 days regardless of actual account age. How does data validation catch this?</p>
+      <ul class="check-opts"><li>A) Range validation would catch this because 365 is outside the valid range for account age</li><li>B) Schema validation catches this because the data type changes when values are computed incorrectly</li><li class="correct">C) Variance/standard deviation expectations catch this — a constant or near-constant feature produces a standard deviation near zero, which would fail an expect_column_stdev_to_be_between assertion even though individual values pass range checks</li><li>D) This bug cannot be caught by automated data validation; it requires manual inspection of sampled records</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> How do you implement data quality checks that catch issues before they affect model training, without slowing down the pipeline significantly?</p>
+      <ul class="check-opts"><li>A) Run all data quality checks after model training completes so they don't block the pipeline</li><li class="correct">B) Use a stratified strategy: real-time schema validation at ingestion (&lt;1ms per record), fast statistical checks after each batch (&lt;5 min), and full distribution PSI checks daily before training; gate training on all checks passing — quality check cost is under 5% of pipeline runtime</li><li>C) Sample 1% of records for quality checks and extrapolate; full dataset validation is too slow for daily pipelines</li><li>D) Data quality checks should run in a separate pipeline that does not block model training — alerts can be addressed after the model is deployed</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#production_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

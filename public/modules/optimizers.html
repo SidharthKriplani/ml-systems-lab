@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deep Learning Optimisers | ML Systems Lab</title>
+  <meta name="description" content="SGD, momentum, RMSProp, Adam, AdaGrad — convergence and learning rate schedules">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/optimizers.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/optimizers.html">
+  <meta property="og:title" content="Deep Learning Optimisers | ML Systems Lab">
+  <meta property="og:description" content="SGD, momentum, RMSProp, Adam, AdaGrad — convergence and learning rate schedules">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Deep Learning Optimisers">
+  <meta name="twitter:description" content="SGD, momentum, RMSProp, Adam, AdaGrad — convergence and learning rate schedules">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Deep Learning Optimisers",
+  "description": "SGD, momentum, RMSProp, Adam, AdaGrad — convergence and learning rate schedules",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/optimizers.html",
+  "keywords": "optimisers, Adam, SGD, learning rate, momentum"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#dl_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">31 min read</span>
+      <span class="tag">optimisers</span><span class="tag">Adam</span><span class="tag">SGD</span><span class="tag">learning rate</span><span class="tag">momentum</span>
+    </div>
+    <h1>Deep Learning Optimisers</h1>
+    <p class="subtitle">SGD, momentum, RMSProp, Adam, AdaGrad — convergence and learning rate schedules</p>
+
+    <p>You are training a ResNet on ImageNet with plain SGD at a fixed learning rate. After 30 epochs the loss flattens out. You switch to <strong>Adam</strong>, and in the next 5 epochs it drops more than it did in the previous 30. What just happened — and why might plain SGD still win in the end?</p>
+    <p>The core issue with one fixed learning rate is that different weights have wildly different lives. A weight in the embedding for a rare word might get a gradient once in a thousand steps; a weight in the final layer gets one every step. The same step size cannot suit both — the rare one needs a big push to make progress from its infrequent updates, the busy one needs small steps to avoid bouncing around its target. <strong>Adaptive optimisers</strong> fix this by giving *each* weight its own effective learning rate, based on its gradient history.</p>
+    <hr>
+    <h3>The lineage: AdaGrad → RMSProp → Adam</h3>
+    <p><strong>AdaGrad</strong> came first: for each weight, add up its squared gradients and divide the step by the square root of that sum. Rarely-updated weights (small sum) get big steps; busy weights get small ones. Perfect for sparse problems like word embeddings — but it has a flaw: the sum only ever grows, so on dense problems the step size eventually shrinks to nothing and learning stalls. <strong>RMSProp</strong> fixes that by using a *decaying* average of squared gradients, so ancient history fades and the step size never collapses. <strong>Adam</strong> then adds momentum on top: it keeps a running average of the gradients themselves (a velocity, to smooth the direction) *and* a decaying average of squared gradients (the adaptive scale). The combination converges fast on almost anything, which is why Adam is the default for most deep learning.</p>
+    <hr>
+    <h3>So why does SGD sometimes win?</h3>
+    <p>Here is the twist. On image-classification benchmarks, a well-tuned <strong>SGD with momentum</strong> often *beats* Adam on validation accuracy, even though Adam trains faster. The reason ties back to the sharp-versus-flat-minima idea: Adam's per-weight rescaling lets it slide neatly into the *nearest* minimum, which tends to be a sharp, narrow one. Plain SGD keeps more of its gradient noise, which jostles it toward *flatter, wider* minima — and flat minima generalise better, especially when the test data drifts from training. So the trade is real: Adam gives you speed, SGD (tuned, with patience) can give a slightly better final model. Whichever you use, never leave the learning rate fixed for the whole run — decay it over time, and for Transformers *warm it up* first (start tiny and ramp up over the first few thousand steps), or the early, unreliable gradients will blow training up.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Adam (or AdamW) when training speed matters; SGD+momentum for image classification when you want the best generalisation and can afford a full run.</strong>
+
+Adam is the safe default for Transformers and NLP. For vision with a big compute budget, well-tuned SGD+momentum often edges ahead on validation accuracy. And whenever you add weight decay to Adam, use <strong>AdamW</strong>: plain Adam's L2 penalty gets distorted by the per-parameter rescaling, while AdamW applies the decay uniformly — always prefer it.</li><li><strong>The trap: running Adam on a Transformer with no learning-rate warmup.</strong>
+
+At the very start, Adam's running estimates have no history, so the first few hundred steps take confident, full-size steps in noisy, unreliable directions — and the loss spikes or diverges in the first epoch. Ramp the learning rate up from near-zero over the first 1,000–4,000 steps so the estimates can settle before big updates land. Missing warmup is the most common cause of early Transformer training blow-ups.</li><li><strong>The diagnostic: plot training and validation loss per optimiser, not just final accuracy.</strong>
+
+If Adam reaches a lower *training* loss but the same or worse *validation* loss than SGD, it has found a sharper minimum, not a better one — and sharp minima are exactly what a shift in the test distribution punishes. If your deployment data differs from training, lean toward SGD's flatter optima; if training speed is the bottleneck, take Adam and accept the trade-off.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Adam converges faster but lands in sharper minima; SGD+momentum is slower but finds flatter optima that generalise better under distribution shift — the choice is training speed versus the generalisation ceiling, and neither should ever run at a fixed learning rate for the full training run.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>One fixed learning rate can't suit every weight:</strong> a rare-word embedding sees a gradient maybe once in 1000 steps and needs big pushes when it does; a final-layer weight sees one every step and needs small ones. A single global step size serves neither well.</li><li><strong>Adaptive optimisers give each weight its own effective learning rate</strong> derived from its gradient history — big steps for parameters with small/rare gradients, small steps for those with large frequent ones.</li><li><strong>The lineage:</strong> AdaGrad divides by the *sum* of past squared gradients (good for sparse features, but the sum only grows so on dense problems the rate decays to zero and training stalls) → RMSProp swaps the sum for a decaying average so it never collapses → Adam adds a momentum term on top of RMSProp. Adam is the default for most deep learning.</li><li><strong>SGD+momentum sometimes wins:</strong> on image classification, well-tuned SGD often *beats* Adam on validation accuracy — Adam's per-weight rescaling slides neatly into the *nearest* (often sharp) minimum, while SGD keeps more gradient noise and drifts toward flatter, wider minima that generalise better under distribution shift. The trade is real: Adam gives speed, tuned SGD can give a slightly better final model.</li><li><strong>Use AdamW whenever you add weight decay:</strong> plain Adam's L2-in-the-loss penalty gets distorted by the per-parameter rescaling (√v̂ divides the penalty down on exactly the weights that need it most — backwards), whereas AdamW applies the decay uniformly and directly to the weights. Always prefer AdamW.</li><li><strong>Never leave the learning rate fixed for the whole run:</strong> decay it over time, and for Transformers *warm it up* first (start near-zero, ramp over ~1,000–4,000 steps) — at the start Adam's running estimates have no history, so full-size steps in noisy directions spike or diverge the loss. Missing warmup is the most common cause of early Transformer blow-ups.</li><li><strong>Diagnostic:</strong> if Adam reaches a lower *training* loss but the same or worse *validation* loss than SGD, it found a *sharper* minimum, not a better one — and a shift in the test distribution punishes sharp minima. Lean toward SGD's flatter optima when deployment data differs; take Adam when training speed is the bottleneck.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Adam is used with default parameters (β1=0.9, β2=0.999, ε=1e-8). Training loss decreases but validation loss starts increasing after epoch 10. Should you change the optimizer or change regularisation?</p>
+      <ul class="check-opts"><li>A) Change the optimizer: the diverging validation loss indicates Adam's adaptive learning rates are too aggressive. The β2=0.999 parameter means Adam remembers 999 past gradient magnitudes for every 1 new gradient — this excessive memory prevents Adam from reducing the learning rate quickly enough when validation loss starts rising. Switch to SGD+momentum (β=0.9), which reduces the learning rate more responsively based on current gradient direction.</li><li>B) Change both simultaneously: the validation loss increase after epoch 10 is caused by Adam's adaptive learning rates overfitting to the training loss landscape (a known failure mode of Adam). Add weight decay via AdamW to address the optimizer issue, and simultaneously reduce β2 from 0.999 to 0.99 to make the adaptive rates more responsive to the current loss surface.</li><li class="correct">C) The diverging train/validation loss indicates overfitting — a data/regularisation problem, not an optimizer problem. Adam is not causing the overfitting; it is merely optimising the loss function you gave it. Changing optimizer parameters would not fix overfitting. Actions: (1) Add/increase weight decay — use AdamW with weight_decay=0.01-0.1 instead of Adam (Adam+L2 does not regularise correctly as explained by the non-uniform gradient scaling). (2) Add dropout if not present. (3) Reduce model capacity if data is limited. (4) Add data augmentation. (5) Use early stopping at epoch 10 as a temporary fix. The question 'optimizer vs regularisation' is a false dichotomy — Adam is fine, but the training objective lacks sufficient regularisation. AdamW is the correct drop-in replacement that adds proper weight decay.</li><li>D) Change the optimizer parameters: increasing β1 from 0.9 to 0.95 gives Adam more momentum, causing it to overshoot validation optima less. The validation loss increase after epoch 10 is a symptom of Adam oscillating around the validation minimum, which higher momentum dampens by averaging over more gradient history.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Compare Adam and SGD+momentum on the training loss curves: Adam converges faster in early epochs, SGD is slower but eventually matches or beats Adam on validation. Why?</p>
+      <ul class="check-opts"><li class="correct">A) Adam's adaptive per-parameter learning rates accelerate early convergence: rare parameters get large effective learning rates, frequent ones get small. In early training, this fast adaptation quickly reduces loss. Adam's per-parameter scaling also reduces gradient noise more aggressively (by dividing by √v̂ which grows large in high-gradient directions), effectively finding narrow gradient directions quickly. However, Adam's reduced noise means it converges toward the nearest minimum, which tends to be sharper (higher local curvature). SGD+momentum with a fixed learning rate explores more broadly — the uniform learning rate retains more gradient noise, allowing the optimizer to escape sharper basins and find flatter minima that generalise better. The SGD generalization advantage is task- and tuning-dependent; on NLP tasks, Adam is often competitive. On vision tasks (especially with batch normalization), well-tuned SGD+momentum typically reaches 1-2% higher test accuracy.</li><li>B) Adam's faster early convergence is due to higher effective batch size: the second moment estimate √v̂ normalises the gradient to have unit variance, which is equivalent to processing more samples per step. SGD processes fewer effective samples per step, giving it lower training speed but more stochastic exploration. The flatter minima SGD finds result from its lower effective sample efficiency, not from any property of gradient noise.</li><li>C) Adam converges faster in early epochs because it uses a higher implicit learning rate (the bias correction terms make the effective first-step learning rate equal to α/(1-β₁), which is 10× α for β₁=0.9). SGD's lower effective learning rate in early epochs forces more conservative updates that accidentally explore more of the loss landscape before converging — this exploration advantage compounds to produce better generalisation.</li><li>D) Adam converges faster because its adaptive learning rates are equivalent to second-order optimisation: the v̂ denominator approximates the diagonal Hessian, making Adam an approximate Newton's method. SGD+momentum only uses first-order gradient information and is therefore slower. However, second-order methods tend to overfit because they converge more precisely to the training loss minimum, explaining SGD's better generalisation.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> A new dataset is available and you are fine-tuning a pre-trained ResNet with Adam. The last layer is randomly initialised, the rest are pre-trained. What learning rate do you use for each part?</p>
+      <ul class="check-opts"><li>A) Use the same learning rate for all layers (e.g., 1e-3) but with a weight decay 100× higher on the pre-trained layers compared to the last layer. Weight decay serves as the mechanism for preserving pre-trained knowledge — it prevents large weight changes without requiring different learning rates, and a single learning rate with differential regularisation is simpler to tune.</li><li>B) Use a higher learning rate for the pre-trained layers (e.g., 1e-3) and a lower one for the randomly initialised last layer (e.g., 1e-5). The pre-trained layers need to adapt more aggressively to the new task's feature requirements, while the randomly initialised last layer should update conservatively to avoid gradient instability from its random starting point.</li><li>C) Use identical learning rates for all layers, but train in two phases: first train only the last layer for several epochs to converge its random weights, then unfreeze all layers and train jointly at the same learning rate. Differential learning rates are unnecessary because Adam's adaptive mechanism automatically scales updates based on gradient history — layers with pre-trained weights receive naturally lower updates because their gradient history is already accumulated.</li><li class="correct">D) Differential learning rates: pre-trained layers should use a much smaller learning rate (e.g., 1e-5 or 1e-4) than the randomly initialised last layer (e.g., 1e-3 or 1e-2). The pre-trained weights encode useful representations learned from the large source dataset — large updates would destroy this knowledge (catastrophic forgetting). The last layer has random weights that need substantial updates to fit the new task's classification boundaries. In PyTorch/fastai: set param_groups with different lr values. A common schedule: freeze pre-trained layers for the first few epochs (train only the last layer), then unfreeze all with differential rates — the '1cycle' fine-tuning schedule. The ratio of 10x-100x between last layer and earlier layers is typical. If the new dataset is very similar to the source, use smaller differential; if very different (e.g., medical imaging from ImageNet pre-trained model), larger differential.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#dl_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

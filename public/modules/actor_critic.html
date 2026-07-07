@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Actor-Critic Methods | ML Systems Lab</title>
+  <meta name="description" content="A2C, A3C, advantage function, GAE, async vs sync, bias-variance in advantage estimation">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/actor_critic.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/actor_critic.html">
+  <meta property="og:title" content="Actor-Critic Methods | ML Systems Lab">
+  <meta property="og:description" content="A2C, A3C, advantage function, GAE, async vs sync, bias-variance in advantage estimation">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Actor-Critic Methods">
+  <meta name="twitter:description" content="A2C, A3C, advantage function, GAE, async vs sync, bias-variance in advantage estimation">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Actor-Critic Methods",
+  "description": "A2C, A3C, advantage function, GAE, async vs sync, bias-variance in advantage estimation",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/actor_critic.html",
+  "keywords": "actor-critic, a2c, a3c, advantage, gae, bias-variance"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#rl_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">55 min read</span>
+      <span class="tag">actor-critic</span><span class="tag">a2c</span><span class="tag">a3c</span><span class="tag">advantage</span><span class="tag">gae</span>
+    </div>
+    <h1>Actor-Critic Methods</h1>
+    <p class="subtitle">A2C, A3C, advantage function, GAE, async vs sync, bias-variance in advantage estimation</p>
+
+    <p>Return to the robotic arm. With REINFORCE, you collect a full episode before updating — the arm attempts the reach, you compute G_t at every step, and you update the policy. Two problems. First, you need complete episodes. Second, G_t at step t includes rewards from steps t+1 through the end of the episode — all caused by different actions, not the one at step t. The credit assignment is noisy. Variance is high.</p>
+    <p>Actor-critic solves both. Maintain two networks simultaneously. The actor π_θ(a|s) selects actions — the policy. The critic V_φ(s) estimates the state value — how much total reward to expect from here under the current policy. After each step, update the critic using TD: the critic learns V(s_t) ≈ R + γV(s_{t+1}). Then compute the advantage A(s_t, a_t) = R + γV(s_{t+1}) - V(s_t) — how much better than expected was this particular step? Update the actor proportionally. You get updates every step, not every episode.</p>
+    <p>The advantage has a key property: E_{a~π}[A(s, a)] = 0. It is zero-mean across actions. This means it carries only relative information — this action was above average, that one was below. Unlike raw Q(s, a), which can be large and positive for all actions in a highly valuable state, the advantage removes the state's baseline value and isolates the signal about action quality. This is what makes actor-critic gradient estimates so much lower variance than REINFORCE.</p>
+    <p>Generalized Advantage Estimation (GAE) extends this. Instead of the one-step advantage R + γV(s') - V(s), GAE accumulates a weighted average of n-step advantages: Â^GAE = δ_t + γλδ_{t+1} + (γλ)²δ_{t+2} + ... where δ_t = R_{t+1} + γV(s_{t+1}) - V(s_t). λ = 0 gives the one-step TD error — low variance, high bias. λ = 1 gives the full Monte Carlo advantage — no bias, high variance. λ = 0.95 is the standard for most tasks. PPO, SAC, and most modern actor-critics use GAE.</p>
+    <p>NOT this: the actor and critic have separate learning problems that can interfere with each other. The two networks are cooperative, not adversarial — the critic provides variance-reducing signal to the actor, and the actor's improving policy makes the critic's targets more stable. The instability risk is that a slow or inaccurate critic injects biased gradient into the actor. Mitigate by setting critic learning rate 3–10× higher than actor learning rate, so the critic leads.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Use actor-critic over pure policy gradients for any task with episodes longer than about 50 steps.</strong>
+
+Per-step TD updates in actor-critic dramatically reduce gradient variance compared to full-trajectory REINFORCE. The actor-critic wall-clock speedup is typically 10–100× on continuous control tasks because you do not wait for episode completion.</li><li><strong>Set critic learning rate 3–10× higher than actor learning rate.</strong>
+
+The critic must converge to a stable estimate before the actor can use it meaningfully. If critic and actor learn at the same speed, the actor is chasing a moving value target — equivalent to applying noisy baselines that can increase gradient variance rather than reduce it.</li><li><strong>If actor loss improves but critic loss plateaus at a high value, the reward magnitude is too large for the critic to track.</strong>
+
+Normalize rewards to approximately [-1, 1] or clip them, then recheck critic convergence. A critic that cannot model the value function correctly injects biased advantage estimates into the actor gradient, which explains why actor performance degrades even as actor loss decreases.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Actor-critic gives you per-step policy updates by replacing the noisy full-episode return with a TD advantage estimate — the actor learns from how much better each action was than the critic expected, not from the absolute return.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Two networks:</strong> actor $\pi_\theta(a|s)$ picks actions, critic $V_\phi(s)$ estimates state value.</li><li><strong>Per-step TD updates</strong> replace REINFORCE's noisy full-episode return.</li><li><strong>Advantage</strong> $A(s_t,a_t) = R + \gamma V(s_{t+1}) - V(s_t)$ — how much better than expected this step was.</li><li><strong>$E_{a\sim\pi}[A]=0$:</strong> zero-mean signal removes the state baseline, isolating action quality — lower variance than raw $Q$.</li><li><strong>GAE</strong> blends n-step advantages: λ=0 one-step (low var/high bias), λ=1 MC, <strong>0.95 is the default.</strong></li><li><strong>Set critic LR 3–10× the actor LR</strong> so the critic leads and the actor isn't chasing a moving target.</li><li><strong>Actor down, critic plateaus high = reward magnitude too large;</strong> normalize rewards to ~$[-1,1]$.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Prove that E_{a~π}[A^π(s,a)] = 0. Why does this property make the advantage a better policy gradient weight than Q(s,a)?</p>
+      <ul class="check-opts"><li class="correct">A) E_{a~π}[A^π(s,a)] = E_{a~π}[Q^π(s,a)] - V^π(s) = V^π(s) - V^π(s) = 0, since V^π(s) = E_{a~π}[Q^π(s,a)] by definition; this zero-mean property centres the gradient signal so positive advantage reinforces above-average actions and negative advantage discourages below-average ones, removing the large constant mean of V^π(s) that would dominate raw Q(s,a) and add variance without directional signal</li><li>B) The advantage has zero mean because it is normalised during training by dividing by its standard deviation, which centres the gradient signal; Q(s,a) has non-zero mean because it is not normalised</li><li>C) E_{a~π}[A^π(s,a)] = 0 only holds when the policy is at a Nash equilibrium; during training the advantage has non-zero mean, which is why it still provides useful gradient signal for improvement</li><li>D) The advantage has zero mean by construction since it subtracts the average reward; Q(s,a) is a better gradient weight in states with sparse rewards because it retains the magnitude of the return signal</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> In GAE, what does setting
+
+$λ=0 vs λ=0.95 vs λ=1 do to the advantage estimate? When wo$
+
+uld you choose each?</p>
+      <ul class="check-opts"><li>A) λ=0 uses only immediate rewards (no bootstrapping), giving unbiased but high-variance estimates; λ=1 uses the full critic value (pure bootstrapping), giving low-variance but high-bias estimates; λ=0.95 is a middle ground; choose λ=0 when episodes are short and choose λ=1 when the critic is well-trained</li><li>B) λ controls the learning rate for the critic, not the advantage estimate; λ=0 means the critic updates once per episode and λ=1 means it updates every step; λ=0.95 is the standard that balances critic update frequency with policy stability</li><li>C) λ=0 produces advantage estimates identical to Monte Carlo returns; λ=1 uses only the one-step TD error; λ=0.95 is an exponential moving average of the reward signal; choose λ=0 for sparse reward environments</li><li class="correct">D) λ=0 uses the one-step TD error δ_t only (high bias from V, low variance); λ=0.95 considers ~20 future steps (moderate bias/variance, empirically best for most tasks like PPO); λ=1 uses full MC advantage G_t - V(s_t) (zero bias, high variance); choose λ=0 when the critic is accurate, λ=0.95 as the standard default, λ=1 for short episodes or when the critic is very inaccurate</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> You are training an actor-critic agent and notice that the actor loss keeps decreasing but the critic loss oscillates and never converges. The agent's reward also oscillates. What is happening?</p>
+      <ul class="check-opts"><li>A) Decreasing actor loss with oscillating critic loss is normal early in training; the actor converges faster than the critic by design; continue training until the critic stabilises after approximately 10× more steps</li><li class="correct">B) The actor and critic are destabilising each other: the actor updates rapidly while the critic cannot track the changing policy's value function, making advantage estimates noisy and injecting bad gradient into the actor, which changes the policy further in a feedback loop; fixes include lowering the actor learning rate, adding PPO-style clipping to constrain policy change, running multiple critic updates per actor update, or reducing the shared backbone learning rate</li><li>C) The oscillating critic is caused by the replay buffer containing too many transitions from the old policy; empty the buffer and restart training with only on-policy data from the current policy</li><li>D) The oscillating critic loss means the reward model is non-stationary; this is an environment problem caused by distribution shift in the data, not an algorithmic issue; the only fix is to collect more diverse training data</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#rl_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

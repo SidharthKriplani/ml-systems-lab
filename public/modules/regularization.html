@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Regularisation Geometry | ML Systems Lab</title>
+  <meta name="description" content="L1 vs L2 geometry, Lasso sparsity, Ridge shrinkage, elastic net">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/regularization.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/regularization.html">
+  <meta property="og:title" content="Regularisation Geometry | ML Systems Lab">
+  <meta property="og:description" content="L1 vs L2 geometry, Lasso sparsity, Ridge shrinkage, elastic net">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Regularisation Geometry">
+  <meta name="twitter:description" content="L1 vs L2 geometry, Lasso sparsity, Ridge shrinkage, elastic net">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Regularisation Geometry",
+  "description": "L1 vs L2 geometry, Lasso sparsity, Ridge shrinkage, elastic net",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/regularization.html",
+  "keywords": "regularisation, L1, L2, Lasso, Ridge"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#classical_ml_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">28 min read</span>
+      <span class="tag">regularisation</span><span class="tag">L1</span><span class="tag">L2</span><span class="tag">Lasso</span><span class="tag">Ridge</span>
+    </div>
+    <h1>Regularisation Geometry</h1>
+    <p class="subtitle">L1 vs L2 geometry, Lasso sparsity, Ridge shrinkage, elastic net</p>
+
+    <p>Picture two students cramming for an exam. One learns the ideas — the reasoning behind each answer. The other memorises the practice answer key word for word. On that practice test the memoriser scores 100% and the thinker 90%. But on the real exam, with new questions, the thinker sails through and the memoriser falls apart — they learned the key, not the subject. That memoriser is a model that has <strong>overfit</strong>, and <strong>regularisation</strong> is how we stop it.</p>
+    <p>Here is where it bites in real life. You are predicting house prices with 100 features for only 200 houses — size, rooms, lot size, distance to school, and ninety-odd more, many of them overlapping. You fit plain least squares and the training fit looks incredible: R² of 0.98. Then you check houses it has never seen: R² of 0.51. It memorised the training set, noise and all.</p>
+    <hr>
+    <h3>Why it overfits, and the one-line fix</h3>
+    <p>Least squares has exactly one instruction: make the training error as small as possible, by any means. Nothing tells it to hold back. Give it 100 knobs to fit 200 points and it will use the spare freedom to bend through the noise — a giant positive weight here cancelled by a giant negative one there, contortions that fit these houses and no others.</p>
+    <p>So we change the instruction. We add a second piece to the loss: a penalty that grows with the size of the weights. The new loss is &quot;training error <strong>plus</strong> lambda times the size of the weights,&quot; where lambda is a dial for how much we care.</p>
+    <p>Now watch the mechanism, because this is the whole thing. The model is trained by gradient descent, which does one job — nudge the weights, step by step, in whatever direction makes the loss smaller. The moment those big weights start adding a big number to the loss, gradient descent sees that cost and does the only thing it knows: it pushes the weights back down to bring the loss down again. Small weights are not a rule we impose from outside. They are what the model settles on by itself, once big weights start costing it. That is regularisation in one sentence: make big weights expensive, and gradient descent keeps them small.</p>
+    <hr>
+    <h3>Two ways to measure &quot;size&quot;, two different results</h3>
+    <p>There are two honest ways to measure how big the weights are, and the choice matters more than you would guess.</p>
+    <p>Square each weight and add them up — that is <strong>L2</strong>, also called <strong>Ridge</strong>. It shrinks every weight smoothly toward zero, but never all the way; weights get tiny, never exactly zero.</p>
+    <p>Add up the plain sizes instead (ignoring sign) — that is <strong>L1</strong>, also called <strong>Lasso</strong>. This one does something Ridge cannot: it drives some weights to *exactly* zero, switching those features off completely. Lasso does feature selection for free.</p>
+    <p>Why the difference? There is a lovely picture for it. Draw the region the penalty allows the weights to live in. For L1 that region is a diamond with sharp corners sitting right on the axes; for L2 it is a smooth circle. The best answer is where the training-error rings first touch that region — and a diamond gets touched at a *corner*, which sits on an axis, where one weight is exactly zero. A circle has no corners, so it gets touched on a smooth edge, off the axes, where no weight is exactly zero. There is an even plainer way to say it: L1 pushes each weight toward zero with the *same* steady force no matter how small it already is, so it can finish the job and land on zero. L2's push *fades* as the weight shrinks, so it slows and stalls just short.</p>
+    <hr>
+    <h3>When to use which, and the trap</h3>
+    <p>Use <strong>Lasso (L1)</strong> when you believe only a handful of features truly matter and you want the model to pick them out for you. Use <strong>Ridge (L2)</strong> when you think many features each add a little, or when features are correlated and you want to keep them together. (A blend called <strong>elastic net</strong> does a bit of both.)</p>
+    <p>And one trap falls straight out of &quot;we penalise weight size&quot;: a feature measured in dollars needs a tiny weight, while a yes/no feature needs a big one. The same penalty hits them completely unequally — the big-scale feature barely feels it, the small-scale one gets hammered. So <strong>standardise your features first</strong> (put them all on the same scale), or the penalty is quietly punishing features for their units instead of judging how useful they are.</p>
+    <hr>
+    <h3>The real tradeoff underneath: bias for variance</h3>
+    <p>Why does shrinking weights help at all? Because it trades one kind of error for another. An unconstrained model has *low bias* (it can fit any shape) but *high variance* (it swings wildly from one training sample to the next — that's the overfitting). Adding a penalty deliberately introduces a little <strong>bias</strong> — the weights are pulled away from the perfect training fit — in exchange for a large drop in <strong>variance</strong>. The goal is never &quot;small weights for their own sake&quot;; it's *lower error on unseen data*. You accept some bias because the variance you kill is worth more. That framing — regularisation buys variance reduction at the price of bias — is the one interviewers want to hear.</p>
+    <hr>
+    <h3>How you actually pick lambda</h3>
+    <p>Lambda isn't guessed; it's *tuned*. Sweep a range of values and, for each, measure error on held-out data with <strong>cross-validation</strong> — a <strong>validation curve</strong> of error versus lambda. Too little penalty and both train and validation error are the overfit gap; too much and the model underfits and both climb. The sweet spot is the lambda that minimises validation error. scikit-learn ships this as `RidgeCV` and `LassoCV` so the search is built in. Never pick lambda by looking at training error — it always prefers zero penalty.</p>
+    <hr>
+    <h3>Ridge has a one-step formula too — and it explains why it helps</h3>
+    <p>Just like OLS, Ridge has a closed form: $θ̂ = (XᵀX + λI)⁻¹Xᵀy$. Notice the only change from OLS is the $+λI$ added to the diagonal before inverting. That's not cosmetic — when features are correlated, XᵀX is nearly singular and blows up on inversion (the exact source of those wild, unstable weights). Adding $λI$ lifts the diagonal and makes the matrix cleanly invertible again. So Ridge literally *stabilises the inversion*, which is why it tames collinearity.</p>
+    <hr>
+    <h3>The naming mess across libraries</h3>
+    <p>This trips people up constantly, so nail it. In scikit-learn, `Ridge` and `Lasso` take <strong>alpha</strong> as the penalty strength (bigger alpha = more regularisation). But `LogisticRegression` and `LinearSVC` take <strong>C</strong>, which is the *inverse* (C = 1/λ, so *smaller* C = more regularisation). And `ElasticNet` takes <strong>alpha</strong> for overall strength plus <strong>l1_ratio</strong> to mix L1 and L2 (l1_ratio=1 is pure Lasso, 0 is pure Ridge). Same idea, three different dials.</p>
+    <hr>
+    <h3>Don't penalise the intercept</h3>
+    <p>One subtlety: the intercept (bias term) is usually *not* regularised. Penalising it would drag your predictions toward zero for no good reason — the intercept just anchors the overall level, it isn't a feature whose influence you want to shrink. Libraries handle this for you, but it's why you *center* features (and why standardising matters): with centered features the intercept stays meaningful and the penalty only touches the actual feature weights.</p>
+    <hr>
+    <h3>Lasso's sharper limits</h3>
+    <p>Beyond the &quot;which correlated feature gets kept is unstable&quot; issue, Lasso has a hard structural limit: in a wide problem with more features than samples (p &gt; n), it can select <strong>at most about n features</strong> before it runs out — a real problem in genomics or text where p is huge. It can also over- or under-select depending on lambda. Elastic net was invented partly to fix exactly these Lasso failures: it keeps L1's sparsity while L2's presence lets it select more than n features and hold correlated groups together.</p>
+    <hr>
+    <h3>Not just linear regression</h3>
+    <p>Finally, regularisation isn't a linear-regression trick — it's everywhere. It's the `C` in logistic regression and SVMs, the margin-softening in SVMs, and <strong>weight decay</strong> in neural networks (L2 on the network's weights). The penalty interacts differently with each loss and solver, but the core move is identical: add a cost on complexity so the optimiser stops chasing the training noise.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>What regularisation does: it adds a penalty on weight size to the loss, so gradient descent keeps the weights small and the model simple.</strong>
+
+Reach for it any time you have many features relative to your data, or you see a big gap between training and test performance — the classic sign of overfitting. Use Ridge (L2) as your default; it shrinks everything gently and handles correlated features well. Use Lasso (L1) when you suspect most features are useless and you want the model to zero them out and hand you a short list. The dial is lambda (in scikit-learn often called alpha, or C = 1/lambda for logistic regression): more penalty means a simpler model.</li><li><strong>The trap: Lasso's feature picks get shaky when features are correlated.</strong>
+
+If two features carry nearly the same information, Lasso keeps one and zeros the other — but which one it keeps can flip from one training run to the next. So do not read Lasso's chosen features as gospel. If the selected set changes across cross-validation folds, switch to elastic net, which blends in a little Ridge and tends to keep correlated features together instead of picking one at random.</li><li><strong>The habit that is not optional: standardise your features before any regularised model.</strong>
+
+Because the penalty judges weights purely by size, a feature on a huge scale (income in dollars) needs a tiny weight and barely gets penalised, while a 0/1 flag needs a big weight and gets hammered — even if they are equally useful. Put every feature on the same scale first (subtract the mean, divide by the standard deviation). Skip this and the penalty punishes features for their units, not their usefulness, and the whole model tilts toward the large-scale ones.</li><li><strong>The framing to state out loud: regularisation trades a little bias for a big drop in variance, and lambda is tuned, not guessed.</strong>
+
+An unconstrained model is low-bias but high-variance (it overfits); the penalty adds bias to kill variance, and the target is lower error on unseen data, not small weights for their own sake. Pick lambda by cross-validation — sweep values and take the one that minimises validation error (`RidgeCV`/`LassoCV`) — never by training error, which always wants zero penalty. Too little penalty overfits; too much underfits; both raise validation error.</li><li><strong>Ridge has a closed form that shows why it works, and the library naming is a minefield.</strong>
+
+Ridge solves $θ̂ = (XᵀX + λI)⁻¹Xᵀy$: the $+λI$ lifts the diagonal so a near-singular XᵀX (from correlated features) becomes cleanly invertible — that's literally how Ridge stabilises collinearity. On naming: scikit-learn's `Ridge`/`Lasso` use `alpha` (bigger = more penalty), `LogisticRegression`/`LinearSVC` use `C` = 1/λ (smaller = more penalty), and `ElasticNet` uses `alpha` plus `l1_ratio` to blend L1 and L2. Also: don't regularise the intercept — center features so it stays meaningful.</li><li><strong>Know Lasso's hard limits and that regularisation reaches far beyond linear regression.</strong>
+
+With more features than samples (p &gt; n), Lasso can select at most about n features and its picks are unstable under correlation — elastic net was designed to fix both by keeping L1 sparsity while L2 lets it exceed n features and hold correlated groups together. And the same idea is everywhere: the `C` in logistic regression and SVMs, the soft margin in SVMs, and weight decay (L2) in neural networks — add a cost on complexity so the optimiser stops chasing training noise.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Regularisation adds a penalty on weight size to the loss, so gradient descent — which only ever chases a smaller loss — keeps the weights small and the model simple. L2 (Ridge) shrinks everything smoothly; L1 (Lasso) drives some weights to exactly zero and so selects features. Always standardise first, because the penalty judges weights by size, not by usefulness.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Regularisation = penalty on weight size added to the loss.</strong> Gradient descent chases smaller loss → weights stay small, model stays simple.</li><li><strong>L2 (Ridge):</strong> shrinks everything smoothly. <strong>L1 (Lasso):</strong> drives some weights to exactly zero → feature selection.</li><li><strong>Always standardise first</strong> — the penalty judges weights by size, not usefulness.</li><li><strong>Lasso is shaky under correlated features</strong> — it keeps one, zeros the rest, and which it keeps can change.</li><li><strong>Trades a little bias for a big drop in variance;</strong> λ is tuned, not guessed.</li><li><strong>Ridge has a closed form;</strong> library naming (C = 1/λ) is a minefield.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You add a penalty on the size of the weights to the loss. Why does that actually make the trained weights come out smaller?</p>
+      <ul class="check-opts"><li>`A) Because the model is trained by gradient descent to shrink the loss, and once big weights start inflating the loss, gradient descent pushes them back down to bring the loss down — small weights are simply what the model settles on once big ones cost it.`</li><li>`B) Because the penalty term mathematically caps each weight at a fixed maximum value, so no single weight is ever allowed to grow past the hard limit that the lambda setting puts in place.`</li><li>`C) Because adding the penalty deletes the features that carry the largest weights before training even starts, leaving only naturally small-weight features for the model to fit.`</li><li>`D) Because the penalty quietly rescales the input features to be smaller, and smaller inputs always produce smaller fitted weights on the other side of the equation.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Ridge (L2) and Lasso (L1) both shrink weights, but only Lasso drives some all the way to exactly zero. Why?</p>
+      <ul class="check-opts"><li>`A) Because L2 is applied before training while L1 is applied afterward, so only L1 gets a final chance to round the smallest surviving weights down to exactly zero once the fitting has finished.`</li><li>`B) L1 pushes each weight toward zero with the same steady force no matter how small it already is, so it can finish the job and land on zero. L2's push fades as the weight shrinks, so it stalls just short — tiny, but never exactly zero.`</li><li>`C) Because L2 only ever shrinks the positive weights while L1 shrinks both positive and negative ones, and it is specifically those negative weights that end up driven all the way down to zero.`</li><li>`D) Because Lasso simply runs with a much larger lambda than Ridge by default, and any penalty that is large enough will force weights to zero regardless of whether it is L1 or L2.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> You fit a regularised model on features in wildly different units — income in dollars, plus a few 0/1 flags. What must you do first, and why?</p>
+      <ul class="check-opts"><li>`A) Nothing special — regularised models rescale their inputs internally, so mixed units are handled automatically, and standardising by hand would just undo that and hurt the fit.`</li><li>`B) Drop the 0/1 flags, since binary features cannot be regularised on the same footing as continuous ones and will otherwise dominate the penalty term entirely.`</li><li>`C) Standardise every feature to a common scale first. The penalty judges weights only by size, so a dollar feature needs a tiny weight and is barely penalised, while a 0/1 flag needs a big weight and gets hammered — even if they matter equally. Without scaling the penalty punishes units, not usefulness.`</li><li>`D) Raise lambda until the dollar-scale feature's weight shrinks to match the flags' weights in size, which balances the penalty across the different units without any need to rescale the data.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> An interviewer asks: &quot;What is regularisation doing in bias-variance terms, and how do you choose the penalty strength?&quot;</p>
+      <ul class="check-opts"><li>`A) It reduces bias without touching variance, and you choose lambda by picking the value that gives the lowest training error.`</li><li>`B) It reduces both bias and variance simultaneously, and lambda is a fixed constant (usually 1.0) that rarely needs changing.`</li><li>`C) It deliberately adds a little bias to buy a large reduction in variance, aiming for lower error on unseen data — not smaller weights for their own sake. You choose lambda by cross-validation (a validation curve of error vs lambda), taking the value that minimises validation error, never training error.`</li><li>`D) It increases variance to reduce bias, which is why heavily regularised models overfit; lambda is chosen to be as large as possible to maximise that effect.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> Ridge regression's closed form is θ̂ = (XᵀX + λI)⁻¹Xᵀy. What does the +λI term accomplish beyond shrinking weights?</p>
+      <ul class="check-opts"><li>`A) It adds a bias column to the feature matrix so the intercept gets regularised along with the other weights, which is the main point of Ridge.`</li><li>`B) When features are correlated, XᵀX is nearly singular and explodes on inversion; adding λI lifts the diagonal so the matrix becomes cleanly invertible again — that is how Ridge stabilises collinearity, not just shrinks.`</li><li>`C) It converts the L2 penalty into an L1 penalty, which is what lets Ridge drive some weights to exactly zero for feature selection.`</li><li>`D) It rescales the features to unit variance inside the formula, removing the need to standardise the data before fitting a Ridge model.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q6.</strong> You have 5,000 gene features but only 200 patients (p ≫ n) and want a sparse model. Why might plain Lasso disappoint, and what fixes it?</p>
+      <ul class="check-opts"><li>`A) Lasso cannot run when p &gt; n at all; the only option is to reduce features by hand with PCA before any L1 model will fit.`</li><li>`B) Lasso overfits because L1 has no effect in high dimensions; switching to a larger training set is the only real remedy.`</li><li>`C) Lasso can select at most about n (~200) features before it saturates, and with correlated genes its picks are unstable across runs. Elastic net fixes both: L1 keeps sparsity while the added L2 lets it exceed n features and hold correlated groups together.`</li><li>`D) Lasso works perfectly here — p ≫ n is exactly the regime L1 was designed for — so nothing needs to change beyond raising alpha.`</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#classical_ml_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

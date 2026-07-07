@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Information Theory for ML | ML Systems Lab</title>
+  <meta name="description" content="Entropy, cross-entropy, KL divergence, mutual information">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/information_theory.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/information_theory.html">
+  <meta property="og:title" content="Information Theory for ML | ML Systems Lab">
+  <meta property="og:description" content="Entropy, cross-entropy, KL divergence, mutual information">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Information Theory for ML">
+  <meta name="twitter:description" content="Entropy, cross-entropy, KL divergence, mutual information">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Information Theory for ML",
+  "description": "Entropy, cross-entropy, KL divergence, mutual information",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/information_theory.html",
+  "keywords": "entropy, KL divergence, cross-entropy, mutual information"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#math_stats_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">30 min read</span>
+      <span class="tag">entropy</span><span class="tag">KL divergence</span><span class="tag">cross-entropy</span><span class="tag">mutual information</span>
+    </div>
+    <h1>Information Theory for ML</h1>
+    <p class="subtitle">Entropy, cross-entropy, KL divergence, mutual information</p>
+
+    <p>You are building a compression system for text messages. The word &quot;the&quot; appears in 7% of positions; the word &quot;zymurgy&quot; appears in 0.0001% of positions. If you give both words the same-length code, you waste bits every time you encode &quot;the.&quot; Efficient encoding gives short codes to common words and long codes to rare ones. But how short and how long, exactly?</p>
+    <p>The answer falls out of a simple observation: the minimum number of bits needed to encode an event with probability $p$ is $-log_2(p)$. A word appearing with probability 0.07 needs $-log_2(0.07) \approx 3.8$ bits. A word at probability 0.000001 needs about 20 bits. If all events were equally probable, the average bits needed would be $log_2(N)$ where $N$ is the number of possible events. In general, the average bits over the whole distribution is the entropy: $H = -\sum p(x) \log p(x)$. Entropy measures how uncertain the distribution is — how many bits you need on average to describe a draw from it.</p>
+    <p>Now suppose your compression algorithm was designed for the wrong distribution. You built it assuming word frequencies $q$, but the true frequencies are $p$. The average bits you actually spend is $H(p, q) = -\sum p(x) \log q(x)$ — cross-entropy. The extra bits you waste compared to an optimal encoder is $KL(p | q) = H(p, q) - H(p)$. Since $H(p)$ is fixed by the true distribution, minimising cross-entropy is identical to minimising KL divergence — the extra waste from using the wrong distribution.</p>
+    <p>This is where ML enters. Your model produces a predicted distribution $\hat{y}$. The true label is a one-hot distribution $y$. Cross-entropy loss $= -\log(\hat{y}_{correct})$ measures how many bits your model`s encoding wastes relative to optimal. Minimising cross-entropy is fitting your model`s distribution to the true data distribution.</p>
+    <p><strong>NOT this.</strong> Most people think cross-entropy is just a loss function that happens to work well. Cross-entropy is an information-theoretic quantity measuring encoding efficiency. When the model is perfectly calibrated, cross-entropy equals entropy — no wasted bits. The loss function framing hides why cross-entropy is the *right* choice, not merely a convenient one. It also hides the direction of KL: forward KL ($KL(p | q)$, used in training) forces the model to cover all modes of the true distribution. Reverse KL ($KL(q | p)$, used in VAEs) lets the model collapse to one mode. These produce qualitatively different learned distributions — mode-covering versus mode-seeking.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Use cross-entropy loss for classification, not MSE.</strong> Cross-entropy penalises confident wrong predictions exponentially: predicting 0.99 probability for the wrong class gets $-\log(0.01) \approx 6.6$ bits of punishment. MSE penalises it with $(1 - 0.99)^2 = 0.0001$ — nearly nothing. Any classifier trained with MSE on softmax outputs will be underpenalised for overconfident errors.</li><li><strong>The production trap: KL direction determines whether your model covers all modes or collapses to one.</strong> Maximum likelihood training minimises forward KL — the model must assign non-zero probability everywhere the data has density. VAE training minimises reverse KL — the model can ignore modes it finds inconvenient, collapsing to a single sharp mode. If your generative model produces only one type of output despite diverse training data, reverse KL mode collapse is the culprit.</li><li><strong>The diagnostic: use mutual information $I(X;Y) = H(X) - H(X|Y)$ for feature selection, not Pearson correlation.</strong> Correlation only detects linear relationships. A feature where $Y = X^2$ has zero correlation with $X$ but high mutual information — the feature is perfectly predictive but nonlinearly so. Any feature with $I(X;Y) = 0$ is truly independent of the label. Estimators like MINE make this tractable even for high-dimensional continuous features.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Minimising cross-entropy is minimising KL divergence from your model to the true distribution. Cross-entropy is not an arbitrary loss — it is the exact measure of encoding waste, and that framing tells you why the KL direction matters.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Bits to encode probability $p$ = $-\log_2(p)$;</strong> entropy $H=-\sum p(x)\log p(x)$ = average bits / uncertainty.</li><li><strong>Cross-entropy $H(p,q)=-\sum p\log q$</strong> = bits spent when you encode true $p$ with wrong $q$.</li><li><strong>KL = the waste:</strong> $KL(p\|q)=H(p,q)-H(p)$. Minimising cross-entropy = minimising KL to the true distribution.</li><li><strong>Cross-entropy loss $=-\log(\hat{y}_{correct})$</strong> — an encoding-efficiency measure, not an arbitrary loss.</li><li><strong>Use cross-entropy, not MSE, for classification:</strong> confident wrong 0.99 → $-\log(0.01)\approx 6.6$ bits; MSE ≈ 0.0001.</li><li><strong>KL direction matters:</strong> forward KL (MLE) is mode-covering; reverse KL (VAEs) is mode-seeking / collapsing.</li><li><strong>Mutual information $I(X;Y)=H(X)-H(X|Y)$</strong> detects nonlinear dependence correlation misses; $I=0$ ⟹ truly independent.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Compute H(X) for a fair six-sided die. Then compute H(Y) where Y = 'even or odd' (2 outcomes). Why is H(Y) &lt; H(X)?</p>
+      <ul class="check-opts"><li>A) H(X) = log₂(6) ≈ 2.585 bits. H(Y) = log₂(2) = 1 bit. H(Y) &lt; H(X) because Y has fewer outcomes. More outcomes always means higher entropy since the uniform distribution maximises entropy and a 6-outcome uniform has more uncertainty than a 2-outcome uniform.</li><li>B) H(X) = −6·(1/6)·log₂(1/6) = log₂(6) ≈ 2.585 bits. H(Y) = −2·(1/2)·log₂(1/2) = 1 bit. H(Y) &lt; H(X) because Y has higher probability on each outcome (1/2 vs. 1/6) — higher probability means less surprise per event, so less information is needed.</li><li>C) H(X) = 6 bits (one bit per face). H(Y) = 2 bits (one bit per outcome). H(Y) &lt; H(X) because knowing Y = 'even' still requires 3 bits to specify which even face, so H(X|Y) = log₂(3) ≈ 1.585. The conditional entropy accounts for the remaining uncertainty.</li><li class="correct">D) H(X) = −Σ P(xᵢ)log₂P(xᵢ) = −6·(1/6)log₂(1/6) = log₂(6) ≈ 2.585 bits. H(Y): P(even) = P(odd) = 1/2. H(Y) = −2·(1/2)log₂(1/2) = 1 bit. H(Y) &lt; H(X) because Y carries less information: knowing Y=even tells you the outcome is in {2,4,6} but doesn't specify which face. Knowing X tells you the exact face. Information-theoretically: Y is a coarsening of X — a function of X — and functions of a random variable cannot increase entropy (data processing inequality). The maximum entropy for n equally likely outcomes is log₂(n): H(X) achieves log₂(6), H(Y) achieves log₂(2)=1. More outcomes = more uncertainty = more bits needed to communicate the outcome.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> What is KL divergence D_KL(P||Q), and why is it asymmetric? Give an ML example where direction matters.</p>
+      <ul class="check-opts"><li class="correct">A) D_KL(P||Q) = Σ P(x)·log(P(x)/Q(x)) = E_P[log(P(x)/Q(x))]. Asymmetry: D_KL(P||Q) ≠ D_KL(Q||P) in general. They are equal only when P=Q. In ML: when we minimise D_KL(P_data || Q_model) (forward KL, used in MLE), the model Q must cover all places where P_data is nonzero — if P(x)&gt;0 but Q(x)=0, the KL diverges. The model spreads to cover all modes of P_data (mode-covering). When minimising D_KL(Q_model || P_data) (reverse KL, used in variational inference), Q must be zero wherever P_data is zero, but can be zero where P_data is nonzero — Q can be mode-seeking (collapse to one mode, ignoring others). In VAEs and variational inference, we minimise reverse KL, which is why learned approximations often underestimate uncertainty and collapse to dominant modes.</li><li>B) D_KL(P||Q) = Σ Q(x)·log(Q(x)/P(x)) — the expected log-ratio under Q. Asymmetry arises because Q is the reference distribution in the expectation. In ML: forward KL is used in MLE (fitting model Q to data P), and reverse KL is used when sampling from Q to approximate P. The practical difference is negligible for unimodal distributions but large for multimodal ones.</li><li>C) D_KL(P||Q) = Σ P(x)·log(P(x)/Q(x)). KL is symmetric when both P and Q are from the same exponential family. Asymmetry arises only when the distributions have different supports. In ML: the direction matters only for variational inference, not for MLE, because MLE minimises the forward KL which equals the cross-entropy up to a constant.</li><li>D) D_KL(P||Q) = Σ P(x)·log(P(x)/Q(x)). KL divergence is asymmetric because the weight assigned to each term differs: forward KL weights by P, reverse KL weights by Q. In ML: both directions give identical solutions when the model is correctly specified (Q can represent P exactly). The direction only matters under model misspecification, where the forward KL favors spreading mass and reverse KL favors concentrating it.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Mutual information I(X;Y) = 0. What does this mean, and how is it different from Cov(X,Y) = 0?</p>
+      <ul class="check-opts"><li>A) I(X;Y) = 0 means the entropy of X equals the entropy of Y — both variables carry the same amount of information. Cov(X,Y) = 0 means they have no linear relationship. The two conditions are independent: you can have I(X;Y) = 0 with nonzero covariance, or Cov(X,Y) = 0 with nonzero MI, depending on whether the dependence is linear or nonlinear.</li><li>B) I(X;Y) = 0 means the correlation between X and Y is zero in the information-theoretic sense, which is equivalent to Pearson correlation = 0 for continuous distributions. Both conditions are equivalent ways of saying there is no relationship between X and Y, with MI being the more general version that applies to discrete distributions as well.</li><li class="correct">C) I(X;Y) = H(X) − H(X|Y) = 0 means that knowing Y provides zero information about X: H(X|Y) = H(X). This implies X and Y are statistically independent — P(X,Y) = P(X)P(Y) for all values. MI detects any statistical dependence: linear, nonlinear, or categorical. By contrast, Cov(X,Y) = 0 only means there is no linear relationship. Zero covariance allows for nonlinear dependence (as in the X, X² example). Zero MI is strictly stronger than zero covariance: I(X;Y) = 0 ⟹ Cov(X,Y) = 0, but not vice versa. Cov(X,Y) = 0 ⟹ I(X;Y) = 0 only for jointly Gaussian distributions. MI is used in feature selection because it detects nonlinear dependence that correlation misses; MINE (mutual information neural estimator) estimates MI for complex distributions.</li><li>D) I(X;Y) = 0 means H(X|Y) = 0 — that is, X is completely determined by Y. This is the strongest form of dependence, where knowing Y eliminates all uncertainty about X. Cov(X,Y) = 0 is weaker: it only says there is no linear predictive relationship. So I(X;Y) = 0 implies Cov(X,Y) = 0, but also implies complete deterministic dependence, not independence.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#math_stats_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Online Learning &amp; Model Staleness | ML Systems Lab</title>
+  <meta name="description" content="Continuous training, concept drift, staleness management, shadow deployment">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/online_learning.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/online_learning.html">
+  <meta property="og:title" content="Online Learning &amp; Model Staleness | ML Systems Lab">
+  <meta property="og:description" content="Continuous training, concept drift, staleness management, shadow deployment">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Online Learning &amp; Model Staleness">
+  <meta name="twitter:description" content="Continuous training, concept drift, staleness management, shadow deployment">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Online Learning & Model Staleness",
+  "description": "Continuous training, concept drift, staleness management, shadow deployment",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/online_learning.html",
+  "keywords": "online learning, concept drift, model staleness, shadow mode, canary"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#production_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">29 min read</span>
+      <span class="tag">online learning</span><span class="tag">concept drift</span><span class="tag">model staleness</span><span class="tag">shadow mode</span><span class="tag">canary</span>
+    </div>
+    <h1>Online Learning &amp; Model Staleness</h1>
+    <p class="subtitle">Continuous training, concept drift, staleness management, shadow deployment</p>
+
+    <p>A news recommender retrains once a week. A big crypto story breaks Tuesday and interest spikes within hours. The weekly model doesn't surface crypto until Sunday — five days after the peak, three days after it started fading. An online model, updating on every click in real time, is surfacing crypto within minutes. For trending content, that five-day lag is real lost engagement.</p>
+    <p>That's the case for online learning. But it's a *narrow* case, so start with a measurement, not a preference.</p>
+    <hr>
+    <h3>First ask: is batch actually too slow?</h3>
+    <p>Compare a daily-retrained model against an online model on the metric you care about. If daily is close enough, take the simpler system — because online learning gives up three things a good model wants. It's harder to *debug* (the model changes constantly — which update broke it?), harder to *audit* (there's no fixed version to evaluate), and harder to *roll back* (revert to what?). Reach for it only when retraining latency demonstrably hurts the business metric.</p>
+    <hr>
+    <h3>If it's warranted, pick the right algorithm — and mind deep models</h3>
+    <p>FTRL is Google's workhorse for large-scale online *linear* models (ads serving), efficient with sparse gradients and L1/L2. Online SGD updates weights per example or mini-batch, fine for linear models and shallow nets. But deep models hit <strong>catastrophic forgetting:</strong> trained on a stream, they overwrite what they haven't seen lately. Feed a recommender two weeks of crypto-heavy traffic and it starts recommending *only* crypto, having forgotten sports, politics, and finance. Fixes: *experience replay* (mix a buffer of diverse old examples into each update) and *elastic weight consolidation* (protect the weights that mattered for older patterns).</p>
+    <hr>
+    <h3>The sneakiest failure: feedback loops</h3>
+    <p>The model's own predictions shape user behavior, that behavior becomes training data, and the data reinforces the predictions. A model that leans slightly toward crypto drives crypto clicks, which show up as a strong crypto signal, which makes it lean harder — a filter bubble compounding at the speed of online updates. Break it with *exploration* (ε-greedy, Thompson sampling).</p>
+    <hr>
+    <p><strong>The bottom line:</strong> &quot;more current is always better&quot; is wrong, because recency is only one virtue — auditability, debuggability, and one-click rollback are others, and batch retraining has all of them (rollback is just a registry promotion). For most systems, periodic batch retraining is the more reliable choice. Online learning wins only when the metric clearly suffers from retraining lag *and* the measured gain justifies the extra complexity.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Use FTRL or online SGD only when the retraining-to-deployment cycle is measurably too slow for your use case — establish this empirically before committing to the infrastructure.</strong>
+
+Compare a daily-retrained model against an online model on a key business metric. If the gap is small, choose the simpler system. The engineering cost of online learning — continuous deployment pipeline, feedback loop monitoring, catastrophic forgetting mitigations, audit trail for a model that changes every second — is only worth paying when the measurement shows a gap that matters to the business.</li><li><strong>Trap: feedback loops in online learning create filter bubbles and popularity bias that compound over time.</strong>
+
+The model's predictions influence user behavior, which becomes training data, which reinforces the predictions. A small initial bias amplifies on every update cycle. Add exploration (ε-greedy, Thompson sampling) to the online model to break the feedback loop — without exploration, the model collapses toward the already-popular and the already-predicted, destroying the diversity that makes recommendations valuable.</li><li><strong>Diagnostic: track concept drift metrics alongside the online model's performance — if drift is low but performance is degrading, the feedback loop is the problem; if drift is high and performance is degrading, the model is not adapting fast enough.</strong>
+
+These two failure modes look similar from the outside (degrading performance) but require opposite interventions. Feedback loop: add exploration, reduce learning rate, increase replay buffer diversity. Insufficient adaptation: increase learning rate, reduce replay buffer weight, consider triggered full retraining on large drift events.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Online learning solves a real problem — retraining latency — but creates three new ones: feedback loops, catastrophic forgetting, and a continuously changing model that cannot be audited, debugged, or rolled back the way a batch-trained model can; use it only when the measurement shows the tradeoff is worth it.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Case for online:</strong> weekly news recommender lags a crypto spike by 5 days; an online model surfaces it in minutes.</li><li><strong>But start with a measurement, not a preference:</strong> is daily-retrained batch actually too slow on the metric you care about?</li><li><strong>Online gives up three things:</strong> harder to debug (which update broke it?), audit (no fixed version), roll back (revert to what?).</li><li><strong>Algorithms:</strong> FTRL for large sparse linear (ads), online SGD for linear/shallow. Deep models hit <strong>catastrophic forgetting.</strong></li><li><strong>Catastrophic forgetting:</strong> 2 weeks of crypto traffic → recommends only crypto. Fix with experience replay + elastic weight consolidation.</li><li><strong>Feedback loops:</strong> predictions shape behavior → behavior becomes training data → bias compounds. Break with exploration (ε-greedy, Thompson).</li><li><strong>&quot;More current is always better&quot; is wrong:</strong> batch has auditability, debuggability, one-click rollback. Use online only when the measured gain justifies it.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Your fraud detection model's precision starts dropping 3 weeks after deployment with no code changes. Feature distributions are stable. What is the most likely cause and what do you do?</p>
+      <ul class="check-opts"><li>A) Stable features with dropping precision means the model was undertrained; increase training epochs and redeploy</li><li class="correct">B) This is most likely real concept drift — fraudsters have adapted and the relationship P(fraud|features) has changed; investigate false positive clusters for new fraud patterns, compare recent false positives to historical true positives, retrain with recency-weighted recent data, and shorten the retraining cycle</li><li>C) Stable feature distributions guarantee stable model performance; the precision drop must be a monitoring artifact</li><li>D) Precision dropping without feature drift means the positive rate in production has increased; recalibrate the decision threshold to match the new base rate</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> You are deploying a new recommendation model. Walk through the shadow mode and canary release process.</p>
+      <ul class="check-opts"><li>A) Deploy directly to 50% traffic, monitor for 24 hours, then promote to 100% if metrics are stable</li><li class="correct">B) Shadow mode (1-2 weeks): deploy alongside production, log both models' predictions without serving the challenger; check edge cases, errors, and score distributions; canary: step from 1% → 5% → 10% → 25% → 50% → 100% with metric gates at each step and automatic rollback if CTR drops &gt; 2% or P99 latency exceeds SLA</li><li>C) Shadow mode is only needed for models with significantly different architectures; for same-architecture models, go directly to canary at 10%</li><li>D) Skip shadow mode and run the canary for 3 days at 50% — a longer canary period is more informative than shadow mode</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> A streaming recommendation model is trained online (each user interaction updates the model weights immediately). After 2 weeks, you notice the model systematically recommends items from only 3 categories. What has happened?</p>
+      <ul class="check-opts"><li>A) The model has correctly identified the 3 most popular categories and is optimizing for engagement</li><li class="correct">B) Catastrophic forgetting from recency bias — recent 2-week category skew has overwritten knowledge of other categories through repeated SGD updates; fix with rehearsal (replay buffer of diverse historical examples), reduced learning rate, elastic weight consolidation, or limiting online learning to a shallow adapter layer</li><li>C) Three-category collapse is a common initialization artifact in recommendation models; reinitialize the embedding layer and retrain</li><li>D) Online learning cannot cause category collapse; the issue is in the feature pipeline producing biased category features</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> Define covariate shift, label shift, and concept drift precisely. For each, describe whether retraining is required and what other interventions are available.</p>
+      <ul class="check-opts"><li>A) All three types of drift require immediate full retraining — distinguishing between them is academic</li><li class="correct">B) Covariate shift (P(X) changes, P(Y|X) stable): importance weighting can correct without retraining if new values are in training support; label shift (P(Y) changes, P(X|Y) stable): threshold recalibration or prior correction may suffice; concept drift (P(Y|X) changes): retraining required, no weighting or threshold fix corrects a changed underlying relationship</li><li>C) Covariate shift requires retraining; label shift and concept drift can both be fixed with threshold recalibration</li><li>D) Only concept drift requires intervention; covariate shift and label shift self-correct as the model receives more data</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#production_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

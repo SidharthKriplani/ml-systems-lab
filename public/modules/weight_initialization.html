@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weight Initialization | ML Systems Lab</title>
+  <meta name="description" content="Symmetry breaking, Xavier and He initialization, and the connection to gradient flow.">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/weight_initialization.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/weight_initialization.html">
+  <meta property="og:title" content="Weight Initialization | ML Systems Lab">
+  <meta property="og:description" content="Symmetry breaking, Xavier and He initialization, and the connection to gradient flow.">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Weight Initialization">
+  <meta name="twitter:description" content="Symmetry breaking, Xavier and He initialization, and the connection to gradient flow.">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Weight Initialization",
+  "description": "Symmetry breaking, Xavier and He initialization, and the connection to gradient flow.",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/weight_initialization.html",
+  "keywords": "initialization, xavier, he, glorot, symmetry-breaking, variance"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#optimization_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">40 min read</span>
+      <span class="tag">initialization</span><span class="tag">xavier</span><span class="tag">he</span><span class="tag">glorot</span><span class="tag">symmetry-breaking</span>
+    </div>
+    <h1>Weight Initialization</h1>
+    <p class="subtitle">Symmetry breaking, Xavier and He initialization, and the connection to gradient flow.</p>
+
+    <p>Before a network takes a single training step, the *starting* values of its weights already decide whether it can learn at all. Two things can go wrong at the very beginning, and both are worth understanding.</p>
+    <p>The first is a surprise: <strong>do not set all the weights to zero.</strong> It sounds harmless, but it is fatal. If every neuron in a layer starts with identical weights, they all compute the same output, all receive the same gradient, and all take the same update — so they stay identical forever. A 512-neuron layer initialised to zero behaves exactly like a *single* neuron; the other 511 are wasted. The fix is <strong>random</strong> initialisation: the randomness is what makes neurons different from one another so they can learn different features. This is called <strong>breaking symmetry</strong>.</p>
+    <hr>
+    <h3>The second problem: getting the scale right</h3>
+    <p>So the weights must be random — but *how big* should those random numbers be? This turns out to matter enormously, and it connects straight to the gradient-flow story from the last lesson.</p>
+    <p>Picture a signal passing forward through the layers, multiplied by the weights at each one. If the weights are <strong>too small</strong>, the signal shrinks a little at every layer, and after 20 layers it has faded to essentially zero — the network cannot tell its inputs apart, and since a dead forward signal means a dead backward signal too, nothing learns. If the weights are <strong>too large</strong>, the opposite happens: the signal grows until it blows up, or it slams activations like sigmoid and tanh into their flat &quot;saturated&quot; zones where their sensitivity drops to zero — and again the gradient dies. The weights need to be *just* the right size to keep the signal steady as it travels through the network.</p>
+    <hr>
+    <h3>The recipes: Xavier and He</h3>
+    <p>Happily, the right size can be worked out exactly, and it depends on how many inputs feed into a layer. The idea is simple: pick the random scale so the signal comes out of each layer at about the same size it went in — no shrinking, no growing.</p>
+    <p><strong>Xavier (Glorot) initialisation</strong> computes that scale for symmetric activations like tanh, and it was the fix that first let deep tanh networks train reliably.</p>
+    <p><strong>He (Kaiming) initialisation</strong> adjusts it for <strong>ReLU</strong>. Because ReLU throws away all the negative values, it roughly *halves* the signal at every layer — so He simply doubles the variance to make up for the half that ReLU discards. Use He for ReLU networks and Xavier for tanh; use the wrong one on a deep network and it will silently fail to learn.</p>
+    <hr>
+    <p>One small but famous exception: <strong>biases</strong> can safely start at zero (the random weights already break symmetry), *except* the LSTM's &quot;forget gate&quot; bias, which is usually set to 1. That nudges the gate to *remember* by default at the start, keeping the memory highway open long enough for the network to learn when it actually should forget.</p>
+    <hr>
+    <h3>The actual formulas, and fan-in vs fan-out</h3>
+    <p>Worth carrying the numbers. Let <strong>fan_in</strong> be the number of inputs to a layer and <strong>fan_out</strong> the number of outputs. <strong>He/Kaiming</strong> (for ReLU) uses variance <strong>2/fan_in</strong>. <strong>Xavier/Glorot</strong> (for tanh/sigmoid) uses either <strong>1/fan_in</strong> or the symmetric <strong>2/(fan_in + fan_out)</strong>. Why the two versions of Xavier? Preserving the signal's variance on the <strong>forward</strong> pass wants 1/fan_in; preserving the <strong>gradient's</strong> variance on the <strong>backward</strong> pass wants 1/fan_out; averaging the two (2/(fan_in+fan_out)) is the compromise that keeps both roughly stable. He fixes on fan_in because for ReLU the forward-pass halving is the dominant effect to correct.</p>
+    <hr>
+    <h3>Uniform or normal?</h3>
+    <p>Both Xavier and He come in a <strong>normal</strong> and a <strong>uniform</strong> flavour, and they're near-equivalent in practice. The normal version draws from N(0, variance). The uniform version draws from U(−limit, +limit) with the limit chosen to give the *same* variance (for Xavier uniform, limit = √(6/(fan_in+fan_out))). Frameworks default to one or the other; the difference rarely matters, but know that &quot;Xavier uniform&quot; and &quot;Xavier normal&quot; are the same idea with different sampling shapes.</p>
+    <hr>
+    <h3>Orthogonal initialisation for recurrence</h3>
+    <p>For <strong>RNNs</strong> and very deep near-linear stacks, there's a better choice than random Gaussian: <strong>orthogonal</strong> initialisation, where the weight matrix is initialised to be orthogonal (its rows/columns are unit vectors at right angles). An orthogonal matrix has the property that it <strong>preserves vector norms</strong> under multiplication — so applying it repeatedly (as an RNN does across time steps) neither grows nor shrinks the signal. That's exactly the property you want when the *same* matrix is multiplied hundreds of times, which is why orthogonal init helps recurrent and deep-linear networks specifically.</p>
+    <hr>
+    <h3>Modern architectures soften the sensitivity — but don't remove it</h3>
+    <p>Here's the honest caveat: &quot;use the wrong init and the network silently fails&quot; is true for a <strong>deep plain network</strong>, but much less so once you add <strong>residual connections</strong> and <strong>BatchNorm/LayerNorm</strong>. Normalisation re-centres and re-scales activations at every layer, which repairs a lot of a bad initial scale, and residual shortcuts keep gradients flowing regardless. So a ResNet or a normalised transformer is far more *forgiving* of initialisation than an old-style plain net. Init still matters — it affects early-training stability and final quality — but it's a smaller cliff than the unqualified claim suggests.</p>
+    <hr>
+    <h3>Transformer-specific initialisation</h3>
+    <p>Very deep transformers need extra care beyond He/Xavier. Because each layer adds to the residual stream, naive init lets the residual-stream variance <strong>grow with depth</strong>, destabilising training — so large models <strong>scale the residual-branch weights down</strong> by a factor related to depth (e.g. 1/√(2N) schemes) to keep the stream stable. The <strong>embedding</strong> and <strong>output</strong> layers often get their own scaling, and the <strong>LayerNorm</strong> gain/bias start at 1/0. This is why deep transformers historically needed careful warmup — and why good residual-scaling schemes let them train more stably.</p>
+    <hr>
+    <h3>Diagnosing an init problem</h3>
+    <p>You can catch a bad initialisation before wasting a training run. Check the <strong>loss at step zero</strong>: for a K-class classifier it should be ≈ ln(K) (e.g. ~2.3 for 10 classes) — a wildly different value means the output scale is off. Log the <strong>activation variance per layer</strong> on the first forward pass: healthy init keeps it roughly constant across layers; a steady decay or explosion means the scale is wrong. Also check <strong>per-layer gradient norms</strong>, the <strong>dead-ReLU count</strong>, and run <strong>NaN/Inf checks</strong>. These five-minute checks tell you the init is sane before you commit GPU hours.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>First rule: never initialise all weights to zero — break symmetry with randomness.</strong>
+
+If every neuron in a layer starts identical, they compute the same output, get the same gradient, and update in lockstep, so they stay identical forever — a whole layer collapses to the behaviour of one neuron. Random initial weights make neurons different from the start, which is the only way they can specialise into different features. Biases can safely start at zero, since the random weights already do the symmetry-breaking.</li><li><strong>Second rule: get the scale right, because it decides whether the signal survives.</strong>
+
+Too-small weights shrink the signal a little at each layer until, several layers deep, it has faded to zero and nothing learns. Too-large weights either blow the signal up or push tanh and sigmoid into their flat saturated zones where the gradient dies. The right scale keeps the signal about the same size from layer to layer — and it can be computed exactly from how many inputs each layer has.</li><li><strong>Match the recipe to the activation: Xavier for tanh, He for ReLU.</strong>
+
+Xavier (Glorot) picks the scale that preserves signal size through symmetric activations like tanh. He (Kaiming) adjusts it for ReLU: since ReLU discards the negative half of the signal, halving it each layer, He doubles the variance to compensate. Use the wrong one on a deep network — Xavier with ReLU, say — and the signal quietly decays layer by layer, and the network fails to train even though nothing looks obviously broken.</li><li><strong>One famous exception: the LSTM forget-gate bias starts at 1, not 0.</strong>
+
+A forget gate initialised at zero passes only about half the memory forward each step, so long-range information is erased before the model ever learns when to keep it. Setting the bias to 1 makes the gate lean toward &quot;remember&quot; by default, keeping the memory highway open at the start of training. Everywhere else, zero is a perfectly good default for biases.</li><li><strong>Carry the formulas and the specialised variants.</strong>
+
+He (ReLU): variance 2/fan_in. Xavier (tanh/sigmoid): 1/fan_in (preserves forward variance) or 2/(fan_in+fan_out) (compromise between forward and backward — fan_out preserves the gradient's variance). Uniform and normal flavours are equivalent (same variance, different sampling shape). For RNNs and deep near-linear stacks, orthogonal initialisation preserves vector norms under repeated multiplication, which is exactly what you want when the same matrix is applied many times.</li><li><strong>Modern architectures forgive init more, transformers need residual scaling, and you can diagnose it fast.</strong>
+
+&quot;Wrong init = silent failure&quot; holds for deep plain nets but is softened a lot by residual connections and BatchNorm/LayerNorm, which repair bad scale at every layer — init still matters for stability and final quality, just less of a cliff. Deep transformers scale residual-branch weights down with depth (so the residual stream doesn't grow) and this is why they needed warmup. Sanity-check init before a full run: loss at step 0 ≈ ln(K), roughly constant activation variance across layers, healthy per-layer gradient norms, low dead-ReLU count, and no NaN/Inf.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Initialization is gradient flow at step zero. Before the optimizer runs, the parameters must already be at a scale where signals neither vanish nor explode in the forward pass — because if they vanish in the forward pass, they also vanish in the backward pass. The correct variance formula depends on the activation function, and using the wrong formula (Xavier for ReLU, or He for tanh) produces a deep network that silently fails to learn.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Never initialize all weights to zero:</strong> every neuron in a layer then computes the same thing and receives the same gradient, so they stay identical forever and the layer has the capacity of one neuron — you must break symmetry with randomness.</li><li><strong>Scale decides survival:</strong> too-small weights fade the forward signal toward zero over depth (and vanish the backward gradient with it); too-large weights blow the signal up or saturate tanh/sigmoid into their flat regions. Init is gradient flow at step zero.</li><li><strong>Match the recipe to the activation:</strong> Xavier/Glorot for tanh/sigmoid, He/Kaiming for ReLU — He uses 2× the variance specifically to offset ReLU discarding the negative half of its inputs. Using Xavier for ReLU (or He for tanh) makes a deep net silently fail to learn.</li><li><strong>LSTM exception:</strong> initialize the forget-gate bias to 1 so the gate leans toward *remember* from the start, keeping the cell-state memory highway open; the other biases can be 0.</li><li><strong>Formulas:</strong> He = variance 2/fan_in; Xavier = 1/fan_in (forward) or 2/(fan_in+fan_out) (a forward+backward compromise); uniform and normal draws work about equally well.</li><li><strong>Orthogonal init for RNNs and deep linear stacks:</strong> an orthogonal matrix preserves vector norms under repeated multiplication, so the signal neither shrinks nor grows as it passes through many identical transforms.</li><li><strong>Residuals + norm forgive bad init a lot</strong> (they repair scale at every layer), so it's a soft failure not a cliff in modern nets; deep Transformers still scale residual-branch weights down with depth (why they needed warmup). Sanity-check init before a full run: loss at step 0 should be ≈ ln(K) for K classes.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> A 30-layer tanh network is initialised with weights from N(0, 1). Training loss barely moves. What is happening, and what is the fix?</p>
+      <ul class="check-opts"><li>`A) N(0,1) is meant for networks with no activations; with tanh you should use N(0,0) — zero-variance weights that start the network as an identity — and the σ=1 is introducing neuron correlations that stall training.`</li><li>`B) The weights are far too large: with hundreds of inputs, each layer blows the signal up, and within a few layers the activations are huge, slamming tanh into its flat saturated zone where its sensitivity is nearly zero — so the backward signal dies. Fix: use Xavier initialisation, which sizes the random weights to keep the signal steady and the activations in tanh's responsive middle range.`</li><li>`C) The weights are too *small*, not too large — with 256 inputs each product is tiny, so activations shrink toward zero by layer five; the fix is to raise the scale to about √(n_in) so activations stay at unit size.`</li><li>`D) The weights are too spread out, so a few neurons saturate while others learn nothing; the fix is orthogonal initialisation, which gives every neuron an equal norm and prevents any single one from saturating.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Why is He initialisation made specifically for ReLU, and what goes wrong if you use Xavier on a deep ReLU network?</p>
+      <ul class="check-opts"><li>`A) He is for ReLU because ReLU only outputs positives, doubling the activations' mean; Xavier assumes zero-mean, so He shrinks the weight scale to stop the positive-shifted activations from growing too large.`</li><li>`B) Xavier balances the forward and backward passes; for ReLU the backward pass behaves differently, so He optimises purely for the backward-pass gradient and lets the forward variance drift a little.`</li><li>`C) He handles ReLU's kink at zero — Xavier assumes a smooth derivative everywhere, and ReLU's corner changes the integral in the derivation, which is where the factor of 2 comes from.`</li><li>`D) Xavier's scale preserves the signal size through symmetric activations. But ReLU zeros out the negative half of its inputs, roughly halving the signal at every layer — so with Xavier's scale a deep ReLU network shrinks the signal by about ½ each layer (0.5^30 ≈ 10⁻⁹ over 30 layers) and the activations collapse. He uses double the variance, exactly cancelling ReLU's halving, so the signal holds steady and deep ReLU networks can train.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Why can biases be initialised to zero when weights cannot, and what is the LSTM exception?</p>
+      <ul class="check-opts"><li>`A) Zeroing all weights is fatal because it makes every neuron identical forever (symmetry never breaks); zeroing biases is fine because the random weights already make neurons differ, so a zero bias does no harm. The exception is the LSTM forget gate: at bias 0 it keeps only about half the memory each step, quickly erasing long-range information, so it is set to 1 to lean toward remembering at the start and keep the memory highway open.`</li><li>`B) Biases must be zero to satisfy the zero-mean-activation assumption that Xavier and He rely on; a non-zero bias shifts the pre-activations and breaks the variance formulas. The LSTM forget gate is the one deliberate exception to that rule.`</li><li>`C) Both weights and biases *can* be zero — zero weights just train more slowly because all neurons share one gradient, not incorrectly; the LSTM bias is a special case needed to offset tanh saturation at the edges of the range.`</li><li>`D) Biases are zero because they sit after the linear step and do not affect the backward signal's magnitude; a non-zero bias would break an independence assumption in He's derivation and require a correction term.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> Xavier initialisation has two common variance formulas: 1/fan_in and 2/(fan_in + fan_out). Why do both exist?</p>
+      <ul class="check-opts"><li>`A) 1/fan_in is for classification and 2/(fan_in+fan_out) is for regression — you pick based on the task type.`</li><li>`B) Preserving the signal's variance on the forward pass calls for 1/fan_in, while preserving the gradient's variance on the backward pass calls for 1/fan_out. Since a single scale can't satisfy both exactly when fan_in ≠ fan_out, 2/(fan_in+fan_out) averages them as a compromise that keeps both roughly stable. He fixes on fan_in because for ReLU the forward-pass halving is the dominant effect to correct.`</li><li>`C) 2/(fan_in+fan_out) is simply the newer, strictly better formula; 1/fan_in is legacy and should never be used.`</li><li>`D) They give identical values in all cases, so the two formulas are just notational variants with no practical difference.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> You're training a plain (non-normalised) RNN and want the recurrent weight matrix to neither vanish nor explode the signal as it's applied across hundreds of time steps. Which initialisation is especially suited, and why?</p>
+      <ul class="check-opts"><li>`A) He initialisation, because the RNN uses ReLU-like gates and He is always the right choice for any recurrent network.`</li><li>`B) Orthogonal initialisation: an orthogonal matrix preserves vector norms under multiplication, so applying the same recurrent matrix repeatedly across time steps neither grows nor shrinks the signal — exactly the stability property you need when one matrix is multiplied hundreds of times. Random Gaussian init lacks this and tends to vanish or explode over long sequences.`</li><li>`C) Zero initialisation, so the recurrent matrix starts as the identity and never changes the signal magnitude.`</li><li>`D) Very large Gaussian weights, because a bigger recurrent matrix guarantees the signal survives across many time steps.`</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#optimization_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

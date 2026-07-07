@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eval Metrics from First Principles | ML Systems Lab</title>
+  <meta name="description" content="Confusion matrix, precision, recall, F1, why accuracy fails">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/metrics_first_principles.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/metrics_first_principles.html">
+  <meta property="og:title" content="Eval Metrics from First Principles | ML Systems Lab">
+  <meta property="og:description" content="Confusion matrix, precision, recall, F1, why accuracy fails">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Eval Metrics from First Principles">
+  <meta name="twitter:description" content="Confusion matrix, precision, recall, F1, why accuracy fails">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Eval Metrics from First Principles",
+  "description": "Confusion matrix, precision, recall, F1, why accuracy fails",
+  "proficiencyLevel": "Foundational",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/metrics_first_principles.html",
+  "keywords": "metrics, precision, recall, F1, confusion matrix"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#eval_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Foundational</span>
+      <span class="read-time">32 min read</span>
+      <span class="tag">metrics</span><span class="tag">precision</span><span class="tag">recall</span><span class="tag">F1</span><span class="tag">confusion matrix</span>
+    </div>
+    <h1>Eval Metrics from First Principles</h1>
+    <p class="subtitle">Confusion matrix, precision, recall, F1, why accuracy fails</p>
+
+    <p>Imagine you build a fraud detector. Your dataset has 10,000 transactions, and 100 of them are fraud — just 1%. You train a model and it scores <strong>99% accuracy</strong>. The team celebrates. Then you look closer: the model predicted &quot;not fraud&quot; for every single transaction. It caught zero frauds. The accuracy number was lying to you the whole time.</p>
+    <p>That is the trap accuracy sets on imbalanced data. It blends four very different outcomes into one number that the majority class dominates. To actually understand a classifier, you have to pull those four outcomes apart.</p>
+    <hr>
+    <h3>The four outcomes: the confusion matrix</h3>
+    <p>Every prediction lands in one of four boxes. <strong>TP</strong> (true positive): correctly caught fraud. <strong>FP</strong> (false positive): flagged a legit transaction — a false alarm, a customer's card blocked for nothing. <strong>FN</strong> (false negative): missed a fraud — it goes through, the bank eats the loss. <strong>TN</strong> (true negative): correctly cleared a legit transaction.</p>
+    <p>The whole point is that these four do *not* cost the same. A false alarm annoys a customer; a missed fraud loses real money. Accuracy pretends they are interchangeable. They never are.</p>
+    <hr>
+    <h3>Two numbers that actually mean something</h3>
+    <p>From those four boxes come two ratios, each measuring a different way to fail.</p>
+    <p><strong>Precision</strong> = TP / (TP + FP): when the model shouts &quot;fraud!&quot;, how often is it right? Low precision means you are drowning your operations team in false alarms.</p>
+    <p><strong>Recall</strong> = TP / (TP + FN): of all the real frauds, how many did you actually catch? Low recall means fraud is slipping past you.</p>
+    <p>And here is the tension that runs through all of classification: these two pull against each other. Make the model more cautious (raise the threshold) and precision climbs while recall falls — fewer false alarms, but more fraud missed. Loosen it and the reverse happens. This is not a flaw in the metrics; it is a real business trade-off, and where you land depends entirely on what each mistake costs you.</p>
+    <hr>
+    <h3>Combining them — and doing it honestly</h3>
+    <p>People often reach for <strong>F1</strong>, which blends precision and recall into one number: $F1 = 2 \cdot P \cdot R / (P + R)$. It uses the *harmonic* mean on purpose, because that punishes lopsided scores — a model with precision 0.9 and recall 0.1 gets an F1 of 0.18, not a flattering 0.5.</p>
+    <p>But F1 makes a silent assumption: that precision and recall matter equally. If a missed fraud costs ten times more than a false alarm, they do not. <strong>F-beta</strong> lets you tilt the balance: $F_β = (1 + β^2) \cdot P \cdot R / (β^2 \cdot P + R)$, where β &gt; 1 weights recall more and β &lt; 1 weights precision more. The right β comes from your costs, not from habit.</p>
+    <p>So the real first step is not choosing a metric — it is writing down what each mistake costs. In fraud, a missed fraud (FN) usually dwarfs a false alarm (FP), so you lean toward recall. In spam filtering it flips: a real email lost to the spam folder (FP) destroys trust, so you lean toward precision. In cancer screening, a missed tumor (FN) is catastrophic, so recall rules. Translate TP, FP, FN, TN into money or risk first. Every metric choice follows from that.</p>
+    <hr>
+    <h3>The rest of the confusion-matrix vocabulary</h3>
+    <p>Precision and recall look at the *positive* column, but interviewers expect the full set. <strong>Recall</strong> is also called <strong>sensitivity</strong> or the <strong>true-positive rate (TPR)</strong>. Its mirror on the negative side is <strong>specificity</strong>, or the <strong>true-negative rate (TNR)</strong> = TN / (TN + FP) — of all the truly-legit transactions, how many did you correctly clear? One minus specificity is the <strong>false-positive rate (FPR)</strong>, sometimes called <strong>fallout</strong> — the share of legit transactions you wrongly flagged. And <strong>false-negative rate (FNR)</strong> = FN / (TP + FN) = 1 − recall. Two rules of thumb: recall/TPR and FPR are the axes of the ROC curve, and specificity is the metric to quote when *correctly clearing negatives* is what matters (e.g. a screening test you don't want firing on healthy people).</p>
+    <hr>
+    <h3>More than two classes: macro, micro, weighted</h3>
+    <p>With several classes you compute precision/recall/F1 per class, then average them — and *how* you average changes the story. <strong>Macro</strong> averages the per-class scores equally, so a tiny class counts as much as a huge one — use it when rare classes matter. <strong>Micro</strong> pools all the TP/FP/FN across classes first and then computes one score, so it's dominated by the frequent classes and equals overall accuracy for single-label problems — use it when every *instance* matters equally. <strong>Weighted</strong> averages the per-class scores weighted by class size, a middle ground. A big macro-vs-micro gap is a signal: macro high, micro low means the model nails small classes but stumbles on the big one (or vice versa).</p>
+    <hr>
+    <h3>Single numbers that survive imbalance</h3>
+    <p>F1 ignores true negatives entirely, which is why two better summaries exist for skewed data. <strong>Balanced accuracy</strong> is the average of recall across classes (equivalently, the mean of sensitivity and specificity) — it doesn't reward always-predict-majority. <strong>Matthews correlation coefficient (MCC)</strong> uses all four boxes of the confusion matrix in one correlation-style score from −1 to +1, and is widely regarded as the most honest single number under imbalance because a model can't fake it by ignoring a class. When you need one number and the classes are skewed, prefer balanced accuracy or MCC over raw accuracy or F1.</p>
+    <hr>
+    <h3>When you can only act on the top K</h3>
+    <p>Often the real constraint is capacity, not a threshold: a fraud team reviews the top 500 alerts, a search page shows 10 results. Then the metric is <strong>precision@K</strong> (of the top K ranked by score, how many are truly positive) and <strong>recall@K</strong> (of all positives, how many landed in the top K). The model only has to get the worst cases to the *top of the list* — a global threshold is the wrong framing when the action budget is fixed.</p>
+    <hr>
+    <h3>Curves beat single thresholds: ROC-AUC vs PR-AUC</h3>
+    <p>Precision and recall are measured *at one threshold*; to summarise a model across all thresholds you use an area-under-curve. <strong>ROC-AUC</strong> plots TPR against FPR — but on rare-positive problems it can look flatteringly high, because a huge TN count keeps FPR tiny even when the model floods you with false positives relative to the few real positives. <strong>PR-AUC</strong> (precision vs recall) ignores true negatives and so exposes that failure. Rough heuristic: when positives are scarce, PR-AUC is usually the more honest summary — though it's a heuristic, not a law (PR-AUC has its own quirks under shifting prevalence).</p>
+    <hr>
+    <h3>Pick the threshold on validation, freeze it, then report on test</h3>
+    <p>One discipline ties it together. The decision threshold is a *parameter you tune*, so tune it on the <strong>validation</strong> set — sweep thresholds, pick the one matching your cost/precision/recall target — then <strong>freeze</strong> it and report final performance on the <strong>test</strong> set *once*. Tuning the threshold on the test set is the same sin as tuning weights on it: the reported number becomes optimistic and won't hold in production.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>When to use it: always define your cost matrix before picking a metric.</strong>
+
+In fraud detection: a missed fraud (FN) costs the full transaction amount plus investigation time. A false alarm (FP) costs a customer service call and customer inconvenience. If FN costs 10x more than FP, optimize for recall ($F_\beta$ with $\beta = 2$ or higher). In spam filtering, FP (blocking a real email) is the catastrophic failure — optimize for precision ($\beta &lt; 1$). Accuracy is appropriate only when classes are roughly balanced and all errors cost the same, which is rarely true in production.</li><li><strong>The most common production trap: reporting F1 without asking whether FP and FN cost the same.</strong>
+
+F1 weights precision and recall equally. On a fraud model where missing fraud costs 50x more than a false alarm, optimizing F1 will under-weight recall and leave real money on the table. Before training, write down: what does a FP cost? What does a FN cost? If those numbers differ by more than 2x, F1 is the wrong metric. $F_\beta$ (with $\beta$ larger when recall matters more) tilts the balance, but treat it as a rough proxy — the cleaner tool when you have real costs is to minimise expected cost directly by choosing the threshold that minimises $FP \cdot cost_{FP} + FN \cdot cost_{FN}$, rather than encoding the ratio into a single $\beta$.</li><li><strong>The diagnostic: when your model looks suspiciously good, check whether it is predicting the majority class.</strong>
+
+The tell: high accuracy, recall near 0. Compute recall separately. If recall ≈ 0 on a 1% fraud dataset, the model learned to predict &quot;not fraud&quot; for everything and achieved 99% accuracy by doing nothing. Also check: if F1 is decent but all FPs come from the same subgroup, you have a slice-level failure the aggregate metric is hiding. Disaggregate by segment before declaring the model ready.</li><li><strong>Know the full vocabulary and the right single number under imbalance.</strong>
+
+Recall = sensitivity = TPR; specificity = TNR = TN/(TN+FP); FPR (fallout) = 1 − specificity; FNR = 1 − recall — TPR and FPR are the ROC axes. For multiclass, macro averages classes equally (rare classes count), micro pools instances first (frequent classes dominate, equals accuracy for single-label), weighted sits between. And since F1 ignores true negatives, prefer balanced accuracy (mean of per-class recall) or MCC (uses all four cells, −1 to +1) as the honest single summary on skewed data.</li><li><strong>Match the summary to how you'll act, and tune the threshold on validation only.</strong>
+
+When action is capacity-limited (review top 500, show top 10), optimise precision@K / recall@K — the model just needs the worst cases at the top. To compare models across thresholds use an AUC, and prefer PR-AUC to ROC-AUC when positives are rare (ROC-AUC's huge TN count hides false-positive floods) — a heuristic, not a law. Critically, the decision threshold is a tuned parameter: sweep it on the validation set, freeze it, then report on test once. Tuning the threshold on test inflates the number exactly like tuning weights on test.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Before picking any classification metric, write down the cost of a FP and the cost of a FN — every metric choice follows from that ratio, and skipping that step is how teams end up optimizing the wrong number for months.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Accuracy lies on imbalanced data:</strong> a model that predicts &quot;not fraud&quot; for every transaction scores 99% accuracy on a 1%-fraud dataset while catching zero frauds (recall 0). Accuracy blends four different outcomes into one number the majority class dominates — to understand a classifier you must pull those four apart.</li><li><strong>The confusion matrix is TP / FP / FN / TN, and the four don't cost the same:</strong> TP = caught fraud, FP = false alarm (a customer's card blocked for nothing), FN = missed fraud (the bank eats the loss), TN = correctly cleared. A false alarm annoys; a missed fraud loses real money — accuracy pretends they're interchangeable.</li><li><strong>Precision and recall each measure a different way to fail:</strong> precision = TP/(TP+FP) = when the model shouts &quot;fraud,&quot; how often is it right (low → drowning in false alarms); recall = TP/(TP+FN) = of all real frauds, how many you caught (low → fraud slipping past). They trade off via the threshold — raise it and precision climbs while recall falls.</li><li><strong>F1 blends them but assumes they matter equally:</strong> F1 = 2PR/(P+R), the *harmonic* mean, which punishes lopsided scores (P=0.9, R=0.1 → F1=0.18, not 0.5). <strong>F-beta</strong> tilts by cost — $F_\beta = (1+\beta^2)PR/(\beta^2 P + R)$, where β&gt;1 favours recall, β&lt;1 favours precision.</li><li><strong>Write the cost matrix first — every metric choice follows from it:</strong> translate TP/FP/FN/TN into money or risk before picking a metric. Fraud: a missed fraud dwarfs a false alarm → lean recall. Spam: a lost real email destroys trust → lean precision. Skipping this step is how teams optimize the wrong number for months.</li><li><strong>Know the full vocabulary:</strong> recall = sensitivity = TPR; specificity = TNR = TN/(TN+FP); FPR (fallout) = 1 − specificity; FNR = 1 − recall. TPR and FPR are the ROC axes; quote specificity when correctly clearing negatives is what matters (a screening test you don't want firing on healthy people).</li><li><strong>Under imbalance prefer balanced accuracy or MCC over F1</strong> (F1 ignores true negatives; MCC uses all four cells, −1 to +1, and can't be faked by ignoring a class). Use <strong>precision@K / recall@K</strong> when action is capacity-limited (review top 500, show top 10). And <strong>tune the threshold on validation, freeze it, then report on test once</strong> — tuning it on test inflates the number exactly like tuning weights on test.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> A cancer screening model has precision=0.95 and recall=0.40. Is this a good model?</p>
+      <ul class="check-opts"><li>A) Yes — precision=0.95 means nearly all positive predictions are correct, which minimizes unnecessary follow-up tests</li><li>B) It depends — F1=0.57 is moderate and acceptable for screening if the patient population is low-risk</li><li>C) Yes — high precision is always more important than recall in medical settings to avoid false alarms</li><li class="correct">D) No — recall=0.40 means 60% of actual cancer cases are missed; for screening you need recall &gt; 0.90 and should lower the threshold accepting more FPs</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Two models: Model A has precision=0.80, recall=0.80 (F1=0.80). Model B has precision=0.99, recall=0.67 (F1=0.80). Same F1. How do you choose?</p>
+      <ul class="check-opts"><li>A) Always choose Model B — higher precision means fewer false positives which is universally better</li><li class="correct">B) The choice depends on cost(FP) vs cost(FN): Model B is better when FPs are costly, Model A is safer when FNs are costly — identical F1 can correspond to very different operating points on the precision-recall curve</li><li>C) Always choose Model A — balanced precision and recall is always preferable to an extreme operating point</li><li>D) The models are equivalent — identical F1 means identical performance and either can be deployed</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> You compute macro-F1=0.91 and micro-F1=0.78 on a 5-class classifier. What does this tell you?</p>
+      <ul class="check-opts"><li class="correct">A) The gap means small classes perform well (pulling macro up) while the majority class has significant errors (pulling micro down) — for production where majority-class errors are most frequent, micro-F1=0.78 is the number that matters</li><li>B) Macro-F1 is always higher than micro-F1 on imbalanced data, so the gap is expected and uninformative</li><li>C) The model is overfitting — high macro-F1 with low micro-F1 is a sign of variance, not bias</li><li>D) Micro-F1=0.78 means the model is poor and macro-F1=0.91 is misleading due to class weighting errors</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> A model predicts fraud with AUC=0.97 but the operations team says too many legitimate transactions are being blocked. What metric should you change and why?</p>
+      <ul class="check-opts"><li>A) Switch from AUC to F1 — F1 balances precision and recall and will directly capture the blocking problem</li><li>B) Switch to accuracy — AUC ignores the absolute number of errors which is what the operations team cares about</li><li class="correct">C) Switch to monitoring precision at a fixed recall target — AUC measures ranking quality across all thresholds and says nothing about where you operate; the operations team is experiencing a precision problem at the deployed threshold</li><li>D) Keep AUC but raise the threshold until FPs drop — the metric is fine, only the operating point needs adjustment</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> On a 2%-positive dataset, two summary metrics disagree: ROC-AUC is 0.94 (looks great) but PR-AUC is 0.31 (looks poor). Which do you trust and why?</p>
+      <ul class="check-opts"><li>A) Trust ROC-AUC — it is the standard metric and 0.94 means the model ranks positives above negatives well, so PR-AUC must be miscomputed.</li><li class="correct">B) Trust PR-AUC here. With only 2% positives, the enormous true-negative count keeps FPR tiny, so ROC-AUC stays high even while the model produces many false positives per true positive. PR-AUC ignores true negatives and exposes that, making it the more honest summary for rare positives.</li><li>C) Average the two into a single 0.63 score, since neither is reliable alone on imbalanced data and the mean cancels their biases.</li><li>D) Neither — on imbalanced data only raw accuracy is trustworthy, so discard both AUC metrics and report accuracy instead.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q6.</strong> You sweep the decision threshold, find the value that maximises F1 on your test set, and report that F1 as the model's performance. What is wrong?</p>
+      <ul class="check-opts"><li>A) Nothing — the threshold is a hyperparameter, and choosing it to maximise F1 on the test set is exactly how you should report best-case performance.</li><li>B) You should have maximised accuracy instead of F1; the threshold choice is fine but the metric is wrong.</li><li class="correct">C) The threshold is a tuned parameter, so choosing it on the test set makes the reported F1 optimistic — it won't hold in production. Tune the threshold on a validation set, freeze it, then report on the untouched test set once. It's the same leakage as tuning weights on test.</li><li>D) F1 can't be used with a swept threshold at all; only fixed-threshold metrics like accuracy are valid after threshold selection.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#eval_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

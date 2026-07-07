@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Training-Serving Skew | ML Systems Lab</title>
+  <meta name="description" content="Definition, causes, detection, remediation">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/training_serving_skew.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/training_serving_skew.html">
+  <meta property="og:title" content="Training-Serving Skew | ML Systems Lab">
+  <meta property="og:description" content="Definition, causes, detection, remediation">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Training-Serving Skew">
+  <meta name="twitter:description" content="Definition, causes, detection, remediation">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Training-Serving Skew",
+  "description": "Definition, causes, detection, remediation",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/training_serving_skew.html",
+  "keywords": "training-serving skew, production ML, feature drift"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#production_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">29 min read</span>
+      <span class="tag">training-serving skew</span><span class="tag">production ML</span><span class="tag">feature drift</span>
+    </div>
+    <h1>Training-Serving Skew</h1>
+    <p class="subtitle">Definition, causes, detection, remediation</p>
+
+    <p>Your fraud model scored beautifully in offline testing. In production it is 15% worse. The features look right. No exception is thrown. The pipeline reports success every hour. So what broke?</p>
+    <p>One feature broke: &quot;number of transactions in the last 7 days.&quot; At training time you computed it from a historical database — exact counts, every transaction, counted precisely. In production it comes from a real-time streaming service that counts *approximately* to stay fast (it uses a probabilistic sketch under the hood). The two numbers are close but not equal. For high-volume power users the gap is big enough to move the prediction — and those are exactly the users most likely to be committing fraud. The model learned from exact counts and is now judging approximate ones. That mismatch has a name: <strong>training-serving skew.</strong></p>
+    <hr>
+    <h3>Why this is so dangerous: it is completely silent</h3>
+    <p>No alarm sounds when the database says 47 and the stream says 43. Nothing crashes. The model just quietly gets a little worse. And this is not some rare, big-company problem — it appears the moment your training code and your serving code are two different pieces of code. A two-person team with a scikit-learn model and a Flask endpoint has exactly the same exposure as a giant org. What matters is not infrastructure size; it is whether the feature is computed by *the same logic* in both places — not similar logic, the same logic.</p>
+    <hr>
+    <h3>The five ways skew sneaks in</h3>
+    <p>*Different code:* training in Python, serving in Java — rounding and null-handling differ, and tiny differences compound. *Different freshness:* training reads a complete history offline; serving reads a real-time value that is slightly stale or approximate. *Schema drift:* serving quietly reorders columns while the model expects a fixed layout. *Preprocessing mismatch:* the scaler was fit on training data (mean 120, std 45) but serving refits it or loads defaults, so the numbers land in a totally different range. *Leakage:* a training feature used information that won't exist at serving time, inflating the offline score against data the model will never actually see.</p>
+    <hr>
+    <h3>The fix is structural, not a patch</h3>
+    <p>Build one feature-computation layer that both training and serving call — a feature store. The *same function* counts transactions whether you are assembling a training set or answering a live request, so four of the five root causes simply cannot occur. To catch anything left over, use log-and-replay: record the exact features every production request saw alongside its prediction, then re-score those logged features offline and compare to real production results. Any gap is skew, measured directly. The core idea: a model cannot fix bad inputs — the only durable defense is making the two codepaths *the same code.*</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Use it when you have separate training and serving codepaths for the same feature.</strong> The diagnostic question: if you ran the training pipeline and the serving pipeline on the same raw event at the same moment, would they produce the identical feature value? If the answer is anything other than &quot;yes, by construction,&quot; skew is accumulating. The specific failure to watch for is language differences: a Python Spark training job and a Java serving microservice implementing the &quot;same&quot; feature will diverge. Floating-point operations are not associative across languages. Null handling defaults differ. Timezone parsing behavior differs. These differences are individually tiny and collectively catastrophic.</li><li><strong>The most common production trap is preprocessing parameter mismatch.</strong> The StandardScaler is fit on training data — mean=120, std=45. Then one of three things goes wrong: (1) the serving code refits the scaler on production data instead of loading the saved parameters; (2) the scaler is saved correctly but deserialized incorrectly, silently using default parameters; (3) a new serving engineer reimplements the normalization from scratch. In all three cases, the model receives feature values in a completely different numerical range than it was trained on. The fix is architectural: serialize the fitted scaler inside the model artifact as a single sklearn Pipeline, not as a separate file. The scaler travels with the model weights and is loaded atomically. Any other approach relies on operational discipline that will eventually break.</li><li><strong>The diagnostic is log-and-replay.</strong> Instrument production to log every raw input feature value alongside every prediction. After 24 hours, run offline evaluation on the logged features and compare to actual production performance. The gap between them is skew, measured directly. Then compute PSI for each feature between the logged production distribution and the training distribution. Any feature with PSI &gt; 0.1 is a candidate. Sort by feature importance — a high-PSI feature that ranks 47th in importance is not your problem; a high-PSI feature that ranks 2nd is. This narrows the investigation from &quot;something is wrong&quot; to &quot;it is this specific feature, and here is why.&quot;</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Training-serving skew is an infrastructure problem, not a modeling problem. A model cannot compensate for receiving different feature values than it was trained on. Two separately maintained codepaths will always drift. The only reliable fix is a single shared computation function with serialized preprocessing parameters — anything else is relying on discipline that will eventually fail at the worst moment.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Training-serving skew = the model scores values it never learned from.</strong> Silent, no exception, no crash.</li><li><strong>Infrastructure problem, not modeling.</strong> Team size irrelevant — exposure appears the moment training code ≠ serving code.</li><li><strong>Five culprits:</strong> different code (Python vs Java), freshness, schema drift, preprocessing mismatch, leakage.</li><li><strong>Preprocessing trap:</strong> scaler fit at train (mean=120, std=45) refit/defaulted at serve → values land in wrong range.</li><li><strong>Fix is structural:</strong> one shared feature-computation path (feature store) + serialize scaler *inside* the model artifact as one `Pipeline`.</li><li><strong>Diagnostic = log-and-replay:</strong> log prod features + predictions, re-score offline, compare. Gap = skew, measured directly.</li><li><strong>Then PSI per feature vs training; PSI &gt; 0.1 sorted by importance</strong> — a high-PSI feature ranked 2nd is the problem, ranked 47th is noise.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Your model predicts churn well in offline evaluation but performs randomly in production. Feature distributions look similar at the aggregate level. What specific mechanisms do you investigate?</p>
+      <ul class="check-opts"><li class="correct">A) Label definition mismatch, feature encoding mismatches, high null rates on key features in production, and prediction horizon differences — aggregate similarity masks skew in tail values and encoding mismatches</li><li>B) The model's learning rate was too high, causing instability that only shows under production load</li><li>C) Production servers use a different hardware architecture, changing floating-point precision enough to shift predictions</li><li>D) The model is overfitting to the validation set, so aggregate feature similarity guarantees it will fail on new data</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> You find that a &quot;user_7d_purchase_count&quot; feature has PSI=0.35 between training and production. What is the investigation and remediation process?</p>
+      <ul class="check-opts"><li>A) PSI=0.35 is within normal range — only values above 1.0 require action, so no investigation is needed</li><li>B) Immediately retrain the model on production data to match the new distribution, then redeploy</li><li class="correct">C) Check aggregation window alignment, data source completeness, distribution bucket contributions, and feature staleness; once root cause is found, align code paths or fix data freshness, then recalibrate</li><li>D) Replace the feature with a 30-day window to smooth out the variance causing the PSI spike</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> A model is trained with a StandardScaler fit on training data. How do you ensure the scaler is applied correctly at serving, and what goes wrong if it is not?</p>
+      <ul class="check-opts"><li>A) Refit the scaler on incoming production batches weekly so it stays current — a stale scaler is the main risk</li><li class="correct">B) Serialize the fitted scaler alongside the model weights; at serving, load the same fitted scaler. Re-fitting or using a different scaler causes mean/std shifts that place feature values outside the range the model trained on</li><li>C) The scaler only matters during training; once the model learns the normalized weights, the scaler can be discarded at serving</li><li>D) StandardScaler parameters are invariant to dataset changes, so the serving scaler will produce the same output regardless of where it was fit</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> A model trained on historical data uses a &quot;days_since_last_login&quot; feature. At training time, this was computed relative to today's date. Explain the skew this creates and how to fix it.</p>
+      <ul class="check-opts"><li>A) The skew is negligible because the model learns to adjust for the time offset during training</li><li>B) The skew causes the feature to be systematically larger in production, but this can be corrected by subtracting the deployment date from serving values</li><li class="correct">C) Training anchors the feature to the pipeline run date, so at serving months later all active users appear to have much larger values than the model trained on; fix by computing relative to the observation event timestamp in both training and serving</li><li>D) Computing relative to today's date is correct practice — both training and serving use the same reference point, so there is no skew</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#production_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

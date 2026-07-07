@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monte Carlo Methods | ML Systems Lab</title>
+  <meta name="description" content="Sampling, importance sampling, MCMC, variance reduction">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/monte_carlo.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/monte_carlo.html">
+  <meta property="og:title" content="Monte Carlo Methods | ML Systems Lab">
+  <meta property="og:description" content="Sampling, importance sampling, MCMC, variance reduction">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Monte Carlo Methods">
+  <meta name="twitter:description" content="Sampling, importance sampling, MCMC, variance reduction">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Monte Carlo Methods",
+  "description": "Sampling, importance sampling, MCMC, variance reduction",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/monte_carlo.html",
+  "keywords": "Monte Carlo, sampling, MCMC, importance sampling"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#math_stats_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">26 min read</span>
+      <span class="tag">Monte Carlo</span><span class="tag">sampling</span><span class="tag">MCMC</span><span class="tag">importance sampling</span>
+    </div>
+    <h1>Monte Carlo Methods</h1>
+    <p class="subtitle">Sampling, importance sampling, MCMC, variance reduction</p>
+
+    <p>You need E[f(X)] where X follows some complex distribution and f(X) is the revenue of a pricing model under uncertain market conditions. You cannot compute the integral analytically. But you can do this: sample X₁, X₂, ..., X_n from the distribution, evaluate f(X_i) for each, and average. By the law of large numbers, the average converges to E[f(X)] as n → ∞. This is Monte Carlo integration — replace an intractable integral with a sample average.</p>
+    <p>Why it works: the law of large numbers guarantees convergence. The CLT tells you the error rate: the standard error of the Monte Carlo estimate is σ/√n where σ² = Var[f(X)]. To halve the error, quadruple the sample size. The convergence rate O(1/√n) is independent of the dimension of X — unlike grid integration, which requires N^d evaluations in d dimensions. This dimension-independence is the entire reason Monte Carlo is the only tractable option for high-dimensional integration.</p>
+    <p>MCMC (Markov Chain Monte Carlo): when you cannot sample directly from the target distribution but can evaluate the density up to a normalizing constant. Metropolis-Hastings: propose a move from x to x', accept with probability min(1, p(x')/p(x)). The chain's stationary distribution is p(x). The acceptance ratio cancels the intractable normalizing constant — you never need to compute it. MCMC is the standard tool for Bayesian posterior sampling.</p>
+    <p>Importance sampling: use a proposal distribution q(x) instead of sampling from p. Reweight each sample by p(x)/q(x). The estimator is unbiased. But if q has lighter tails than p, a small number of samples get enormous weights and dominate the estimate — the effective sample size collapses. Always diagnose importance sampling with the effective sample size: ESS = (Σ w_i)² / Σ w_i². If ESS/n &lt; 0.1, the proposal is misspecified.</p>
+    <p><strong>NOT this.</strong> Monte Carlo is not only for simulations. Monte Carlo is the default tool for Bayesian posterior inference (MCMC samples from the posterior), for dropout uncertainty estimation (run the model k times with dropout active and average the predictions), for model evaluation confidence intervals (bootstrap resampling is Monte Carlo over the empirical distribution), and for reinforcement learning policy gradient estimation (sample trajectories to estimate E[reward]). Anywhere you see an expectation you cannot compute analytically, Monte Carlo is the practical solution.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Use bootstrap resampling — sampling with replacement from your dataset, repeated 1000 times — for confidence intervals on any statistic.</strong> Bootstrap requires no distributional assumption and works for complex statistics like AUC, NDCG, and precision@K where there is no analytical confidence interval formula. It is the universal fallback when you cannot derive a standard error.</li><li><strong>Trap: importance weights that blow up.</strong> If your proposal q(x) has lighter tails than the target p(x), some samples get enormous weights, the variance of the estimator blows up, and the effective sample size is tiny. Always compute ESS = (Σ w_i)² / Σ w_i² after importance sampling. If ESS/n &lt; 0.1, your proposal is misspecified — use a heavier-tailed proposal or switch to MCMC.</li><li><strong>Diagnostic: for MCMC, check mixing with trace plots and R-hat statistics.</strong> Trace plots of sampled values over iterations should look like white noise — rapid fluctuations around a stable level. Slow drift or long autocorrelation indicates the chain is not mixing well. R-hat &lt; 1.1 across multiple chains initialized from different starting points indicates convergence to the same stationary distribution.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Monte Carlo error scales as O(1/√n) regardless of dimension. That dimension-independence is the entire reason Monte Carlo dominates variational inference, policy gradients, and any high-dimensional expectation. Variance of the integrand — not dimension — determines how many samples you need.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Monte Carlo = replace an intractable integral with a sample average:</strong> sample Xᵢ, average f(Xᵢ) → E[f(X)].</li><li><strong>Error = σ/√n, O(1/√n) and dimension-independent</strong> — halve error → quadruple samples. Why it beats grid integration (Nᵈ).</li><li><strong>MCMC (Metropolis-Hastings):</strong> accept x→x' with min(1, p(x')/p(x)); the ratio cancels the normalising constant.</li><li><strong>Importance sampling reweights by p(x)/q(x)</strong> — unbiased, but light-tailed q → a few huge weights dominate.</li><li><strong>Diagnose IS with ESS = (Σwᵢ)²/Σwᵢ²;</strong> ESS/n &lt; 0.1 means the proposal is misspecified.</li><li><strong>MCMC mixing:</strong> trace plots like white noise, R-hat &lt; 1.1 across chains from different starts.</li><li><strong>MC is everywhere:</strong> Bayesian posteriors, dropout uncertainty, bootstrap CIs, RL policy gradients — any expectation you can't solve.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Estimate ∫₀¹ √x dx using Monte Carlo with n=1000 samples. Describe the algorithm and the expected error.</p>
+      <ul class="check-opts"><li>A) Algorithm: (1) Sample xᵢ ~ Uniform(0,1) for i=1,...,1000. (2) Estimate Î = (1/1000)Σᵢ√xᵢ. True value: ∫₀¹ √x dx = 2/3 ≈ 0.667. Error: SE = σ/√n. But σ² = Var(√U) = E[U] − (E[√U])² = 1/2 − 4/9 = 1/18, so SE ≈ 0.236/√1000 ≈ 0.0075. However, this is the standard Monte Carlo estimator; the hit-or-miss estimator (uniform sampling in [0,1]×[0,1] and checking if y ≤ √x) has worse efficiency: SE ≈ 0.015.</li><li>B) Algorithm: (1) Draw n=1000 points (xᵢ,yᵢ) ~ Uniform([0,1]²). (2) Count hits where yᵢ ≤ √xᵢ. (3) Estimate Î = hits/n. True value = 2/3. This hit-or-miss approach is equivalent to the expectation estimator but uses more samples for the same accuracy. SE ≈ √(p(1−p)/n) ≈ √(0.667·0.333/1000) ≈ 0.015 — about twice the error of the direct expectation estimator.</li><li>C) Algorithm: (1) Evaluate √xᵢ at n=1000 equally spaced xᵢ = i/1000. (2) Estimate Î = (1/1000)Σᵢ√(i/1000). This is a Riemann sum, not Monte Carlo. Error is O(1/n) rather than O(1/√n) — deterministic quadrature is more accurate than Monte Carlo in 1D. Monte Carlo's advantage (dimension-independence) only emerges in high dimensions d ≥ 3.</li><li class="correct">D) Algorithm: (1) Draw Uᵢ ~ Uniform(0,1) for i=1,...,1000. (2) Compute estimate Î = (1/1000)Σᵢ√Uᵢ. This works because ∫₀¹ √x dx = E[√U] for U~Uniform(0,1), and by LLN, the sample mean Î → E[√U] as n→∞. True value: ∫₀¹ x^{1/2}dx = [2x^{3/2}/3]₀¹ = 2/3 ≈ 0.667. Expected error: standard error ≈ σ/√n where σ² = Var(√U) = E[U] − (E[√U])² = 1/2 − 4/9 = 1/18. So σ ≈ 0.236, and SE ≈ 0.236/√1000 ≈ 0.0075. The estimate will be within ±0.015 (2 SE) with 95% probability. Monte Carlo error scales as O(1/√n) regardless of dimension — this dimension-independence is the key advantage over quadrature methods whose error scales as O(n^{-k/d}) in d dimensions.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> What is importance sampling, and when is standard Monte Carlo estimation inefficient?</p>
+      <ul class="check-opts"><li>A) Importance sampling is a variance reduction technique that evaluates f(x) at strategically chosen points rather than random points. Instead of sampling xᵢ ~ p, you choose evaluation points at the quantiles of p, giving a deterministic quadrature rule that achieves O(1/n) convergence rather than Monte Carlo's O(1/√n). The 'importance' weights w(x) = 1/p(x) correct for the uneven spacing of quantile points.</li><li class="correct">B) Standard MC estimates E_p[f(x)] = (1/n)Σf(xᵢ) where xᵢ~p. This is inefficient when: (1) f(x) is nonzero only in a rare region that p rarely samples (e.g., P(catastrophic failure) where p=typical system operation); (2) p is hard to sample from but we can evaluate it. Importance sampling: introduce a proposal q from which we can sample easily. E_p[f(x)] = ∫f(x)p(x)dx = ∫f(x)(p(x)/q(x))q(x)dx = E_q[f(x)·p(x)/q(x)]. Estimate: Î = (1/n)Σᵢf(xᵢ)·p(xᵢ)/q(xᵢ) where xᵢ~q. The weight w(x)=p(x)/q(x) upweights rare-under-q regions. Optimal q: q*(x) ∝ |f(x)|·p(x) — concentrates samples where the integrand is large. IS can dramatically reduce variance if q is well-chosen but can diverge (infinite variance) if q has lighter tails than p·f — a critical failure mode when q underestimates the tails of p.</li><li>C) Importance sampling is equivalent to stratified sampling: partition the sample space into strata, sample from each stratum with probability proportional to the stratum's importance weight. Standard MC is inefficient when the integrand is multimodal — each mode requires a separate sample stratum. The importance weights w(x) = p(x)/q(x) must sum to n for the estimator to be unbiased.</li><li>D) Standard MC is always efficient when n is large enough. Importance sampling is a bias-correction technique for cases where the sampler introduces systematic bias — for example, when using MCMC with a non-stationary proposal or when sampling from a truncated distribution. The weights p(x)/q(x) correct for the bias by reweighting samples from q to match the target p.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> MCMC sampling converges to the target distribution. What does 'convergence' mean technically, and what is the burn-in period?</p>
+      <ul class="check-opts"><li>A) Convergence means the chain's acceptance rate approaches a constant — the Metropolis-Hastings acceptance probability stabilises as the chain explores the target. The burn-in period is the initial phase before the acceptance rate stabilises, during which chain positions are discarded. After burn-in, the acceptance rate and sample distribution are both at their asymptotic values.</li><li>B) Convergence means the chain's acceptance rate stabilises at the target value (typically 23–44% for well-tuned Metropolis-Hastings). Burn-in is the initial phase before the acceptance rate reaches this target, during which the proposal distribution is being automatically tuned (adaptive MCMC). After burn-in, samples are from the target and the proposal is fixed. R̂ measures acceptance rate stability across chains, not posterior convergence.</li><li class="correct">C) An MCMC chain constructs a Markov chain θ₁, θ₂, ... with transition kernel K(θ'|θ) designed so that the stationary distribution is P(θ|data). Under ergodicity conditions (irreducibility + aperiodicity), the marginal distribution of θ_t converges to P(θ|data) as t→∞: ||P(θ_t ∈ ·) − P(·|data)||_TV → 0. 'Convergence' means this total variation distance goes to zero. Burn-in is the initial phase where θ_t has not yet converged — the chain is in a transient state influenced by the (arbitrary) initialisation θ_0. Samples during burn-in are not from the target distribution and are discarded. How long to burn in: run multiple chains from different initialisations; monitor R̂ (Gelman-Rubin diagnostic) — values near 1.0 indicate convergence across chains. After burn-in, consecutive samples are correlated (unlike i.i.d. Monte Carlo), so effective sample size &lt; number of samples; thin by taking every k-th sample to reduce correlation.</li><li>D) Convergence means the log-likelihood of chain samples stabilises — the chain is no longer moving to higher-probability regions. The burn-in period ends when the log-probability trace plot plateaus. After burn-in, the Markov chain behaves like an i.i.d. sampler because the stationarity condition ensures all samples are equally likely under P(θ|data).</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#math_stats_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

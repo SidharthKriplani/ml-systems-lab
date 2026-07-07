@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generalisation Theory | ML Systems Lab</title>
+  <meta name="description" content="Bias-variance, VC dimension, PAC learning, double descent">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/generalization.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/generalization.html">
+  <meta property="og:title" content="Generalisation Theory | ML Systems Lab">
+  <meta property="og:description" content="Bias-variance, VC dimension, PAC learning, double descent">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Generalisation Theory">
+  <meta name="twitter:description" content="Bias-variance, VC dimension, PAC learning, double descent">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Generalisation Theory",
+  "description": "Bias-variance, VC dimension, PAC learning, double descent",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/generalization.html",
+  "keywords": "bias-variance, VC dimension, overfitting, double descent"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#classical_ml_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">32 min read</span>
+      <span class="tag">bias-variance</span><span class="tag">VC dimension</span><span class="tag">overfitting</span><span class="tag">double descent</span>
+    </div>
+    <h1>Generalisation Theory</h1>
+    <p class="subtitle">Bias-variance, VC dimension, PAC learning, double descent</p>
+
+    <p>Imagine throwing darts at a board, over and over. There are two very different ways to be bad at it. You could throw tightly grouped darts that all land in the same wrong corner — consistent, but consistently off. Or you could throw darts scattered wildly all over — sometimes near the bullseye, sometimes nowhere near, no two alike. The first kind of error is <strong>bias</strong>: a steady, systematic miss in the same direction. The second is <strong>variance</strong>: a wild sensitivity that makes every throw different. Almost every model that fails, fails in one of these two ways — and knowing which one is the difference between fixing it and flailing.</p>
+    <p>Here is the setup that makes it real. You train a model on house prices. Training error: 2%. Test error: 20%. In production it is useless, and nothing in the training loop warned you — it was doing its job perfectly. That 18-point gap is the real problem, and to fix it you have to know *why* it is there.</p>
+    <hr>
+    <h3>Splitting the error into three pieces</h3>
+    <p>The test error of any model breaks into three parts.</p>
+    <p>The first is <strong>noise</strong> — the random, unpredictable wobble in house prices that no model could ever capture (a seller in a hurry, a surprise bidding war). This is a floor; you cannot beat it.</p>
+    <p>The second is <strong>bias</strong> — the model's steady tendency to miss in the same direction, because its assumptions are too simple. A straight line fit to a curvy truth will always cut the same corners. High bias means the model is too rigid to capture the real shape. That is <strong>underfitting</strong>.</p>
+    <p>The third is <strong>variance</strong> — how much the model's predictions jump around when you retrain it on a slightly different sample of houses. A deep, flexible model can bend to fit the training set exactly, but swap out ten houses and it draws a completely different curve. High variance means the model is chasing noise. That is <strong>overfitting</strong>.</p>
+    <hr>
+    <h3>The tug-of-war</h3>
+    <p>Here is the catch that makes this hard: the cure for one makes the other worse. Add flexibility to reduce bias (a deeper tree, more features) and you raise variance — the model now has enough freedom to chase noise. Add regularisation to tame variance and you raise bias — the model is now too constrained to fit the real shape. This is the <strong>bias-variance tradeoff</strong>, and every knob you turn — model size, regularisation strength, tree depth — is a position on it. The whole game is finding where the total is smallest.</p>
+    <p>That is also why the two failures need opposite fixes, and why guessing wrong wastes weeks. Training error high *and* test error high (say 15% and 18%)? That is <strong>high bias</strong> — the model cannot even fit the data it trained on, so give it more power (more features, a more flexible model, less regularisation); more data will not help. Training error low but test error much higher (2% and 20%)? That is <strong>high variance</strong> — the model memorised the training set, so rein it in (more regularisation, a simpler model, or the most reliable fix, more training data).</p>
+    <hr>
+    <h3>How much power is too much? (going deeper)</h3>
+    <p>There is a classical way to measure a model's raw capacity to overfit, called the <strong>VC dimension</strong>. In plain terms it is the largest number of points the model can label *any way you like* and still fit perfectly. A straight line in a plane can do this for any 3 points but not 4 — so its capacity is small. Pile on features and the capacity climbs, and the rule of thumb is stark: the more capacity you add, the more data you need just to keep the same gap between training and test. Double the features and you roughly double the data you need to stay level. That is the formal price of flexibility.</p>
+    <p>And there is a modern twist that broke the old picture. The classic story says test error follows a U as you add capacity — too little underfits, too much overfits, one sweet spot in the middle. That U is real, but it is not the whole story. Keep pushing capacity *far* past the point where the model can memorise the training data — into the giant, over-parameterised models behind today's deep learning — and test error, surprisingly, often starts falling *again*. This is <strong>double descent</strong>. Roughly: when a model has far more capacity than it needs, gradient descent tends to settle on the *smoothest* fit among the many that work, and smooth fits generalise well.</p>
+    <hr>
+    <h3>The one belief to drop</h3>
+    <p>&quot;More data always helps.&quot; Not true — and knowing when it does not saves you months. More data reliably cuts *variance*: if the model is overfitting, more examples pin it down. But more data does almost nothing for *bias*. A straight line fit to a curve will miss that curve by about the same amount whether you feed it 100 houses or 100,000 — it will just be more confident about the wrong shape. More data fixes a model that is too twitchy. It cannot fix a model that is simply the wrong shape. For that, you fix the model.</p>
+    <hr>
+    <h3>Three sets, three jobs: train / validation / test</h3>
+    <p>None of this measurement works without disciplined splits. <strong>Training</strong> data fits the weights. <strong>Validation</strong> data tunes the knobs — lambda, tree depth, which model — and you can look at it as often as you like. <strong>Test</strong> data is touched *once*, at the very end, to get an honest final number. The cardinal sin is letting the test set influence any decision; peek at it while tuning and it stops being an honest estimate — you've overfit to it just as surely as to the training set. Watch too for <strong>leakage</strong>: any preprocessing (scaling, imputation, feature selection) must be fit on training folds only, or information about the test set sneaks into training and your numbers turn rosy and false. When data is scarce and a single split is too noisy, use <strong>k-fold cross-validation</strong> — rotate which fold is held out and average — to get a stable estimate.</p>
+    <hr>
+    <h3>The decomposition, written down</h3>
+    <p>The three-part split has an exact form. For squared-error regression, the expected test error at a point is:</p>
+    <p>$E[(y - \hat{f})^2] = \sigma^2 + \text{Bias}^2 + \text{Variance}$</p>
+    <p>— irreducible <strong>noise</strong> ($\sigma^2$), the squared <strong>bias</strong> (how far the average model is from the truth), and the <strong>variance</strong> (how much the model wiggles across training samples). You can't touch the noise; every knob you turn trades the other two. That's the tradeoff made precise.</p>
+    <hr>
+    <h3>VC dimension, precisely: shattering</h3>
+    <p>We said VC dimension is &quot;the most points you can label any way and still fit.&quot; The exact word is <strong>shatter</strong>: a model *shatters* a set of points if, for *every* possible labeling of them, it can fit them perfectly. The VC dimension is the size of the largest set it can shatter — a line in 2D shatters any 3 points but no set of 4, so its VC dimension is 3. Two cautions interviewers probe. First, VC dimension is *capacity*, and it is <strong>not</strong> the same as parameter count — some models with few parameters have huge capacity and vice versa. Second, the VC generalization bound (gap ∝ √(VC/n)) is *conceptually* central but *numerically loose* — it's a useful way to think, not a number you'd quote to predict real test error.</p>
+    <hr>
+    <h3>PAC learning: what the letters actually mean</h3>
+    <p>The module title says PAC, so here's the real content. <strong>PAC</strong> = <strong>Probably Approximately Correct.</strong> &quot;Approximately&quot; is an accuracy tolerance <strong>ε</strong> — the model's error is within ε of the best possible. &quot;Probably&quot; is a confidence <strong>δ</strong> — it hits that accuracy with probability at least 1−δ. Why both, and why probabilistic? Because you learn from a *random* sample: with bad luck you could draw a misleading sample, so you can never promise correctness with certainty — only &quot;approximately correct, probably.&quot; PAC theory then gives <strong>sample complexity</strong>: how many examples you need to guarantee (ε, δ) for a given <strong>hypothesis class</strong> (the set of models you're choosing from). Bigger, more expressive hypothesis classes need more samples — the formal echo of &quot;more capacity needs more data.&quot;</p>
+    <hr>
+    <h3>Capacity isn't just parameter count</h3>
+    <p>This is why &quot;count the parameters&quot; is too crude. What matters is *effective* capacity, and regularisation shrinks it without deleting parameters. L2/weight decay, dropout, early stopping, and data augmentation all reduce how much arbitrary structure the model can actually express, even though the parameter count is unchanged. A giant network trained with heavy augmentation and early stopping can have far less effective capacity than its raw size suggests — which is part of why over-parameterised models don't overfit the way naive capacity counting predicts.</p>
+    <hr>
+    <h3>Double descent — with the caveats</h3>
+    <p>Double descent (test error falling again far past the interpolation point) is real, but it's *not* a license to blindly enlarge models. Whether it shows up depends on the optimiser and its implicit regularisation, the data quality and noise level, and the architecture. In many practical, noisy, well-tuned settings you never see a second descent, or the gains are marginal versus the compute. Treat it as &quot;huge models can generalise better than the classic U-curve warns,&quot; not &quot;bigger is always better.&quot;</p>
+    <hr>
+    <h3>The assumption hiding under all of it: same distribution</h3>
+    <p>Every guarantee here — bias-variance, VC bounds, PAC, even the honest test set — quietly assumes train and deployment data come from the *same* distribution. Production breaks that constantly, which is why a model can look great in validation and fail live. <strong>Covariate shift</strong>: the inputs P(X) drift (new user demographics) while the true relationship holds. <strong>Concept drift</strong>: the relationship P(Y|X) itself changes (fraud tactics evolve). <strong>Train-serving skew</strong>: a feature is computed differently in training than in serving. When validation looked good but production didn't, this family — not bias or variance — is usually the culprit.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Use the bias-variance lens to read a train/test gap — and measure training error, not just test error.</strong>
+
+Both training and test error high and close together? That is high bias — the model is too simple, so give it more power (more features, a more flexible model, less regularisation). Training error low but test error much higher? That is high variance — the model memorised noise, so rein it in (more regularisation, a simpler model, or more data). The one move that tells you which you are facing is looking at training error. Diagnose first, because the two fixes are opposite and applying the wrong one makes things worse.</li><li><strong>The trap: reaching for &quot;more data&quot; as a cure-all.</strong>
+
+More data is the most reliable fix for high variance — it pins down a model that is overfitting. But it does almost nothing for bias. A model that is simply the wrong shape (a straight line on curved data, or missing a key feature) keeps making the same systematic miss no matter how many examples you feed it — just with more false confidence. Before you spend months collecting data, fit a more flexible model on what you already have; if its test error is also high, you have a feature or data-quality problem, not a sample-size one.</li><li><strong>The diagnostic: plot a learning curve — training and validation error as the dataset grows.</strong>
+
+If both curves sit high and hug each other, you are underfitting (high bias), and more data barely moves them — add capacity. If training error is low but validation stays well above it and the gap refuses to close, you are overfitting (high variance) — regularise, simplify, or gather more data, which slowly pulls the curves together. If they meet but at a stubbornly high error, you have hit the noise floor or a genuinely wrong model.</li><li><strong>Guard the three-way split and know the decomposition it measures.</strong>
+
+Train fits weights, validation tunes knobs (look freely), test is touched once for an honest final number — peek at test while tuning and it's no longer honest. Fit all preprocessing on training folds only to avoid leakage, and use k-fold CV when data is scarce. What you're estimating has an exact form: $E[(y-\hat f)^2] = \sigma^2 + \text{Bias}^2 + \text{Variance}$ — irreducible noise plus squared bias plus variance, and every knob trades the last two.</li><li><strong>State VC and PAC precisely — capacity is not parameter count.</strong>
+
+A model *shatters* points if it can fit every possible labeling of them; VC dimension is the largest set it can shatter (a 2D line: 3). The VC bound (gap ∝ √(VC/n)) is conceptually central but numerically loose. PAC = Probably (confidence 1−δ) Approximately (error within ε) Correct — probabilistic because you learn from a random sample — and its sample complexity says bigger hypothesis classes need more data. Crucially, effective capacity is shrunk by L2, dropout, early stopping, and augmentation without changing the parameter count, which is why over-parameterised models needn't overfit.</li><li><strong>Double descent has caveats, and every guarantee assumes a fixed distribution.</strong>
+
+Test error falling again past the interpolation point is real but depends on the optimiser's implicit regularisation, noise level, and architecture — it's &quot;huge models can beat the U-curve,&quot; not &quot;bigger is always better.&quot; And all of this — bias-variance, VC, PAC, the honest test set — assumes train and serving data share a distribution. When validation looked fine but production failed, suspect covariate shift (P(X) moves), concept drift (P(Y|X) moves), or train-serving skew, not bias or variance.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Test error splits into three parts: noise you cannot beat, bias (the model is too simple — underfitting), and variance (the model is too twitchy — overfitting). The two failures need opposite fixes, so measure training error to tell them apart. And remember: more data cures variance, not bias — a wrong-shaped model stays wrong no matter how much you feed it.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Test error = noise (irreducible) + bias² + variance.</strong></li><li><strong>Bias</strong> = model too simple (underfitting); <strong>variance</strong> = model too twitchy (overfitting). Opposite fixes.</li><li><strong>Measure training error to tell them apart</strong> — high train error = bias, low train + high test = variance.</li><li><strong>More data cures variance, not bias.</strong> A wrong-shaped model stays wrong.</li><li><strong>Learning curve</strong> (train + validation error vs dataset size) is the diagnostic.</li><li><strong>Capacity ≠ parameter count</strong> — VC dimension is the real measure; every PAC guarantee assumes a fixed distribution.</li><li><strong>Double descent</strong> breaks the classic U-curve, but with caveats.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> A model gets 99% on the training data but 75% on test. What does that say about bias and variance, and what do you do?</p>
+      <ul class="check-opts"><li>`A) High bias and high variance at once — the model is underfitting and overfitting together, which means the whole model family is wrong, so throw it out and switch families rather than tuning anything.`</li><li>`B) Low bias but high variance — it fits training beautifully yet does not generalise, so it memorised noise. Rein it in: more data (the most direct fix), stronger regularisation, or a simpler model. Adding capacity would only make it worse.`</li><li>`C) This is perfectly healthy — a gap between training and test is normal and expected, and 75% is fine; closing it any further would only add bias and hurt the model on real data.`</li><li>`D) High bias — the model is too simple, which is exactly why the test accuracy is low, so the fix is to add capacity (a deeper model, more features) until the test number climbs up to match.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> A neural net does worse at 1,000 parameters than at 100, but better at 1,000,000 than at 100. How can piling on parameters help after it first hurt?</p>
+      <ul class="check-opts"><li>`A) At 1,000 it has just barely enough capacity to memorise the data, landing on a jagged high-variance fit. At 1,000,000 it has far more than it needs, and gradient descent tends to pick the smoothest fit among the many that work — and smooth fits generalise. That second improvement is double descent, past the classic U-curve.`</li><li>`B) The 1,000,000-parameter model quietly deletes its unused parameters during training, collapsing back into a small 100-parameter model, which is why it ends up generalising exactly like the small one did.`</li><li>`C) More parameters always lower test error as long as the learning rate is small enough; the dip at 1,000 was just an unlucky random seed, and re-running the whole thing would smooth it away entirely.`</li><li>`D) The huge model quietly memorises the test set through its shared weights, so its low test error is really a form of leakage rather than any genuine improvement in how it generalises.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> You add 400 new features to a linear model. Training accuracy rises but test accuracy drops. What happened, in terms of capacity?</p>
+      <ul class="check-opts"><li>`A) Extra features never change a linear model's capacity — only the number of training points does — so the drop is a numerical glitch from the bigger matrix; regularise to stabilise it and the test accuracy comes right back.`</li><li>`B) The 400 new features are simply all noise; delete any feature with low correlation to the target and test accuracy returns on its own, with no regularisation or extra data needed.`</li><li>`C) More features means more capacity to fit arbitrary patterns, including noise. With the same amount of data, the higher-capacity model overfits and the train/test gap widens. Fixes: regularise harder, cut features down to the ones carrying real signal, or gather more data in proportion to the added capacity.`</li><li>`D) Adding features shrinks capacity, because each feature now explains a smaller share of the target, so the real problem is too little capacity — add even more features until the test accuracy recovers.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> Your model looks great in cross-validation but fails in production, and the failure isn't explained by bias or variance. What is the most likely cause?</p>
+      <ul class="check-opts"><li>`A) The model simply has high variance that cross-validation somehow missed; retraining on the same data with more folds will surface and fix it.`</li><li>`B) Distribution shift between training and production — covariate shift (the input distribution P(X) moved), concept drift (the relationship P(Y|X) changed), or train-serving skew (a feature computed differently at serving time). Every generalisation guarantee assumes train and serving share a distribution, and production routinely breaks that.`</li><li>`C) The test set was too small, so the production drop is just sampling noise and will disappear once more production data accumulates.`</li><li>`D) Cross-validation always overestimates production performance by a fixed margin, so the gap is expected and needs no investigation.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> An interviewer asks you to define PAC learning and why it is &quot;probably&quot; and &quot;approximately&quot; rather than a hard guarantee.</p>
+      <ul class="check-opts"><li>`A) PAC means the model is Perfectly And Completely correct once it has seen enough data; the words &quot;probably&quot; and &quot;approximately&quot; refer only to the early phase before convergence.`</li><li>`B) PAC stands for Probably Approximately Correct: &quot;approximately&quot; is an accuracy tolerance ε (error within ε of the best possible), and &quot;probably&quot; is a confidence 1−δ. It cannot be a hard guarantee because you learn from a random sample — an unlucky draw could mislead any learner — so the best you can promise is approximately correct, with high probability. Sample complexity then says larger hypothesis classes need more data.`</li><li>`C) PAC learning is a specific algorithm (like SVM or k-NN) that trains models with probabilistic weights, and its accuracy is approximate because those weights are randomised at inference.`</li><li>`D) PAC guarantees exact correctness with probability 1, and the ε and δ terms are just tuning constants that control the learning rate during training.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q6.</strong> You reduce a big network's overfitting using dropout and early stopping without removing any parameters. In capacity terms, what changed?</p>
+      <ul class="check-opts"><li>`A) Nothing changed — capacity is fixed by the parameter count, so dropout and early stopping only speed up training without affecting how much the model can overfit.`</li><li>`B) The parameter count is unchanged but the model's effective capacity dropped: dropout, early stopping, L2, and data augmentation all shrink how much arbitrary structure the model can actually express, which is why capacity is not the same as parameter count.`</li><li>`C) Dropout increased capacity by adding randomness, and it only appeared to help because the test set happened to match that noise.`</li><li>`D) Early stopping physically deletes the parameters that had not yet been trained, so the parameter count really did fall even though the architecture looks the same.`</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#classical_ml_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

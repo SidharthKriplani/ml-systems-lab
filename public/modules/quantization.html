@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quantisation &amp; Model Efficiency | ML Systems Lab</title>
+  <meta name="description" content="INT8 vs FP16, quantisation-aware training vs PTQ, calibration, accuracy tradeoff">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/quantization.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/quantization.html">
+  <meta property="og:title" content="Quantisation &amp; Model Efficiency | ML Systems Lab">
+  <meta property="og:description" content="INT8 vs FP16, quantisation-aware training vs PTQ, calibration, accuracy tradeoff">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Quantisation &amp; Model Efficiency">
+  <meta name="twitter:description" content="INT8 vs FP16, quantisation-aware training vs PTQ, calibration, accuracy tradeoff">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Quantisation & Model Efficiency",
+  "description": "INT8 vs FP16, quantisation-aware training vs PTQ, calibration, accuracy tradeoff",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/quantization.html",
+  "keywords": "quantisation, INT8, model compression, efficiency"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#dl_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">29 min read</span>
+      <span class="tag">quantisation</span><span class="tag">INT8</span><span class="tag">model compression</span><span class="tag">efficiency</span>
+    </div>
+    <h1>Quantisation &amp; Model Efficiency</h1>
+    <p class="subtitle">INT8 vs FP16, quantisation-aware training vs PTQ, calibration, accuracy tradeoff</p>
+
+    <p>A trained model stores every weight as a float32 number — 4 bytes each. GPT-2's 117 million weights take 468 MB just sitting there. On a phone, that is often too big to load and too slow to run. The obvious question: do we really need 4 bytes of precision per weight, or can we get away with less?</p>
+    <p>We can get away with a lot less. Store each weight as an 8-bit integer instead — 1 byte — and the file shrinks 4× to 117 MB. Better still, most CPUs have special hardware for 8-bit integer math (the same circuitry that makes video and audio codecs fast), so the model also runs <strong>2–4× faster.</strong> For a phone, that is often the difference between &quot;can't run this&quot; and &quot;runs smoothly.&quot;</p>
+    <hr>
+    <h3>How do you turn a float into an 8-bit integer?</h3>
+    <p>An 8-bit integer can only be one of 256 values. So you take the actual range of the weights — say [−0.5, 0.5] — and chop it into 256 evenly spaced buckets. Each weight is rounded to its nearest bucket: `x_int = round(x_float / scale)`, where `scale = (max − min) / 255`. Two nearby floats that land in the same bucket become the same integer. That rounding is the price you pay — a small error per weight.</p>
+    <p>The catch is *outliers.* If 99.9% of weights sit in [−0.5, 0.5] but one weight is 5.0, the range must stretch to cover it — and now your 256 buckets are spread across a huge span, wasting almost all of them and leaving the common weights with almost no precision. Handling outliers well is the whole game in quantization.</p>
+    <hr>
+    <h3>The key move: calibrate on real data</h3>
+    <p>Weights are fixed after training, so their range is known exactly. But *activations* — the numbers flowing between layers — change with every input, and you can't know their range in advance. So you *calibrate*: run 100–1000 real, representative inputs through the model, watch the actual activation ranges at each layer, and set the scale factors from what you see. This is <strong>post-training quantization (PTQ)</strong> — no retraining, done in minutes. With good calibration, INT8 typically loses <strong>under 1% accuracy.</strong> Skip calibration — guess the ranges instead of measuring them — and accuracy collapses silently, with no error in the logs. That silent failure is the single most common quantization mistake.</p>
+    <hr>
+    <h3>When PTQ isn't enough</h3>
+    <p>Push down to 4-bit and PTQ starts dropping 2–5% accuracy — too many weights crammed into too few buckets. Two fixes. Smarter PTQ (GPTQ, AWQ) protects the weights that matter most and nudges the rest to compensate for rounding, reaching 4-bit at under 1% loss. Or <strong>quantization-aware training (QAT):</strong> simulate the rounding *during* training so the model learns to place its weights where they round cleanly. QAT recovers the most accuracy but costs a full retraining run — so you reach for it only when 4-bit-and-below quality is critical.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Apply INT8 PTQ to every model before production deployment — it is 2–4× faster on CPU, 4× smaller in memory, and nearly free accuracy-wise with proper calibration. ONNX Runtime or TensorRT handles this in a few lines.</strong>
+
+The two-line version in ONNX Runtime: `quantize_dynamic(model_path, output_path, weight_type=QuantType.QInt8)`. The full version with static calibration: provide a calibration dataset and use `quantize_static`. The static version consistently outperforms dynamic quantization by 0.3–0.8% accuracy because it calibrates activation ranges, not just weight ranges.</li><li><strong>Trap: quantizing without a calibration set causes severe accuracy loss — the scale factors are wrong. Always run calibration on 100–1000 representative examples from your deployment distribution, not random noise.</strong>
+
+The scale factor must cover the actual activation value range at inference. If calibration is done on random inputs (or skipped), the scale factors are computed from a distribution that does not match deployment. Activations get clipped to the scale range, producing large quantization errors that look like random noise in predictions. The model will have low average accuracy with no error or warning in the serving logs.</li><li><strong>Diagnostic: per-layer quantization error — if one layer shows much higher reconstruction error than others, that layer has outlier activations. Apply mixed-precision (keep that layer in fp16) before resorting to QAT.</strong>
+
+Quantization frameworks expose per-layer error metrics. A single layer whose int8 reconstruction differs from float32 by more than 2% of the output range is an outlier layer. Mixed-precision keeps that one layer in fp16 while quantizing everything else to int8, recovering most of the accuracy at a small memory cost. This is almost always cheaper than running a full QAT retraining run.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Quantization is a calibration problem: the scale factors that map float ranges to integers are only valid for the distribution they were calibrated on — skip calibration or shift the production distribution and the accuracy drop will be silent, with no error and no obvious cause.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>FP32 = 4 bytes/weight:</strong> GPT-2's 117M weights = 468MB, often too big/slow for a phone.</li><li><strong>INT8 = 1 byte:</strong> 4× smaller *and* 2–4× faster (CPUs have integer-math hardware).</li><li><strong>Float → int:</strong> `x_int = round(x_float / scale)`, `scale = (max − min) / 255` — 256 buckets, rounding is the cost.</li><li><strong>Outliers are the whole game:</strong> one weight at 5.0 stretches the range, wasting buckets and starving the common weights of precision.</li><li><strong>Calibrate on real data:</strong> activation ranges are input-dependent, so run 100–1000 representative inputs to set scale factors. This is PTQ — no retraining, minutes, typically &lt;1% loss.</li><li><strong>Skip calibration → silent accuracy collapse:</strong> no error in the logs. The single most common quantization mistake.</li><li><strong>Below INT8:</strong> GPTQ/AWQ reach 4-bit at &lt;1% loss; QAT simulates rounding during training for the best accuracy but costs a full retrain.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> INT8 quantization reduces a weight from float32 (32 bits) to int8 (8 bits). What is the compression ratio, and what information is lost?</p>
+      <ul class="check-opts"><li>A) PTQ: quantize after training is complete. No additional training required — load the trained model, apply quantization (compute scale factors from a small calibration dataset, 100-1000 samples). Fast and easy, but accuracy may degrade for aggressive quantization (INT4 or below). Typical accuracy: FP32→INT8 PTQ on ResNet-50: &lt;0.5% top-1 accuracy drop. FP32→INT4 PTQ: 1-3% drop. QAT: insert fake quantization nodes during training — the forward pass uses quantized values (rounding to INT8), the backward pass uses straight-through estimator (STE) to pass gradients through the non-differentiable rounding. The model learns to use weight values that round well to INT8. More training required (fine-tuning for 10-30% of original training schedule), but accuracy is much closer to float32. Typical: QAT INT4 ≈ PTQ INT8 accuracy. Use PTQ when: fast deployment, INT8 is the target, accuracy drop is acceptable. Use QAT when: INT4 or lower is needed, accuracy is critical, training infrastructure is available.</li><li>B) Compression ratio: 32/8 = 4× reduction in memory. Information lost: dynamic range. A float32 weight can represent values across 23 bits of mantissa precision, but the critical information lost in INT8 is the exponent range — INT8 can represent values from -128 to 127, while float32 can represent values up to ~3.4×10³⁸. Any weight larger than 127 in absolute value is clipped to the INT8 maximum, causing large quantization errors for weights with high magnitude regardless of their distribution.</li><li>C) Compression ratio: 32/8 = 4× reduction in memory. But the effective compression is smaller in practice because INT8 requires storing scale factors (float32) alongside the quantized weights — one scale factor per layer adds ~4 bytes per weight matrix, reducing effective compression to ~3.7× for typical layer sizes. The information lost is primarily in the gradient computation during backward passes, which is why INT8 is only used for inference, not training.</li><li class="correct">D) Compression ratio: 32/8 = 4× reduction in memory. Information lost: precision. A float32 weight can represent values across ~7.2 significant decimal digits and a wide dynamic range (exponent allows values from ~10⁻⁴⁵ to ~10³⁸). INT8 can represent only 256 distinct values in the range [w_min, w_max] with step size (w_max−w_min)/255. For a weight range of [−0.5, 0.5], the quantization step is ~0.004 — any weight value is rounded to the nearest 0.004 increment. Weights with magnitude &lt; 0.001 (tiny weights) are rounded to 0 and zeroed out. The quantization error is the difference between the original float32 weight and its INT8 representation — this error propagates through inference as output noise. The key insight: if the weight distribution is not too wide and outliers are rare, INT8 precision is sufficient for inference accuracy close to float32.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Post-training quantization (PTQ) vs quantization-aware training (QAT): when do you use each, and what is the typical accuracy difference?</p>
+      <ul class="check-opts"><li class="correct">A) PTQ: quantize after training is complete. No additional training required — load the trained model, apply quantization (compute scale factors from a small calibration dataset, 100-1000 samples). Fast and easy, but accuracy may degrade for aggressive quantization (INT4 or below). Typical accuracy: FP32→INT8 PTQ on ResNet-50: &lt;0.5% top-1 accuracy drop. FP32→INT4 PTQ: 1-3% drop. QAT: insert fake quantization nodes during training — the forward pass uses quantized values (rounding to INT8), the backward pass uses straight-through estimator (STE) to pass gradients through the non-differentiable rounding. The model learns to use weight values that round well to INT8. More training required (fine-tuning for 10-30% of original training schedule), but accuracy is much closer to float32. Typical: QAT INT4 ≈ PTQ INT8 accuracy. Use PTQ when: fast deployment, INT8 is the target, accuracy drop is acceptable. Use QAT when: INT4 or lower is needed, accuracy is critical, training infrastructure is available.</li><li>B) PTQ and QAT produce identical accuracy at INT8 because INT8 has sufficient precision (256 levels) that rounding errors are below the model's noise floor. The choice between them is purely practical: PTQ takes minutes, QAT takes days. The accuracy difference only becomes relevant at INT4 or INT2, where QAT's gradient-guided weight adjustment is needed to maintain model performance.</li><li>C) PTQ is always preferred over QAT because QAT's fake quantization introduces a training-inference discrepancy: the straight-through estimator used for backward passes is an approximation that biases the gradient, causing the model to converge to a slightly different weight configuration than the non-quantized model. PTQ avoids this bias by quantizing after convergence, producing weights that are true quantizations of the fully trained float32 weights.</li><li>D) QAT is always preferred over PTQ regardless of the target bit width — QAT recovers 2-5% accuracy at INT8, not just INT4. The reason PTQ is used despite QAT's accuracy advantage is that QAT requires modifying the training code to insert fake quantization nodes, which creates engineering complexity. PTQ is a deployment step that requires no changes to the training infrastructure.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Why are activations harder to quantize than weights in a neural network?</p>
+      <ul class="check-opts"><li>A) Activations are harder to quantize because they are computed in sequence during the forward pass — each layer's activations depend on the previous layer's quantized activations, causing quantization errors to compound through the network. Weight quantization errors don't compound because all weights are applied independently in parallel during matrix multiplication, so errors average out rather than accumulating.</li><li class="correct">B) Weights are fixed after training — their distribution is known precisely and static. We can compute the exact min/max range of each weight tensor once and set scale/zero-point accordingly. Activations are dynamic — they change for every input sample. The activation distribution depends on the input, and we cannot precompute the exact range for all possible inputs. Outlier activations (very large or very small values occurring rarely) force the quantization range to be wide, wasting bits on the large range while losing precision in the common range. In transformers, attention logits can have very large outliers (especially in later layers of large models) that make INT8 quantization of activations much harder than weight quantization. Solutions: (1) Histogram-based calibration — use a representative dataset to estimate the 99th percentile range and clip outliers. (2) Per-tensor vs per-token quantization — quantize each token's activation separately for its own scale factor. (3) SmoothQuant — mathematically migrate the quantization difficulty from activations to weights (which are easier to quantize).</li><li>C) Activations are harder to quantize because they have higher dimensionality than weights — a hidden layer with 4096 units produces 4096-dimensional activation vectors, whereas the corresponding weight matrix is only 4096×4096 scalars. Higher-dimensional tensors require more scale factors, and computing scale factors for high-dimensional activations is computationally expensive compared to the simpler per-channel weight scale factors.</li><li>D) Activations use floating-point operations (floating-point multiplications for nonlinear activations like ReLU and GELU) that cannot be represented exactly in integer formats. Weights are applied through matrix multiplication, which can be exactly replicated in integer arithmetic. The fundamental incompatibility between activation functions and integer arithmetic makes activation quantization an approximation, while weight quantization is exact.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#dl_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

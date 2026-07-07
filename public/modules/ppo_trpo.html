@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PPO and TRPO | ML Systems Lab</title>
+  <meta name="description" content="Trust region, KL constraint, clipped surrogate, entropy bonus, implementation details">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/ppo_trpo.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/ppo_trpo.html">
+  <meta property="og:title" content="PPO and TRPO | ML Systems Lab">
+  <meta property="og:description" content="Trust region, KL constraint, clipped surrogate, entropy bonus, implementation details">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="PPO and TRPO">
+  <meta name="twitter:description" content="Trust region, KL constraint, clipped surrogate, entropy bonus, implementation details">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "PPO and TRPO",
+  "description": "Trust region, KL constraint, clipped surrogate, entropy bonus, implementation details",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/ppo_trpo.html",
+  "keywords": "ppo, trpo, trust region, kl divergence, clipped objective, entropy"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#rl_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">60 min read</span>
+      <span class="tag">ppo</span><span class="tag">trpo</span><span class="tag">trust region</span><span class="tag">kl divergence</span><span class="tag">clipped objective</span>
+    </div>
+    <h1>PPO and TRPO</h1>
+    <p class="subtitle">Trust region, KL constraint, clipped surrogate, entropy bonus, implementation details</p>
+
+    <p>You are training a quadruped robot to walk. With vanilla policy gradient, you take a gradient step and the policy changes. If the step is too large, the robot attempts movements far outside the distribution of the collected data — the advantage estimates, computed under the old policy, are completely wrong for the new one. The robot was walking; after one bad update it is lying on the ground producing no useful gradient signal. Recovery is impossible because the next gradient step is also based on wrong estimates. This catastrophic policy collapse is the problem PPO and TRPO solve.</p>
+    <p>TRPO formalizes the constraint: maximize the expected advantage subject to KL(π_old || π_new) ≤ δ. The KL constraint defines a trust region — updates inside it are theoretically safe, with a guaranteed lower bound on policy improvement. The cost is second-order optimization: computing the natural gradient requires Fisher information matrix-vector products, conjugate gradient, and a line search. Correct, but expensive and complex.</p>
+    <p>PPO approximates TRPO with a clipped objective: L_CLIP = E[min(r_t A_t, clip(r_t, 1-ε, 1+ε) A_t)] where r_t = π_new/π_old. When A_t &gt; 0 and r_t &gt; 1+ε — the policy is already much more likely to take this good action — the gradient is killed. When A_t &lt; 0 and r_t &lt; 1-ε — the policy has already moved away from this bad action — the gradient is killed again. The clip enforces a soft trust region using only first-order optimization and vanilla Adam.</p>
+    <p>PPO's clip parameter ε = 0.2 allows up to 20% policy ratio change per step. This is not overly conservative — it prevents catastrophic collapse while still allowing rapid learning across multiple mini-batch epochs per collected batch. The fraction of clipped updates should be 10–30% during stable training. Below 1% means the clip is never activating and providing no stability benefit. Above 90% means the policy is drifting too far and the trust region is already broken.</p>
+    <p>NOT this: PPO is conservative and learns slowly. PPO with ε = 0.2 is not slow — the alternative (unconstrained large updates) produces policy collapse that wastes entire training runs. PPO's constraint is exactly why it achieves consistent results across random seeds when unconstrained policy gradients do not.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Use PPO as your default policy gradient algorithm — it outperforms TRPO with comparable stability, requires no second-order optimization, and is robust to hyperparameters.</strong>
+
+TRPO's theoretical monotonic improvement guarantee is valuable only when you need formal guarantees. For most tasks, PPO's clipped objective achieves the same protective effect at a fraction of the compute cost.</li><li><strong>Too many mini-batch epochs K defeats PPO's trust region.</strong>
+
+After K gradient steps, the policy has drifted from π_old even though the advantages were computed under π_old. The policy ratio r_t becomes large, the clip triggers constantly, and gradient signal becomes noise. Limit K to 3–10 epochs per collected batch. If &gt; 20% of samples have r_t outside [0.8, 1.2], reduce K.</li><li><strong>Track the policy ratio r_t distribution during training as the primary diagnostic.</strong>
+
+If less than 1% of samples are clipped, ε is too large — you are not getting the stability benefit. If more than 20% are outside [0.8, 1.2], the step size is too large and the trust region is being violated. Adjust K or ε accordingly.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>PPO prevents catastrophic policy collapse by killing gradients when the policy ratio r_t moves outside [1-ε, 1+ε] — ensuring each update stays within a soft trust region where the advantage estimates are still valid.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Problem:</strong> too-large a PG step -&gt; policy leaves the data distribution, advantages go wrong, catastrophic collapse.</li><li><strong>TRPO:</strong> maximize advantage s.t. $KL(\pi_{old}\|\pi_{new}) \le \delta$ — a trust region, but 2nd-order and expensive.</li><li><strong>PPO clip:</strong> $L = E[\min(r_t A_t, \text{clip}(r_t, 1-\epsilon, 1+\epsilon)A_t)]$, $r_t = \pi_{new}/\pi_{old}$ — 1st-order, soft trust region.</li><li><strong>Clip kills the gradient</strong> once the policy already moved far on a good action ($r_t &gt; 1+\epsilon$) or away from a bad one.</li><li><strong>$\epsilon = 0.2$</strong> allows 20% ratio change; target 10–30% clipped updates (&lt; 1% = no benefit, &gt; 90% = trust region broken).</li><li><strong>Too many minibatch epochs $K$ defeats the trust region</strong> — limit to 3–10; PPO is the default over TRPO.</li><li><strong>In RLHF, the KL penalty to SFT is non-optional</strong> — remove it and the LLM reward-hacks.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Explain what the PPO clip objective does in the case where A_t &gt; 0 (good action) and the new policy probability is much higher than the old one (r_t &gt;&gt; 1+ε).</p>
+      <ul class="check-opts"><li class="correct">A) When A_t &gt; 0 and r_t &gt;&gt; 1+ε, the clip selects min(r_t · A_t, (1+ε) · A_t) = (1+ε) · A_t, and since (1+ε) · A_t is a constant with respect to θ at the clip boundary, the gradient with respect to the policy ratio is killed; this prevents further reinforcing an action once the policy has already moved far beyond the trust region boundary</li><li>B) When A_t &gt; 0 and r_t &gt;&gt; 1+ε, the PPO objective applies a penalty proportional to how far r_t exceeds 1+ε, discouraging very large policy updates while still providing a positive gradient signal toward the good action</li><li>C) When A_t &gt; 0 and r_t &gt;&gt; 1+ε, the clip objective is identical to the unclipped importance-sampling objective; clipping only activates when r_t &lt; 1-ε (bad actions), not when r_t &gt; 1+ε (good actions)</li><li>D) When A_t &gt; 0 and r_t &gt;&gt; 1+ε, the clip replaces the gradient entirely with the TRPO natural gradient step to ensure the KL constraint is not violated, which is why PPO approximates TRPO's monotonic improvement guarantee</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> You are training PPO on a continuous control task and observe that training is stable for 100 updates, then the policy collapses — mean episode reward drops from +500 to near 0 and never recovers. What happened and how do you diagnose and fix it?</p>
+      <ul class="check-opts"><li>A) Policy collapse after stable training is caused by the value function diverging, which is a known PPO failure mode when the critic learning rate is too high; reduce the critic learning rate by 10× and the policy will recover</li><li>B) The collapse indicates the environment has a non-stationary distribution shift at update 100; the agent's policy became optimal for the old distribution but the environment changed; monitor environment statistics and retrain when distribution shift is detected</li><li class="correct">C) Policy collapse after stable training is typically caused by too many mini-batch epochs K (policy drifts far from π_old, making all advantage estimates invalid and gradient signal pure noise) or a too-high learning rate; diagnose by logging r_t distribution, fraction of clipped updates (should be 10-30%, not 90%+), and KL(π_old ‖ π_new) per batch; fix by reducing K, adding early stopping when mean KL exceeds ~0.015, lowering learning rate, or regularising the critic</li><li>D) The collapse is caused by entropy collapsing to zero; once the policy becomes deterministic it cannot recover because the policy gradient is zero for deterministic policies; add a large entropy bonus β=1.0 to force the policy back to a stochastic regime</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> In RLHF with PPO for an LLM, why is the KL penalty to the SFT model necessary? What happens if you remove it?</p>
+      <ul class="check-opts"><li>A) The KL penalty is only necessary during the early stages of RLHF training to stabilise the reward model scores; once training has run for 1000 steps, the KL penalty can be removed without any degradation in output quality</li><li class="correct">B) Without the KL penalty, the LLM exploits the reward model via Goodhart's Law — generating repetitive, verbose, or incoherent text that achieves high reward model scores but low human preference, because the policy drifts into regions where the reward model is uncalibrated (trained only on SFT-like outputs); β controls the tradeoff: too low allows hacking, too high means no improvement from SFT</li><li>C) The KL penalty prevents the LLM from generating toxic or harmful content by keeping responses close to the safe SFT baseline; removing it would cause the model to generate harmful outputs even when the reward model explicitly penalises them</li><li>D) The KL penalty is a computational efficiency trick that reduces the size of the policy gradient update; removing it would cause training to be unstable due to the large gradient magnitudes from the reward model</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#rl_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

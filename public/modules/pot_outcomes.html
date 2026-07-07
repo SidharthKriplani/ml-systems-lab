@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Potential Outcomes Framework | ML Systems Lab</title>
+  <meta name="description" content="Rubin causal model, ATE/ATT, fundamental problem of causal inference">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/pot_outcomes.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/pot_outcomes.html">
+  <meta property="og:title" content="Potential Outcomes Framework | ML Systems Lab">
+  <meta property="og:description" content="Rubin causal model, ATE/ATT, fundamental problem of causal inference">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Potential Outcomes Framework">
+  <meta name="twitter:description" content="Rubin causal model, ATE/ATT, fundamental problem of causal inference">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Potential Outcomes Framework",
+  "description": "Rubin causal model, ATE/ATT, fundamental problem of causal inference",
+  "proficiencyLevel": "Foundational",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/pot_outcomes.html",
+  "keywords": "causal inference, potential outcomes, ATE, Rubin"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#causal_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Foundational</span>
+      <span class="read-time">29 min read</span>
+      <span class="tag">causal inference</span><span class="tag">potential outcomes</span><span class="tag">ATE</span><span class="tag">Rubin</span>
+    </div>
+    <h1>Potential Outcomes Framework</h1>
+    <p class="subtitle">Rubin causal model, ATE/ATT, fundamental problem of causal inference</p>
+
+    <p>You want to know if sending a discount email causes users to make a purchase. User 47 receives the email and purchases. Would they have purchased anyway without the email? You can never know — you can only observe one reality for User 47. The &quot;would have purchased anyway&quot; outcome is the counterfactual — the potential outcome under the treatment not received. This is the fundamental problem of causal inference: for each individual, you observe exactly one of two potential outcomes, and the other is permanently missing.</p>
+    <p>Rubin's potential outcomes framework names this gap precisely. For each unit i, define Y_i(1) — the outcome if treated — and Y_i(0) — the outcome if untreated. The individual treatment effect (ITE) is Y_i(1) − Y_i(0). You observe either Y_i(1) or Y_i(0), never both. The Average Treatment Effect (ATE) = E[Y_i(1) − Y_i(0)] is the average causal effect across all units. ATE is estimable even though ITE is not — with appropriate experimental design that makes the missing potential outcome recoverable in expectation.</p>
+    <p>Three identification assumptions make this possible. SUTVA (Stable Unit Treatment Value Assumption): your treatment does not affect others' outcomes — no spillover. Violated by network effects: treating one user can change connected users' behavior, contaminating the &quot;untreated&quot; group. Consistency: the observed outcome for a treated unit equals Y_i(1). Positivity/overlap: every unit has some probability of being in either treatment or control. If high-income users are never assigned to the discount condition, you have no evidence about the treatment effect for that group.</p>
+    <p>The estimand choice is a first decision, not an afterthought. ATE = average effect across all units. ATT = average treatment effect on the treated — the effect for people who actually received the treatment. CATE = conditional average treatment effect, the effect for units with features X = x. Using ATT to justify a universal rollout is an estimand error: the users who self-selected into treatment may benefit far more than the average user who would receive the rollout.</p>
+    <p>What this framework is not: a statement that causal inference is impossible. It is a statement that causal inference requires explicit assumptions, and those assumptions are claims about the world that cannot be verified from the same data used to estimate the effect. The assumptions must be argued from domain knowledge, embedded in study design (randomization), or subjected to sensitivity analysis — not assumed away.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Always specify the estimand before choosing an estimation method.</strong> ATE = average effect across all units. ATT = average treatment effect on the treated. ATC = average treatment effect on the control. CATE = conditional average treatment effect for units with features X = x. These are different quantities with different identification assumptions and different policy implications. Confusing ATT for ATE when recommending a universal rollout produces the wrong answer for the wrong population.</li><li><strong>Trap: SUTVA violations from network effects.</strong> In a social network, treating 10% of users and comparing to untreated users underestimates the true treatment effect — untreated users are indirectly affected by their treated connections. Their Y_i(0) is not the baseline outcome; it is the spillover-contaminated outcome. Test for SUTVA violations by comparing outcomes in clusters with high treated-neighbor density versus low treated-neighbor density.</li><li><strong>Diagnostic: if your estimated ATE changes substantially when you reweight to match population demographics, either treatment effects are heterogeneous across subgroups or you have a positivity violation for some subgroup.</strong> A region of covariate space with only treated units means any estimate there is pure extrapolation. Report the estimand precisely — including which subpopulation the estimate applies to — before interpreting the result.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Causal inference is a missing data problem: for every unit you observe one potential outcome and must assume something about the other — and those assumptions are unverifiable from the same data you used to estimate the effect.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>The fundamental problem of causal inference:</strong> for each unit you observe only one of Y_i(1) (outcome if treated) and Y_i(0) (if untreated) — the other is the *counterfactual* and permanently missing. Causal inference is at heart a missing-data problem.</li><li><strong>ATE = E[Y_i(1) − Y_i(0)] is estimable even though the individual effect (ITE) is not:</strong> you never get Y(1)−Y(0) for one person, but a design that makes the missing outcome recoverable *in expectation* (randomization) lets you estimate the average across units.</li><li><strong>Three identification assumptions make it work:</strong> SUTVA (no spillover — one unit's treatment doesn't change another's outcome), consistency (the observed outcome for a treated unit *is* Y_i(1)), and positivity/overlap (every unit has nonzero probability of being in either arm, or you're extrapolating).</li><li><strong>Pick the estimand *first*, before choosing a method:</strong> ATE (all units), ATT (the treated), CATE (units with X=x) are different quantities with different identification assumptions and different policy implications — a first decision, not an afterthought.</li><li><strong>Classic estimand error:</strong> using the ATT — the effect among people who *self-selected* into treatment — to justify a *universal* rollout, when the self-selected group may benefit far more than the average user who'd receive it.</li><li><strong>SUTVA breaks on network effects:</strong> treating 10% of a social network and comparing to untreated users *underestimates* the effect, because untreated users are indirectly affected by their treated connections — their Y_i(0) is spillover-contaminated, not the true baseline.</li><li><strong>Ignorability can never be tested from the same data used to estimate the effect</strong> (that would need both potential outcomes) — argue it from domain knowledge, embed it via randomization, or bound it with sensitivity analysis.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Observed data shows users who saw an ad (T=1) had 20% higher conversion than users who did not (T=0). Can you conclude the ad caused 20% lift? What would you need to make a causal claim?</p>
+      <ul class="check-opts"><li>A) Yes — if the sample is large enough, the 20% difference is a valid causal estimate because the law of large numbers eliminates selection bias</li><li class="correct">B) No — the 20% includes selection bias: E[Y|T=1] − E[Y|T=0] = ATE + selection bias term. Users who saw ad may differ in intent/demographics/prior engagement. Need either: (1) RCT (random assignment), or (2) observational strategy with ignorability — measure all variables that predict ad exposure AND conversion. Critical question: any unmeasured variable predicting both exposure and conversion?</li><li>C) Yes — controlling for age and gender in a regression is sufficient to remove selection bias and recover the causal effect</li><li>D) No — the only valid approach is an RCT; observational strategies can never support causal claims about ad effectiveness</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> A clinical trial shows ATE = +5 points on health scale. A policymaker wants to mandate the drug for everyone. Is ATE the right estimand? What if trial enrolled only volunteers?</p>
+      <ul class="check-opts"><li>A) ATE is always the right estimand for policy decisions because it represents the average across all units; volunteer enrollment does not affect its validity</li><li>B) ATE is only valid when the trial population perfectly matches the policy target population, otherwise ATT should be used regardless of volunteer enrollment</li><li>C) The trial ATE is valid for mandating because randomization within the trial guarantees the estimate applies to all subpopulations, including non-volunteers</li><li class="correct">D) Mandating for everyone → target is ATE over full population including non-volunteers. If trial enrolled volunteers, estimated ATE may reflect ATT (effect among self-selected), not full population ATE. Volunteers may be more compliant or health-conscious. Right response: check covariate distributions of trial participants vs target population, consider external validity, weight estimate toward target population using covariate reweighting.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> You run an A/B test for a new social sharing feature. Control group engagement unexpectedly increased. What is happening?</p>
+      <ul class="check-opts"><li class="correct">A) SUTVA violation — interference between units. Treated users share posts that appear in feeds of control users, changing control behavior even without treatment. Contamination means control group's Y_i(0) is spillover-inflated, not true baseline. Naive estimate underestimates true effect. Remedy: cluster-based randomization (assign friend groups or geographic regions) to isolate treatment and control groups from spillover.</li><li>B) Novelty effect — treated users are generating more content initially due to excitement about the feature, which temporarily lifts overall platform engagement</li><li>C) Regression to the mean — the control group's prior engagement was unusually low before the experiment started, and the increase reflects natural reversion</li><li>D) A/B test implementation error — the treatment feature was accidentally deployed to some control users, causing the unexpected engagement increase</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> Why can the ignorability assumption never be tested from data? What is the best you can do to support it?</p>
+      <ul class="check-opts"><li>A) Ignorability can be partially tested using balance tests on observed covariates — if all measured variables are balanced, ignorability is confirmed for both measured and unmeasured confounders</li><li>B) Ignorability cannot be tested because the propensity score model is always under-specified, but adding more covariates to the model eventually guarantees the assumption holds</li><li class="correct">C) To test ignorability you'd need to observe both Y(0) and Y(1) for the same unit — exactly what the Fundamental Problem prevents (you can't observe the counterfactual). Best you can do: (1) check balance on observed covariates (necessary but not sufficient), (2) run placebo tests on outcomes T can't causally affect, (3) argue from data-generating process that all common causes of T and Y are in X, (4) sensitivity analysis to quantify how large unmeasured confounder would need to be to overturn conclusion.</li><li>D) Ignorability cannot be tested because observational data is inherently biased; the only valid approach is to abandon observational inference and always run RCTs</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#causal_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

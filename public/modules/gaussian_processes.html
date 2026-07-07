@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gaussian Processes | ML Systems Lab</title>
+  <meta name="description" content="Distribution over functions, kernel selection, GP regression, sparse GPs, Bayesian optimisation">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/gaussian_processes.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/gaussian_processes.html">
+  <meta property="og:title" content="Gaussian Processes | ML Systems Lab">
+  <meta property="og:description" content="Distribution over functions, kernel selection, GP regression, sparse GPs, Bayesian optimisation">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Gaussian Processes">
+  <meta name="twitter:description" content="Distribution over functions, kernel selection, GP regression, sparse GPs, Bayesian optimisation">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Gaussian Processes",
+  "description": "Distribution over functions, kernel selection, GP regression, sparse GPs, Bayesian optimisation",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/gaussian_processes.html",
+  "keywords": "GP, gaussian process, kernel, Bayesian optimisation, inducing points, SVGP"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#probabilistic_ml_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">65 min read</span>
+      <span class="tag">GP</span><span class="tag">gaussian process</span><span class="tag">kernel</span><span class="tag">Bayesian optimisation</span><span class="tag">inducing points</span>
+    </div>
+    <h1>Gaussian Processes</h1>
+    <p class="subtitle">Distribution over functions, kernel selection, GP regression, sparse GPs, Bayesian optimisation</p>
+
+    <p>You have 5 noisy measurements of a physical process at time points {1, 2, 5, 7, 10}. You want to predict the value at time 3. A standard regression model gives you a point prediction — but how confident should you be? The measurements are noisy, and time 3 sits between two observations. A model that says &quot;value = 4.2&quot; with no indication of uncertainty is only half useful.</p>
+    <p>A Gaussian Process solves this by treating the unknown function itself as a random variable. A GP defines a distribution over functions: any finite collection of points {f(x₁), ..., f(xₙ)} follows a jointly Gaussian distribution. The kernel function k(x, x') defines the covariance between any two points — points close in time covary strongly, points far apart covary weakly. You specify the prior over functions by choosing the kernel. The posterior at time 3 conditions the joint Gaussian on your 5 observations, yielding a Gaussian predictive distribution: a mean (best estimate) and a variance (uncertainty). Near the data, the variance collapses — the GP knows what it knows. Far from the data, the variance expands — the GP correctly reports ignorance.</p>
+    <p>The mechanism that produces this behavior is the posterior update: μ* = K(X*, X)[K(X, X) + σ²I]⁻¹ y, and Σ* = K(X*, X*) - K(X*, X)[K(X, X) + σ²I]⁻¹ K(X, X*). The variance term Σ* shrinks at observed points and expands away from them — this is what no other regression method gives you automatically. At time 20, far beyond your training data, the posterior variance will be large: the GP correctly says it doesn't know.</p>
+    <p>The cost of this principled uncertainty is computational: the matrix inversion [K(X, X) + σ²I]⁻¹ costs O(n³) and storing K costs O(n²). At n = 10,000, this hits a hard wall on standard hardware. Everything in the sparse GP literature exists to circumvent this wall.</p>
+    <p><strong>NOT this.</strong> &quot;GPs are too slow for real data.&quot; Exact GPs are O(n³) and impractical for n &gt; 10,000. But inducing point approximations (sparse GPs) reduce this to O(nm²) where m &lt;&lt; n. For hyperparameter tuning via Bayesian optimization — where n is the number of function evaluations, typically under 200 — exact GPs are standard, fast, and the default choice in tools like BoTorch. The O(n³) wall is real, but it is the wall for exact GPs at large n. Sparse GPs, SKI, and deep kernel learning each offer a different strategy for breaking through it.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>A GP is fully specified by a mean function m(x) and a kernel k(x, x').</strong> Any finite collection f(x₁), ..., f(xₙ) follows a multivariate Gaussian: f ~ N(m, K) where Kᵢˇ = k(xᵢ, xˇ). The kernel encodes structural beliefs about the function — its smoothness, length-scale, and periodicity. This is the prior over functions. A bad kernel is a bad prior: it doesn't just affect fit, it determines what shapes of function the GP can even consider.</li><li><strong>GP regression posterior: given noisy observations y = f(X) + ε, ε ~ N(0, σ²I), the posterior at new points X* is Gaussian with mean μ* = m(X*) + K(X*,X)[K(X,X)+σ²I]⁻¹(y-m(X)) and variance Σ* = K(X*,X*) - K(X*,X)[K(X,X)+σ²I]⁻¹K(X,X*).</strong> The variance term is what other regression methods don't give you: it collapses near observed data (the model knows what it knows) and balloons in unexplored regions (the model knows what it doesn't know).</li><li><strong>Defaulting to RBF is the most common GP mistake.</strong> RBF (squared exponential) is infinitely differentiable — it assumes the function is smoother than almost any real-world process. Sensor readings, financial returns, and experimental measurements are not infinitely differentiable. Matérn kernels control differentiability via ν: Matérn 3/2 (once differentiable) and 5/2 (twice differentiable) are almost always better defaults. The kernel is the most consequential modelling decision you make with a GP — it encodes what kinds of functions can explain the data.</li><li><strong>Hyperparameters (length-scale ℓ, signal variance σ², noise σ²_n) are learned by maximising the log marginal likelihood: log p(y|X,θ) = -½yᵀ(K+σ²I)⁻¹y - ½ log|K+σ²I| - n/2 log(2π).</strong> The first term rewards fit; the log-determinant penalises complexity — an overly flexible kernel can explain any data but pays a large penalty in the log-determinant term. This is automatic Occam's razor: the simplest kernel consistent with the data wins.</li><li><strong>O(n³) is the central engineering constraint.</strong> Inverting the n×n kernel matrix costs O(n³) compute and O(n²) memory. For n &gt; 10,000, this is simply infeasible on standard hardware. This single fact drives the entire sparse GP literature — every method there is a different strategy for approximating or avoiding that matrix inversion.</li><li><strong>Sparse GPs introduce m &lt;&lt; n inducing points Z that summarise the training data.</strong> SVGP (Stochastic Variational GP) places a variational distribution q(u) over inducing outputs u=f(Z) and optimises the ELBO with minibatch SGD — O(m³) per step regardless of n. With m=500 and minibatches, you can train on millions of points. The tradeoff: the inducing point approximation introduces bias — the posterior is not the true GP posterior, and predictive uncertainty may be underestimated between inducing points.</li><li><strong>Bayesian optimisation is where GPs earn their production keep.</strong> Use a GP as a surrogate for an expensive black-box function (hyperparameter tuning, drug discovery, materials science). The GP posterior gives you a mean prediction and uncertainty at any candidate point. Acquisition functions use both to decide where to query next: Expected Improvement (EI) = E[max(0, f(x) - f(x+))]; UCB = μ(x) + κσ(x) where κ tunes the explore-exploit tradeoff. BO with a GP is orders of magnitude more sample-efficient than grid or random search for expensive evaluations.</li><li><strong>GPs belong in your toolkit for: small datasets (n &lt; 10,000) where calibrated uncertainty is the core deliverable; Bayesian optimisation (the standard surrogate in tools like BoTorch and Ax); scientific regression where domain knowledge belongs in the kernel.</strong> They don't belong in: high-dimensional unstructured inputs (images, raw text) where no meaningful kernel exists, or n &gt; 100,000 without significant approximation infrastructure and the engineering budget to support it.</li><li><strong>Always normalise outputs to zero mean and unit variance before fitting a GP.</strong> GPs are sensitive to output scale in ways that quietly break the model if you skip this: the noise variance and signal variance hyperparameters are optimised assuming a certain output scale, and wrong assumptions propagate through to miscalibrated uncertainty estimates.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>The O(n³) wall is the central engineering fact about GPs, and SVGP with inducing points is the standard workaround — but the tradeoff is that the variational approximation underestimates predictive uncertainty between inducing points. Kernel choice encodes the prior over functions: RBF assumes infinite differentiability (wrong for most real processes), Matérn 5/2 assumes twice-differentiability (usually correct), and a periodic kernel is required for any recurring pattern — the GP is only as good as the prior you encode in its kernel.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>GP = distribution over functions:</strong> any finite set $f(x_1)...f(x_n) sim N(m, K)$; kernel $k(x,x')$ IS the prior.</li><li><strong>Posterior variance collapses at data, expands away from it</strong> — the one thing other regression gives you for free.</li><li><strong>$O(n^3)$ compute, $O(n^2)$ memory</strong> from inverting $[K+σ^2I]$ — hard wall at n &gt; 10,000. The central engineering fact.</li><li><strong>Kernel = prior over functions:</strong> RBF assumes infinite smoothness (usually wrong); Matérn 5/2 (twice-diff) is the better default.</li><li><strong>Hyperparameters learned by maximising log marginal likelihood</strong> — fit term vs log-det complexity penalty = automatic Occam's razor.</li><li><strong>Sparse GPs (SVGP): m ≪ n inducing points, $O(m^3)$/step</strong>; tradeoff = underestimated uncertainty between inducing points.</li><li><strong>Bayesian optimisation is where GPs earn their keep:</strong> GP surrogate + EI/UCB acquisition, far more sample-efficient than grid/random.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You have 50,000 training points and want to use a GP. What are your options and what do you trade away with each?</p>
+      <ul class="check-opts"><li class="correct">A) SVGP with m inducing points trained via minibatch SGD at O(m³) per step, SKI for low-dimensional grid-structured inputs, or deep kernel networks for expressive feature learning — each trades away exact posterior accuracy for tractability.</li><li>B) Use an exact GP with float16 precision to halve memory usage, reducing the effective cost to O(n²) without any approximation error.</li><li>C) Switch to a random forest, since GPs are only defined for n &lt; 1,000 and cannot be extended to larger datasets under any circumstances.</li><li>D) Use RBF kernel with automatic hyperparameter tuning; the O(n³) cost is manageable with modern GPUs for n = 50,000 in under an hour.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Your GP Bayesian optimisation run converges prematurely — the acquisition function keeps suggesting the same region. What went wrong and how do you fix it?</p>
+      <ul class="check-opts"><li>A) The kernel length-scale is too short, causing the GP to treat every new point as uncorrelated. Fix by increasing the length-scale via marginal likelihood optimisation.</li><li class="correct">B) Insufficient exploration: UCB κ is too small (over-exploiting), noise model is wrong causing posterior variance to not decrease, or length-scale is too large. Fix by increasing κ, checking learned hyperparameters, or using Thompson Sampling for diversity.</li><li>C) The ELBO has collapsed because the inducing points are too sparse. Add more inducing points and retrain from scratch.</li><li>D) Premature convergence is expected in GP BO and signals that the global optimum has been found; the correct response is to stop the run and report the best result found so far.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> How does the GP marginal likelihood objective perform automatic model selection, and what is its failure mode?</p>
+      <ul class="check-opts"><li>A) It performs cross-validation by holding out 20% of data; failure mode is overfitting when the validation set is not representative.</li><li>B) It maximises the posterior over kernels using a Dirichlet prior; failure mode is when the prior over kernels is misspecified.</li><li>C) It maximises predictive accuracy on a held-out test set; failure mode is data leakage when test points are too close to training points.</li><li class="correct">D) The log marginal likelihood balances data fit against a log-determinant complexity penalty (automatic Occam's razor). Failure mode: multiple local optima in low-data regimes requiring random restarts, and hyperparameter estimates that may not reflect true function structure when n &lt; 20.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#probabilistic_ml_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

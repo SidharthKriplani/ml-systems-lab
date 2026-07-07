@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prediction Distribution Monitoring | ML Systems Lab</title>
+  <meta name="description" content="Output distribution shift, score distribution, confidence calibration drift">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/prediction_monitoring.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/prediction_monitoring.html">
+  <meta property="og:title" content="Prediction Distribution Monitoring | ML Systems Lab">
+  <meta property="og:description" content="Output distribution shift, score distribution, confidence calibration drift">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Prediction Distribution Monitoring">
+  <meta name="twitter:description" content="Output distribution shift, score distribution, confidence calibration drift">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Prediction Distribution Monitoring",
+  "description": "Output distribution shift, score distribution, confidence calibration drift",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/prediction_monitoring.html",
+  "keywords": "prediction monitoring, score distribution, output drift"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#monitoring_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">35 min read</span>
+      <span class="tag">prediction monitoring</span><span class="tag">score distribution</span><span class="tag">output drift</span>
+    </div>
+    <h1>Prediction Distribution Monitoring</h1>
+    <p class="subtitle">Output distribution shift, score distribution, confidence calibration drift</p>
+
+    <p>Your fraud model is live. Labels won't arrive for 7 days — chargebacks take that long to confirm. Infrastructure looks perfect: normal latency, 0% errors. So you cannot measure accuracy until next week. And yet you can see the *predictions* right now, and three of them are already whispering that something moved.</p>
+    <hr>
+    <h3>Three signals you have before any label</h3>
+    <p>*The mean score fell.* Last month the average predicted fraud probability was 3.1%; this month, 2.7%. The model is scoring this week's transactions as less risky. Right or wrong, that's worth a look.</p>
+    <p>*Confidence collapsed.* The share of predictions above 0.8 confidence dropped from 12% to 4%. The model is now hesitant about cases it used to call decisively.</p>
+    <p>*The histogram flattened.* Last month's scores were bimodal — clear fraud piled high, clear non-fraud piled low, a trough between. This month it's a single lump near 0.5. The model has lost its ability to separate the two classes.</p>
+    <hr>
+    <h3>What each one tends to mean</h3>
+    <p>A falling score distribution means either fewer genuinely risky events (could be real) or a feature that shifted the wrong way (pipeline). A dropping high-confidence rate means the inputs have moved outside the model's training range — it's seeing unfamiliar data. A flattening histogram means a key discriminative feature is missing or corrupted, leaving the model unable to tell the classes apart.</p>
+    <p>You measure all of this with the same tools as feature drift: PSI on the score distribution (same 0.1/0.2 bands), Jensen-Shannon divergence between current and reference histograms (bounded in [0, 1]), and a z-test on the mean-score shift.</p>
+    <hr>
+    <p><strong>What prediction monitoring is — and isn't.</strong> It tells you the model's *behavior* changed, not that the model is *wrong.* Maybe fraud genuinely dropped and the lower scores are correct; maybe a feature pipeline broke. That's exactly why it's your earliest warning system — it fires days ahead of the delayed labels — and exactly why the right first move when it fires is to *investigate the inputs,* not to assume the model is broken and retrain on reflex.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Set reference baselines for score distribution, high-confidence rate, and histogram shape from the first 4 weeks of deployment — these are your &quot;healthy&quot; benchmarks.</strong> Alert when current statistics deviate more than 2σ from baseline. The 4-week window captures natural weekly variation so that normal Monday-vs-Friday patterns do not generate spurious alerts.</li><li><strong>Trap: setting alert thresholds too tight.</strong> If your score distribution naturally varies ±15% week-over-week due to business seasonality, a 2σ threshold generates constant alerts. Calibrate thresholds based on observed natural variation from the first month of production traffic, not on theoretical distributions. A threshold that produces more than one alert per week during normal operation needs to be widened.</li><li><strong>Diagnostic: when prediction distribution shifts, check the feature distributions of high-confidence positive predictions specifically.</strong> If a key feature — for example, `transaction_velocity` — has suddenly shifted for high-confidence predictions, the feature pipeline is the root cause. If feature distributions are clean for high-confidence predictions but the score distribution has still shifted, the change is in the data itself, not the pipeline — possible concept drift or genuine fraud rate change.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Prediction distribution monitoring is your earliest warning — it fires days before delayed labels arrive — but a changed score distribution tells you behavior changed, not whether the change is correct or wrong.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>See predictions now, labels in 7 days:</strong> three signals fire before any label.</li><li><strong>Falling mean score:</strong> fewer risky events (real) or a feature shifted the wrong way (pipeline).</li><li><strong>Collapsing high-confidence rate:</strong> inputs moved outside the training range — unfamiliar data.</li><li><strong>Flattening histogram:</strong> a key discriminative feature is missing or corrupted — classes no longer separate.</li><li><strong>Same tools as feature drift:</strong> PSI on scores (0.1/0.2), Jensen-Shannon in [0,1], z-test on mean shift.</li><li><strong>Set baselines from first 4 weeks; alert at 2σ</strong> — captures Monday-vs-Friday variation.</li><li><strong>Behavior changed ≠ model wrong:</strong> earliest warning, so investigate the inputs before retraining on reflex.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Your fraud model's average prediction score has drifted from mean=0.12 to mean=0.08 over 2 weeks. Labels are delayed 7 days. What do you do now?</p>
+      <ul class="check-opts"><li>A) Wait 7 days for labels to arrive before taking any action — acting on unlabelled signals risks unnecessary retraining that could hurt performance</li><li>B) Immediately retrain the model on the most recent 30 days of data and redeploy — score drift of this magnitude always indicates concept drift requiring full retraining</li><li class="correct">C) Check feature distributions and full score distribution now, query business intelligence for fraud rate changes, then act on the diagnosis when 7-day labels confirm precision/recall impact</li><li>D) Raise the classification threshold to compensate for the lower scores — if mean dropped from 0.12 to 0.08, lowering the threshold by 0.04 will restore the original positive rate</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> The share of predictions above 0.8 confidence dropped from 12% to 4% while the mean score barely moved. What does the collapsing high-confidence rate most directly signal?</p>
+      <ul class="check-opts"><li>A) The base rate P(Y) rose, so more borderline cases are genuinely appearing and the model is correctly hesitating on them</li><li class="correct">B) The inputs have moved outside the model's training range — it is now seeing unfamiliar data it cannot score decisively</li><li>C) A discriminative feature is fully corrupted, which is why the histogram collapsed into a single lump near 0.5</li><li>D) The decision threshold was raised upstream, mechanically pushing predictions out of the high-confidence band</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Prediction monitoring fires, so you want to separate a pipeline bug from a genuine data change. What is the sharpest diagnostic?</p>
+      <ul class="check-opts"><li>A) Retrain on the last 30 days and see whether the score distribution snaps back to its reference shape after redeploy</li><li>B) Wait for the 7-day labels and compute precision/recall, since only confirmed accuracy can distinguish a bug from real change</li><li class="correct">C) Check feature distributions of the high-confidence positive predictions: a shifted key feature there points to the pipeline; clean features with shifted scores point to the data</li><li>D) Compare P99 latency and endpoint error rate before and after the shift, because a pipeline bug always co-occurs with an infrastructure alert</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#monitoring_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

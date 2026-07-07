@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Information Geometry &amp; Natural Gradient | ML Systems Lab</title>
+  <meta name="description" content="Fisher information matrix, statistical manifold, natural gradient descent, K-FAC, connection to Adam">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/information_geometry.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/information_geometry.html">
+  <meta property="og:title" content="Information Geometry &amp; Natural Gradient | ML Systems Lab">
+  <meta property="og:description" content="Fisher information matrix, statistical manifold, natural gradient descent, K-FAC, connection to Adam">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Information Geometry &amp; Natural Gradient">
+  <meta name="twitter:description" content="Fisher information matrix, statistical manifold, natural gradient descent, K-FAC, connection to Adam">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Information Geometry & Natural Gradient",
+  "description": "Fisher information matrix, statistical manifold, natural gradient descent, K-FAC, connection to Adam",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/information_geometry.html",
+  "keywords": "Fisher information, natural gradient, information geometry, K-FAC, Riemannian metric, Adam"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#probabilistic_ml_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">75 min read</span>
+      <span class="tag">Fisher information</span><span class="tag">natural gradient</span><span class="tag">information geometry</span><span class="tag">K-FAC</span><span class="tag">Riemannian metric</span>
+    </div>
+    <h1>Information Geometry &amp; Natural Gradient</h1>
+    <p class="subtitle">Fisher information matrix, statistical manifold, natural gradient descent, K-FAC, connection to Adam</p>
+
+    <p>Standard gradient descent treats all parameter directions as equally meaningful. But two parameters that differ by the same Euclidean distance in parameter space may correspond to distributions that are almost identical or drastically different — the Euclidean metric ignores how sensitive the model's outputs are to perturbations in each direction. This produces the ravine problem: gradient descent zigzags across high-curvature directions while inching along low-curvature directions, wasting steps.</p>
+    <p>Information geometry gives the right metric: the space of probability distributions is a Riemannian manifold where distances are measured by the Fisher information matrix (FIM), which quantifies how much the output distribution changes per unit perturbation of parameters. Natural gradient descent premultiplies the gradient by the inverse FIM, taking steps that are equal-sized in distribution space.</p>
+    <p>The result is faster convergence per step. The catch: computing and inverting the full FIM is O(p²) in storage and O(p³) in compute — prohibitive at any useful scale. Adam's per-parameter learning rate scaling is a diagonal FIM approximation, which explains both why Adam works and why it fails when parameters are highly correlated.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>The Fisher information matrix: F = E_{x~p_θ}[∇_θ log p(x|θ) ∇_θ log p(x|θ)ᵀ].</strong> The FIM measures how much the output distribution changes when θ is perturbed: KL[p_θ ‖ p_{θ+δ}] ≈ ½ δᵀFδ locally. So the FIM is the curvature of the KL divergence landscape — the metric tensor for distribution space. Flat directions in F (zero eigenvalues) are parameter directions that do not change the output distribution at all — overparameterisation, symmetries, dead neurons.</li><li><strong>Standard gradient descent is not covariant under reparameterisation: if you apply a bijective transformation φ = h(θ), the gradient direction in φ-space is different from the gradient direction in θ-space (after accounting for the Jacobian).</strong> This means the solution gradient descent finds depends on how you chose to parameterise the model — different implementations of the same model (batch norm vs weight normalisation) converge to different solutions. Natural gradient is covariant: the update corresponds to the same distribution-space step regardless of parameterisation.</li><li><strong>Natural gradient update: θ_{t+1} = θ_t - η F(θ_t)⁻¹ ∇_θ L.</strong> In a loss landscape with a ravine (high curvature in one direction, low in another), standard SGD zigzags — large steps in the steep direction oscillate, small steps in the shallow direction barely move. Natural gradient rescales: small steps in the steep direction, large steps in the shallow direction. Per distribution-space step, you get more loss reduction than any Euclidean-metric gradient step.</li><li><strong>FIM = second derivative of KL: KL[p_θ ‖ p_{θ+δ}] ≈ ½δᵀFδ.</strong> This is the operational definition that connects information geometry to practical optimisation. Directions with large Fisher eigenvalues change the model's output distribution a lot per unit parameter change — natural gradient takes small steps there. Directions with small eigenvalues change the distribution very little — natural gradient takes large steps there. Euclidean gradient ignores all of this.</li><li><strong>K-FAC (Kronecker-Factored Approximate Curvature) makes natural gradient tractable for neural networks.</strong> For a layer with weight matrix W, the FIM admits a Kronecker product approximation F ≈ A ⊗ G where A = E[a_ta_tᵀ] (input activation covariance) and G = E[g_tg_tᵀ] (output gradient covariance). Storage drops from O(p²) to O(d_in² + d_out²) per layer. Inversion is separable: (A⊗G)⁻¹ = A⁻¹⊗G⁻¹. K-FAC captures within-layer input-output correlations — the structure that Adam's diagonal approximation misses.</li><li><strong>Adam is a diagonal FIM approximation.</strong> The second moment v_t ≈ diag(F) estimates only the diagonal of the Fisher. Dividing the gradient by √v_t + ε approximates rescaling by the diagonal Fisher — each parameter gets an independent learning rate based on its gradient variance. This works well when parameters are approximately uncorrelated. When parameters are highly correlated (collinear features, attention across similar tokens), the off-diagonal terms of F matter and Adam's approximation fails.</li><li><strong>K-FAC vs Adam: Adam is the practical choice for most deep learning because K-FAC's per-step cost is much higher.</strong> K-FAC wins when data is small, per-step compute is affordable, and the correlations between parameters are strong — some supervised learning benchmarks and RL settings. The convergence advantage is real: K-FAC typically converges in fewer steps, but each step costs more than Adam.</li><li><strong>TRPO and PPO formalise the natural gradient idea in RL.</strong> TRPO explicitly constrains KL[π_old ‖ π_new] ≤ δ at each update — this is a trust region in distribution space, exactly what natural gradient descent respects. Euclidean constraints on weight updates do not prevent large changes in the policy distribution. KL constraints do — and large distribution changes destabilise RL training. PPO approximates the KL constraint with a clipped surrogate, trading theoretical precision for engineering simplicity.</li><li><strong>The FIM connects to confidence intervals in MLE.</strong> By the Cramér-Rao bound, Var(θ̂) ≥ F(θ)⁻¹ for any unbiased estimator. The MLE achieves this bound asymptotically. The inverse FIM is the asymptotic covariance of the MLE — this is where frequentist confidence intervals for point estimates come from. In continual learning, Elastic Weight Consolidation (EWC) penalises changes to parameters with high Fisher information, preserving knowledge from previous tasks by anchoring the highest-curvature directions.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Parameter space is the wrong space to measure gradient steps — what matters is how much the model's output distribution changes per step, which is measured by the FIM. Adam's diagonal FIM approximation works when parameters are uncorrelated but fails when off-diagonal Fisher terms are large. The TRPO/PPO connection is the most concrete production application: constraining updates by KL[π_old ‖ π_new] instead of Euclidean weight change is what stabilises RL training, because Euclidean constraints on weights do not bound how much the policy distribution changes.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Parameter space is the wrong metric</strong> — what matters is how much the output distribution moves per step, measured by the FIM.</li><li><strong>FIM = curvature of KL:</strong> $KL[p_θ ‖ p_{θ+δ}] ≈ 	frac12 δ^T F δ$ — the metric tensor for distribution space.</li><li><strong>Natural gradient: $θ_{t+1} = θ_t - η F^{-1}∇L$</strong> — small steps in steep (high-Fisher) directions, large in flat ones; fixes ravine zigzag.</li><li><strong>Natural gradient is covariant</strong> to reparameterisation; plain SGD finds different optima depending on parameterisation (batch vs weight norm).</li><li><strong>Full FIM is $O(p^2)$ store / $O(p^3)$ invert</strong> — infeasible; K-FAC uses Kronecker factoring $F ≈ A ⊗ G$ per layer.</li><li><strong>Adam is a diagonal FIM approximation</strong> ($v_t ≈ 	ext{diag}(F)$) — works when parameters are uncorrelated, fails when off-diagonals matter.</li><li><strong>TRPO/PPO = natural gradient in RL:</strong> constrain $KL[π_{old} ‖ π_{new}]$, not Euclidean weight change — Euclidean constraints don't bound policy shift.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Why is the natural gradient invariant to reparameterisation of the model parameters, and why does this matter?</p>
+      <ul class="check-opts"><li>A) Natural gradient is invariant because the FIM is always the identity matrix under any reparameterisation, making F⁻¹∇L equal to ∇L regardless of parameterisation.</li><li>B) Natural gradient is invariant because it uses second-order information; standard gradient uses only first-order information which changes under reparameterisation.</li><li>C) Natural gradient is invariant because the step size η is adapted per-parameter; different parameterisations just require rescaling η.</li><li class="correct">D) The FIM transforms as a covariant tensor (F_φ = J⁻ᵀF_θJ⁻¹), so F_φ⁻¹∇_φL maps to the same distribution-space step regardless of parameterisation. This matters because standard SGD finds different optima depending on model parameterisation (e.g., batch norm vs weight normalisation).</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Adam's second moment estimate v_t ≈ diag(F). What does this mean for Adam's performance on highly correlated parameters?</p>
+      <ul class="check-opts"><li>A) Adam performs better on correlated parameters because the moving average of v_t smooths out the correlations over time, effectively approximating the off-diagonal FIM terms.</li><li>B) Adam performs identically on correlated and uncorrelated parameters because the diagonal FIM approximation is provably tight when the learning rate is small enough.</li><li class="correct">C) Adam's diagonal FIM approximation ignores off-diagonal correlations, leading to suboptimal steps in correlated directions. K-FAC captures within-layer input-output correlations and converges in fewer steps on tasks with highly correlated parameters, at higher per-step cost.</li><li>D) Adam applies a full FIM inverse internally via the Adam epsilon term; the diagonal approximation is only used for numerical stability, not for the step direction.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> What is the connection between the Fisher information matrix and confidence intervals in maximum likelihood estimation?</p>
+      <ul class="check-opts"><li class="correct">A) By the Cramér-Rao bound, Var(θ̂) ≥ F(θ)⁻¹ for any unbiased estimator; the MLE achieves this asymptotically. The inverse FIM is the asymptotic covariance of the MLE, which is where frequentist confidence intervals and EWC's importance weights come from.</li><li>B) The FIM equals the Hessian of the log-likelihood only at the MLE; elsewhere they are unrelated, so confidence intervals must use the Hessian, not the FIM.</li><li>C) The FIM provides confidence intervals only for exponential family models; for other likelihoods, bootstrap confidence intervals must be used instead.</li><li>D) The connection is purely theoretical; in practice, confidence intervals are computed from the Jacobian of the loss function, not the FIM.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#probabilistic_ml_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Graphs as ML Data Structures | ML Systems Lab</title>
+  <meta name="description" content="Adjacency formats, task types, permutation invariance, homophily, inductive vs transductive">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/graph_representations.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/graph_representations.html">
+  <meta property="og:title" content="Graphs as ML Data Structures | ML Systems Lab">
+  <meta property="og:description" content="Adjacency formats, task types, permutation invariance, homophily, inductive vs transductive">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Graphs as ML Data Structures">
+  <meta name="twitter:description" content="Adjacency formats, task types, permutation invariance, homophily, inductive vs transductive">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Graphs as ML Data Structures",
+  "description": "Adjacency formats, task types, permutation invariance, homophily, inductive vs transductive",
+  "proficiencyLevel": "Foundational",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/graph_representations.html",
+  "keywords": "graph, adjacency, CSR, homophily, permutation invariance, transductive"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#graph_ml_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Foundational</span>
+      <span class="read-time">35 min read</span>
+      <span class="tag">graph</span><span class="tag">adjacency</span><span class="tag">CSR</span><span class="tag">homophily</span><span class="tag">permutation invariance</span>
+    </div>
+    <h1>Graphs as ML Data Structures</h1>
+    <p class="subtitle">Adjacency formats, task types, permutation invariance, homophily, inductive vs transductive</p>
+
+    <p>A fraud detection system has 50 million users and 500 million transactions. A user who received money from 5 confirmed fraud accounts last week is almost certainly a fraud risk. But your ML model takes a feature vector per user — age, account balance, transaction volume. None of those features capture &quot;connected to known fraudsters.&quot; The signal is real, it is strong, and it is invisible unless you model the graph structure. This is why graph ML exists.</p>
+    <p>Graphs appear wherever relationships between entities carry information: molecular property prediction (atoms as nodes, bonds as edges), citation networks (papers as nodes, citations as edges), knowledge graphs (entities as nodes, relations as edges), social recommendations. In each case, the graph structure encodes relational signals that a per-node feature vector cannot represent. Graph ML extracts that signal.</p>
+    <p>Before any model runs, you need the right data structure. A 50M-node social graph stored as a dense adjacency matrix requires 50M × 50M entries at 1 bit each: 312 terabytes. Stored as a CSR (Compressed Sparse Row) sparse matrix with only the 500M actual edges, it requires about 40 gigabytes. This is not a detail — it is the difference between a system that is buildable and one that is not.</p>
+    <p>Beyond data structures, graph tasks split into three types. Node-level tasks (fraud detection, protein function prediction) require a prediction per node, using each node's final embedding directly. Edge-level tasks (link prediction, drug-target interaction) require a prediction per edge, typically from a decoder applied to the two endpoint embeddings. Graph-level tasks (molecular property prediction) require one prediction for the entire graph, using a readout function that aggregates all node embeddings into a fixed-size vector.</p>
+    <p><strong>NOT this.</strong> &quot;Graphs are just for network analysis.&quot; Graphs appear wherever entities have relationships that carry information: molecular property prediction where the graph is a molecule, recommendation systems where the graph connects users to items, knowledge graphs that power QA systems, traffic routing where roads are edges. Any problem with entities and relations between them is potentially a graph problem. The question is whether the relational structure contains signal that a per-entity feature vector would miss — and in most domains, it does.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Dense adjacency matrix A ∈ {0,1}^{NxN}: stores all N² entries regardless of edge count.</strong> O(N²) memory. Efficient only for dense graphs (|E| ≈ N²). For a social graph with N=50M nodes: 50M×50M = 2.5×10^{15} entries, ~312 TB even at 1 bit per entry. GCN on full adjacency requires O(N²) memory even at inference. Never use for large sparse graphs.</li><li><strong>CSR (Compressed Sparse Row): stores only nonzero entries in three arrays — values (edge weights), col_indices (column of each entry), row_ptr (start of each row in col_indices).</strong> Memory O(|E| + |V|). For a 50M-node graph with 5B edges: ~40 GB. SpMM (sparse × dense matrix multiply) is the core GNN operation — PyTorch Geometric and DGL both build on this. Message passing on CSR is naturally parallel across edges, which maps directly to GPU execution.</li><li><strong>Node-level, edge-level, and graph-level tasks require fundamentally different output structures.</strong> Node-level (fraud detection, protein function): each node gets a prediction, using the node's final embedding directly. Edge-level (link prediction, knowledge graph completion): each edge gets a prediction, typically from a decoder applied to the two endpoint embeddings. Graph-level (molecular property, circuit quality): the entire graph gets a prediction, requiring a readout function that aggregates all node embeddings into a fixed-size vector.</li><li><strong>Standard NNs cannot be applied to graphs for two reasons: variable input size (graphs differ in |V| and |E|), and no canonical node ordering — the same node appears at index 3 in one ordering and index 87 in another.</strong> Permutation invariance requires f(PAP^T, Px) = f(A, x) for any permutation matrix P. An MLP applied to a flattened adjacency matrix is not permutation invariant — different orderings of the same graph produce different outputs.</li><li><strong>Graph signal processing gives structural intuition: node features are signals on the graph.</strong> The graph Laplacian L = D - A captures discrete gradient structure. Multiplying by L computes the difference between each node's feature and its neighbors' mean — a high-pass filter that amplifies differences. GCN aggregation with self-loops is a low-pass filter that smooths features across edges. Stacking too many GCN layers over-smooths features to the point where all nodes become indistinguishable.</li><li><strong>Homophily vs heterophily determines whether mean aggregation helps or hurts.</strong> In homophilic graphs (social networks — connected nodes have similar properties), standard GNNs that average neighbor features work well because neighbors have informative features. In heterophilic graphs (fraud ring members connect to victims, bipartite recommendation graphs), mean aggregation destroys the discriminative signal because the fraudster's neighbors are predominantly legitimate. H2GCN addresses this by keeping the ego node's embedding separate from aggregated neighbor features.</li><li><strong>Inductive vs transductive is an architectural commitment with production consequences.</strong> Transductive GNNs (spectral methods, vanilla GCN) train and test on the same fixed graph — they cannot generate embeddings for unseen nodes without retraining. In production, new users and items arrive continuously. GraphSAGE, GAT, and spatial methods learn aggregation functions that apply to any neighborhood, making them inductive by design. Anything requiring full graph retraining to embed new nodes is not deployable.</li><li><strong>Heterogeneous graphs are the production default.</strong> Multiple node types (user, item, category) and edge types (click, purchase, co-viewed) are the norm in e-commerce and knowledge graphs. Homogeneous GNNs that ignore type information discard the relational semantics that distinguish a click from a purchase — which are often the most commercially important signals. Modeling heterogeneity is not an advanced feature; ignoring it is a lossy baseline.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>The constraint that makes GNNs fundamentally different from every other neural network is permutation invariance — the same graph admits N! adjacency matrix representations, so any valid GNN must aggregate neighbor features with a permutation-invariant function (sum, mean, max). Everything else in GNN design follows from this constraint. In production, the adjacency matrix format is not a detail: for a 50M-node social graph, the choice between dense (312 TB) and CSR (~40 GB) determines whether the system is buildable at all.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Graph ML exists for relational signal:</strong> &quot;connected to known fraudsters&quot; is invisible to a per-node feature vector.</li><li><strong>Dense adjacency is O(N²):</strong> 50M nodes → ~312 TB. <strong>CSR</strong> stores only edges → ~40 GB. Format decides buildability.</li><li><strong>Three task types:</strong> node-level (per-node embedding), edge-level (decoder on 2 endpoints), graph-level (readout aggregates all nodes).</li><li><strong>Permutation invariance is the defining constraint:</strong> N! orderings → aggregate with sum/mean/max; MLP on flattened $A$ is not invariant.</li><li><strong>Homophily → mean aggregation helps; heterophily → it destroys signal</strong> (fraud rings connect to victims).</li><li><strong>Inductive vs transductive is a deployment commitment:</strong> vanilla GCN can't embed unseen nodes; GraphSAGE/GAT can.</li><li><strong>Heterogeneous graphs are the production default</strong> — ignoring node/edge types is a lossy baseline.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You have a social network with 50M users and 5B edges. Explain concretely why you cannot use a standard dense adjacency matrix, and what data structure you would use instead.</p>
+      <ul class="check-opts"><li>A) Dense adjacency would work but is slow; use a hash map from node pairs to edge weights for faster lookup</li><li class="correct">B) Dense adjacency requires 50M×50M = 2.5×10^15 entries (~312 TB even at 1 bit per entry) — infeasible; use CSR (stores only 5B edges, ~40 GB), which maps naturally to SpMM operations in PyTorch Geometric and supports distributed graph partitioning</li><li>C) Dense adjacency is fine for 50M nodes if stored on a distributed file system — the storage limit is not a practical concern at this scale</li><li>D) Use a dense adjacency matrix but restrict training to 1% of nodes via random sampling to reduce memory to a manageable size</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Explain what permutation invariance means for a graph neural network, and show why a 2-layer MLP applied to the flattened adjacency matrix is not permutation invariant.</p>
+      <ul class="check-opts"><li>A) Permutation invariance means the network produces the same output regardless of node feature values; MLP is not invariant because it is sensitive to feature magnitude</li><li class="correct">B) Permutation invariance means f(PAP^T, PX) = f(A, X) for any permutation P; an MLP on flattened A is not invariant because two different node orderings of the same graph produce different 1D vectors, giving different outputs from the same model</li><li>C) MLPs are permutation invariant as long as the input features are L2-normalized before flattening</li><li>D) Permutation invariance is only required for graph-level tasks; node-level MLPs are exempt because each node has a fixed position in the feature matrix</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Your GNN for citation network node classification achieves 85% accuracy with 2 layers, but drops to 60% with 8 layers. What is happening and how do you fix it?</p>
+      <ul class="check-opts"><li>A) 8-layer GNNs require larger learning rates to converge; the accuracy drop is a training stability issue, not a structural one</li><li class="correct">B) Over-smoothing: each GCN layer applies a low-pass filter, and after 8 layers node embeddings converge to nearly the same vector (weighted average of the full 8-hop neighborhood); fixes include residual connections, JK-Net (concatenate all layer outputs), or limiting depth to 2-4 layers</li><li>C) 8 layers cause the model to overfit — reduce model capacity by cutting the hidden dimension in half</li><li>D) The citation network is too small for 8-layer GNNs; this architecture requires graphs with millions of nodes</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> Why do standard GNNs fail on heterophilic graphs, and name a method that handles them?</p>
+      <ul class="check-opts"><li>A) Standard GNNs fail on heterophilic graphs because they cannot process graphs with more than 2 node types</li><li class="correct">B) Standard GNNs aggregate neighbor features via mean/sum — in heterophilic graphs, neighbors have different labels and their averaged features destroy the ego node's discriminative signal; H2GCN handles this by keeping ego embedding separate from neighbor aggregations and concatenating 1-hop and 2-hop neighborhoods separately</li><li>C) Standard GNNs fail on heterophilic graphs because they require the graph to be symmetric (undirected)</li><li>D) Heterophilic graphs are handled by all GNNs equally well — performance differences are due to feature quality, not architecture</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#graph_ml_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anomaly Detection | ML Systems Lab</title>
+  <meta name="description" content="Isolation Forest, one-class SVM, LOF, autoencoder-based, evaluation without labels">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/anomaly_detection.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/anomaly_detection.html">
+  <meta property="og:title" content="Anomaly Detection | ML Systems Lab">
+  <meta property="og:description" content="Isolation Forest, one-class SVM, LOF, autoencoder-based, evaluation without labels">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Anomaly Detection">
+  <meta name="twitter:description" content="Isolation Forest, one-class SVM, LOF, autoencoder-based, evaluation without labels">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Anomaly Detection",
+  "description": "Isolation Forest, one-class SVM, LOF, autoencoder-based, evaluation without labels",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/anomaly_detection.html",
+  "keywords": "anomaly detection, isolation forest, outlier, one-class"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#unsupervised_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">40 min read</span>
+      <span class="tag">anomaly detection</span><span class="tag">isolation forest</span><span class="tag">outlier</span><span class="tag">one-class</span>
+    </div>
+    <h1>Anomaly Detection</h1>
+    <p class="subtitle">Isolation Forest, one-class SVM, LOF, autoencoder-based, evaluation without labels</p>
+
+    <p>Every day your e-commerce site processes a flood of transactions. <strong>99.9%</strong> are ordinary. <strong>0.1%</strong> are fraud — and the tricky part is that the newest fraud looks like nothing anyone has labelled before. You cannot just train a fraud classifier, because you have almost no fraud examples and the next attack will be one you have never seen. So you flip the problem: instead of learning what fraud looks like, learn what *normal* looks like, and flag anything that does not fit. That is <strong>anomaly detection</strong>.</p>
+    <p>There are a few different ways to define &quot;does not fit,&quot; and each one is a different algorithm.</p>
+    <hr>
+    <h3>Statistical: live in the fat part of the distribution</h3>
+    <p>Fit a distribution to your normal data (a bell curve, say) and flag any point that lands far out in the thin tail. Simple, and great when &quot;normal&quot; really does form a neat blob — but it struggles the moment normal has a lumpy, complicated shape.</p>
+    <hr>
+    <h3>Isolation Forest: anomalies are easy to fence off</h3>
+    <p>This one has a genuinely clever insight. Pick a feature at random, pick a random value to split on, and cut the data in two. Keep cutting. A *normal* point is buried in a dense crowd, so it takes many random cuts to fence it off by itself. An *anomaly* sits out on its own, so just a couple of cuts isolate it. So the anomaly score is simply *how few cuts it took to isolate this point* — fewer cuts, more anomalous.</p>
+    <p>It is fast (scales to millions of points), makes no assumption about the shape of normal, and is the sensible default for tabular data.</p>
+    <hr>
+    <h3>Reconstruction and density: two more lenses</h3>
+    <p>A <strong>reconstruction</strong> method (the autoencoder from the last lesson) learns to rebuild normal data, then flags anything it rebuilds badly. A <strong>density</strong> method like <strong>LOF</strong> (Local Outlier Factor) compares how crowded a point's neighbourhood is versus its neighbours' neighbourhoods — a point sitting in a sparse patch surrounded by dense ones stands out. The clever bit about LOF is that it judges density *locally*, so it can flag the odd point at the edge of a loose cluster without wrongly flagging an entire tight-but-small cluster.</p>
+    <hr>
+    <h3>Turning a score into a decision (and checking it works)</h3>
+    <p>All of these produce a continuous *score*, not a yes/no. To act on it you pick a threshold — flag the top 1%, or flag as many as your review team can actually investigate, or tune it against whatever few labels you have. And do not fool yourself into thinking you need labelled anomalies to *train* — you do not, and that is the whole point. But grab even a tiny labelled set to *check* the detector: if the precision at your threshold is not clearly better than the base rate, the method is barely beating random and you should try another. A common practical check is Precision@50 — have an expert eyeball the top 50 flagged items and count how many are real.</p>
+    <hr>
+    <h3>One-class SVM: draw a boundary around normal</h3>
+    <p>The method in the title deserves its own paragraph. A <strong>one-class SVM</strong> learns a boundary (in a kernel-lifted space) that *tightly encircles* the normal data; anything falling outside is an anomaly. With an RBF kernel it can wrap a <strong>nonlinear</strong> normal region, which makes it a good fit for <strong>small-to-medium, clean</strong> datasets where normal has a complex shape. The costs: it's very <strong>sensitive to scaling and to its hyperparameters</strong> — `nu` (roughly the expected fraction of outliers / margin softness) and `gamma` (kernel width) — and it <strong>scales poorly</strong> (roughly O(n²)–O(n³)), so it's the wrong tool for millions of points. Reach for it on modest, well-cleaned data; reach for Isolation Forest when volume or dimensionality is high.</p>
+    <hr>
+    <h3>Novelty detection vs outlier detection</h3>
+    <p>A distinction that trips people up. <strong>Novelty detection</strong> assumes your training data is *clean normal* and you want to flag *new, unseen* anomalies at inference (one-class SVM and autoencoders are natural here). <strong>Outlier detection</strong> assumes the training data is *already contaminated* with anomalies and you want to find them *within* it (Isolation Forest and LOF are typically used this way). The difference decides both which method fits and how you must treat the training set — a novelty method fed contaminated &quot;normal&quot; data learns the contaminants and misses them later.</p>
+    <hr>
+    <h3>Time-series anomalies come in three kinds</h3>
+    <p>Point-in-time methods miss a whole class of anomalies in sequences. <strong>Point anomalies</strong> are single wildly-off values (a sensor spikes to 1000). <strong>Contextual anomalies</strong> are values that are normal in general but abnormal *in context* (30°C is fine in summer, anomalous in December). <strong>Collective / sequence anomalies</strong> are a run of individually-normal values that together form an abnormal *pattern* (a heartbeat rhythm that's wrong as a shape). Isolation Forest and other per-point methods catch point anomalies but <strong>miss contextual and collective ones</strong> — those need sequence models (LSTM/Transformer autoencoders) that see the temporal context.</p>
+    <hr>
+    <h3>Scaling matters — mostly</h3>
+    <p>Feature scale changes what &quot;far&quot; means. <strong>Distance-, kernel-, and reconstruction-based</strong> methods (LOF, one-class SVM, autoencoders) are <strong>scale-sensitive</strong> — an unscaled large-range feature dominates the distance and drowns the others, so standardise first. <strong>Isolation Forest</strong> is *less* scale-sensitive (it splits on random thresholds per feature), but it's still affected by feature quality and irrelevant noise features. Standardising is the safe default across the board; it's only truly optional for tree-based isolation.</p>
+    <hr>
+    <h3>The method-selection map</h3>
+    <p>Match the tool to the situation. <strong>Isolation Forest</strong> — the scalable default for tabular data, no distributional assumption. <strong>LOF</strong> — when anomalies are *local* (sparse relative to a nearby dense cluster), but avoid it on very large datasets (O(n²)). <strong>One-class SVM</strong> — a clean, nonlinear boundary around normal on smaller data. <strong>Autoencoders</strong> — images, sequences, and nonlinear structure where reconstruction error is meaningful. Pick by data size, structure, and the *kind* of anomaly you expect.</p>
+    <hr>
+    <h3>Evaluating without labels, expanded</h3>
+    <p>Since you usually can't label anomalies, evaluation is a craft. <strong>Synthetic anomaly injection</strong> (add known-weird points and check they're caught) is useful but caveated — synthetic anomalies may not resemble real ones, so a detector that aces synthetic can still miss real fraud. <strong>Precision@K expert audit</strong> (have a human review the top-K flags) gives a real precision estimate. Track the <strong>alert acceptance rate</strong> (what fraction of alerts investigators confirm), the <strong>incident-confirmation lag</strong> (truth arrives weeks later), and set up <strong>post-deployment label collection</strong> so confirmed incidents become a labeled set for retraining. No single label-free metric is trustworthy alone — triangulate.</p>
+    <hr>
+    <h3>The operational layer: alerts, not just scores</h3>
+    <p>A production detector isn't a score, it's an alerting system, and that layer is where most of them fail. <strong>Deduplicate</strong> so one incident doesn't fire fifty alerts. Manage <strong>alert fatigue</strong> — too many false positives and investigators stop trusting the system, so a technically-good detector becomes useless. Add <strong>severity scoring</strong> and <strong>investigation queues</strong> so the worst cases surface first, wire a <strong>false-positive feedback loop</strong> back into tuning, and <strong>monitor for drift</strong> — &quot;normal&quot; shifts over time, so a detector calibrated last quarter silently degrades. The model produces scores; the operational layer decides whether anyone acts on them.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Use Isolation Forest as your default anomaly detector for tabular data — it is fast (O(n log n)), handles high dimensions, requires no distributional assumption, and has one tunable parameter (contamination rate = expected fraction of anomalies).</strong>
+
+For time-series data with contextual anomalies, switch to an LSTM or transformer autoencoder that reconstructs sequences — Isolation Forest treats each point independently and misses anomalies that only appear anomalous in context.</li><li><strong>Trap: using per-feature Z-scores to flag anomalies.</strong>
+
+Multivariate anomalies — combinations that are individually normal but jointly unusual — are invisible to per-feature analysis. A transaction of 100 dollars at 3pm in New York is normal on each dimension; together they might be anomalous for a user who has never used the card outside California. Always use multivariate methods.</li><li><strong>Diagnostic: always test your anomaly detector on a small labeled holdout set, even if you cannot label everything.</strong>
+
+If precision at threshold is less than 2× the base rate, the method is barely better than random — try a different method or transform the feature space. Precision@50 (expert review of the top 50 flagged samples) is a practical operating metric when full labeled sets are unavailable.</li><li><strong>Know one-class SVM, the novelty/outlier split, and the time-series anomaly taxonomy.</strong>
+
+One-class SVM wraps a nonlinear boundary around clean normal data — good on small/medium sets, but scaling- and (nu, gamma)-sensitive and O(n²)–O(n³), so not for millions of points. Novelty detection assumes clean training data and flags new anomalies (one-class SVM, autoencoders); outlier detection assumes contaminated training data and finds anomalies within it (Isolation Forest, LOF). For time series, distinguish point, contextual (abnormal-in-context), and collective/sequence anomalies — per-point methods miss the latter two, which need sequence models. Standardise for distance/kernel/reconstruction methods (Isolation Forest is less scale-sensitive but still affected).</li><li><strong>Evaluate by triangulation and build the operational alerting layer.</strong>
+
+Without labels, combine synthetic anomaly injection (caveat: synthetics may not match real anomalies), Precision@K expert audits, alert acceptance rate, and post-deployment label collection for retraining — no single label-free metric is trustworthy alone. And a detector is an alerting system, not just a score: deduplicate alerts, manage alert fatigue (too many false positives and investigators stop trusting it), add severity scoring and investigation queues, feed false positives back into tuning, and monitor for drift since &quot;normal&quot; shifts over time.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Each anomaly detection algorithm encodes a different definition of &quot;unusual&quot; — Isolation Forest flags what is easy to isolate, LOF flags what is sparser than its neighbors, autoencoders flag what is hard to reconstruct — pick the definition that matches the anomalies you actually expect.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Learn normal, flag what doesn't fit</strong> — no fraud labels needed, catches unseen attacks.</li><li><strong>Isolation Forest = scalable tabular default:</strong> anomalies isolate in few random cuts, no distributional assumption.</li><li><strong>LOF</strong> flags locally sparse points; <strong>autoencoder</strong> flags what rebuilds badly; <strong>one-class SVM</strong> wraps a nonlinear boundary (small/clean data, $O(n^2)$–$O(n^3)$).</li><li><strong>Per-feature Z-scores miss multivariate anomalies</strong> — individually normal, jointly unusual.</li><li><strong>Score → threshold is a business choice;</strong> check Precision@K against base rate on a tiny labeled set.</li><li><strong>Novelty (clean training) vs outlier (contaminated training)</strong> decides method and data handling.</li><li><strong>Time-series anomalies:</strong> point, contextual, collective — per-point methods miss the last two; a detector is an alerting system, not a score.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You are detecting network intrusion anomalies from 1 million log events per day with 200 features. Which method do you choose and why?</p>
+      <ul class="check-opts"><li>A) LOF — it detects local density anomalies which are most common in network intrusion patterns</li><li>B) One-class SVM with RBF kernel — it learns a non-linear boundary around normal traffic that handles the high feature count well</li><li class="correct">C) Isolation Forest — O(n log n) training and O(log n) scoring makes it feasible at 1M events/day with 200 features; handles high dimensions better than LOF (O(n²)) or one-class SVM (O(n²-n³)); use LSTM autoencoder if temporal sequence patterns matter for contextual anomalies</li><li>D) Mahalanobis distance on a fitted multivariate Gaussian — the most interpretable option for explaining detected intrusions to security teams</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> LOF detects an anomaly in a dataset with two clusters of very different sizes and densities. A point in the smaller, denser cluster gets LOF=0.9 (classified as normal). A point at the edge of the larger, sparser cluster gets LOF=1.8 (classified as anomaly). Is this correct behaviour?</p>
+      <ul class="check-opts"><li>A) No — the point in the dense small cluster should have a high LOF because the cluster is unusual relative to the global data distribution</li><li>B) No — LOF should be calibrated relative to global density, not local neighbourhood density</li><li>C) No — LOF=0.9 indicates a numerical error; LOF values cannot be below 1 for any point</li><li class="correct">D) Yes — LOF is locally normalised by design; the dense-cluster point is normal relative to its equally-dense neighbours (LOF≈1), while the sparse-cluster edge point is sparser than its denser-core neighbours (LOF&gt;1), which is the correct semantic</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Your Isolation Forest model is flagging 15% of transactions as anomalies, but the fraud team says the actual fraud rate is 0.5%. What do you change?</p>
+      <ul class="check-opts"><li>A) Increase n_estimators from 100 to 500 — more trees reduce the false positive rate</li><li class="correct">B) Set contamination=0.005 to align with the 0.5% fraud rate, which shifts the decision threshold to the 99.5th percentile of training anomaly scores; sweep contamination from 0.001 to 0.01 and calibrate against labelled fraud cases and the team's review capacity</li><li>C) Switch to LOF — Isolation Forest is known to have high false positive rates at low fraud rates</li><li>D) Reduce max_samples per tree — smaller subsamples reduce over-sensitivity and lower the false positive rate</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> You have 1,000 labelled normal samples and 0 labelled anomalies. How do you build and evaluate an anomaly detection model?</p>
+      <ul class="check-opts"><li>A) You cannot build an anomaly detection model without labelled anomalies — collect anomaly labels first</li><li>B) Train a supervised binary classifier using synthetic anomalies as the negative class</li><li>C) Use a one-class SVM which requires only normal samples, and evaluate by checking that its boundary tightly encircles all training points</li><li class="correct">D) Train Isolation Forest or autoencoder exclusively on normal samples; evaluate via synthetic anomaly injection (uniform samples from feature bounding box), expert review of top-k flagged samples (Precision@50), and collect confirmed incidents in the first month of production to build a labelled set for retraining</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> You must detect anomalies in ECG time series where a run of individually-normal beats forms an abnormal rhythm. Why might Isolation Forest miss this, and what fits better?</p>
+      <ul class="check-opts"><li>A) Isolation Forest is ideal for this — it isolates rare points quickly, and abnormal rhythms are always made of rare individual values.</li><li class="correct">B) This is a collective/sequence anomaly: each beat is normal on its own, so a per-point method like Isolation Forest (which scores points independently) sees nothing unusual — it catches point anomalies, not patterns. A sequence model that sees temporal context (an LSTM or Transformer autoencoder reconstructing the sequence) is needed to flag the abnormal rhythm.</li><li>C) Isolation Forest misses it only because ECG data is high-dimensional; running PCA first would let it catch the rhythm.</li><li>D) The rhythm is a contextual anomaly that any scaling fix would resolve, so just standardise the features and Isolation Forest will catch it.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q6.</strong> Your training data for a fraud detector is genuinely clean normal transactions, and you want to flag new, never-before-seen fraud at inference. Which framing and method family fit, versus finding anomalies hidden inside a contaminated dataset?</p>
+      <ul class="check-opts"><li>A) Both are the same problem, so any anomaly method works identically regardless of whether the training data is clean or contaminated.</li><li class="correct">B) This is novelty detection (train on clean normal, flag new anomalies) — one-class SVM or an autoencoder fit naturally. Outlier detection is the different case where training data is already contaminated and you find anomalies within it, typically with Isolation Forest or LOF. The distinction matters because a novelty method fed contaminated 'normal' data learns the contaminants and then misses them at inference.</li><li>C) It's outlier detection because all fraud detection is outlier detection, so use LOF and assume the training data is contaminated regardless.</li><li>D) Neither framing applies to fraud; you must have labeled fraud examples and train a supervised classifier, so anomaly detection can't be used here.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#unsupervised_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

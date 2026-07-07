@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A/B Infrastructure | ML Systems Lab</title>
+  <meta name="description" content="Traffic splitting, treatment assignment, exposure logging, interaction effects">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/ab_infra.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/ab_infra.html">
+  <meta property="og:title" content="A/B Infrastructure | ML Systems Lab">
+  <meta property="og:description" content="Traffic splitting, treatment assignment, exposure logging, interaction effects">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="A/B Infrastructure">
+  <meta name="twitter:description" content="Traffic splitting, treatment assignment, exposure logging, interaction effects">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "A/B Infrastructure",
+  "description": "Traffic splitting, treatment assignment, exposure logging, interaction effects",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/ab_infra.html",
+  "keywords": "A/B testing, experimentation, traffic splitting, exposure logging"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#production_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">29 min read</span>
+      <span class="tag">A/B testing</span><span class="tag">experimentation</span><span class="tag">traffic splitting</span><span class="tag">exposure logging</span>
+    </div>
+    <h1>A/B Infrastructure</h1>
+    <p class="subtitle">Traffic splitting, treatment assignment, exposure logging, interaction effects</p>
+
+    <p>A team runs an A/B test the simple way: even user IDs go to control, odd IDs to treatment. Three weeks later they realize their hashing put the *same* 15% of power users into treatment across all six experiments running at once. Those users saw six new experiences stacked on top of each other, and their behavior is now tangled up in all six at the same time. That's <strong>experiment interference,</strong> and it doesn't just complicate the reading — it structurally breaks all six results. The groups aren't comparable, the p-values aren't valid, and every decision made from them rests on corrupted evidence.</p>
+    <hr>
+    <h3>Why an A/B bug is scarier than a model bug: it hides behind real-looking statistics</h3>
+    <p>A biased assignment still produces a p-value, a confidence interval, a tidy result summary — and every number in that chain is wrong. Nothing crashes, the experiment completes, and a decision gets made on bad data. That's why getting the infrastructure right isn't an implementation detail; it's the precondition for every statistical claim downstream.</p>
+    <hr>
+    <h3>The pieces that make assignment trustworthy</h3>
+    <p>*Deterministic assignment* — hash(user_id + experiment_id) so a user always lands in the same bucket, making their events attributable. *Orthogonal splitting* — a different salt per experiment so simultaneous tests assign users independently and don't correlate. *An experiment registry* — tracks what's live and blocks conflicting experiments from overlapping. *Traffic ramp-up* — 1% → 5% → 20% → 50%, to catch bugs before full exposure. *Guardrail metrics* — automatic regression alerts that fire before anyone reads the primary metric.</p>
+    <hr>
+    <h3>The single most important check: Sample Ratio Mismatch</h3>
+    <p>You intended 50/50 and observed 52/48. That is *not* noise — it's the fingerprint of a systematic bug in assignment or logging. Even a 1% mismatch means your two groups came from different populations, and then every comparison is invalid no matter how significant it looks. Run a χ² test on the raw split *before* you open any metric dashboard. Above 1% SRM, there is no valid analysis to do.</p>
+    <hr>
+    <p><strong>And for the long view: holdout groups.</strong> Permanently hold 5–10% of traffic out of *all* experiments and compare production against it over time. This catches novelty effects — the wins that look great in a two-week test but fade once the shine wears off — and shows the true cumulative impact of your ML work. All of this is why &quot;A/B testing is just feature flags and if/else&quot; misses the point: the flag is the mechanism; everything above is the safety system that makes the mechanism produce answers you can trust.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Implement an experiment registry before running more than 2 simultaneous experiments — without it, experiment interference silently invalidates results and you make product decisions on corrupted data.</strong>
+
+hash(user_id + experiment_id) % 100 gives orthogonal assignments only if each experiment uses a different salt. Without the registry tracking what is running, two experiments may accidentally share users in ways that correlate treatment assignments, confound their effects, and produce results that look significant but measure the interaction, not the treatment.</li><li><strong>Trap: running experiments past their planned duration on a fixed sample size is a form of p-hacking, regardless of your statistical reasoning for the extension.</strong>
+
+Once an experiment runs past its pre-specified duration, extending it is outcome-dependent stopping. You looked at the data, saw it was close to significance, and extended. That is exactly what p-hacking looks like from the outside. Plan sample size before starting. If you need to extend, use sequential testing methods (mSPRT) that account for the additional looks.</li><li><strong>Diagnostic: audit your last 10 A/B test results — if more than 30% were positive, your testing framework likely has inflated Type I error.</strong>
+
+Under pure noise at α=0.05 with a single primary metric and no peeking, you expect 5% false positives. If your win rate is 30%, you are either measuring real effects (unlikely across all features) or you have peeking, multiple comparisons, or SRM issues inflating the Type I error. The win rate is the fastest diagnostic for whether your experimentation infrastructure is measuring reality.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>A biased assignment generates a p-value, a confidence interval, and a recommendation — every number in the chain is invalid, no alarm fires, and there is no statistical correction for a compromised experiment.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Experiment interference:</strong> same power users land in treatment across six concurrent tests → all six results structurally broken.</li><li><strong>An A/B bug is scarier than a model bug:</strong> it hides behind real-looking p-values and confidence intervals.</li><li><strong>Trustworthy assignment:</strong> deterministic `hash(user_id + experiment_id)`, orthogonal splitting (per-experiment salt), registry, traffic ramp 1→5→20→50%, guardrail metrics.</li><li><strong>Most important check = Sample Ratio Mismatch:</strong> intended 50/50, observed 52/48 is a bug fingerprint, not noise.</li><li><strong>Run a χ² test on the raw split *before* opening any metric dashboard.</strong> Above 1% SRM there's no valid analysis.</li><li><strong>Extending a fixed-N experiment past its planned duration = p-hacking</strong> — use sequential methods (mSPRT) if you must look again.</li><li><strong>Permanent 5–10% holdout</strong> across all experiments catches novelty effects and shows true cumulative ML impact.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You run an A/B test with 50/50 split. Analysis shows 52% of unique users are in treatment, 48% in control. What do you do before looking at metrics?</p>
+      <ul class="check-opts"><li>A) Proceed with analysis but apply a statistical correction to adjust for the 2% imbalance</li><li class="correct">B) Do not look at primary metrics — SRM indicates a systematic assignment or logging bug making the groups non-comparable; debug the hash function, bot filtering, session/user assignment mismatch, and logging coverage; restart the experiment after fixing the root cause</li><li>C) The 52/48 split is within acceptable statistical variance for a 50/50 experiment; proceed with analysis</li><li>D) Discard the treatment group entirely and rerun with only the control group as a baseline</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Your A/B test shows a 5% lift in click-through rate. The experiment ran for 3 days. What validity threats should you consider before claiming the win?</p>
+      <ul class="check-opts"><li>A) A statistically significant result at 3 days is valid regardless of duration — significance means the result is real</li><li class="correct">B) Day-of-week effects (3 days may miss the weekly cycle), novelty effect (users clicking because it's new, not better), peeking/early stopping bias, SRM, and post-hoc metric selection all threaten validity; run for at least 7-14 days before declaring a win</li><li>C) The only validity threat is sample size — if the confidence interval is narrow, the result is valid at any duration</li><li>D) Three-day experiments are only invalid for negative results; positive results are inherently more reliable</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> How do you design an A/B infrastructure for testing ML model changes when models have different computational costs and serving latency?</p>
+      <ul class="check-opts"><li>A) Test models in separate sequential experiments to avoid latency confounding — never A/B test models with different serving times simultaneously</li><li class="correct">B) Ensure both models meet the latency SLA before launch; run a canary first (1-5% traffic) to catch errors; route assignment before model execution; log model_version with every prediction and outcome; ensure model assignment and experiment assignment share the same request context</li><li>C) Use the faster model as control and the slower model as treatment — this naturally accounts for any latency differences in the analysis</li><li>D) Latency differences between models are irrelevant to A/B validity as long as the sample sizes are equal</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> A marketplace A/B test treats seller-side UI (treated sellers get a new dashboard). Control sellers are unaffected. But analysis shows control buyer behaviour also changed. What is happening?</p>
+      <ul class="check-opts"><li>A) The control group has been contaminated by a separate unrelated experiment running concurrently</li><li class="correct">B) This is network interference (SUTVA violation) — treated sellers change behavior (pricing, listings, response time) which directly affects buyers interacting with those sellers in the control group; remedies include cluster randomisation by geographic market, switchback designs, or bipartite experiment estimators</li><li>C) Control buyer behaviour changing is expected and should be factored into the primary metric calculation</li><li>D) The buyer-side change proves the seller UI treatment is working as intended; this validates the experiment result</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#production_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

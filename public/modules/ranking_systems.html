@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learning-to-Rank Systems | ML Systems Lab</title>
+  <meta name="description" content="Pointwise vs pairwise vs listwise, LambdaMART, position bias, distillation">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/ranking_systems.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/ranking_systems.html">
+  <meta property="og:title" content="Learning-to-Rank Systems | ML Systems Lab">
+  <meta property="og:description" content="Pointwise vs pairwise vs listwise, LambdaMART, position bias, distillation">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Learning-to-Rank Systems">
+  <meta name="twitter:description" content="Pointwise vs pairwise vs listwise, LambdaMART, position bias, distillation">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Learning-to-Rank Systems",
+  "description": "Pointwise vs pairwise vs listwise, LambdaMART, position bias, distillation",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/ranking_systems.html",
+  "keywords": "LTR, learning-to-rank, LambdaMART, position bias"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#system_design_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">25 min read</span>
+      <span class="tag">LTR</span><span class="tag">learning-to-rank</span><span class="tag">LambdaMART</span><span class="tag">position bias</span>
+    </div>
+    <h1>Learning-to-Rank Systems</h1>
+    <p class="subtitle">Pointwise vs pairwise vs listwise, LambdaMART, position bias, distillation</p>
+
+    <p>A trap that catches almost everyone: training a classifier to predict relevance and sorting by its score is *not* the same as training a ranker. A classifier tuned for per-item accuracy can get every absolute score right and still order them wrong — because ranking is *relative*. What matters is which item beats which, not the exact number on each.</p>
+    <hr>
+    <p><strong>Three ways to train for order.</strong> *Pointwise* scores each item alone and misses the relative point. *Pairwise* learns &quot;A should rank above B&quot; — fixes pairs but treats a swap at rank 1 the same as a swap at rank 100. *Listwise* optimizes the whole list, which is what you want, but it's expensive and sensitive to label noise. For tabular ranking (web search, ads) the practical winner is <strong>LambdaMART</strong>: gradient-boosted trees whose gradients are weighted by NDCG impact, so a swap near the top gets a far bigger push than one near the bottom — a ranking-aware signal without needing NDCG to be differentiable (it isn't).</p>
+    <hr>
+    <p><strong>The deeper problem none of these fixes alone: position bias.</strong> Click data is contaminated by *where* items were shown. Position 1 collects clicks whether or not it deserved them, so training on raw clicks teaches the model to reproduce position effects — a self-reinforcing loop where it keeps promoting whatever the last model promoted. Breaking it needs inverse-propensity weighting: weight each example by 1/P(click|position), so position-1 examples count less and position-5 examples count more.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>LambdaMART is the tabular workhorse: GBM with gradients weighted by NDCG impact.</strong> Each item's gradient sums LambdaRank pair-gradients weighted by how much swapping the pair changes NDCG. A rank-1-vs-2 swap gets a much larger gradient than rank-98-vs-99 — NDCG-aware training without a differentiable NDCG.</li><li><strong>Position bias is a correctness bug that loss choice alone can't fix.</strong> Position 1 gets ~10× the clicks of position 10 regardless of relevance; raw-click training reproduces the prior model's ranking. Inverse-propensity weighting (1/P(click|position)) plus occasional randomization recovers unbiased relevance.</li><li><strong>Online distillation decouples quality from serving latency.</strong> A large teacher with expensive features (cross-attention, full history) trains offline; a small student matches its rankings without those features and serves fast. The standard pattern when the most accurate model is too slow to serve directly.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Ranking is a relative problem, so you train for order (LambdaMART weights each gradient by NDCG impact) not for per-item accuracy — but click-trained rankers also inherit position bias, which only inverse-propensity weighting (not a better loss) removes.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Sorting a classifier ≠ training a ranker:</strong> ranking is *relative* — what matters is which item beats which, not the exact score on each. A classifier tuned for per-item accuracy can get every absolute score right and still misorder the few hard, high-value pairs near the top.</li><li><strong>Three ways to train for order, cost and fidelity rising together:</strong> *pointwise* scores each item alone (misses the relative point); *pairwise* learns &quot;A ranks above B&quot; (fixes pairs but treats a rank-1 swap like a rank-100 swap); *listwise* optimizes the whole list (what you want, but expensive and label-noise sensitive).</li><li><strong>LambdaMART is the tabular workhorse:</strong> gradient-boosted trees whose gradients are weighted by |ΔNDCG| — a swap near the top gets a far bigger push than one near the bottom, injecting a ranking-aware signal without needing NDCG to be differentiable (it's sorting-based, zero-gradient almost everywhere).</li><li><strong>Position bias is a correctness bug loss choice alone can't fix:</strong> position 1 gets ~10× the clicks of position 10 regardless of relevance, so raw-click training reproduces the prior model's ranking in a self-reinforcing loop. Break it with inverse-propensity weighting (weight each example by 1/P(click|position)) plus occasional randomization — not a better loss.</li><li><strong>Online distillation decouples quality from serving latency:</strong> a large teacher with expensive features (cross-attention, full history) trains offline; a small student matches its rankings without those features and serves fast. The standard pattern when the most accurate model is too slow — watch for train/serve distribution shift as live traffic drifts from the distillation set.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> A classifier assigns correct absolute relevance probabilities to every item, yet its ranking is worse than a pairwise model with less accurate scores. How is that possible?</p>
+      <ul class="check-opts"><li>A) It isn't — correct absolute scores imply correct ordering.</li><li class="correct">B) Ranking depends only on relative order. A classifier trained on per-item log-loss spends capacity getting easy items' absolute scores right and can misorder the few hard, high-value pairs near the top; a pairwise/listwise objective spends capacity exactly where order matters. Correct on average ≠ correct where the ranking is decided.</li><li>C) The classifier's scores need softmax normalization before sorting; without it the order is arbitrary.</li><li>D) Only if the classifier is uncalibrated — calibrate it and its ranking matches the pairwise model.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Why does LambdaMART weight each pairwise gradient by |ΔNDCG| rather than training directly to maximize NDCG?</p>
+      <ul class="check-opts"><li>A) Because NDCG is faster to compute as a gradient than as a metric.</li><li class="correct">B) Because NDCG is a sorting-based, piecewise-constant metric — it has zero gradient almost everywhere and is non-differentiable, so you can't optimize it directly. Weighting each pair's gradient by how much swapping it would change NDCG injects the ranking-position signal into a well-defined gradient the GBM can follow.</li><li>C) Because |ΔNDCG| weighting is equivalent to L2 regularization on the trees.</li><li>D) Because direct NDCG optimization requires listwise labels, which are never available.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> You deploy an online-distilled student ranker. It matches the teacher on held-out ranking but underperforms in production. What's the most likely cause tied to distillation?</p>
+      <ul class="check-opts"><li>A) The student has fewer parameters, so it must be underfit; just enlarge it to the teacher's size.</li><li class="correct">B) Distribution shift between the distillation data and live traffic: the student only mimics the teacher where the teacher was evaluated. If live queries drift from the distillation set (new items, seasonal intent), the student's imitation degrades. Refresh distillation on recent traffic and monitor teacher-student agreement online.</li><li>C) Distillation always loses exactly the teacher's top-1 accuracy; nothing to fix.</li><li>D) The student can't use the teacher's expensive features at serving, so it must be fed them anyway.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#system_design_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

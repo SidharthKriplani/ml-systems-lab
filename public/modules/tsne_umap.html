@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>t-SNE &amp; UMAP | ML Systems Lab</title>
+  <meta name="description" content="Perplexity, why t-SNE clusters mislead, UMAP vs t-SNE tradeoffs">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/tsne_umap.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/tsne_umap.html">
+  <meta property="og:title" content="t-SNE &amp; UMAP | ML Systems Lab">
+  <meta property="og:description" content="Perplexity, why t-SNE clusters mislead, UMAP vs t-SNE tradeoffs">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="t-SNE &amp; UMAP">
+  <meta name="twitter:description" content="Perplexity, why t-SNE clusters mislead, UMAP vs t-SNE tradeoffs">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "t-SNE & UMAP",
+  "description": "Perplexity, why t-SNE clusters mislead, UMAP vs t-SNE tradeoffs",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/tsne_umap.html",
+  "keywords": "t-SNE, UMAP, visualisation, manifold"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#unsupervised_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">40 min read</span>
+      <span class="tag">t-SNE</span><span class="tag">UMAP</span><span class="tag">visualisation</span><span class="tag">manifold</span>
+    </div>
+    <h1>t-SNE &amp; UMAP</h1>
+    <p class="subtitle">Perplexity, why t-SNE clusters mislead, UMAP vs t-SNE tradeoffs</p>
+
+    <p>You have 50,000 single-cell RNA sequences, each described by 20,000 gene expression values. You want a 2D visualization to see whether cell types cluster naturally. PCA gives a blurry projection where all cells overlap. t-SNE produces a crisp 2D visualization where distinct cell types form separated islands — and that visualization guided the discovery of a previously unknown rare cell population, 0.1% of cells with a distinct gene expression profile invisible in PCA.</p>
+    <p>t-SNE: computes pairwise similarities in high dimensions (Gaussian distribution of distances, perplexity parameter controls effective neighborhood size). Computes pairwise similarities in low dimensions (Student t-distribution — heavier tails prevent crowding). Minimizes KL divergence between the two similarity distributions via gradient descent. The heavy tails in low dimensions mean that moderate distances in high dimensions map to large distances in low dimensions — this creates the well-separated clusters that make t-SNE visualizations visually striking.</p>
+    <p>UMAP (Uniform Manifold Approximation and Projection): grounded in Riemannian geometry and topological data analysis. Preserves more global structure than t-SNE, faster (O(n log n) vs O(n²)), supports out-of-sample transformation (new points can be projected without refitting). Default choice over t-SNE for most use cases.</p>
+    <p>NOT-this: &quot;t-SNE cluster distances are interpretable.&quot; The distances between clusters in a t-SNE plot are meaningless — a cell type that appears far from another in t-SNE might be close in the actual high-dimensional space. t-SNE preserves local neighborhoods but distorts global distances. Never interpret inter-cluster distances in a t-SNE plot. UMAP preserves more global structure but still warps distances.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Use UMAP over t-SNE for nearly all visualization tasks — it is faster, supports out-of-sample projection, and preserves more global structure while producing equally clear local cluster separation.</strong>
+
+The only reason to use t-SNE over UMAP is when existing analyses were done with t-SNE for direct comparison. For new work, UMAP is the default.</li><li><strong>Trap: interpreting cluster sizes in t-SNE or UMAP as meaningful.</strong>
+
+Point density in the 2D projection does not correspond to point density in the original space — a small dense cluster in the plot might represent a small or large group in high dimensions. Report cluster sizes from the original space, not the projection. Visual size carries no quantitative meaning.</li><li><strong>Diagnostic: if UMAP shows one undifferentiated blob, try increasing n_neighbors (too small → disconnected graph, no global structure) or decreasing min_dist (too large → all points crowded to center).</strong>
+
+If UMAP shows many tiny isolated clusters, n_neighbors is too small. Structures that persist across multiple n_neighbors values are more trustworthy than those that appear only at one setting.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>t-SNE and UMAP are for looking at data, not for generating features — inter-cluster distances in t-SNE are deliberately distorted, UMAP's are approximate, and clustering on either's 2D output will mislead you at exactly the boundaries that matter most.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>For looking, not for features</strong> — 2D visualization of nonlinear structure.</li><li><strong>t-SNE:</strong> match high-D and low-D similarities, minimize KL; Student-t tails prevent crowding.</li><li><strong>Inter-cluster distances are meaningless</strong> — deliberately distorted; never interpret them.</li><li><strong>UMAP default over t-SNE:</strong> faster ($O(n\log n)$), preserves more global structure, out-of-sample transform.</li><li><strong>Cluster sizes in the plot carry no quantitative meaning</strong> — report from original space.</li><li><strong>Never run K-means on the 2D output</strong> — cluster on PCA-50, use UMAP for display only.</li><li><strong>Perplexity / n_neighbors are knobs:</strong> trust structure that persists across settings.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You run t-SNE with perplexity=5 and see 50 tiny, tight clusters. You run with perplexity=100 and see 3 blobs. Which represents the &quot;true&quot; structure?</p>
+      <ul class="check-opts"><li>A) Perplexity=5 is always more accurate — lower perplexity reveals true local structure that high perplexity obscures</li><li>B) Perplexity=100 is always more accurate — t-SNE requires high perplexity to capture meaningful global structure</li><li class="correct">C) Neither alone is definitive — run at intermediate perplexities (15, 30, 50), use UMAP for comparison, and run k-means in the original high-dimensional space; structures that appear in both the parametric clustering and t-SNE across perplexity values are most likely real</li><li>D) Both are wrong — t-SNE is unreliable at any perplexity setting and should not be used for exploratory analysis</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> A team visualises 50,000 single-cell RNA-seq measurements with t-SNE, sees 12 distinct clusters, and runs k-means on the 2D t-SNE embedding. Explain two problems with this approach.</p>
+      <ul class="check-opts"><li>A) t-SNE is too slow for 50,000 cells and k-means cannot handle RNA-seq data directly</li><li>B) The number of clusters should be determined by BIC, not visual inspection; and k-means should use cosine distance for RNA-seq data</li><li class="correct">C) k-means on t-SNE embeddings uses distances distorted by the t-distribution so cluster boundaries are wrong; and the 12 apparent clusters may be artefacts of the perplexity setting that disappear under different runs or perplexity values</li><li>D) t-SNE does not work on high-dimensional data — PCA must be applied first, after which k-means on the 2D output is valid</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Your t-SNE plot shows two large clusters that are completely separated. Does this mean these two groups are very different from each other in the original space?</p>
+      <ul class="check-opts"><li>A) Yes — complete visual separation in t-SNE directly corresponds to large distance in the original high-dimensional space</li><li>B) Yes — t-SNE's heavy-tailed t-distribution preserves inter-cluster distances proportionally</li><li class="correct">C) No — t-SNE's repulsive forces push any locally-separated groups apart visually regardless of their true high-dimensional distance; verify with actual centroid distance, UMAP comparison, or statistical tests on original features</li><li>D) Only if the same separation appears at both low and high perplexity settings</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> You need to compress 768-dimensional BERT embeddings to 2D for visualisation and downstream k-means clustering. What is your pipeline and why?</p>
+      <ul class="check-opts"><li>A) Apply UMAP directly from 768D to 2D, then run k-means on the 2D output — UMAP preserves distances well enough for clustering</li><li>B) Apply t-SNE to 2D for visualisation and k-means simultaneously — t-SNE is preferred for BERT embeddings because it handles the dense manifold structure better</li><li class="correct">C) Apply PCA to 50D (clustering step), run k-means on the 50D space, then apply UMAP to 2D separately (visualisation step), colouring by k-means labels — clustering on PCA-50 uses meaningful Euclidean distances; UMAP 2D is for display only</li><li>D) Run k-means directly in 768D — dimensionality reduction before clustering discards information and reduces clustering accuracy</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#unsupervised_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ranking &amp; Learning-to-Rank | ML Systems Lab</title>
+  <meta name="description" content="Pointwise vs pairwise vs listwise — why the loss must match the ranking objective">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/learning_to_rank.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/learning_to_rank.html">
+  <meta property="og:title" content="Ranking &amp; Learning-to-Rank | ML Systems Lab">
+  <meta property="og:description" content="Pointwise vs pairwise vs listwise — why the loss must match the ranking objective">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Ranking &amp; Learning-to-Rank">
+  <meta name="twitter:description" content="Pointwise vs pairwise vs listwise — why the loss must match the ranking objective">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Ranking & Learning-to-Rank",
+  "description": "Pointwise vs pairwise vs listwise — why the loss must match the ranking objective",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/learning_to_rank.html",
+  "keywords": "RecSys, learning to rank, LTR, pairwise, listwise, NDCG"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#recsys_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">24 min read</span>
+      <span class="tag">RecSys</span><span class="tag">learning to rank</span><span class="tag">LTR</span><span class="tag">pairwise</span><span class="tag">listwise</span>
+    </div>
+    <h1>Ranking &amp; Learning-to-Rank</h1>
+    <p class="subtitle">Pointwise vs pairwise vs listwise — why the loss must match the ranking objective</p>
+
+    <p>Ranking sits at the expensive end of the funnel: a few hundred candidates, all the features you couldn't afford in retrieval, and one job — get the *order* right. The subtle part is that &quot;get the order right&quot; is not the same objective as &quot;predict each score accurately,&quot; and choosing the wrong loss quietly wastes the whole stage.</p>
+    <hr>
+    <p><strong>Pointwise LTR treats ranking as regression/classification per item.</strong> Predict p(click) or a rating for each candidate independently, then sort by the score. It's simple and reuses standard losses (log-loss, MSE). Its blind spot: the loss cares about *absolute* accuracy, not relative order. A model that predicts 0.9 vs 0.8 for two items and one that predicts 0.5 vs 0.4 rank them identically, but pointwise loss treats them as different — spending capacity on calibration the ranking doesn't need, and under-weighting the pairs that actually decide the order.</p>
+    <hr>
+    <p><strong>Pairwise LTR optimizes the thing you actually care about: relative order.</strong> It looks at pairs (i, j) where i is more relevant than j and penalizes ranking j above i (RankNet, LambdaRank, and the ubiquitous BPR for implicit feedback). This aligns the loss with the objective — you're directly minimizing inversions. <strong>LambdaMART</strong> (pairwise gradients weighted by the NDCG change each swap causes) is the classic strong baseline and still wins many tabular ranking bake-offs.</p>
+    <hr>
+    <p><strong>Listwise LTR optimizes the whole ordered list at once</strong> (ListNet, ListMLE, softmax cross-entropy over the list, or directly approximating NDCG). It's the most aligned with metrics like NDCG@k that depend on the entire ranking and its position discounts, but it's harder to optimize and more sensitive to list construction. The practical rule: <strong>pointwise is the easy default, pairwise/listwise align the loss with the ranking objective</strong> — reach for them when relative order and top-of-list quality are what the product is graded on. Note ranking has features retrieval couldn't afford: cross features (user×item), real-time context, candidate-set features, and the user's session so far.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>The loss must match the objective: order, not absolute score.</strong> Pointwise minimizes per-item error and can waste capacity calibrating items whose relative order is never in doubt, while under-weighting the boundary pairs that decide the ranking. Pairwise/listwise optimize order directly.</li><li><strong>Pairwise (RankNet/LambdaRank/BPR) minimizes inversions; LambdaMART weights each pair by its NDCG impact.</strong> This directly targets ranking quality and is the classic strong baseline — especially LambdaMART on tabular features, and BPR for implicit feedback.</li><li><strong>Listwise (ListNet/ListMLE/approx-NDCG) optimizes the entire ordered list</strong>, matching position-discounted metrics like NDCG@k most closely, at the cost of harder optimization and sensitivity to how the candidate list is built.</li><li><strong>Ranking uses features retrieval couldn't afford.</strong> Cross features (user×item), real-time context, candidate-set-level features, and the in-session sequence are available here because there are only hundreds of candidates — this is why the stage is worth its cost.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Learning-to-rank optimizes *order*, not absolute score: pointwise (regression per item) is the easy default but misaligned with ranking; pairwise (minimize inversions; LambdaMART weights pairs by NDCG impact) and listwise (optimize the whole list, matching NDCG@k) align the loss with the objective — and ranking earns its cost by using cross/context/session features retrieval couldn't afford.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>The loss must match the objective — order, not absolute score.</strong> Pointwise (regress/classify each item, then sort) is simple but optimizes absolute accuracy; it wastes capacity on items whose order is never in doubt and under-weights the boundary pairs that decide the ranking.</li><li><strong>Pairwise LTR minimizes inversions:</strong> RankNet/LambdaRank/BPR penalize ranking a less-relevant item above a more-relevant one — directly aligned with order. <strong>LambdaMART</strong> (pairwise gradients weighted by each swap's NDCG change) is the classic strong tabular baseline; BPR is the implicit-feedback default.</li><li><strong>Listwise LTR optimizes the whole ordered list</strong> (ListNet/ListMLE/approx-NDCG), matching position-discounted metrics like NDCG@k most closely — but it's harder to optimize and sensitive to list construction.</li><li><strong>Practical rule:</strong> pointwise = easy default; reach for pairwise/listwise when relative order and top-of-list quality are how the product is graded.</li><li><strong>Ranking earns its cost via features retrieval couldn't afford:</strong> user×item cross features, real-time context, candidate-set features, and the in-session sequence — affordable over hundreds of candidates, not millions.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> A ranker trained with pointwise log-loss has excellent calibration (predicted p(click) matches observed) but disappointing NDCG@10. What's the most likely explanation?</p>
+      <ul class="check-opts"><li>A) The model is underfit; add capacity and both calibration and NDCG will improve together.</li><li class="correct">B) Pointwise loss optimizes absolute per-item accuracy, not relative order. Capacity is spent getting well-separated items' scores exactly right (which doesn't change their order) while the close boundary pairs that actually determine NDCG are under-weighted. A pairwise/listwise objective (or LambdaMART) targets the order directly.</li><li>C) NDCG is simply the wrong metric for a calibrated model; report AUC instead and the problem disappears.</li><li>D) The candidates are too few; retrieve more so NDCG@10 has more items to work with.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Why does LambdaMART weight each candidate *pair* by the change in NDCG that swapping them would cause, rather than treating all pairs equally (as vanilla RankNet does)?</p>
+      <ul class="check-opts"><li>A) To reduce training time by ignoring pairs, since NDCG-zero pairs can be skipped.</li><li class="correct">B) Because NDCG is position-discounted: fixing an inversion near the top of the list matters far more than fixing one deep in the list. Weighting each pair's gradient by its NDCG delta focuses learning on the swaps that actually move the metric, aligning the pairwise objective with top-heavy ranking quality.</li><li>C) Because equal weighting causes gradient explosion in gradient-boosted trees.</li><li>D) Because NDCG weighting makes the loss convex, guaranteeing a global optimum.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Which feature type is a legitimate reason the ranking stage justifies its cost, even though retrieval already narrowed the candidates?</p>
+      <ul class="check-opts"><li>A) The item's static embedding, since it's already computed in retrieval and just needs re-scoring.</li><li class="correct">B) User×item cross features and real-time session context — expensive to compute per pair, unaffordable over millions in retrieval, but affordable over the few hundred survivors, and exactly what lets the ranker distinguish items a two-tower dot product can't.</li><li>C) The catalog size, which the ranker uses to normalize scores.</li><li>D) The ANN index parameters (ef_search/nprobe), which the ranker consumes as features.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#recsys_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

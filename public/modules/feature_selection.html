@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feature Selection &amp; Dimensionality | ML Systems Lab</title>
+  <meta name="description" content="Filter/wrapper/embedded, mutual information, RFE, SHAP">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/feature_selection.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/feature_selection.html">
+  <meta property="og:title" content="Feature Selection &amp; Dimensionality | ML Systems Lab">
+  <meta property="og:description" content="Filter/wrapper/embedded, mutual information, RFE, SHAP">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Feature Selection &amp; Dimensionality">
+  <meta name="twitter:description" content="Filter/wrapper/embedded, mutual information, RFE, SHAP">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Feature Selection & Dimensionality",
+  "description": "Filter/wrapper/embedded, mutual information, RFE, SHAP",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/feature_selection.html",
+  "keywords": "feature selection, mutual information, SHAP, RFE"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#classical_ml_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">28 min read</span>
+      <span class="tag">feature selection</span><span class="tag">mutual information</span><span class="tag">SHAP</span><span class="tag">RFE</span>
+    </div>
+    <h1>Feature Selection &amp; Dimensionality</h1>
+    <p class="subtitle">Filter/wrapper/embedded, mutual information, RFE, SHAP</p>
+
+    <p>It feels obvious that more features should mean better predictions — more information about each house, each patient, each customer. For a while that is true. But there is a point where piling on features starts making the model *worse*, and the reason has a wonderful name, coined by the mathematician Richard Bellman in the 1950s: the <strong>curse of dimensionality</strong>.</p>
+    <p>Here is the curse in one picture. Imagine 100 data points spread along a single line (one feature) from 0 to 1 — they sit packed close together, a few hundredths apart. Now give each point a second feature: the same 100 points scatter across a square, and the gaps between them widen. Add a third feature and they float in a cube, mostly empty space around each one. Keep going, and in high dimensions the points drift so far apart that every point is roughly the same enormous distance from every other — there is simply not enough data to fill the space. Patterns that were obvious in a few dimensions dissolve into the emptiness.</p>
+    <p>So extra features are not free. Irrelevant ones add noise for the model to trip over. Redundant ones (two features saying the same thing) add nothing but confusion. And every extra dimension thins out your data, which makes overfitting easier and real structure harder to find. The cure is to be deliberate about which features you keep — that is <strong>feature selection</strong>.</p>
+    <hr>
+    <h3>Three families of ways to choose</h3>
+    <p>There are three broad strategies, trading speed for smartness.</p>
+    <p><strong>Filter methods</strong> are the quick screen. They score each feature on its own — how strongly does it relate to the target, using a measure like correlation or mutual information — and keep the top ones. Fast and simple, but blind: they judge each feature in isolation, so they can throw away two features that are useless alone yet powerful together.</p>
+    <p><strong>Wrapper methods</strong> are the brute-force search. They actually train the model on different subsets of features and keep whichever subset scores best. A common version, <strong>recursive feature elimination</strong>, trains the model, drops the weakest feature, and repeats. Accurate, because the model itself is the judge — but slow, since it means training many times, which becomes impractical with thousands of features.</p>
+    <p><strong>Embedded methods</strong> fold selection into training itself. <strong>Lasso (L1 regularisation)</strong> is the classic: as the model trains, its penalty drives useless features' weights all the way to zero, selecting and fitting at once. Tree-based importance — or better, SHAP values — does something similar: a single trained model ranks the features it actually leaned on, interactions included. For everyday tabular work this is the most reliable recipe: train one gradient-boosted model on everything, rank the features by importance, and keep the top ones.</p>
+    <hr>
+    <h3>Selection versus reduction — a real distinction</h3>
+    <p>There is a cousin of feature selection worth separating out: <strong>dimensionality reduction</strong>, of which <strong>PCA</strong> is the famous example. The difference matters. Selection *keeps a subset of your original features* — afterward you can still say &quot;we used income, age, and debt.&quot; Reduction *invents new features* by blending the old ones into a handful of combined directions that capture most of the variation. Those directions are compact but no longer mean anything you can explain to a person (&quot;0.4 × income minus 0.2 × age…&quot;). So choose selection when you need to keep things explainable, and reduction when you only care about squeezing the information into fewer numbers.</p>
+    <hr>
+    <h3>The one trap that fakes good results</h3>
+    <p>Whatever method you use, there is a mistake that quietly inflates your numbers: <strong>choosing features using the whole dataset, before you split off a test set.</strong> If you pick features by how they relate to the label across *all* your data, you have let the test set's answers leak into the choice — the chosen features look more predictive than they really are, and your reported accuracy is a mirage. The fix is to do feature selection *inside* your cross-validation: choose features using only the training portion of each fold, and judge on the held-out portion. Select on the training data only. Always.</p>
+    <hr>
+    <h3>SHAP is powerful but not gospel</h3>
+    <p>SHAP is the best-known importance tool, and it's genuinely good — it fairly attributes a prediction across features with solid theory behind it. But two caveats keep you honest. First, under <strong>correlated features</strong> SHAP can *split* or *shuffle* credit between the correlated group in ways that mislead — a truly important feature can look weak because its correlated twin absorbed the attribution. Second, SHAP explains what the *model* used, not what *causes* the outcome — high SHAP importance is <strong>not</strong> evidence of causality. Treat SHAP as &quot;what is this model leaning on,&quot; never as &quot;what drives the world.&quot;</p>
+    <hr>
+    <h3>Permutation importance, and its blind spot</h3>
+    <p>A model-agnostic alternative worth naming: <strong>permutation importance</strong> shuffles one feature's values and measures how much accuracy drops — a big drop means the model really relied on it. It works on any fitted model and needs no retraining. Its blind spot is the same correlation trap that haunts forests: with two correlated features, shuffling one barely hurts because its twin still carries the signal, so both look unimportant. So read permutation importance with the correlation caveat, and consider dropping correlated groups together to test them jointly.</p>
+    <hr>
+    <h3>Mutual information, read carefully</h3>
+    <p>Correlation only catches *linear* relationships; <strong>mutual information</strong> catches *any* dependence, linear or not, which is why it's a better filter score. But mind its limits: as usually applied it's <strong>univariate</strong> (scores each feature against the target alone, missing features that only matter in combination), and its estimate is <strong>sensitive to binning, the estimator, and sample size</strong> — noisy MI values with little data can rank features almost at random. Useful as a fast screen, not a final verdict.</p>
+    <hr>
+    <h3>RFE in practice: use RFECV</h3>
+    <p>Recursive feature elimination is accurate but has practical costs: it's <strong>expensive</strong> (retrains repeatedly), <strong>estimator-dependent</strong> (the ranking changes with the model you wrap), and <strong>unstable under correlated features</strong>. And plain RFE makes you guess *how many* features to keep. The fix is <strong>RFECV</strong> — wrap RFE in cross-validation so it *selects the feature count* by held-out performance instead of you picking it by hand.</p>
+    <hr>
+    <h3>PCA's fine print</h3>
+    <p>If you do reach for PCA, know its assumptions. It's <strong>unsupervised</strong> — it keeps the directions of largest *variance*, which are <strong>not necessarily the directions that predict your target</strong> (a high-variance feature can be pure noise). It's scale-sensitive, so you <strong>must standardise first</strong> or the largest-unit feature dominates the components. And the components are linear blends of everything, so they're <strong>hard to explain</strong>. PCA reduces dimensions and decorrelates, but it can throw away exactly the low-variance signal that mattered.</p>
+    <hr>
+    <h3>When dimensions explode: special regimes</h3>
+    <p>The right strategy shifts sharply with the data type. For <strong>text / sparse one-hot</strong> features (tens of thousands of mostly-zero columns), L1/Lasso-style selection and sparse-aware methods fit naturally. For <strong>genomics</strong> (p ≫ n, thousands of genes, few samples), univariate screening plus stability selection is common. For <strong>embeddings</strong> (dense learned vectors), individual dimensions are meaningless, so you reduce or regularise rather than select individual columns. Don't apply a tabular feature-selection recipe blindly to text, genomic, or embedding data.</p>
+    <hr>
+    <h3>Is the selection even stable?</h3>
+    <p>One last discipline: a feature set chosen from a single run can be a fluke of that particular sample. <strong>Stability selection</strong> checks this — rerun the selection on many bootstrap resamples (or CV folds) and keep the features that get chosen *consistently*. If a feature appears in 90% of runs, trust it; if it flickers in and out across runs, it's likely noise dressed up as signal. Stable selections generalise; one-run selections often don't.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>More features is not always better — past a point they add noise and thin out your data (the curse of dimensionality).</strong>
+
+Irrelevant features give the model more ways to trip; redundant ones add confusion; and every extra dimension spreads your data points further apart, which makes overfitting easier and real patterns harder to find. So be deliberate about which features you keep. A solid default recipe: train one gradient-boosted model on everything, rank the features by importance (SHAP is a strong choice, though read with care under correlated features), and keep the top ones.</li><li><strong>Know the three ways to choose, and their tradeoff of speed versus smartness.</strong>
+
+Filter methods score each feature on its own — fast, but blind to features that only matter in combination. Wrapper methods train the model on different subsets and keep the best — accurate, but slow, and impractical with thousands of features. Embedded methods select while training: Lasso zeros out useless weights as it fits, and tree or SHAP importance ranks what a trained model actually used. For everyday tabular work, embedded methods give the best balance of the three.</li><li><strong>The trap that fakes good results: choosing features on the whole dataset before splitting off a test set.</strong>
+
+If you pick features by how they relate to the label across all your data, the test set's answers have leaked into the choice, and your reported accuracy is a mirage. Do feature selection inside cross-validation: choose features using only the training portion of each fold, then judge on the held-out portion. And keep selection (which preserves your original, explainable features) separate from dimensionality reduction like PCA (which blends them into compact but unexplainable new ones).</li><li><strong>Read every importance method with the correlation caveat, and don't confuse importance with cause.</strong>
+
+SHAP fairly attributes predictions but splits credit between correlated features and shows what the *model* used, not what *causes* the outcome — high SHAP ≠ causal. Permutation importance is model-agnostic but hits the same correlation trap (shuffling one of a correlated pair barely hurts). Mutual information catches non-linear dependence but is univariate and binning/sample-sensitive. RFE is accurate but expensive, estimator-dependent, and unstable — use RFECV to pick the feature count. And PCA keeps high-variance directions, which aren't necessarily predictive, needs standardising, and yields unexplainable components.</li><li><strong>Confirm your selection is stable, and adapt to the data regime.</strong>
+
+A feature set from one run can be a fluke — stability selection reruns the choice across bootstraps/folds and keeps features chosen consistently (appears in 90% of runs → trust it; flickers → noise). And the recipe shifts with the data: L1/sparse methods for text and one-hot, univariate screening plus stability selection for genomics (p ≫ n), and reduce/regularise rather than select individual columns for dense embeddings — a tabular recipe doesn't transfer blindly.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>More features is not always better — past a point they add noise and spread your data so thin that patterns vanish (the curse of dimensionality). Pick features deliberately: filter methods are fast but blind, wrapper methods are accurate but slow, and embedded methods (Lasso, tree or SHAP importance) usually give the best balance. Keep selection (which preserves your original, explainable features) separate from PCA-style reduction (which invents new ones). And always select inside cross-validation, or the test labels leak in and your results are a mirage.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>More features isn't always better</strong> — past a point they add noise and thin your data out (curse of dimensionality).</li><li><strong>Three ways to choose, speed vs smartness:</strong> filter (fast, blind), wrapper (accurate, slow), embedded (best balance).</li><li><strong>Embedded = Lasso, tree or SHAP importance</strong> — usually the sweet spot.</li><li><strong>Selection ≠ reduction:</strong> selection keeps original explainable features; PCA invents new ones.</li><li><strong>Always select inside cross-validation</strong> — choose features on the whole dataset and test labels leak in (mirage results).</li><li><strong>Read importances with the correlation caveat, and importance ≠ cause.</strong></li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You have 500 features and want to cut down to about 50 before tuning a model. What is a sound approach?</p>
+      <ul class="check-opts"><li>`A) Run cross-validation on all 500 features, average each feature's coefficient across the folds, and keep the top 50 — this leans on the model's own signal and is the single most reliable method available.`</li><li>`B) Rank all 500 by their individual mutual information with the target and keep the top 50; since mutual information already handles redundancy and interactions on its own, no other steps are needed at all.`</li><li>`C) First drop constant and near-constant features and one of each highly correlated pair (cheap, no model needed). Then train a model on what remains and rank features by an interaction-aware importance like permutation importance or SHAP, keeping the top 50. Check the smaller model matches the full one, and loosen to 75 if it drops.`</li><li>`D) Use recursive feature elimination with Gini importance, dropping the 50 weakest features in a single shot and never retraining, since one pass is enough to identify which features can safely be removed.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> A colleague ranks features by their correlation with the label across the entire dataset, then runs cross-validation to report accuracy. Why is the number misleading?</p>
+      <ul class="check-opts"><li>`A) The features were chosen using the whole dataset, including the rows that later serve as test folds — so the label information from those rows leaked into the selection, and the chosen features look more predictive than they are. Selection has to happen inside the CV loop, on each fold's training portion only.`</li><li>`B) Correlation is a filter method and ignores interactions, so the real problem is that it misses features that only matter in combination; switching to Gini importance on the full dataset would fix the misleading number.`</li><li>`C) The procedure is fine — correlation on the full dataset estimates a population-level quantity, so using it before cross-validation is just like standardising the features beforehand, which is entirely normal practice.`</li><li>`D) Five folds is simply too few to evaluate a model with a reduced feature set; the number is misleading only because leave-one-out cross-validation was not used to measure the accuracy more precisely.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Your stakeholders need to explain each prediction (&quot;we flagged this loan because of income and debt&quot;). Should you use feature selection or PCA-style dimensionality reduction, and why?</p>
+      <ul class="check-opts"><li>`A) PCA — it compresses the features into fewer numbers, and fewer numbers are always easier for stakeholders to reason about than a long list of the original named features.`</li><li>`B) Feature selection — it keeps a subset of your original, named features, so each prediction can still be explained in plain terms. PCA blends features into new combined directions that are compact but no longer mean anything a person can point to.`</li><li>`C) Either one works equally well for explanation, since a PCA component can always simply be relabelled with the name of whichever original feature it happens to resemble most closely.`</li><li>`D) PCA — dimensionality reduction is strictly more powerful than selection, and its components stay just as interpretable as the original features once you rotate them back into place.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> A stakeholder points to a feature's high SHAP importance and concludes it &quot;causes&quot; the outcome, so the business should intervene on it. Why is that reasoning unsafe?</p>
+      <ul class="check-opts"><li>`A) It's completely safe — SHAP is grounded in game theory, so high SHAP importance is a mathematical proof of causation and intervening on the feature will change the outcome.`</li><li>`B) SHAP explains what the trained model leaned on, not what causes the outcome in the world — high SHAP importance is associational, not causal. It can also mis-split credit among correlated features, so a truly important feature may look weak (or a proxy may look strong). Establishing causation needs an experiment or causal analysis, not a SHAP ranking.`</li><li>`C) The reasoning fails only because SHAP values are random noise; averaging them over more background samples would turn them into valid causal estimates.`</li><li>`D) SHAP is fine for causation but only for linear models, so the stakeholder is wrong purely because the model here is gradient-boosted rather than linear.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> You want to be sure the features you selected aren't just an artifact of one particular training sample. What technique addresses this, and what does the mutual-information filter miss that it doesn't?</p>
+      <ul class="check-opts"><li>`A) Use leave-one-out cross-validation once; if accuracy is stable the feature set is automatically stable too, and mutual information already accounts for feature interactions so nothing is missed.`</li><li>`B) Stability selection: rerun the selection across many bootstrap resamples or CV folds and keep features chosen consistently (e.g. in 90% of runs) — flickering features are likely noise. Mutual information, by contrast, is usually univariate: it scores each feature against the target alone and misses features that only matter in combination (and it's sensitive to binning and sample size).`</li><li>`C) Use PCA to compress the features first, which guarantees stability because principal components never change across samples, and mutual information misses only linear relationships that PCA then recovers.`</li><li>`D) Increase the number of features until the selection stabilises; more candidates always makes the chosen subset more robust, and mutual information misses nothing since it is fully multivariate by construction.`</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#classical_ml_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

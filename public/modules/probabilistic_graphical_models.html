@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Probabilistic Graphical Models | ML Systems Lab</title>
+  <meta name="description" content="Bayesian networks, MRFs, d-separation, factor graphs, belief propagation, HMMs">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/probabilistic_graphical_models.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/probabilistic_graphical_models.html">
+  <meta property="og:title" content="Probabilistic Graphical Models | ML Systems Lab">
+  <meta property="og:description" content="Bayesian networks, MRFs, d-separation, factor graphs, belief propagation, HMMs">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Probabilistic Graphical Models">
+  <meta name="twitter:description" content="Bayesian networks, MRFs, d-separation, factor graphs, belief propagation, HMMs">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Probabilistic Graphical Models",
+  "description": "Bayesian networks, MRFs, d-separation, factor graphs, belief propagation, HMMs",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/probabilistic_graphical_models.html",
+  "keywords": "PGM, Bayesian network, MRF, d-separation, belief propagation, HMM, factor graph"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#probabilistic_ml_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">70 min read</span>
+      <span class="tag">PGM</span><span class="tag">Bayesian network</span><span class="tag">MRF</span><span class="tag">d-separation</span><span class="tag">belief propagation</span>
+    </div>
+    <h1>Probabilistic Graphical Models</h1>
+    <p class="subtitle">Bayesian networks, MRFs, d-separation, factor graphs, belief propagation, HMMs</p>
+
+    <p>High-dimensional joint distributions are intractable to work with directly — storing and computing over p(X₁,...,Xₙ) is exponential in n.</p>
+    <p>The key observation is that most real-world variables are not all directly dependent on each other. PGMs formalise this: encode which variables are independent of which using a graph structure, then factorise the joint into local potentials over connected subsets. Inference becomes a local message-passing operation over the graph rather than a global computation over the full joint. Bayesian networks use directed edges to encode generative causal stories; Markov Random Fields use undirected edges to encode symmetric correlations. PGMs largely ceded perception tasks to deep learning after 2012, but remain the right tool when conditional independence structure must be explicitly represented, audited, and explained — medical diagnosis networks, causal models, structured prediction with hard output constraints.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Bayesian network: a DAG where each node Xᵢ has parents Pa(Xᵢ).</strong> The joint factorises as p(X₁,...,Xₙ) = Πᵢ p(Xᵢ | Pa(Xᵢ)). Every missing edge is a conditional independence assumption. The structure of the DAG is the entire modelling decision — it encodes your beliefs about the causal generating process. A fully connected DAG encodes no independence assumptions and offers no tractability benefit over the full joint.</li><li><strong>Markov Random Field (MRF): undirected graph, joint factorises over cliques: p(X) = (1/Z) Πc ψc(Xc).</strong> The partition function Z = Σ_X Πc ψc(Xc) sums over all configurations — typically intractable. This is the central computational problem for MRFs: you can write down the unnormalised joint, but normalising it requires the sum you are trying to avoid. MRFs encode symmetric correlations: image segmentation (neighbouring pixels tend to share labels), spatial statistics, Ising models.</li><li><strong>d-separation is the fundamental tool for reading conditional independence from a Bayesian network.</strong> X and Y are d-separated given Z if Z blocks all paths between them. Chains (X → m → Y) and forks (X ← m → Y) are blocked when m ∈ Z. Colliders (X → m ← Y) are blocked when m ∉ Z and no descendant of m is in Z. The collider rule is the surprising one: conditioning on a collider opens the path, creating a dependence that did not exist marginally. This is Berkson's paradox — the mechanism behind selection bias.</li><li><strong>Belief propagation (sum-product) on trees: messages pass between variable and factor nodes.</strong> After 2|E| message passes, every node's marginal is exact — you get p(Xᵢ) for every variable by multiplying incoming messages. On loopy graphs, the same algorithm (loopy BP) is an approximation that may not converge, but works well in practice for error-correcting codes and image segmentation. Tree structure is what makes BP exact; loops require approximation.</li><li><strong>HMM is a chain-structured Bayesian network.</strong> Hidden Markov chain s₁,...,s_T with transition p(s_t|s_{t-1}). Observations x_t ~ p(x_t|s_t). Forward-backward algorithm (BP on the chain): O(T·K²) to compute all marginals p(s_t|x₁,...,x_T). Viterbi (max-product): most likely state sequence. Baum-Welch (EM for HMMs): parameter learning. These three algorithms form the complete HMM toolkit — and each one is just belief propagation in a different form.</li><li><strong>Exact inference in general Bayesian networks is #P-hard.</strong> The junction tree algorithm handles tractable cases: moralise the DAG → triangulate → build a junction tree → run BP on the tree. Complexity is O(K^{treewidth+1} × n) where K is the state space size. Treewidth ≤ ~20 is usually feasible; most real-world networks have higher treewidth, making exact inference impossible and forcing approximations (loopy BP, VI, MCMC).</li><li><strong>Why PGMs lost perception tasks to deep learning after 2012: feature engineering burden (variables and structure had to be hand-specified), inference costs exponential in treewidth, and poor scalability compared to GPU-friendly neural networks.</strong> Why PGMs remain in use: auditable conditional independence structure that can be inspected and explained, structured prediction (CRFs for NER still competitive in low-resource settings), domain knowledge encoding in the graph topology, and causal analysis where the direction of edges has scientific meaning.</li><li><strong>CRFs (Conditional Random Fields) are the discriminative version of MRFs for structured prediction: p(Y|X) = (1/Z(X)) Πc ψc(Yc,X).</strong> The normaliser Z(X) conditions on input X, making it tractable for linear-chain CRFs via belief propagation. CRFs outperform generative HMMs for sequence labelling when input features are complex and when discriminative training is possible. Largely replaced by BERT fine-tuning for most NLP tasks, but remain relevant when structured output constraints must be hard-enforced.</li><li><strong>Treewidth determines inference complexity: trees (treewidth 1) allow exact inference in O(K² × n); grids (treewidth ≈ √n) require exponential cost per column.</strong> Real-world networks often have high treewidth because domain experts add edges to capture every dependency they can think of, creating highly connected graphs. The expressiveness-tractability tradeoff is fundamental to PGMs: every edge you add captures a dependency and potentially increases treewidth.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>The collider rule is the most interview-critical concept in PGMs: conditioning on a collider Z opens the path between its parents X and Y, creating a dependence that did not exist marginally. This is Berkson's paradox and the mechanism behind selection bias in observational studies. Treewidth determines inference complexity: exact inference is tractable only for low-treewidth graphs, and the exponential cost in treewidth is the primary reason PGMs lost perception tasks to neural networks — but PGMs remain the right tool when conditional independence structure must be explicitly represented, inspected, and explained.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>PGMs factorise the joint via a graph</strong> — encode independence, turn global computation into local message passing.</li><li><strong>Bayes net = DAG:</strong> $p(X)=prod_i p(X_i|Pa(X_i))$, every missing edge is an independence assumption. <strong>MRF = undirected</strong>, cliques + intractable $Z$.</li><li><strong>Collider rule (the surprising one):</strong> conditioning on a collider $X→Z←Y$ opens the path — Berkson's paradox, the mechanism of selection bias.</li><li><strong>Belief propagation exact on trees</strong> ($2|E|$ passes); loopy BP on graphs with cycles is approximate but works in practice.</li><li><strong>HMM = chain Bayes net:</strong> forward-backward $O(T·K^2)$, Viterbi (best path), Baum-Welch (EM) — all just BP in different forms.</li><li><strong>Treewidth sets inference cost:</strong> junction tree $O(K^{tw+1})$; exact only for low treewidth, else loopy BP / VI / MCMC.</li><li><strong>Why PGMs faded then persist:</strong> lost perception to deep nets (feature/treewidth cost), but win when structure must be audited and explained.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> In a Bayesian network X → Z ← Y, are X and Y marginally independent? Are they independent given Z?</p>
+      <ul class="check-opts"><li>A) X and Y are marginally dependent because they share the common effect Z; conditioning on Z makes them independent by blocking the v-structure path.</li><li>B) X and Y are marginally independent and also independent given Z, because Z is a collider and colliders always block paths regardless of whether Z is observed.</li><li class="correct">C) X and Y are marginally independent (the collider Z blocks the path when unobserved). Conditioning on Z opens the path — X and Y become dependent given Z. This is Berkson's paradox: conditioning on a common effect induces a spurious correlation between its causes.</li><li>D) X and Y are marginally dependent due to the directed edges; conditioning on Z renders them independent because the path is blocked.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> What is the treewidth of a graph and why does it determine inference complexity in PGMs?</p>
+      <ul class="check-opts"><li>A) Treewidth is the maximum node degree in the graph; inference complexity is O(K^{max_degree}) per node, which is tractable for sparse graphs.</li><li>B) Treewidth is the number of cycles in the graph; each cycle adds a factor of K to inference complexity, making loopy graphs exponentially harder.</li><li>C) Treewidth is the minimum number of edges to remove to make the graph a tree; inference complexity is O(K^{removed_edges}) using the junction tree algorithm.</li><li class="correct">D) Treewidth measures how close the graph is to a tree; the junction tree algorithm runs exact inference in O(K^{tw+1} × nodes). Trees (tw=1) are tractable at O(K²·n); high-treewidth graphs (social networks, dense medical networks) make exact inference #P-hard, forcing loopy BP, MCMC, or VI approximations.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> You want to use an HMM for anomaly detection in a time series of server metrics. What are the failure modes and how would you address them?</p>
+      <ul class="check-opts"><li>A) The Viterbi algorithm is the only valid inference method for anomaly detection; using forward-backward instead gives incorrect marginals. Use Viterbi and flag states with low emission probability as anomalies.</li><li class="correct">B) HMM failure modes include the Markov assumption breaking for long-range dependencies (daily/weekly seasonality), stationarity failing under deployments, Gaussian emission mismatch for heavy-tailed metrics, incorrect K selection, and training data contamination — each requiring targeted fixes like higher-order HMMs, sliding-window EM, Student-t emissions, or BIC-based model selection.</li><li>C) HMMs cannot detect anomalies by definition since they model normal behaviour; use an isolation forest instead for any anomaly detection task involving time series.</li><li>D) The only failure mode is choosing K incorrectly; set K = number of known operational states and all other issues resolve automatically.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#probabilistic_ml_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

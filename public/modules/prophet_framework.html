@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prophet | ML Systems Lab</title>
+  <meta name="description" content="Piecewise growth, Fourier seasonality, changepoints, uncertainty, failure modes">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/prophet_framework.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/prophet_framework.html">
+  <meta property="og:title" content="Prophet | ML Systems Lab">
+  <meta property="og:description" content="Piecewise growth, Fourier seasonality, changepoints, uncertainty, failure modes">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Prophet">
+  <meta name="twitter:description" content="Piecewise growth, Fourier seasonality, changepoints, uncertainty, failure modes">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Prophet",
+  "description": "Piecewise growth, Fourier seasonality, changepoints, uncertainty, failure modes",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/prophet_framework.html",
+  "keywords": "prophet, changepoints, Fourier, piecewise-linear, uncertainty, holiday"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#time_series_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">40 min read</span>
+      <span class="tag">prophet</span><span class="tag">changepoints</span><span class="tag">Fourier</span><span class="tag">piecewise-linear</span><span class="tag">uncertainty</span>
+    </div>
+    <h1>Prophet</h1>
+    <p class="subtitle">Piecewise growth, Fourier seasonality, changepoints, uncertainty, failure modes</p>
+
+    <p>Most time series forecasting tools require deep domain expertise to configure — choosing ARIMA orders, specifying seasonal structure, diagnosing residuals. Prophet was built to solve a specific operational problem at Meta: let analysts without time series expertise produce sensible forecasts for thousands of business KPIs without model-by-model tuning. It achieves this by encoding strong structural assumptions: piecewise linear growth with sparse changepoints, Fourier seasonality at weekly and annual periods, and an explicit holiday calendar. These assumptions work well for typical business metrics (daily active users, weekly revenue, annual seasonal sales).</p>
+    <p>The mistake is treating Prophet as a general-purpose forecaster. Feed it a volatile financial series, a mean-reverting series, or anything where recent trend doesn't extrapolate linearly, and it will produce confidently wrong forecasts. Knowing the failure modes matters more than knowing the feature list.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Prophet is a structural additive regression model: y(t) = g(t) + s(t) + h(t) + ε_t. g(t) is piecewise linear (or logistic) growth, s(t) is Fourier seasonality, h(t) is holiday effects.</strong> Each component is a separate, interpretable regression. This makes Prophet easy to inspect and debug — you can plot each component and check whether the trend extrapolation, seasonal pattern, and holiday effects make domain-knowledge sense.</li><li><strong>Piecewise linear growth: rate changes δ_j at potential changepoints are regularised with a Laplace prior, so most changepoints have δ ≈ 0 — sparsity by design.</strong> Changepoints are placed automatically across the first 80% of training data. This means the last 20% of training data has few changepoints — recent trend changes go undetected. changepoint_prior_scale (default 0.05) controls how aggressively trend changes are allowed; it is the single most consequential hyperparameter. Too large → overfits recent trend at the forecast boundary; too small → sluggish response to genuine structural breaks.</li><li><strong>Seasonality is modelled via Fourier series: S(t) = Σ [aₙ cos(2πnt/P) + bₙ sin(2πnt/P)] with N=10 harmonics for yearly (P=365.25) and N=3 for weekly (P=7).</strong> These coefficients are fitted by OLS as part of the additive regression. Not spectral estimation — just linear regression on engineered features. This is why Prophet works natively with non-integer periods like 365.25, where seasonal dummies are impractical.</li><li><strong>changepoint_prior_scale is the most consequential hyperparameter because it controls trend extrapolation.</strong> Too large: the model fits every recent zigzag as a changepoint and extrapolates the last slope aggressively — produces trend explosions at the forecast boundary. Too small: the model ignores genuine structural breaks and forecasts with a stale trend. Don't leave it at the default without running cross-validation and checking whether the trend extrapolation at the forecast horizon makes domain-knowledge sense.</li><li><strong>Uncertainty in Prophet comes in two forms.</strong> MAP estimation (the default) is fast but prediction intervals capture only observation noise and future changepoint sampling uncertainty — they do not propagate parameter uncertainty. MCMC (mcmc_samples &gt; 0) gives full posterior uncertainty and properly calibrated intervals. For business forecasts where interval width drives decisions (inventory safety stock, budget reserves), MAP intervals are systematically too narrow. Always check empirical coverage via cross-validation before reporting intervals.</li><li><strong>Prophet's failure modes are predictable from its structural assumptions.</strong> Mean-reverting series (stock spreads, some financial metrics): Prophet assumes piecewise linear trend; a mean-reverting series has no long-run trend and the piecewise linear model will produce upward-drifting forecasts. Multiplicative seasonality: supported via seasonality_mode=&quot;multiplicative&quot; but only as a global mode — all seasons are multiplicative or none are. External shocks: add_regressor is too rigid for series dominated by unpredictable events. Less than 1-2 years of history: annual seasonality identification degrades significantly.</li><li><strong>add_regressor adds exogenous features as linear terms in the regression.</strong> The critical production trap: the regressor must be available at forecast time. If you add observed weather as a regressor during training and backtesting, the model appears accurate — but in production, you'd need weather forecasts for the forecast horizon. Substituting forecast weather for actual weather introduces regressor error that inflates MAPE. Always backtest with the same information available at deployment time.</li><li><strong>Prophet's cross-validation: prophet.diagnostics.cross_validation() with initial (training window), period (spacing between cutoffs), and horizon.</strong> This is rolling-origin evaluation, not random train-test split. performance_metrics() summarises MAPE/RMSE/MAE by forecast horizon — essential for understanding where accuracy degrades. Empirical interval coverage from this output tells you whether MAP or MCMC intervals are needed.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Prophet is a specific tool for a specific problem: business KPIs with trend + weekly + yearly seasonality, designed for analysts who need sensible forecasts without deep time series expertise. Its failure modes are predictable from its structural assumptions — trend explosion at the forecast boundary when changepoint_prior_scale is too high, silently using future regressor values during backtesting, and underconfident MAP intervals. changepoint_prior_scale is the single most consequential hyperparameter and must be validated via rolling-origin cross-validation rather than left at the default.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Prophet = structural additive regression:</strong> `y(t)=g(t)+s(t)+h(t)+ε` — growth + Fourier seasonality + holidays.</li><li><strong>Built for analysts:</strong> sensible KPI forecasts (DAU, revenue) without per-series tuning.</li><li><strong>Piecewise linear growth</strong>, changepoints only in first 80% of data → recent trend shifts undetected.</li><li><strong>changepoint_prior_scale (default 0.05) is THE hyperparameter:</strong> too high → trend explosion at boundary; too low → sluggish.</li><li><strong>MAP intervals (default) are too narrow</strong> — capture only noise + changepoint sampling, not parameter uncertainty; use MCMC.</li><li><strong>add_regressor trap:</strong> regressor must exist at forecast time — backtesting with actuals inflates accuracy.</li><li><strong>Fails on mean-reverting / volatile series</strong> and &lt;1-2yr history; validate via rolling-origin CV.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Your Prophet model produces a forecast for next quarter that shows a sharp trend acceleration starting exactly where your training data ends. What is the likely cause and how do you fix it?</p>
+      <ul class="check-opts"><li>A) The Fourier seasonality terms are constructively interfering at the forecast boundary; increase the number of yearly harmonics from N=10 to N=20 to smooth the transition.</li><li class="correct">B) This is a changepoint detection artifact: Prophet places changepoints only in the first 80% of training data, so recent trend shifts go undetected and the last extrapolated slope accelerates at the boundary. Fix: inspect plot_components(), reduce changepoint_prior_scale, set changepoint_range=0.95, add logistic growth cap, and validate with a domain-knowledge check.</li><li>C) The acceleration is a correct forecast; Prophet`s piecewise linear growth reliably captures genuine trend accelerations that ARIMA would miss, so no intervention is needed unless domain knowledge contradicts it.</li><li>D) The sharp acceleration indicates over-differencing in the internal trend model; set growth=&quot;flat&quot; to disable trend extrapolation and re-fit the model.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> You add daily temperature as an external regressor to Prophet to forecast energy demand. During backtesting, MAPE is 3%. In production, MAPE is 22%. What happened?</p>
+      <ul class="check-opts"><li>A) The model overfit to temperature during training; remove the regressor and retrain on the demand series alone to restore production-level accuracy.</li><li>B) The energy demand series has a structural break between the backtest period and production; the temperature regressor is not responsible for the degradation.</li><li>C) The changepoint_prior_scale is too high, causing trend explosion in production that dominates the temperature regressor signal; reduce it to 0.001 and retrain.</li><li class="correct">D) Lookahead bias: backtesting used actual observed temperatures for the forecast period, but production requires weather forecasts. Substituting forecasted temperatures introduces regressor error that inflates MAPE. Backtest using only temperature forecasts beyond each cutoff to simulate production conditions.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> A manager wants a 90% prediction interval for monthly revenue 6 months out. You have a trained Prophet model. What are the steps to produce well-calibrated intervals and what are their limitations?</p>
+      <ul class="check-opts"><li class="correct">A) Enable MCMC (mcmc_samples=300), set interval_width=0.9, evaluate calibration via cross_validation() with horizon=6 months, and check coverage_rate. Limitations: uncertainty only from future changepoints and observation noise — not regime changes; 6-month forecasts often undercover; heavy-tailed noise not handled by Gaussian likelihood.</li><li>B) MAP estimation is sufficient for calibrated intervals; set interval_width=0.9 and report directly — MCMC is only needed for horizons beyond 12 months.</li><li>C) Run Monte Carlo simulation by perturbing the holiday effect parameters 1000 times; aggregate the resulting forecast distribution to produce the 90% interval.</li><li>D) Prophet prediction intervals are always well-calibrated by construction because the Laplace prior on changepoints is a proper Bayesian prior; no additional steps are needed.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#time_series_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

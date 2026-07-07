@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sensitivity Analysis for Causal Claims | ML Systems Lab</title>
+  <meta name="description" content="E-values, Rosenbaum bounds, placebo tests, falsification design">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/sensitivity_analysis.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/sensitivity_analysis.html">
+  <meta property="og:title" content="Sensitivity Analysis for Causal Claims | ML Systems Lab">
+  <meta property="og:description" content="E-values, Rosenbaum bounds, placebo tests, falsification design">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Sensitivity Analysis for Causal Claims">
+  <meta name="twitter:description" content="E-values, Rosenbaum bounds, placebo tests, falsification design">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Sensitivity Analysis for Causal Claims",
+  "description": "E-values, Rosenbaum bounds, placebo tests, falsification design",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/sensitivity_analysis.html",
+  "keywords": "sensitivity analysis, E-value, Rosenbaum bounds, placebo test, robustness"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#causal_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">30 min read</span>
+      <span class="tag">sensitivity analysis</span><span class="tag">E-value</span><span class="tag">Rosenbaum bounds</span><span class="tag">placebo test</span><span class="tag">robustness</span>
+    </div>
+    <h1>Sensitivity Analysis for Causal Claims</h1>
+    <p class="subtitle">E-values, Rosenbaum bounds, placebo tests, falsification design</p>
+
+    <p>You have estimated that a job training program increases earnings by $3,000/year using a matching estimator. Your result assumes no unmeasured confounders — the unconfoundedness assumption. But what if motivation is unobserved and it causes both training program enrollment and higher earnings? How strong would this unmeasured confounder need to be to reduce your estimated effect to zero? If the answer is &quot;only a moderate confounder,&quot; your result is fragile. If the answer is &quot;a confounder stronger than any observed covariate,&quot; your result is robust. Sensitivity analysis quantifies this threshold.</p>
+    <p>Rosenbaum sensitivity analysis is designed for matching studies. It reports the Γ (Gamma) parameter: the maximum ratio by which the odds of treatment can differ between two matched units due to unobserved variables, while still rejecting the null hypothesis. Γ = 1.5 means: even if an unobserved confounder could cause 50% more treatment odds, you would still find a significant effect. Γ = 1.0 means any unobserved confounding overturns the result. Sensitive at Γ = 1.2 is fragile; robust to Γ = 3.0 is credible.</p>
+    <p>The E-value (VanderWeele and Ding) is more general. It is the minimum strength of association that an unmeasured confounder would need with both treatment and outcome to fully explain away the observed effect. E = RR + √(RR(RR − 1)) where RR is the observed risk ratio. Compare the E-value to the associations of observed covariates — if the E-value is smaller than your strongest observed confounder's association, an unmeasured confounder of that strength could explain your result away.</p>
+    <p>Placebo tests provide indirect evidence from a different angle. A placebo outcome is one the treatment logically cannot affect — if the analysis shows a significant &quot;effect&quot; on the placebo, something correlated with treatment is also correlated with the outcome, signaling confounding in the main estimate. An event study pre-period check in DiD is a placebo treatment test: pre-treatment coefficients should cluster near zero.</p>
+    <p>What sensitivity analysis does not do: prove the causal estimate is correct. It tells you how fragile or robust the estimate is to violations of the identifying assumption. A high Γ says the conclusion survives substantial hidden bias — this is reassuring but not proof of causal validity. It is a communication tool that makes the credibility of the claim explicit, not a proof.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Always report an E-value or Rosenbaum Γ alongside any observational causal estimate.</strong> Without it, readers have no way to assess the credibility of the causal claim. This is becoming a standard requirement in top journals and should be standard in internal data science reports. Compare the E-value against the observed associations of covariates you already control for — if it is smaller than any of those, the residual confounding threat is concrete, not hypothetical.</li><li><strong>Trap: running multiple sensitivity analyses and reporting only the one with the highest Γ.</strong> Pre-specify your sensitivity analysis approach before seeing results. Sensitivity analysis p-hacking is less common than outcome p-hacking but follows the same logic — choosing the most favorable framing after seeing results. Use the same estimator and assumptions throughout, and report the full range of sensitivity estimates across specification choices.</li><li><strong>Diagnostic: if your E-value is smaller than the association of any variable in your observed covariate set — for example, E-value = 1.8, but industry sector has RR = 2.5 with outcome — the unmeasured confounder needed to explain away your result is weaker than covariates you are already controlling for.</strong> This is a warning sign of residual confounding. Report it honestly rather than treating the E-value as evidence of robustness when the comparison to observed covariates undermines it.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Sensitivity analysis does not prove a causal estimate — it reports how much hidden confounding it would take to overturn it, making the fragility or robustness of the claim explicit rather than hidden.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>The core question:</strong> given a result that assumes no unmeasured confounders, *how strong* would a hidden confounder have to be to reduce your effect to zero? &quot;Only a moderate one&quot; ⇒ fragile; &quot;stronger than any observed covariate&quot; ⇒ robust.</li><li><strong>Rosenbaum Γ (for matching studies):</strong> the maximum ratio by which two matched units' *odds of treatment* could differ due to unobserved variables while you still reject the null — it quantifies how much hidden bias the conclusion tolerates.</li><li><strong>Reading Γ:</strong> Γ = 1.0 means *any* unobserved confounding overturns the result; sensitive at Γ = 1.2 is fragile; robust up to Γ = 3.0 is credible.</li><li><strong>E-value = RR + √(RR(RR−1)):</strong> the *minimum* association strength an unmeasured confounder would need with *both* treatment and outcome to fully explain away the observed effect — more general than Γ, works beyond matching.</li><li><strong>Contextualise the E-value against your observed covariates:</strong> if it's *smaller* than the association of a confounder you already control for (e.g. E = 1.8 but industry sector has RR = 2.5), the residual-confounding threat is concrete, not hypothetical — report it honestly.</li><li><strong>Placebo tests give indirect evidence:</strong> run the analysis on an outcome the treatment logically can't affect — a &quot;significant&quot; effect there means something correlated with treatment is driving the outcome, signalling confounding in the main estimate.</li><li><strong>It does *not* prove causality:</strong> sensitivity analysis makes the fragility or robustness of a claim explicit — a high Γ is reassuring, not verification. It's a communication tool, not a proof.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Your matching analysis shows treatment increases survival rates by 30% (RR=1.3). You compute an E-value of 1.9. What does this mean and how do you use it?</p>
+      <ul class="check-opts"><li>A) E-value = 1.9 means the study has 90% power to detect confounders with RR ≥ 1.9; any confounder below this threshold is too weak to explain the observed effect</li><li>B) E-value = 1.9 means the observed RR=1.3 is statistically significant at p&lt;0.05; the E-value is a transformation of the p-value that accounts for multiple testing</li><li>C) E-value = 1.9 means 1.9 additional covariates would need to be added to the matching model before the effect disappears; the E-value counts the number of unmeasured confounders rather than their strength</li><li class="correct">D) E-value = 1.9 means for unmeasured confounder to fully explain away RR=1.3, it would need RR ≥ 1.9 with BOTH treatment receipt AND survival simultaneously. To contextualize: compare against known confounders. If most plausible unmeasured (e.g., SES) has known RR≈1.4 with both treatment access and survival, then 1.4 &lt; 1.9 → SES alone can't fully explain result (though can attenuate it). If smoking has RR=2.5 with survival and likely associated with treatment, 2.5 &gt; 1.9 → smoking alone could explain entire effect. E-value converts &quot;might there be confounders?&quot; into answerable question: how strong would a confounder need to be?</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Your DiD estimate shows minimum wage increase reduced employment by 3%. A critic says treated and control counties had different pre-trends. How do you test and respond?</p>
+      <ul class="check-opts"><li class="correct">A) Formal pre-trend test: in TWFE regression, add interactions T_i × 1(t = pre-period) for each pre-treatment period. Should be near zero and jointly insignificant. Plot in event study diagram — systematic divergence pre-treatment means parallel trends violated. If pre-trends diverge: (1) add county-specific linear time trends (unit-specific trend extrapolation); (2) synthetic control to match treated counties' exact pre-treatment trajectory; (3) report pre-trend test result honestly. Systematic pre-period decline in treated counties means -3% estimate is biased upward (counties would have declined even without policy).</li><li>B) Respond that parallel trends is untestable by definition — pre-trend tests are a logical fallacy because pre-treatment trend similarity does not imply post-treatment trend similarity; the critic's concern cannot be addressed empirically</li><li>C) Run the DiD with a shorter pre-post window (one quarter instead of one year) — if the effect is consistent across windows, pre-trends do not affect the estimate and the -3% is valid</li><li>D) The critic's concern is invalid if the TWFE regression includes county and time fixed effects — these absorb all permanent group differences and common time trends, making pre-trend testing unnecessary</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> You want to test whether IV analysis for effect of college education on earnings (using proximity as instrument) is confounded. Describe two falsification tests.</p>
+      <ul class="check-opts"><li>A) Test 1 — Hausman test: compare OLS and IV estimates; if they differ significantly, proximity is endogenous and the IV estimate is confounded. Test 2 — First-stage F test: if F &lt; 10, proximity is a weak instrument and the IV estimate is biased toward OLS</li><li>B) Test 1 — Overidentification test: add a second instrument (state-level college subsidies) and run Sargan-Hansen test; rejection indicates exclusion violation. Test 2 — Reduced-form placebo: regress earnings directly on proximity without controlling for education; a significant coefficient confirms the exclusion restriction holds</li><li class="correct">C) Test 1 — Pre-instrument outcome placebo: run same IV analysis on cohort too old to benefit from nearby colleges at time of schooling decisions. A significant &quot;effect&quot; for older cohorts (couldn't have been affected by proximity) signals proximity is correlated with local labor market conditions affecting earnings directly — exclusion restriction violation. Test 2 — Pre-determined covariate test: regress pre-determined covariates (parents' education, family income before schooling decision) on the instrument. If proximity predicts pre-determined family characteristics, it's not exogenous — correlated with geographic family sorting, creating direct path from proximity to earnings via family human capital.</li><li>D) Test 1 — Geographic heterogeneity test: compare IV estimates in rural vs urban counties; if they differ significantly, proximity is measuring urbanicity rather than college access. Test 2 — Time series placebo: run the IV using college proximity 20 years prior as the instrument; a null result confirms current proximity is the relevant variation</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> After reporting a positive causal effect of a product feature on revenue using DiD, a sceptical executive asks: 'How fragile is this result?' How do you answer rigorously?</p>
+      <ul class="check-opts"><li>A) Report the p-value and confidence interval — a p-value below 0.01 and a confidence interval that excludes zero is sufficient evidence that the result is not fragile</li><li class="correct">B) Specification robustness / multiverse analysis: (1) bandwidth/window — vary pre-post window (3/6/12 months), report estimates for each; (2) control group definition — different constructions (same geography, similar-sized markets, synthetic control); (3) outcome metric — related but distinct outcomes (revenue per user, transaction count, gross margin) — real effect should appear in mechanistically related outcomes; (4) regression specification — with/without covariates, unit-specific trends, different clustering levels; (5) placebo test summary — distribution of placebo estimates using pre-treatment pseudo-dates, show where main estimate sits (97th percentile → unlikely statistical artefact).</li><li>C) Run a power analysis retrospectively — if the test was adequately powered (&gt;80%), the result is not fragile; underpowered tests produce fragile results, but well-powered tests are robust by construction</li><li>D) Report that the result is not fragile because DiD with two-way fixed effects is robust to all forms of time-invariant confounding by construction; sensitivity analysis is only needed for cross-sectional studies without fixed effects</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#causal_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

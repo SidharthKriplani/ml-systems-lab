@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Convolutional Neural Networks | ML Systems Lab</title>
+  <meta name="description" content="Convolution mechanics, pooling, receptive field, translation equivariance">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/cnns.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/cnns.html">
+  <meta property="og:title" content="Convolutional Neural Networks | ML Systems Lab">
+  <meta property="og:description" content="Convolution mechanics, pooling, receptive field, translation equivariance">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Convolutional Neural Networks">
+  <meta name="twitter:description" content="Convolution mechanics, pooling, receptive field, translation equivariance">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Convolutional Neural Networks",
+  "description": "Convolution mechanics, pooling, receptive field, translation equivariance",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/cnns.html",
+  "keywords": "CNN, convolution, pooling, receptive field, computer vision"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#dl_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">31 min read</span>
+      <span class="tag">CNN</span><span class="tag">convolution</span><span class="tag">pooling</span><span class="tag">receptive field</span><span class="tag">computer vision</span>
+    </div>
+    <h1>Convolutional Neural Networks</h1>
+    <p class="subtitle">Convolution mechanics, pooling, receptive field, translation equivariance</p>
+
+    <p>Take a 28×28 MNIST digit — 784 raw pixels. Feed them into a flat linear layer of 128 units and you need 784×128 = 100,352 parameters just for that one layer. More importantly, the model treats pixel (3,4) and pixel (3,5) as completely independent inputs. There is nothing in the architecture that says these two pixels are neighbors, that they participate in the same local edge, or that an edge at position (3,4) is the same kind of feature as an edge at position (15,20). The flat model must separately learn that connection for every pair of positions. Spatial structure is invisible to it.</p>
+    <p>Convolution is the solution to that invisibility. A 3×3 filter slides across the image, computing a dot product at every position: the same 9 weights applied at (3,4), at (15,20), and at every other location. That is weight sharing — the filter has 9 parameters regardless of image size. When the filter learns to detect a horizontal edge, it detects horizontal edges everywhere, because the same weights do the computation everywhere. A flat linear layer needs 100K parameters to do what a single convolutional filter does with 9. Pooling takes the output of a filter across a small spatial region and keeps only the maximum: if the edge appeared slightly left or slightly right, the pooled value is the same. This builds position invariance. Stack several layers: the first layer detects edges, the second layer detects combinations of edges into corners and curves, the third detects shapes, the fourth detects objects. Each neuron at a deep layer &quot;sees&quot; a large portion of the original image because its receptive field grows with each convolution — a neuron at layer 5 of a 3×3-stride-1 network has a receptive field of 11×11 pixels in the original image, seeing a neighborhood that spans multiple objects.</p>
+    <p><strong>NOT this.</strong> &quot;CNNs were designed for images.&quot; The principle — local patterns plus translation equivariance — applies anywhere locality matters. 1D CNNs classify audio and DNA sequences, where adjacent time steps or nucleotides are locally related. 3D CNNs process video, where nearby frames in time are locally correlated. Graph CNNs extend the idea to molecular structures and social networks. The architecture is not about pixels; it is about exploiting whatever spatial or sequential structure your data has. If your input has the property that neighboring elements are more related than distant elements, a convolutional inductive bias is appropriate. If your input is a bag of features with no meaningful ordering, it is not.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Use CNNs over MLPs whenever the input has local structure — weight sharing cuts parameters 10–100× and builds in the right inductive bias.</strong>
+
+A flat MLP applied to a 224×224 image needs 150M parameters in the first layer alone. A convolutional layer with 64 filters of size 3×3 needs 64×9×3 = 1,728 parameters, regardless of image size. The accuracy gain is not from having more parameters — it is from encoding the assumption that local patterns repeat, which is correct for images, audio, and sequences.</li><li><strong>Trap: deepening a CNN without residual connections kills gradients — VGG-19 was state of the art; ResNet-152 beat it by simply adding skip connections. Depth without residuals is not free.</strong>
+
+With plain convolutions, a 50-layer network was harder to train than a 34-layer network — more depth actually hurt. The skip connection output = F(x) + x gives the gradient a direct path: ∂L/∂x includes the identity term regardless of what F does. This one change unlocked reliable training at 100+ layers. If your CNN depth is above ~10 layers and you are not using residuals, the network is likely training with near-zero gradient in early layers.</li><li><strong>Diagnostic: if early-layer filters look like random noise after training, the network is not learning — check learning rate, initialization, and whether input is normalized.</strong>
+
+Healthy early filters in a CNN trained on images look like oriented edge detectors and color blobs — not random static. Visualize the first-layer weights after 1 epoch. If they are still indistinguishable from the initialization, the gradient is not reaching them. Candidate causes: learning rate too small for the layer depth, missing or wrong normalization on inputs, or vanishing gradients from missing residuals.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>A CNN's efficiency comes entirely from weight sharing: the same filter applied everywhere encodes the assumption that features repeat across space, cutting parameters 100× versus a flat model and building translation equivariance into the architecture by construction.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Flat layers are blind to spatial structure:</strong> an MLP treats pixel (3,4) and (3,5) as completely independent inputs — nothing says they're neighbours or that an edge at one position is the same feature as an edge elsewhere, so it must relearn every feature separately at every position (and a 28×28 digit alone needs ~100K weights for one 128-unit layer).</li><li><strong>Convolution = weight sharing:</strong> a 3×3 filter (9 weights) slides across the whole image, computing the same dot product at every location — learn a horizontal-edge detector once and it fires on edges *everywhere*, because the same weights do the work everywhere. That's 9 params where a flat layer needs ~100K.</li><li><strong>Pooling = position invariance:</strong> keep only the max activation over a small region, so a feature that appeared slightly left or right gives the same pooled value. The downside is lost localisation — after a few pooling layers you know a feature exists in a region but not exactly where (why segmentation uses skip connections / U-Nets).</li><li><strong>Stacking builds a hierarchy:</strong> layer 1 detects edges, layer 2 combines them into corners and curves, layer 3 into shapes, layer 4 into objects — and each deeper neuron's *receptive field* grows, so it &quot;sees&quot; a wider slice of the original image.</li><li><strong>Not just images:</strong> the real principle is local patterns + translation equivariance, which applies to 1D (audio, DNA), 3D (video), and graphs (molecules, social networks) — any data where neighbouring elements are more related than distant ones. A bag of unordered features is where it does *not* apply.</li><li><strong>Trap — depth without residuals kills gradients:</strong> a plain 50-layer CNN trained *worse* than a 34-layer one; the skip connection (output = F(x) + x) gives the gradient a direct identity path (∂L/∂x keeps an identity term regardless of F), which unlocked reliable training past 100 layers. Above ~10 layers with no residuals, early layers likely train on near-zero gradient.</li><li><strong>Diagnostic:</strong> visualise first-layer filters after one epoch — healthy ones look like oriented edge detectors and colour blobs. Still-random static means the gradient isn't reaching them: check learning rate, input normalisation, and missing residuals.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> A convolutional layer has filter size 3×3, 64 input channels, 128 output channels. How many parameters? How does this compare to a fully connected layer with the same input/output dimensions?</p>
+      <ul class="check-opts"><li class="correct">A) Conv layer: each of 128 filters has 3×3×64 = 576 weights + 1 bias = 577 parameters. Total: 128 × 577 = 73,856 parameters. FC layer equivalent (input dimension = H×W×64 for an H×W feature map, output = H×W×128): parameters = (H×W×64) × (H×W×128). For H=W=28: input_dim = 28×28×64 = 50,176; output_dim = 28×28×128 = 100,352; parameters = 50,176 × 100,352 ≈ 5×10⁹. The convolutional layer's weight sharing (same 576 weights applied at each spatial location) is the key efficiency: 73,856 vs ~5 billion parameters. This reduction comes from translation equivariance assumption: the same filter is useful at every spatial position. Parameter sharing also enables learning from less data and improves generalisation.</li><li>B) Conv layer: 128 filters × 3×3 weights = 1,152 parameters (input channels are processed independently in depthwise convolutions, so the 64 input channels don't multiply the parameter count). FC layer equivalent: 64 × 128 = 8,192 parameters — fewer than the conv layer, which is why depthwise-separable CNNs are more efficient than standard CNNs at the same spatial dimensions.</li><li>C) Conv layer: 3×3×64×128 = 73,728 weights only — biases are not used in modern conv layers because batch normalisation makes biases redundant (BN's β parameter serves the same role). FC layer equivalent: same 73,728 parameters, because an FC layer with H×W=1 spatial size is mathematically identical to a conv layer with a 1×1 kernel.</li><li>D) Conv layer: each of 128 filters has 3×3 = 9 weights + 1 bias = 10 parameters per filter (input channels are implicitly handled by the architecture, not the parameter count). Total: 128 × 10 = 1,280 parameters. FC layer equivalent: 64 × 128 = 8,192 parameters — 6× more than the conv layer, showing modest savings from weight sharing at this scale.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Why does max pooling help with spatial invariance, and what is the downside for tasks requiring precise localisation?</p>
+      <ul class="check-opts"><li>A) Max pooling helps with spatial invariance by computing the mean activation over each pooling window — the average is insensitive to small shifts within the window because nearby pixels tend to have similar values. The downside for localisation is that mean pooling loses sharp boundary information, making segmentation contours blurry because edge activations are diluted by surrounding non-edge values.</li><li>B) Max pooling provides spatial invariance by selecting the dominant feature in each region, which helps the network focus on the presence of features rather than their precise location. The downside is that max pooling discards the activation values of non-maximum neurons entirely — for localisation tasks, those discarded activations contain the gradient signal needed to pinpoint feature boundaries precisely.</li><li>C) Max pooling provides spatial invariance because it normalises activation magnitudes within each window to the maximum value, making the network insensitive to lighting and contrast variations rather than spatial position. The localisation downside is that max-normalised features can no longer be compared across different spatial scales, making multi-scale object detection harder.</li><li class="correct">D) Max pooling over a 2×2 region takes the maximum activation in each 2×2 window, reducing spatial resolution by 2×. If a feature (e.g., edge at pixel (10,10)) shifts to (11,10), it is still within the same 2×2 pool window — the max-pooled output is the same. Max pooling provides local translation invariance: small shifts of features don't change the output. Stacking multiple pooling layers accumulates this invariance across larger regions. Downside for localisation: spatial information is lost. After 2-3 pooling layers (8× reduction), the exact location of a feature is discarded — you know it existed in an 8×8 input region but not where. For segmentation (pixel-level prediction) and object detection (bounding box prediction), we need spatial information preserved. Solutions: skip connections (U-Net preserves spatial info via skip paths), deconvolution/transposed convolution (upsampling with learned weights), or stride-1 convolutions without pooling (dilated convolutions for receptive field growth without spatial reduction).</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> What is the receptive field of a neuron after three 3×3 convolutional layers (no pooling)? Why does depth matter for receptive field size?</p>
+      <ul class="check-opts"><li>A) After three 3×3 layers, the receptive field is 9×9 (each layer triples the receptive field: 3 → 9 → 27 but capped by output size, so effectively 9×9). Depth matters because receptive fields grow multiplicatively with depth — each additional 3×3 layer multiplies the receptive field by 3, which is why 3 layers of 3×3 convolutions are equivalent to a single 27×27 convolution. This multiplicative growth is far more efficient than the additive growth claimed for stacked filters.</li><li>B) After three 3×3 layers, the receptive field is 3×3 regardless of depth — each 3×3 filter sees a 3×3 region of its input, but since the output of each layer feeds the next, the spatial size of the feature map shrinks rather than the receptive field growing. Depth helps by creating a hierarchy of 3×3 features, not by expanding the spatial receptive field size.</li><li class="correct">C) Layer 1: each 3×3 filter sees a 3×3 region of the input. Layer 2: each 3×3 filter sees a 3×3 region of layer 1 output, which each sees 3×3 of input. Total: 5×5 receptive field. Layer 3: 3×3 of layer 2 output, which sees 5×5 of input. Total: 7×7 receptive field. General formula: RF_depth = 2×depth + 1 for consecutive 3×3 layers. Depth matters because: large receptive fields are needed to detect large-scale patterns (objects, scenes). A single large kernel (e.g., 7×7) would achieve the same RF as three 3×3 layers but with more parameters (49 vs 3×9=27 weights per filter) and fewer nonlinearities (1 ReLU vs 3 ReLUs). Three 3×3 layers with three ReLUs can represent more complex functions than one 7×7 layer with one ReLU, at lower parameter cost. This is the fundamental justification for VGG-style deep networks using small filters.</li><li>D) After three 3×3 layers with no pooling, the receptive field remains 3×3 because stride-1 convolutions do not expand the spatial context — each layer's filter still only sees a 3×3 patch of its immediate input. Receptive field growth requires either stride &gt; 1 or pooling layers between convolutions. The three 3×3 layers achieve better feature abstraction than a single 3×3 layer, but only pooling can expand the spatial receptive field.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#dl_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Uplift Modeling | ML Systems Lab</title>
+  <meta name="description" content="S-learner, T-learner, X-learner, R-learner — heterogeneous treatment effects and targeting">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/uplift_modeling.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/uplift_modeling.html">
+  <meta property="og:title" content="Uplift Modeling | ML Systems Lab">
+  <meta property="og:description" content="S-learner, T-learner, X-learner, R-learner — heterogeneous treatment effects and targeting">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Uplift Modeling">
+  <meta name="twitter:description" content="S-learner, T-learner, X-learner, R-learner — heterogeneous treatment effects and targeting">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Uplift Modeling",
+  "description": "S-learner, T-learner, X-learner, R-learner — heterogeneous treatment effects and targeting",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/uplift_modeling.html",
+  "keywords": "uplift, CATE, causal ML, treatment effect, meta-learner"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#causal_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">35 min read</span>
+      <span class="tag">uplift</span><span class="tag">CATE</span><span class="tag">causal ML</span><span class="tag">treatment effect</span><span class="tag">meta-learner</span>
+    </div>
+    <h1>Uplift Modeling</h1>
+    <p class="subtitle">S-learner, T-learner, X-learner, R-learner — heterogeneous treatment effects and targeting</p>
+
+    <p>A marketing team has a $1M budget for promotional emails. They can send to 1M users, but only 200K will benefit from the discount — people who would not have purchased without it. Sending to users who would purchase anyway wastes the discount cost. Sending to users who actively dislike being contacted is counterproductive. A simple propensity-to-purchase model predicts who will buy — but that is not uplift. Uplift is: who changes their behavior because of the treatment?</p>
+    <p>Four user types define the targeting problem. Persuadables will buy with treatment and not without — your target. Sure Things will buy regardless — wasting budget on them yields zero incremental revenue. Lost Causes will not buy regardless. Sleeping Dogs will buy without treatment but not with it — negative uplift, worse than doing nothing. A model maximizing purchase propensity concentrates budget on Sure Things. An uplift model maximizes incremental effect.</p>
+    <p>Uplift estimation targets τ(x) = E[Y(1) − Y(0) | X = x] — the Conditional Average Treatment Effect (CATE). You cannot observe τ(x) directly because you never observe both Y(1) and Y(0) for the same person. Meta-learners estimate it from RCT data. Two-model (T-learner): fit Y ~ X separately for treated and control, subtract predictions. S-learner: include T as a feature, fit one model. X-learner: imputes individual treatment effects and then builds a CATE model by borrowing strength across groups — better for imbalanced treatment/control splits. Causal forests: non-parametric CATE estimator with valid confidence intervals.</p>
+    <p>Evaluation: Qini curves rank users by predicted uplift descending. At each percentile of targeted users, compute cumulative incremental outcome versus random targeting. The area under the Qini curve is the AUUC. A holdout A/B test with a no-contact group is required to calibrate Qini offline against actual incremental effect.</p>
+    <p>What a response model is not: an uplift model. A response model predicts P(purchase) — dominated by Sure Things. An uplift model predicts P(purchase | treatment) − P(purchase | no treatment) — targets Persuadables. These are orthogonal quantities. Deploying a response model as an uplift model wastes marketing budget and misses the actual causal effect of the treatment.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Always evaluate uplift models with a holdout A/B test with a no-contact group.</strong> Offline Qini curves measure ranking quality — they do not verify that high-τ̂ users actually have higher treatment effects. Without a holdout, you cannot distinguish Persuadables from Sure Things in the evaluation. The holdout is the only way to confirm the model is targeting causal heterogeneity rather than baseline propensity.</li><li><strong>Trap: using the T-learner on highly imbalanced treatment/control designs (95% treated, 5% control).</strong> The control model has very little data and its predictions are noisy. Errors from both models compound in the subtraction — variance of τ̂(x) is dominated by noise in the smaller group. Use X-learner or causal forests, which are specifically designed for imbalanced designs and borrow strength across groups.</li><li><strong>Diagnostic: if your model assigns high uplift to users with high baseline purchase rates — high overlap between uplift deciles and response deciles — the uplift model is collapsing to a response model.</strong> Check the correlation between CATE estimates and baseline propensity. If it exceeds 0.7, the model is not capturing incremental effects. Segment users by baseline propensity quintile and verify that τ̂(x) varies within each quintile before trusting the targeting.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>A response model finds likely converters; an uplift model finds people who convert because of the treatment — these are orthogonal, and targeting the first group wastes budget on Sure Things and backfires on Sleeping Dogs.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Uplift is not propensity:</strong> a response model predicts *who will convert* (dominated by people who'd buy anyway); an uplift model predicts *who converts because of the treatment* — orthogonal quantities, and confusing them wastes budget on people who'd have bought regardless.</li><li><strong>Four user types define the targeting problem:</strong> Persuadables (buy only if treated — your target), Sure Things (buy regardless — wasted discount), Lost Causes (never buy — wasted), Sleeping Dogs (buy *without* treatment but not with it — negative uplift, actively backfires).</li><li><strong>Target τ(x) = E[Y(1) − Y(0) | X=x], the CATE:</strong> you can never observe it directly (never both potential outcomes per person), so you estimate it from RCT data with a meta-learner.</li><li><strong>The meta-learners:</strong> S-learner (include T as a feature, one model), T-learner (fit treated and control separately, subtract), X-learner (impute individual effects and borrow strength across groups), causal forests (non-parametric, with valid confidence intervals).</li><li><strong>Use X-learner (or causal forests) for imbalanced splits</strong> (e.g. 95% treated / 5% control): the T-learner's small-group model is noisy and its error compounds in the subtraction, whereas X-learner borrows strength from the larger group to stabilise.</li><li><strong>Evaluate with a Qini curve / AUUC</strong> — rank users by predicted uplift and measure cumulative incremental outcome vs random — but a no-contact holdout A/B group is *required* to confirm the model targets causal heterogeneity, not baseline propensity.</li><li><strong>Collapse warning:</strong> if corr(τ̂, baseline purchase propensity) exceeds ~0.7, the uplift model has degenerated into a plain response model — it's ranking Sure Things, not Persuadables.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Your response model targets customers with highest predicted purchase probability. Why might this be suboptimal?</p>
+      <ul class="check-opts"><li class="correct">A) Response model identifies likely purchasers — but &quot;likely to purchase&quot; ≠ &quot;likely to purchase because of treatment.&quot; High-baseline customers are often Sure Things (buy regardless of discount — wasted margin). Some may be Do-Not-Disturbs (loyal customers annoyed by discount emails, eventually unsubscribe — treatment backfires). Uplift models estimate τ̂(x) = E[Y(1)-Y(0)|X=x] and target users where incremental purchase probability is highest. Persuadables often mid-propensity users genuinely swayed by offer. At any budget, targeting by τ̂ achieves 2-5x more incremental purchases vs targeting by ŷ.</li><li>B) Response models are suboptimal only when the discount is large (&gt;30%) — for small discounts, predicted purchase probability is a valid proxy for uplift because discount-induced incremental purchases dominate</li><li>C) Response models are suboptimal because they use logistic regression, which is miscalibrated for targeting; switching to a gradient boosting model for the response prediction solves the targeting problem</li><li>D) Response models perform similarly to uplift models in practice; the theoretical distinction between likely purchasers and incremental purchasers rarely translates to meaningful revenue differences in real campaigns</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> You have RCT dataset with 100,000 control users and 10,000 treated users. You want to estimate CATE. Which meta-learner and why?</p>
+      <ul class="check-opts"><li>A) S-learner: it uses all 110,000 observations in a single model, minimizing variance from the treatment-control imbalance by pooling data efficiently</li><li>B) T-learner: training separate models for treatment and control ensures treatment effects are not regularized away, which is the primary failure mode with severe imbalance</li><li class="correct">C) X-learner for 10:1 imbalance. T-learner problematic: μ̂₁ trained on only 10,000 treated obs → high variance, errors compound in subtraction. X-learner's imputation step (D̃ = Ŷ(1)-Y_observed for control units) borrows from 100,000 control obs to stabilize estimates. Propensity-weighted combination further down-weights noisy treated-side estimate (e(x)≈0.1 everywhere). Watch for: check μ̂₁ fit quality via cross-validated RMSE; verify τ̂₁ sub-model not entirely ignored; validate with Qini on held-out RCT test set.</li><li>D) R-learner: it orthogonalizes against the propensity score (e(x)≈0.1 everywhere), which eliminates the variance problem from imbalance without discarding the 10,000 treated observations</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> After training X-learner for marketing targeting, how would you evaluate whether CATE estimates are actually measuring causal heterogeneity vs spurious correlation?</p>
+      <ul class="check-opts"><li>A) Compute feature importance and verify that the top features driving τ̂(x) are the same as those driving the baseline outcome model — consistency between τ̂ and ŷ feature importance confirms causal heterogeneity</li><li class="correct">B) Four-part: (1) Qini/AUUC on held-out RCT — train X-learner on train, rank test set by τ̂(x), plot uplift curve (should rise steeply in high-τ̂ group, flatten/negative in low-τ̂ group); (2) Subgroup lift verification — for top/bottom decile by τ̂, estimate actual ITEs within each decile using holdout RCT; (3) Plausibility check — features driving τ̂ should make domain sense; (4) Post-deployment holdout — deploy to 90%, keep 10% random holdout, compare targeted-by-uplift vs random groups in holdout.</li><li>C) Cross-validate the X-learner using standard k-fold CV and report RMSE on held-out folds — low RMSE confirms the model is capturing real causal heterogeneity rather than noise</li><li>D) Compare X-learner CATE estimates to T-learner CATE estimates — if both models agree on which users have high vs low uplift, the estimates reflect true causal heterogeneity rather than model-specific artifacts</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> What is the R-learner and why does 'orthogonalisation' matter for CATE estimation?</p>
+      <ul class="check-opts"><li>A) R-learner is a regularized version of T-learner that adds L2 penalties to prevent overfitting; orthogonalisation refers to the penalty ensuring the treatment and control models are orthogonal to each other</li><li>B) R-learner uses random forests for both nuisance and CATE estimation; orthogonalisation refers to the decorrelation of tree splits across the ensemble, which reduces variance in CATE estimates</li><li>C) R-learner trains CATE models on residualized outcomes controlling for propensity score; orthogonalisation refers to projecting the outcome onto the treatment indicator before fitting CATE</li><li class="correct">D) R-learner based on Y - m(X) = τ(X)(T - e(X)) + ε. Minimizes loss: Σ[(Yᵢ - m̂(Xᵢ)) - τ(Xᵢ)(Tᵢ - ê(Xᵢ))]². Orthogonalisation matters because of Neyman orthogonality: gradient of loss w.r.t. τ is zero when m and e at true values → first-order errors in estimating m and e do NOT bias CATE estimate. Key failure mode of non-orthogonal approaches: propensity estimation errors propagate into τ̂ via confounding. With cross-fitting (estimating m and e on separate fold), provides semiparametrically efficient, essentially unbiased CATE estimates.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> You estimate CATE using X-learner on observational data (no RCT). A colleague argues the estimates cannot be trusted. Who is right?</p>
+      <ul class="check-opts"><li class="correct">A) Colleague is mostly right. CATE from observational data inherits all ATE identification problems plus more: ignorability must hold WITHIN every subgroup defined by X (not just on average); overlap must hold throughout X-space (thin regions with near-zero overlap = pure extrapolation). Defence: (1) argue ignorability from domain knowledge (measured all confounders?); (2) check overlap throughout X-space; (3) sensitivity analysis; (4) validate by running small RCT on subset and comparing observational CATE to RCT CATE within tested subgroups.</li><li>B) The colleague is wrong — X-learner uses propensity weighting which fully adjusts for confounding in observational data; the estimates are as credible as any IPW-based ATE estimate</li><li>C) Both are equally right — observational CATE estimates are neither trustworthy nor untrustworthy; they should always be reported alongside a disclaimer that results may not be causal</li><li>D) The colleague is right only if the observational data lacks overlap; with sufficient overlap (all propensity scores in [0.1, 0.9]), observational CATE estimates from X-learner are unbiased and can be trusted without additional validation</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#causal_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

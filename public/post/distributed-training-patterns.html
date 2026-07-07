@@ -38,8 +38,8 @@
       "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
     }
   },
-  "datePublished": "2026-06-20",
-  "dateModified": "2026-06-20",
+  "datePublished": "2026-07-07",
+  "dateModified": "2026-07-07",
   "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/distributed-training-patterns.html",
   "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
   "keywords": "Distributed Training, Data Parallel, Model Parallel, ZeRO, Deep Learning"
@@ -87,12 +87,12 @@
 <p>Simulates a larger batch size by computing gradients over multiple micro-batches before updating. Useful when you can't increase batch size due to memory but want the stability benefits of larger batches. gradient_accumulation_steps=8 with micro_batch=16 is equivalent to batch=128.</p>
 <h2>Practical guidance:</h2>
 <p>Start with DDP. Add ZeRO stages if you need memory relief. Only add model parallelism if the model genuinely doesn't fit on a single node. Communication costs scale super-linearly with node count — profile before scaling.</p>
-<p>\`\`\`python import torch import torch.distributed as dist from torch.nn.parallel import DistributedDataParallel as DDP</p>
+<p>```python import torch import torch.distributed as dist from torch.nn.parallel import DistributedDataParallel as DDP</p>
 <p>def train_ddp(rank, world_size, model, dataset, accum_steps=4): """Minimal DDP loop with gradient accumulation. accum_steps=4 with micro_batch=8 → effective batch = 32 × world_size.""" dist.init_process_group('nccl', rank=rank, world_size=world_size) model = model.to(rank) model = DDP(model, device_ids=[rank]) optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)</p>
 <p>loader = torch.utils.data.DataLoader( dataset, sampler=torch.utils.data.distributed.DistributedSampler(dataset), batch_size=8, )</p>
 <p>for step, batch in enumerate(loader): loss = model(batch.to(rank)).loss / accum_steps   # scale loss loss.backward() if (step + 1) % accum_steps == 0: torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0) optimizer.step() optimizer.zero_grad()</p>
 <p>dist.destroy_process_group()</p>
-<p># Production note: unused params in DDP cause a hang — set find_unused_parameters=True # only as a debug fallback; fix the architecture instead. \`\`\`</p>
+<p># Production note: unused params in DDP cause a hang — set find_unused_parameters=True # only as a debug fallback; fix the architecture instead. ```</p>
 
     <div class="cta">
       <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>

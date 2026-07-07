@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attention Mechanism | ML Systems Lab</title>
+  <meta name="description" content="Dot-product attention, multi-head attention, Q/K/V, complexity">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/attention.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/attention.html">
+  <meta property="og:title" content="Attention Mechanism | ML Systems Lab">
+  <meta property="og:description" content="Dot-product attention, multi-head attention, Q/K/V, complexity">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Attention Mechanism">
+  <meta name="twitter:description" content="Dot-product attention, multi-head attention, Q/K/V, complexity">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Attention Mechanism",
+  "description": "Dot-product attention, multi-head attention, Q/K/V, complexity",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/attention.html",
+  "keywords": "attention, self-attention, multi-head attention, Transformer"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#dl_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">29 min read</span>
+      <span class="tag">attention</span><span class="tag">self-attention</span><span class="tag">multi-head attention</span><span class="tag">Transformer</span>
+    </div>
+    <h1>Attention Mechanism</h1>
+    <p class="subtitle">Dot-product attention, multi-head attention, Q/K/V, complexity</p>
+
+    <p>Consider the sentence &quot;The bank by the river was steep.&quot; To translate &quot;bank&quot; correctly, a model needs to notice that &quot;river&quot; is nearby — otherwise it might pick the money-bank meaning. So the core question is: <strong>how do you let a word look at the other words that matter to it?</strong> That is exactly what <strong>attention</strong> does, and it is the single idea behind every Transformer.</p>
+    <p>The old way (encoder-decoder RNNs, circa 2014) crammed the whole sentence into one fixed-size summary vector before translation even began. By the time the model got to &quot;bank,&quot; that summary had been overwritten word by word and the &quot;river&quot; clue was diluted or gone. For long sentences, this squeeze lost exactly the information that mattered.</p>
+    <p><strong>Attention</strong> fixed it directly: instead of relying on one squeezed summary, let each word *reach back and look at all the other words at once*, and weight them by how relevant they are. When translating &quot;bank,&quot; the model can put most of its weight on &quot;river&quot; — no matter how many words sit in between.</p>
+    <hr>
+    <h3>Q, K, V — the mechanism</h3>
+    <p>Self-attention lets *every* position look at every other position, using three learned views of each word:</p>
+    <p>- <strong>Query (Q)</strong> — &quot;what am I looking for?&quot;
+- <strong>Key (K)</strong> — &quot;what do I offer?&quot;
+- <strong>Value (V)</strong> — &quot;what do I hand over if you pick me?&quot;</p>
+    <p>To decide how much word *i* should attend to word *j*, you compare *i*'s query with *j*'s key (a dot product) — a big match means &quot;this one is relevant.&quot; Run all those scores through a softmax so they become weights that add up to 1, then take the weighted average of the *values*. That is the whole operation, and it gives each word a fresh representation blended from exactly the words it cares about.</p>
+    <p>(One detail with a reason: the scores are divided by √d before the softmax. Without it, in high dimensions the dot products get so large that softmax turns nearly one-hot — a word attends to a single other word and the gradients dry up. The scaling keeps things soft enough to keep learning.)</p>
+    <hr>
+    <h3>Many heads, many kinds of relationship</h3>
+    <p>A single attention pass can only capture one *kind* of relationship at a time. So Transformers run several in parallel — <strong>multi-head attention</strong> — each head with its own Q/K/V views. One head might track grammatical links (verb ↔ subject), another word meaning, another position. Their outputs are combined, giving the model several different lenses on the same sentence instead of forcing everything through one.</p>
+    <p>The catch is cost: comparing every word with every other word is <strong>O(n²)</strong> — double the sequence length and you quadruple the work and memory. That quadratic cost is the single biggest constraint on long-context Transformers, and a whole family of tricks (FlashAttention, sparse attention, and others) exists to tame it.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Use self-attention when the task requires modeling relationships between any two positions in a sequence, especially when those positions are far apart.</strong> Encoder-only (bidirectional) attention for classification and understanding tasks; causal (masked) attention for generation. For sequences longer than ~8k tokens, O(n²) memory becomes the bottleneck — use FlashAttention (exact, 2–4× faster, O(n) memory via tiling) as the first-line solution before considering approximate methods. Cross-attention applies when you need one sequence to query another — translation, image captioning, conditioning in diffusion models.</li><li><strong>The production trap: missing causal mask in autoregressive models.</strong> Without masking future positions to −∞ before softmax, the model during training can attend directly to the token it is predicting — achieving near-zero training loss while learning nothing about language. The symptom is excellent training loss and near-random test generation. Always verify the causal mask is applied before the softmax, not after. Multi-head attention in decoder-only models must use upper-triangular masking for every head.</li><li><strong>The diagnostic: visualise attention weights on a known example before trusting any trained model.</strong> For an encoder model, check whether the attention distribution for a given word is concentrated on related words (e.g., the subject attends to its verb) or diffuse noise. Uniform attention weights across all positions indicate the model has not learned meaningful relationships — either the query-key projections are not trained or the softmax temperature is too high. Log the entropy of attention distributions per head per layer: low entropy = head is attending specifically; high entropy = head is attending uniformly (potentially wasted capacity).</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Self-attention creates an O(1) information path between any two positions in a sequence — that is the property RNNs cannot replicate without exponential gradient attenuation, and the O(n²) memory cost is the price every efficient Transformer variant is trying to reduce.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Core question:</strong> how do you let a word look at exactly the other words that matter to it (e.g. &quot;bank&quot; needs to see nearby &quot;river&quot; to disambiguate)? That single idea is attention, and it underlies every Transformer.</li><li><strong>Old encoder-decoder RNNs squeezed the whole sentence into one fixed-size summary vector</strong> before decoding began — by the time it reached &quot;bank,&quot; that summary had been overwritten word by word and the &quot;river&quot; clue was diluted or gone. Long sentences lost exactly the information that mattered.</li><li><strong>Attention fixed it directly:</strong> instead of one squeezed summary, each word *reaches back and looks at all the other words at once*, weighting them by relevance — so translating &quot;bank&quot; can put most of its weight on &quot;river&quot; no matter how many words sit in between.</li><li><strong>Q, K, V — three learned views of each word:</strong> Query (&quot;what am I looking for?&quot;), Key (&quot;what do I offer?&quot;), and Value (&quot;what I hand over if you pick me?&quot;). To decide how much word *i* attends to word *j*, you compare i's query with j's key.</li><li><strong>Mechanism:</strong> score = Q·K (a dot product — big match = relevant), run all scores through a softmax so they become weights summing to 1, then take the weighted average of the *values*. Divide scores by √d before the softmax, or in high dimensions the dot products get so large the softmax goes near one-hot and gradients dry up.</li><li><strong>Multi-head attention runs several in parallel,</strong> each with its own Q/K/V — one head can track grammar, another meaning, another position — giving the model several lenses instead of forcing everything through one. Self-attention also gives an O(1) path between any two positions, which RNNs can't match without exponential gradient attenuation.</li><li><strong>The catch is O(n²) cost:</strong> comparing every word with every other word means doubling the sequence length quadruples the work and memory — the single biggest constraint on long-context Transformers, and what FlashAttention, sparse attention, and every efficient variant are trying to cut.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> In scaled dot-product attention, why divide by √d_k? What happens without this scaling for large d_k?</p>
+      <ul class="check-opts"><li>A) For n=10,000: full attention requires computing n×n = 100,000,000 attention scores. Memory: the attention matrix is n×n×4 bytes (fp32) = 400 MB per layer per head. With 16 heads and 32 layers: ~200 GB just for attention matrices — far exceeding GPU memory. FLOPs: O(n²d) per layer. Approximate approaches: (1) Sparse attention (Longformer, BigBird): compute attention only between local windows + some global tokens — O(n·k) where k is window size. (2) Linear attention: reformulate attention as a kernel approximation, achieving O(n) complexity. (3) Flash Attention: not an approximation — keeps O(n²) complexity but restructures computation to minimise GPU memory reads/writes via tiling, enabling 2-4× speedup and lower memory.</li><li>B) Dividing by √d_k normalises the dot products to have unit variance, ensuring the softmax operates at a temperature of 1. Without √d_k, the softmax temperature would be proportional to 1/√d_k, making the distribution sharper for larger d_k. A sharper distribution means the model attends too strongly to the top-scoring key, which reduces the effective batch size in the value aggregation step.</li><li>C) The √d_k scaling prevents the attention logits from having different magnitudes at different heads in multi-head attention. Without it, heads with larger d_k dimensions would have systematically larger logits than heads with smaller d_k, causing the softmax to saturate for larger heads but not smaller ones — making multi-head attention inconsistent across heads with different dimensions.</li><li class="correct">D) For query q and key k both having i.i.d. components with mean 0 and variance 1, their dot product q·k = Σᵢ qᵢkᵢ has mean 0 and variance d_k (sum of d_k unit-variance terms). Without scaling, for large d_k (e.g., d_k = 512), q·k has standard deviation √512 ≈ 22.6. The softmax is applied to these large-magnitude values: softmax([22, -15, 18, ...]) → nearly one-hot, close to 0 everywhere except the largest value. The softmax output is nearly deterministic: the attention head collapses to a hard selection rather than a soft weighting. This causes vanishing gradients through the softmax (the saturated softmax has gradients ≈ 0 for all positions). Dividing by √d_k normalises variance to 1: q·k/√d_k has std ≈ 1, keeping the softmax in a moderate-temperature regime where gradients flow.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Multi-head attention uses h parallel attention heads, each with dimension d_k = d_model/h. Why is multi-head attention more expressive than single-head attention with dimension d_model?</p>
+      <ul class="check-opts"><li>A) Multi-head attention with h heads is more expressive because it has h times more parameters than single-head attention with d_model dimension: each head has its own Q, K, V projection matrices of size d_model × d_k, and with h heads there are h such sets. The increased parameter count allows the model to represent more complex attention patterns than the single-head equivalent with its smaller parameter budget.</li><li class="correct">B) Each attention head uses different projection matrices (Wᵢ_Q, Wᵢ_K, Wᵢ_V), allowing it to attend to different aspects of the input. Head 1 might learn to attend to syntactic dependencies (verb-subject agreement), head 2 to semantic similarity (co-reference), head 3 to positional proximity, etc. A single head with d_model dimensions would need to simultaneously encode all these attention patterns in one set of attention weights — the single attention distribution cannot capture multiple different relationships at once. Multi-head: each head learns a distinct attention pattern independently, then the outputs are concatenated. This gives h different views of the same input. Ablation studies confirm: different heads specialise — removing individual heads has selective effects, confirming functional differentiation. The expressiveness gain is not from the total parameter count (which is the same as a single-head with d_model/h) but from the diversity of attention patterns.</li><li>C) Multi-head attention is more expressive because applying softmax to smaller d_k dimensions produces sharper attention distributions for each head. Sharper distributions mean each head selects fewer positions to attend to, creating a form of sparse attention. The combination of h sparse attention patterns covers more of the input space than one diffuse attention pattern over d_model dimensions.</li><li>D) Single-head attention with d_model dimensions computes QKᵀ as a single d_model×d_model outer product. Multi-head attention factorises this into h smaller d_k×d_k outer products, each with a different low-rank subspace. The factorisation provides more expressiveness because low-rank approximations to attention patterns are more regularised and generalise better than a single high-rank attention matrix.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Attention has O(n²) complexity in sequence length n. For a 10,000-token document, what is the computational problem, and what are the main approximation approaches?</p>
+      <ul class="check-opts"><li class="correct">A) For n=10,000: full attention requires computing n×n = 100,000,000 attention scores. Memory: the attention matrix is n×n×4 bytes (fp32) = 400 MB per layer per head. With 16 heads and 32 layers: ~200 GB just for attention matrices — far exceeding GPU memory. FLOPs: O(n²d) per layer = 10⁸×512 = ~5×10¹⁰ per layer. Approximate approaches: (1) Sparse attention (Longformer, BigBird): compute attention only between local windows + some global tokens — O(n·k) where k is window size. (2) Linear attention: reformulate attention as a kernel approximation, achieving O(n) complexity (Performer, Linformer). (3) Sliding window + global attention (Longformer): O(n·w) where w is window size. (4) Flash Attention: not an approximation — keeps O(n²) complexity but restructures computation to minimise GPU memory reads/writes via tiling, enabling 2-4× speedup and lower memory. (5) Retrieval-augmented / chunked attention: split document into chunks, process independently.</li><li>B) For n=10,000 with d_model=512: full attention requires 10,000×512 = 5M operations per head. The computational problem is that 512-dimensional Q and K projections make each pairwise dot product O(512) rather than O(1) — the total cost is O(n×d) not O(n²), but for large d this becomes prohibitive. Approximation approaches focus on reducing d: using lower-dimensional projections (d=64 instead of d=512) reduces the per-pair cost while keeping n×n pairs.</li><li>C) The computational problem for n=10,000 is purely a matter of sequential processing — GPU parallelism can only process b tokens simultaneously, so n=10,000 tokens requires ceil(10,000/b) sequential steps. Approximation approaches include increasing GPU batch size b (Flash Attention), using sparse representations to skip zero-attention positions (BigBird), or distilling the attention matrix into a fixed-size representation (pooling-based models).</li><li>D) For n=10,000, the O(n²) complexity means the model must process 100M token pairs, but the true bottleneck is the position embedding lookup: each of the 10,000 positions requires a unique learned embedding, and with d_model=512 this is a 10,000×512 = 5M parameter lookup table. Approximation approaches replace learned position embeddings with computed encodings (RoPE, ALiBi) to eliminate the O(n) position embedding memory.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#dl_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

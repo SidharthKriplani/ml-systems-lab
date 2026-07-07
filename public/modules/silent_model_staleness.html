@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Silent Model Staleness | ML Systems Lab</title>
+  <meta name="description" content="When models decay without alerts, leading indicators, staleness signals">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/silent_model_staleness.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/silent_model_staleness.html">
+  <meta property="og:title" content="Silent Model Staleness | ML Systems Lab">
+  <meta property="og:description" content="When models decay without alerts, leading indicators, staleness signals">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Silent Model Staleness">
+  <meta name="twitter:description" content="When models decay without alerts, leading indicators, staleness signals">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Silent Model Staleness",
+  "description": "When models decay without alerts, leading indicators, staleness signals",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/silent_model_staleness.html",
+  "keywords": "model staleness, silent failure, monitoring, model decay"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#monitoring_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">20 min read</span>
+      <span class="tag">model staleness</span><span class="tag">silent failure</span><span class="tag">monitoring</span><span class="tag">model decay</span>
+    </div>
+    <h1>Silent Model Staleness</h1>
+    <p class="subtitle">When models decay without alerts, leading indicators, staleness signals</p>
+
+    <p>You take a two-week vacation. No alerts, no pages — the model is &quot;running fine.&quot; You come back, check the business metric the model drives, and it has slid 8% in the wrong direction over the last ten days. Nothing caught it, because each individual signal stayed under its threshold: no single feature's drift crossed the line, the prediction distribution moved too slowly to trip a z-test, and the model kept answering at low latency with zero errors. Technically functioning, empirically wrong. This is <strong>silent model staleness.</strong></p>
+    <hr>
+    <h3>It's not a rare failure — it's the default</h3>
+    <p>Staleness needs no failure event and makes no announcement. It just accumulates as the world moves and the model doesn't. User behavior, fraud tactics, the economy, your own product — all changing constantly, while the model keeps applying patterns it learned six months ago. The growing gap between what it learned and what the world now looks like *is* the staleness, and it widens every single day.</p>
+    <hr>
+    <h3>No one signal catches it — you need several, overlapping</h3>
+    <p>*Feature drift:* PSI over 0.2 on any tier-1 feature. *Prediction drift:* score mean or variance outside 3σ of the launch baseline. *Business divergence:* the KPI the model influences trending the wrong way for 5+ straight days. *Delayed accuracy:* once labels land, rolling 30-day accuracy more than 3 points below launch. Any one of these can stay silent on its own — a 0.19 PSI that never quite hits 0.2, a KPI dip that hides in the noise. The staleness signal is when *two or three fire together, in the same direction.*</p>
+    <hr>
+    <h3>The strongest defense doesn't depend on alerts at all</h3>
+    <p>Set a time-based retraining SLA: a model retrained monthly simply cannot go more than four weeks stale, no matter what monitoring missed. Pair it with shadow retraining — continuously train a challenger on recent data and compare it to the champion weekly — which surfaces staleness before the live metrics visibly sag.</p>
+    <p>And retire the belief that &quot;if it's running, it's working.&quot; A model can serve every request at normal latency with zero infrastructure errors and be wrong on every prediction. Operational health and prediction quality are unrelated; correctness has to be actively maintained and verified — uptime does not certify it.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Deploy a composite health score for every production model — a single number that aggregates feature drift, prediction drift, and delayed accuracy into one signal.</strong> Alert when it crosses a threshold. This creates a single pane of glass instead of 15 separate alerts that each stay below their individual threshold while collectively signaling degradation.</li><li><strong>Trap: relying only on label-based monitoring.</strong> Labels can take days or weeks to arrive. By the time label-based accuracy confirms degradation, the model has been wrong for the entire label delay period. You need leading indicators — prediction distribution, feature drift — that fire days before labels confirm the diagnosis.</li><li><strong>Diagnostic: compare model performance in the first week after deployment to the most recent week.</strong> If the gap is greater than 5 percentage points and no known change explains it, the model has gone stale. This 5-minute check should be part of every weekly team review — it catches gradual drift that no alert threshold was calibrated to catch.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Silent staleness is the default state of any unmonitored model — detect it with overlapping leading indicators, build a composite health score to surface the &quot;everything drifting a little&quot; pattern, and set time-based retraining SLAs so no model ages past its empirically calibrated staleness limit.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Silent staleness is the default</strong>, not a rare failure — no event, no announcement, widening every day.</li><li><strong>Running ≠ working:</strong> normal latency, zero errors, and wrong on every prediction can coexist.</li><li><strong>No single signal catches it:</strong> each stays under its threshold (a 0.19 PSI, a KPI dip in the noise).</li><li><strong>The signal is co-firing:</strong> two or three indicators moving the same direction together.</li><li><strong>Overlapping indicators:</strong> feature drift PSI&gt;0.2, prediction drift outside 3σ, KPI wrong-way 5+ days, 30-day accuracy 3pts below launch.</li><li><strong>Composite health score</strong> aggregates them into one pane of glass instead of 15 sub-threshold alerts.</li><li><strong>Time-based retraining SLA is the strongest defense:</strong> monthly retrain caps staleness regardless of what monitoring missed; pair with shadow retraining.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> How would you design a staleness detection system for a recommendation model where engagement labels are available daily but the model is retrained monthly?</p>
+      <ul class="check-opts"><li class="correct">A) Multi-layer detection: real-time PSI on output scores (alert if PSI &gt; 0.15); daily CTR on top-10 vs rolling 30-day baseline (alert if CTR drops &gt;5% for 3+ days); weekly NDCG@10 vs post-deployment reference; monthly shadow-train challenger and promote if challenger wins NDCG by &gt;1%</li><li>B) Single-layer detection is sufficient: compute NDCG@10 weekly on a held-out sample and alert if it drops more than 3% below the post-deployment baseline — adding more layers increases complexity without improving detection speed</li><li>C) Rely on the monthly retraining schedule alone — for a model retrained monthly, staleness cannot meaningfully accumulate within that window, so additional detection layers add operational overhead without benefit</li><li>D) Monitor only prediction entropy daily — if entropy stays stable, the model is not stale; if entropy rises, trigger an immediate retrain regardless of how long since the last training run</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Every individual metric sits just below its threshold — PSI at 0.19, prediction drift inside 3σ — yet the business KPI has slid 6% over 10 days. What is the staleness signal here?</p>
+      <ul class="check-opts"><li>A) A single sub-threshold PSI of 0.19 is the real alarm; nudge the PSI threshold down to 0.15 and the incident would have paged</li><li>B) The KPI slide alone is decisive, so business divergence should be the only monitored signal and the drift metrics can be retired</li><li class="correct">C) The signal is co-firing: several indicators moving the same direction together, each individually silent, is the pattern a composite health score is built to surface</li><li>D) Nothing is wrong yet — until at least one metric crosses its threshold the model is healthy, and the KPI move is unrelated noise</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Why is a time-based retraining SLA described as the strongest defense against silent staleness rather than better alert thresholds?</p>
+      <ul class="check-opts"><li>A) Alert thresholds are expensive to compute, whereas a retraining SLA runs offline and therefore costs the serving path nothing</li><li class="correct">B) A monthly retrain caps how stale the model can get regardless of what monitoring missed, so it does not depend on any threshold firing correctly</li><li>C) Time-based SLAs are mandated by MLOps compliance frameworks, so they take precedence over threshold-based detection by policy</li><li>D) Retraining monthly eliminates concept drift permanently, removing the need for any leading-indicator monitoring going forward</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#monitoring_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

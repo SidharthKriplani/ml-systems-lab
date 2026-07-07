@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Two-Stage Architecture | ML Systems Lab</title>
+  <meta name="description" content="Why candidate generation → ranking exists — latency forces a cheap recall stage before an expensive precision stage">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/two_stage_architecture.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/two_stage_architecture.html">
+  <meta property="og:title" content="The Two-Stage Architecture | ML Systems Lab">
+  <meta property="og:description" content="Why candidate generation → ranking exists — latency forces a cheap recall stage before an expensive precision stage">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="The Two-Stage Architecture">
+  <meta name="twitter:description" content="Why candidate generation → ranking exists — latency forces a cheap recall stage before an expensive precision stage">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "The Two-Stage Architecture",
+  "description": "Why candidate generation → ranking exists — latency forces a cheap recall stage before an expensive precision stage",
+  "proficiencyLevel": "Foundational",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/two_stage_architecture.html",
+  "keywords": "RecSys, candidate generation, ranking, latency budget"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#recsys_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Foundational</span>
+      <span class="read-time">22 min read</span>
+      <span class="tag">RecSys</span><span class="tag">candidate generation</span><span class="tag">ranking</span><span class="tag">latency budget</span>
+    </div>
+    <h1>The Two-Stage Architecture</h1>
+    <p class="subtitle">Why candidate generation → ranking exists — latency forces a cheap recall stage before an expensive precision stage</p>
+
+    <p>Every serious recommender answers one question: &quot;of the millions of things I could show this user, which handful do I show *now*?&quot; The naive answer — score every item with your best model and take the top-k — is arithmetically impossible, and understanding *why* is the whole foundation of RecSys design.</p>
+    <hr>
+    <p><strong>The latency wall is the forcing function.</strong> Suppose a good ranker takes 1ms to score one (user, item) pair — generous, since real cross-feature rankers are slower. A catalog of 10M items would need 10,000,000 ms = 10,000 seconds of compute per request. Your latency budget is ~100ms end-to-end. You are off by <strong>five orders of magnitude</strong>. No amount of hardware closes a 100,000× gap at request time; you cannot buy your way out of an asymptotic mismatch.</p>
+    <hr>
+    <p><strong>So the system splits into two stages with opposite objectives.</strong> *Candidate generation* (retrieval) cheaply narrows 10M → ~hundreds using methods so cheap they can touch every item — embedding lookups, approximate nearest neighbor, precomputed lists. It optimizes <strong>recall</strong>: don't lose the good items. *Ranking* then runs an expensive, feature-rich model over only those few hundred survivors and optimizes <strong>precision</strong>: order them exactly right. The cheap stage runs over everything; the expensive stage runs only over what the cheap stage kept.</p>
+    <hr>
+    <p><strong>The consequence that trips up juniors: the two stages have different metrics because they have different jobs.</strong> Retrieval is judged on recall@k (did the relevant items make the shortlist?), ranking on NDCG/precision (are they ordered well?). And retrieval's recall is a *ceiling* — an item retrieval drops is gone forever; no ranker can order an item it never received. A brilliant ranker on top of a mediocre retriever is capped by the retriever. This is why &quot;great model, mediocre recommendations&quot; almost always means: audit retrieval recall first.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>The two-stage split is forced by arithmetic, not taste.</strong> 10M items × ~1ms/item = 10,000s per request against a ~100ms budget — a 100,000× gap. You cannot run the precise model over the full catalog, so a cheap recall stage must run first and an expensive precision stage second.</li><li><strong>Retrieval optimizes recall; ranking optimizes precision — different jobs, different metrics.</strong> Retrieval's only sin is dropping a good item (unrecoverable); ranking's job is ordering the survivors. Judge retrieval on recall@k, ranking on NDCG/precision@k. Conflating the two is a classic interview tell.</li><li><strong>Retrieval recall is a hard ceiling on final quality.</strong> If recall@500 = 0.7, then 30% of items the user would have loved never reach the ranker, and no ranking sophistication recovers them. Diagnose a &quot;good ranker, bad results&quot; system by measuring retrieval recall before touching the ranker.</li><li><strong>The stage counts are a budget allocation.</strong> A typical split: retrieval 10M→~1k in ~2ms, ranking ~1k→~100 in ~20ms, then a re-rank/business-rules pass ~100→~10. Each stage gets a hard millisecond allocation; one overrunning stage steals from the next.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>A recommender is a recall-then-precision funnel forced by a ~100,000× latency gap: cheap candidate generation maximizes recall over millions (setting an unraiseable ceiling on final quality), then an expensive ranker maximizes precision over the few hundred survivors. One model cannot occupy both ends of the funnel.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>The two-stage split is forced by a latency wall, not preference:</strong> 10M items × ~1ms each ≈ 10,000s per request vs a ~100ms budget = a 100,000× gap. You cannot score the full catalog with the precise model at request time.</li><li><strong>Two stages, opposite objectives:</strong> candidate generation (retrieval) is cheap and maximizes *recall* over millions; ranking is expensive and maximizes *precision* over the few hundred survivors. The cheap stage runs over everything; the expensive stage only over what the cheap stage kept.</li><li><strong>Retrieval recall is an unraiseable ceiling:</strong> an item retrieval drops is gone — no ranker can order an item it never received. recall@500 = 0.6 means 40% of loved items are lost before ranking. Tell: &quot;great ranker, mediocre feed&quot; → audit retrieval recall first.</li><li><strong>Different jobs → different metrics:</strong> judge retrieval on recall@k, ranking on NDCG/precision@k. Conflating them is a junior tell.</li><li><strong>Stages are a budget allocation:</strong> e.g. retrieval 10M→1k (~2ms) → rank 1k→100 (~20ms) → re-rank 100→10 (~5ms). Each stage has a hard ms allocation; one overrun steals from the next.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> An interviewer asks you to &quot;design YouTube recommendations.&quot; You have a strong ranking model. What is the correct *first* architectural move?</p>
+      <ul class="check-opts"><li>A) Run the ranking model over the full catalog and cache the top results per user nightly, so serving is a lookup.</li><li class="correct">B) Establish that a precise ranker can't score millions of items inside the latency budget, so the system needs a cheap candidate-generation stage (recall) feeding an expensive ranking stage (precision) — then design each stage's objective and budget.</li><li>C) Start with the loss function and negative-sampling scheme for the ranker, since the ranker decides final quality.</li><li>D) Pick the embedding dimension and ANN index, since retrieval is where all the engineering difficulty lives.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Your ranker scores 0.94 AUC offline, but users say the feed misses obvious interests. Retrieval recall@500 is measured at 0.6. Where is the bug?</p>
+      <ul class="check-opts"><li>A) The ranker — 0.94 AUC on a biased offline set is misleading; retrain with harder negatives and the complaints resolve.</li><li class="correct">B) Retrieval — at recall@500 = 0.6, 40% of relevant items never reach the ranker, capping quality regardless of AUC. Fix retrieval (more candidates, better embeddings, hard negatives) before touching the ranker.</li><li>C) The metric — AUC is wrong for feeds; switch to NDCG and the gap disappears without changing the system.</li><li>D) Serving — the ranker is timing out on some requests and returning a fallback; add retries.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Why can't you simply make candidate generation *also* precise — e.g., use the full ranking model but only over a random 1% sample of the catalog?</p>
+      <ul class="check-opts"><li>A) You can — sampling 1% and ranking it precisely is exactly how production retrieval works.</li><li class="correct">B) A random 1% sample has ~1% recall of the relevant items by construction, so you'd throw away ~99% of what the user wants before ranking ever runs. Retrieval must be cheap *and* target the relevant region (via embeddings/ANN), not a blind random cut.</li><li>C) Random sampling breaks the ANN index's distance metric, causing incorrect neighbors.</li><li>D) It works but only if the sample is stratified by item popularity, which is expensive to maintain.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#recsys_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

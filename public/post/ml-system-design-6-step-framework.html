@@ -38,8 +38,8 @@
       "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
     }
   },
-  "datePublished": "2026-06-20",
-  "dateModified": "2026-06-20",
+  "datePublished": "2026-07-07",
+  "dateModified": "2026-07-07",
   "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/ml-system-design-6-step-framework.html",
   "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
   "keywords": "Interview, System Design, ML Interview, Framework, Recommendation, Evaluation"
@@ -93,7 +93,7 @@
 <h2>Step 4: Feature design</h2>
 <p>Now you can talk about features. By this point you know the task, the labels, and the constraints — so feature design is guided by actual requirements, not intuition.</p>
 <p>Structure your feature discussion around: user features (demographics, historical behaviour, preferences), item features (content embeddings, metadata, popularity signals), context features (time of day, device, session context), and interaction features (user-item affinity, historical clicks on similar items).</p>
-<p>For each feature, state: availability at serving time? Point-in-time correct? Any leakage risk? This is where many candidates reveal whether they\'ve actually worked with ML data pipelines.</p>
+<p>For each feature, state: availability at serving time? Point-in-time correct? Any leakage risk? This is where many candidates reveal whether they've actually worked with ML data pipelines.</p>
 <h2>Step 5: Model choice</h2>
 <p>Only now do you choose a model. Given everything above: the task type, the latency requirement, the label quality, the feature space, and the training data volume.</p>
 <p>Common mapping:</p>
@@ -109,11 +109,11 @@
 <p>Serving: latency budget, caching strategy (can you pre-compute scores for a subset of users?), failover behaviour (what does the system serve if the model is unavailable?), monitoring.</p>
 <h2>Worked example: news feed ranking</h2>
 <p>Step 1: Objective — maximise long-term user engagement, not pure CTR. North star: weekly active days. Step 2: Task — list-wise ranking over candidate posts for a user. Retrieval (ANN) + ranking (transformer). Step 3: Labels — implicit: 10s+ dwell = positive, scroll past = weak negative, share = strong positive. Labels available in realtime. Step 4: Features — user embedding (historical engagement), post embedding (BERT on text), user-post affinity, recency decay, source reliability signal. Step 5: Model — two-tower for retrieval, 6-layer transformer ranker for top-100 candidates. Retrain daily. Step 6: Evaluation — NDCG@10 offline; A/B on weekly active days online with 2-week exposure minimum.</p>
-<p>The interview test: can you do this in 45 minutes, and does your answer reveal that you\'ve thought about what happens when the model is wrong?</p>
-<p>\`\`\`python from dataclasses import dataclass from typing import Literal</p>
+<p>The interview test: can you do this in 45 minutes, and does your answer reveal that you've thought about what happens when the model is wrong?</p>
+<p>```python from dataclasses import dataclass from typing import Literal</p>
 <p>@dataclass class Feature: name: str available_at_serving: bool    # exists at inference time (not post-hoc)? point_in_time_correct: bool   # no future data bleeds into training rows? source: Literal['realtime', 'batch_precomputed', 'derived']</p>
 <p>def step4_audit(features: list) -> None: """Call this before training, not after debugging a production incident.""" for f in features: flags = [] if not f.available_at_serving: flags.append("SERVING SKEW — not available at inference") if not f.point_in_time_correct: flags.append("LEAKAGE — future data contaminates training rows") print(f"{'✓' if not flags else '✗'} {f.name}: {flags or 'OK'}")</p>
-<p># News feed ranking — step 4 audit step4_audit([ Feature('user_click_history_7d',   True,  True,  'batch_precomputed'), Feature('post_engagement_rate',    True,  False, 'derived'),          # leakage! Feature('avg_session_duration',    False, True,  'batch_precomputed'), # serving skew Feature('realtime_trending_score', True,  True,  'realtime'), ]) \`\`\`</p>
+<p># News feed ranking — step 4 audit step4_audit([ Feature('user_click_history_7d',   True,  True,  'batch_precomputed'), Feature('post_engagement_rate',    True,  False, 'derived'),          # leakage! Feature('avg_session_duration',    False, True,  'batch_precomputed'), # serving skew Feature('realtime_trending_score', True,  True,  'realtime'), ]) ```</p>
 
     <div class="cta">
       <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Non-Stationary Bandits | ML Systems Lab</title>
+  <meta name="description" content="Sliding window UCB, discounted UCB, change-point detection, EXP3, REXP3">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/non_stationary_bandits.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/non_stationary_bandits.html">
+  <meta property="og:title" content="Non-Stationary Bandits | ML Systems Lab">
+  <meta property="og:description" content="Sliding window UCB, discounted UCB, change-point detection, EXP3, REXP3">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Non-Stationary Bandits">
+  <meta name="twitter:description" content="Sliding window UCB, discounted UCB, change-point detection, EXP3, REXP3">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Non-Stationary Bandits",
+  "description": "Sliding window UCB, discounted UCB, change-point detection, EXP3, REXP3",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/non_stationary_bandits.html",
+  "keywords": "non-stationary, sliding window, discounted UCB, EXP3, adversarial, change point"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#bandits_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">70 min read</span>
+      <span class="tag">non-stationary</span><span class="tag">sliding window</span><span class="tag">discounted UCB</span><span class="tag">EXP3</span><span class="tag">adversarial</span>
+    </div>
+    <h1>Non-Stationary Bandits</h1>
+    <p class="subtitle">Sliding window UCB, discounted UCB, change-point detection, EXP3, REXP3</p>
+
+    <p>Standard UCB and Thompson Sampling are built for stationary reward distributions. They accumulate observations indefinitely — N_a(t) grows monotonically. An arm with millions of accumulated observations has a confidence interval so tight it never loses the argmax, even after its reward has collapsed.</p>
+    <p>The algorithm stays frozen on a historically dominant arm long after its true mean has dropped. The failure mode is slow: it takes O(N_a) new observations to substantially move the empirical mean — that is months of data for a heavily exploited arm. The right production strategy combines two mechanisms: CUSUM-based change detection for abrupt shifts (triggers an immediate statistics reset when a change is detected) and sliding window or discounted UCB for gradual drift (continuously forgets stale observations so the mean tracks recent reality). Predictable seasonality is not non-stationarity — weekly cycles belong in contextual features, not in a forgetting mechanism.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Standard UCB/TS failure after a change point: UCB1 and standard TS accumulate all historical observations monotonically.</strong> For a previously dominant arm whose reward drops, N_a is large (tight confidence interval), the UCB stays high (empirical mean barely moves), and the algorithm continues exploiting it. The empirical mean only shifts substantially after O(N_a) new observations — for an arm with 50,000 observations, it takes thousands of post-change pulls to notice. Regret grows linearly after the change.</li><li><strong>Sliding window UCB (SW-UCB): maintain only the last W observations per arm.</strong> UCB
+
+$index = μ̂_a(W) + B√(ln t / min(N_a, W)). Old observations e$
+
+xpire automatically — after a change, the window fills with new observations in W rounds. Optimal window W ≈ √(T/K) for infrequent abrupt changes; regret = O(√(KT)). The tradeoff: a small W adapts quickly but has high variance; a large W is stable but slow to adapt.</li><li>**Discounted UCB (D-UCB): weight observations exponentially:
+
+$μ̂_a = Σ γ^(t−s) r_s / Σ γ^(t−s) where γ ∈ (0,1).** Effective me$
+
+mory length ≈ 1/(1−γ) rounds. Smoother than SW-UCB — old observations don't vanish abruptly but fade gradually. Behaves like an exponential moving average of rewards. γ = 0.99 gives effective memory of 100 rounds; γ = 0.999 gives 1000 rounds.</li><li><strong>Change-point detection + reset: run CUSUM or Page-Hinkley on each arm's reward stream.</strong> CUSUM maintains a cumulative sum statistic and signals a change when it exceeds a threshold. On detection, reset that arm's statistics (N_a = 0, μ̂_a = flat prior). More principled than windowing — only forgets when change is actually detected, not continuously. Requires tuning the detection threshold: low threshold → fast detection but frequent false alarms; high threshold → fewer false alarms but slow detection.</li><li><strong>EXP3 (Exponential-weight algorithm for Exploration and Exploitation): the adversarial bandit algorithm.</strong> Maintains weights w_a per arm. Selects arm with probability proportional to w_a plus uniform exploration floor γ/K. Importance-weights the observed reward: x̂_{a,t} = r_t / p_{a_t,t}. Updates: w_{a_t} ← w_{a_t} × exp(γ x̂_{a_t,t} / K). Achieves E[R_T] ≤ O(√(KT ln K)) against any adversarial sequence with no distributional assumptions.</li><li><strong>EXP3 importance-weighted reward: x̂_{a,t} = r_t / p_{a,t} × 1(a_t = a).</strong> Unbiased: E[x̂_{a,t}] = p_{a,t} × μ_a / p_{a,t} = μ_a. The importance weighting compensates for selection probability — rare arms have their observed rewards scaled up to correct for how rarely they are pulled. Variance is O(K/γ) per arm per round — high, especially with small γ. This is the cost of the adversarial guarantee: no distributional structure means you must pay for all information gathering.</li><li><strong>REXP3 (Restarting EXP3): for non-stationary adversarial settings with Υ change points, run EXP3 in epochs of length T/Υ, restarting at each epoch.</strong> If Υ is unknown, use a doubling schedule: epochs of length 1, 2, 4,... The cost of not knowing Υ is logarithmic — the doubling trick adds at most a constant factor to regret.</li><li><strong>Seasonality is not non-stationarity.</strong> Weekly cycles and hour-of-day patterns are predictable and recurring. Sliding window and discounted UCB handle the weekend-weekday difference by forgetting weekday observations on weekends — discarding useful data. The correct treatment: include day_of_week and hour_of_day as context features in a contextual bandit. The model learns that preferences differ predictably by time. Non-stationary algorithms are for genuine concept drift and external shocks — not for predictable patterns.</li><li><strong>EXP3 vs UCB for moderately non-stationary settings: EXP3 achieves O(√(KT ln K)) against adversarial sequences but O(√(KT ln K)) is worse than UCB's O(log T) for stationary settings.</strong> In practice, most production problems have stochastic structure with occasional abrupt changes — neither purely stationary nor fully adversarial. Sliding window or discounted UCB typically outperforms EXP3 because they exploit stochastic structure when present. EXP3 is the right choice when the adversary is strategic or the reward distribution is fundamentally unpredictable.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Standard UCB/TS freezes on a historically dominant arm after a change point because N_a is too large for the empirical mean to move quickly — it takes O(N_a) post-change observations to detect the drop. The right production strategy combines CUSUM-based change detection for abrupt shifts (immediate statistics reset) and sliding window or discounted UCB for gradual drift (continuous forgetting). Predictable seasonality is not non-stationarity — recurring patterns belong in contextual features where the model learns them, not in a forgetting mechanism that discards them.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Failure mode:</strong> standard UCB/TS freezes on a once-dominant arm — large N_a means the mean barely moves after a change.</li><li><strong>Detection is slow:</strong> O(N_a) post-change pulls needed — thousands of pulls for an arm with 50K observations.</li><li><strong>Sliding window UCB:</strong> keep last W observations; window fills with fresh data in W rounds; W ≈ √(T/K).</li><li><strong>Discounted UCB:</strong> $μ̂_a = Σ γ^(t−s) r_s / Σ γ^(t−s)$; effective memory ≈ 1/(1−γ); smoother than SW-UCB.</li><li><strong>CUSUM change detection + reset:</strong> forgets only when a change is actually detected, not continuously.</li><li><strong>EXP3 / REXP3:</strong> adversarial O(√(KT ln K)) via importance-weighted rewards; restart in epochs for Υ change points.</li><li><strong>NOT this:</strong> predictable seasonality isn't drift — put day_of_week / hour_of_day in context features, don't forget the data.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You're running UCB on an ad creative rotation with K=5 creatives. Creative A dominated for 3 months, but a competitor launched a similar ad and A's CTR dropped from 8% to 2% overnight. How does UCB fail and what algorithm do you switch to?</p>
+      <ul class="check-opts"><li>A) UCB adapts within 10 rounds because the confidence interval always shrinks to include the new true mean</li><li>B) UCB fails because it does not support more than 3 arms</li><li class="correct">C) UCB fails because N_A ≈ 50,000 observations makes the confidence interval so tight that the empirical mean barely moves — needs O(N_A) post-change pulls to substantially detect the drop. Fix: sliding window UCB (W = 7 days) or discounted UCB (γ = 0.99) for gradual drift, combined with CUSUM monitoring that resets A's statistics on abrupt change detection</li><li>D) UCB never fails in practice because the confidence bonus grows after a change point</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Explain the EXP3 importance-weighted reward estimate x̂_{a,t} = r_t / p_{a,t}. Why is it unbiased and what is the variance?</p>
+      <ul class="check-opts"><li class="correct">A) x̂_{a,t} = r_t / p_{a,t} × 1(a_t = a) is unbiased because E[x̂_{a,t}] = p_{a,t} × μ_a / p_{a,t} = μ_a — the propensity weighting corrects for selection frequency. Variance ≤ r_max² / p_{a,t} ≤ K · r_max² / γ (using the minimum exploration floor γ/K), which is the inherent cost of the adversarial guarantee</li><li>B) The estimate is biased because dividing by p_{a,t} amplifies noise in low-probability arms</li><li>C) The estimate is unbiased only when all arms are selected with equal probability</li><li>D) The variance is O(1) regardless of p_{a,t} because the importance weighting exactly cancels the variance</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> In a content recommendation system with weekly seasonality (weekend vs weekday user preferences differ strongly), is non-stationary bandit the right framing? What would you do differently?</p>
+      <ul class="check-opts"><li>A) Yes — weekly seasonality is a form of non-stationarity and sliding window UCB is the correct algorithm</li><li class="correct">B) Weekly seasonality is predictable and recurring, not genuine concept drift — non-stationary algorithms would discard useful weekday data on weekends. The correct approach is a contextual bandit with day_of_week and hour_of_day as context features, letting the model learn stable seasonal patterns without forgetting. Reserve non-stationary algorithms for genuine concept drift and external shocks</li><li>C) The recommendation system should be retrained daily to handle weekly seasonality, without any bandit algorithm</li><li>D) Non-stationary bandits with γ = 0.99 discounting are the right choice because weekly cycles fall within the effective memory window</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> REXP3 achieves O(Υ^{1/3} K^{1/3} T^{2/3}) regret with Υ change points. How does this compare to the lower bound, and what is the cost of not knowing Υ?</p>
+      <ul class="check-opts"><li>A) REXP3 matches the lower bound exactly — there is no gap between REXP3 and the minimax optimal rate</li><li>B) REXP3 has worse than O(T) regret when Υ is large, making it unusable in practice</li><li>C) The lower bound is O(1) for non-stationary bandits because change points are observable</li><li class="correct">D) The minimax lower bound is Ω(√(ΥKT)); REXP3's O(Υ^{1/3} K^{1/3} T^{2/3}) does not match it — EXP3-R with change detection achieves the near-optimal O(√(ΥKT ln K)). Not knowing Υ costs only a logarithmic factor via the doubling trick (epochs of length 1, 2, 4,...) — the added regret is O(log T), making uncertainty about Υ practically free</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#bandits_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

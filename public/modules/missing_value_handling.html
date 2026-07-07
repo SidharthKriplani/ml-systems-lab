@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Missing Value Handling | ML Systems Lab</title>
+  <meta name="description" content="The mechanism of missingness — MCAR, MAR, MNAR — determines the right treatment, not the null rate alone.">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/missing_value_handling.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/missing_value_handling.html">
+  <meta property="og:title" content="Missing Value Handling | ML Systems Lab">
+  <meta property="og:description" content="The mechanism of missingness — MCAR, MAR, MNAR — determines the right treatment, not the null rate alone.">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Missing Value Handling">
+  <meta name="twitter:description" content="The mechanism of missingness — MCAR, MAR, MNAR — determines the right treatment, not the null rate alone.">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Missing Value Handling",
+  "description": "The mechanism of missingness — MCAR, MAR, MNAR — determines the right treatment, not the null rate alone.",
+  "proficiencyLevel": "Foundational",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/missing_value_handling.html",
+  "keywords": "missing data, imputation, MCAR, MAR, MNAR, MICE"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#data_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Foundational</span>
+      <span class="read-time">40 min read</span>
+      <span class="tag">missing data</span><span class="tag">imputation</span><span class="tag">MCAR</span><span class="tag">MAR</span><span class="tag">MNAR</span>
+    </div>
+    <h1>Missing Value Handling</h1>
+    <p class="subtitle">The mechanism of missingness — MCAR, MAR, MNAR — determines the right treatment, not the null rate alone.</p>
+
+    <p>You are building a model to predict which hospital patients will be readmitted. One column — a creatinine lab result — is missing for 32% of patients. The natural instinct is to ask &quot;how do I fill in these blanks?&quot; But that is the wrong first question. The right one is: <strong>why are they missing?</strong> Because the reason completely changes what you should do.</p>
+    <p>So you ask the clinical team, and you learn there are actually *two* different reasons. Some patients had mild symptoms, so the doctor never bothered ordering the test — here the missingness depends on things you *can* see (their other symptoms). Other patients were too critically ill to draw blood — here the missingness depends on the very thing you *cannot* see (how bad their creatinine would have been). These two look identical in the data — both just show up as &quot;null&quot; — but they demand completely different treatment.</p>
+    <p>Statisticians name three cases. <strong>MCAR</strong> (missing completely at random): the blanks are pure chance, unrelated to anything — a lab machine randomly dropped some readings. <strong>MAR</strong> (missing at random): the blanks depend on things you *did* observe — mild patients skip the test. <strong>MNAR</strong> (missing not at random): the blanks depend on the missing value *itself* — the sickest patients, with the worst readings, are exactly the ones missing them.</p>
+    <hr>
+    <h3>Why the mechanism decides everything</h3>
+    <p>For <strong>MCAR</strong> and <strong>MAR</strong>, you can fill the blanks intelligently. Since MAR missingness is explained by other columns, a model can *predict* the missing creatinine from a patient's age, comorbidities, and other labs. That is what <strong>MICE</strong> does: for each column with gaps, it trains a little regression on all the other columns and predicts what belongs in the blank, looping until the estimates settle.</p>
+    <p>For <strong>MNAR</strong>, you are in trouble, and no clever statistics can rescue you. If the worst readings are precisely the ones missing, then filling in the *average* hands the sickest patients a reassuringly normal number. The model learns that these patients look fine, predicts low risk for them, and systematically fails exactly the people who most need help. You cannot impute your way out of MNAR without explicitly modeling *why* the data is missing.</p>
+    <hr>
+    <h3>The imputation ladder, simplest to fanciest</h3>
+    <p><strong>Mean/median</strong>: replace blanks with the column's average. Fast, but it crushes the column's variance and erases its relationships with other features. <strong>KNN</strong>: find the most similar complete rows and borrow their values — respects local structure, but slow and needs scaled features. <strong>MICE</strong>: the regression-based looping method above — most accurate for MAR data, but you have to carry the fitted models around at serving time.</p>
+    <p>And one rule that holds no matter the mechanism: for any column more than about 5% missing, <strong>add a little yes/no &quot;was this missing?&quot; column next to it.</strong> The mere *fact* that a value was absent is often predictive (a skipped test says something), and a model given both the filled-in value and the was-missing flag can learn from the pattern of absence. Impute alone and you throw that signal away forever.</p>
+    <p>(And the usual leakage warning: fit your imputer on the *training* data only. Compute the fill-in value using the test set too, and you have leaked the future into the past.)</p>
+    <hr>
+    <h3>Single versus multiple imputation: honesty about uncertainty</h3>
+    <p>Every method above is <strong>single imputation</strong> — it fills each blank with *one* number and then the model treats that guess as if it were a certainty. But it wasn't a certainty; it was an estimate with error, and pretending otherwise makes the model overconfident and understates the uncertainty in anything downstream. <strong>Multiple imputation</strong> fixes this: generate *several* completed datasets (each with slightly different plausible fills drawn from the imputation model's uncertainty), train/analyse on each, and <strong>pool</strong> the results. The spread across the versions honestly reflects how much the missingness actually costs you. MICE is naturally a multiple-imputation method (run it a few times with different seeds); use it when calibrated uncertainty matters, not just a point prediction.</p>
+    <hr>
+    <h3>Handling MNAR properly</h3>
+    <p>MNAR can't be imputed away, but it can be *managed*. <strong>Sensitivity analysis</strong>: impute under several assumptions about how the missing values differ from the observed ones, and see whether your conclusions hold across them — if they do, you're robust; if they flip, you've found a real vulnerability. More formal tools <strong>model the missingness itself</strong>: <strong>pattern-mixture models</strong> fit different distributions for the missing-vs-observed groups, and <strong>selection models</strong> explicitly model the probability of being missing. And sometimes the right move is <strong>domain escalation</strong> — go back to the people who generated the data and ask why it's missing, because that answer often changes the whole approach. What you must *not* do is quietly median-fill and move on.</p>
+    <hr>
+    <h3>Categorical missingness is its own case</h3>
+    <p>For categorical columns, you often don't need to &quot;impute&quot; at all — you can make missing an <strong>explicit &quot;Unknown/Missing&quot; category</strong>. This is clean and lets the model learn whatever the absence signals, without inventing a fake category value. Combine it with <strong>rare-category grouping</strong> (fold sparse categories, including Unknown, into an &quot;Other&quot; bucket if they're too thin to estimate) and, as with numeric columns, a <strong>missingness indicator</strong> where the fact of absence is predictive.</p>
+    <hr>
+    <h3>Imputation at serving time</h3>
+    <p>Imputation isn't just a training-time step — it has to run *identically* in production, and that's where it breaks. You must <strong>store the fitted imputer</strong> (the training means, the MICE regression models, the KNN reference set) and apply the *same* parameters at serving, never re-fit on live data. You also have to handle <strong>unseen missingness patterns</strong> (a feature that was never missing in training suddenly arrives null) with a defined fallback, and <strong>monitor null-rate drift</strong> — a feature whose null rate jumps from 2% to 30% in production means the imputer is now guessing far more than it was validated to, and quality degrades silently.</p>
+    <hr>
+    <h3>Trees can sometimes skip imputation entirely</h3>
+    <p>One model-family nuance worth knowing: several tree implementations (<strong>LightGBM</strong>, <strong>XGBoost</strong>, and histogram-based gradient boosting) handle missing values <strong>natively</strong> — they learn, at each split, which direction a missing value should go, so you can feed them NaNs directly and often *shouldn't* impute. Linear models, neural networks, and distance-based methods (k-NN, SVM) have no such mechanism and <strong>require</strong> explicit imputation (and usually scaling) first. So &quot;how do I handle missing values&quot; partly depends on which model you're feeding — trees may want the raw gaps, everything else needs them filled.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Always add a binary indicator variable alongside imputation for any column with more than 5% missing — the fact that a value is missing is often more predictive than the imputed value itself.</strong>
+
+For the creatinine column: a model trained with only imputed values learns from the imputation. A model trained with imputed values plus a `creatinine_was_null` indicator can learn that absence itself is a clinical signal. Never throw away the missingness signal by imputing alone.</li><li><strong>Trap: fitting the imputer on the entire dataset before splitting. This leaks test-set statistics into training. Always fit imputers only on training data, then apply to validation and test.</strong>
+
+Fitting a mean imputer on train + test computes a mean influenced by test-set values. The training imputation now reflects the test distribution — a form of leakage that produces optimistic metrics which collapse in production. Use an sklearn Pipeline to enforce fit-on-train-only structurally, not through discipline.</li><li><strong>Diagnostic: compare model performance trained on imputed-only versus imputed plus indicator columns. If adding the indicator improves AUC, the missingness is *informative* — treat absence as a feature.</strong>
+
+This test costs one additional training run and shows whether the *fact* of missingness carries signal. Be careful with the conclusion, though: an informative indicator proves the missingness is predictive, but it does <strong>not</strong> by itself prove MNAR — MAR missingness (driven by other observed features) can also make the indicator useful. So use the indicator either way, but don't read &quot;indicator helped&quot; as a definitive MNAR diagnosis; confirm the mechanism with domain knowledge.</li><li><strong>Single imputation hides uncertainty; MNAR needs management, not a median fill.</strong>
+
+Single imputation fills one value and treats the guess as certain, making the model overconfident — multiple imputation generates several plausible completed datasets and pools them to reflect the real uncertainty (run MICE with different seeds). MNAR can't be imputed away but can be managed with sensitivity analysis (do conclusions hold under different assumptions?), pattern-mixture/selection models, or domain escalation. For categoricals, prefer an explicit &quot;Unknown&quot; category over inventing a value, plus rare-category grouping.</li><li><strong>Imputation must run identically at serving, and trees may not need it at all.</strong>
+
+Store the fitted imputer (training means, MICE models, KNN reference set) and apply the same parameters in production — never re-fit on live data — handle unseen missingness patterns with a defined fallback, and monitor null-rate drift (2% → 30% means the imputer is guessing far more than it was validated for). Model family matters: LightGBM/XGBoost/histogram gradient boosting handle NaNs natively (learning a default split direction), so you often shouldn't impute for them, while linear/neural/distance methods require explicit imputation and scaling.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>The mechanism of missingness — MCAR, MAR, or MNAR — determines the right treatment; choosing a method before diagnosing the mechanism trains the model on systematically wrong values for the cases where accuracy matters most.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Ask *why* it's missing, not *how* to fill it</strong> — the mechanism decides the treatment.</li><li><strong>MCAR/MAR</strong> are imputable (MAR via a model like `MICE` predicting the gap from other columns); <strong>MNAR</strong> can't be imputed away — mean-fill hands the sickest patients a normal number.</li><li><strong>Imputation ladder:</strong> mean/median (fast, crushes variance) → KNN (local, slow) → MICE (regression loop, most accurate for MAR).</li><li><strong>Add a `was_missing` indicator</strong> for any column &gt;5% missing — the fact of absence is often predictive.</li><li><strong>Fit imputers on train only</strong> — computing fills on test leaks the future into the past.</li><li><strong>Single imputation hides uncertainty;</strong> multiple imputation pools several plausible fills to restore honest error bars.</li><li><strong>Trees may want the raw gaps:</strong> LightGBM/XGBoost/hist-GBM learn a default split direction for NaNs; linear/NN/distance methods require explicit imputation + scaling.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You are building a model to predict hospital readmission. A lab test result is missing for 30% of patients. A colleague imputes with the median. What is wrong?</p>
+      <ul class="check-opts"><li>A) Median imputation is only valid for normally distributed columns; the correct choice for skewed lab values is mean imputation after log-transforming the column.</li><li>B) The missingness rate of 30% is too low to matter — complete-case analysis (dropping these rows) would be both simpler and unbiased.</li><li>C) Median imputation will inflate the variance of the imputed column, causing the model to overweight this feature during training.</li><li class="correct">D) Lab tests are typically ordered when a clinician suspects a problem — the test is more likely MISSING when the patient appears healthy, making this MNAR. Imputing with the median assigns average lab values to untested patients who may be systematically different. The right approach is to add a binary &quot;was this test ordered&quot; indicator feature, which captures the clinical signal of missingness. Model-based imputation from other covariates is also possible but only after acknowledging MNAR risk.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Why is it data leakage to fit a mean imputer on the full dataset (train + test) before splitting?</p>
+      <ul class="check-opts"><li class="correct">A) When you compute the column mean on the full dataset, that mean is influenced by test-set values. Imputing the training set with that mean means training data contains information derived from the test set. The model indirectly sees test-set statistics during training, inflating accuracy. In production, future data is never available when computing the imputer — fit all preprocessing transformers on the training fold only.</li><li>B) Fitting on the full dataset computes a mean that is biased toward the majority class, which causes the imputer to systematically overestimate values for the minority class.</li><li>C) The imputer fitted on the full dataset will have higher variance than one fitted on the training set alone, producing noisier imputations that hurt model performance.</li><li>D) Fitting the imputer before splitting prevents you from using cross-validation later, because the imputer's parameters cannot be re-fitted inside each fold.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> What is the difference between mean imputation and MICE, and when does the difference matter most?</p>
+      <ul class="check-opts"><li>A) Mean imputation is biased for large datasets while MICE is unbiased for any dataset size; the difference always matters regardless of missingness rate.</li><li>B) Mean imputation uses the training-set mean; MICE uses the test-set mean during inference. The difference matters when train and test distributions differ.</li><li class="correct">C) Mean imputation replaces missing values with the column mean — fast but ignores column relationships. MICE treats imputation as a prediction problem: for each column with missing values, it trains a regression model using all other columns as features and iterates until convergence. The difference matters most when features are correlated — if missing income values are predictable from education/employment/age, MICE produces accurate imputations while mean imputation produces the overall average regardless of predictors.</li><li>D) Mean imputation and MICE produce identical results for numerical columns; the difference only matters for categorical columns where MICE uses a classifier instead of a regressor.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> A model trained with complete-case analysis (dropping all rows with any null) achieves 92% accuracy. When you deploy, accuracy drops to 84%. What is the most likely explanation?</p>
+      <ul class="check-opts"><li>A) The model overfit to the complete cases during training; adding L2 regularization would have prevented the 8-point accuracy gap.</li><li class="correct">B) The dropped rows were not MCAR — they were systematically different from the complete cases. The model trained on a biased subset and tuned decision boundaries to that subset. In production it encounters the full population including the types of rows dropped during training. The 8-point gap reflects distribution mismatch between the training population (complete cases) and the production population (everyone). Complete-case analysis is only valid when MCAR, which is rarely true in practice.</li><li>C) The production dataset has a higher null rate than training, which causes the model's learned coefficients to extrapolate outside their training range.</li><li>D) The 92% training accuracy was computed on the same rows used to drop nulls, introducing a selection bias into the accuracy estimate itself.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> You single-impute a 25%-missing feature with MICE, train a model, and report tight confidence intervals on its coefficients. A statistician says your uncertainty is understated. Why, and what's the fix?</p>
+      <ul class="check-opts"><li>A) The statistician is wrong — MICE is a regression method, so its imputations are exact and add no uncertainty.</li><li class="correct">B) Single imputation (even with MICE) fills each blank with one value and the model then treats that guess as a certainty, so 25% of the feature is fabricated-but-treated-as-known and the reported uncertainty ignores the imputation error. The fix is multiple imputation: generate several completed datasets from the imputation model's uncertainty (e.g. MICE with different seeds), fit the model on each, and pool the estimates — the spread across versions restores the honest uncertainty.</li><li>C) The intervals are too tight only because the sample is large; collecting less data would widen them appropriately.</li><li>D) The fix is to switch from MICE to mean imputation, which produces wider and therefore more honest confidence intervals.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q6.</strong> You're deciding how to handle missing values for two candidate models: a LightGBM gradient-boosting model and a logistic regression. How should your approach differ?</p>
+      <ul class="check-opts"><li>A) Both require the same explicit mean imputation before training, since all models treat missing values identically.</li><li class="correct">B) LightGBM handles missing values natively — it learns a default split direction for NaNs at each node — so you can often feed it the raw gaps and shouldn't impute. Logistic regression has no such mechanism and requires explicit imputation (plus scaling) before training. So the missing-value strategy depends partly on which model you're feeding: raw NaNs can be fine for the tree, but must be filled for the linear model.</li><li>C) LightGBM requires imputation while logistic regression handles missing values natively, so only the tree needs preprocessing.</li><li>D) Neither model can accept missing values, so both require dropping all rows with any null before training.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#data_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

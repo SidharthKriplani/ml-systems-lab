@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eigenvalues &amp; Eigenvectors | ML Systems Lab</title>
+  <meta name="description" content="Geometric intuition, spectral theorem, power iteration">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/eigendecomposition.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/eigendecomposition.html">
+  <meta property="og:title" content="Eigenvalues &amp; Eigenvectors | ML Systems Lab">
+  <meta property="og:description" content="Geometric intuition, spectral theorem, power iteration">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Eigenvalues &amp; Eigenvectors">
+  <meta name="twitter:description" content="Geometric intuition, spectral theorem, power iteration">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Eigenvalues & Eigenvectors",
+  "description": "Geometric intuition, spectral theorem, power iteration",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/eigendecomposition.html",
+  "keywords": "eigenvalues, eigenvectors, spectral theorem"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#math_stats_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">26 min read</span>
+      <span class="tag">eigenvalues</span><span class="tag">eigenvectors</span><span class="tag">spectral theorem</span>
+    </div>
+    <h1>Eigenvalues &amp; Eigenvectors</h1>
+    <p class="subtitle">Geometric intuition, spectral theorem, power iteration</p>
+
+    <p>You have customer behavioral data with 50 features. Three of them — features 3, 7, and 22 — are all variations of &quot;how much did the user spend.&quot; They carry similar information while consuming three times the parameter weight in regularization and three times the compute in every matrix operation. If you could find the single direction that captures the spending signal, you would reduce noise, compute, and overfitting simultaneously. That direction is a principal component — an eigenvector.</p>
+    <p>A square matrix A has eigenvalue λ and eigenvector v if Av = λv. The matrix A acts on v by pure scaling — the direction does not change, only the magnitude. For a symmetric positive semidefinite matrix like a covariance matrix, all eigenvalues are ≥ 0 and all eigenvectors are orthogonal. This is what makes PCA geometrically clean: the principal components are mutually perpendicular directions.</p>
+    <p>The covariance matrix C = X^T X / (n-1). Its eigenvectors are the principal directions of variance in the data. Its eigenvalues tell you how much variance lies along each direction. The first eigenvector, with the largest eigenvalue, is the direction of maximum variance — this is PC1. The second eigenvector, orthogonal to PC1, is PC2. The eigenvalue ratio λ₁ / Σλᵢ tells you the fraction of total variance captured by PC1.</p>
+    <p>Spectral theorem: any real symmetric matrix A decomposes as A = Q Λ Q^T where Q is orthogonal (columns are eigenvectors) and Λ is diagonal (eigenvalues on diagonal). This decomposition separates the rotating part (Q) from the scaling part (Λ). For PCA, Q gives you the rotation into principal component space, and Λ tells you how much each direction matters.</p>
+    <p><strong>NOT this.</strong> Eigenvalues are not a mathematical abstraction with limited practical use. The eigenvalues of a neural network's Hessian determine optimization dynamics — a flat loss landscape has many near-zero eigenvalues, which is why overparameterized networks trained with Adam and good initialization converge faster than vanilla SGD. The eigenvalues of the attention matrix determine how information diffuses through a transformer layer. The eigenvalue spectrum of X^T X tells you the effective dimensionality of your data before you fit any model. Eigenvalues are the fingerprint of every matrix that matters in ML.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>When features are correlated, eigendecompose the covariance matrix before modeling.</strong> The eigenvalue spectrum tells you how many truly independent directions of variation exist in your data. If 5 of 50 eigenvalues contain 90% of the variance, you can reduce to 5 components with negligible information loss — the remaining 45 components are dominated by noise and correlations, not signal.</li><li><strong>Trap: forgetting to center data before computing the covariance matrix.</strong> If the mean is nonzero, the first eigenvector points toward the mean rather than toward the direction of maximum variance. Always subtract the column means from X before computing X^T X / (n-1). sklearn's PCA does this by default. If you compute the covariance matrix manually, centering is mandatory.</li><li><strong>Diagnostic: plot the explained variance ratio (eigenvalue_i / sum of all eigenvalues) as a cumulative curve.</strong> The elbow in the curve tells you how many components to keep. Where the curve flattens, adding more components yields diminishing returns — each additional component explains only noise. A sharp elbow at k components means the data lies approximately on a k-dimensional subspace.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>The eigenvalue spectrum of your covariance matrix is a complete picture of your data's intrinsic dimensionality. Check it before choosing a model — it tells you whether you have 50 independent features or 5 directions of variation dressed up as 50.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Av = λv:</strong> the matrix scales v without rotating it. Eigenvectors are the invariant directions.</li><li><strong>Covariance C = XᵀX/(n−1):</strong> its eigenvectors are principal directions, eigenvalues the variance along each.</li><li><strong>PC1 = eigenvector with largest eigenvalue</strong> = direction of max variance; λ₁/Σλᵢ = fraction of variance captured.</li><li><strong>Symmetric PSD (covariance) ⟹ eigenvalues ≥ 0, eigenvectors orthogonal</strong> — this is what makes PCA clean.</li><li><strong>Spectral theorem:</strong> A = QΛQᵀ separates rotation (Q) from scaling (Λ).</li><li><strong>Center data first</strong> — otherwise the first eigenvector points at the mean, not the max-variance direction.</li><li><strong>Scree/explained-variance elbow tells you how many components to keep;</strong> the flat tail is noise, not signal.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> What are the eigenvalues and eigenvectors of a rotation matrix R(θ) = [[cos θ, −sin θ], [sin θ, cos θ]]?</p>
+      <ul class="check-opts"><li>A) The eigenvalues are cos θ ± sin θ (real values). The eigenvectors are [cos θ, sin θ]ᵀ and [−sin θ, cos θ]ᵀ — the columns of the rotation matrix itself. This makes sense because the columns of any orthogonal matrix are its eigenvectors, and rotation matrices are orthogonal.</li><li>B) The eigenvalues are always λ₁=1, λ₂=1 because rotation preserves lengths: ‖Rv‖=‖v‖ for all v, so the scaling factor is always 1. The eigenvectors are the axes of rotation. For 2D rotations with θ≠0, the only axis is the origin, so there are no non-trivial eigenvectors.</li><li class="correct">C) det(R − λI) = (cos θ − λ)² + sin²θ = 0 → λ² − 2λcos θ + 1 = 0 → λ = cos θ ± i·sin θ = e^{±iθ}. For θ ≠ 0, π, the eigenvalues are complex: e^{iθ} and e^{−iθ}. There are no real eigenvalues (no real vectors are preserved by the rotation). The eigenvectors are complex: for λ = e^{iθ}, the eigenvector is [1, −i]ᵀ/√2; for λ = e^{−iθ}, it is [1, i]ᵀ/√2. For θ=0: R=I, both eigenvalues are 1, every vector is an eigenvector. For θ=π: R=−I, both eigenvalues are −1, every vector is an eigenvector. Physical interpretation: rotations in ℝ² do not have real eigenvectors — no real vector points in the same direction after rotation (unless the rotation is 0° or 180°). This generalises: orthogonal matrices can have complex eigenvalues.</li><li>D) The eigenvalues are real only when θ = kπ for integer k (0°, 180°, etc.). For general θ, R has no eigenvalues because eigenvalue equations require real solutions. The correct eigenvalue analysis uses the characteristic polynomial but only the real part: λ = cos θ.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> A symmetric matrix A has eigenvalues λ₁=5, λ₂=3, λ₃=1 and orthonormal eigenvectors v₁, v₂, v₃. Write A as a sum of rank-1 matrices, and explain what this means geometrically.</p>
+      <ul class="check-opts"><li class="correct">A) By the spectral theorem (A symmetric ⟹ A = QΛQᵀ where Q=[v₁,v₂,v₃] and Λ=diag(5,3,1)): A = Σᵢ λᵢvᵢvᵢᵀ = 5v₁v₁ᵀ + 3v₂v₂ᵀ + 1v₃v₃ᵀ. Each vᵢvᵢᵀ is a rank-1 matrix that projects any vector onto the direction vᵢ. The eigendecomposition says A acts as: (1) project x onto v₁, scale by 5; (2) project onto v₂, scale by 3; (3) project onto v₃, scale by 1; then add the results. Geometrically: A stretches space by 5× in the v₁ direction, 3× in v₂, and 1× in v₃. The eigenvectors are the principal axes of the transformation; eigenvalues are the stretch factors. A unit sphere maps to an ellipsoid with semiaxes of length 5, 3, 1 along v₁, v₂, v₃.</li><li>B) A = v₁v₁ᵀ + v₂v₂ᵀ + v₃v₃ᵀ since the eigenvectors are orthonormal and span ℝ³. The eigenvalues λ₁=5, λ₂=3, λ₃=1 scale the matrix rather than the individual rank-1 components. Geometrically: each rank-1 term projects onto one axis of the eigenbasis; A is the sum of all three projections, which equals the identity matrix in the eigenbasis.</li><li>C) A = 5·(v₁ + v₂ + v₃)(v₁ + v₂ + v₃)ᵀ/(‖v₁+v₂+v₃‖²) using the dominant eigenvalue. The other eigenvalues contribute smaller corrections: A ≈ 5v₁v₁ᵀ with error ‖A − 5v₁v₁ᵀ‖_F = √(9+1) = √10. Geometrically: A is approximately a rank-1 matrix pointing in the v₁ direction, with small perturbations in v₂ and v₃.</li><li>D) A = (5+3+1)·v_avg v_avg^ᵀ where v_avg = (v₁+v₂+v₃)/‖v₁+v₂+v₃‖. The spectral theorem decomposes A into a single rank-1 matrix scaled by the sum of eigenvalues. Geometrically: A uniformly stretches all vectors by 9× in the average eigenvector direction.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> The power iteration algorithm computes the dominant eigenvector of A by repeatedly multiplying v ← Av/‖Av‖. Why does this converge to the eigenvector for the largest eigenvalue?</p>
+      <ul class="check-opts"><li>A) Power iteration works because matrix multiplication is associative: Aᵏv = A(A(...(Av)...)). At each step, the component of v in the dominant eigenvector direction is multiplied by λ₁, while other components are multiplied by smaller eigenvalues. After k steps, the dominant component has grown by λ₁ᵏ relative to all others. Normalisation at each step prevents overflow and maintains the direction. Convergence is guaranteed for any A, at rate |λ₂/λ₁|ᵏ.</li><li class="correct">B) Expand the initial vector v₀ in the eigenbasis: v₀ = Σᵢ cᵢvᵢ where Avᵢ = λᵢvᵢ. Applying A k times: Aᵏv₀ = Σᵢ cᵢλᵢᵏvᵢ. Factor out λ₁ᵏ (the largest eigenvalue): Aᵏv₀ = λ₁ᵏ(c₁v₁ + Σᵢ&gt;1 cᵢ(λᵢ/λ₁)ᵏvᵢ). Since |λᵢ/λ₁| &lt; 1 for all i &gt; 1, (λᵢ/λ₁)ᵏ → 0 as k → ∞. The sum collapses to c₁v₁ — just the dominant eigenvector (assuming c₁ ≠ 0). The convergence rate is |λ₂/λ₁|ᵏ — fast when the spectral gap |λ₁|−|λ₂| is large. For degenerate eigenvalues (|λ₁| = |λ₂|), power iteration fails to converge to a single direction — it cycles between eigenvectors. In ML context: PageRank uses power iteration on the web graph's transition matrix to find the stationary distribution (dominant eigenvector).</li><li>C) Power iteration converges because the gradient of ‖Av‖₂ with respect to v points in the direction of the dominant eigenvector. Each normalised multiplication step performs a projected gradient ascent on the Rayleigh quotient vᵀAv/vᵀv, which is maximised at the dominant eigenvector. The convergence rate equals the learning rate times the spectral gap.</li><li>D) Power iteration converges because symmetric matrices have orthogonal eigenvectors. Starting from any v₀, each multiplication by A rotates v toward the dominant eigenvector direction. After k rotations, the angle between v and v₁ decreases geometrically. Non-symmetric matrices may not converge because their eigenvectors are not orthogonal.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#math_stats_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

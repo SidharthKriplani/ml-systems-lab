@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Graph ML for Fraud: Why Tabular Models Miss What GNNs Catch — ML Systems Lab</title>
+  <meta name="description" content="A fraudster reusing one device across 40 accounts looks clean in any tabular model. A GNN sees the device as an edge — and a node two hops from 38 confirmed-fraud accounts is no longer clean. Here is …" />
+  <meta name="keywords" content="Fraud Detection, Graph Neural Networks, GNN, Message Passing, Production ML, Deep Learning, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/graph-ml-fraud-detection-gnns.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/graph-ml-fraud-detection-gnns.html" />
+  <meta property="og:title" content="Graph ML for Fraud: Why Tabular Models Miss What GNNs Catch" />
+  <meta property="og:description" content="A fraudster reusing one device across 40 accounts looks clean in any tabular model. A GNN sees the device as an edge — and a node two hops from 38 confirmed-fraud accounts is no longer clean. Here is …" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="ML System Design" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Graph ML for Fraud: Why Tabular Models Miss What GNNs Catch" />
+  <meta name="twitter:description" content="A fraudster reusing one device across 40 accounts looks clean in any tabular model. A GNN sees the device as an edge — and a node two hops from 38 confirmed-fraud accounts is no longer clean. Here is …" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Graph ML for Fraud: Why Tabular Models Miss What GNNs Catch",
+  "description": "A fraudster reusing one device across 40 accounts looks clean in any tabular model. A GNN sees the device as an edge — and a node two hops from 38 confirmed-fraud accounts is no longer clean. Here is …",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-07-07",
+  "dateModified": "2026-07-07",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/graph-ml-fraud-detection-gnns.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Fraud Detection, Graph Neural Networks, GNN, Message Passing, Production ML, Deep Learning"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=graph-ml-fraud-detection-gnns#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">ML System Design &middot; ML Systems Lab</div>
+    <h1>Graph ML for Fraud: Why Tabular Models Miss What GNNs Catch</h1>
+    <p class="excerpt">A fraudster reusing one device across 40 accounts looks clean in any tabular model. A GNN sees the device as an edge — and a node two hops from 38 confirmed-fraud accounts is no longer clean. Here is how graph structure becomes the primary fraud signal.</p>
+    <p>Fraud detection is one of the few production ML problems where graph structure is not a nice-to-have — it is the primary signal. This post covers why, and what building a GNN-based fraud system actually involves.</p>
+<h2>Why graphs?</h2>
+<p>A fraudster opening accounts for a synthetic identity ring reuses resources: the same device, the same IP subnet, the same phone number, the same email domain pattern. Each individual account may look completely clean — legitimate transaction amounts, normal velocity, plausible name. But the device connects 40 accounts, 38 of which are confirmed fraud.</p>
+<p>A tabular model sees one row per user. It can engineer "number of accounts sharing this device" as a feature, but this requires an explicit join, a daily batch computation, and a schema update every time a new connection type is discovered. A GNN is structural by design — the edges are the model.</p>
+<h2>The graph structure for fraud</h2>
+<p>Nodes: accounts, devices, IP addresses, phone numbers, email addresses, bank accounts (for payment fraud), merchants.</p>
+<p>Edges: "account A used device D" (shared resource edge), "account A sent money to account B" (transaction edge), "account A and B have the same phone number" (identity edge).</p>
+<p>This is a heterogeneous graph: different node types and different edge types. GraphSAGE, GAT (Graph Attention Network), and HGT (Heterogeneous Graph Transformer) all handle this. The simplest production approach: convert to a homogeneous graph by treating all node types as "entities" and all edge types as weighted connections.</p>
+<h2>Message passing for fraud</h2>
+<p>In a GNN, each node updates its representation by aggregating from its neighbours. After k layers, node v's representation encodes its k-hop neighbourhood.</p>
+<p>Layer 0: h_v = [account_age, balance, velocity_7d, country_code, ...] Layer 1: h_v = σ(W · CONCAT(h_v, mean({h_u : u ∈ N(v)}))) Layer 2: h_v = σ(W · CONCAT(h_v, mean({h_u : u ∈ N(v)})))</p>
+<p>After 2 layers, a clean account whose device is shared with one confirmed fraud account has absorbed that fraud account's representation into its own vector. The fraud label diffuses through edges. A clean account two hops from a fraud ring gets a risk score 3-4× higher than an isolated clean account, even without any individual suspicious features.</p>
+<h2>Label propagation as a baseline</h2>
+<p>Before building a GNN, always try label propagation. Starting from confirmed fraud labels, propagate a fraud score outward through edges with exponential decay: score(v) = Σ_u (α × score(u)) for neighbours u, where α < 1. This is cheap, interpretable, and surprisingly effective. At Alibaba, label propagation on their transaction graph outperformed their tabular XGBoost model before they added GNN features. Use LP as your baseline, then measure GNN uplift on top of it.</p>
+<h2>Temporal graphs</h2>
+<p>Fraud rings are dynamic. An account may share a device with clean accounts at first, then the device gets compromised. Edges should decay: a connection made 90 days ago carries less risk signal than one made yesterday.</p>
+<p>Implementation: timestamp each edge, use exponential decay: edge_weight = exp(-λ × days_since_edge). CTDNE (Continuous-Time Dynamic Network Embeddings) and TGN (Temporal Graph Networks) handle this explicitly — they maintain node memory that updates as new edges arrive. Simpler production approach: rebuild the graph weekly with a 30-day lookback window and retrain.</p>
+<h2>Inductive vs transductive</h2>
+<p>Transductive GNNs (early GCNs): learn an embedding for each specific node in the training graph. Cannot generalise to new nodes at inference. Useless for fraud — new accounts appear continuously.</p>
+<p>Inductive GNNs (GraphSAGE, GAT): learn a function that computes a node's embedding from its features and neighbourhood, not from a fixed embedding table. Can generalise to new nodes as long as the node has features and some edges. GraphSAGE is the standard choice for production fraud systems for this reason.</p>
+<h2>Feature engineering for the graph</h2>
+<p>Node features on user accounts: account age, verified status, KYC score, transaction velocity (7d, 30d), device count, average transaction amount, refund rate. Edge features on transaction edges: amount, time of day, merchant category, direction (send/receive). Edge features on shared-resource edges: resource type (device vs IP vs phone), resource age, how many total accounts share this resource.</p>
+<h2>Production architecture</h2>
+<p>Two-stage: GNN pre-computes node embeddings in batch (daily or hourly) → stored in Redis → served at transaction time alongside real-time tabular features → fed into a final classifier (XGBoost or logistic regression). The GNN handles the slow, structural signal; the tabular model handles fast, transaction-level signals.</p>
+<p>Real-time GNN inference is possible but expensive — GraphSAGE with 2 layers and 10 neighbours per hop requires 100 feature lookups per prediction. Most teams precompute embeddings in batch and refresh every 1–4 hours.</p>
+<h2>The over-smoothing trap</h2>
+<p>With more than 3–4 message-passing layers, all node representations converge. The fraud ring members and the clean accounts look identical to the GNN. Use 2 layers for most fraud graphs. Add skip connections to preserve original features. Monitor embedding diversity (pairwise cosine similarity across nodes) as a training health metric.</p>
+<p><strong>Try on Colab:</strong> build a small fraud detection GNN using PyTorch Geometric. Create a synthetic dataset: 1000 accounts, 50 marked as fraud, connected in 5 rings of 10 accounts via a shared device node. Train a 2-layer GraphSAGE with BCELoss. Compare AUC against a tabular logistic regression using only node features (no edges). The GNN should achieve AUC > 0.95; the tabular model will be near-random for ring members who have no individual suspicious features.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=graph-ml-fraud-detection-gnns#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

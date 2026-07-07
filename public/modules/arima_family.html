@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ARIMA Family | ML Systems Lab</title>
+  <meta name="description" content="AR/MA intuition, ACF/PACF identification, SARIMA, Box-Jenkins, structural break failure">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/arima_family.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/arima_family.html">
+  <meta property="og:title" content="ARIMA Family | ML Systems Lab">
+  <meta property="og:description" content="AR/MA intuition, ACF/PACF identification, SARIMA, Box-Jenkins, structural break failure">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="ARIMA Family">
+  <meta name="twitter:description" content="AR/MA intuition, ACF/PACF identification, SARIMA, Box-Jenkins, structural break failure">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "ARIMA Family",
+  "description": "AR/MA intuition, ACF/PACF identification, SARIMA, Box-Jenkins, structural break failure",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/arima_family.html",
+  "keywords": "ARIMA, SARIMA, ACF, PACF, Box-Jenkins, autoregression"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#time_series_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">45 min read</span>
+      <span class="tag">ARIMA</span><span class="tag">SARIMA</span><span class="tag">ACF</span><span class="tag">PACF</span><span class="tag">Box-Jenkins</span>
+    </div>
+    <h1>ARIMA Family</h1>
+    <p class="subtitle">AR/MA intuition, ACF/PACF identification, SARIMA, Box-Jenkins, structural break failure</p>
+
+    <p>Monthly airline passenger counts tell a story that breaks every naive forecasting approach. The Box-Jenkins 1976 dataset shows a clear upward trend plus strong yearly seasonality — summer peaks, winter troughs — with amplitude that grows as the level grows. A straight regression on time misses the seasonality. A seasonal average ignores the trend. Feed the raw series into a model without preprocessing and the non-stationary mean will invalidate every coefficient estimate.</p>
+    <p>ARIMA is built to handle exactly this. The &quot;I&quot; — integrated — is the trend fix: difference the series once (y_t − y_{t-1}) and the linear trend disappears, leaving a stationary series the AR and MA components can model. AR(p) captures autocorrelation through the series' own past: the current value is a weighted sum of the last p observations. MA(q) captures dependence on past shock terms. Together they describe how today's value relates to yesterday's observations and yesterday's surprises.</p>
+    <p>For the airline data, the seasonal structure at period s=12 requires SARIMA: seasonal AR(P) at lags 12, 24, 36; seasonal differencing at lag 12 to remove the repeating yearly cycle; seasonal MA(Q) for dependence on past seasonal shocks. The SARIMA(p,d,q)(P,D,Q)[12] notation stacks non-seasonal and seasonal layers into one model.</p>
+    <p><strong>NOT this.</strong> &quot;ARIMA is outdated and should always be replaced by ML methods.&quot; ARIMA is interpretable, requires no GPU, handles small datasets (n &lt; 200) well, and its parameters have direct statistical interpretations: φ₁ is the momentum coefficient, θ₁ is the shock decay rate. For monthly aggregate forecasting with fewer than 5 years of data, ARIMA is often competitive with or better than neural methods. The real limitation is the Box-Jenkins identification workflow: ACF/PACF cutoffs appear cleanly only in simulated data. Real series mix AR and MA contributions, making the cutoffs ambiguous. The workflow is iterative — tentatively identify orders, fit, diagnose residuals, revise — and it breaks at scale. At 50,000 SKUs, per-series ARIMA identification is impractical regardless of accuracy.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>AR(p) captures momentum: Y_t = φ₁Y_{t-1} + ... + φ_pY_{t-p} + ε_t.</strong>
+
+The current value is a weighted sum of p lagged values plus noise. Positive φ₁ captures persistence — values tend to continue in the same direction. Negative φ₁ captures oscillation. The &quot;I&quot; in ARIMA handles non-stationarity by differencing d times before fitting: one difference removes a linear trend, so ARIMA(p,1,q) is the appropriate model for a trending series. Over-differencing (d=2) is a common error — if d=1 residuals still show a unit root, suspect a structural break, not more differencing.</li><li><strong>ACF/PACF give a starting point, not a recipe: AR(p) shows PACF cutoff at lag p; MA(q) shows ACF cutoff at lag q; ARMA shows both decaying.</strong>
+
+In practice these clean cutoffs appear only in simulated data. Real series mix AR and MA contributions, so textbook cutoffs are rarely visible. Treat ACF/PACF as a prior for candidate orders, then compare ARIMA(1,1,0), ARIMA(0,1,1), ARIMA(1,1,1) by AIC. The Ljung-Box test on residuals must pass at all lags including seasonal ones — a p-value of 0.42 overall can mask a lag-12 spike that signals missing seasonality.</li><li><strong>ARIMA's structural break failure is its most consequential limitation in production.</strong>
+
+The model assumes p, d, q are constant over time. A regime change — competitor entry, regulatory shift, macroeconomic shock — violates this. After a break, the model absorbs the shift as a long-lag autocorrelation effect, producing biased forecasts indefinitely. CUSUM detects gradual drift; Zivot-Andrews ADF tests for an unknown break date. The correct response is to re-identify ARIMA orders on post-break data, not to add more lags to the existing model.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>ARIMA's &quot;I&quot; solves non-stationarity by differencing — one difference removes a linear trend, enabling the AR and MA components to model the stationary residuals. ACF/PACF cutoffs are a starting point, not a recipe: textbook-clean patterns only appear in simulated data, so Box-Jenkins is always iterative via residual diagnostics. The most consequential failure mode is the structural break: after a regime change the model absorbs the shift as a spurious long-lag effect, producing biased forecasts indefinitely — the fix is re-identifying orders on post-break data, not adding more lags.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>AR(p) = momentum</strong> ($Y_t=Σφ_iY_{t-i}+ε_t$); <strong>MA(q) = shocks</strong>; <strong>I(d) = differencing</strong> removes trend.</li><li><strong>One difference removes a linear trend</strong> — ARIMA(p,1,q) for trending series; d=2 usually over-differencing.</li><li><strong>ACF/PACF = starting point, not recipe:</strong> clean cutoffs only in simulated data; compare candidates by AIC.</li><li><strong>Ljung-Box must pass at ALL lags</strong> — overall p=0.42 can hide a lag-12 seasonal spike → go SARIMA.</li><li><strong>Structural break = worst failure:</strong> model absorbs regime shift as long-lag effect, biased forecasts forever.</li><li><strong>Fix a break by re-identifying orders on post-break data</strong>, not adding more lags.</li><li><strong>Per-SKU ARIMA doesn't scale</strong> (50k series, cold start, intermittent) → global models / Croston's.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Your ACF shows significant spikes at lags 1, 2, 3 that decay, and your PACF shows a single significant spike at lag 1 that cuts off. What model do you fit and why?</p>
+      <ul class="check-opts"><li>A) MA(3) — the three significant ACF spikes indicate three MA terms; the PACF pattern is consistent with MA order selection.</li><li class="correct">B) AR(1) — PACF cuts off at lag 1 and ACF decays, the textbook signature of an AR(1) process. Fit ARIMA(1,0,0) and check residuals with Ljung-Box; if autocorrelation remains at lag 2+ try AR(2) or ARMA.</li><li>C) ARMA(1,1) — whenever both ACF and PACF show non-zero values at early lags, a mixed model is required regardless of the decay pattern.</li><li>D) ARIMA(3,1,0) — differencing is needed because three lags in the ACF are significant, indicating a unit root with AR structure of order 3.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> You fit ARIMA(2,1,2) to a monthly sales series. The Ljung-Box test on residuals passes (p=0.42), but the ACF of residuals shows a significant spike at lag 12. What does this mean and what is the fix?</p>
+      <ul class="check-opts"><li>A) A passing Ljung-Box with p=0.42 is sufficient; a single spike at lag 12 in the ACF is within normal sampling variation and can be ignored.</li><li>B) The significant lag-12 spike indicates the differencing order d should be increased to 2 to remove the remaining autocorrelation structure.</li><li>C) The model has overfit at short lags, causing the residual energy to concentrate at lag 12; reduce to ARIMA(1,1,1) to redistribute the autocorrelation evenly.</li><li class="correct">D) The Ljung-Box passing overall does not guarantee all lags are clean. The lag-12 spike indicates uncaptured seasonal pattern; upgrade to SARIMA(2,1,2)(1,0,1)[12] or add seasonal differencing D=1.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Your e-commerce platform has 50,000 product SKUs. You need daily sales forecasts for each. Why is per-SKU ARIMA unrealistic and what do you use instead?</p>
+      <ul class="check-opts"><li class="correct">A) Per-SKU ARIMA is unrealistic because order selection is expensive for 50k series, many SKUs have intermittent demand ARIMA cannot handle, cold-start is unsolvable for new SKUs, and frequent structural breaks occur. Better: global neural models (N-BEATS, LightGBM with lag features), Croston`s for intermittent demand, and hierarchical forecasting with MinT reconciliation.</li><li>B) Per-SKU ARIMA is unrealistic only because of the computational cost; once parallelised across a cluster, ARIMA remains the most accurate method for individual SKU-level forecasting.</li><li>C) Per-SKU ARIMA fails primarily because ARIMA requires at least 5 years of history per series; for SKUs with less data, use a simple seasonal naive forecast instead.</li><li>D) Per-SKU ARIMA is unrealistic due to the cold-start problem alone; the fix is to pre-train a single ARIMA model on aggregate data and then fine-tune per SKU.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> You fit ARIMA(0,1,1) and ARIMA(1,1,0) to the same series. Both pass diagnostics. The MA model has lower AIC. A colleague argues the AR model is more interpretable for business stakeholders. How do you decide?</p>
+      <ul class="check-opts"><li>A) Always choose the model with lower AIC regardless of stakeholder considerations; interpretability arguments are not a valid statistical reason to prefer a higher-AIC model.</li><li>B) Prefer the AR model unconditionally — AR models are always more interpretable because lagged values are observable, while MA error terms are latent and cannot be explained to non-statisticians.</li><li class="correct">C) ARIMA(0,1,1) with θ≈1 approximates exponential smoothing; ARIMA(1,1,0) with φ≈1 approximates a random walk with momentum. Use lower AIC (MA model) for forecast-only use, AR for stakeholder comms; verify on out-of-sample holdout; if forecasts are nearly identical deploy the simpler one.</li><li>D) Fit both models simultaneously as a mixture, weighting them equally; this avoids the model-selection problem and produces better calibrated prediction intervals than either model alone.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#time_series_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

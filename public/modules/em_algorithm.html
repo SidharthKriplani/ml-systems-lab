@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EM Algorithm | ML Systems Lab</title>
+  <meta name="description" content="Latent variables, E-step/M-step, GMM, convergence">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/em_algorithm.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/em_algorithm.html">
+  <meta property="og:title" content="EM Algorithm | ML Systems Lab">
+  <meta property="og:description" content="Latent variables, E-step/M-step, GMM, convergence">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="EM Algorithm">
+  <meta name="twitter:description" content="Latent variables, E-step/M-step, GMM, convergence">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "EM Algorithm",
+  "description": "Latent variables, E-step/M-step, GMM, convergence",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/em_algorithm.html",
+  "keywords": "EM, GMM, latent variables, expectation maximisation"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#math_stats_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">28 min read</span>
+      <span class="tag">EM</span><span class="tag">GMM</span><span class="tag">latent variables</span><span class="tag">expectation maximisation</span>
+    </div>
+    <h1>EM Algorithm</h1>
+    <p class="subtitle">Latent variables, E-step/M-step, GMM, convergence</p>
+
+    <p>You have 1000 customer purchase records but no segment labels. You believe there are K=3 segments: high-value, medium-value, and occasional. To fit a Gaussian Mixture Model, you need to know which segment each customer belongs to in order to compute per-segment means and variances. But you cannot know the segments until you have the parameters. Classic chicken-and-egg: you need labels to fit parameters and parameters to assign labels.</p>
+    <p>EM breaks the deadlock by replacing hard segment assignments with soft ones — probabilities. The E-step (Expectation): given current parameters θ^(t), compute P(segment k | customer i) for every i and k. These are soft memberships — each customer is distributed across all segments with weights summing to 1. The M-step (Maximization): given soft memberships, update parameters θ^(t+1) using weighted statistics. The mean of segment k is the weighted mean of all customers, with weights equal to P(segment k | customer). Repeat. Each iteration is guaranteed to increase the marginal log-likelihood — EM cannot decrease it, though it can converge to a local maximum.</p>
+    <p>EM generalizes far beyond Gaussian mixture models. K-means is a hard-assignment EM: the E-step assigns each point to its nearest centroid with probability 1, and the M-step updates centroids as unweighted means. Hidden Markov Models use EM under the name Baum-Welch. Probabilistic PCA uses EM. The unifying pattern: any model where the complete-data likelihood is tractable but the marginal likelihood (summing or integrating over hidden variables) is not — EM is the natural algorithm.</p>
+    <p>The theoretical guarantee: EM increases the marginal log-likelihood L(θ) = log P(X | θ) at every iteration. This follows from Jensen's inequality applied to the log-sum structure of the marginal likelihood. The E-step constructs a lower bound that is tight at the current θ. The M-step maximizes that lower bound. The next iteration starts from a point where the bound and the true objective coincide — so the objective has not decreased.</p>
+    <p><strong>NOT this.</strong> EM is not an algorithm for mixture models. EM is a general framework for maximum likelihood estimation when data has missing or latent variables. The pattern is always: treat the missing data as if it were observed but uncertain (E-step fills in the expected complete data), then maximize the resulting expected complete-data log-likelihood (M-step). K-means, Baum-Welch for HMMs, and probabilistic PCA are all instances of this pattern.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Use EM whenever you have latent variables and the complete-data log-likelihood has a closed-form maximizer.</strong> This is the pattern in GMMs, HMMs, probabilistic PCA, and factor models. When the M-step does not have a closed-form solution, replace it with gradient ascent on the expected complete-data log-likelihood — this is called Generalized EM and still monotonically increases the marginal likelihood.</li><li><strong>Trap: EM converges to local optima.</strong> Run EM with multiple random initializations — typically 5 to 10 — and take the solution with the highest final log-likelihood. K-means++ initialization (choosing initial centroids with probability proportional to their squared distance from already-chosen centroids) gives better starting points and reduces the number of restarts needed for reliable convergence.</li><li><strong>Diagnostic: plot log-likelihood per iteration.</strong> It should monotonically increase. If it ever decreases, there is a bug in the M-step — the expected complete-data log-likelihood is not being maximized correctly. A non-monotone EM log-likelihood is not a convergence issue, it is a correctness issue. The monotonicity guarantee is a theorem, not an approximation.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>EM converts one intractable optimization — maximizing the marginal likelihood when variables are hidden — into a sequence of tractable steps by alternating between filling in hidden variable distributions and maximizing the resulting expected log-likelihood. Any model with latent variables and a tractable complete-data likelihood is a candidate for EM.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>EM breaks the chicken-and-egg</strong> of latent variables: need labels for params, need params for labels.</li><li><strong>E-step:</strong> given θ, compute soft responsibilities P(segment k | point i), summing to 1 per point.</li><li><strong>M-step:</strong> given responsibilities, update params with weighted statistics (weighted means/covariances).</li><li><strong>Monotonic guarantee:</strong> each iteration increases the marginal log-likelihood (Jensen on the log-sum), converging to a local max.</li><li><strong>K-means = hard-assignment EM;</strong> HMM Baum-Welch, probabilistic PCA are all EM instances.</li><li><strong>Use EM when complete-data likelihood is tractable but the marginal (over hidden vars) is not.</strong></li><li><strong>Local optima trap:</strong> run 5–10 random inits (or k-means++) and keep the highest final log-likelihood; a decreasing log-likelihood = M-step bug.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> In the EM algorithm for Gaussian Mixture Models (GMMs), what are the E-step and M-step doing concretely?</p>
+      <ul class="check-opts"><li>A) E-step: assign each data point to the nearest cluster centroid using Euclidean distance — this is the hard assignment step. M-step: update each cluster's mean to the centroid of its assigned points. The EM algorithm for GMMs reduces to k-means when the covariances are all fixed to the identity and mixing weights are equal. The 'expectation' in EM refers to the expected distance to each centroid.</li><li class="correct">B) E-step (Expectation): compute the soft assignment (responsibility) of each data point xᵢ to each cluster k: r_{ik} = P(z=k|xᵢ,θ_current) = πₖN(xᵢ;μₖ,Σₖ) / Σⱼ πⱼN(xᵢ;μⱼ,Σⱼ). The responsibilities are a soft version of cluster assignment — each point is 'partly' in each cluster. M-step (Maximisation): update parameters to maximise the expected log-likelihood given responsibilities: new mixture weight πₖ = (Σᵢr_{ik})/n; new mean μₖ = Σᵢr_{ik}xᵢ / Σᵢr_{ik} (weighted mean); new covariance Σₖ = Σᵢr_{ik}(xᵢ−μₖ)(xᵢ−μₖ)ᵀ / Σᵢr_{ik} (weighted covariance). EM is a coordinate ascent: E-step optimises over latent variable posterior (responsibilities), M-step optimises over parameters — both steps monotonically increase the marginal log-likelihood.</li><li>C) E-step: compute the marginal likelihood P(xᵢ|θ) = Σₖ πₖN(xᵢ;μₖ,Σₖ) for each data point — this is the 'expectation' over the mixture. M-step: maximise the total log-likelihood log Πᵢ P(xᵢ|θ) by taking gradients with respect to μₖ, Σₖ, πₖ and applying gradient ascent. EM is distinct from gradient ascent in that it computes exact updates for each parameter rather than approximate gradient steps.</li><li>D) E-step: initialise responsibilities r_{ik} = 1/k uniformly for all points and clusters — this is the uninformative starting point. M-step: update parameters using the current responsibilities, then return to the E-step. The 'expectation' refers to initialising with equal expectations about cluster membership. After the first M-step, subsequent E-steps compute proper posterior responsibilities.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> EM guarantees that the log-likelihood is non-decreasing at each step. Prove this using Jensen's inequality.</p>
+      <ul class="check-opts"><li>A) The log-likelihood is non-decreasing because the M-step maximises the complete-data log-likelihood Q(θ,θ_old) ≥ Q(θ_old,θ_old), and by the data processing inequality, maximising Q can never decrease the marginal log-likelihood log P(X|θ). Jensen's inequality ensures that log E[P(X,Z|θ)] ≥ E[log P(X,Z|θ)], which bounds the improvement from below.</li><li>B) The M-step finds θ_new = argmax Q(θ,θ_old), so Q(θ_new,θ_old) ≥ Q(θ_old,θ_old). Since log P(X|θ) = Q(θ,θ_old) + H(θ,θ_old) where H is always constant (independent of θ by definition of the E-step), log P(X|θ_new) ≥ log P(X|θ_old). The proof does not use Jensen's inequality — it only requires the M-step to find a non-decreasing point.</li><li>C) The non-decreasing property follows from the concavity of log: log P(X|θ) = log Σ_Z P(X,Z|θ). By Jensen's inequality applied to the concave log function: log Σ_Z P(X,Z|θ) ≥ Σ_Z log P(X,Z|θ) · P(Z|X,θ_old) = Q(θ,θ_old). This lower bound is tight when P(Z|X,θ) = P(Z|X,θ_old) exactly — achieved at θ=θ_old. The M-step increases Q which raises the lower bound, but this alone does not prove log P(X|θ_new) ≥ log P(X|θ_old) without accounting for how the bound changes at θ_new vs θ_old.</li><li class="correct">D) At step t with parameters θ_old, define Q(θ,θ_old) = E_{z|x,θ_old}[log P(x,z|θ)] (expected complete-data log-likelihood). E-step computes this expectation; M-step finds θ_new = argmax_θ Q(θ,θ_old). The log-likelihood decomposes: log P(x|θ) = Q(θ,θ_old) − H(θ,θ_old) where H(θ,θ_old) = E_{z|x,θ_old}[log q(z|x,θ_old)/P(z|x,θ)] is a KL divergence. By Jensen (log is concave): log P(x|θ) = log Σ_z P(x,z|θ) ≥ Σ_z q(z)log(P(x,z|θ)/q(z)) (ELBO). The E-step tightens this bound (sets q(z) = P(z|x,θ_old), making it exact). The M-step maximises the lower bound. Since θ_new maximises Q and Q(θ_old,θ_old) = the current ELBO, log P(x|θ_new) ≥ log P(x|θ_old). The likelihood is non-decreasing.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> EM converges, but the solution is often a local optimum. What strategies help escape poor local optima in practice?</p>
+      <ul class="check-opts"><li class="correct">A) EM converges to a local maximum of the log-likelihood or a saddle point — not necessarily global. The landscape for GMMs has many local optima corresponding to different cluster assignments. Strategies: (1) Multiple random restarts: run EM from k different random initialisations; keep the solution with highest final log-likelihood. (2) K-means++ initialisation: use the k-means++ seeding procedure (choosing initial centroids proportional to distance from already-chosen centroids) for the initial μₖ — this spreads initial cluster centers and avoids degenerate starting configurations. (3) Annealing: start EM with high covariances (broad clusters) and gradually reduce — allows the algorithm to merge/split clusters before converging to a local structure. (4) Split-and-merge EM: periodically split a cluster with high variance and merge two similar clusters. (5) Increase k and prune: start with more clusters than needed, use BIC/AIC to select the optimal k after convergence.</li><li>B) EM only converges to local optima when the number of components k is misspecified. The correct strategy is: first determine the true k using BIC/AIC on a range of values, then run EM once with the optimal k. With the correct k, EM always converges to the global optimum because the log-likelihood landscape for correctly-specified GMMs is log-concave.</li><li>C) The primary strategy is gradient-based correction: after EM converges, run a few steps of full gradient ascent on log P(X|θ) to escape the local optimum. EM is a lower-bound maximiser that may stop at non-stationary points; gradient ascent detects these by checking if ‖∇log P(X|θ)‖ &gt; ε and continues climbing if so.</li><li>D) Local optima in EM are unavoidable and not problematic in practice because all local optima of GMM log-likelihood correspond to valid, interpretable cluster solutions. The global optimum is only preferable from a statistical standpoint — in applications, multiple local solutions provide useful ensemble predictions by capturing different clusterings of the data.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#math_stats_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

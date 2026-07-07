@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cross-Validation Strategies | ML Systems Lab</title>
+  <meta name="description" content="k-fold, stratified, group k-fold, time-series CV, nested CV">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/cross_validation.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/cross_validation.html">
+  <meta property="og:title" content="Cross-Validation Strategies | ML Systems Lab">
+  <meta property="og:description" content="k-fold, stratified, group k-fold, time-series CV, nested CV">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Cross-Validation Strategies">
+  <meta name="twitter:description" content="k-fold, stratified, group k-fold, time-series CV, nested CV">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Cross-Validation Strategies",
+  "description": "k-fold, stratified, group k-fold, time-series CV, nested CV",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/cross_validation.html",
+  "keywords": "cross-validation, k-fold, time series, nested CV"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#eval_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">30 min read</span>
+      <span class="tag">cross-validation</span><span class="tag">k-fold</span><span class="tag">time series</span><span class="tag">nested CV</span>
+    </div>
+    <h1>Cross-Validation Strategies</h1>
+    <p class="subtitle">k-fold, stratified, group k-fold, time-series CV, nested CV</p>
+
+    <p>You are training a random forest on 5,000 examples. You tune max_depth with a single 80/20 split. By luck, the test set landed on mostly *easy* examples — the ones any model gets right. You read <strong>87% accuracy</strong>, pick the max_depth that scores best on this one split, and call it done. You deploy. Performance: <strong>79%.</strong> What went wrong?</p>
+    <p>A single split is just one of the many ways you *could* have divided the data. You got a lucky draw, your estimate had high variance, and you staked the whole tuning decision on it.</p>
+    <hr>
+    <h3>k-fold: don't trust one split, average many</h3>
+    <p>k-fold cross-validation runs several splits and averages them. With k=5 on 5,000 examples: cut the data into 5 groups of 1,000; train on 4,000 and test on the held-out 1,000; rotate so each group is the test set exactly once; average the 5 scores. Now every example is tested once, and your estimate is far steadier. Standard choices are k=5 (tests on 80% each time) or k=10 (90%, but slower). Leave-one-out (k = n) sounds ideal but is actually noisy — a single weird test example swings each fold's score.</p>
+    <p>Plain k-fold is right only when your rows are independent draws from the same distribution. Step outside that and you need a different flavour.</p>
+    <hr>
+    <h3>Stratified — when the classes are imbalanced</h3>
+    <p>With a 5% positive rate, a careless random split can hand you one fold with 1% positives (too easy) and another with 9% (too hard); averaging scores from folds that are secretly different problems is misleading. <strong>Stratified k-fold</strong> forces every fold to hold roughly the same 5% positives. Stratify for any classification task where the positive class is under about 20%.</p>
+    <hr>
+    <h3>Group — when the same subject repeats</h3>
+    <p>Suppose you have 50,000 hospital visits from 5,000 patients, and you will deploy on *new* patients. With plain k-fold, patient 142's January visit trains the model and their June visit tests it — so the model quietly memorises patient 142 and &quot;predicts&quot; a patient it already knows. <strong>Group k-fold</strong> keeps all of one patient's visits on the same side, so the test fold is always patients the model has never seen — which is the real deployment situation.</p>
+    <hr>
+    <h3>Time-series — walk forward, and mind the gap</h3>
+    <p>On time-ordered data plain k-fold is not just rough, it is *wrong*: it lets the model train on month 10 to predict month 3. The fix is <strong>walk-forward validation</strong> — train on an early window, test on the next, then expand: train on [start … t], test on [t … t+1], and keep going, always keeping time in order. One subtlety most people miss: if any feature uses a rolling window (a 7-day average, say), a training row from day 89 and a test row from day 91 share raw data, because day 91's feature is built from days 85–91. So add a <strong>purge gap</strong> — drop the rows within one feature-window of the boundary — so the two sides never share ingredients.</p>
+    <hr>
+    <h3>One honest caveat</h3>
+    <p>Cross-validation estimates performance on *new data from the same distribution, drawn the same way.* It does not save you if the world shifts before deployment, and it cannot undo leakage baked in before the split. And if you tune hyperparameters on the very folds you then report, you have quietly cheated: trying 200 configurations and reporting the best fold score is biased upward by the search itself. The clean fix is <strong>nested CV</strong> — an outer loop estimates quality on data the tuning never touched, while the inner loop does the full hyperparameter search. Slower, but it is the only setup that honestly scores your whole pipeline.</p>
+    <hr>
+    <h3>When the folds themselves are noisy: repeated k-fold</h3>
+    <p>On small datasets a single 5-fold split is still one arbitrary partition — shuffle the rows differently and the estimate moves. <strong>Repeated k-fold</strong> runs the whole k-fold procedure several times with different random shuffles and averages, shrinking the variance of the estimate. It costs more compute but gives a steadier number when data is scarce or fold scores are unstable (like the [0.83, 0.84, 0.92, 0.85, 0.83] case where one fold is an outlier).</p>
+    <hr>
+    <h3>When you need both balance and isolation: stratified group k-fold</h3>
+    <p>Stratified k-fold keeps the class ratio; group k-fold keeps entities together — but real problems often need *both*. Imbalanced medical data with multiple visits per patient wants every fold to hold the same rare-disease rate <strong>and</strong> never split a patient across folds. <strong>Stratified group k-fold</strong> does both at once. It's an approximation (you can't always satisfy both perfectly), but it's the right tool when you have imbalance and repeated subjects together — a very common combination.</p>
+    <hr>
+    <h3>Rolling versus expanding windows</h3>
+    <p>Walk-forward comes in two flavours, and the choice is about drift. An <strong>expanding window</strong> always trains on *all* history up to time t — more data, better when the relationship is stable. A <strong>rolling (sliding) window</strong> trains only on the most *recent* fixed span, deliberately forgetting old data — better under strong concept drift, where ancient patterns actively mislead. Rule of thumb: expanding by default, rolling when the world changes fast enough that stale data hurts more than it helps.</p>
+    <hr>
+    <h3>Nested CV estimates the pipeline, not the final model</h3>
+    <p>A subtlety people miss: nested CV gives you an unbiased estimate of your *model-selection procedure's* quality — but the model you actually ship is usually <strong>retrained on all available training data</strong> using the hyperparameters that procedure chose. Nested CV answers &quot;how good is my process,&quot; not &quot;here's the exact model.&quot; So report the nested-CV score as your honest performance estimate, then retrain on everything for deployment. Don't confuse the two.</p>
+    <hr>
+    <h3>Fold scores aren't independent — mean ± std isn't a confidence interval</h3>
+    <p>Reporting mean ± std across folds is useful, but treat it carefully: the folds <strong>overlap in training data</strong> (each pair of 5-fold training sets shares most of their rows), so the fold scores are correlated, not independent draws. That means the naive standard error understates the true uncertainty, and the std across folds is *not* a valid 95% confidence interval. Use it as a rough spread and an instability flag, not as a rigorous statistical bound.</p>
+    <hr>
+    <h3>Stratifying regression and multi-label targets</h3>
+    <p>Stratification isn't only for single-label classification. For <strong>regression</strong>, stratify on *binned* target values so each fold spans the full range (otherwise one fold can get all the cheap houses). For <strong>multi-label</strong> problems, use iterative/multi-label stratification that balances each label's distribution across folds. Naive random splitting can leave a rare label almost absent from some folds, making those folds unrepresentative.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Match the CV strategy to your deployment assumption — it is not a style choice.</strong>
+
+Plain k-fold (k=5 or 10): rows are independent, no time order, no repeated subjects. Stratified k-fold: any imbalanced classification, so every fold keeps the same class mix. Group k-fold: the model will score entities (users, patients, stores) it has never seen, so all rows from one entity stay on one side. Walk-forward: any time-series data, always. Use the wrong one and you are measuring a deployment scenario that does not exist.</li><li><strong>The most common trap: plain k-fold on time-series data.</strong>
+
+It produces validation scores that look fine and mean nothing. The tell: CV says AUC 0.85, then it drops sharply the moment you run a proper time-ordered holdout. Always split by time for time-series, default to an expanding walk-forward window, and add a purge gap (say 7 days) between train and validation so rolling-window features cannot bleed across the boundary.</li><li><strong>The diagnostic: if you tuned hyperparameters and reported the best fold score, that number is inflated.</strong>
+
+Trying 100 configurations and reporting the best one's validation score is selection bias — you implicitly fit to that partition, and the more you tried, the worse the inflation. Fix it with nested CV (search only in the inner fold) or a separate test set never touched during tuning. Quick check: retrain with the chosen settings and score on data the tuning never influenced — if it drops a lot, the bias was real.</li><li><strong>Reach for the right variant, and read fold spread honestly.</strong>
+
+Repeated k-fold shrinks estimate variance on small/unstable data; stratified group k-fold handles imbalance and repeated subjects together; expanding windows use all history (stable world) while rolling windows keep only recent data (strong drift). Stratify regression on binned targets and multi-label with iterative stratification so no fold misses a rare label. And every learned transform (scaler, imputer, selector, encoder, SMOTE) must be fit inside each fold via a Pipeline — fitting before CV leaks.</li><li><strong>Know what nested CV estimates and that folds aren't independent.</strong>
+
+Nested CV gives an unbiased estimate of your model-selection *procedure*; the shipped model is then retrained on all training data with the chosen hyperparameters, so report the nested score but don't mistake it for the exact deployed model. And because k-fold training sets overlap heavily, fold scores are correlated — mean ± std is a useful spread and instability flag but not a valid confidence interval, so don't treat the std as a rigorous statistical bound.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Every CV strategy embeds an assumption about deployment — pick the wrong one and you are evaluating a scenario that does not exist, which is why walk-forward is mandatory for time-series and group k-fold is mandatory whenever new entities appear at inference time.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>A single split has high variance — k-fold averages many:</strong> one 80/20 split can land on easy examples (87%) and mislead your tuning (deploy → 79%). k-fold cuts the data into k groups, trains on k−1 and tests on the held-out one, rotates, and averages — every example tested once, a far steadier estimate. k=5 (test on 80%) or k=10 (90%, slower); leave-one-out is actually noisy (one weird example swings each fold).</li><li><strong>Stratified — for imbalanced classes:</strong> at a 5% positive rate a careless split can hand you one fold with 1% positives and another with 9% — secretly different problems. Stratified k-fold forces each fold to hold roughly the same class ratio; use it for any classification under ~20% positive.</li><li><strong>Group — when the same subject repeats and you deploy on new entities:</strong> plain k-fold lets patient 142's January visit train and their June visit test, so the model memorises a patient it already knows. Group k-fold keeps all of one entity's rows on one side, so test folds are always unseen entities — the real deployment situation.</li><li><strong>Time-series → walk-forward, and mind the gap:</strong> plain k-fold on time-ordered data is *wrong* (trains on month 10 to predict month 3). Train on [start…t], test on [t…t+1], expand, always keeping time in order. Add a <strong>purge gap</strong> — drop rows within one feature-window of the boundary — so a 7-day rolling feature can't share raw data across the split.</li><li><strong>Expanding vs rolling window is a call about drift:</strong> an expanding window trains on *all* history (more data, better when the relationship is stable); a rolling window keeps only the recent span and deliberately forgets old data (better under strong concept drift, where stale patterns mislead). Expanding by default, rolling when the world changes fast.</li><li><strong>Tuning on the folds you then report is cheating:</strong> trying 200 configs and reporting the best fold score is biased upward by the search itself. Fix with <strong>nested CV</strong> — an outer loop estimates quality on data the tuning never touched while the inner loop does the full hyperparameter search.</li><li><strong>Nested CV scores the *procedure*, not the shipped model:</strong> it gives an unbiased estimate of your model-selection process; the deployed model is retrained on *all* training data with the chosen hyperparameters, so report the nested score but don't confuse it for the exact model. And because k-fold training sets overlap heavily, fold scores are correlated — mean ± std is a useful spread and instability flag, not a valid confidence interval.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You have 5 years of daily transaction data and want to build a fraud model. How do you set up CV?</p>
+      <ul class="check-opts"><li>A) Use standard 5-fold CV with stratification on the fraud label — stratification ensures each fold has balanced fraud cases and prevents misleading evaluation</li><li>B) Use a single 80/20 random split — with 5 years of data the sample size is large enough that variance is low and k-fold adds unnecessary computation</li><li>C) Use group k-fold by user_id — the main concern is that the same user appears in both train and test, which group k-fold prevents</li><li class="correct">D) Use time-series walk-forward CV: train on year 1 validate on Q1 of year 2, then expand forward — add a 7-day purge gap for rolling features, use expanding window unless strong concept drift is present; never use standard k-fold which would train on 2024 data to predict 2022 events</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> You run 5-fold CV and get AUC scores [0.83, 0.84, 0.92, 0.85, 0.83]. The mean is 0.854. Should you report this as your model's performance?</p>
+      <ul class="check-opts"><li class="correct">A) No — report mean ± std = 0.854 ± 0.035 and investigate why fold 3 is an outlier (AUC=0.92 vs others at 0.83-0.85); high variance itself is information about instability</li><li>B) Yes — the mean is the correct summary statistic and a sample size of 5 folds is sufficient to report reliably</li><li>C) No — discard the outlier fold (AUC=0.92) and report the mean of the remaining four folds as it is more representative</li><li>D) Yes — 0.854 is a conservative estimate because some folds may have been unlucky; the true performance is closer to 0.92</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> A colleague argues that since you are doing hyperparameter search with Optuna and reporting the best trial's validation score, you have a proper unbiased evaluation. Explain why this is wrong.</p>
+      <ul class="check-opts"><li>A) Optuna's best trial is unbiased because Bayesian optimization does not overfit to the validation set — only grid search causes selection bias</li><li class="correct">B) This is the nested CV problem — running 200 Optuna trials and reporting the best trial's validation AUC is upward-biased by selection; unbiased evaluation requires either nested CV (hyperparameter search in inner fold only) or a completely separate test set never touched during optimization</li><li>C) The evaluation is correct if the validation set is large enough — selection bias from Optuna only matters with small datasets below 10,000 samples</li><li>D) Optuna handles this automatically through its pruning mechanism — trials that overfit to the validation set are pruned before they can inflate the reported score</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> You have 3 years of daily sales data and strong seasonality/drift, and must forecast the next quarter. Between an expanding window and a rolling window for walk-forward CV, how do you choose?</p>
+      <ul class="check-opts"><li>A) Always use an expanding window — more training data is strictly better, so rolling windows are never the right choice.</li><li class="correct">B) It depends on drift: an expanding window trains on all history (best when the underlying relationship is stable and more data helps), while a rolling window keeps only the recent span and deliberately forgets old data (best under strong concept drift, where stale patterns actively mislead). With strong drift here, a rolling window is often the better fit — and validate both.</li><li>C) Use whichever gives the higher validation score, since the window type is purely a performance knob with no assumptions attached.</li><li>D) Neither — with seasonality you must use standard k-fold so every season appears in training, and window type is irrelevant.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> You run nested CV and get an outer-loop estimate of 0.86 AUC. What model do you actually deploy, and what does the 0.86 represent?</p>
+      <ul class="check-opts"><li>A) Deploy the single best inner-fold model from the outer fold that scored highest, and 0.86 is that model's exact production performance.</li><li class="correct">B) The 0.86 is an unbiased estimate of your whole model-selection procedure's quality, not of one specific model. For deployment you retrain on all available training data using the hyperparameters the procedure selects, and report 0.86 as the honest expected performance — the process is what was evaluated, the retrained-on-everything model is what ships.</li><li>C) Deploy nothing — nested CV is only a diagnostic and cannot produce a deployable model.</li><li>D) Average the weights of all outer-fold models into one ensemble and deploy that; 0.86 is that ensemble's guaranteed score.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#eval_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

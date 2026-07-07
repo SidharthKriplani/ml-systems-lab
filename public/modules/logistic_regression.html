@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Logistic Regression | ML Systems Lab</title>
+  <meta name="description" content="Sigmoid, cross-entropy loss, decision boundary, calibration">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/logistic_regression.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/logistic_regression.html">
+  <meta property="og:title" content="Logistic Regression | ML Systems Lab">
+  <meta property="og:description" content="Sigmoid, cross-entropy loss, decision boundary, calibration">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Logistic Regression">
+  <meta name="twitter:description" content="Sigmoid, cross-entropy loss, decision boundary, calibration">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Logistic Regression",
+  "description": "Sigmoid, cross-entropy loss, decision boundary, calibration",
+  "proficiencyLevel": "Foundational",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/logistic_regression.html",
+  "keywords": "classification, logistic regression, calibration"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#classical_ml_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Foundational</span>
+      <span class="read-time">24 min read</span>
+      <span class="tag">classification</span><span class="tag">logistic regression</span><span class="tag">calibration</span>
+    </div>
+    <h1>Logistic Regression</h1>
+    <p class="subtitle">Sigmoid, cross-entropy loss, decision boundary, calibration</p>
+
+    <p>Here is a question doctors have asked for a very long time: will this patient have a heart attack in the next ten years? You cannot answer that honestly with a flat yes or no — nobody knows the future. What you *can* give is a <strong>probability</strong>: this patient has a 12% chance. That is the real job. It is a <strong>classification</strong> problem — the outcome is one of two classes, heart attack or not — but we do not want a bare label, we want a number between 0 and 1 we can trust. Logistic regression is the tool that has quietly done this job for medicine, banking, and half the internet for decades. Let me show you how it pulls it off.</p>
+    <p>There is a nice bit of history hiding in the name. Almost two hundred years ago a mathematician named Verhulst was studying how populations grow — not in a straight line, but slow at first, then fast, then flattening out as food and space run low. He drew that S-shaped curve and called it the <strong>logistic</strong> curve. Decades later people noticed the very same S-curve is perfect for a completely different task: taking any number and gently squashing it into a probability between 0 and 1. That borrowed curve is the engine we are about to build.</p>
+    <hr>
+    <h3>The setup</h3>
+    <p>Start with what we already know how to build: a plain linear equation, w·x + b. Feed in the patient's numbers — age, blood pressure, cholesterol — and out comes a single number. But here is the snag. That number lives on the whole number line: it could be −4, or 3000. A linear equation will happily hand you 1.4 or −0.3, and those are nonsense as probabilities. So the one question that *defines* logistic regression is this: how do we bend the wide-open output of a linear equation down into the (0, 1) range of a probability?</p>
+    <hr>
+    <h3>Building the bridge</h3>
+    <p>The trick uses a pair of functions that undo each other. You already know one such pair: eˣ and its inverse, the natural log. eˣ takes any number and gives back a positive one — its output lives in (0, ∞). The natural log runs it backwards: hand it a positive number, it gives back any number at all. From that pair we build a second pair — the <strong>logit</strong> and the <strong>sigmoid</strong> — which also undo each other. The logit takes a probability in (0, 1) and stretches it out across the whole number line. The sigmoid, $σ(z) = 1/(1 + e^{-z})$, does the reverse: it takes any number and squashes it into (0, 1). That squash is exactly the bend we were hunting for — and yes, the sigmoid is the same S-curve Verhulst drew.</p>
+    <p>Now the move that makes everything click. A linear equation outputs a number on the whole line. A logit is also a number on the whole line. So instead of forcing the linear equation to spit out a probability directly, we let it predict the <strong>logit</strong>, then run that through the sigmoid to land on a clean probability. The linear part does what it is naturally good at; the sigmoid handles the bending.</p>
+    <hr>
+    <h3>But what is a logit, really?</h3>
+    <p>Here is the part most courses rush past, and it is the heart of the whole thing. A logit is the <strong>log of the odds</strong>.</p>
+    <p>Odds are just a way of comparing the two outcomes: the chance of the event divided by the chance of no event. If a heart attack is 75% likely, the odds are 0.75 / 0.25 = 3 — &quot;three to one.&quot; Simple enough. But odds have an annoying lopsidedness. A probability of 0.99 gives odds of 99. Its mirror image, a probability of 0.01, gives odds of 0.01. Same distance from the middle, yet one number is 99 and the other a tiny sliver — you cannot line them up on a fair scale.</p>
+    <p>Wrapping the odds in a log fixes the lopsidedness at once. log(99) ≈ +4.6 and log(0.01) ≈ −4.6 — now they are clean mirror images around zero. That log-of-odds is the <strong>logit</strong>, and it is exactly the quantity our linear equation predicts. So the full pipeline is: linear equation → logit (log-odds) → sigmoid → probability.</p>
+    <p>And this hands us something lovely: one weight, read three ways. Say feature x₁ goes up by one unit and everything else stays fixed. The logit goes up by exactly w₁ — a clean, straight step. The odds get multiplied by $e^{w_1}$. And the probability itself moves in a curve — a lot in the middle, barely anything near 0 or 1. One weight, three honest stories.</p>
+    <hr>
+    <h3>The second half: what loss do we train it with?</h3>
+    <p>Reach for the obvious loss — mean squared error, the one linear regression uses — and watch it fail. Take one patient who truly had a heart attack (target = 1). If the model predicted 0.9, the squared error is (0.9 − 1)² = 0.01 — tiny, and rightly so; the model was basically right. Now suppose the model predicted 0.0001. It was insisting this person was safe, about someone who was not — confidently, badly wrong. Yet the squared error is (0.0001 − 1)² ≈ 1. Just 1. The penalty barely moved.</p>
+    <p>That is the whole problem. A loss is the *cost we attach to being wrong* — it is how we tell the model how badly it messed up. MSE tells the model that a confident disaster (0.0001 when the truth is 1) costs about the same as a mild miss. So the model has no reason to fix its worst mistakes: the loss never screams. The signal is too flat to be any use.</p>
+    <p><strong>Log loss</strong> (also called cross-entropy) fixes this by making the cost blow up as a confident prediction turns out wrong:</p>
+    <p>$L = -[\,y\log(\hat{y}) + (1-y)\log(1-\hat{y})\,]$</p>
+    <p>Because y is 0 or 1, only one of the two terms is ever active. For our patient (y = 1) the loss is just $-\log(\hat{y})$: predict 0.9 and the cost is a gentle 0.10; predict 0.0001 and the cost is $-\log(0.0001) ≈ 9.2$ — nearly a hundred times bigger. Log loss punishes confident wrongness without any ceiling, which is exactly the message the model needs to hear. That is why we train classification with log loss, not MSE.</p>
+    <hr>
+    <h3>Under the hood (the deeper why)</h3>
+    <p>There is a cleaner reason log loss wins, and you can see it in the gradient. Work out how log loss changes as you nudge the logit z, and the messy sigmoid-slope term cancels out perfectly, leaving just $\partial L/\partial z = \hat{y} - y$ — the plain prediction error. MSE-with-a-sigmoid instead leaves behind an extra $σ(z)(1-σ(z))$ factor that shrinks to almost nothing exactly when the model is most confident and most wrong — so it barely learns from its worst mistakes. Log loss keeps a full-strength gradient no matter how wrong the model is.</p>
+    <p>Two failure modes are worth knowing. First, <strong>perfect separation</strong>: if some feature splits the two classes cleanly in the training data, the model can keep making its weights bigger to push every prediction toward a hard 0 or 1, and the weights run off toward infinity — training never settles (watch for exploding weights or a loss that turns into NaN). A small L2 penalty caps the weights and brings back a finite answer. Second, logistic regression tends to come out <strong>well-calibrated when the model is correctly specified</strong>: because it is trained to give high probability to what actually happened, a predicted 0.7 often really does mean about 70% in reality — something trees, SVMs, and boosting do not give you for free. But &quot;well-calibrated&quot; is a tendency, not a guarantee: heavy regularisation, class imbalance, a mis-specified model, or a shift between training and serving data can all break it, so you still verify calibration rather than assume it.</p>
+    <p>And it stretches past two classes: swap the sigmoid for the <strong>softmax</strong>, which turns a whole set of logits into probabilities that add up to 1, and train it with the same log-loss idea. The boundary it draws stays straight — a line in 2D, a flat plane in higher dimensions — so to bend it you must add curved or interaction features yourself. One practical habit: because the L2 penalty judges weights by size, standardise your features first, or a feature measured in the millions gets penalised on a completely different scale from one measured in single digits.</p>
+    <hr>
+    <h3>Reading the weights the way a statistician does: odds ratios</h3>
+    <p>We said a one-unit bump in a feature multiplies the odds by $e^{w}$. That number, $e^{w}$, is the <strong>odds ratio</strong>, and it is how logistic regression coefficients get reported in medicine and credit — &quot;smokers have 2.3× the odds.&quot; Just like linear regression, each coefficient carries a <strong>standard error</strong>, so you can put a <strong>confidence interval</strong> around the odds ratio and a <strong>p-value</strong> on whether it differs from 1 (an odds ratio of 1 means &quot;no effect&quot;). This is the inference layer for classification. And the same tooling split applies: scikit-learn hands you the coefficients but not p-values or intervals — for those you use statsmodels' Logit on an unpenalised fit.</p>
+    <hr>
+    <h3>The threshold is a business decision, not 0.5</h3>
+    <p>Logistic regression's real output is a *probability*. Turning that probability into an action — flag this transaction, approve this loan — needs a <strong>threshold</strong>, and 0.5 is almost never the right one. The right threshold comes from the *cost of each mistake*. In fraud you can only review, say, 500 alerts a day, so you set the threshold to fill that queue with the highest-risk cases (a precision@K problem). In cancer screening a missed case (false negative) is far worse than a false alarm, so you drop the threshold to buy recall. In lending the costs are literally dollars. Separate the two steps cleanly: the model estimates probability, and *you* choose the decision threshold from the business costs.</p>
+    <hr>
+    <h3>When one class is rare</h3>
+    <p>If only 1% of transactions are fraud, a model that predicts &quot;not fraud&quot; every time is 99% accurate and completely useless — which is why <strong>accuracy is the wrong metric under imbalance.</strong> Three fixes work together. Weight the rare class more heavily in the loss (`class_weight='balanced'` in scikit-learn), so each rare example counts for more. Move the threshold, as above. And judge the model with the right curve: <strong>PR-AUC</strong> (precision-recall) is far more informative than <strong>ROC-AUC</strong> when positives are scarce, because ROC-AUC can look flattering while the model still floods you with false positives.</p>
+    <hr>
+    <h3>The practical knobs: C, penalties, and solvers</h3>
+    <p>Regularisation is not optional trivia here — it is how you control overfitting and tame perfect separation. One confusing detail trips people up: scikit-learn's `C` is the <strong>inverse</strong> of the penalty strength, so *smaller C means stronger* regularisation (C = 1/λ). You also choose the penalty type — <strong>L2</strong> (shrink weights), <strong>L1</strong> (drive some to exactly zero for feature selection), or <strong>Elastic Net</strong> (a blend) — and the penalty must match the solver: L1 and Elastic Net need a solver like `saga`, while the default `lbfgs` only does L2. Interview-ready summary: C = 1/λ, L1/L2/Elastic Net, and saga is the one solver that does them all.</p>
+    <hr>
+    <h3>More than two classes</h3>
+    <p>Two ways to go past yes/no. <strong>One-vs-rest</strong> trains one binary logistic model per class (&quot;this class or not&quot;) and picks the highest scorer — simple, and each model is independently interpretable. <strong>Multinomial</strong> (softmax) logistic regression trains a single model over all classes at once, with probabilities that sum to 1, and is usually better calibrated across classes. scikit-learn supports both; multinomial is the default for most solvers.</p>
+    <hr>
+    <h3>Making the straight boundary bend</h3>
+    <p>The decision boundary logistic regression draws is *linear* in whatever feature space you give it — a line, a plane, a hyperplane. That is a real limit, but also a lever: you make the model as expressive as you like by *engineering the features*. Add interaction terms (age × blood_pressure) to let features combine, polynomial or spline terms to let a feature curve, and binning to let it jump in steps. Done well, this keeps the interpretability and calibration of logistic regression while letting it fit relationships a raw straight line never could — often you reach for a heavier model only after these run out.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>What logistic regression really is: a linear equation that predicts the log-odds, and a sigmoid that turns that into a probability.</strong>
+
+Use it as your first model for any yes/no question where you want a probability you can trust, not just a label — fraud, churn, default, click-through. Its coefficients read cleanly: a one-unit bump in a feature adds its weight to the log-odds and multiplies the odds by $e^{weight}$. It is fast, interpretable, and — uniquely among the common classifiers — calibrated out of the box. Reach for something heavier only when the boundary is clearly non-linear or the features interact in ways a straight line cannot capture.</li><li><strong>The trap that stops the model learning: training with MSE instead of log loss.</strong>
+
+MSE caps the penalty for a confident wrong answer at around 1, so the model shrugs off its worst mistakes — and worse, its gradient shrinks to near zero exactly when the prediction is most confidently wrong, so it barely updates. Log loss (cross-entropy) makes the cost climb toward infinity as a confident prediction turns out wrong, and its gradient stays full-strength. Always train classification with cross-entropy. Watch too for perfect separation: a feature that splits the classes cleanly drives the weights toward infinity — a little L2 (in scikit-learn, a lower C) reins them back in.</li><li><strong>The diagnostic: read the reliability diagram — when the model says 0.7, is the real rate about 70%?</strong>
+
+Logistic regression starts well-calibrated, but strong regularisation shrinks the logits and pulls probabilities toward the middle, and class imbalance can distort them. On a held-out set, bucket the predictions and compare each bucket's predicted probability against its actual positive rate. If the model says 0.8 where the truth is 0.55, it is overconfident — fix it with Platt scaling or isotonic regression fit on a *separate* calibration set, never the training set. And standardise features before fitting, since L2 is scale-sensitive.</li><li><strong>The output is a probability; the threshold is a separate business decision — and under imbalance, 0.5 and accuracy both betray you.</strong>
+
+Let the model estimate probability, then choose the action threshold from the cost of each error: fill a fixed review queue (precision@K) for fraud, buy recall for cancer screening, weigh dollars for lending. When the positive class is rare, accuracy is meaningless (predict-the-majority scores 99%), so weight the rare class (`class_weight='balanced'`), move the threshold, and judge with PR-AUC rather than ROC-AUC, which flatters models that still spew false positives.</li><li><strong>Know the practical knobs cold: C is inverse regularisation, and the penalty must match the solver.</strong>
+
+In scikit-learn smaller `C` means *stronger* regularisation (C = 1/λ). Pick the penalty — L2 (shrink), L1 (sparse/select), or Elastic Net (blend) — and remember L1 and Elastic Net need a solver like `saga`; the default `lbfgs` only does L2. For more than two classes, one-vs-rest trains an independent binary model per class while multinomial (softmax) trains one joint model with probabilities summing to 1 and is usually better calibrated across classes.</li><li><strong>The boundary is linear in your feature space — so engineer the features to make it bend, and read coefficients as odds ratios.</strong>
+
+Logistic regression can only draw a straight boundary in whatever space you hand it, so add interactions, polynomial, spline, or binned features to fit curved and combined relationships while keeping its interpretability. And report coefficients as odds ratios ($e^{w}$) with confidence intervals and p-values — an odds ratio of 1 means no effect — using statsmodels when you need the inference layer scikit-learn omits.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Logistic regression lets a linear equation predict the log-odds, then a sigmoid turns that into a probability — so one weight reads three ways: it adds to the log-odds, multiplies the odds by e^w, and moves the probability non-linearly. Train it with log loss, not MSE: log loss makes a confident wrong answer cost enormously and keeps the gradient alive, while MSE goes flat exactly when the model most needs to learn.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Logistic regression = linear equation predicts the log-odds, sigmoid turns it into a probability</strong> in (0,1).</li><li><strong>One weight, three readings:</strong> adds to the log-odds, multiplies the odds by e^w, moves the probability non-linearly.</li><li><strong>Train with log loss, not MSE.</strong> Log loss punishes confident-wrong enormously and keeps the gradient alive; MSE goes flat right when learning matters.</li><li><strong>Output is a probability; threshold is a separate business call.</strong> Under imbalance, 0.5 and accuracy both betray you.</li><li><strong>Knobs:</strong> C = inverse regularisation (small C = strong penalty); penalty must match the solver.</li><li><strong>Boundary is linear in feature space</strong> — engineer features to bend it; read coefficients as odds ratios.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> A linear equation w·x + b can output any real number. Why can't we use that number directly as the probability for a yes/no classification, and what does logistic regression do about it?</p>
+      <ul class="check-opts"><li>`A) A linear output isn't bounded — it can be 1.4 or −0.3, which make no sense as probabilities. So logistic regression has the linear part predict the log-odds instead (which really can be any number), then feeds that through the sigmoid to squash it into a clean (0, 1) probability.`</li><li>`B) A linear output is always positive, so it can climb above 1 but never fall below 0; logistic regression just divides by the biggest output seen so far to pull everything down into the (0, 1) range.`</li><li>`C) A linear equation cannot capture how features interact, so its output is too plain to be a probability; the sigmoid's real job is to add those missing interaction terms between the features.`</li><li>`D) The only real issue is the sign, since linear outputs can go negative; logistic regression takes the absolute value of the output and then simply caps it at 1.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> In a trained logistic regression, feature x₁ has weight w₁ = 0.7. If x₁ increases by one unit while everything else is held fixed, what happens?</p>
+      <ul class="check-opts"><li>`A) The predicted probability goes up by exactly 0.7 — the same fixed jump, no matter what the starting probability happened to be before the change.`</li><li>`B) The log-odds goes up by 0.7, so the odds get multiplied by e^0.7 ≈ 2.0, and the probability itself moves in a curve — a lot near the middle, very little near 0 or 1.`</li><li>`C) The odds go up by 0.7 and the probability goes up by e^0.7, and both of them change in a straight line as the feature keeps increasing.`</li><li>`D) Nothing you can read off — unlike linear regression, logistic regression weights carry no meaning in terms of any single individual feature.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> For a sample whose true label is 1, the model predicts 0.0001 — confidently wrong. Why is log loss (cross-entropy) a better training signal than MSE in this case?</p>
+      <ul class="check-opts"><li>`A) MSE and log loss hand out the same penalty here, so the only real reason to prefer log loss is that it happens to be a little faster to compute in practice.`</li><li>`B) MSE actually gives the bigger penalty in this case, but we still prefer log loss because it produces a smoother, nicer-shaped loss curve to optimise over.`</li><li>`C) With MSE the squared error is only about 1 even for this disaster, so the penalty barely reflects how wrong the model is — and its gradient nearly vanishes right when the model is most confidently wrong. Log loss instead sends the cost toward infinity (−log(0.0001) ≈ 9.2) and keeps a full-strength gradient.`</li><li>`D) MSE simply cannot be paired with a sigmoid output at all, since the two are mathematically incompatible, so log loss is the only loss a sigmoid model can ever be trained with.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> While training on real patient data, the weights keep growing and the loss eventually becomes NaN. It turns out one feature separates the sick patients from the healthy ones perfectly in the training set. What is happening, and what is the fix?</p>
+      <ul class="check-opts"><li>`A) The features just are not scaled, so gradient descent keeps overshooting; dropping to a smaller learning rate on its own will settle the weights and remove the NaN.`</li><li>`B) Because the classes are perfectly separable, the model can always cut the loss a little more by making its weights bigger (sharpening the sigmoid toward hard 0/1), so there is no finite best answer and they run off to infinity. A small L2 penalty (lower C in scikit-learn) caps them.`</li><li>`C) A NaN loss means the label column has missing values on that one separating feature; once you fill in those missing labels, the training run stops diverging entirely.`</li><li>`D) Perfect separation means the model has basically already solved the task, so the NaN is just a harmless display glitch that you can safely ignore and keep the model.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> Only 1% of your transactions are fraud. Your logistic model reports 99% accuracy and 0.95 ROC-AUC, but the fraud team says it is useless. What is going on and what do you change?</p>
+      <ul class="check-opts"><li>`A) The model is genuinely excellent — 99% accuracy and 0.95 ROC-AUC are both strong, so the fraud team is likely misreading the dashboards rather than the model failing.`</li><li>`B) Under 1% imbalance, accuracy is meaningless (predicting &quot;not fraud&quot; always scores 99%) and ROC-AUC can look high while precision is terrible. Judge with PR-AUC instead, weight the rare class (class_weight='balanced'), and set the decision threshold to fill the review queue with the highest-risk cases rather than leaving it at 0.5.`</li><li>`C) The problem is purely the loss function — swap cross-entropy for MSE so the rare class is weighted more heavily, and both metrics will start reflecting real fraud-catching ability.`</li><li>`D) ROC-AUC of 0.95 proves the ranking is fine, so nothing about the model needs to change; the only fix is to collect far more fraud examples before retraining.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q6.</strong> You want L1-penalised logistic regression in scikit-learn and decide to make the penalty stronger. Which change is correct, and what must you check about the solver?</p>
+      <ul class="check-opts"><li>`A) Increase C to strengthen the penalty, and any default solver handles L1 since the penalty type is independent of the solver.`</li><li>`B) Decrease C to strengthen the penalty (C = 1/λ, so smaller C means more regularisation), and use a solver that supports L1 such as saga — the default lbfgs only handles L2.`</li><li>`C) Increase C to strengthen the penalty, but switch to lbfgs, which is the only solver that supports the L1 penalty and Elastic Net.`</li><li>`D) The C value has no effect on penalty strength — it only sets the number of iterations — so you strengthen the penalty by raising max_iter and the solver choice is irrelevant.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q7.</strong> An interviewer says: &quot;Logistic regression only draws a straight decision boundary. How would you get it to separate two classes that are split by a curve?&quot;</p>
+      <ul class="check-opts"><li>`A) You can't — a curved boundary is fundamentally impossible for logistic regression, so you must abandon it and move straight to a neural network or kernel SVM.`</li><li>`B) Switch the loss from cross-entropy to hinge loss, which is what actually bends the boundary while leaving the features untouched.`</li><li>`C) The boundary is linear only in the feature space you provide, so engineer richer features — polynomial and spline terms to let a feature curve, interaction terms to let features combine, binning to let it step — and the same linear model then fits a curved boundary while keeping its interpretability.`</li><li>`D) Raise the classification threshold above 0.5, which reshapes the boundary from a straight line into a curve that follows the class split.`</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#classical_ml_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

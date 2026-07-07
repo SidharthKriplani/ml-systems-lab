@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Self-supervised Learning Overview | ML Systems Lab</title>
+  <meta name="description" content="Label bottleneck, pretext tasks, generative vs contrastive vs predictive paradigms">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/ssl_overview.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/ssl_overview.html">
+  <meta property="og:title" content="Self-supervised Learning Overview | ML Systems Lab">
+  <meta property="og:description" content="Label bottleneck, pretext tasks, generative vs contrastive vs predictive paradigms">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Self-supervised Learning Overview">
+  <meta name="twitter:description" content="Label bottleneck, pretext tasks, generative vs contrastive vs predictive paradigms">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Self-supervised Learning Overview",
+  "description": "Label bottleneck, pretext tasks, generative vs contrastive vs predictive paradigms",
+  "proficiencyLevel": "Foundational",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/ssl_overview.html",
+  "keywords": "ssl, pretraining, representation, pretext tasks, foundation models"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#self_supervised_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Foundational</span>
+      <span class="read-time">35 min read</span>
+      <span class="tag">ssl</span><span class="tag">pretraining</span><span class="tag">representation</span><span class="tag">pretext tasks</span><span class="tag">foundation models</span>
+    </div>
+    <h1>Self-supervised Learning Overview</h1>
+    <p class="subtitle">Label bottleneck, pretext tasks, generative vs contrastive vs predictive paradigms</p>
+
+    <p>You have 1 million images and labels for exactly 1,000 of them. Train a supervised classifier on those 1,000 labeled examples and you get 62% validation accuracy. Run self-supervised pretraining on all 1 million unlabeled images, then fine-tune on the same 1,000 labels, and you get 84%. That gap—22 percentage points from unlabeled data—is what self-supervised learning actually delivers, and understanding why it works is more useful than memorizing which method beats which benchmark.</p>
+    <p>Self-supervised learning generates its own supervision from the structure of the data itself. Instead of human-provided labels, it uses a pretext task: predict the masked word, reconstruct the missing image patch, learn representations that are invariant to different augmented views of the same image. Because the supervision signal is automatic, SSL can absorb internet-scale data that no annotation budget could touch. That is why Common Crawl—petabytes of raw web text—became the training substrate for every major language model, while ImageNet required millions of annotation hours for 1.2M images.</p>
+    <p>The three paradigms work differently. Predictive SSL (BERT, MAE) masks content and forces the model to reconstruct it—the reconstruction pressure encodes syntax, semantics, and spatial structure because local shortcuts cannot solve the task at high mask rates. Contrastive SSL (SimCLR, MoCo) avoids reconstruction entirely, instead pulling together representations of two augmented views of the same image while pushing representations of different images apart—the model learns which variations are irrelevant (color, crop, blur) and which distinctions matter. Generative methods (autoencoders, diffusion models) reconstruct the full input from a compressed representation, learning rich structure but often at the cost of representations that are less discriminative for downstream classification.</p>
+    <p><strong>NOT this.</strong> Self-supervised is not the same as unsupervised learning. Unsupervised methods like k-means or PCA find clusters and components in data without any objective tied to downstream use. SSL uses a pretext task—a constructed supervised objective derived from data structure—specifically to produce representations that transfer well. The difference is not philosophical: a representation learned by predicting masked words encodes semantic relationships because the prediction task requires them; a representation learned by PCA encodes variance, not meaning. The SSL pretext task is the mechanism that aligns what gets learned with what downstream tasks need.</p>
+    <p>The practical consequence is the pretrain-then-adapt paradigm that now dominates every modality. SSL on massive unlabeled data, followed by lightweight fine-tuning or prompting on a small labeled set, outperforms supervised training from scratch whenever unlabeled data is abundant and labels are scarce. This is not a trend. It is the current structure of the field.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Self-supervised learning closes a 22-point accuracy gap that supervised training on scarce labels cannot close—because pretext tasks extract signal from unlabeled data that labels never touched.</strong>
+
+On a 1M-image dataset with 1K labels, supervised training gets 62%; SSL pretraining on all 1M then fine-tuning on 1K gets 84%. The gap comes from unlabeled data, and the mechanism is the pretext task: it forces the model to encode structure that transfers to downstream tasks.</li><li><strong>A pretext task is only useful if solving it requires semantic understanding that low-level shortcuts cannot provide.</strong>
+
+Predicting a masked word forces syntactic parsing and world knowledge. Predicting image rotation at 75% mask rate forces global object understanding. Predicting image noise level requires only texture statistics. The pretext task determines what gets learned—choosing a task that can be solved with shortcuts produces shallow representations regardless of scale.</li><li><strong>The three paradigms—predictive, contrastive, generative—solve different versions of the same problem: how to extract semantically rich signal from unlabeled data without annotation.</strong>
+
+Predictive SSL masks and reconstructs; contrastive SSL aligns augmented views; generative SSL compresses and reconstructs. Each encodes different invariances. The right choice depends on what the downstream task needs: contrastive for classification and retrieval, predictive (MAE) for dense spatial tasks, generative when the representation itself must be rich enough for synthesis.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>SSL's advantage over supervised training on scarce labels comes from forcing models to solve pretext tasks that require semantic understanding—not from labels, but from the structure of unlabeled data itself. The 22-point accuracy gap on 1K labeled examples is not magic; it is what happens when a model encodes the full unlabeled distribution before seeing any label.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>SSL = supervision from data structure, not labels:</strong> 1M images, 1K labels → supervised 62% vs SSL-pretrain+fine-tune 84%.</li><li><strong>Pretext task is the mechanism:</strong> it must require semantics that low-level shortcuts can't provide.</li><li><strong>Three paradigms:</strong> predictive (mask+reconstruct) · contrastive (align augmented views) · generative (compress+reconstruct).</li><li><strong>Good pretext ≠ solvable by shortcut:</strong> masked LM good; predicting file size / noise level bad.</li><li><strong>SSL ≠ unsupervised:</strong> k-means/PCA encode variance; pretext tasks encode meaning that transfers.</li><li><strong>Pretrain-then-adapt now dominates every modality</strong> — the current structure of the field, not a trend.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Explain why a model trained with supervised ImageNet labels (1000-class classification) transfers less well than a CLIP model trained on 400M image-text pairs, even though both see similar amounts of compute.</p>
+      <ul class="check-opts"><li>A) CLIP transfers better primarily because it uses a larger architecture with more parameters</li><li class="correct">B) Supervised ImageNet collapses all visual diversity into 1000 class logits and discards irrelevant features; CLIP must align 400M unique text descriptions, forcing encoding of fine-grained attributes, spatial relations, style, and domain diversity (medical, satellite, art) that ImageNet categories ignore</li><li>C) CLIP transfers better because contrastive loss is superior to cross-entropy loss for all visual tasks</li><li>D) ImageNet supervision causes the model to memorize training images rather than learning generalizable features</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> What is a pretext task, and what makes one &quot;good&quot;? Give two examples of good pretext tasks and one bad one.</p>
+      <ul class="check-opts"><li>A) A pretext task is any task that uses labeled data; good tasks have clear class boundaries; masked language modeling, image rotation prediction, and file size prediction are all good examples</li><li class="correct">B) A pretext task constructs supervision automatically from data; a good one requires high-level semantic understanding that low-level shortcuts cannot solve; good: masked language modeling, contrastive augmentation invariance; bad: predicting image file size (correlates with texture, not semantics)</li><li>C) A pretext task is a data augmentation strategy; any augmentation that does not corrupt labels is a good pretext task</li><li>D) All pretext tasks are equally useful if the model is large enough — the architecture determines representation quality, not the pretext task choice</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> A team trains an SSL model and claims it outperforms the supervised baseline on linear probe accuracy. The manager asks: does that mean SSL is better for the downstream task? What caveats would you raise?</p>
+      <ul class="check-opts"><li>A) Yes — linear probe accuracy is the definitive measure of representation quality; higher linear probe means better downstream performance in all scenarios</li><li class="correct">B) Linear probe tests only linear separability, not fine-tuning performance; SSL may use far more compute in pretraining; the probe result on one task may not predict performance on a different downstream task; full fine-tuning often closes the gap</li><li>C) The only caveat is model size — if both models have the same parameter count, higher linear probe always predicts better downstream performance</li><li>D) SSL models always outperform supervised baselines when given enough data; the linear probe result is expected and requires no caveats</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> Why does SSL work better on language than on images, and why did it take longer for SSL to dominate vision?</p>
+      <ul class="check-opts"><li>A) Language models are easier to train because text datasets are larger than image datasets</li><li class="correct">B) Language has discrete tokens with natural masking boundaries making reconstruction a clean classification problem; vision operates on continuous pixels with high spatial redundancy, allowing models to solve 15% masking by local interpolation rather than semantic understanding — requiring 75% masking, patch-level tokenization, or contrastive design choices to prevent shortcuts</li><li>C) Image SSL failed because convolutional networks are inherently less capable than Transformers for self-supervised pretraining</li><li>D) Vision SSL took longer because image labeling is cheaper than text labeling, reducing the incentive to develop SSL alternatives</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#self_supervised_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

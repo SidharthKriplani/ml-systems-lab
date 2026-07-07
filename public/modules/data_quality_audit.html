@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Quality Audit | ML Systems Lab</title>
+  <meta name="description" content="Understand what makes data &quot;dirty&quot; and why auditing before modeling is non-negotiable.">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/data_quality_audit.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/data_quality_audit.html">
+  <meta property="og:title" content="Data Quality Audit | ML Systems Lab">
+  <meta property="og:description" content="Understand what makes data &quot;dirty&quot; and why auditing before modeling is non-negotiable.">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Data Quality Audit">
+  <meta name="twitter:description" content="Understand what makes data &quot;dirty&quot; and why auditing before modeling is non-negotiable.">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Data Quality Audit",
+  "description": "Understand what makes data \"dirty\" and why auditing before modeling is non-negotiable.",
+  "proficiencyLevel": "Foundational",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/data_quality_audit.html",
+  "keywords": "data quality, profiling, missing values, outliers"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#data_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Foundational</span>
+      <span class="read-time">35 min read</span>
+      <span class="tag">data quality</span><span class="tag">profiling</span><span class="tag">missing values</span><span class="tag">outliers</span>
+    </div>
+    <h1>Data Quality Audit</h1>
+    <p class="subtitle">Understand what makes data &quot;dirty&quot; and why auditing before modeling is non-negotiable.</p>
+
+    <p>A vendor hands you a shiny 2-million-row dataset with 47 columns. Before you write a single line of modeling code, you spend 20 minutes just *looking* at the data — a <strong>data quality audit</strong> — and here is what you find. The `income` column is stored as text, not numbers. `date_of_birth` has values from 1800 to 2300. `transaction_amount` is 12% missing, and the missing ones are suspiciously the *large* transactions. And 30,000 rows are exact duplicates. Twenty minutes of looking just saved you a week of chasing a broken model in production.</p>
+    <p>Here is why this step is non-negotiable, and it is subtler than &quot;garbage in, garbage out.&quot; A powerful model does not choke on bad data — it *learns from it, confidently*. Feed a gradient-boosted tree rows where `age = -3` and it will happily decide that negative ages predict something. Your training metrics look fine. The model ships. It assigns high confidence to wrong answers and never once flags that anything is off. The real slogan is &quot;garbage in, *confident* garbage out,&quot; and the bill arrives weeks later when the true labels do.</p>
+    <hr>
+    <h3>What to actually check</h3>
+    <p>A good audit sweeps seven things:</p>
+    <p>- <strong>Schema</strong> — are the column types right, and are all the expected columns present?
+- <strong>Missing values</strong> — how much is null per column, and is the missingness random or *patterned*?
+- <strong>Duplicates</strong> — exact repeated rows, or near-duplicates on a key?
+- <strong>Distribution</strong> — outliers, strange skew, two humps where you expected one?
+- <strong>Target</strong> — is the label balanced, and are there noisy or impossible label/feature combos?
+- <strong>Leakage</strong> — does any feature secretly use information you would not have at prediction time?
+- <strong>Coverage</strong> — does this data actually resemble the population you will deploy against?</p>
+    <hr>
+    <h3>The sneakiest failure: rows that silently vanish</h3>
+    <p>One failure deserves special mention because it hides so well. Join two tables on customer ID, and if some IDs in one table have no match in the other, those rows simply *disappear* — no error, the pipeline reports success, and 120,000 training examples are gone. And they are almost never a random 120,000: they tend to be a specific group (older customers, one region), which is now missing entirely from training. Your model quietly learns nothing about them.</p>
+    <hr>
+    <h3>Make the checks automatic</h3>
+    <p>The fix is to turn the whole checklist into *executable assertions* that run on every new batch of data — &quot;column income must be a float between 0 and 10 million with under 5% nulls.&quot; Tools like Great Expectations do exactly this. When an assertion fails you get a loud error on day one instead of a mysterious performance drop six weeks later. And re-run these at *every* retrain, not just once: a column that was 2% null in January and 18% null in June is a data-collection problem, and you will never notice it without looking again. A pipeline running without crashing is not the same thing as the data being good.</p>
+    <hr>
+    <h3>Missingness has a taxonomy — and it changes what you can do</h3>
+    <p>&quot;How much is missing&quot; is only half the question; &quot;*why* is it missing&quot; decides the fix. <strong>MCAR</strong> (missing completely at random): the missingness is unrelated to anything, so dropping or simple imputation is safe. <strong>MAR</strong> (missing at random): the missingness depends on *other observed* features (income missing more often for a certain age group) — you can impute using those features. <strong>MNAR</strong> (missing not at random): the missingness depends on the *missing value itself* (high earners refuse to state income) — and this is the dangerous one, because the missing values carry signal or bias that no ordinary imputation recovers. During the audit, don't just count nulls; look at *what else is true* about the missing rows.</p>
+    <hr>
+    <h3>Drift has metrics, not just eyeballs</h3>
+    <p>&quot;Does this batch resemble training?&quot; can be measured. For continuous features, <strong>PSI</strong> (population stability index) is the industry-standard drift score (below 0.1 stable, above 0.2 significant), the <strong>KS test</strong> measures the largest gap between two distributions, and <strong>Wasserstein distance</strong> captures how far mass moved. For distributions generally, <strong>KL</strong> and <strong>Jensen-Shannon divergence</strong> quantify how different two are (JS is symmetric and bounded). For <strong>categorical</strong> features, compare category frequencies (chi-squared, or PSI on the buckets) and watch for brand-new categories. Wire these into the audit so drift is a *number that crosses a threshold*, not a vibe.</p>
+    <hr>
+    <h3>Audit the labels, not just the features</h3>
+    <p>Dirty labels quietly cap model quality more than dirty features. Check for <strong>noisy labels</strong> (wrong ground truth), <strong>conflicting labels</strong> (identical rows labeled differently), <strong>annotation disagreement</strong> (measure inter-annotator agreement), <strong>delayed labels</strong> (the truth arrives weeks later, so recent rows are under-labeled), <strong>label leakage</strong> (a feature encodes the label), and <strong>label-definition drift</strong> (what counts as &quot;fraud&quot; changed between last year and this year). A feature audit that ignores label quality misses the ceiling on how good any model can get.</p>
+    <hr>
+    <h3>Train-serving skew and feature freshness</h3>
+    <p>Some quality problems only exist *between* environments. <strong>Train-serving skew</strong> is when a feature is computed one way offline (SQL over full history) and another way online (a real-time approximation) — the model then scores on values it never trained on. Related is <strong>staleness</strong>: a feature that's fresh offline may be hours old at serving time. So the audit must track *timestamps*: the <strong>event time</strong> (when it happened), the <strong>ingestion time</strong> (when it landed), and the <strong>feature-computation time</strong> — and enforce a <strong>maximum feature age</strong>. A value that's correct but stale is still wrong at decision time.</p>
+    <hr>
+    <h3>Data contracts and a severity policy</h3>
+    <p>Mature pipelines formalise this with <strong>data contracts</strong>: the producing team commits to a schema, types, value ranges, cardinality, null-rate ceilings, and a freshness SLA, with clear <strong>ownership</strong> so a breaking change upstream is caught at the boundary, not six weeks downstream. And each failed check needs a <strong>severity/action policy</strong> decided in advance: does this failure <strong>block training</strong>, <strong>quarantine the batch</strong>, fall back to a <strong>previous model</strong>, fire a <strong>warning only</strong>, or route to <strong>human review</strong>? &quot;The check failed&quot; is useless without &quot;…and therefore we do X.&quot;</p>
+    <hr>
+    <h3>Audit sample coverage, not just column values</h3>
+    <p>Finally, check *who* is in the data. A dataset can be clean on every column yet systematically under-represent a <strong>segment</strong> — a geography, a device type, an acquisition channel, a cohort, or the rare high-value population you most care about. Break the audit down by these dimensions and confirm each important segment has enough coverage, because a model trained on a skewed sample is confidently wrong exactly where the data was thin.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Run a data quality audit before any EDA or modeling — 30 minutes of auditing routinely saves days of debugging model failures caused by silent data issues.</strong>
+
+The 2-million-row vendor dataset example is representative: type mismatches, impossible values, structured missingness, and 30,000 duplicates all coexist quietly until you look for them explicitly. Powerful models do not flag dirty data — they learn from it confidently.</li><li><strong>Trap: auditing only the training set. Data quality gates must run on every new incoming batch in production — upstream systems change schemas, inject nulls, and shift distributions without notice.</strong>
+
+A column with 2% nulls in January training data and 18% nulls in June production data is a structural change in data collection. The model trained on the low-null version will impute using training-fit parameters that no longer fit the incoming distribution, degrading silently on the most information-rich rows.</li><li><strong>Diagnostic: build a schema snapshot of the training data — column types, value ranges, null rates, cardinality — and diff every new batch against it. A diff that exceeds threshold is a data quality alert, not a model problem.</strong>
+
+Great Expectations implements this as code: assertions that fail loudly when violated, run in CI/CD on every batch. The alternative is discovering the schema drift 6 weeks later as a &quot;mysterious performance regression.&quot;</li><li><strong>Diagnose missingness by mechanism and measure drift with real metrics.</strong>
+
+Don't just count nulls — determine MCAR (unrelated, safe to impute), MAR (depends on other observed features, impute using them), or MNAR (depends on the missing value itself, so ordinary imputation injects bias). Turn &quot;does this batch look like training?&quot; into numbers: PSI (&gt;0.2 significant) and KS/Wasserstein for continuous features, KL/Jensen-Shannon for distributions, category-frequency comparison for categoricals — with new-category detection. And audit label quality (noisy, conflicting, delayed, leaked, definition-drifted labels), which caps model quality more than dirty features.</li><li><strong>Guard the boundaries: skew, freshness, contracts, and a severity policy.</strong>
+
+Train-serving skew (feature computed differently offline vs online) and staleness are cross-environment bugs, so track event/ingestion/computation timestamps and enforce a maximum feature age. Formalise producer-consumer data contracts (schema, types, ranges, cardinality, null-rate ceiling, freshness SLA, ownership) so upstream breaks are caught at the boundary. Give every failed check a pre-decided action — block training, quarantine batch, fall back to previous model, warn, or human-review — and audit sample coverage by segment/geography/device/channel/cohort so no important population is silently thin.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Data quality failures surface as production incidents, not training errors — because models train confidently on garbage and only reveal the problem when ground-truth labels arrive weeks later.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Garbage in, *confident* garbage out:</strong> powerful models learn from bad data silently — the bill arrives weeks later with the true labels.</li><li><strong>Audit before modeling:</strong> 20-min sweep of schema, missing, duplicates, distribution, target, leakage, coverage catches type mismatches, impossible values, 30k dupes.</li><li><strong>Silent row loss:</strong> a join with unmatched IDs drops rows with no error — and the dropped group (a region, a cohort) is never random.</li><li><strong>Make checks executable assertions</strong> that run on *every* batch (Great Expectations) — 2% nulls in Jan vs 18% in June is a collection bug you only catch by re-checking.</li><li><strong>Missingness has a mechanism:</strong> MCAR safe to impute, MAR impute from observed features, MNAR carries bias no ordinary imputation recovers.</li><li><strong>Drift is a number, not a vibe:</strong> PSI (&gt;0.2 significant), KS/Wasserstein for continuous, KL/JS for distributions, category-frequency + new-category for categoricals.</li><li><strong>Guard the boundaries:</strong> train-serving skew, feature staleness, data contracts, per-check severity policy, and per-segment coverage audits.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> A colleague argues that outlier rows should simply be removed before training to keep the model clean. What breaks if you follow this advice blindly on a fraud detection dataset?</p>
+      <ul class="check-opts"><li>A) The model trains faster but loses calibration on high-value transactions, requiring threshold recalibration before deployment.</li><li class="correct">B) Fraud transactions are inherently outliers — rare, high-value, anomalous by definition. Removing outliers would systematically eliminate the positive class, leaving a model trained almost entirely on legitimate transactions that achieves 99%+ accuracy while catching zero fraud. Outlier removal requires knowing WHY a value is extreme, not just that it is.</li><li>C) Removing outliers reduces variance but introduces bias toward the mean transaction profile, causing the model to underperform only on weekend transactions.</li><li>D) The model becomes overconfident on the majority class but can be corrected by applying SMOTE after the outlier removal step.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> You join two tables on a customer ID and your training set shrinks from 500,000 to 380,000 rows without any error. What likely happened and why does it matter?</p>
+      <ul class="check-opts"><li>A) A deduplication step silently ran during the join, removing duplicate customer records — this is expected behavior and the remaining rows are a random sample.</li><li>B) A filter on a date column excluded older customers during the join, but since the sample is still large the model will generalize without issue.</li><li>C) The join used a DISTINCT clause internally, collapsing multi-purchase customers to one row per customer ID and slightly underrepresenting heavy buyers.</li><li class="correct">D) Referential integrity failure — 120,000 rows were lost because customer IDs had no match in the second table. This matters enormously: the dropped rows are almost certainly not a random sample — likely older customers, different region, or churned customers — so the model trains on a biased subset and generalizes poorly to the full population.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> What is the difference between an outlier and an impossible value, and why should they be handled differently?</p>
+      <ul class="check-opts"><li class="correct">A) An outlier is statistically extreme but potentially valid (a 50,000-dollar transaction is unusual but possible). An impossible value violates a hard constraint (a person cannot be -3 years old). Outliers require domain judgment; impossible values are always errors and should be nullified before any other processing. Imputing an impossible value propagates the error as if it were real information.</li><li>B) An outlier is any value above the 99th percentile; an impossible value is any value above the 99.9th percentile. Both should be clipped to the 99th percentile to stabilize model training.</li><li>C) An outlier is a data entry error; an impossible value is a measurement instrument failure. Outliers should be removed; impossible values should be imputed with the domain-specific minimum valid value.</li><li>D) Both terms describe the same phenomenon — values that fall outside two standard deviations from the mean. The distinction is semantic and does not affect handling.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> You run a data profile on training set in January and model performs well. You retrain in June without re-profiling and performance drops. What data quality issue is most likely responsible?</p>
+      <ul class="check-opts"><li>A) The model's hyperparameters are no longer optimal because the dataset grew larger in June, requiring a new grid search.</li><li>B) Random seed differences between January and June training runs caused the model to converge to a different local minimum.</li><li class="correct">C) Distribution shift between January and June data that profiling would have caught — new data source added (changed null rate or value range), upstream system changed encoding (categorical field uses different labels), or a business event changed the real-world distribution. Without profiling at retraining time, the pipeline reports no error but the model trains on a different distribution than originally validated.</li><li>D) The validation split was smaller in June due to more training rows, causing the evaluation to be noisier and less representative of true performance.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> A column has 55% null values. A colleague says to impute with the median. What should you do before accepting that advice?</p>
+      <ul class="check-opts"><li>A) Run a Shapiro-Wilk test to confirm the non-null values are normally distributed; if they are, use mean imputation instead of median.</li><li class="correct">B) First determine the mechanism of missingness (WHY 55% are missing). If MNAR, imputing with median fills in systematically wrong values for highest-risk cases. Then consider whether the column is worth including at all (45% observed rows creates poorly estimated interactions). Also check if missing rate in test set matches training — if not, there is a structural data collection difference. Median imputation is only appropriate after these questions are answered.</li><li>C) Check whether the column has more than 10 unique values; if so, KNN imputation is always superior to median imputation regardless of the missingness mechanism.</li><li>D) Immediately drop the column — any feature with more than 30% nulls introduces more bias than predictive value and should never be imputed.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q6.</strong> Two features are each 20% missing. In feature A, the missingness is unrelated to anything; in feature B, high earners systematically decline to report the value. How do you classify each, and why does it change your handling?</p>
+      <ul class="check-opts"><li>A) Both are MCAR because the missing rate is the same (20%), so median imputation is equally safe for both.</li><li class="correct">B) Feature A is MCAR (missingness unrelated to any value) — dropping or simple imputation is safe. Feature B is MNAR (missingness depends on the missing value itself — the high earners are exactly the ones missing), so any ordinary imputation fills in systematically wrong values and biases the model precisely on the high-value cases; you need an explicit missingness indicator, a model of the missingness, or domain handling, not a plain median fill.</li><li>C) Feature A is MAR and feature B is MCAR, and both should be handled identically with KNN imputation.</li><li>D) The classification is irrelevant — with 20% missing, both features should simply be dropped regardless of mechanism.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q7.</strong> Your feature pipeline is clean on every column, but the model underperforms badly for one region and one device type. Aggregate metrics look fine. What audit dimension did you likely skip?</p>
+      <ul class="check-opts"><li>A) You skipped hyperparameter tuning — regional underperformance is always a capacity problem fixed by a larger model.</li><li class="correct">B) You skipped a sample-coverage audit: a dataset can be valid on every column yet systematically under-represent a segment (a region, device, channel, or cohort), so the model is confidently wrong exactly where the data was thin. Break the audit down by segment and confirm each important population has enough coverage, rather than trusting aggregate column checks.</li><li>C) You skipped outlier removal for those segments, which is the only reason a clean dataset underperforms on a subgroup.</li><li>D) Nothing was skipped — per-segment underperformance with clean columns is random noise and needs no action.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#data_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

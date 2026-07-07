@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Revenue vs Margin: Choosing the Objective | ML Systems Lab</title>
+  <meta name="description" content="The single most consequential pricing decision is what you are optimizing — top-line revenue, contribution margin, or long-term customer value">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/revenue_vs_margin_objective.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/revenue_vs_margin_objective.html">
+  <meta property="og:title" content="Revenue vs Margin: Choosing the Objective | ML Systems Lab">
+  <meta property="og:description" content="The single most consequential pricing decision is what you are optimizing — top-line revenue, contribution margin, or long-term customer value">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Revenue vs Margin: Choosing the Objective">
+  <meta name="twitter:description" content="The single most consequential pricing decision is what you are optimizing — top-line revenue, contribution margin, or long-term customer value">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Revenue vs Margin: Choosing the Objective",
+  "description": "The single most consequential pricing decision is what you are optimizing — top-line revenue, contribution margin, or long-term customer value",
+  "proficiencyLevel": "Foundational",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/revenue_vs_margin_objective.html",
+  "keywords": "Pricing, objective design, contribution margin, unit economics"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#pricing_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Foundational</span>
+      <span class="read-time">22 min read</span>
+      <span class="tag">Pricing</span><span class="tag">objective design</span><span class="tag">contribution margin</span><span class="tag">unit economics</span>
+    </div>
+    <h1>Revenue vs Margin: Choosing the Objective</h1>
+    <p class="subtitle">The single most consequential pricing decision is what you are optimizing — top-line revenue, contribution margin, or long-term customer value</p>
+
+    <p>Before any elasticity math, someone has to answer a question that feels like a formality but decides everything downstream: *what are we maximizing?* Revenue and profit peak at <strong>different prices</strong>, and a model that quietly optimizes the wrong one will look successful while destroying value.</p>
+    <hr>
+    <p><strong>The two optimal prices are different, and the gap is the marginal cost.</strong> Revenue is P·Q, maximized where marginal revenue = 0, which happens exactly at <strong>|ε| = 1</strong> — the unit-elastic point. Profit is (P − c)·Q, maximized where <strong>marginal revenue = marginal cost (MR = MC)</strong>. These coincide *only when c = 0*. With any positive unit cost, the profit-maximizing price is strictly <strong>higher</strong> than the revenue-maximizing price (you don't want to sell cheap units that barely clear cost). So &quot;we grew revenue&quot; and &quot;we grew profit&quot; can be the results of opposite price moves.</p>
+    <hr>
+    <p><strong>Contribution margin is the identity that exposes the trap.</strong> Contribution = (P − c) × Q. A price cut can raise Q enough to grow revenue P·Q while the per-unit margin (P − c) collapses — so revenue is up but contribution is down. Example: c = 6. At P = 10, margin 4 × 1000 units = 4,000. Cut to P = 8, sell 1,400 units: revenue jumps 10,000 → 11,200 (looks great), but contribution 2 × 1,400 = 2,800 — you sold 40% more and made 30% *less* money. Revenue is a vanity target when c is meaningful.</p>
+    <hr>
+    <p><strong>So objective choice is a strategy decision, not a math default.</strong> Maximizing revenue/share makes sense in a land-grab (network effects, near-zero marginal cost, winner-take-most). Maximizing contribution makes sense in a harvest phase or a cost-heavy business. And often the true objective is <strong>long-term customer value</strong> — a low intro price that loses margin now but raises retention and lifetime value. This is the pricing analog of RecSys value-model weighting: the *weights on the objective* are a product decision the model then optimizes faithfully. Pick them wrong and every downstream number is precisely optimized toward the wrong destination.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Revenue and profit peak at different prices.</strong> Revenue P·Q is maximal at |ε| = 1 (MR = 0); profit (P − c)·Q is maximal at MR = MC. They coincide only when marginal cost c = 0. With c &gt; 0 the profit-maximizing price is strictly higher, so revenue-max and profit-max can be opposite moves.</li><li><strong>Contribution = (P − c) × Q is the identity that catches the trap.</strong> A price cut can raise revenue while margin (P − c) collapses. Selling 40% more units at a thin margin routinely yields *less* total contribution — revenue growth with margin destruction is a common and dangerous outcome.</li><li><strong>Objective choice is strategy, not a default.</strong> Revenue/share-max fits a land-grab (near-zero cost, network effects, winner-take-most). Contribution-max fits a harvest phase or cost-heavy unit economics. Long-term customer value (LTV) can justify losing margin now for retention later.</li><li><strong>This is the pricing analog of value-model weighting.</strong> The objective's weights are a product decision; the optimizer then faithfully drives toward whatever you specified. Choose revenue when you meant profit and the model will &quot;succeed&quot; while quietly eroding the business.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>The most consequential pricing choice is the objective itself: revenue P·Q peaks at |ε| = 1 while profit (P − c)·Q peaks at MR = MC, and they coincide only at zero marginal cost — so with real costs the two optimal prices differ. A price cut that grows revenue can shrink contribution (P − c)×Q, so revenue is a vanity metric whenever c matters. Picking revenue vs margin vs LTV is a strategy decision the model then optimizes faithfully.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Revenue and profit peak at different prices:</strong> revenue P·Q maxes at |ε| = 1 (MR = 0); profit (P − c)·Q maxes at MR = MC. They coincide only when c = 0.</li><li><strong>Positive marginal cost → profit-max price is strictly higher</strong> than the revenue-max price. &quot;Grew revenue&quot; and &quot;grew profit&quot; can be opposite price moves.</li><li><strong>Contribution = (P − c) × Q exposes the trap:</strong> a cut can raise revenue while (P − c) collapses. Selling 40% more units at a thin margin can yield 30% *less* money.</li><li><strong>Objective choice is a strategy decision:</strong> revenue/share for a land-grab (near-zero cost, network effects), contribution for a harvest or cost-heavy business, LTV when retention pays back the margin.</li><li><strong>It is the pricing analog of value-model weighting:</strong> the weights are a product decision; the optimizer faithfully drives toward whatever you specify — so a wrong objective &quot;succeeds&quot; while destroying value.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Unit cost c = $6. Cutting price from $10 to $8 raises volume from 1,000 to 1,400 units. Which objective improved and which got worse?</p>
+      <ul class="check-opts"><li>A) Both revenue and contribution improved, so the cut is unambiguously good.</li><li class="correct">B) Revenue improved (10,000 → 11,200) but contribution fell (4×1,000 = 4,000 → 2×1,400 = 2,800) — the classic revenue-up, margin-down outcome; a profit-maximizer would reject this cut.</li><li>C) Contribution improved but revenue fell, so the cut is good only if you optimize margin.</li><li>D) Both fell, so the price cut was strictly dominated.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Under what condition does the revenue-maximizing price equal the profit-maximizing price?</p>
+      <ul class="check-opts"><li>A) When demand is perfectly inelastic (|ε| = 0).</li><li class="correct">B) When marginal cost c = 0, because profit (P − c)·Q then reduces to revenue P·Q, so MR = MC = 0 collapses onto the |ε| = 1 revenue peak. With any positive cost the profit-max price is strictly higher.</li><li>C) When elasticity is exactly |ε| = 2, the midpoint of the elastic range.</li><li>D) Never — the two prices are always different regardless of cost.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> A subscription startup deliberately prices below the contribution-maximizing point in its first two years. What objective is this most consistent with, and is it necessarily irrational?</p>
+      <ul class="check-opts"><li>A) It is irrational — any price below contribution-max destroys value by definition.</li><li class="correct">B) It is optimizing long-term customer value / market share: a low intro price sacrifices near-term margin to raise acquisition and retention, which can maximize LTV under network effects or high switching costs. Whether it is rational depends on whether the retained-value gain exceeds the foregone margin.</li><li>C) It is maximizing revenue, which is always the correct objective for startups.</li><li>D) It is a pricing bug; the model minimized the objective by mistake.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#pricing_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

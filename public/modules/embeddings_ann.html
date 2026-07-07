@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Embeddings + ANN Serving Deep-Dive | ML Systems Lab</title>
+  <meta name="description" content="HNSW vs IVF-PQ, the recall–latency knob, index build/refresh, quantization">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/embeddings_ann.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/embeddings_ann.html">
+  <meta property="og:title" content="Embeddings + ANN Serving Deep-Dive | ML Systems Lab">
+  <meta property="og:description" content="HNSW vs IVF-PQ, the recall–latency knob, index build/refresh, quantization">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Embeddings + ANN Serving Deep-Dive">
+  <meta name="twitter:description" content="HNSW vs IVF-PQ, the recall–latency knob, index build/refresh, quantization">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Embeddings + ANN Serving Deep-Dive",
+  "description": "HNSW vs IVF-PQ, the recall–latency knob, index build/refresh, quantization",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/embeddings_ann.html",
+  "keywords": "ANN, HNSW, IVF-PQ, quantization, retrieval"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#system_design_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">26 min read</span>
+      <span class="tag">ANN</span><span class="tag">HNSW</span><span class="tag">IVF-PQ</span><span class="tag">quantization</span><span class="tag">retrieval</span>
+    </div>
+    <h1>Embeddings + ANN Serving Deep-Dive</h1>
+    <p class="subtitle">HNSW vs IVF-PQ, the recall–latency knob, index build/refresh, quantization</p>
+
+    <p>Once retrieval is a dot product between a query embedding and every item embedding, the bottleneck is search, not the model. Exact nearest-neighbor over 100M vectors of dimension 256 is 100M·256 ≈ 25.6 billion multiply-adds per query — hopeless in 10ms. Approximate nearest-neighbor (ANN) trades a sliver of recall for two-to-three orders of magnitude speedup.</p>
+    <hr>
+    <p><strong>HNSW builds a navigable graph; IVF-PQ partitions and compresses.</strong> HNSW (hierarchical navigable small world) links each vector to a few neighbors across layered graphs, so a query &quot;greedily walks&quot; from an entry point to its neighborhood in ~log(N) hops — very fast, very high recall, but the full float vectors sit in RAM (100M × 256 × 4 bytes ≈ 100GB). IVF-PQ instead clusters vectors into, say, 4096 cells (search only the nearest few), and product-quantizes each vector — splitting 256 dims into 32 sub-vectors, each mapped to one of 256 centroids — so a vector shrinks from 1024 bytes to 32 bytes, a 32× compression that fits 100M vectors in ~3GB.</p>
+    <hr>
+    <p><strong>Recall and latency are one knob, turned at query time.</strong> HNSW's `efSearch` (how many candidates to keep on the walk) and IVF's `nprobe` (how many cells to scan) both trade recall for latency continuously: nprobe=8 might hit 0.92 recall at 3ms, nprobe=64 hits 0.99 recall at 12ms. You don't pick &quot;an index&quot; — you pick an operating point on its recall–latency curve, and that point is a product decision (how many good candidates can the funnel afford to lose?).</p>
+    <hr>
+    <p><strong>Build cost and staleness are the operational tax.</strong> HNSW graph construction is O(N·log N) and expensive to mutate, so high-churn catalogs favor periodic rebuilds or a small &quot;fresh&quot; index searched alongside the main one. Quantization (PQ) is lossy: the 32× compression that saves RAM also blurs fine distances, costing a few points of recall — acceptable at retrieval (the ranker re-scores anyway) but never in the final ranker.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Exact NN is infeasible at scale; ANN buys ~100–1000× speedup for a few points of recall.</strong> 100M × 256-dim exact search ≈ 25.6B MACs/query — impossible in budget. ANN is not an optimization, it's the only way retrieval runs in real time.</li><li><strong>HNSW = graph walk (fast, high recall, RAM-heavy); IVF-PQ = partition + quantize (compact, tunable, mildly lossy).</strong> HNSW keeps full float vectors (~100GB for 100M×256); IVF-PQ compresses 1024B → 32B (~32×, ~3GB) by splitting into sub-vectors and centroid-coding each. Choose by whether RAM or recall is the binding constraint.</li><li><strong>Recall and latency are a single tunable knob (efSearch / nprobe), set at query time.</strong> More candidates scanned → higher recall, higher latency. You select an operating point on the curve, not a fixed index — and that point is a business call about how many good candidates the funnel can lose.</li><li><strong>Build cost and quantization loss are the operational reality.</strong> HNSW is costly to mutate → high-churn catalogs use rebuilds or a side &quot;fresh&quot; index; PQ's compression is lossy, tolerable at retrieval (the ranker re-scores) but not in final ranking.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>ANN serving turns retrieval's dot-product-over-millions into a tunable recall–latency tradeoff: HNSW greedily walks a navigable graph (fast, high-recall, RAM-heavy) while IVF-PQ partitions and product-quantizes vectors (32× smaller, mildly lossy), and in both you pick an operating point (efSearch/nprobe) rather than a fixed index.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Once retrieval is a dot product, the bottleneck is search, not the model:</strong> exact NN over 100M vectors of dim 256 is 100M·256 ≈ 25.6B multiply-adds/query — hopeless in 10ms. ANN (approximate nearest-neighbor) trades a sliver of recall for 100–1000× speedup; it's not an optimization, it's the only way retrieval runs in real time.</li><li><strong>HNSW builds a navigable graph:</strong> each vector links to a few neighbors across layered graphs, so a query greedily walks from an entry point to its neighborhood in ~log(N) hops — very fast, very high recall, but the full float vectors sit in RAM (100M × 256 × 4B ≈ 100GB).</li><li><strong>IVF-PQ partitions and compresses:</strong> cluster vectors into ~4096 cells (search only the nearest few), and product-quantize each — splitting 256 dims into 32 sub-vectors, each mapped to one of 256 centroids — so a vector shrinks 1024B → 32B (32×), fitting 100M vectors in ~3GB, mildly lossy. Choose HNSW vs IVF-PQ by whether recall or RAM is the binding constraint.</li><li><strong>Recall and latency are one knob, turned at query time:</strong> HNSW's efSearch and IVF's nprobe both trade recall for latency continuously (nprobe=8 → 0.92 recall at 3ms; nprobe=64 → 0.99 at 12ms). You don't pick &quot;an index,&quot; you pick an operating point on its recall–latency curve — a product decision about how many good candidates the funnel can afford to lose.</li><li><strong>Build cost and quantization loss are the operational tax:</strong> HNSW graphs are O(N·log N) to build and expensive to mutate, so high-churn catalogs use periodic rebuilds or a small &quot;fresh&quot; index searched alongside the main one. PQ's compression is lossy — acceptable at retrieval (the ranker re-scores anyway), never in the final ranker.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You must index 200M 256-dim vectors but have only 8GB of RAM per serving node. Exact search and plain HNSW both overflow memory. Which approach fits, and what's the cost?</p>
+      <ul class="check-opts"><li>A) Reduce embedding dimension to 4 so full vectors fit; recall stays high because low dimensions are easier to search.</li><li>B) Store all vectors on disk and do exact search per query; SSD latency is negligible at this scale.</li><li class="correct">C) IVF-PQ: cluster into cells and product-quantize each vector (e.g., 256 dims → 32 sub-vectors × 1 byte = 32B/vector ≈ 6.4GB for 200M), accepting a small recall loss from lossy quantization that the downstream ranker re-scores away.</li><li>D) Switch to a cross-encoder so no index is needed at all.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Retrieval recall@1000 is 0.90 at nprobe=8 and 3ms. The latency budget allows 12ms and the ranker keeps missing relevant items. What's the correct single-knob change?</p>
+      <ul class="check-opts"><li>A) Rebuild the index nightly instead of weekly — staleness, not recall, is the issue.</li><li class="correct">B) Raise nprobe (e.g., 8 → 64) so more IVF cells are scanned, lifting recall toward ~0.99 while staying within the 12ms budget — you're moving along the recall–latency curve, not changing index type.</li><li>C) Lower nprobe to 2 to speed up search, freeing time for the ranker to compensate.</li><li>D) Switch dot-product to cosine similarity; recall improves for free.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> A catalog adds and removes thousands of items per minute. Retrieval keeps returning deleted items and missing brand-new ones, even though HNSW recall benchmarks are excellent. What's the underlying issue?</p>
+      <ul class="check-opts"><li>A) HNSW recall degrades above 10M vectors; shard the index into smaller pieces.</li><li>B) efSearch is set too high, causing the walk to revisit deleted nodes; lower it.</li><li>C) Product quantization is corrupting the new vectors; disable PQ and the freshness problem resolves.</li><li class="correct">D) HNSW graphs are costly to mutate, so a periodically-rebuilt index goes stale between builds — new items aren't in it and deleted ones linger. Fix with a small frequently-refreshed &quot;fresh&quot; index searched alongside the main one (or incremental upserts), not a bigger main index.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#system_design_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

@@ -38,8 +38,8 @@
       "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
     }
   },
-  "datePublished": "2026-06-20",
-  "dateModified": "2026-06-20",
+  "datePublished": "2026-07-07",
+  "dateModified": "2026-07-07",
   "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/spark-shuffle-mental-model.html",
   "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
   "keywords": "PySpark, Performance, Internals, Spark UI"
@@ -83,10 +83,10 @@
 <li>GC Time: high GC = executor heap pressure = likely spill incoming.</li>
 <li>Spill (memory): amount spilled from RAM to disk. Non-zero = your partitions are too large for executor heap.</li>
 <h2>The key dials:</h2>
-<li>\`spark.sql.shuffle.partitions\` (default: 200): target 128–256 MB per partition after shuffle. For 100GB of shuffled data: 100*1024 / 200 = 512 MB per partition — too large. Try 800.</li>
-<li>\`spark.sql.autoBroadcastJoinThreshold\` (default: 10MB): raise to 500MB if one join side fits.</li>
-<li>\`spark.sql.adaptive.enabled=true\`: AQE dynamically coalesces small partitions and splits large ones at runtime. Enable by default in Spark 3.</li>
-<p><strong>AQE is not magic.</strong> It can't save a job with a 5000:1 key skew if you haven't enabled AQE skew join (\`spark.sql.adaptive.skewJoin.enabled=true\`). And even with skew join enabled, extremely hot keys (> 20× median) may require explicit salting.</p>
+<li>`spark.sql.shuffle.partitions` (default: 200): target 128–256 MB per partition after shuffle. For 100GB of shuffled data: 100*1024 / 200 = 512 MB per partition — too large. Try 800.</li>
+<li>`spark.sql.autoBroadcastJoinThreshold` (default: 10MB): raise to 500MB if one join side fits.</li>
+<li>`spark.sql.adaptive.enabled=true`: AQE dynamically coalesces small partitions and splits large ones at runtime. Enable by default in Spark 3.</li>
+<p><strong>AQE is not magic.</strong> It can't save a job with a 5000:1 key skew if you haven't enabled AQE skew join (`spark.sql.adaptive.skewJoin.enabled=true`). And even with skew join enabled, extremely hot keys (> 20× median) may require explicit salting.</p>
 
     <div class="cta">
       <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>

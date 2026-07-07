@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Time Series Anomaly Detection | ML Systems Lab</title>
+  <meta name="description" content="Point/contextual/collective anomalies, CUSUM, STL residuals, LSTM autoencoders, adaptive thresholds">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/ts_anomaly_detection.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/ts_anomaly_detection.html">
+  <meta property="og:title" content="Time Series Anomaly Detection | ML Systems Lab">
+  <meta property="og:description" content="Point/contextual/collective anomalies, CUSUM, STL residuals, LSTM autoencoders, adaptive thresholds">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Time Series Anomaly Detection">
+  <meta name="twitter:description" content="Point/contextual/collective anomalies, CUSUM, STL residuals, LSTM autoencoders, adaptive thresholds">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Time Series Anomaly Detection",
+  "description": "Point/contextual/collective anomalies, CUSUM, STL residuals, LSTM autoencoders, adaptive thresholds",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/ts_anomaly_detection.html",
+  "keywords": "anomaly detection, CUSUM, STL, LSTM autoencoder, isolation forest, contextual anomaly"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#time_series_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">55 min read</span>
+      <span class="tag">anomaly detection</span><span class="tag">CUSUM</span><span class="tag">STL</span><span class="tag">LSTM autoencoder</span><span class="tag">isolation forest</span>
+    </div>
+    <h1>Time Series Anomaly Detection</h1>
+    <p class="subtitle">Point/contextual/collective anomalies, CUSUM, STL residuals, LSTM autoencoders, adaptive thresholds</p>
+
+    <p>Time series anomaly detection fails in production for one specific reason more than any other: teams apply a threshold to the raw series instead of the residuals of a properly specified seasonal and trend model. An API error rate of 10,000 per minute is normal during peak traffic and anomalous at 3am — but a static threshold treats both identically. The raw series conflates seasonality, trend, and anomaly signal into a single number; a threshold on raw values fires whenever any component is high, including seasonality that's entirely expected. Decompose first, threshold on the residuals, and nearly all seasonality-driven false positives disappear. The quality ceiling for any anomaly detector is the quality of its baseline model — the residuals are only as clean as the decomposition.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Applying a static threshold to a seasonal series produces false positives every time the seasonal component peaks — not because anything unusual happened, but because the underlying cycle reached its expected high.</strong> Decompose
+
+$Y_t = T_t + S_t + R_t, then threshold R_t. Point anomaly: |R_t| &gt; k·σ_R where σ_R is an IQR-based robust standard devia$
+
+tion and k=3-4. The decomposition removes expected variation; the threshold detects unexpected deviation. This single change eliminates the majority of seasonality-driven false positives in most production monitoring systems.</li><li><strong>Three anomaly types require different detection strategies.</strong> Point anomalies: a single observation far from expected (latency spike, sensor error). Contextual anomalies: a value normal in one context but anomalous in another — 500 sales on a random Tuesday versus 500 sales on Black Friday (should be 50,000). Collective anomalies: a sequence of individually normal observations that are jointly anomalous — 5 days of conversion rate 1% below normal, each individually within tolerance but collectively a significant degradation. Each type requires a different detection approach.</li><li><strong>CUSUM (Cumulative Sum Control Chart): C_t = max(0, C_{t-1} + (Y_t − μ₀ − k)).</strong> Alert when C_t &gt; h. Directional — it accumulates evidence of sustained shift rather than reacting to single spikes. This makes CUSUM naturally suited for detecting collective anomalies (sustained shifts) and resistant to false positives from individual noisy observations. Requires specifying μ₀ and k — doesn't adapt to non-stationary baselines or seasonality without preprocessing (decompose first, then apply CUSUM to residuals).</li><li><strong>Isolation Forest for time series requires careful feature engineering.</strong> Applied to raw values, it ignores temporal structure entirely — it doesn't know that observation 100 follows observation 99. The correct input is a feature matrix: lag values [Y_{t-1}, Y_{t-2}, ...], rolling mean, rolling std, time-of-day, day-of-week. Without lag features, Isolation Forest is a point anomaly detector with no temporal awareness. It also cannot detect collective anomalies without explicit sliding window features encoding the joint distribution of a sequence.</li><li><strong>LSTM Autoencoders encode a time window and decode it back, using reconstruction error as the anomaly score.</strong> Trained on normal data only. High reconstruction error = the window is unusual relative to training distribution. The production problem is threshold calibration: the reconstruction error distribution shifts as the system drifts (concept drift), so a static threshold set at training time produces increasing false positives over time. Use a rolling calibration window — 99th percentile of reconstruction error over the past 7-14 days as the threshold, updated daily.</li><li><strong>Adaptive thresholds are necessary when variance is non-constant, when the series has multiple operating modes, or when you need to directly control the alert rate.</strong> Static 3-sigma fails on all three counts. EWMA control charts adapt to recent variance. Quantile regression estimates conditional quantiles as functions of time features (capturing time-varying variance). Conformal prediction provides coverage-guaranteed anomaly scores without distributional assumptions — the alert fires when the score falls in the top α fraction of calibration set scores, guaranteeing at most α false positive rate by construction.</li><li><strong>Root cause vs symptom: a single upstream failure propagates through a dependency graph and produces correlated anomalies across dozens of downstream metrics simultaneously, flooding the alert queue.</strong> A DB failure causes API latency, cache miss rate, and error rate to all spike within seconds. Alert flooding without root cause identification means incident responders chase symptoms while the root cause persists. Multi-variate anomaly detection finds correlated joint anomalies; causal graph traversal identifies whether the anomaly originated upstream or is local. Alert correlation groups alerts firing within the same time window into a single incident.</li><li><strong>Evaluation when labels are scarce: PR-AUC (precision-recall) beats ROC-AUC for imbalanced anomaly detection — imbalance is extreme (1 anomaly per 1000 normal observations), so ROC-AUC is dominated by the large number of true negatives.</strong> NAB (Numenta Anomaly Benchmark) score rewards early detection within a window before impact — detection two hours late is still valuable, just less so than detection immediately. Precision@k (fraction of top-k flagged events that are true anomalies) is practical when operators review top-ranked alerts.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Nearly all production false-positive problems in time series anomaly detection trace back to applying a threshold to the raw series instead of the residuals of a properly specified seasonal+trend model. The decompose-first, threshold-on-residuals pattern eliminates seasonality-driven false positives immediately. The second most important insight is distinguishing root causes from downstream symptoms via causal graph traversal: a single upstream failure floods the alert queue with correlated alerts across dozens of metrics, and incident response fails when teams chase symptoms while the root cause persists.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>#1 production failure:</strong> thresholding the raw series instead of decomposition residuals → seasonal false positives.</li><li><strong>Decompose `Y=T+S+R`, threshold R_t</strong> (|R|&gt;k·σ, IQR-based, k=3-4) — kills seasonality-driven alerts.</li><li><strong>Three types:</strong> point (single spike), contextual (500 sales normal Tue vs Black Friday), collective (sustained drift).</li><li><strong>CUSUM</strong> accumulates evidence of sustained shift — good for collective anomalies, resistant to single spikes.</li><li><strong>LSTM autoencoder:</strong> reconstruction error as score, trained on normal data; needs rolling threshold recalibration (concept drift).</li><li><strong>Adaptive thresholds</strong> (EWMA, quantile regression, conformal) beat static 3-sigma; conformal guarantees ≤α FPR.</li><li><strong>Root cause vs symptom:</strong> one upstream failure floods alerts across metrics — trace causal graph, don't chase symptoms.</li><li><strong>Imbalanced eval:</strong> PR-AUC beats ROC-AUC; NAB rewards early detection.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Your 3-sigma threshold on raw API error rate generates 200 false-positive alerts per day because of daily and weekly seasonality. What is the right fix?</p>
+      <ul class="check-opts"><li>A) Increase the threshold from 3-sigma to 5-sigma; the higher threshold will reduce false positives caused by seasonal peaks without requiring any decomposition step.</li><li class="correct">B) Decompose the series with STL, compute residuals R_t = Y_t − T_t − S_t, apply a 3-sigma threshold on the residuals using IQR-based σ̂, and alert when |R_t| &gt; 3σ̂. Further: use an EWMA control chart on residuals and set alert rate using 99th percentile over a rolling 14-day window.</li><li>C) Apply separate 3-sigma thresholds for each hour of the day and each day of the week; stratifying by calendar period removes the seasonal false positives without requiring a decomposition model.</li><li>D) Switch from a 3-sigma threshold to an interquartile range (IQR) based threshold on the raw series; the IQR is more robust to seasonal outliers than the standard deviation and will reduce false positive rate.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> You use an LSTM autoencoder for multivariate anomaly detection on 50 metrics. The reconstruction error correctly identifies an outage on day 15 of deployment, but by day 90 the false positive rate has tripled. What happened and how do you fix it?</p>
+      <ul class="check-opts"><li>A) The LSTM autoencoder has overfit to the day-15 outage pattern and now flags any deviation from that specific pattern as anomalous; retrain on a dataset that excludes the day-15 outage.</li><li>B) The 50-metric dimensionality causes the autoencoder to gradually memorise normal patterns rather than generalise; apply PCA to reduce to 10 components before feeding into the autoencoder.</li><li>C) The LSTM hidden state becomes saturated after 90 days of continuous inference; reset the hidden state every 7 days and the false positive rate will return to its original level.</li><li class="correct">D) Concept drift: normal behaviour shifted over 90 days but the autoencoder still uses its day-0 training distribution, causing new normal data to appear anomalous. Fix: periodic retraining on a rolling 30-60 day window, plus adaptive threshold calibrated daily as 99th percentile of recent reconstruction errors. Trigger retraining when the mean reconstruction error drifts upward.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> You detect a latency spike anomaly in your API service. Your colleague says it is a &quot;real anomaly.&quot; You say it is a downstream symptom. How do you distinguish, and what are the implications for incident response?</p>
+      <ul class="check-opts"><li>A) Check whether the API latency anomaly score exceeds the 99th vs 95th percentile threshold; a score above the 99th percentile indicates a root cause, while a 95th-percentile score indicates a downstream symptom.</li><li>B) Run Granger causality from upstream metrics to API latency; if the test is significant at p &lt; 0.05 the API latency is a downstream symptom driven by the upstream metric.</li><li class="correct">C) Check temporal order across metrics (did upstream DB anomaly precede API latency?), trace the call graph (API → DB → Storage), and cross-correlate anomaly times to find the earliest-onset metric. Root cause mitigation on the symptom leads to incorrect incident response — build a causal dependency graph and run automated root cause analysis.</li><li>D) Always treat the first anomaly detected as the root cause regardless of metric type; downstream symptoms always appear simultaneously with root causes because modern distributed systems have sub-second propagation latency.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> You are designing an anomaly detection system for 10,000 IoT sensors. Labelled anomalies exist for only 50 sensors. How do you evaluate model performance across all 10,000?</p>
+      <ul class="check-opts"><li>A) Evaluate only on the 50 labelled sensors; performance on unlabelled sensors cannot be measured and reporting it would misrepresent model quality.</li><li>B) Use the 50 labelled sensors to tune thresholds, then apply those thresholds uniformly to all 10,000 sensors and report the alert rate as the primary evaluation metric.</li><li>C) Train a semi-supervised model using the 50 labelled sensors as positive examples and all remaining sensors as negative; the F1-score on the 50 labelled sensors is sufficient evaluation.</li><li class="correct">D) Supervised evaluation on 50 labelled sensors (PR-AUC/F1), check representativeness. Surrogate evaluation via synthetic anomaly injection on unlabelled sensors. Monitor alert rate across 10k sensors for miscalibration. Human-review sample 100 triggered alerts to estimate precision. Active learning to prioritise labelling high-scoring ambiguous cases.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#time_series_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bayesian Inference | ML Systems Lab</title>
+  <meta name="description" content="Likelihood, prior, posterior, conjugate priors, predictive distribution, sequential updating">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/bayesian_inference--probabilistic_ml_foundation.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/bayesian_inference--probabilistic_ml_foundation.html">
+  <meta property="og:title" content="Bayesian Inference | ML Systems Lab">
+  <meta property="og:description" content="Likelihood, prior, posterior, conjugate priors, predictive distribution, sequential updating">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Bayesian Inference">
+  <meta name="twitter:description" content="Likelihood, prior, posterior, conjugate priors, predictive distribution, sequential updating">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Bayesian Inference",
+  "description": "Likelihood, prior, posterior, conjugate priors, predictive distribution, sequential updating",
+  "proficiencyLevel": "Foundational",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/bayesian_inference--probabilistic_ml_foundation.html",
+  "keywords": "bayes, posterior, prior, likelihood, conjugate priors, credible interval"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#probabilistic_ml_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Foundational</span>
+      <span class="read-time">50 min read</span>
+      <span class="tag">bayes</span><span class="tag">posterior</span><span class="tag">prior</span><span class="tag">likelihood</span><span class="tag">conjugate priors</span>
+    </div>
+    <h1>Bayesian Inference</h1>
+    <p class="subtitle">Likelihood, prior, posterior, conjugate priors, predictive distribution, sequential updating</p>
+
+    <p>You flip a coin 3 times and get H, H, H. The frequentist MLE gives P(H) = 3/3 = 1.0 — the model is certain the coin always lands heads. But you only have 3 flips. The model has fit the data perfectly and is telling you something obviously wrong. This is what happens when you collapse inference to a single point estimate without tracking uncertainty.</p>
+    <p>Bayesian inference solves this by maintaining a full distribution over the unknown parameter rather than collapsing to one value. The update rule is: posterior ∝ likelihood × prior. With a uniform prior Beta(1, 1) — encoding no prior knowledge about the coin — and likelihood P(data | θ) = θ³, the posterior is Beta(4, 1).</p>
+    <p>The posterior mean is 4/5 = 0.8, not 1.0. The prior has pulled the estimate away from the degenerate MLE, encoding the reasonable belief that most coins are somewhere near fair.</p>
+    <p>The key mechanism: the prior's influence is inversely proportional to the amount of data. With 3 flips, the posterior is 0.8 — meaningfully different from MLE. With 300 flips and 300 heads, the posterior mean is 300/302 ≈ 0.99 — nearly identical to MLE. The likelihood dominates and the prior washes out. This is the correct behavior: priors matter when data is scarce and become irrelevant when data is abundant.</p>
+    <p>The practical cost of this framework is the denominator in Bayes' theorem: p(θ | X) = p(X | θ) p(θ) / p(X), where p(X) = ∫ p(X | θ) p(θ) dθ requires integrating the likelihood over the entire parameter space. For conjugate models, this integral is analytic. For everything else — which is most real models — it has no closed form, and the entire ecosystem of approximate inference methods (MCMC, variational inference, Laplace approximation) exists to avoid or approximate this integral.</p>
+    <p><strong>NOT this.</strong> &quot;Bayesian methods are computationally intractable.&quot; For conjugate prior-likelihood pairs, the posterior is analytic — no integration required. Beta + Binomial, Gaussian + Gaussian, Dirichlet + Categorical all yield closed-form posteriors. For non-conjugate problems, variational inference reframes the posterior computation as an optimization problem, and MCMC constructs a Markov chain whose stationary distribution is the posterior. Bayesian deep learning with MC Dropout adds a single forward pass with dropout active at test time. The intractability is real but narrower than it appears: it applies only to the exact normalizing constant, and every major approximate inference method has a principled strategy for working around it.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Bayes' theorem: p(θ|X) = p(X|θ)p(θ) / p(X).</strong> The normaliser p(X) = ∫ p(X|θ)p(θ)dθ requires integrating the likelihood over the entire parameter space, which has no closed form for most real models. This is why posterior ∝ likelihood × prior is the workable form — the intractable constant drops out. It also why every approximate inference method (MCMC, VI, conjugate priors) exists: each is a different strategy for avoiding or approximating that integral.</li><li><strong>Likelihood p(X|θ) is a function of θ given fixed data — it scores how well θ explains what you observed.</strong> It is not a probability distribution over θ and does not integrate to 1 over θ. Conflating likelihood with probability over parameters leads to a specific error: treating the parameter value that maximises the likelihood as the most probable one, ignoring the prior. MLE is valid; calling the MLE the &quot;most probable&quot; parameter is Bayesian reasoning without the prior.</li><li><strong>Conjugate priors are a computational shortcut: choose a prior from a family where the posterior stays in the same family after multiplying by the likelihood, giving closed-form updates with no integration.</strong> Beta(α,β) + Binomial data → Beta(α + successes, β + failures). Gaussian prior on μ + Gaussian likelihood → Gaussian posterior. Dirichlet + categorical → Dirichlet. This convenience comes at a cost: the conjugate family constrains what shapes your prior can take, which may not match your actual beliefs — the mathematical convenience is real but the resulting prior may not be.</li><li><strong>The correct Bayesian predictive distribution integrates over the full posterior: p(x*|X) = ∫ p(x*|θ)p(θ|X)dθ.</strong> Plugging in the MAP estimate instead — the common shortcut — treats a point estimate as if it were certain, systematically underestimating predictive uncertainty. In low-data regimes, this underestimate is large enough to make wrong decisions. The correct predictive distribution is wider, especially where the posterior is spread out.</li><li><strong>Bayesian A/B testing with Beta-Binomial: after observing conversions, p_A and p_B have Beta posteriors.</strong> P(A beats B) = ∫∫ 1[p_A &gt; p_B] p(p_A|data) p(p_B|data) dp_A dp_B — computable analytically or by Monte Carlo. This is a direct probability statement about which variant is better, not a p-value. You stop when P(A &gt; B) clears your decision threshold (e.g., 95%). No null hypothesis needed — the question is framed exactly as &quot;how likely is it that A is better?&quot;</li><li><strong>Credible intervals and confidence intervals answer different questions.</strong> A 95% Bayesian credible interval [L, U] means P(θ ∈ [L,U] | data) = 0.95 — a direct probability statement about where the parameter is. A 95% frequentist confidence interval means that if you repeated the experiment many times, 95% of the resulting intervals would contain the true θ. For any single computed interval, the true θ either is or isn't in it. Credible intervals are what stakeholders intuitively mean when they ask &quot;how likely is it that the true value is in this range?&quot; — confidence intervals don't answer that question.</li><li><strong>Sequential Bayesian updating is the natural model for streaming systems: the posterior from today becomes the prior for tomorrow.</strong> With Beta-Binomial, after day 1 you have Beta(α₁, β₁); feed it new data on day 2 and you get Beta(α₁ + new_successes, β₁ + new_failures). No reprocessing of historical data. The prior from yesterday is a sufficient summary of everything observed so far — this is what makes it computationally attractive for systems that must update continuously.</li><li><strong>Prior sensitivity is the thing practitioners skip and then regret.</strong> In low-data regimes, the prior dominates — your conclusions are largely determined by what you assumed before seeing any data. In high-data regimes, the likelihood takes over and the prior washes out. Always sanity-check: re-run with a more diffuse prior. If the posterior shifts substantially, you do not yet have enough data to draw firm conclusions — the result is prior-driven, not data-driven.</li><li><strong>MAP (Maximum A Posteriori) estimate: θ_MAP = argmax_θ [log p(X|θ) + log p(θ)].</strong> This is regularised MLE — L2 regularisation corresponds to a Gaussian prior, L1 to a Laplace prior. MAP is often the right production choice (fast, no integration), but it collapses the posterior to a point and discards all information about posterior shape. Using a MAP estimate for predictions is the same as ignoring posterior uncertainty.</li><li><strong>Priors that look uninformative often aren't.</strong> A uniform prior over θ ∈ [0,1] looks neutral but assigns equal probability to CTR = 0.01 and CTR = 0.99 — which may be a strong prior in a context where rates above 20% are implausible. A uniform prior over log(θ) implies a very different belief. Always ask what your prior implies about the quantities you actually care about, not just the parameterisation you happened to write down.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>The practical cost of collapsing to a point estimate (MAP) shows up in the predictive distribution: MAP plugged into p(x*|θ̂) underestimates uncertainty because it pretends the parameter is known exactly. The correct predictive distribution integrates over the posterior and is wider, especially in low-data regimes. The credible interval vs confidence interval distinction is the sharpest interview signal: credible intervals are direct probability statements about where the parameter is; confidence intervals are long-run coverage guarantees that say nothing about any single computed interval.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Posterior ∝ likelihood × prior.</strong> 3 flips HHH: MLE = 1.0 (degenerate); Beta(1,1) prior → Beta(4,1), posterior mean 0.8.</li><li><strong>Prior's pull is inversely proportional to data:</strong> dominates when scarce, washes out when abundant (300/300 → 0.99 ≈ MLE).</li><li><strong>The hard part is the normaliser $p(X)=int p(X|θ)p(θ)dθ$</strong> — analytic only for conjugate pairs; MCMC/VI/Laplace exist to dodge it.</li><li><strong>Conjugate priors = closed-form updates:</strong> Beta+Binomial, Gaussian+Gaussian, Dirichlet+Categorical — convenient but constrains prior shape.</li><li><strong>MAP = regularised MLE</strong> (L2 ↔ Gaussian prior, L1 ↔ Laplace); collapses posterior to a point, discards uncertainty.</li><li><strong>Predictive distribution integrates over the posterior</strong> — plugging in MAP underestimates uncertainty, badly in low-data.</li><li><strong>Credible ≠ confidence:</strong> credible = direct $P(θ∈[L,U]|data)$; confidence = long-run coverage, silent on any single interval.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You run a Bayesian A/B test. After 500 conversions each, the posterior P(p_A &gt; p_B | data) = 0.94. Your decision threshold is 0.95. Your boss says &quot;just call it — it's clearly A&quot;. What do you do and why?</p>
+      <ul class="check-opts"><li class="correct">A) Do not call it yet — examine expected loss first. P(A&gt;B)=0.94 is below threshold; the 6% chance B is better is non-negligible. Compute expected revenue loss if A is rolled out but B is actually better before deciding.</li><li>B) Call it for A immediately, since 0.94 is practically indistinguishable from 0.95 and further data collection is wasteful when the result is this clear.</li><li>C) Reject A and collect more data indefinitely until P(A&gt;B) reaches exactly 1.0, since Bayesian thresholds must be met precisely.</li><li>D) Switch to a frequentist p-value test, since Bayesian thresholds are inherently subjective and cannot support a business decision.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> What is the marginal likelihood p(X) in Bayes' theorem and why is it hard to compute?</p>
+      <ul class="check-opts"><li>A) p(X) is the maximum likelihood estimate of the data and is hard to compute because gradient ascent is slow in high dimensions.</li><li>B) p(X) is the prior probability of the parameters and is hard to compute because priors are often improper.</li><li class="correct">C) p(X) = ∫ p(X|θ)p(θ)dθ is the normalising constant requiring integration over all parameters. It is intractable for continuous high-dimensional θ, which is why MCMC, VI, and conjugate shortcuts exist.</li><li>D) p(X) is the posterior mode and is hard to compute because the likelihood surface has multiple local optima.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> You have Beta(2,2) prior on a coin's bias θ. You flip it 3 times and observe HHH. What is the posterior and MAP estimate? How does this differ from the MLE?</p>
+      <ul class="check-opts"><li>A) Posterior is Beta(3,2), MAP = 0.5, MLE = 1.0. The prior has no effect on MAP since the Beta family is not conjugate to the Binomial.</li><li class="correct">B) Posterior is Beta(5,2), MAP = 4/5 = 0.8, MLE = 3/3 = 1.0. The prior pulls the estimate away from the degenerate MLE of 1.0; the posterior mean E[θ|data] = 5/7 ≈ 0.71 is even more conservative.</li><li>C) Posterior is Beta(5,2), MAP = 1.0, MLE = 0.8. With only 3 observations the prior dominates, so MAP equals MLE.</li><li>D) Posterior is Beta(2,5), MAP = 2/7 ≈ 0.29, MLE = 0.0. The symmetric prior pulls the estimate toward zero as a regularisation effect.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> When would you NOT use Bayesian inference in production and use frequentist methods instead?</p>
+      <ul class="check-opts"><li>A) When you have very large datasets, since Bayesian inference is only valid for small samples and the prior always dominates in large-data regimes.</li><li>B) When the model has a closed-form posterior, since frequentist methods are required whenever the posterior is available analytically.</li><li>C) When you want to report p-values, since Bayesian methods can always compute equivalent p-values but frequentist methods are more accurate.</li><li class="correct">D) When computational cost is prohibitive, when the prior is hard to specify and small data makes it matter, when regulatory compliance mandates frequentist framing, or when the model is too large for practical Bayesian inference over all weights.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#probabilistic_ml_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

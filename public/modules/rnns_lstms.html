@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RNNs &amp; LSTMs | ML Systems Lab</title>
+  <meta name="description" content="Vanishing gradient in sequences, gate mechanisms, hidden state, when to still use them">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/rnns_lstms.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/rnns_lstms.html">
+  <meta property="og:title" content="RNNs &amp; LSTMs | ML Systems Lab">
+  <meta property="og:description" content="Vanishing gradient in sequences, gate mechanisms, hidden state, when to still use them">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="RNNs &amp; LSTMs">
+  <meta name="twitter:description" content="Vanishing gradient in sequences, gate mechanisms, hidden state, when to still use them">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "RNNs & LSTMs",
+  "description": "Vanishing gradient in sequences, gate mechanisms, hidden state, when to still use them",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/rnns_lstms.html",
+  "keywords": "RNN, LSTM, GRU, vanishing gradient, sequential data"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#dl_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">31 min read</span>
+      <span class="tag">RNN</span><span class="tag">LSTM</span><span class="tag">GRU</span><span class="tag">vanishing gradient</span><span class="tag">sequential data</span>
+    </div>
+    <h1>RNNs &amp; LSTMs</h1>
+    <p class="subtitle">Vanishing gradient in sequences, gate mechanisms, hidden state, when to still use them</p>
+
+    <p>Try to classify the sentiment of &quot;The movie was not good.&quot; Process it token by token with a vanilla RNN. At each step, the hidden state h_t is updated: h_t = tanh(W_h · h_{t-1} + W_x · x_t). By the time the model reaches &quot;good,&quot; it needs to remember that &quot;not&quot; appeared two steps earlier to get the sentiment right. The gradient of the loss with respect to h_0 — the state that captured &quot;not&quot; — must travel back through 4 Jacobian matrices, one per timestep. Each Jacobian for the tanh activation has a spectral radius that, on average, is less than 1. Multiply four of them together and the gradient shrinks: if each Jacobian contributes a factor of 0.5, the combined factor is 0.5⁴ = 0.0625. After 20 steps the factor is 0.5²⁰ ≈ 10⁻⁶. The model cannot learn that &quot;not&quot; reverses the sentiment — the signal from that early token cannot reach the loss gradient strongly enough to update the corresponding weights.</p>
+    <p>The LSTM was designed specifically to defeat this. Rather than passing the gradient only through the hidden state h_t, it adds a cell state C_t with an additive update path: C_t = f_t ⊙ C_{t-1} + i_t ⊙ g_t. The forget gate f_t ∈ (0, 1) decides how much of the previous cell state to keep. The gradient of C_t with respect to C_{t-1} is f_t — and the LSTM can learn to keep f_t near 1 for timesteps where memory should be preserved. When f_t ≈ 1, the gradient flows backward through the cell state unchanged, giving the early token a direct path to the loss. The input gate i_t decides what new information to write to the cell state. The output gate o_t decides what to expose as the hidden state h_t = o_t ⊙ tanh(C_t). The GRU achieves similar behavior with two gates instead of four, fewer parameters, and empirically comparable performance on most tasks.</p>
+    <p><strong>NOT this.</strong> &quot;Transformers made RNNs obsolete.&quot; For offline NLP with the full sequence available, transformers win on almost every benchmark. But RNNs remain the correct tool for streaming inference: when you are processing an audio stream, a live trading feed, or a robotics sensor reading, you do not have the full sequence at inference time. Transformer attention requires all positions to be present simultaneously — O(n²) memory to compute the attention matrix. An RNN processes each new token in O(1) with fixed memory. For sequences beyond ~16K tokens where attention memory becomes prohibitive, or for tasks with strict sequential causality and real-time constraints, the RNN is not a fallback — it is the right architecture.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Use LSTMs for sequential tasks where the full sequence is not available at inference time — streaming audio, live trading, real-time sensor processing.</strong>
+
+Transformer attention requires all positions simultaneously; an LSTM processes each new token in O(1) with fixed memory. That is the decision boundary: if inference is sequential and unbounded, use an LSTM. If inference can wait for the full sequence and length is under ~16K tokens, use a Transformer.</li><li><strong>Trap: vanishing gradient is not fully fixed by LSTMs for all sequence lengths. Beyond ~200 steps even LSTMs struggle — for long-range dependencies in offline settings, attention is strictly better.</strong>
+
+The forget gate keeps gradients alive by learning f_t ≈ 1, but it is learned under gradient pressure from the task. For dependencies spanning hundreds of steps, the gradient through the cell state path still attenuates — product of 200 forget gate values, each slightly below 1, compounds. LSTMs win over vanilla RNNs at 20–50 steps. For 500+ steps with the full sequence available, use attention.</li><li><strong>Diagnostic: plot gradient norms per time step during backpropagation through time — if the norm at step 1 is &lt; 1e-4 while step T is 1.0, you have vanishing gradients regardless of LSTM gates.</strong>
+
+Hook into the backward pass and log ‖∂L/∂h_t‖ for each t. A healthy LSTM should show gradient norms decaying by at most ~100× from the last timestep to the first for sequences under 100 steps. Exponential decay is the vanishing gradient signature. Check that forget gate biases are initialized to 1.0 (not 0.0) — a forget bias of 0 means sigmoid(0) = 0.5, which already shrinks the cell state gradient path by half at every step from initialization.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>The LSTM's cell state is an additive gradient highway: when the forget gate stays near 1, the gradient flows back through hundreds of steps without shrinking — the one mechanism that vanilla RNNs lack and the reason LSTMs remain the right choice for any task where inference is sequential, real-time, and the full sequence is not available.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Vanilla RNN vanishing gradient:</strong> to learn that &quot;not&quot; two tokens back flips the sentiment, the gradient must travel back through one Jacobian per timestep, each with spectral radius under 1 (say ~0.5) → 0.5²⁰ ≈ 10⁻⁶ after 20 steps. The early-token signal can't reach the loss strongly enough to update its weights, so long-range dependencies simply aren't learned.</li><li><strong>LSTM cell state = an additive gradient highway:</strong> alongside the hidden state it carries a cell state with an *additive* update, C_t = f_t ⊙ C_{t-1} + i_t ⊙ g_t. The gradient of C_t with respect to C_{t-1} is just the forget gate f_t — no per-step shrinking multiplication, unlike the vanilla RNN's Jacobian chain.</li><li><strong>Forget gate near 1 preserves the signal:</strong> because ∂C_t/∂C_{t-1} = f_t, the network can *learn* to keep f_t ≈ 1 exactly where memory should be preserved, giving the early token a nearly unobstructed path back to the loss across hundreds of steps.</li><li><strong>GRU:</strong> achieves similar gated behaviour with two gates instead of the LSTM's four, ~25% fewer parameters, and empirically comparable performance on most tasks — prefer it on smaller datasets or when compute is tight.</li><li><strong>Not obsolete:</strong> for offline NLP with the full sequence available, Transformers win almost every benchmark — but RNNs remain correct for *streaming* inference (audio, live feeds, robotics) where you don't have the whole sequence. Attention needs all positions present at once (O(n²) memory); an RNN processes each new token in O(1) with fixed memory.</li><li><strong>Trap — LSTMs don't fully fix vanishing:</strong> beyond ~200 steps the product of many forget gates (each just under 1) still compounds toward zero. LSTMs beat vanilla RNNs at 20–50 steps; for 500+ step dependencies with the full sequence available, attention is strictly better.</li><li><strong>Diagnostic:</strong> initialise the forget-gate bias to 1.0, not 0 — sigmoid(0)=0.5 already halves the cell-state gradient path at every step from the start. Then log ‖∂L/∂h_t‖ per timestep; exponential decay toward step 1 is the vanishing signature.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> An LSTM processes a sequence of length 200. Where does the gradient come from for updating W_h (the hidden-to-hidden weight) at timestep 1?</p>
+      <ul class="check-opts"><li class="correct">A) In BPTT (backpropagation through time), the gradient ∂L/∂W_h at t=1 is: ∂L/∂W_h|_{t=1} = (∂L_T/∂h_T)·(∂h_T/∂h_{T-1})·...·(∂h_2/∂h_1)·(∂h_1/∂W_h). This product of 199 Jacobians ∂hₜ/∂h_{t-1} gives the gradient. In a vanilla RNN, each factor contains tanh'(·)·W_h, and the product of 199 such terms leads to either vanishing (‖W_h‖ &lt; 1) or exploding (‖W_h‖ &gt; 1) gradients. In an LSTM, the gradient also flows through the cell state pathway: ∂c_t/∂c_{t-1} = f_t (forget gate). If f_t ≈ 1 (remember everything), this is an approximately unobstructed gradient highway across 200 timesteps. The forget gate values depend on the input and are trained to be near 1 for long-range dependencies, preserving the gradient for W_h updates at early timesteps.</li><li>B) The gradient for W_h at t=1 comes exclusively from the loss at t=1 — the local loss L₁. In BPTT, each timestep's W_h update uses only the loss computed at that timestep, not future losses. The total gradient is the sum ∂L₁/∂W_h + ∂L₂/∂W_h + ... + ∂L₂₀₀/∂W_h, where each term is computed independently from the local loss without any gradient propagation across time.</li><li>C) In an LSTM, W_h is updated only from the gradient at the final timestep T=200, because the hidden state h₂₀₀ is the only output used for the loss. All intermediate hidden states h₁,...,h₁₉₉ are internal to the sequence processing and do not receive gradient signals — the LSTM's gating mechanism prevents gradients from flowing backward through intermediate timesteps to protect the stored cell state.</li><li>D) The gradient for W_h at t=1 flows backward from the loss through the output gate only — the forget and input gates block gradient propagation to preserve the cell state's long-range memory. This gated gradient flow means W_h at early timesteps receives gradient only from the output gate pathway, which is trained separately from the cell state pathway.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> What is the key mathematical difference between an LSTM cell and a GRU cell? When would you prefer one over the other?</p>
+      <ul class="check-opts"><li>A) The key mathematical difference is that LSTM uses multiplicative gating (gates ∈ (0,1) that multiply cell state values), while GRU uses additive gating (gates that add to cell state values). This means LSTM can completely suppress or pass information (values approach 0 or 1), while GRU can only shift information values, making LSTM strictly more expressive for binary memory tasks like parenthesis matching.</li><li class="correct">B) LSTM has 4 gates (forget, input, output, cell) and 2 state vectors (hidden h and cell c): 4 x (n_in + n_hidden) weight matrices. GRU has 3 gates (reset, update, new hidden) and 1 state vector: 3 x (n_in + n_hidden) weight matrices — ~25% fewer parameters. Mathematical difference: LSTM cell state c_t = f_t*c_{t-1} + i_t*g_t (additive, like a ResNet), giving a clean gradient highway. GRU combines cell and hidden states: h_t = (1-z_t)*h_{t-1} + z_t*new_h_t — an interpolation between old and new hidden state. Practical preference: GRU is preferred for smaller datasets or compute-limited settings (fewer parameters, faster training). LSTM is preferred for longer sequences where the explicit cell state c_t's separation from the output gate may help preserve very long-range information. Empirically, performance differences are small — dataset and tuning often matter more than the choice.</li><li>C) LSTM separates short-term memory (hidden state h) from long-term memory (hidden state c) using two entirely different weight matrices. GRU collapses both into a single state vector but uses twice as many gates to compensate, making GRU more parameter-efficient for short sequences but less expressive for any task requiring distinct short-term and long-term memory simultaneously.</li><li>D) The key difference is in gradient flow: LSTM's forget gate is initialised near 0 (sigmoid(0) ≈ 0.5) and must learn to open for long-range dependencies, meaning LSTM starts with poor gradient flow that improves during training. GRU's update gate is initialised near 1, providing good gradient flow from the start — this is why GRU trains faster in early epochs and is preferred when training time is limited.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Teacher forcing trains RNNs with ground-truth tokens as inputs, but at test time, the model uses its own predictions. What problem does this cause?</p>
+      <ul class="check-opts"><li>A) Teacher forcing causes the model to become dependent on the exact token embedding values of ground-truth tokens, which have specific distributional properties (mean, variance) that differ from the model's own predicted tokens. At test time, the model's predicted embeddings have different statistical properties, causing activation distributions in the RNN hidden state to shift — a form of internal covariate shift that wasn't present during training.</li><li>B) Teacher forcing creates a slower learning signal because the model always receives correct inputs and therefore never needs to learn error recovery. The model's hidden state trajectory is always optimal (conditioned on correct history), so the model never practices the more realistic scenario of recovering from suboptimal hidden states — it learns to operate only in the narrow manifold of correct-input-conditioned hidden states.</li><li class="correct">C) Exposure bias: during training, the RNN always receives the correct previous token y_{t-1} as input. It never learns to handle its own (potentially wrong) predictions as inputs. At test time, if the model generates a wrong token at step t, it uses that wrong token as input at step t+1 — creating an error cascade (compounding errors). The model has never been trained on this error-recovery scenario and fails badly. The gap between training distribution (perfect inputs) and test distribution (self-generated inputs) is the exposure bias. Solutions: (1) Scheduled sampling — gradually replace ground-truth inputs with model predictions during training (starts with all ground-truth, ends with all model predictions). (2) Professor forcing — regularise hidden state trajectories from teacher-forced and model-forced runs to be similar. (3) REINFORCE/reward-augmented training — train with task-level rewards that are agnostic to token-level correctness. (4) Non-autoregressive models — avoid sequential generation entirely.</li><li>D) Teacher forcing prevents the model from learning the true language model probability P(x_t | x_{t-1},...,x_1) — it instead learns the conditional P(x_t | y_{t-1},...,y_1) where y are ground truth tokens. At test time the model needs the former but has only learned the latter, causing a distribution mismatch. The fix is to use maximum likelihood estimation without teacher forcing, accepting slower convergence in exchange for learning the correct conditional distribution.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#dl_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

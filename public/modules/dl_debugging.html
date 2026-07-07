@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DL Training Failure Modes | ML Systems Lab</title>
+  <meta name="description" content="Loss spikes, NaN gradients, mode collapse, underfitting vs overfitting — debugging">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/dl_debugging.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/dl_debugging.html">
+  <meta property="og:title" content="DL Training Failure Modes | ML Systems Lab">
+  <meta property="og:description" content="Loss spikes, NaN gradients, mode collapse, underfitting vs overfitting — debugging">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="DL Training Failure Modes">
+  <meta name="twitter:description" content="Loss spikes, NaN gradients, mode collapse, underfitting vs overfitting — debugging">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "DL Training Failure Modes",
+  "description": "Loss spikes, NaN gradients, mode collapse, underfitting vs overfitting — debugging",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/dl_debugging.html",
+  "keywords": "debugging, training failures, NaN gradients, mode collapse"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#dl_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">29 min read</span>
+      <span class="tag">debugging</span><span class="tag">training failures</span><span class="tag">NaN gradients</span><span class="tag">mode collapse</span>
+    </div>
+    <h1>DL Training Failure Modes</h1>
+    <p class="subtitle">Loss spikes, NaN gradients, mode collapse, underfitting vs overfitting — debugging</p>
+
+    <p>You start training a new model and the loss just sits there — stuck at log(number of classes), epoch after epoch. The natural instinct is to start turning knobs: a different learning rate, a bigger model, more data. Resist it. Before asking &quot;why won't it learn what I want,&quot; ask the more basic question: *can this model learn anything at all?* Almost every training bug is easier to catch by answering that first.</p>
+    <hr>
+    <h3>Step 1: overfit a single batch</h3>
+    <p>Take one batch. Turn off all regularization. Train on just that one batch for a thousand steps. A working model *must* be able to memorize a handful of examples — the loss should crash to near-zero. If it can't even do that, no hyperparameter will save you; the model is wired wrong. Usual suspects: the loss doesn't match the output (softmax paired with MSE, or cross-entropy fed raw logits), the output layer has the wrong number of classes, the labels are the wrong shape, or a forward-pass bug is zeroing activations. This test takes 60 seconds and rules out every one of those at once. It is the single most valuable habit in debugging deep nets.</p>
+    <hr>
+    <h3>Step 2: if that passes but full training won't converge, look at gradient flow</h3>
+    <p>The signal is learning, but maybe it isn't reaching every layer. Log the average gradient size for each layer after a step. In a healthy network the biggest and smallest layer gradients stay within ~10× of each other. See 10,000× instead and the early layers are getting almost nothing — <strong>vanishing gradients</strong> — and they will not learn no matter how long you train; the fix is ReLU, residual connections, or better initialization, not more epochs. The reverse — early layers with huge gradients — is <strong>exploding gradients:</strong> clip them (max_norm=1.0) and check your initialization.</p>
+    <hr>
+    <h3>A quick lookup for the classic failures</h3>
+    <p>Loss frozen at log(K): the model is outputting uniform probabilities — the output layer isn't connected or the loss is wrong. Loss suddenly NaN at step t: gradients were blowing up in the steps just before, the learning rate is too high, or a log(0) crept into cross-entropy (add a tiny ε to the softmax). Training loss falling but validation flat: train and validation don't come from the same distribution, or a threshold hasn't been tuned.</p>
+    <hr>
+    <p><strong>And the trap that fools everyone: a falling loss does not mean it's working.</strong> Loss can drop steadily while the model learns nothing useful. On an imbalanced dataset, a model that always predicts the majority class hits 95% accuracy and a nicely decreasing loss curve — and is completely useless. So look past the curve: eyeball a few actual predictions, check the confusion matrix (is it just always guessing one class?), and check that gradient norms sit in a sane range (~0.001–10).</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Always start debugging by overfitting a single batch — if loss does not reach near-zero on 1 example, the model is fundamentally misconfigured before any data issue can matter.</strong>
+
+Reduce to 1 batch, remove all regularization (dropout, weight decay), train for 1,000 steps. Loss should converge to near-zero. If it does not, the model has a bug — wrong output activation, wrong loss function, dimension mismatch, or a broken forward pass. This test costs 60 seconds and rules out all configuration bugs before you touch hyperparameters.</li><li><strong>Trap: tuning hyperparameters before running sanity checks. A model with a bug can have decreasing loss but be completely wrong — never tune until the single-batch overfit test passes.</strong>
+
+A cross-entropy loss with softmax output decreasing from 2.3 to 1.8 over 10 epochs looks like progress. It is not, if the model has an off-by-one label error and is learning to predict the class one index above the correct class everywhere. The single-batch overfit test catches this: the model will overfit the single example to near-zero loss, but inspection of the prediction will show the wrong class label being predicted with high confidence.</li><li><strong>Diagnostic: gradient norm logging catches 80% of training bugs — if any layer's gradient norm is 0 or greater than 100, you have found the problem layer. Add a single hook at the start of training, not after the model is already broken.</strong>
+
+In PyTorch: `param.register_hook(lambda g: print(g.abs().mean()))` on each layer, or use a unified hook that logs per-layer norms to a dictionary. Run it for the first 10 steps. Norm of 0 on a layer: dead neurons (ReLU killing all activations), wrong weight initialization, or a missing gradient path. Norm above 100: exploding gradients, clip with `torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)`. Both are fixable in minutes once localized to the specific layer.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Overfit one batch first, then log gradient norms per layer — these two tests diagnose 80% of training failures in minutes, before touching hyperparameters or architecture, because a model that cannot learn one example has a bug, not a tuning problem.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Before &quot;why won't it learn what I want,&quot; ask &quot;can it learn anything at all?&quot;</strong> Most bugs surface there first — resist turning knobs.</li><li><strong>Step 1 — overfit one batch:</strong> turn off regularisation, train on one batch for 1000 steps; a working model must crash to near-zero loss.</li><li><strong>If it can't:</strong> loss/output mismatch (softmax+MSE, cross-entropy on raw logits), wrong class count, wrong label shape, or a forward-pass bug. 60-second test rules them all out.</li><li><strong>Step 2 — gradient flow:</strong> log per-layer average gradient; healthy layers stay within ~10× of each other. 10,000× = vanishing (fix: ReLU, residuals, init); huge early gradients = exploding (clip max_norm=1.0).</li><li><strong>Classic failures:</strong> loss frozen at log(K) → output not connected or wrong loss; sudden NaN → LR too high or log(0) in cross-entropy (add ε); train falling but val flat → distribution mismatch or untuned threshold.</li><li><strong>The trap:</strong> a falling loss doesn't mean it works — always-predict-majority hits 95% accuracy on imbalanced data. Check predictions, confusion matrix, and gradient norms (~0.001–10).</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Training loss is NaN after step 47. List your debugging steps in order, and what is the most common cause in transformer training?</p>
+      <ul class="check-opts"><li>A) NaN loss after step 47 means the batch at step 47 triggered the failure. The only debugging step needed is: identify that exact batch (save the random seed, reproduce step 47), inspect it for outlier values, and remove it from the training set. Most NaN losses in transformer training are caused by corrupted data batches containing infinity or missing values, not architectural or hyperparameter issues.</li><li class="correct">B) Debugging order: (1) Reduce learning rate by 10× — most common cause of NaN in transformer training is a bad gradient update exploding weights. If NaN disappears, LR was too high. (2) Check for NaN in inputs — if data preprocessing produces NaN (e.g., log(0), division by zero), the loss will be NaN immediately. Add a nan_check assertion on the batch before the forward pass. (3) Enable gradient clipping (max_norm=1.0) — large gradients, not the learning rate itself, cause weight explosions. (4) Check for numerical instability in custom loss functions — log(0) or 0/0 in the loss computation. Add epsilon: log(x+1e-8). (5) Reduce batch size — smaller batches sometimes expose NaN-producing edge cases that rare inputs cause. (6) Use FP32 for the loss computation even if the model uses FP16 (mixed precision) — FP16 overflows at ~65504, easy to overflow with large logit values. Most common cause in transformer training: FP16 overflow in attention softmax when logits are not scaled by √d_k, or exploding gradients in early training without warmup.</li><li>C) NaN loss always propagates backward from the final layer. Start debugging by checking the output layer: verify the loss function is compatible with the output activation (e.g., log-softmax loss requires softmax output, not raw logits). If the output layer is correct, add a NaN check after each layer in order from output to input — the first layer that produces NaN is the root cause. Most common cause: incompatible loss-activation combination in the output layer.</li><li>D) The debugging order for NaN loss is irrelevant because NaN always results from the same cause: division by zero in the normalisation layers. Add epsilon=1e-7 to every denominator in every LayerNorm, BatchNorm, and attention computation in the transformer. This single fix resolves all NaN losses in transformer training; any remaining issues after this fix are data problems, not architectural ones.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Your model achieves 99% training accuracy but 51% test accuracy (near-random for binary classification). What is happening, and what are the top 3 most likely causes?</p>
+      <ul class="check-opts"><li>A) 99% training accuracy with 51% test accuracy indicates the model has converged to a degenerate solution — it has learned to output one class for all inputs. This happens when the model architecture is too deep and residual connections allow the model to trivially learn the identity function. The top 3 causes: (1) too many residual layers, (2) identity initialisation that persists, (3) loss function that rewards predicting the majority class.</li><li>B) This gap indicates the model has memorised the training set's class-conditional feature means rather than discriminative features. Top 3 causes: (1) mean features are not discriminative (the two classes have overlapping means), (2) model has no regularisation and has fit to the exact means rather than decision boundaries, (3) validation set has different feature means than training — distribution shift in the first and second moments.</li><li class="correct">C) This 99/51% gap indicates severe overfitting or data leakage. The 3 most likely causes in order of probability: (1) Target leakage — a feature in the training data directly encodes the label (e.g., 'previous outcome' field, a row ID correlated with label ordering, a timestamp that identifies which class comes from which time period). The model perfectly memorises the leaky feature during training; this feature behaves differently or is absent at test time. Investigate: train a 1-feature model for each feature individually — any feature achieving near-100% training accuracy alone is leaking. (2) Train/test distribution shift — training data and test data come from different distributions (e.g., training on 2019 data, testing on 2023 data with different feature relationships). The model memorises the 2019 distribution perfectly but does not generalise to 2023. (3) Data preprocessing leakage — scaling, encoding, or imputation applied to the full dataset before splitting, using test-set statistics during training. Correct procedure: fit all preprocessing on train only, apply to test.</li><li>D) 99% training accuracy with 51% test accuracy (near chance) means the model is predicting the majority class for all test examples — a class imbalance problem. The training set has 99% of one class, so the model achieves 99% training accuracy by always predicting that class. The test set happens to be balanced (50/50), making always-predicting-one-class achieve ~50% test accuracy. Fix: apply class-balanced sampling during training or use a weighted loss function.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Validation loss oscillates rather than decreasing monotonically. You're using SGD+momentum with lr=0.01 and batch size 64. List three possible causes and fixes.</p>
+      <ul class="check-opts"><li class="correct">A) (1) Learning rate too high — the optimizer overshoots the loss minimum, bouncing between two nearby loss values. Fix: reduce lr by 2-5×, or add a learning rate schedule (cosine decay, ReduceLROnPlateau). Monitor training loss — if it also oscillates, LR is the culprit. If training loss decreases monotonically but validation oscillates, the cause is (2). (2) Validation set too small — with few validation examples, the validation loss estimate has high variance; random fluctuations in validation batches appear as oscillations. Fix: increase validation set size if possible, or use k-fold CV. Report the moving average of validation loss rather than step-by-step values. (3) Momentum too high — β=0.9 or β=0.99 causes the optimizer to overshoot in the high-curvature directions of the loss landscape, creating bouncing behavior. Fix: reduce β to 0.85 or 0.8. Also check: is the model changing significantly between evaluations (evaluation frequency is too high relative to training speed)? Report validation loss every epoch rather than every 100 steps.</li><li>B) Validation loss oscillation with monotonically decreasing training loss always indicates overfitting, not an optimization problem. The three causes are always variations of the same root: (1) insufficient regularisation, (2) model too large for dataset size, (3) missing data augmentation. Fix all three simultaneously: add dropout p=0.3, add weight decay λ=0.01, add random horizontal flips and crops. Optimization parameters (lr, momentum) do not cause validation loss oscillation if training loss is decreasing smoothly.</li><li>C) Oscillation means the model is alternating between two different parameter configurations on each epoch. This is a momentum artifact: with β=0.9, SGD remembers 90% of the previous gradient direction, causing the optimizer to alternate between two nearby gradient directions if the loss landscape has symmetric saddle points. Fix: use Adam instead of SGD+momentum — Adam's adaptive learning rates prevent the symmetric oscillation that momentum causes on saddle-point-dominated loss landscapes.</li><li>D) Validation loss oscillation at batch size 64 is caused by the correlation between batch selection and validation performance: with 64-sample batches, each batch represents 1/n of the training data, and some batches happen to contain examples that are very similar to the validation set, temporarily improving validation performance. Fix: use stratified batch sampling to ensure each batch has the same class distribution as the overall dataset, eliminating the spurious validation fluctuations caused by non-representative batches.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#dl_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

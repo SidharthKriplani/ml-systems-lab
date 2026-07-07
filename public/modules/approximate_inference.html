@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Approximate Inference Methods | ML Systems Lab</title>
+  <meta name="description" content="Laplace approximation, importance sampling, MCMC, HMC, diagnostics — when to use which">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/approximate_inference.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/approximate_inference.html">
+  <meta property="og:title" content="Approximate Inference Methods | ML Systems Lab">
+  <meta property="og:description" content="Laplace approximation, importance sampling, MCMC, HMC, diagnostics — when to use which">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Approximate Inference Methods">
+  <meta name="twitter:description" content="Laplace approximation, importance sampling, MCMC, HMC, diagnostics — when to use which">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Approximate Inference Methods",
+  "description": "Laplace approximation, importance sampling, MCMC, HMC, diagnostics — when to use which",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/approximate_inference.html",
+  "keywords": "MCMC, HMC, Metropolis-Hastings, Laplace approximation, importance sampling, R-hat, ESS"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#probabilistic_ml_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">70 min read</span>
+      <span class="tag">MCMC</span><span class="tag">HMC</span><span class="tag">Metropolis-Hastings</span><span class="tag">Laplace approximation</span><span class="tag">importance sampling</span>
+    </div>
+    <h1>Approximate Inference Methods</h1>
+    <p class="subtitle">Laplace approximation, importance sampling, MCMC, HMC, diagnostics — when to use which</p>
+
+    <p>Outside of conjugate models, the posterior p(θ|X) is intractable — you cannot compute it, only approximate it. The question is how much approximation you can tolerate and at what computational cost.</p>
+    <p>MAP (maximum a posteriori) is the fastest: find the mode and stop, discarding all information about posterior shape. Laplace adds one matrix inversion to recover a Gaussian approximation around the MAP — fast but wrong if the posterior is multimodal or heavy-tailed. MCMC is the gold standard: given enough time, it converges to the true posterior, but &quot;enough time&quot; is often hours or days for complex models. Most production ML systems use MAP with frequentist standard errors and reserve MCMC for settings where exact uncertainty is the product — clinical decision support, scientific inference, hierarchical models. Knowing when each method is appropriate, and critically how to diagnose whether MCMC has actually converged, is what separates theoretical understanding from practical competence.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Laplace approximation: find the MAP, compute the Hessian H = -∇² log p(θ|X) at that point, approximate the posterior as N(θ_MAP, H⁻¹).</strong> No sampling — just one optimisation and one Hessian computation. When the posterior is genuinely unimodal and approximately Gaussian (which the Bernstein-von Mises theorem guarantees asymptotically), this is excellent. It fails badly for multimodal posteriors because the Hessian only captures local curvature at one mode — if the posterior has mass elsewhere, the Laplace approximation misses it entirely.</li><li><strong>Importance sampling estimates E_p[f(θ)] using a proposal q: E_p[f(θ)] ≈ Σᵢ wᵢ f(θᵢ) where wᵢ ∝ p(θᵢ|X)/q(θᵢ).</strong> The effective sample size ESS ≈ (Σwᵢ)²/Σwᵢ² tells you how many i.i.d. samples the weighted set is worth. In high dimensions, IS collapses catastrophically: the typical sets of p and q have negligible overlap, almost all weights are near zero, and a few lucky samples dominate the estimate. ESS &lt; 5% of N means the IS estimate is unreliable regardless of sample count.</li><li><strong>Metropolis-Hastings: propose θ* ~ q(θ*|θ_current), accept with probability α = min(1, p(θ*|X)q(θ_current|θ*) / p(θ_current|X)q(θ*|θ_current)).</strong> The intractable normaliser p(X) cancels in the ratio p(θ*|X)/p(θ_current|X) = p(X|θ*)p(θ*) / p(X|θ)p(θ) — this is the key insight that makes MCMC work at all for unnormalised posteriors. You never need to compute p(X); you only need ratios.</li><li><strong>HMC augments the state with momentum and uses gradient information to make large, correlated proposals that are accepted at high rates.</strong> Random-walk MH explores via small random steps — inefficient in high dimensions because it takes many steps to traverse the posterior. HMC uses the gradient of log p(θ|X) to simulate Hamiltonian dynamics, enabling large steps that respect the posterior geometry. NUTS (No-U-Turn Sampler) adapts step size and trajectory length automatically and is the default in Stan and PyMC.</li><li><strong>MCMC diagnostics are non-negotiable.</strong> R-hat (Gelman-Rubin): run K independent chains from different starting points. R-hat = √(total variance / within-chain variance). R-hat &lt; 1.01 → chains have converged to the same distribution. R-hat &gt; 1.1 → chains are exploring different regions; you do not yet have samples from the posterior. ESS accounts for within-chain autocorrelation: ESS &lt; 100 per parameter means high Monte Carlo error. Trace plots should look like a &quot;hairy caterpillar&quot; — no trends, no sticking, all chains overlapping.</li><li><strong>HMC divergences are a hard stop, not a warning.</strong> A divergence means the leapfrog integrator encountered extreme posterior curvature and went numerically unstable. Any divergences mean the posterior geometry is pathological and posterior estimates are biased. Non-centred reparameterisation fixes the most common cause. Never report results from a sampler with divergences.</li><li><strong>Non-centred parameterisation is the most important practical HMC fix for hierarchical models.</strong> Centred: μ_i ~ N(μ, σ²) directly — when σ is small, the posterior forms a funnel: narrow at the tip (small μ_i variations) and wide at the top. HMC's step size must be tiny to navigate the narrow funnel tip, causing slow mixing everywhere else. Non-centred: write μ_i = μ + σ·z_i where z_i ~ N(0,1), sample z_i instead. The funnel geometry disappears. If you see divergences in a hierarchical model, this is the first thing to try.</li><li><strong>Method selection guide: MAP + frequentist CIs for production systems that need speed and scale.</strong> Laplace for post-MAP uncertainty estimates where full MCMC is too slow (last-layer BNNs). NUTS/HMC in Stan or PyMC for serious scientific Bayesian analysis with &lt; ~1M parameters. VI (CAVI, BBVI) for large-scale latent variable models where sampling is too slow. Deep ensembles + conformal prediction for large neural networks where full Bayes is infeasible. The choice is about what you need from uncertainty: a fast approximation or an exact distribution.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>R-hat &gt; 1.01 means the chains are not sampling from the same distribution — the samples are not from the posterior. This is not a warning to note; it means you do not have valid posterior samples. Non-centred reparameterisation for hierarchical models eliminates the funnel geometry that causes divergences by changing μ_i ~ N(μ, σ²) to μ_i = μ + σ·z_i, z_i ~ N(0,1). The Metropolis-Hastings ratio cancels p(X) — this is the key insight that makes MCMC possible for unnormalised posteriors, because you only ever need the ratio of densities, not the densities themselves.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Cost/accuracy ladder:</strong> MAP (mode only) → Laplace (Gaussian at MAP) → MCMC (exact, but hours-to-days).</li><li><strong>Laplace = $N(θ_{MAP}, H^{-1})$</strong> — one Hessian; fails for multimodal/heavy-tailed posteriors (only local curvature).</li><li><strong>Importance sampling collapses in high-D:</strong> typical sets of p and q barely overlap; ESS &lt; 5% of N → unreliable.</li><li><strong>Metropolis-Hastings ratio cancels $p(X)$</strong> — the key that makes MCMC work on unnormalised posteriors (only ratios needed).</li><li><strong>HMC/NUTS use gradients</strong> for large, high-acceptance proposals; NUTS auto-tunes and is the Stan/PyMC default.</li><li><strong>R-hat &gt; 1.01 = not converged</strong> — the samples are not from the posterior. HMC divergences are a hard stop, not a warning.</li><li><strong>Non-centred reparameterisation</strong> ($μ_i = μ + σ·z_i$) removes the funnel geometry that causes hierarchical-model divergences.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You run 4 MCMC chains with NUTS. After 2000 samples per chain, R-hat = 1.35 for a key parameter. What do you do?</p>
+      <ul class="check-opts"><li>A) Accept the result — R-hat = 1.35 is within the commonly cited threshold of R-hat &lt; 2.0, and 2000 samples per chain is generally sufficient for most models.</li><li>B) Discard all samples and rerun with a different likelihood family, since R-hat &gt; 1.2 always indicates model misspecification.</li><li>C) Thin the chains to reduce autocorrelation — keeping every 10th sample will bring R-hat below 1.01.</li><li class="correct">D) Chains have not converged (R-hat &gt;&gt; 1.01). Examine trace plots for systematic differences, check for HMC divergences indicating funnel geometry, run chains much longer (10,000+ samples), and verify model identifiability. Never report results with R-hat &gt; 1.01.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Why does importance sampling fail in high dimensions, and what is the effective sample size telling you?</p>
+      <ul class="check-opts"><li>A) IS fails in high dimensions because the proposal distribution q must be specified analytically, which becomes impossible when the parameter space exceeds 20 dimensions.</li><li class="correct">B) In high dimensions the typical sets of p and q have exponentially shrinking overlap, so almost all weights are near zero. ESS = (Σwᵢ)²/Σwᵢ² tells you how many i.i.d. samples the weighted set is worth — ESS = 10 out of 10,000 means only 10 samples drive the estimate.</li><li>C) IS fails because the acceptance rate drops below 1% in high dimensions, making it equivalent to rejection sampling which is known to be inefficient.</li><li>D) IS fails because the normalising constant p(X) cannot be computed exactly in more than 10 dimensions, making the weights undefined.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> What is the Bernstein-von Mises theorem and when does it break down?</p>
+      <ul class="check-opts"><li class="correct">A) BvM states that with sufficient data the posterior converges to a Gaussian centred at the MLE with covariance equal to the inverse Fisher information. It breaks down for non-regular models, high-dimensional settings where d/n → c &gt; 0, misspecified models, and nonparametric posteriors.</li><li>B) BvM states that MAP always equals MLE in large samples; it breaks down when the prior is informative.</li><li>C) BvM states that the posterior predictive converges to the empirical distribution; it breaks down when the model is parametric rather than nonparametric.</li><li>D) BvM states that all Bayesian credible intervals are asymptotically equivalent to bootstrap intervals; it breaks down when bootstrapping is computationally infeasible.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#probabilistic_ml_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

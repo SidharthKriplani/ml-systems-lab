@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DBSCAN | ML Systems Lab</title>
+  <meta name="description" content="Core/border/noise points, eps and minPts, non-spherical clusters">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/dbscan.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/dbscan.html">
+  <meta property="og:title" content="DBSCAN | ML Systems Lab">
+  <meta property="og:description" content="Core/border/noise points, eps and minPts, non-spherical clusters">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="DBSCAN">
+  <meta name="twitter:description" content="Core/border/noise points, eps and minPts, non-spherical clusters">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "DBSCAN",
+  "description": "Core/border/noise points, eps and minPts, non-spherical clusters",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/dbscan.html",
+  "keywords": "DBSCAN, density-based, outlier detection"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#unsupervised_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">36 min read</span>
+      <span class="tag">DBSCAN</span><span class="tag">density-based</span><span class="tag">outlier detection</span>
+    </div>
+    <h1>DBSCAN</h1>
+    <p class="subtitle">Core/border/noise points, eps and minPts, non-spherical clusters</p>
+
+    <p>You have geographic data — customer addresses mapped to (lat, lon). You want to find city clusters of any shape. K-means would fit circles; cities are not circles. DBSCAN finds density-connected regions of arbitrary shape and labels sparse areas as noise. A city center is a dense region; a rural highway stop is noise. No K to specify — the number of clusters emerges from the data's density structure.</p>
+    <p>DBSCAN parameters: ε (epsilon) — the radius defining &quot;neighborhood.&quot; minPts — the minimum number of points in the ε-neighborhood to be a core point. Core point: has ≥ minPts points within distance ε. Border point: within ε of a core point but not itself a core point. Noise point: not within ε of any core point — explicitly labeled -1.</p>
+    <p>Density reachability: point A is directly density-reachable from core point B if A is in B's ε-neighborhood. A cluster is the connected component of core points plus their border points. The chain-following is what lets clusters take any shape — crescents, rings, L-shapes.</p>
+    <p>Parameter selection: minPts = 2 × dimensions (rule of thumb). For ε: sort all pairwise distances to the k-th nearest neighbor (k = minPts), plot the k-distance graph, pick ε at the knee where distances jump.</p>
+    <p>NOT-this: &quot;DBSCAN does not require K, so it is always better than K-means.&quot; DBSCAN has two equally tricky hyperparameters: ε and minPts. If ε is too small, most points are noise. If too large, all points merge into one cluster. And DBSCAN does not handle clusters of varying density well — dense and sparse clusters need different ε values. HDBSCAN (hierarchical DBSCAN) handles variable density and is almost always better than vanilla DBSCAN in practice.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Use DBSCAN when your clusters are non-spherical or vary in size, when noise or outlier detection is important, and when you do not know K.</strong>
+
+Geospatial and graph neighborhood data are ideal. The explicit noise label (-1) is operationally valuable — route ambiguous points to human review rather than forcing overconfident cluster assignments.</li><li><strong>Trap: DBSCAN is O(n²) without a spatial index. On 1M+ points, build a KD-tree or ball tree first — sklearn's DBSCAN does this automatically with algorithm=`'auto'` for low dimensions.</strong>
+
+Above 20 dimensions, spatial indices degrade back to O(n²) anyway. For high-dimensional data, use HDBSCAN with UMAP preprocessing to first reduce to a meaningful low-dimensional space.</li><li><strong>Diagnostic: if DBSCAN produces one giant cluster containing 90% of points, ε is too large. If it produces hundreds of tiny clusters, ε is too small.</strong>
+
+Plot the k-distance graph for k=minPts and pick the elbow — this is the systematic way to set ε. No clear elbow means density-based clustering may not match the structure of your data.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>DBSCAN finds clusters of any shape and labels outliers explicitly — but a single ε threshold breaks when clusters have different internal densities, which is exactly the problem HDBSCAN was built to fix.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Density-connected regions of any shape;</strong> sparse points labeled noise (-1). No K.</li><li><strong>Core point:</strong> ≥ minPts within ε. <strong>Border:</strong> near a core. <strong>Noise:</strong> near nothing.</li><li><strong>Clusters follow chains of core points</strong> → crescents, rings, L-shapes.</li><li><strong>Params:</strong> minPts ≈ 2×dims; set ε at the knee of the k-distance plot.</li><li><strong>ε too small → all noise; ε too large → one giant cluster.</strong></li><li><strong>Explicit -1 noise label is operationally valuable</strong> — route to human review.</li><li><strong>Fails on varying density</strong> — single ε breaks; HDBSCAN fixes it.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> K-means gives 5 circular clusters on GPS location data, but you suspect the true structure has non-circular geographic regions. How do you set up DBSCAN and validate it?</p>
+      <ul class="check-opts"><li>A) Use minPts=2 to maximise sensitivity, then validate by counting how many more clusters DBSCAN finds compared to k-means</li><li>B) Set eps by taking the mean pairwise distance divided by 10, which is the standard GPS calibration rule</li><li>C) DBSCAN is not suitable for GPS data because lat/lon coordinates require spherical distance, which DBSCAN does not support</li><li class="correct">D) Use the k-distance plot with k=4 to find eps at the knee; validate by inspecting clusters on a map for geographic boundary alignment, checking that noise points are genuinely sparse areas, and adjusting eps if known locations are mislabelled as noise</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> DBSCAN with eps=0.5 and minPts=5 produces 1 cluster containing 95% of data and 200 noise points. What does this indicate and what do you try?</p>
+      <ul class="check-opts"><li>A) eps is too small — the radius is not wide enough to connect the dense regions into their natural clusters</li><li>B) minPts is too high — reducing it to 2 will split the single large cluster into meaningful subgroups</li><li class="correct">C) One giant cluster means eps is too large — reduce eps using the k-distance plot knee, halving incrementally; if no density gap exists between groups, DBSCAN is the wrong algorithm for finding subgroups</li><li>D) The 200 noise points indicate the dataset has significant outliers that are preventing proper cluster formation — remove them first</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> You apply DBSCAN to customer embeddings in 128 dimensions and get mostly noise (90% of points labelled -1). What is happening and how do you fix it?</p>
+      <ul class="check-opts"><li>A) The minPts value is set too high for 128-dimensional data — reduce it to 2 and re-run</li><li>B) DBSCAN labels as noise any point that is not a core point, so 90% noise just means the dataset has few dense regions — this is the correct output</li><li>C) The training data is contaminated — 90% of points are genuine anomalies and only 10% are normal</li><li class="correct">D) In 128 dimensions, Euclidean distances converge so no point has many neighbours within a discriminating eps — apply PCA or UMAP to reduce to 10-20 dimensions where neighbourhood structure is meaningful before re-running DBSCAN</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> What is the difference between noise in DBSCAN and outliers detected by Isolation Forest? When would you use each for anomaly detection?</p>
+      <ul class="check-opts"><li>A) They are equivalent — both define anomalies as points with fewer than k neighbours within a fixed radius</li><li>B) DBSCAN noise requires labelled normal data; Isolation Forest is fully unsupervised</li><li class="correct">C) DBSCAN noise is density-defined and local — points in sparse regions relative to eps/minPts; Isolation Forest gives a global continuous anomaly score based on isolation depth — use DBSCAN when you simultaneously want clusters and outliers on low-dimensional data; Isolation Forest when you need ranked anomaly scores or high-dimensional data</li><li>D) Isolation Forest is always superior — DBSCAN noise labelling should only be used as a preprocessing step before Isolation Forest</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#unsupervised_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

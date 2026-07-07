@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Probabilistic Calibration | ML Systems Lab</title>
+  <meta name="description" content="Reliability diagrams, ECE, overconfidence in NNs, temperature scaling, Platt scaling, isotonic regression">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/calibration--probabilistic_ml_foundation.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/calibration--probabilistic_ml_foundation.html">
+  <meta property="og:title" content="Probabilistic Calibration | ML Systems Lab">
+  <meta property="og:description" content="Reliability diagrams, ECE, overconfidence in NNs, temperature scaling, Platt scaling, isotonic regression">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Probabilistic Calibration">
+  <meta name="twitter:description" content="Reliability diagrams, ECE, overconfidence in NNs, temperature scaling, Platt scaling, isotonic regression">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Probabilistic Calibration",
+  "description": "Reliability diagrams, ECE, overconfidence in NNs, temperature scaling, Platt scaling, isotonic regression",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/calibration--probabilistic_ml_foundation.html",
+  "keywords": "calibration, ECE, temperature scaling, Platt scaling, reliability diagram, overconfidence"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#probabilistic_ml_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">45 min read</span>
+      <span class="tag">calibration</span><span class="tag">ECE</span><span class="tag">temperature scaling</span><span class="tag">Platt scaling</span><span class="tag">reliability diagram</span>
+    </div>
+    <h1>Probabilistic Calibration</h1>
+    <p class="subtitle">Reliability diagrams, ECE, overconfidence in NNs, temperature scaling, Platt scaling, isotonic regression</p>
+
+    <p>Your risk team is using a random forest to score loan applications. When the model outputs 0.8, they treat it as an 80% probability of default. They set loss reserves, calculate expected portfolio losses, and make approval decisions based on these numbers. Then you run an audit. Among all loans where the model predicted &quot;80% default probability,&quot; only 55% actually defaulted. The model is overconfident by 25 percentage points. Every risk calculation built on those numbers is wrong. This is a calibration failure, and it is costing real money.</p>
+    <p>Calibration asks a simple question: when a model says 70%, does 70% of the time the positive outcome actually occur? A calibration curve — also called a reliability diagram — makes this visible. Bin all predictions into intervals (0–10%, 10–20%, and so on). For each bin, plot the mean predicted probability against the fraction of actual positives. A perfectly calibrated model produces a diagonal line. An overconfident model produces a curve that sags below the diagonal — predictions of 80% correspond to actual rates of 55%.</p>
+    <p>Different model families have characteristic calibration behavior. Logistic regression is well-calibrated by design: it optimizes a proper scoring rule that directly rewards accurate probability estimates. Random forests are routinely overconfident — the trees output class proportions in their leaves, and these leaf proportions cluster near 0 and 1 because fully grown trees tend to be pure. The result: probabilities pile up at the extremes and are miscalibrated relative to observed rates. Gradient boosting has the same problem. SVMs produce scores that are not probabilities at all by default and need Platt scaling before any probability interpretation is valid. Neural networks are documented to be systematically overconfident after cross-entropy training (Guo et al., 2017) — the optimizer pushes logits toward infinity with no incentive to stop once labels are correctly ranked, and larger models are worse, not better.</p>
+    <p>Three methods fix this. Platt scaling fits a logistic regression on top of model outputs using a held-out calibration set — two parameters, handles asymmetric miscalibration, needs at least a few hundred calibration examples. Isotonic regression fits a non-parametric monotone function from predicted probabilities to observed frequencies — maximally flexible, but overfits aggressively below about 1,000 examples per class. Temperature scaling divides all logits by a single scalar T before the softmax — one parameter, zero retraining, accuracy unchanged, and it works remarkably well for neural networks.</p>
+    <p><strong>NOT this.</strong> A high AUC does not mean a model is well-calibrated. AUC measures discrimination: can the model rank positives above negatives? Calibration measures accuracy of probability estimates: are the numbers themselves trustworthy? A model can have AUC = 0.95 and predict 80% for everything that ends up at 55%. These are orthogonal properties. AUC tells you the model can rank correctly. Calibration tells you the numbers mean what they say. For risk modeling, insurance pricing, and medical decisions, you need both — ranking without calibration means you can order applicants but cannot price the risk correctly. The Brier score = (1/n)Σ(pᵢ - yᵢ)² penalizes both failures jointly and is the single number that captures the full picture. ECE (Expected Calibration Error) isolates the calibration component.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Use calibration checks on any model whose output score drives a threshold decision, a dollar amount, or a downstream probability input.</strong> Random forests and gradient boosting trees need it by default — their leaf-proportion scores are structurally overconfident. Neural networks need temperature scaling before any production deployment for probabilistic use. Logistic regression is the one exception: it is calibrated by design. The practical test: take all predictions in the 0.7–0.8 bucket and compute what fraction of outcomes were actually positive. If it is not approximately 75%, the model is miscalibrated at your decision boundary.</li><li><strong>The most common production trap is confusing AUC with calibration.</strong> A model with AUC = 0.92 and ECE = 0.14 will rank correctly — put it in an A/B test comparing models and it wins on every ranking metric. But every downstream system using the probabilities is making decisions on numbers that are wrong by 14 percentage points on average. The fraud team sets their block threshold at 0.7 thinking they are blocking 70%+ risk loans, but are actually blocking 56% risk loans. Risk reserves are systematically too low. The failure is invisible in standard model evaluation because AUC reports are the default, and ECE reports are the exception.</li><li><strong>The diagnostic is the reliability diagram, and the fix is temperature scaling first.</strong> Build the reliability diagram: bin predictions into 10 equal-frequency bins, plot mean predicted probability vs. actual positive rate per bin. If it sags below the diagonal uniformly (overconfidence), apply temperature scaling — fit scalar T on a held-out set by minimizing NLL of softmax(logits/T). Accuracy is unchanged. ECE typically drops from 10–15% to 1–3%. If the curve has a non-uniform shape (overconfident at high probabilities, underconfident at low), use Platt scaling. If neither is sufficient and you have more than 1,000 calibration examples per class, isotonic regression can correct any monotone miscalibration pattern.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Temperature scaling cannot hurt accuracy (argmax is unchanged) and fixes most of the systematic overconfidence that cross-entropy training induces — it is the mandatory post-training step before using a neural classifier for probabilistic decisions. The AUC vs ECE tradeoff is the calibration insight that matters most: AUC measures ranking quality, ECE measures whether probabilities are accurate at the threshold you actually use for decisions. A model with high AUC but poor calibration is systematically mispricing risk at every decision boundary.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Calibration: when the model says 70%, does the positive outcome happen 70% of the time?</strong> &quot;0.8 predicted, 55% actual&quot; = overconfident.</li><li><strong>Reliability diagram:</strong> bin predictions, plot mean predicted vs actual positive rate; perfect = diagonal, overconfident sags below.</li><li><strong>Family behaviour:</strong> logistic regression calibrated by design; random forests / GBMs overconfident (leaf proportions near 0/1); NNs overconfident post-CE.</li><li><strong>Temperature scaling: divide logits by scalar T</strong> — one param, no retrain, accuracy unchanged; ECE 10–15% → 1–3%. Do it first.</li><li><strong>Platt scaling</strong> for non-uniform miscalibration; <strong>isotonic regression</strong> for any monotone pattern but needs &gt; 1,000 examples/class.</li><li><strong>AUC ⊥ calibration:</strong> AUC measures ranking, ECE measures probability accuracy at the threshold — a model can rank well and misprice risk.</li><li><strong>Brier score $=rac1nsum(p_i-y_i)^2$ penalises both</strong> discrimination and calibration jointly; ECE isolates the calibration part.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Your model has 92% accuracy but ECE = 12%. What does this mean, and what would you do?</p>
+      <ul class="check-opts"><li>A) ECE = 12% means the model has 12% label noise in the training set; retrain with a cleaner dataset.</li><li class="correct">B) High accuracy with high ECE means the model ranks correctly but predicted probabilities are inaccurate — likely overconfident by ~12 percentage points per bin. Apply temperature scaling, inspect the reliability diagram, and verify post-calibration ECE on the test set.</li><li>C) ECE = 12% is acceptable for a model with 92% accuracy since calibration degrades proportionally with accuracy gains.</li><li>D) High ECE with high accuracy means the model is underconfident; apply Platt scaling with a &lt; 1 to sharpen predictions.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> You need to compare two models for a medical triage application. Model A has AUC=0.88, ECE=0.03. Model B has AUC=0.91, ECE=0.11. Which do you deploy?</p>
+      <ul class="check-opts"><li class="correct">A) For triage using probability thresholds, calibration is critical. Try to recalibrate Model B first — if temperature scaling brings its ECE to ~0.03 without losing AUC, deploy B. Otherwise, prefer Model A whose stated probabilities are reliable at the decision boundary.</li><li>B) Always deploy the higher-AUC model (B) in medical settings — ranking quality is the only metric that matters for triage prioritisation.</li><li>C) Neither model is deployable; medical applications require ECE &lt; 0.01 and AUC &gt; 0.95 by regulatory standards.</li><li>D) Deploy Model A only — ECE is always more important than AUC in any medical application regardless of how the model output is used.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Why does standard cross-entropy training produce overconfident neural networks, and does label smoothing fix it?</p>
+      <ul class="check-opts"><li class="correct">A) Cross-entropy is minimised as softmax outputs approach one-hot, pushing logits to large values. Label smoothing (soft targets) penalises overconfident outputs and improves calibration, but it also distorts penultimate-layer representations; temperature scaling post-training is still recommended.</li><li>B) Cross-entropy training is not the cause of overconfidence — the real cause is batch normalisation, which should be replaced with layer normalisation.</li><li>C) Label smoothing fully fixes overconfidence and eliminates the need for any post-hoc calibration method.</li><li>D) Cross-entropy training produces underconfidence, not overconfidence; label smoothing corrects this by sharpening the logits.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#probabilistic_ml_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

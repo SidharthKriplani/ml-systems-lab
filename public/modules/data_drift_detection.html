@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Drift Detection | ML Systems Lab</title>
+  <meta name="description" content="PSI, KS test, chi-squared, Jensen-Shannon divergence, choosing thresholds">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/data_drift_detection.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/data_drift_detection.html">
+  <meta property="og:title" content="Data Drift Detection | ML Systems Lab">
+  <meta property="og:description" content="PSI, KS test, chi-squared, Jensen-Shannon divergence, choosing thresholds">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Data Drift Detection">
+  <meta name="twitter:description" content="PSI, KS test, chi-squared, Jensen-Shannon divergence, choosing thresholds">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Data Drift Detection",
+  "description": "PSI, KS test, chi-squared, Jensen-Shannon divergence, choosing thresholds",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/data_drift_detection.html",
+  "keywords": "data drift, PSI, KS test, distribution monitoring"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#monitoring_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">20 min read</span>
+      <span class="tag">data drift</span><span class="tag">PSI</span><span class="tag">KS test</span><span class="tag">distribution monitoring</span>
+    </div>
+    <h1>Data Drift Detection</h1>
+    <p class="subtitle">PSI, KS test, chi-squared, Jensen-Shannon divergence, choosing thresholds</p>
+
+    <p>A loan model goes live in January. By March a new kind of applicant is showing up — recent graduates, a newly opened geographic market — and their median income has moved from about 55K to 70K dollars. The model still runs, still returns predictions at the same speed, still fires no alerts. But it is quietly making worse decisions, because it was tuned for a population that no longer shows up at the same rate. By the time a stakeholder notices the approval or default rate has drifted, it's July — and the root cause is six months old. This is silent model decay, and it is the *default* outcome when nobody is monitoring.</p>
+    <hr>
+    <h3>The idea: watch the inputs, don't wait for the labels</h3>
+    <p>Instead of waiting for outcomes to confirm the damage, you compare each input feature's *current* distribution against its *training* distribution and measure how far apart they've moved. The question becomes concrete: how much has the income distribution shifted, and is that shift big enough to matter?</p>
+    <hr>
+    <h3>PSI: the metric the lending world built for exactly this</h3>
+    <p>Population Stability Index sums, across bins of a feature, how much probability mass moved:</p>
+    <p>$PSI = \sum (p_{train} - p_{new}) ln(p_{train}/p_{new})$</p>
+    <p>Below 0.1 the population is stable; 0.1–0.2 is mild drift worth a look; above 0.2 is real drift that needs action. For income moving from 55K to 70K, PSI will likely clear 0.2 — an actionable signal *months* before any label confirms the harm.</p>
+    <hr>
+    <h3>Other tests for other shapes of data</h3>
+    <p>For continuous features, the Kolmogorov-Smirnov test takes the largest gap between two cumulative distributions:</p>
+    <p>$D = max|F_{train}(x) - F_{new}(x)|$</p>
+    <p>It's distribution-free and notices shifts anywhere, not just in the mean. The trap: with a million daily requests, D = 0.015 will be &quot;statistically significant&quot; (p &lt; 0.001) yet operationally meaningless — so pair it with a *practical* floor like D &gt; 0.05. For categorical features, chi-squared checks whether category frequencies still match training. And when you want one bounded, uniformly-thresholdable number across very different features, Jensen-Shannon divergence sits neatly in [0, 1].</p>
+    <hr>
+    <p><strong>One caution on what an alert means.</strong> Statistical significance is not business significance. A drift alert means *investigate,* not *retrain.* Sometimes a feature moves a lot and the model stays accurate because the learned relationship still holds; other times a subtle shift in one important feature wrecks accuracy while 49 others look fine. So you run both: drift detection as the early warning that *something* changed, and performance monitoring on delayed labels as the confirmation that it *matters.* The alert says &quot;look here.&quot; The labels tell you if it's a real problem.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Use PSI for binned continuous and ordinal features as your default drift metric.</strong> Build 10 equal-frequency bins from the training distribution — not equal-width, because skewed distributions put all the signal in a few dense center buckets with equal-width binning. Add boundary bins for values falling outside the training range. Apply the rule: PSI &lt; 0.1 is stable, 0.1–0.2 is investigate, &gt; 0.2 is act. The loan income example with a median shift from 55K to 70K dollars will produce PSI well above 0.2. These thresholds are stable enough to apply without per-feature recalibration, which is why the financial industry standardized on them.</li><li><strong>The most common production trap is acting on statistical significance rather than practical significance.</strong> With 1M daily serving requests, the KS test will flag D = 0.015 as p &lt; 0.001. That is a shift of 1.5 percentage points in the CDF — real, but almost certainly not affecting model performance. Engineers who fire a retraining pipeline on every statistically significant drift alert spend all their time on retraining overhead and still miss the actual incidents, because the threshold is too sensitive. Set D &gt; 0.05 as your practical floor. For PSI, trust the 0.1/0.2 boundaries — they were empirically calibrated over decades of financial model deployment, not derived from theory.</li><li><strong>The diagnostic: monitor prediction score distribution first, then feature distributions.</strong> The prediction score distribution changes before any feature drift alerts fire and before any labels arrive. A loan model's score distribution shifting from mean 0.35 to mean 0.28 over two months is the earliest signal — the model is scoring the new population differently. Once you see score drift, run PSI on each feature ordered by training-time importance. The first high-PSI, high-importance feature is your root cause. This narrows a 50-feature investigation to a 1-feature investigation within minutes.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Drift detection provides the early warning that silent model decay is accumulating. PSI above 0.2 on a high-importance feature is actionable even before labels arrive. But a drift alert triggers investigation, not automatic retraining — the question that matters is whether the drift actually degrades performance, which only labels can confirm.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Watch inputs, don't wait for labels:</strong> silent decay is the default when nobody monitors.</li><li><strong>PSI = default drift metric:</strong> $PSI = \sum (p_{train} - p_{new}) \ln(p_{train}/p_{new})$; &lt;0.1 stable, 0.1–0.2 investigate, &gt;0.2 act.</li><li><strong>Use 10 equal-frequency bins</strong>, not equal-width — skew hides signal in dense center buckets.</li><li><strong>KS for continuous:</strong> $D = \max|F_{train}(x) - F_{new}(x)|$; distribution-free but pair with a practical floor $D &gt; 0.05$.</li><li><strong>Significance ≠ business significance:</strong> 1M requests make $D=0.015$ &quot;significant&quot; yet meaningless.</li><li><strong>Score distribution shifts first</strong>, before feature alerts or labels — then run PSI ordered by feature importance.</li><li><strong>A drift alert means investigate, not retrain</strong> — only labels confirm the drift actually matters.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You have 1M daily serving requests and are monitoring feature drift. The KS test shows p&lt;0.001 for &quot;age&quot; feature with KS statistic D=0.015. Should you alert?</p>
+      <ul class="check-opts"><li>A) Yes — p&lt;0.001 is highly significant, meaning the age distribution has definitively shifted and the model is likely degraded</li><li>B) Yes — any statistically significant drift in a top feature warrants an immediate page to the on-call engineer</li><li>C) No — the KS test is the wrong tool for continuous features; rerun with PSI before making any decision</li><li class="correct">D) No — with 1M samples, D=0.015 is statistically significant but not practically significant; use a practical threshold like D &gt; 0.05 or PSI &gt; 0.1 instead</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Why does PSI use 10 equal-frequency bins from the training distribution rather than equal-width bins?</p>
+      <ul class="check-opts"><li>A) Equal-width bins are slower to compute, so equal-frequency binning is chosen purely to reduce monitoring latency at scale</li><li>B) Equal-frequency bins guarantee the PSI score falls in [0, 1], which equal-width bins cannot promise for skewed features</li><li class="correct">C) On a skewed feature, equal-width bins pile most of the mass into a few dense center buckets, hiding the shift; equal-frequency spreads resolution where the data actually is</li><li>D) Regulators mandate equal-frequency binning for lending models, so it is a compliance requirement rather than a statistical one</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> A loan model's prediction score distribution shifts from mean 0.35 to mean 0.28 over two months. What is the fastest path to the root-cause feature?</p>
+      <ul class="check-opts"><li>A) Run PSI on all 50 features and page whichever one has the single highest raw PSI value regardless of that feature's importance</li><li class="correct">B) Run PSI on each feature ordered by training-time importance; the first high-PSI, high-importance feature is the likely root cause</li><li>C) Wait for delayed labels to arrive, then retrain on the most recent window since score drift alone cannot localize a cause</li><li>D) Increase the number of PSI bins to 50 for finer resolution, then re-scan every feature to find the smallest detectable shift</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#monitoring_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

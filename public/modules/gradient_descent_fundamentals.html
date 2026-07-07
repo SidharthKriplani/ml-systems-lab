@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gradient Descent Fundamentals | ML Systems Lab</title>
+  <meta name="description" content="The update rule, learning rate, and why the gradient changes at every step.">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/gradient_descent_fundamentals.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/gradient_descent_fundamentals.html">
+  <meta property="og:title" content="Gradient Descent Fundamentals | ML Systems Lab">
+  <meta property="og:description" content="The update rule, learning rate, and why the gradient changes at every step.">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Gradient Descent Fundamentals">
+  <meta name="twitter:description" content="The update rule, learning rate, and why the gradient changes at every step.">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Gradient Descent Fundamentals",
+  "description": "The update rule, learning rate, and why the gradient changes at every step.",
+  "proficiencyLevel": "Foundational",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/gradient_descent_fundamentals.html",
+  "keywords": "gradient, learning-rate, update-rule, calculus, convergence"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#optimization_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Foundational</span>
+      <span class="read-time">40 min read</span>
+      <span class="tag">gradient</span><span class="tag">learning-rate</span><span class="tag">update-rule</span><span class="tag">calculus</span><span class="tag">convergence</span>
+    </div>
+    <h1>Gradient Descent Fundamentals</h1>
+    <p class="subtitle">The update rule, learning rate, and why the gradient changes at every step.</p>
+
+    <p>You are training a neural network with 500,000 parameters, and you need the settings that make its loss smallest. How hard could that be? Try to brute-force it — just 10 possible values per parameter — and you face $10^{500000}$ combinations to check. For scale, the observable universe holds about $10^{80}$ atoms. Brute force is not slow; it is flat-out impossible. You need a completely different idea, and it comes from one simple picture.</p>
+    <p>Imagine you are standing somewhere on a vast, foggy hillside, trying to reach the lowest point in the valley. You cannot see anything, but you can feel the slope of the ground under your feet. So you do the obvious thing: feel which way is downhill, take a small step that way, and repeat. Step by step, you descend. That is <strong>gradient descent</strong>, and it is the entire idea.</p>
+    <hr>
+    <h3>The update rule</h3>
+    <p>&quot;Feel the slope&quot; has a precise name: the <strong>gradient</strong>. At any point, the gradient points in the direction of steepest *uphill*; flip its sign and you have the steepest way *down*. So each step is:</p>
+    <p>new weights = old weights − (step size) × gradient</p>
+    <p>Compute the gradient, step a little in the downhill direction, repeat — fifty thousand times, a million times, until the loss stops dropping. That step size has a name too: the <strong>learning rate</strong>, and getting it right is most of the game.</p>
+    <hr>
+    <h3>The learning rate: too big, too small, just right</h3>
+    <p>Set the learning rate <strong>too small</strong> and you inch downhill in tiny timid steps — you will get there, but it might take days of compute. Set it <strong>too large</strong> and each step overshoots the valley floor, landing partway up the far side; do that repeatedly and the loss bounces around or even flies off to infinity. Somewhere in between is &quot;just right,&quot; and the picture above shows all three.</p>
+    <p>Why not just measure the slope once and follow it straight to the bottom? Because the slope is *local*. The moment you take a step, the ground under your feet has changed — a valley curves, so the downhill direction rotates as you move. Follow your very first reading in a straight line and you would sail right past the floor and up the opposite wall. That is why gradient descent recomputes the gradient at every single step: it is fresh, local information, good only for where you are standing right now.</p>
+    <hr>
+    <h3>Why one learning rate is never quite right (going deeper)</h3>
+    <p>Here is the deep frustration with plain gradient descent. Real loss landscapes are rarely tidy round bowls; they are often long, narrow <strong>ravines</strong> — very steep across the ravine, very gentle along its floor. A step size small enough to be safe on the steep walls is far too small to make progress along the gentle floor. One learning rate simply cannot serve two wildly different steepnesses at once. This mismatch even has a name, the <strong>condition number</strong> problem, and it is the reason nearly every fancier optimizer exists (momentum, Adam, learning-rate schedules): each one is a trick to take bigger steps in the flat directions and smaller steps in the steep ones.</p>
+    <p>The gold-standard fix would be <strong>Newton's method</strong>, which looks at the *curvature* in every direction (through a giant matrix called the Hessian) and sizes each step perfectly on its own. It works beautifully — and it is hopeless at scale: for 500,000 parameters that curvature matrix has 250 billion entries (a terabyte just to store) and costs far too much to invert. So in practice everyone uses gradient descent and its cheap approximations, which borrow a little of Newton's curvature wisdom without paying the full price.</p>
+    <hr>
+    <p>One last honest note: on the simple, bowl-shaped losses of something like logistic regression, gradient descent is guaranteed to reach the bottom. On the wildly bumpy landscapes of deep networks there is no such guarantee — the best you can promise is that it will roll to *some* flat spot. In practice that turns out to be fine, because in very high dimensions the truly bad traps (points that curve upward in every direction at once) become vanishingly rare; the real enemies are the ravines and the long flat plateaus, not getting stuck in a little pit.</p>
+    <hr>
+    <h3>How much data per step: full-batch, stochastic, mini-batch</h3>
+    <p>We glossed over *what* the gradient is computed on. <strong>Full-batch</strong> gradient descent uses the entire dataset for every step — the gradient is exact but each step is expensive, and for millions of examples you take painfully few steps. <strong>Stochastic gradient descent (SGD)</strong> goes to the other extreme: one example per step — cheap and fast, but the gradient is a noisy estimate that jitters around the true direction. <strong>Mini-batch</strong> SGD is the practical middle (batches of 32–512): enough examples to average out most of the noise, few enough to take many steps per pass. One full pass over the data is an <strong>epoch</strong>; each mini-batch update is a <strong>step</strong>. And the noise isn't purely bad — the jitter of small batches helps the model skip past sharp, brittle minima toward flatter, better-generalising ones. Batch size is a real knob, not just a memory setting.</p>
+    <hr>
+    <h3>Where the gradient actually comes from: backprop</h3>
+    <p>Gradient descent *uses* a gradient; <strong>backpropagation</strong> is how you *get* it efficiently. Backprop is just the chain rule applied layer by layer, computing the gradient of the loss with respect to every weight in a single backward pass — turning what would be a separate derivative computation per parameter into one sweep. Keep the two ideas distinct: backprop computes the gradients, the optimizer decides how to step with them. They're partners, not the same thing.</p>
+    <hr>
+    <h3>The optimizer family, in one map</h3>
+    <p>Plain gradient descent's one-step-size weakness spawned a family, each borrowing a little of Newton's curvature wisdom cheaply (each has its own lesson). <strong>Momentum</strong> keeps a running average (velocity) of past gradients, so consistent directions build speed while oscillations across a ravine cancel out — it damps the zig-zag. <strong>AdaGrad/RMSProp</strong> give each parameter its *own* effective learning rate based on how large its recent gradients have been, taking bigger steps in flat directions and smaller in steep ones. <strong>Adam</strong> combines both: a momentum term (first moment, m, controlled by β₁) and a per-parameter scaling (second moment, v, controlled by β₂), plus bias correction for the early steps and an ε for numerical safety — and <strong>AdamW</strong> fixes how weight decay interacts with that scaling. Adam is the default for most deep learning; SGD-with-momentum still wins in some vision settings.</p>
+    <hr>
+    <h3>Learning-rate schedules</h3>
+    <p>One fixed rate is rarely best across a whole run, so you *schedule* it. <strong>Warmup</strong> starts tiny and ramps up over the first few hundred steps (a big early step on a fresh, unstable model can blow up). Then you <strong>decay</strong> — <strong>step decay</strong> (drop by a factor at milestones), <strong>cosine decay</strong> (smoothly anneal to near zero), or <strong>reduce-on-plateau</strong> (cut the rate whenever validation loss stalls). The point: take large steps early to cover ground, small steps late to settle precisely. Schedules interact with <strong>early stopping</strong> (halt when validation stops improving) — together they're how modern training both moves fast and lands cleanly.</p>
+    <hr>
+    <h3>When do you actually stop?</h3>
+    <p>&quot;Until the loss stops dropping&quot; needs to be made concrete. Common <strong>convergence criteria</strong>: validation loss stops improving for *N* checks (<strong>early stopping</strong> with a <strong>patience</strong> window — the most common in deep learning), the <strong>gradient norm</strong> falls below a threshold (you're at a flat spot), the <strong>loss improvement</strong> per step drops under a tolerance, or you simply hit a <strong>max epochs / compute budget</strong>. In practice validation-based early stopping is what you use, because it stops at best *generalisation*, not just lowest training loss.</p>
+    <hr>
+    <h3>The gradient pathologies to recognise</h3>
+    <p>A few characteristic failure modes, each with a tell and a fix. <strong>Vanishing gradients</strong>: gradients shrink toward zero in early layers, which barely learn (fix: ReLU-family activations, residual connections, normalisation, good init). <strong>Exploding gradients</strong>: gradients blow up, loss goes NaN (fix: gradient clipping, better init). <strong>Saddle points and plateaus</strong>: large flat regions where the gradient is near zero but you're not at a minimum — momentum and adaptive methods power through them. <strong>Poor initialisation</strong>: weights scaled wrong make activations saturate or explode from step one. Normalisation layers (BatchNorm/LayerNorm) smooth the landscape and make all of this more forgiving. Most of these have dedicated lessons — the point here is to recognise the symptom from the loss curve.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Use gradient descent when you have a differentiable loss and many parameters — but not when a closed-form answer exists.</strong>
+
+For plain linear regression, the exact formula (XᵀX)⁻¹Xᵀy is cheaper and more accurate — do not iterate when you can just solve. Gradient descent earns its keep once there are too many parameters or no closed form: logistic regression on 10,000 features, or any neural network. Rough rule: if solving the exact equations would cost more than running enough gradient steps to converge, iterate.</li><li><strong>The trap: treating the learning rate as one fixed number when the landscape needs different step sizes in different directions.</strong>
+
+If your loss drops fast for a while and then crawls along a long plateau, that is usually not a data problem — it is the ravine problem: the flat directions are starving while the steep ones already converged. Quick diagnosis: plot the loss on a log scale. A straight line means steady fractional progress (the learning rate is fine); a curve that flattens out means you have hit a high-mismatch region, where momentum or an adaptive optimizer will help.</li><li><strong>The diagnostic: healthy training shows the loss falling steadily — roughly a straight line on a log scale.</strong>
+
+Oscillating loss means the learning rate is too big. A fast drop then an early plateau means it is too small, or you are in a ravine. A loss that never moves at all usually means a bug — check your gradient against a numerical estimate: nudge one weight up and down by a tiny amount, see how the loss changes, and compare. If that finite-difference slope disagrees with your computed gradient, the gradient code is wrong.</li><li><strong>Know the batch spectrum and that backprop supplies the gradients the optimizer steps with.</strong>
+
+Full-batch gives an exact but expensive gradient; SGD (one example) is cheap and noisy; mini-batch (32–512) is the practical middle, and its noise actually helps escape sharp minima toward flatter ones — one pass is an epoch, one batch update a step. Backprop (the chain rule, one backward pass) computes those gradients efficiently; the optimizer decides how to use them. The optimizer family — momentum (velocity of past gradients), RMSProp/AdaGrad (per-parameter rates), Adam/AdamW (both, with bias correction and β₁/β₂) — each cheaply borrows curvature to fix plain GD's single-step-size weakness.</li><li><strong>Schedule the learning rate, stop on validation, and recognise the pathologies.</strong>
+
+Use warmup (ramp up to avoid early blow-ups) then decay (step, cosine, or reduce-on-plateau) — big steps early, small steps late. Stop via validation-based early stopping with a patience window (best generalisation), or gradient-norm/loss-tolerance/max-budget criteria. Read pathologies off the loss curve: vanishing gradients (early layers stall → ReLU/residuals/normalisation/init), exploding gradients (NaN → clipping/init), saddle points and plateaus (flat, near-zero gradient → momentum/adaptive methods power through), poor initialisation (saturated activations from step one).</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Gradient descent replaces an impossible search over $10^{500000}$ parameter combinations with iterative local steps — each step costs one forward and backward pass, moves downhill by one gradient step, and repeats until convergence or budget exhaustion.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Brute-forcing the parameters is impossible:</strong> 500k parameters × just 10 values each = $10^{500000}$ combinations — dwarfing the ~$10^{80}$ atoms in the observable universe. You need a completely different idea, and it's local descent.</li><li><strong>Update rule:</strong> new weights = old weights − (learning rate) × gradient. The gradient points steepest *uphill*, so you flip its sign to go down, take a small step, and repeat tens of thousands of times until the loss stops dropping.</li><li><strong>Learning rate is most of the game:</strong> too small and you crawl (days of compute); too large and each step overshoots the valley floor, so the loss bounces or flies off to infinity. Somewhere between is &quot;just right.&quot;</li><li><strong>Recompute the gradient at *every* step</strong> — it's purely *local* information. The valley curves, so the instant you move the downhill direction rotates; follow your first reading in a straight line and you'd sail past the floor and up the far wall.</li><li><strong>Ravine / condition-number problem:</strong> real losses are long narrow ravines, steep across and gentle along the floor. One step size safe on the steep walls is far too small for the flat floor — a single learning rate can't serve both, which is why momentum, Adam, and LR schedules exist.</li><li><strong>Newton's method is the ideal fix but hopeless at scale:</strong> it sizes each step by the curvature (the Hessian) but for 500k params that matrix has ~250 billion entries (~1TB) and costs O(n³) to invert — so everyone uses gradient descent and its cheap curvature approximations instead.</li><li><strong>Batch spectrum:</strong> full-batch (exact gradient, painfully slow) → SGD one example (cheap, noisy) → mini-batch 32–512 (the practical default, and its noise helps escape sharp minima). Backprop *supplies* the gradient via the chain rule; the optimizer *decides how to step* with it — keep the two distinct.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You set the learning rate 10× too large. What happens geometrically, and what does the loss curve look like?</p>
+      <ul class="check-opts"><li>`A) Each step overshoots the valley floor and lands partway up the far side, higher than it started — so the loss bounces up and down, and if the overshoot is bad enough it flies off to infinity. Geometrically you are ping-ponging across the valley, each bounce higher than the last.`</li><li>`B) It converges about 10× faster but to a worse minimum — the big steps skip past the best valley and settle in a nearby shallower one, so the loss drops quickly and then plateaus above the ideal value.`</li><li>`C) It only causes trouble on non-convex losses; while the landscape is still bowl-shaped early in training, an oversized step just reaches the bottom faster, and the instability shows up only later on.`</li><li>`D) Each step carries too much momentum and overshoots, but the loss still falls smoothly — it just settles a little high because the big steps add noise that keeps it from fully reaching the minimum.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Why must you recompute the gradient after every step, instead of computing it once and following it all the way to the minimum?</p>
+      <ul class="check-opts"><li>`A) Recomputing is just a coding convention — for simple losses you could follow the first gradient straight to the bottom, but you would need to know the exact distance to travel, which you do not, so it is recomputed as a stand-in for distance.`</li><li>`B) Because mini-batch noise changes the gradient each step; with full-batch descent on a fixed loss the gradient would not change at all, so there you really could follow the first one all the way down.`</li><li>`C) Because the gradient is local — it only describes the slope right where you are standing. Take a step and the landscape has curved, so the downhill direction has shifted. Following your first reading in a straight line would walk you past the floor and up the far wall; only on a perfectly flat, straight landscape would one gradient suffice.`</li><li>`D) Because backprop's chain rule needs the current activations, which change as the weights change — so recomputing is forced by the algorithm's mechanics, not by anything about the shape of the landscape.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Model A (α=0.001) has lower loss than Model B (α=0.1) after 1,000 steps, but by 10,000 steps they reach the same loss. What does this tell you?</p>
+      <ul class="check-opts"><li>`A) That the learning rate has no consistent effect — it is task-dependent and unpredictable, and the only safe conclusion is that you should avoid the extremes on either end.`</li><li>`B) The bigger learning rate takes bigger steps, so B makes more progress per step and gets there in fewer steps; the smaller rate is cautious and lags early, but both land in the same basin. So the learning rate sets the speed of convergence, not the destination — which is why schedules start high and decay, to get both speed and stability.`</li><li>`C) The smaller rate takes more precise steps and reaches a better minimum first; B overshoots and only catches up once its oscillations die down, which shows smaller rates always find better solutions early.`</li><li>`D) Reaching the same loss proves the learning rate does not matter here — any stable rate finds the same minimum eventually, so you should always just pick the small, safe one and be done.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> What is the condition number of a loss landscape, and why does a high one make gradient descent slow?</p>
+      <ul class="check-opts"><li>`A) It is the ratio of the highest to the lowest loss values; a high one means there are big loss gaps to cross, so you need many small steps to stay stable while covering that distance.`</li><li>`B) It is the number of parameters stuck at near-zero gradient; a high one means most parameters are barely updating, so effective depth collapses and training crawls.`</li><li>`C) It is the ratio of training loss to validation loss; a high one means severe overfitting, which drags out convergence toward a sharp minimum that does not generalise.`</li><li>`D) It is the ratio of the steepest curvature to the gentlest (the largest over the smallest Hessian eigenvalue). A high one means a long, narrow ravine — steep one way, nearly flat another. A single learning rate has to stay small enough not to diverge on the steep direction, which leaves it far too small for the flat one, so progress along the floor crawls. That mismatch is exactly what adaptive methods fix.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> An interviewer asks: &quot;You have 10 million training examples. Contrast full-batch, stochastic, and mini-batch gradient descent, and say why mini-batch is the practical default.&quot;</p>
+      <ul class="check-opts"><li>`A) Full-batch is always best because its gradient is exact; the only reason to use anything else is if the data doesn't fit in memory, in which case you use single-example SGD.`</li><li>`B) Full-batch uses all 10M examples per step — an exact gradient but very few, very expensive steps. Pure SGD uses one example per step — cheap and fast but a noisy gradient that jitters around the true direction. Mini-batch (say 32–512) averages out most of the noise while still taking many steps per epoch, giving the best speed/stability trade-off; its remaining noise even helps escape sharp minima toward flatter, better-generalising ones.`</li><li>`C) They differ only in speed, not in the path taken — all three follow the identical trajectory to the identical minimum, so the choice is purely about wall-clock time.`</li><li>`D) Mini-batch is preferred because it computes an exact gradient like full-batch but using less memory; the batch size has no effect on the noise or the quality of the minimum reached.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q6.</strong> A colleague says &quot;gradient descent and backpropagation are the same thing.&quot; How do you correct them?</p>
+      <ul class="check-opts"><li>`A) They're right — backpropagation is just another name for gradient descent, since both are about moving the weights downhill.`</li><li>`B) They're different: backpropagation is the training loss function, while gradient descent is the neural network architecture that minimises it.`</li><li>`C) They're distinct but partnered. Backpropagation is the chain rule applied layer by layer to compute the gradient of the loss with respect to every weight in a single efficient backward pass. Gradient descent is the optimisation step that then uses that gradient to update the weights. Backprop gets the gradient; the optimizer decides how to step with it.`</li><li>`D) They're different because backpropagation only works for convex losses while gradient descent works for any loss, so the two are used on entirely different problems.`</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#optimization_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

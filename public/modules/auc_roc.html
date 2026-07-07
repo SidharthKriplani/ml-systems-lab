@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ROC Curve &amp; AUC | ML Systems Lab</title>
+  <meta name="description" content="FPR/TPR, what area means, PR-AUC for imbalanced classes">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/auc_roc.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/auc_roc.html">
+  <meta property="og:title" content="ROC Curve &amp; AUC | ML Systems Lab">
+  <meta property="og:description" content="FPR/TPR, what area means, PR-AUC for imbalanced classes">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="ROC Curve &amp; AUC">
+  <meta name="twitter:description" content="FPR/TPR, what area means, PR-AUC for imbalanced classes">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "ROC Curve & AUC",
+  "description": "FPR/TPR, what area means, PR-AUC for imbalanced classes",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/auc_roc.html",
+  "keywords": "ROC, AUC, PR-AUC, ranking"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#eval_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">30 min read</span>
+      <span class="tag">ROC</span><span class="tag">AUC</span><span class="tag">PR-AUC</span><span class="tag">ranking</span>
+    </div>
+    <h1>ROC Curve &amp; AUC</h1>
+    <p class="subtitle">FPR/TPR, what area means, PR-AUC for imbalanced classes</p>
+
+    <p>Here is the problem with reporting one number for a classifier: it hides everything. Take that same fraud detector. At a threshold of 0.5 it gets precision 80%, recall 60%. Drop the threshold to 0.3 and precision falls to 65% while recall climbs to 80%. Raise it to 0.7 and you get precision 90%, recall 40%. The model's quality is not a single number — it depends entirely on where you draw the line. So how do you compare two models *before* committing to a threshold?</p>
+    <hr>
+    <h3>The ROC curve: try every threshold at once</h3>
+    <p>The ROC curve answers exactly that. For every possible threshold, compute two numbers: the <strong>TPR</strong> (true positive rate, also called recall — the fraction of real frauds you catch) and the <strong>FPR</strong> (false positive rate — the fraction of legit transactions you wrongly flag). Plot TPR up the side and FPR along the bottom. As you lower the threshold you catch more fraud (TPR rises) but also raise more false alarms (FPR rises), and the curve traces that whole trade-off in one picture.</p>
+    <p>A model that guesses randomly gives the diagonal line (TPR always equals FPR), so its area under the curve — <strong>AUC</strong> — is 0.5. A perfect model hugs the top-left corner (catch everything, flag nothing), so its AUC is 1.0. The AUC is a single score for the model across *all* thresholds at once.</p>
+    <hr>
+    <h3>What AUC actually means</h3>
+    <p>There is a lovely second reading of AUC that needs no curve at all. AUC is exactly the probability that the model scores a random real fraud higher than a random legit transaction. So AUC = 0.91 means: pick any one fraud and any one legit transaction at random, and the model ranks the fraud above the legit one 91% of the time. That is all AUC measures — how well the model *ranks* positives above negatives, averaged over every possible pair. (That is also why it ignores your threshold: it is a pure ranking score. Statisticians know it as the normalized Mann-Whitney U statistic.)</p>
+    <hr>
+    <h3>Where it quietly lies: rare positives</h3>
+    <p>Now the catch. FPR is FP / (FP + TN), and on imbalanced data that TN is enormous — 9,900 legit transactions for every 100 frauds. So even 500 false alarms give FPR = 500 / 10,400 ≈ 0.05, which looks tiny. The ROC curve sits comfortably in the top-left, AUC = 0.91, everyone is happy. But look at precision: 100 / (100 + 500) = 0.17. Six out of every seven alerts your fraud team chases are wrong.</p>
+    <p>The fix is the <strong>precision-recall (PR) curve</strong>, which plots precision against recall and never touches TN at all. When positives are rare, it is the honest picture — a model that looks production-ready on ROC-AUC can be exposed as a false-alarm machine on PR-AUC. Rule of thumb: if your positive class is under about 10% of the data, use <strong>PR-AUC</strong>, not ROC-AUC.</p>
+    <hr>
+    <p>One last thing to hold onto: AUC of either kind is a *threshold-independent* summary, so it tells you nothing about the specific cutoff you will actually run. AUC is for *choosing the model*; setting the threshold is a separate business decision driven by your cost matrix. Pick the model with AUC; pick the operating point with costs.</p>
+    <hr>
+    <h3>Partial AUC: sometimes only one corner matters</h3>
+    <p>Full AUC averages ranking quality over *every* threshold — including regions you'd never operate in. In fraud or medical screening you only ever run at very low FPR (you cannot flag 40% of legit traffic), so ranking performance in the high-FPR region is irrelevant, yet full AUC rewards it. <strong>Partial AUC</strong> restricts the area to the FPR range you actually care about (say FPR &lt; 0.05), giving a score that reflects the operating region instead of a whole-curve average. When two models tie on full AUC, partial AUC in your real operating band often separates them.</p>
+    <hr>
+    <h3>AUC says nothing about calibration</h3>
+    <p>A crucial blind spot: AUC is a *pure ranking* score, so a model can have a superb AUC and badly wrong probabilities. Multiply every predicted probability by 0.5 and the ranking — and therefore the AUC — is unchanged, but every probability is now a lie. So if you use the probability itself (pricing, expected value, a downstream model), AUC is not enough; check calibration separately with a reliability diagram and the Brier score. High AUC, good calibration is what &quot;trustworthy probabilities&quot; requires.</p>
+    <hr>
+    <h3>When ROC curves cross, one AUC hides two stories</h3>
+    <p>AUC collapses a whole curve to one number, so two models with the *same* AUC can have <strong>crossing</strong> ROC curves — model A better in the low-FPR region, model B better in the high-recall region. The single AUC averages that away. If your operating point is low-FPR, you want model A even if its total AUC is slightly lower. Always look at the curves in your operating band, not just the scalar.</p>
+    <hr>
+    <h3>Average precision is not exactly trapezoidal PR-AUC</h3>
+    <p>A subtle library gotcha: sklearn's `average_precision_score` and `auc(recall, precision)` are *not* the same number. <strong>Average precision (AP)</strong> is a weighted mean of precision values, weighted by the increase in recall at each threshold — a step-wise summary that avoids the optimistic interpolation that trapezoidal area under the PR curve can introduce. When someone reports &quot;PR-AUC,&quot; check whether they mean AP (usually what sklearn gives) or trapezoidal area; the two can differ meaningfully on small data.</p>
+    <hr>
+    <h3>Precision moves with prevalence — the formula</h3>
+    <p>This is why the same model can look fine offline and terrible in production. Precision is tied to the base rate: with prevalence π, TPR, and FPR,</p>
+    <p>$\text{precision} = \dfrac{\pi \cdot TPR}{\pi \cdot TPR + (1-\pi)\cdot FPR}$</p>
+    <p>The ROC curve (TPR vs FPR) doesn't change when prevalence shifts — but precision does, dropping as positives get rarer. So a model validated at 5% fraud can post far worse precision when live fraud falls to 1%, with identical ROC-AUC. Always recompute expected precision at the *production* base rate.</p>
+    <hr>
+    <h3>Multiclass AUC</h3>
+    <p>AUC is binary by construction, so for K classes you extend it. <strong>One-vs-rest (OvR)</strong> computes each class's AUC against all others and averages (macro or weighted). <strong>One-vs-one (OvO)</strong> averages AUC over every pair of classes and is more robust to imbalance. sklearn's `roc_auc_score` supports both via `multi_class='ovr'/'ovo'`; name which one you used, since the averaging choice changes the number.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>ROC-AUC or PR-AUC? It comes down to whether the negatives are rare or common.</strong>
+
+Use ROC-AUC when the classes are roughly balanced, or when getting the negatives right genuinely matters (like credit scoring, where correctly approving good applicants counts, not just catching defaulters). Use PR-AUC when negatives massively outnumber positives — fraud, disease screening, anomaly detection — because there the ocean of true negatives inflates the FPR denominator and makes ROC-AUC look better than it really is. Rule of thumb: if your positive class is under about 10% of the data, reach for PR-AUC.</li><li><strong>The trap: shipping a model with a great AUC on rare-positive data, then watching the alert queue overflow.</strong>
+
+AUC = 0.91 on a 1%-fraud dataset can sit right next to precision = 0.17 at the threshold you actually deploy — the ROC curve looked fine only because true negatives flooded the FPR denominator. Always check precision at your intended recall before calling a model ready. If you need 80% recall and precision there is 15%, the model is not production-ready no matter what AUC says.</li><li><strong>The habit: AUC picks the model, the cost matrix picks the threshold.</strong>
+
+After comparing models by AUC or PR-AUC, choose your deployment threshold by plotting the precision-recall trade-off and finding the point your costs demand. A concrete check: at 80% recall, how many alerts per day does that produce? If your team can handle 200 and the model would fire 2,000, the threshold has to move regardless of AUC. AUC told you which model; the costs tell you where to run it.</li><li><strong>AUC is a ranking score — blind to calibration, blind to your operating region, and blind to prevalence shift.</strong>
+
+Scaling every probability by 0.5 leaves AUC unchanged but makes the probabilities lies, so check calibration (reliability diagram, Brier) separately when you use the probability itself. Full AUC averages over thresholds you'd never run — use partial AUC in your real FPR band, and inspect the curves directly since two models with equal AUC can have crossing ROC curves (one wins at low FPR, the other at high recall). And precision = π·TPR / (π·TPR + (1−π)·FPR): the ROC doesn't move with prevalence but precision does, so recompute expected precision at the production base rate.</li><li><strong>Mind the library and multiclass details.</strong>
+
+sklearn's average precision (a recall-weighted mean of precision) is not identical to trapezoidal PR-AUC and avoids its optimistic interpolation — so confirm which &quot;PR-AUC&quot; someone means. For K classes, AUC extends via one-vs-rest (each class vs the rest, averaged) or one-vs-one (every pair, more robust to imbalance); state which averaging you used because it changes the number. Treat the &quot;positives &lt; 10% → use PR-AUC&quot; rule as a helpful heuristic, not a law — PR-AUC has its own quirks under shifting prevalence and isn't universally superior.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>ROC-AUC denominates FPR with true negatives, so on imbalanced datasets it is structurally optimistic — switch to PR-AUC when your positive class is rare, and always set a concrete operating threshold from your cost matrix before shipping.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>The ROC curve tries every threshold at once:</strong> plot TPR (recall — fraction of frauds caught) up the side against FPR (fraction of legit wrongly flagged) along the bottom, sweeping all thresholds. Random guessing gives the diagonal (AUC 0.5); a perfect model hugs the top-left (AUC 1.0).</li><li><strong>AUC is a pure ranking score with a clean probabilistic meaning:</strong> AUC = P(model scores a random real positive above a random real negative). AUC 0.91 means it ranks a random fraud above a random legit transaction 91% of the time — which is why it ignores your threshold entirely. It equals the normalized Mann-Whitney U statistic.</li><li><strong>Rare positives quietly fool ROC-AUC:</strong> FPR = FP/(FP+TN), and on imbalanced data that TN is enormous (9,900 legit per 100 fraud), so even 500 false alarms give FPR ≈ 0.05 — the curve sits in the top-left, AUC 0.91 — while precision is only 100/(100+500) = 0.17. Six of every seven alerts are wrong.</li><li><strong>When positives are under ~10%, use PR-AUC:</strong> precision-recall curve plots precision vs recall and never touches TN, so it exposes the false-alarm floods ROC-AUC hides. It's a heuristic, not a law — PR-AUC has its own quirks under shifting prevalence.</li><li><strong>AUC picks the model; the cost matrix picks the threshold:</strong> AUC is threshold-independent, so it says nothing about the specific cutoff you'll run. Choose the model by AUC, then set the operating point by plotting the precision-recall trade-off against your costs — at 80% recall, how many alerts/day does that make?</li><li><strong>AUC is blind to calibration:</strong> it's pure ranking, so multiply every predicted probability by 0.5 and the AUC is unchanged while every probability is now a lie. If you use the probability itself (pricing, expected value, a downstream model), check calibration separately (reliability diagram, Brier score).</li><li><strong>Precision moves with prevalence — the formula:</strong> precision = $\pi\cdot TPR / (\pi\cdot TPR + (1-\pi)\cdot FPR)$. The ROC (TPR vs FPR) doesn't move when prevalence shifts, but precision drops as positives get rarer — a model validated at 5% fraud posts worse precision when live fraud falls to 1%, at identical ROC-AUC. Use partial AUC in your operating FPR band, and state OvR vs OvO for multiclass since the averaging changes the number.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Two models have the same AUC-ROC (0.85) on a 1% positive rate dataset. How would you further differentiate them?</p>
+      <ul class="check-opts"><li>A) Run longer training with more epochs — same AUC means one model hasn't converged yet</li><li>B) Compare their decision boundaries visually — AUC is a rough metric and visual inspection is more reliable</li><li>C) Check F1 score at threshold=0.5 — this is the standard operating threshold that reveals differences</li><li class="correct">D) Compare PR-AUC, precision at specific recall targets, calibration via Brier score, and lift curves — same AUC-ROC can mask very different PR curves especially in the high-recall regime where one model may be much more precise</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Your fraud model has AUC=0.96. The business team says the alert queue has too many false alarms. What happened and how do you fix it?</p>
+      <ul class="check-opts"><li class="correct">A) AUC=0.96 measures ranking quality, not operational precision at the deployed threshold — raise the score threshold to reduce FPs, or recalibrate with Platt scaling if precision is poor even at high thresholds</li><li>B) AUC=0.96 is too high and indicates overfitting — retrain with more regularization to reduce false alarms</li><li>C) The model needs more training data — high AUC with high false alarms means insufficient examples of legitimate transactions</li><li>D) Switch to a different model architecture — AUC=0.96 means the current model type is not suited to fraud detection</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> AUC-ROC for a model is 0.72. A colleague argues that &quot;since 0.72 &gt; 0.5, the model is useful.&quot; Is that a sufficient argument?</p>
+      <ul class="check-opts"><li>A) Yes — any AUC above 0.5 means the model ranks positives above negatives better than chance, which is sufficient for production use</li><li class="correct">B) No — AUC &gt; 0.5 only means better-than-chance ranking; it says nothing about whether the degree of improvement is meaningful at the specific operating threshold needed, or whether performance is uniform across subgroups</li><li>C) Yes — 0.72 is above the industry standard threshold of 0.70, making the model production-ready</li><li>D) No — 0.72 is too low to be useful; only models with AUC &gt; 0.85 should be considered for production</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> What is the relationship between AUC-ROC and the Mann-Whitney U statistic?</p>
+      <ul class="check-opts"><li>A) They are inversely related — high AUC corresponds to a low Mann-Whitney U, making them complementary tests</li><li>B) Mann-Whitney U tests for statistical significance while AUC measures effect size — they are related but measure different things</li><li class="correct">C) AUC-ROC equals the normalized Mann-Whitney U statistic: both compute P(score(positive) &gt; score(negative)) over all (positive, negative) pairs — so AUC can be computed by counting concordant pairs without drawing the ROC curve</li><li>D) They are unrelated — AUC is a geometric property of the ROC curve while Mann-Whitney U is a rank-based statistical test</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> Your model validated at 5% fraud prevalence with ROC-AUC 0.95 and precision 0.60 at the deployed threshold. In production, live fraud has fallen to 1%. What happens to ROC-AUC and precision, and why?</p>
+      <ul class="check-opts"><li>A) Both drop proportionally, because every metric scales with the base rate of the positive class.</li><li class="correct">B) ROC-AUC stays about the same (TPR and FPR don't depend on prevalence), but precision falls — from precision = π·TPR/(π·TPR + (1−π)·FPR), a smaller π shrinks the numerator while the false positives from the large negative pool grow, so the same model produces a worse precision at 1% than at 5%. Recompute expected precision at the production base rate.</li><li>C) ROC-AUC rises because rarer positives are easier to rank, and precision rises too since there are fewer positives to get wrong.</li><li>D) Neither changes — ROC-AUC and precision are both threshold- and prevalence-independent summaries of the model.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q6.</strong> You're building a fraud screen that can only ever operate at FPR below 5% (you can't block more legit traffic than that). Two models tie on full ROC-AUC. What's the sharper way to compare them?</p>
+      <ul class="check-opts"><li>A) Compare full ROC-AUC again with more decimal places — the tie will resolve at higher precision.</li><li class="correct">B) Compare partial AUC restricted to the FPR &lt; 0.05 region (or precision at your target low-FPR operating point). Full AUC averages over high-FPR thresholds you'll never use, so it can hide that one model is clearly better in the band you actually run — inspect the curves there, since equal-AUC models can cross.</li><li>C) Pick whichever model has the higher accuracy at threshold 0.5, since that's the standard operating point.</li><li>D) They're genuinely equivalent — identical full AUC means identical ranking everywhere, so choose either.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#eval_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

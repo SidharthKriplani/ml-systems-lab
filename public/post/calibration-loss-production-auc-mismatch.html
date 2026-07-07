@@ -38,8 +38,8 @@
       "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
     }
   },
-  "datePublished": "2026-06-20",
-  "dateModified": "2026-06-20",
+  "datePublished": "2026-07-07",
+  "dateModified": "2026-07-07",
   "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/calibration-loss-production-auc-mismatch.html",
   "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
   "keywords": "Calibration, Model Evaluation, Probability, AUC vs Calibration, Production ML, Reliability Diagrams"
@@ -72,7 +72,7 @@
     <div class="meta">Model Evaluation &middot; ML Systems Lab</div>
     <h1>Calibration Loss in Production: When 95% AUC Predicts 60% Precision</h1>
     <p class="excerpt">Your model has 0.95 AUC offline. In production, precision at the same threshold is 0.60. AUC doesn&#39;t predict absolute precision because AUC only measures rank ordering — it doesn&#39;t care about calibration. A model can have perfect AUC and completely miscalibrated probabilities. Here&#39;s what calibration actually means, why production systems need it, and how to detect and fix calibration loss before it breaks your downstream decisions.</p>
-    <p>Calibration is a property that nearly every ML engineer misunderstands. Here\'s the correct definition: a model is calibrated if, when it predicts probability p, the actual frequency of the positive outcome among those predictions is approximately p.</p>
+    <p>Calibration is a property that nearly every ML engineer misunderstands. Here's the correct definition: a model is calibrated if, when it predicts probability p, the actual frequency of the positive outcome among those predictions is approximately p.</p>
 <p>Example: if a model predicts P(fraud) = 0.8 for 1000 transactions, and 800 of them are actually fraudulent, the model is well-calibrated. If only 200 are fraudulent, the model is vastly overconfident.</p>
 <p>AUC measures rank ordering, not calibration. A perfectly ranked model with AUC 0.99 can be completely miscalibrated — assigning probabilities 100× too high or 100× too low while maintaining perfect rank order.</p>
 <h2>Why calibration matters in production:</h2>
@@ -97,7 +97,7 @@
 <h2>1. Confidence miscalibration (model too confident)</h2>
 <p>The model's high-confidence predictions occur less frequently than predicted. Scores of 0.9 correspond to actual rates of 0.5.</p>
 <p>Fix: Platt scaling. Train a logistic regression: targets = true labels, features = model scores. The fitted logistic curve rescales the model's scores to match reality.</p>
-<p>\`\`\`python from sklearn.calibration import CalibratedClassifierCV calibrated_model = CalibratedClassifierCV(model, cv='precomputed', method='sigmoid') calibrated_model.fit(X_val, y_val) \`\`\`</p>
+<p>```python from sklearn.calibration import CalibratedClassifierCV calibrated_model = CalibratedClassifierCV(model, cv='precomputed', method='sigmoid') calibrated_model.fit(X_val, y_val) ```</p>
 <p>Cost: minimal. One additional logistic regression fit on a validation set.</p>
 <h2>2. Systematic base-rate shift (deployed to different segment)</h2>
 <p>Model trained on 2% base rate, deployed to 20% base rate. Same scores, very different calibration.</p>
@@ -105,7 +105,7 @@
 <h2>3. Probability output type mismatch (mixing different model families)</h2>
 <p>An ensemble mixes a neural network (sigmoid outputs) with LightGBM (raw scores). The ensemble aggregates them naively without scaling.</p>
 <p>Fix: calibrate each model separately to [0, 1] before ensembling. Use isotonic regression (more flexible than Platt scaling) if you have enough calibration data (500+ examples).</p>
-<p>\`\`\`python from sklearn.calibration import IsotonicRegression iso_reg = IsotonicRegression(out_of_bounds='clip') iso_reg.fit(lgbm_scores, y_val) lgbm_probs = iso_reg.transform(lgbm_scores) \`\`\`</p>
+<p>```python from sklearn.calibration import IsotonicRegression iso_reg = IsotonicRegression(out_of_bounds='clip') iso_reg.fit(lgbm_scores, y_val) lgbm_probs = iso_reg.transform(lgbm_scores) ```</p>
 <h2>The production checkpoint:</h2>
 <p>Before shipping a model: 1. Generate a reliability diagram on a validation set 2. For each decile of predicted probability, verify that actual positive rate ≈ predicted probability 3. If any decile has actual rate that diverges > 0.1 from predicted, apply Platt scaling or isotonic regression 4. Recompute the reliability diagram after calibration — all deciles should align with the diagonal 5. Ship the calibrated model</p>
 <h2>In production:</h2>

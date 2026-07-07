@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neural Network Fundamentals | ML Systems Lab</title>
+  <meta name="description" content="Perceptron, universal approximation, depth vs width, XOR">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/neural_nets.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/neural_nets.html">
+  <meta property="og:title" content="Neural Network Fundamentals | ML Systems Lab">
+  <meta property="og:description" content="Perceptron, universal approximation, depth vs width, XOR">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Neural Network Fundamentals">
+  <meta name="twitter:description" content="Perceptron, universal approximation, depth vs width, XOR">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Neural Network Fundamentals",
+  "description": "Perceptron, universal approximation, depth vs width, XOR",
+  "proficiencyLevel": "Foundational",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/neural_nets.html",
+  "keywords": "neural networks, universal approximation, depth, perceptron"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#dl_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Foundational</span>
+      <span class="read-time">31 min read</span>
+      <span class="tag">neural networks</span><span class="tag">universal approximation</span><span class="tag">depth</span><span class="tag">perceptron</span>
+    </div>
+    <h1>Neural Network Fundamentals</h1>
+    <p class="subtitle">Perceptron, universal approximation, depth vs width, XOR</p>
+
+    <p>Take two on/off inputs, x₁ and x₂, and try to learn <strong>XOR</strong>: output 1 when *exactly one* input is on, and 0 otherwise. Plot the four cases on a grid and try to separate the 1s from the 0s with a single straight line. You cannot — the 1s sit on one diagonal, the 0s on the other. This is not a data problem or a tuning problem; it is a hard limit. A single linear model can only draw *one* straight boundary, and XOR needs the space bent. And here is the thing: *every* problem a neural network solves is, deep down, this same problem — the input cannot be split as-is, so the model has to reshape it first.</p>
+    <hr>
+    <h3>One hidden layer is the fix</h3>
+    <p>Slip a layer of two neurons between the inputs and the output, pass each through a non-linear squash, and suddenly the network can draw curved, bent, folded boundaries. For XOR: one hidden neuron learns to fire on the &quot;exactly one on&quot; cases, the other suppresses the &quot;both on / both off&quot; cases, and the output combines them. The hidden layer has *transformed* the input into a new space where a straight line finally works — and that is what every hidden layer in every network is doing: reshaping the representation until the decision becomes easy.</p>
+    <hr>
+    <h3>How wide, how deep?</h3>
+    <p>The <strong>universal approximation theorem</strong> says something reassuring: a network with a *single* hidden layer, given enough neurons, can approximate *any* continuous function as closely as you like. So why go deep at all? Because &quot;enough neurons&quot; in one layer can be astronomically many — sometimes exponential in the number of inputs — while a *second* layer can represent the same function with far fewer neurons. That is the real case for depth: not &quot;deeper is magically more accurate,&quot; but &quot;depth lets you represent complex functions far more *efficiently*, with fewer parameters.&quot;</p>
+    <p>But — and this matters — the theorem only says a good solution *exists* at depth. It says nothing about whether gradient descent will *find* it. A careless 10-layer network can have its early layers starved of gradient (the vanishing-gradient problem) and simply not learn. That is why so much of deep learning — better activations, normalisation, residual connections — exists purely to make depth *trainable*. Depth buys efficiency; the rest of the toolkit buys the ability to actually use it.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>When the problem has structure a single boundary cannot capture.</strong> If a scatter plot of your data cannot be separated by a line (or hyperplane in higher dimensions), a single-layer linear model will always fail — not because of tuning, but structurally. Start with one hidden layer of 8–64 neurons. Add depth only when you have verified the model is capacity-limited on training data, not when validation accuracy is poor (that is a regularisation or data problem).</li><li><strong>The production trap: confusing depth with performance.</strong> The most common mistake is adding layers when training loss has stalled. Before adding depth, verify that early layers are receiving gradient signal: hook into the backward pass and log gradient norms per layer. A ratio of 1000:1 between last-layer and first-layer gradient norms means your depth is wasted — those early layers are not learning. Adding more layers worsens this. Fix the gradient flow (ReLU, residual connections, better initialisation) before increasing depth.</li><li><strong>The diagnostic: overfit a single training batch.</strong> Before any hyperparameter search, take one mini-batch and train on it alone with no regularisation. A correct model should reach near-zero loss within 100–200 steps. If it does not, the model cannot learn anything — the architecture, loss function, or output activation is wrong. This test rules out implementation bugs before you spend hours tuning a broken model.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Depth buys representational efficiency, not accuracy for free — every layer must receive gradient signal or it contributes nothing, which is why the entire architecture of modern deep learning is an answer to the question of how to make depth trainable.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>XOR = the whole game:</strong> plot the four cases and no single straight line separates the 1s (exactly-one-on) from the 0s (both-on / both-off) — they sit on opposite diagonals. This is a structural limit of a linear model, not a data or tuning problem, and every problem a network solves is deep down this same &quot;the input can't be split as-is&quot; problem.</li><li><strong>One hidden layer is the fix:</strong> slip in a layer of non-linear neurons and the network can bend, fold, and curve the boundary — it *transforms* the input into a new space where a straight line finally separates the classes. That reshaping is exactly what every hidden layer in every network is doing.</li><li><strong>Universal approximation theorem:</strong> one hidden layer with enough neurons can approximate *any* continuous function arbitrarily well. The catch: &quot;enough&quot; can be astronomically many (exponential in the inputs), whereas a second layer represents the same function with far fewer neurons — so depth is about *efficiency*, not reachability.</li><li><strong>Depth buys efficiency, not free accuracy:</strong> the theorem only says a good solution *exists* at depth — it says nothing about whether gradient descent will *find* it. A careless deep net can starve its early layers of gradient and simply not learn, which is why activations, normalisation, and residual connections exist: to make depth *trainable*.</li><li><strong>Verify capacity-limited before adding depth:</strong> the common mistake is stacking layers when training loss stalls. First hook the backward pass and log per-layer gradient norms — a 1000:1 ratio between last-layer and first-layer norms means the early layers get no signal and the depth is already wasted; more layers make it worse. Fix gradient flow (ReLU, residuals, better init) before going deeper.</li><li><strong>Diagnostic — overfit one batch:</strong> before any hyperparameter search, train on a single mini-batch with no regularisation; a correct model should crash to near-zero loss in 100–200 steps. If it can't, the architecture, loss function, or output activation is wrong — this rules out implementation bugs before you waste hours tuning a broken model.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> A fully connected layer with 512 inputs and 256 outputs has how many parameters? What is the forward pass computation?</p>
+      <ul class="check-opts"><li>A) Two hidden layers of 64 units each: ~64×64 + 64×64 = 8,192 parameters (omitting input/output). For equal parameter counts with typical image inputs, depth helps for hierarchical features — a deeper network learns edges → textures → parts → objects. Empirical finding: depth matters more than width for visual tasks like image recognition.</li><li>B) Parameters: weight matrix W is 256×512, so 256×512 = 131,072 weights; the model also needs a separate normalisation layer. Total: 131,072 + 512 = 131,584 parameters. Forward pass: given input x (512×1), compute z = Wx (256×1), then add normalisation before activation: a = σ(normalize(z)).</li><li>C) Parameters: weight matrix W is 512×256, so 512×256 = 131,072 weights; bias vector b is 512×1, so 512 biases. Total: 131,072 + 512 = 131,584 parameters. Forward pass: given input x (512×1), compute z = Wx + b (256×1) — the weight matrix must match input dimension, so W is input_dim × output_dim.</li><li class="correct">D) Parameters: weight matrix W is 256×512, so 256×512 = 131,072 weights; bias vector b is 256×1, so 256 biases. Total: 131,072 + 256 = 131,328 parameters. Forward pass: given input x (512×1), compute z = Wx + b (256×1) — a matrix-vector multiplication requiring 256×512 = 131,072 multiply-accumulate operations (FLOPs ≈ 2×131,072 for multiply+add). Then apply activation: a = σ(z). For a batch of n samples (X is 512×n), the forward pass is Z = WX + b where b is broadcast across columns, giving 256×n output — a matrix-matrix multiplication of cost O(256×512×n).</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Universal approximation theorem says a neural network can approximate any continuous function. Why doesn't this guarantee good generalisation?</p>
+      <ul class="check-opts"><li>A) Universal approximation applies only to networks with sigmoid activations — networks using ReLU activations have limited expressiveness and cannot approximate all continuous functions. With ReLU, the network can only represent piecewise-linear functions, so the theorem's guarantee doesn't apply to modern deep networks that rely on ReLU.</li><li class="correct">B) Universal approximation is an existence theorem: it says a network with sufficient width/depth can represent any continuous function arbitrarily well on a compact set. It does NOT say the network will learn that function from finite data. The gap: (1) we have finite training data n, not the function itself; (2) the optimisation is non-convex — gradient descent may not find the globally optimal approximation; (3) even if the network fits the training function perfectly, with finite data, many functions fit training data equally well (overfitting). The universal approximator could be learning noise rather than the true underlying function. Generalisation requires regularisation, sufficient data, and the right inductive biases — none of which the theorem addresses.</li><li>C) Universal approximation guarantees that the network can represent the function, but gradient descent is guaranteed to find the global optimum only for convex loss surfaces. Since neural network loss is non-convex, gradient descent always converges to a local minimum that may be far from the true function, regardless of network capacity.</li><li>D) Universal approximation only holds in the limit of infinite width — in practice, finite-width networks cannot approximate all continuous functions. The theorem's conditions are never met in real networks, so it provides no guarantee even in theory for the finite-width networks used in practice.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Two hidden layers with 64 units each vs one hidden layer with 4096 units: same parameter count approximately. Which architecture performs better for image recognition, and why?</p>
+      <ul class="check-opts"><li class="correct">A) Two layers of 64 units: ~64×64 + 64×64 = 8,192 (omitting input/output). One layer of 4096: the actual parameter count is input_dim × 4096 &gt;&gt; 8192. For equal parameter counts with typical image inputs (d=3072 for 32×32×3): the 2-layer architecture has far fewer parameters unless carefully balanced. Setting aside exact counts: depth helps for hierarchical features. For image recognition, a deeper network (even with fewer parameters) learns hierarchical representations — edges → textures → parts → objects. A very wide single hidden layer maps all input pixels to 4096 units directly — no hierarchical composition. Empirical finding: depth matters more than width for visual tasks. LeNet, VGG, and ResNets are all deep, not just wide.</li><li>B) The single layer with 4096 units performs better because it has more neurons to directly process input patterns. Wider layers can represent more diverse feature combinations simultaneously, and a single nonlinearity applied across 4096 units is sufficient to learn complex visual patterns without the gradient attenuation that occurs across multiple layers.</li><li>C) The two architectures perform identically because they have the same parameter count and therefore the same representational capacity. The universal approximation theorem guarantees that both can represent the same class of functions — depth vs width is a training stability concern, not an expressiveness concern, for equal parameter budgets.</li><li>D) The single hidden layer of 4096 units performs better for image recognition specifically because pooling-like behaviour emerges naturally in very wide single layers — the large number of units can implicitly learn spatial invariances that depth would provide, with the advantage of simpler gradient flow through fewer layer transitions.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#dl_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

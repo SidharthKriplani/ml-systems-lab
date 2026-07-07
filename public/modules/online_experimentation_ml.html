@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Online Experimentation for ML Launches | ML Systems Lab</title>
+  <meta name="description" content="Power/MDE, SRM, guardrails, CUPED, sequential/peeking — the A/B machinery for shipping a model safely">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/online_experimentation_ml.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/online_experimentation_ml.html">
+  <meta property="og:title" content="Online Experimentation for ML Launches | ML Systems Lab">
+  <meta property="og:description" content="Power/MDE, SRM, guardrails, CUPED, sequential/peeking — the A/B machinery for shipping a model safely">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Online Experimentation for ML Launches">
+  <meta name="twitter:description" content="Power/MDE, SRM, guardrails, CUPED, sequential/peeking — the A/B machinery for shipping a model safely">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Online Experimentation for ML Launches",
+  "description": "Power/MDE, SRM, guardrails, CUPED, sequential/peeking — the A/B machinery for shipping a model safely",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/online_experimentation_ml.html",
+  "keywords": "evaluation, A/B testing, experimentation, MDE, CUPED, guardrails, SRM"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#eval_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">24 min read</span>
+      <span class="tag">evaluation</span><span class="tag">A/B testing</span><span class="tag">experimentation</span><span class="tag">MDE</span><span class="tag">CUPED</span>
+    </div>
+    <h1>Online Experimentation for ML Launches</h1>
+    <p class="subtitle">Power/MDE, SRM, guardrails, CUPED, sequential/peeking — the A/B machinery for shipping a model safely</p>
+
+    <p>Your challenger model beat the champion by 3% AUC offline. That number does not launch anything. Offline AUC is measured on logged data the *old* model shaped — the same feedback loops, the same exposure bias — and it says nothing about what happens when the new model actually changes what users see. The only way to know a model is better *for the product* is to run it live against the incumbent and measure the metric you actually care about: engagement, revenue, retention. That live comparison is an A/B test (champion vs challenger), and getting it right is a distinct skill from training the model. This module is the launch-safety subset of experimentation — the deeper causal-inference theory lives in PAL; here we cover what a DS/MLE must not get wrong when shipping a model.</p>
+    <hr>
+    <p><strong>Power and minimum detectable effect: size the test before you run it.</strong> A test's *power* is the probability it detects a real effect of a given size. Power depends on three things: the effect size you want to catch (the minimum detectable effect, MDE), the variance of the metric, and the sample size. They trade off — smaller MDE, or noisier metric, means you need more samples. The killer failure mode is the <strong>underpowered test</strong>: too few users to detect the effect you care about, so a genuine 1% lift comes back &quot;not significant&quot; and you either wrongly kill a good model or, worse, ship on a fluke. An underpowered test is a coin flip dressed up as evidence. Standard practice: fix α (false-positive rate, usually 0.05) and target power (usually 0.80), decide the MDE that matters commercially, then *solve for the sample size and runtime* up front. If the math says you need six weeks of traffic to detect a 0.5% lift and you only have one week, you know that *before* you burn the experiment.</p>
+    <hr>
+    <p><strong>Sample-ratio mismatch: the plumbing sanity check.</strong> You assigned 50/50, but the logs show 50.0% control and 48.3% treatment. That 1.7-point gap sounds tiny — but at scale it is astronomically unlikely by chance, and it means the *randomization itself is broken*: maybe treatment errors out and those users silently drop, maybe a redirect fails, maybe logging is lossy on one arm. When assignment is broken, the two groups are no longer comparable and <strong>every downstream metric is untrustworthy</strong> — including the win you were about to celebrate. The check is a <strong>chi-square goodness-of-fit test</strong> on the observed split against the intended ratio. If SRM fires, you stop and fix the plumbing; you do not interpret the results. It is the first thing a senior person looks at.</p>
+    <hr>
+    <p><strong>Guardrails: a win on the target metric is not a launch.</strong> Ranking models are notorious for this: the new model lifts click-through by 2% while quietly raising p99 latency by 40ms, or lifting engagement while depressing revenue-per-session, or boosting short-term clicks while increasing report/block rates. <strong>Guardrail metrics</strong> — latency, error rate, revenue, crash rate, unsubscribe rate — are the non-negotiables the launch must not harm. You monitor them alongside the target metric, and a target-metric win that trips a guardrail is *not a ship*. This is where model launches differ most from generic A/B tests: an ML model's failure modes (a latency regression from a heavier network, a fairness regression on a slice, a feedback loop that degrades over weeks) show up in guardrails, not in the headline metric.</p>
+    <hr>
+    <p><strong>CUPED: buy statistical power for free with pre-period data.</strong> Much of a metric's variance is baseline user difference, not treatment effect — a heavy spender spends a lot in both arms. <strong>CUPED</strong> (Controlled-experiment Using Pre-Existing Data) uses each user's *pre-experiment* behavior as a covariate to subtract off that predictable baseline: it forms an adjusted metric `Y_adj = Y − θ(X − E[X])`, where X is the pre-period value and θ is chosen to minimize variance. The treatment effect is unchanged (X is pre-treatment, so it can't be affected by the assignment), but the *variance* drops by roughly the squared pre/post correlation. Less variance means a smaller MDE at the same sample size — often a 30–50% variance reduction, which can turn a six-week test into three weeks. It is one of the highest-leverage tricks in the toolkit and costs nothing but a join to historical data.</p>
+    <hr>
+    <p><strong>Sequential testing and the peeking problem.</strong> A classic fixed-horizon test is only valid if you look *once*, at the pre-planned sample size. The temptation is to watch the dashboard and stop the moment p &lt; 0.05. But every additional look is another chance for noise to cross the threshold — repeated peeking at a fixed-α test inflates the true false-positive rate far above the nominal 5% (peek continuously and it approaches 100%). Model launches make this worse because the pressure to ship or roll back *now* is intense. The fix is methods designed for continuous monitoring: <strong>sequential testing</strong> and <strong>always-valid p-values / confidence sequences</strong> (e.g. mixture sequential probability ratio tests, group-sequential boundaries), which spend the error budget across looks so you can stop early — for a win *or* a guardrail breach — without inflating false positives. If you need to peek, use a method built to be peeked at.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Size the test before running it — power depends on MDE, variance, and n.</strong> Fix α (0.05) and power (0.80), pick the commercially meaningful MDE, then solve for sample size and runtime up front. An underpowered test is a coin flip: a real lift returns &quot;not significant&quot; and you kill a good model or ship a fluke. Roughly n ∝ variance / MDE² per arm, so halving the MDE quadruples the users needed.</li><li><strong>SRM is the first sanity check — a broken split invalidates every downstream number.</strong> A 50/50 assignment landing at 50.0/48.3 is astronomically unlikely by chance and signals broken randomization (treatment erroring out, lossy logging, failed redirects). Run a chi-square goodness-of-fit on the observed split; if it fires, stop and fix the plumbing before interpreting any metric.</li><li><strong>Guardrails gate the launch — a target-metric win that trips one is not a ship.</strong> Monitor latency, error rate, revenue, crash/report rates alongside the target metric. ML models fail specifically here: a heavier network adds p99 latency, a feedback loop degrades a slice. Guardrails, not the headline metric, catch the launch-specific damage.</li><li><strong>CUPED reduces variance for free using pre-period data — same effect, less noise, smaller MDE.</strong> Adjust Y with a pre-experiment covariate X: Y_adj = Y − θ(X − E[X]). Because X is pre-treatment the effect estimate is unbiased, but variance drops by ~ the squared pre/post correlation (often 30–50%), shrinking the MDE or runtime at the same n.</li><li><strong>Peeking at a fixed-horizon test inflates false positives — use sequential methods to stop early.</strong> Every extra look is another chance for noise to cross α; continuous peeking pushes the true FPR toward 100%. Always-valid p-values / confidence sequences / group-sequential boundaries spend the error budget across looks, so you can stop for a win or a guardrail breach without breaking the guarantee.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Shipping a model safely is an A/B discipline, not a modeling one: pre-compute the sample size from your MDE, α, power, and metric variance so the test isn't a coin flip; check SRM (chi-square on the split) before trusting any result; gate the launch on guardrails (latency/error/revenue), because a target-metric win that trips one is not a ship; use CUPED to cut variance with pre-period data and buy back power for free; and if you must watch the dashboard, use sequential / always-valid methods so peeking doesn't inflate your false-positive rate.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Offline metrics don't launch models — live A/B does.</strong> Offline AUC is measured on data the old model shaped and ignores product impact. Ship via a champion/challenger test on the real metric (engagement/revenue/retention) plus guardrails.</li><li><strong>Size before you run: power = f(MDE, variance, n).</strong> Fix α=0.05 and power=0.80, pick the MDE that matters, solve for n and runtime. n ∝ variance/MDE² per arm — halving the MDE quadruples the users. An underpowered test is a coin flip.</li><li><strong>SRM first: a broken split invalidates everything.</strong> A 50/50 landing at 50/48 at scale is not chance — it's broken randomization/logging. Chi-square on the split; if it fires, stop and fix the plumbing before reading any metric.</li><li><strong>Guardrails gate the ship.</strong> Latency, error rate, revenue, report/crash rates must not regress. A target-metric win that trips a guardrail (e.g. +2% clicks, +50ms p99) is not a launch — this is where ML-specific failure modes surface.</li><li><strong>CUPED buys power for free; sequential methods make peeking safe.</strong> CUPED subtracts pre-period variance (Y_adj = Y − θ(X − E[X])) — unbiased effect, ~30–50% less variance, smaller MDE. And repeated peeking inflates false positives, so use always-valid / sequential tests to stop early without breaking α.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Your challenger model shows +3% AUC offline. Your manager wants to ship it based on that number. What is the correct response?</p>
+      <ul class="check-opts"><li>A) Ship it — a 3% AUC lift is a large, reliable signal and offline evaluation is exactly what AUC is for.</li><li class="correct">B) Offline AUC is measured on data the old model shaped and doesn't measure product impact; run a live champion/challenger A/B test, sized for the MDE that matters, and judge on the real product metric plus guardrails before launching.</li><li>C) Ship to 100% but keep a rollback ready — offline AUC plus a fast rollback is equivalent to an A/B test.</li><li>D) Retrain with more data until offline AUC exceeds +5%, then ship, since a bigger offline gap removes the need for a live test.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> You planned a 50/50 experiment. After a day, exposure logs show 50.1% control and 47.9% treatment across 2 million users. What should you conclude and do?</p>
+      <ul class="check-opts"><li>A) A 2-point gap is within normal randomization noise at this scale; proceed and interpret the metrics as usual.</li><li class="correct">B) This is a sample-ratio mismatch — at 2M users that split is astronomically unlikely by chance, so randomization or logging is broken. Every downstream metric is untrustworthy; stop, run a chi-square to confirm, and fix the plumbing before interpreting results.</li><li>C) Treatment is simply less popular with users, which is itself the result — log it as a negative engagement finding.</li><li>D) Re-randomize only the treatment arm to rebalance to 50/50, then continue the same experiment.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Your new ranking model lifts the target metric (session clicks) by +2.1% with p &lt; 0.01. During the test, p99 serving latency rose from 80ms to 130ms and revenue-per-session dropped 0.8%. Do you launch?</p>
+      <ul class="check-opts"><li>A) Yes — the target metric won decisively at p &lt; 0.01, and latency/revenue are secondary to the primary success metric.</li><li class="correct">B) No — latency and revenue are guardrail metrics the launch must not harm. A +2.1% click win that adds 50ms of p99 latency and drops revenue is a guardrail breach, not a ship; investigate the tradeoff before any rollout.</li><li>C) Yes, but only to mobile users, since the latency regression only matters on slow connections.</li><li>D) Re-run the test without logging latency, so the guardrail can't block a statistically significant win.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> Your metric is noisy and the required sample size for a 1% MDE is six weeks of traffic you don't have. A colleague suggests CUPED. What does CUPED do and why does it help here?</p>
+      <ul class="check-opts"><li>A) CUPED increases the treatment effect by adjusting outcomes upward, so the same effect becomes easier to detect.</li><li class="correct">B) CUPED uses each user's pre-experiment behavior as a covariate to subtract off predictable baseline variance (Y_adj = Y − θ(X − E[X])). The effect estimate stays unbiased because X is pre-treatment, but variance drops by ~ the squared pre/post correlation — shrinking the MDE or runtime at the same n.</li><li>C) CUPED raises the α threshold from 0.05 to 0.10, making significance easier to reach without more data.</li><li>D) CUPED replaces the noisy metric with a proxy metric that has lower variance by definition.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> A PM keeps refreshing the experiment dashboard and wants to stop the test &quot;the moment it hits p &lt; 0.05.&quot; Why is this dangerous on a standard fixed-horizon test, and what is the fix?</p>
+      <ul class="check-opts"><li>A) It's fine — p &lt; 0.05 means 95% confidence whenever you observe it, so stopping early at that threshold is always valid.</li><li class="correct">B) Each extra look is another chance for noise to cross α, so repeated peeking inflates the true false-positive rate well above 5% (toward 100% with continuous peeking). Use sequential testing / always-valid p-values / group-sequential boundaries that spend the error budget across looks, so you can stop early without breaking the guarantee.</li><li>C) The danger is only that stopping early reduces sample size; peeking itself doesn't affect the false-positive rate, so a larger planned n solves it.</li><li>D) Switch to a one-sided test, which halves the p-value and makes early stopping safe.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q6.</strong> You need to detect a 0.5% lift instead of a 1% lift, keeping α and power fixed. Roughly how does the required sample size change, and what's the cheapest way to offset it?</p>
+      <ul class="check-opts"><li>A) It roughly doubles (n ∝ 1/MDE), and the only fix is to wait twice as long for traffic.</li><li class="correct">B) It roughly quadruples (n ∝ 1/MDE², since halving the MDE squares the factor), and the cheapest offset is CUPED — cutting metric variance 30–50% with pre-period data reduces the required n proportionally without extra traffic or a longer runtime.</li><li>C) It stays the same — MDE only affects power, not sample size — so no offset is needed.</li><li>D) It roughly halves, because a smaller effect is easier to detect, so you can shorten the test.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#eval_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

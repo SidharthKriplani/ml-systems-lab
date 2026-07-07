@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Two-Tower Models | ML Systems Lab</title>
+  <meta name="description" content="Encode separately, compare cheaply — the retrieval workhorse">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/two_tower.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/two_tower.html">
+  <meta property="og:title" content="Two-Tower Models | ML Systems Lab">
+  <meta property="og:description" content="Encode separately, compare cheaply — the retrieval workhorse">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Two-Tower Models">
+  <meta name="twitter:description" content="Encode separately, compare cheaply — the retrieval workhorse">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Two-Tower Models",
+  "description": "Encode separately, compare cheaply — the retrieval workhorse",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/two_tower.html",
+  "keywords": "two-tower, embeddings, ANN, retrieval"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#system_design_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">22 min read</span>
+      <span class="tag">two-tower</span><span class="tag">embeddings</span><span class="tag">ANN</span><span class="tag">retrieval</span>
+    </div>
+    <h1>Two-Tower Models</h1>
+    <p class="subtitle">Encode separately, compare cheaply — the retrieval workhorse</p>
+
+    <p>The most accurate way to score a user against an item is to feed them into one model together so it can weigh every interaction. The problem is arithmetic: that means scoring *every* user against *every* item at query time. For 10M items at 1000 users/second, that's 10 billion joint forward passes per second — an overnight warehouse job, not real-time retrieval.</p>
+    <hr>
+    <p><strong>The two-tower trick: encode separately, compare with a dot product.</strong> A user tower and an item tower map into the same embedding space; similarity is a plain dot product. Because an item's embedding no longer depends on who's asking, you compute *all* item embeddings offline, once, and index them for approximate-nearest-neighbor (ANN) search. At query time you encode just the one user and look up neighbors — ~10ms across 100M items.</p>
+    <hr>
+    <p><strong>What you give up, and who picks it up.</strong> Encoding the two sides apart means the model can't capture fine user×item feature interactions — exactly what the expensive joint model was good at. That job is handed downstream to the cross-attention *ranker*, which only has to look at the few hundred candidates retrieval already narrowed. Two-tower for recall, cross-encoder for precision: the same recall-then-precision split as the whole funnel, in miniature.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Two-tower makes real-time retrieval over 100M items possible by precomputing item embeddings offline.</strong> Item embeddings don't depend on the query user, so they're computed once and ANN-indexed; retrieval is one user-embedding computation plus a lookup. Cross-attention destroys this because item encoding would depend on the user.</li><li><strong>In-batch softmax with hard-negative mining is the standard recipe.</strong> Other items in the batch serve as negatives; explicitly mining high-scoring-but-unclicked items forces the model to learn fine distinctions. Random negatives are too easy — the model separates a clicked video from a random one with near-zero gradient and learns nothing subtle.</li><li><strong>ANN index staleness scales with catalog volatility.</strong> When item features change, the indexed embedding is stale. Fast-changing catalogs (price, inventory) need delta re-embedding of changed items; stable catalogs tolerate weekly full rebuilds. Staleness is a continuous freshness-vs-cost tradeoff, not a corner case.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Two-tower breaks the user×item coupling so item embeddings can be precomputed and ANN-indexed — buying ~10ms retrieval over 100M items at the cost of fine feature interactions, which the downstream cross-encoder ranker restores over the few hundred survivors.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Joint (cross-attention) scoring is most accurate but impossible at retrieval scale:</strong> scoring every user against every item is O(all items)/query — 10M items × 1000 users/s = 10B joint forward passes/second, an overnight warehouse job, not real-time retrieval.</li><li><strong>The two-tower trick — encode separately, compare with a dot product:</strong> a user tower and item tower map into the same space; similarity is just u·v. Because an item's embedding no longer depends on who's asking, you compute *all* item embeddings offline once and ANN-index them; at query time you encode one user and look up neighbors — ~10ms across 100M items.</li><li><strong>What you give up, and who restores it:</strong> encoding the two sides apart loses fine user×item feature interactions — exactly what the joint model was good at. That job is handed downstream to the cross-attention *ranker*, which only scores the few hundred candidates retrieval already narrowed. Two-tower for recall, cross-encoder for precision.</li><li><strong>Training recipe = in-batch softmax + hard-negative mining:</strong> other items in the batch serve as negatives; explicitly mining high-scoring-but-unclicked items forces fine distinctions. Random negatives are too easy — separating a clicked video from a random one gives near-zero gradient and teaches nothing subtle.</li><li><strong>Ops: ANN staleness scales with catalog volatility.</strong> When item features change, the indexed embedding is stale. Fast-changing catalogs (price, inventory) need delta re-embedding of changed items; stable catalogs tolerate weekly full rebuilds. Staleness is a continuous freshness-vs-cost tradeoff, not a corner case.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Why does a cross-attention model that jointly encodes user and item fail at retrieval scale even though it's more accurate?</p>
+      <ul class="check-opts"><li>A) Cross-attention overfits on large catalogs, so its accuracy advantage disappears above ~1M items.</li><li class="correct">B) Its item representation depends on the query user, so item embeddings can't be precomputed or indexed — every one of the 10M items must be scored fresh per query, which is orders of magnitude over any real-time budget. Two-tower removes that dependency so items can be indexed offline.</li><li>C) Cross-attention requires GPUs that can't be co-located with the ANN index, adding fatal network latency.</li><li>D) It can't produce fixed-length embeddings, so ANN libraries reject its output.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Your two-tower model has recall@100 of only 60%. Which change most directly attacks the recall problem?</p>
+      <ul class="check-opts"><li>A) Switch dot-product similarity to L2 distance for numerical stability in high dimensions.</li><li>B) Reduce embedding dim from 256 to 64 so the ANN index is smaller and more items are reachable.</li><li class="correct">C) Hard-negative mining plus richer features and a larger embedding dimension, and expand the ANN candidate set (100→500) letting the ranker filter downstream — directly increasing the fraction of relevant items retrieved.</li><li>D) Replace contrastive loss with pointwise regression on explicit ratings for better-calibrated scores.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Your item catalog updates prices every few minutes, but the ANN index is rebuilt nightly. What's the failure mode and the right fix?</p>
+      <ul class="check-opts"><li>A) No failure — price is a ranking feature, so a stale retrieval index is harmless.</li><li class="correct">B) Retrieval embeds items on stale features, so items whose relevance changed (e.g., now-discounted) are retrieved with yesterday's embedding — retrieved wrongly or missed. Fix with delta re-embedding: recompute and upsert only changed items into the index continuously, reserving full rebuilds for structural changes.</li><li>C) The dot product overflows when prices change; normalize embeddings nightly to fix it.</li><li>D) The user tower goes stale; retrain the user tower hourly and the index can stay nightly.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#system_design_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

@@ -38,8 +38,8 @@
       "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
     }
   },
-  "datePublished": "2026-06-20",
-  "dateModified": "2026-06-20",
+  "datePublished": "2026-07-07",
+  "dateModified": "2026-07-07",
   "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/training-serving-skew-comprehensive.html",
   "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
   "keywords": "Training-Serving Skew, Feature Engineering, Feature Store, Production ML, System Design"
@@ -79,15 +79,15 @@
 <p>The model has learned from training features. Production features look different. Predictions degrade.</p>
 <h2>The four canonical forms of training-serving skew:</h2>
 <h2>1. Timestamp boundary bugs</h2>
-<p>Training computes a 7-day rolling window with \`WHERE timestamp <= event_ts\`. Serving computes a 7-day rolling window with \`WHERE timestamp <= NOW() - INTERVAL 7 DAYS\`. Both are "7 days" — they should be identical.</p>
+<p>Training computes a 7-day rolling window with `WHERE timestamp <= event_ts`. Serving computes a 7-day rolling window with `WHERE timestamp <= NOW() - INTERVAL 7 DAYS`. Both are "7 days" — they should be identical.</p>
 <p>They're not. At midnight UTC, they diverge by up to 24 hours. A training event at 08:00 UTC gets a 7-day window from [T-7d 08:00, T 08:00]. A serving request at 08:05 UTC gets a window from [NOW-7d 00:00, NOW 00:00]. Boundary mismatch → feature value difference.</p>
 <p>Production signal: features shift noticeably at midnight UTC. Your model's prediction for the same user differs by a few percentage points depending on when the request arrives relative to UTC midnight.</p>
 <h2>2. Different null handling</h2>
-<p>Training imputes missing \`customer_age\` with the column mean (34 years). Serving code uses 0 for missing values "for simplicity." A user with missing age gets 34 in training (looks like an adult) and 0 in serving (looks like invalid/new user). The model has learned separate patterns for age 0 and age 34 — they are different in its decision boundary.</p>
+<p>Training imputes missing `customer_age` with the column mean (34 years). Serving code uses 0 for missing values "for simplicity." A user with missing age gets 34 in training (looks like an adult) and 0 in serving (looks like invalid/new user). The model has learned separate patterns for age 0 and age 34 — they are different in its decision boundary.</p>
 <p>Production signal: new users and edge cases (null demographic fields) perform worse than average. A slice analysis shows precision drops 15% for users where a demographic field is missing.</p>
 <h2>3. Scaler fitted on wrong data</h2>
-<p>Training: \`scaler.fit(X_train)\` then \`scaler.transform(X_train)\` and \`scaler.transform(X_val)\`. All features are standardised to zero mean and unit variance across the training distribution.</p>
-<p>Serving: \`scaler.fit_transform([single_row])\` every request. A single row has mean = itself and std ≈ 0. Every scaled feature becomes near-zero or NaN. The model receives a feature vector that it has never seen: all zeros.</p>
+<p>Training: `scaler.fit(X_train)` then `scaler.transform(X_train)` and `scaler.transform(X_val)`. All features are standardised to zero mean and unit variance across the training distribution.</p>
+<p>Serving: `scaler.fit_transform([single_row])` every request. A single row has mean = itself and std ≈ 0. Every scaled feature becomes near-zero or NaN. The model receives a feature vector that it has never seen: all zeros.</p>
 <p>Production signal: scaled features disappear (become NaN or 0). Model performance is random. This is the most catastrophic form.</p>
 <h2>4. Aggregation window timezone or calendar mismatch</h2>
 <p>Training: "daily active users" computed as users active between [calendar_day_start_UTC, calendar_day_end_UTC]. A user active on Dec 31 at 23:55 UTC and Jan 1 at 00:05 UTC is counted as 2 calendar days.</p>
@@ -99,14 +99,14 @@
 <p><strong>Step 3: Identify features with unexplained drift.</strong> Features where PSI is high but you haven't deployed changes. Compare the feature computation code between training and serving. Document differences.</p>
 <p><strong>Step 4: Implement a feature parity test.</strong> Take 100 historical events. Compute features for each event using the training pipeline AND the serving pipeline (retroactively, with the same data the serving pipeline would have received at that time). Compare. Any feature with mean difference > 0.05 on a normalised scale is suspect.</p>
 <p><strong>Step 5: Establish a feature store baseline.</strong> Use a feature store (Feast, Tecton, Hopsworks) that enforces identical code paths for training and serving. Invest the time upfront; it pays for itself in prevented incidents.</p>
-<p>\`\`\`python import pandas as pd import numpy as np</p>
+<p>```python import pandas as pd import numpy as np</p>
 <p>def detect_training_serving_skew(train_features: pd.DataFrame, serving_log: pd.DataFrame, threshold: float = 0.1) -> dict: """ Compare training feature distributions vs logged serving features. Returns per-feature PSI. PSI > 0.1 = investigate. PSI > 0.2 = incident. """ results = {} common_cols = set(train_features.columns) & set(serving_log.columns)</p>
 <p>for col in common_cols: train_vals = train_features[col].dropna().values serve_vals = serving_log[col].dropna().values</p>
 <p>if len(serve_vals) < 100: results[col] = {'psi': None, 'status': 'INSUFFICIENT_DATA'} continue</p>
 <p># Compute PSI using training distribution as reference breakpoints = np.percentile(train_vals, np.linspace(0, 100, 11)) breakpoints[0], breakpoints[-1] = -np.inf, np.inf</p>
 <p>exp = np.clip(np.histogram(train_vals, bins=breakpoints)[0] / len(train_vals), 1e-6, None) act = np.clip(np.histogram(serve_vals, bins=breakpoints)[0] / len(serve_vals), 1e-6, None) psi = float(np.sum((act - exp) * np.log(act / exp)))</p>
 <p>status = 'STABLE' if psi < 0.1 else 'INVESTIGATE' if psi < 0.2 else 'INCIDENT' results[col] = {'psi': round(psi, 4), 'status': status}</p>
-<p>return results \`\`\`</p>
+<p>return results ```</p>
 <h2>Prevention through feature stores:</h2>
 <p>A proper feature store provides a single Python function that:</p>
 <li>Runs during training to generate training data</li>

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Markov Decision Processes | ML Systems Lab</title>
+  <meta name="description" content="States, actions, rewards, transitions, discount factor — the formal RL framework">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/mdp_framework.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/mdp_framework.html">
+  <meta property="og:title" content="Markov Decision Processes | ML Systems Lab">
+  <meta property="og:description" content="States, actions, rewards, transitions, discount factor — the formal RL framework">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Markov Decision Processes">
+  <meta name="twitter:description" content="States, actions, rewards, transitions, discount factor — the formal RL framework">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Markov Decision Processes",
+  "description": "States, actions, rewards, transitions, discount factor — the formal RL framework",
+  "proficiencyLevel": "Foundational",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/mdp_framework.html",
+  "keywords": "mdp, markov, bellman, discount, pomdp"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#rl_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Foundational</span>
+      <span class="read-time">40 min read</span>
+      <span class="tag">mdp</span><span class="tag">markov</span><span class="tag">bellman</span><span class="tag">discount</span><span class="tag">pomdp</span>
+    </div>
+    <h1>Markov Decision Processes</h1>
+    <p class="subtitle">States, actions, rewards, transitions, discount factor — the formal RL framework</p>
+
+    <p>Imagine a robot navigating a grid to reach a goal. At each step it sees its current position, chooses a direction to move, and receives a reward: +1 for reaching the goal, -0.01 for each step taken, -1 for falling into a hole. After moving it ends up in a new position, and the decision problem repeats until the robot reaches a terminal state. That sequence of state-action-reward-state is an episode, and RL's entire job is to find the sequence of actions — the policy — that maximizes total reward across that episode.</p>
+    <p>The MDP (Markov Decision Process) is the formal language for this. It has five components. The state space S is all possible positions the robot can be in. The action space A is all directions it can move. The transition function T(s, a, s') = P(s' | s, a) is the probability of landing in s' after moving in direction a from state s. The reward function R(s, a, s') is the immediate reward received on that transition. The discount factor γ ∈ [0, 1) controls how much future rewards are worth relative to immediate ones: γ = 0 means the robot cares only about the next step, γ = 0.99 means a reward 100 steps away still matters almost as much as one received now.</p>
+    <p>The return G_t = R_t + γR_{t+1} + γ²R_{t+2} + ... is the discounted sum of all future rewards from time t. The policy π(a | s) is the probability of taking action a in state s. The agent's goal is to find π* — the optimal policy — that maximizes expected return E[G_t] from every starting state.</p>
+    <p>The Markov property is the key assumption underpinning everything: the next state depends only on the current state and action, not the full history. For the grid robot this holds perfectly — knowing where you are now is enough to navigate. It breaks whenever the current observation is insufficient: a robot that sees only a camera image cannot distinguish a locked door from an unlocked one, because the relevant information — whether a key was picked up earlier — is not in the current frame. The fix is to augment the state representation to include whatever history is needed.</p>
+    <p>NOT this: RL is only for games and robotics. Any sequential decision problem with delayed feedback can be formulated as an MDP. Ad bidding (state = user context, action = bid amount, reward = revenue), recommendation (state = user history, action = item, reward = click), drug dosing (state = patient vitals, action = drug dose, reward = patient outcome). The MDP framework is the language — the applications are as broad as any problem where you act, observe a result, and act again.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Before implementing any RL system, write down all five MDP components explicitly.</strong>
+
+Ambiguity in reward function design is the most common reason RL systems behave unexpectedly. Reward shaping bugs are harder to debug than code bugs because the agent's behavior looks intentional — it is doing exactly what the reward says, just not what you meant.</li><li><strong>Designing a reward that is easy to measure but misaligned with the true objective is the most common production failure.</strong>
+
+An ad system rewarded for clicks maximizes clickbait. A cleaning robot rewarded for dust-sensor readings learns to cover the sensor. A recommendation system rewarded for watch time recommends outrage content. Define the reward to match what you actually want, not what is easiest to instrument.</li><li><strong>If the agent's policy looks plausible but performance plateaus unexpectedly, check whether the Markov property holds for your state representation.</strong>
+
+If good decisions require information that is not in the current state — recent history, actions taken earlier, information that was observed but not retained — the Markov property is violated. Add the missing history to the state representation and retrain.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>The MDP is just a formal way of saying: at every step the agent sees a state, picks an action, gets a reward, and ends up somewhere new — and the goal is to find the policy that makes those rewards add up to as much as possible.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>MDP = 5 components:</strong> state space $S$, actions $A$, transitions $T(s,a,s')$, reward $R$, discount $\gamma \in [0,1)$.</li><li><strong>Return</strong> $G_t = R_t + \gamma R_{t+1} + \gamma^2 R_{t+2} + \dots$ — goal is a policy $\pi^*$ maximizing $E[G_t]$.</li><li><strong>Markov property:</strong> next state depends only on current state+action, not history. Break it, augment the state.</li><li><strong>\gamma tunes horizon:</strong> 0 = myopic, 0.99 = ~100 steps of future still matter.</li><li><strong>Write all 5 components explicitly before coding</strong> — reward ambiguity is the #1 failure.</li><li><strong>Easy-to-measure reward misaligned with the true objective</strong> is the classic production trap (clicks -&gt; clickbait).</li><li><strong>MDP is the language, not just games:</strong> ad bidding, recsys, drug dosing all fit.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Why does the optimal policy for a finite-horizon MDP depend on the time remaining t, while the optimal policy for an infinite-horizon discounted MDP does not?</p>
+      <ul class="check-opts"><li>A) Finite-horizon MDPs use a different reward function at each step, while infinite-horizon MDPs use a constant reward function throughout</li><li>B) Finite-horizon MDPs require stochastic policies near the end because the agent becomes risk-averse, while infinite-horizon MDPs always prefer deterministic policies</li><li class="correct">C) In finite-horizon MDPs the value function V_t(s) changes with remaining time t via backward induction, so the greedy policy at each t differs; in infinite-horizon discounted MDPs the Bellman equation has a unique fixed point and the same greedy policy is optimal at every step</li><li>D) Infinite-horizon MDPs have a higher discount factor γ which makes the agent indifferent to time, while finite-horizon MDPs have γ=1 which causes time-dependent decisions</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Your robot RL agent receives only a camera image as observation. It keeps walking into the same wall repeatedly. What Markov property violation is happening and how do you fix it?</p>
+      <ul class="check-opts"><li class="correct">A) The observation is not Markov because a single camera frame doesn't capture motion, history, or what has already been explored; fixes include frame stacking (concatenate last k frames), recurrent architectures (LSTM over observation history), or state estimation with a belief filter</li><li>B) The Markov property is satisfied because the camera fully captures the current physical state; the issue is instead a poorly designed reward function that doesn't penalise wall collisions</li><li>C) The violation occurs because the transition function P(s'|s,a) is stochastic; the fix is to use a deterministic simulator to train the agent before deploying to the real robot</li><li>D) The observation space is too high-dimensional, which causes numerical instability in the policy network; the fix is to reduce image resolution until the Markov property holds</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Why is γ = 0.99 harder to train with than γ = 0.95, even if both converge to a valid solution?</p>
+      <ul class="check-opts"><li>A) γ=0.99 causes the reward to be discounted more aggressively, meaning the agent ignores long-term consequences and learns a myopic policy that is harder to improve</li><li>B) γ=0.99 requires more environment interactions because the agent needs to explore more steps before any reward is discounted to near zero</li><li>C) γ=0.99 is harder because it requires a denser reward function, which is more difficult to engineer than the sparse rewards used with γ=0.95</li><li class="correct">D) γ=0.99 extends the effective credit-assignment horizon to ~100 steps (vs ~20 for γ=0.95), causing higher Monte Carlo variance and slower TD propagation; rewards 100 steps away still contribute meaningfully, making value estimates noisy and requiring more samples to stabilise</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> A product team asks you to deploy an RL agent for content recommendation. What MDP design decisions do you make, and what can go wrong?</p>
+      <ul class="check-opts"><li>A) The only design decision that matters is the action space (item selection); state and reward can be left at their defaults because the recommendation problem is essentially a supervised classification task</li><li class="correct">B) Key design decisions include state (user context + history length to preserve Markov property), action (item selection from potentially millions of candidates), reward (engagement proxy that risks Goodhart violations), and discount γ (affects learning speed vs long-term optimisation); failure modes include reward hacking, partial observability, non-stationarity, and off-policy distribution shift from historical data</li><li>C) The main design decision is choosing between on-policy and off-policy learning; using on-policy RL avoids all reward hacking and Goodhart problems by construction</li><li>D) MDP design is unnecessary because recommendation systems are contextual bandit problems; sequential state dependencies don't exist in practice so standard supervised learning on click logs suffices</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#rl_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

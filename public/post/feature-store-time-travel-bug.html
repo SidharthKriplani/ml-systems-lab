@@ -3,29 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>The Feature Store Time-Travel Bug: How Point-in-Time Correctness Breaks — ML Systems Lab</title>
-  <meta name="description" content="Your feature store has a bug that doesn&#39;t show up in unit tests, doesn&#39;t trigger alerts, and produces training data that looks completely valid. The bug: your features are computed using data that did…" />
-  <meta name="keywords" content="Feature Engineering, Feature Store, Data Leakage, Production ML, Point-in-Time, ML Systems Lab, senior MLE, machine learning interview" />
+  <title>The Feature Store Time-Travel Bug That Quietly Corrupts Your Models — ML Systems Lab</title>
+  <meta name="description" content="You have a feature store. Your training pipeline reads features from it. You believe your training data is point-in-time correct. It isn&#39;t. The time-travel bug is the most insidious failure mode in ML…" />
+  <meta name="keywords" content="Feature Store, Point-in-Time, Data Leakage, Training Data, Data Engineering, ML Systems Lab, senior MLE, machine learning interview" />
   <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/feature-store-time-travel-bug.html" />
 
   <meta property="og:type" content="article" />
   <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/feature-store-time-travel-bug.html" />
-  <meta property="og:title" content="The Feature Store Time-Travel Bug: How Point-in-Time Correctness Breaks" />
-  <meta property="og:description" content="Your feature store has a bug that doesn&#39;t show up in unit tests, doesn&#39;t trigger alerts, and produces training data that looks completely valid. The bug: your features are computed using data that did…" />
+  <meta property="og:title" content="The Feature Store Time-Travel Bug That Quietly Corrupts Your Models" />
+  <meta property="og:description" content="You have a feature store. Your training pipeline reads features from it. You believe your training data is point-in-time correct. It isn&#39;t. The time-travel bug is the most insidious failure mode in ML…" />
   <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
   <meta property="article:section" content="Feature Engineering" />
 
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="The Feature Store Time-Travel Bug: How Point-in-Time Correctness Breaks" />
-  <meta name="twitter:description" content="Your feature store has a bug that doesn&#39;t show up in unit tests, doesn&#39;t trigger alerts, and produces training data that looks completely valid. The bug: your features are computed using data that did…" />
+  <meta name="twitter:title" content="The Feature Store Time-Travel Bug That Quietly Corrupts Your Models" />
+  <meta name="twitter:description" content="You have a feature store. Your training pipeline reads features from it. You believe your training data is point-in-time correct. It isn&#39;t. The time-travel bug is the most insidious failure mode in ML…" />
   <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
 
   <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "Article",
-  "headline": "The Feature Store Time-Travel Bug: How Point-in-Time Correctness Breaks",
-  "description": "Your feature store has a bug that doesn't show up in unit tests, doesn't trigger alerts, and produces training data that looks completely valid. The bug: your features are computed using data that did…",
+  "headline": "The Feature Store Time-Travel Bug That Quietly Corrupts Your Models",
+  "description": "You have a feature store. Your training pipeline reads features from it. You believe your training data is point-in-time correct. It isn't. The time-travel bug is the most insidious failure mode in ML…",
   "author": {
     "@type": "Person",
     "name": "ML Systems Lab"
@@ -38,11 +38,11 @@
       "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
     }
   },
-  "datePublished": "2026-06-20",
-  "dateModified": "2026-06-20",
+  "datePublished": "2026-07-07",
+  "dateModified": "2026-07-07",
   "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/feature-store-time-travel-bug.html",
   "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
-  "keywords": "Feature Engineering, Feature Store, Data Leakage, Production ML, Point-in-Time"
+  "keywords": "Feature Store, Point-in-Time, Data Leakage, Training Data, Data Engineering"
 }
   </script>
 
@@ -70,27 +70,28 @@
 <body>
   <article>
     <div class="meta">Feature Engineering &middot; ML Systems Lab</div>
-    <h1>The Feature Store Time-Travel Bug: How Point-in-Time Correctness Breaks</h1>
-    <p class="excerpt">Your feature store has a bug that doesn&#39;t show up in unit tests, doesn&#39;t trigger alerts, and produces training data that looks completely valid. The bug: your features are computed using data that didn&#39;t exist at the time of the event you&#39;re training on. This is the point-in-time correctness problem, and it silently inflates your offline metrics by 5–20% while doing nothing for your production model.</p>
-    <p>Feature stores exist to solve one hard problem: making sure the features you use to train a model are identical to the features you compute at serving time. Most teams solve the serving-skew half of this (same code, same logic). Far fewer solve the training half: making sure training features are computed using only data that was available at the moment of each training example.</p>
-<p>This second problem is called point-in-time correctness, and the feature store time-travel bug is what happens when you get it wrong.</p>
-<h2>The bug in concrete terms</h2>
-<p>You\'re building a churn model. One feature is "number of support tickets in the past 30 days." Your training dataset is a table of (user_id, event_date, churned_90_days_later).</p>
-<p>A naive feature store join: for each row in your training set, look up the user\'s ticket count from the tickets table. If you do this join without a timestamp filter, you fetch the ticket count as it exists today — including tickets filed after the prediction date. A user who churned 18 months ago and then filed a support ticket 6 months ago will have a ticket count of 1, not 0 as it would have appeared at training time.</p>
-<p>The model learns that support tickets predict non-churn. In production, the signal is noise.</p>
-<h2>Why it\&#39;s hard to catch</h2>
-<p>The features look valid. The ticket counts are real numbers from real data. There\'s no null, no type error, no join failure. The offline AUC is actually higher than it should be — because the model has access to information from the future that implicitly tells it what happened. Your validation set is also contaminated the same way, so the metric looks consistent.</p>
-<p>The only way to catch it: compare feature distributions at training time vs. a held-out evaluation set where you manually verified point-in-time correctness for a sample of rows.</p>
-<h2>How point-in-time correct feature stores work</h2>
-<p>The correct join is: for each (entity_id, event_timestamp) pair in your training set, retrieve the feature value that was valid at event_timestamp — not the latest value.</p>
-<p>This requires your feature store to store feature history, not just current values. Every write to the feature store needs to be stamped with an as-of timestamp. The lookup becomes: \`WHERE entity_id = ? AND feature_timestamp <= event_timestamp ORDER BY feature_timestamp DESC LIMIT 1\`.</p>
-<p>Tecton, Feast, and Hopsworks all support this pattern. In Feast, it\'s called a point-in-time join and is triggered by passing the event_timestamp column in your training dataset. Without it, you\'re getting the latest feature value regardless of when the training event occurred.</p>
-<h2>The most common way teams get this wrong</h2>
-<p>1. <strong>Batch materialisation without history:</strong> The feature pipeline runs nightly and overwrites the current value. No history is kept. Point-in-time correct retrieval is impossible — you have no historical values to look up.</p>
-<p>2. <strong>The right feature store, wrong API:</strong> The feature store supports point-in-time retrieval, but the engineer generating the training dataset uses the real-time lookup API (get latest value) instead of the historical retrieval API. One function call, silent contamination.</p>
-<p>3. <strong>Aggregate window bugs:</strong> A "30-day rolling average" computed at 06:00 UTC uses data through 05:59 yesterday. The model was trained on data where the window used data through 23:59 yesterday. Small difference per row; consistent bias across the training set.</p>
-<h2>The test you should run before every model release</h2>
-<p>Take 100 rows from your training set. For each row, manually compute the feature using only data with timestamp <= event_timestamp. Compare to what the feature store returned. If the numbers don\'t match, you have a point-in-time bug. This is the most important data quality check in an ML pipeline.</p>
+    <h1>The Feature Store Time-Travel Bug That Quietly Corrupts Your Models</h1>
+    <p class="excerpt">You have a feature store. Your training pipeline reads features from it. You believe your training data is point-in-time correct. It isn&#39;t. The time-travel bug is the most insidious failure mode in ML data infrastructure, and it exists in almost every feature store deployment that hasn&#39;t explicitly tested for it.</p>
+    <p>Point-in-time correctness means: when you build a training example for an event at timestamp T, every feature value reflects the state of the world at time T — not T+1, not T+24h, not "whenever the batch job ran."</p>
+<p>Almost every feature store tutorial demonstrates point-in-time joins. Very few explain how they silently break in production.</p>
+<h2>How the bug appears</h2>
+<p>Your feature store materialises features via a daily batch job that runs at 02:00 UTC. It reads all events from the previous calendar day and computes feature values. The features are stored with a timestamp of "2024-01-15" — the calendar date of the source events.</p>
+<p>Your training pipeline does a point-in-time join: for each training event at timestamp T, fetch the most recent feature row where feature_timestamp <= T.</p>
+<p>Looks correct. The bug: your feature computation job runs at 02:00 UTC on 2024-01-16 to process 2024-01-15 data. The feature row is available in your store starting at 02:00 UTC on 2024-01-16. But the feature_timestamp stored is "2024-01-15 00:00:00 UTC."</p>
+<p>For any training event that occurred on 2024-01-15 after 00:00 UTC but before 02:00 UTC on 2024-01-16, your point-in-time join correctly finds the 2024-01-15 feature row. But those features were computed including data from the full day of 2024-01-15 — including data after the event. If a user made a purchase at 08:00 UTC on 2024-01-15, their "purchases yesterday" feature will include that very purchase. Leakage.</p>
+<h2>The four variants</h2>
+<p><strong>1. Calendar-day vs event-time mismatch.</strong> Features stamped at midnight of the source date but containing full-day data. Training events from early in the day see future-contaminated features.</p>
+<p><strong>2. Processing lag hiding behind event timestamp.</strong> The feature row is available at T+N hours due to pipeline latency, but stamped at T. Any event between T and T+N uses a feature row that "didn't exist yet."</p>
+<p><strong>3. Late-arriving data correction.</strong> Your pipeline reprocesses yesterday's data today to incorporate late-arriving events. The corrected feature row overwrites the original but keeps the original timestamp. Historical training data is retrospectively altered.</p>
+<p><strong>4. Wall-clock time vs event time aggregation.</strong> A "sessions in the last 7 days" feature computed at 2024-01-15 23:55 UTC will include session data that arrived between the training event at 2024-01-15 10:00 UTC and the time the feature was computed.</p>
+<h2>How to detect it</h2>
+<p>For any feature that should reflect "state at time T," compute it independently from raw events for a sample of training rows. Compare against what your feature store served. Systematic overestimation of features for events early in the day = temporal leakage.</p>
+<p>Also: if a model degrades faster after deployment than expected, but shows no feature distribution shift in PSI monitoring, temporal leakage is a prime suspect. The model learned from future-contaminated data and production data is uncontaminated.</p>
+<h2>The correct fix</h2>
+<p>Store features with their availability_timestamp — the time the row was actually written to the store — not the event timestamp. Your point-in-time join must use availability_timestamp <= event_timestamp, not feature_date <= event_date.</p>
+<p>This requires materialising feature rows with accurate write timestamps, which means changing how your pipeline records metadata. Feast 0.28+ supports this with the ttl parameter and feature_view materialisation logs. Without this, you're doing "point-in-time" joins that are not actually point-in-time.</p>
+<h2>The test you should run</h2>
+<p>For 100 training events at time T, fetch the features your training pipeline used. Then independently compute those features using only events with timestamp < T. If they differ systematically, you have the bug.</p>
 
     <div class="cta">
       <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>

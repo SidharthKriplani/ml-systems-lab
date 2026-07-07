@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Class Imbalance | ML Systems Lab</title>
+  <meta name="description" content="When 99% of examples are one class, accuracy is a lie — learn the techniques that actually work.">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/class_imbalance--data_foundation.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/class_imbalance--data_foundation.html">
+  <meta property="og:title" content="Class Imbalance | ML Systems Lab">
+  <meta property="og:description" content="When 99% of examples are one class, accuracy is a lie — learn the techniques that actually work.">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Class Imbalance">
+  <meta name="twitter:description" content="When 99% of examples are one class, accuracy is a lie — learn the techniques that actually work.">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Class Imbalance",
+  "description": "When 99% of examples are one class, accuracy is a lie — learn the techniques that actually work.",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/class_imbalance--data_foundation.html",
+  "keywords": "imbalance, SMOTE, class weights, oversampling, undersampling, threshold moving"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#data_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">50 min read</span>
+      <span class="tag">imbalance</span><span class="tag">SMOTE</span><span class="tag">class weights</span><span class="tag">oversampling</span><span class="tag">undersampling</span>
+    </div>
+    <h1>Class Imbalance</h1>
+    <p class="subtitle">When 99% of examples are one class, accuracy is a lie — learn the techniques that actually work.</p>
+
+    <p>You are building a fraud detector. In your data there are 999 legitimate transactions for every 1 fraud. You train a model, it scores <strong>99.9% accuracy</strong>, and your stakeholder is thrilled. You should not be — because a &quot;model&quot; that simply labels *everything* legitimate, learning nothing and looking at no features at all, *also* scores 99.9%. Accuracy is measuring the wrong thing: how often you agree with the majority class, which you can ace by ignoring the rare class entirely.</p>
+    <p>The rare class is not a flaw in your data — fraud genuinely *is* rare. The trouble is how ordinary training reacts to it. The loss adds up mistakes across all examples, and with 999 legit transactions per fraud, getting the legit ones right dominates the total 999-to-1. The gradient points almost entirely away from fraud, so the model learns to shrug it off. There are three places to fix this, at three points in the pipeline.</p>
+    <hr>
+    <h3>Fix 1 — reweight the loss (start here)</h3>
+    <p>The cleanest first move is <strong>class weights</strong>: tell the loss that a mistake on a fraud example counts as much as roughly 999 mistakes on legit ones (set `class_weight='balanced'`, or `scale_pos_weight` in XGBoost). Now the rare class pulls on the gradient as hard as the common one. No data added or removed — just a reweighted loss.</p>
+    <hr>
+    <h3>Fix 2 — manufacture more minority examples (SMOTE), carefully</h3>
+    <p><strong>SMOTE</strong> takes a different tack: it invents new fraud examples by interpolating *between* real ones in feature space — pick two nearby frauds and drop a synthetic fraud on the line between them. This gives the model a denser minority region to learn a boundary from. But it has a real failure mode: when fraud and legit heavily *overlap*, interpolating between two frauds can plant a synthetic &quot;fraud&quot; right in the middle of legit territory — a contradictory, misleading training point. So SMOTE is not a default; it shines mainly when the minority class is genuinely sparse (a few hundred examples), and it needs care when the classes mix.</p>
+    <hr>
+    <h3>Fix 3 — move the decision threshold</h3>
+    <p>This one does not touch training at all. A classifier outputs a *probability*; turning it into a yes/no needs a <strong>threshold</strong>, and the default 0.5 is almost never right here. If a missed fraud costs 10,000 and a false alarm costs 50 in review time, you should flag on much weaker suspicion — a threshold of 0.15 or 0.2, not 0.5. The threshold is a *business-cost* decision, not a modeling one: plot precision against recall across thresholds and pick the point that minimises your expected cost.</p>
+    <hr>
+    <h3>And above all: stop reporting accuracy</h3>
+    <p>The deepest fix is the metric itself. On imbalanced data, use <strong>precision, recall, and PR-AUC</strong>, which actually measure how you do on the rare class. Even ROC-AUC can read a flattering 0.97 while the model catches almost no fraud, because the huge pile of true negatives swamps its denominator. Accuracy on an imbalanced problem is not a partial truth — it is actively misleading.</p>
+    <hr>
+    <h3>The fuller metric menu</h3>
+    <p>Precision/recall/PR-AUC are the start; know the rest so you can pick the honest single number. <strong>Balanced accuracy</strong> (average recall across classes) doesn't reward always-predict-majority. <strong>MCC</strong> (Matthews correlation) uses all four confusion cells and is often the best single summary under imbalance. <strong>Macro/micro/weighted F1</strong> average per-class F1 differently (macro treats classes equally, weighted by size). <strong>Specificity</strong> (TNR) and the <strong>FPR/FNR</strong> matter when the cost of each error type differs. And when action is capacity-limited — a fraud team reviews the top K — <strong>precision@K</strong>, <strong>recall@K</strong>, and <strong>lift@K</strong> are the right frame, because the model only has to rank the worst cases to the top.</p>
+    <hr>
+    <h3>A fair word on ROC-AUC — and how resampling breaks calibration</h3>
+    <p>ROC-AUC isn't *useless* under imbalance — it's a valid ranking metric — but it's <strong>misleading</strong> because the huge true-negative pile keeps FPR tiny, so it can read 0.97 while precision is terrible; PR-AUC is usually more informative for rare positives. A subtler cost: <strong>class weighting and resampling distort probability calibration.</strong> Both change the class balance the model trains on, so its predicted probabilities come out too high for the minority class. If you need real probabilities (for cost-based thresholds), <strong>recalibrate</strong> afterward (Platt or isotonic) and check the reliability curve — the ranking may be fine while the numbers lie.</p>
+    <hr>
+    <h3>Validating rare events</h3>
+    <p>With few positives, careless validation is noise. Use <strong>stratified</strong> splits so every fold holds enough positives (a random split can leave a fold with almost none), prefer <strong>repeated cross-validation</strong> to average out the high variance of a single split, and put <strong>confidence intervals</strong> around recall and precision — &quot;recall 0.8&quot; on 20 positives has an enormous interval. For fraud and any time-ordered data, use a <strong>temporal split</strong> (train on the past, test on the future), because a random split lets the model peek across the fraud timeline.</p>
+    <hr>
+    <h3>Sampling alternatives, and losses built for imbalance</h3>
+    <p>Beyond plain class weights and vanilla SMOTE, know the toolkit: <strong>random undersampling</strong> (drop majority examples — fast, throws away data), <strong>random oversampling</strong> (duplicate minority — risks overfitting), the <strong>SMOTE + cleaning</strong> hybrids <strong>SMOTE-Tomek</strong> and <strong>SMOTE-ENN</strong> (oversample then remove the confusing points near the boundary), <strong>focal loss</strong> (down-weights easy majority examples so training focuses on the hard minority — popular in detection), and <strong>balanced random forests</strong> (each tree trained on a balanced bootstrap). Match the tool to the model and the imbalance severity rather than reaching for SMOTE reflexively.</p>
+    <hr>
+    <h3>The cost-sensitive formula, made explicit</h3>
+    <p>&quot;Pick the threshold from costs&quot; has an exact form. Write the per-error costs and choose the threshold that minimises <strong>expected cost = FP·cost_FP + FN·cost_FN</strong> over the validation set (a true-positive/true-negative usually costs 0). Equivalently, when there's a hard <strong>review capacity</strong>, set the threshold to fill that queue with the highest-risk cases (precision@K). This turns &quot;which threshold?&quot; from a guess into an optimisation against numbers you can write down.</p>
+    <hr>
+    <h3>In production, imbalance keeps moving</h3>
+    <p>Rare-event models need specific monitoring. Track <strong>alert volume</strong> (a spike means the model or the base rate shifted), <strong>precision drift</strong> (are the flags still real?), and <strong>base-rate drift</strong> (the fraud rate itself changes, which silently moves precision even if the model is unchanged). Account for <strong>delayed labels</strong> (confirmation arrives weeks later) and <strong>review capacity</strong>, and close the loop by <strong>retraining on confirmed cases</strong> as they come in. And at <strong>extreme imbalance</strong> (1:10,000+), stop treating it as one classifier: use a <strong>two-stage</strong> system — a high-recall candidate generator narrows millions to a manageable pool, then a precision-focused ranker or human-review queue orders that pool. Extreme rarity is a systems-design problem, not a loss-function tweak.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Use cost-sensitive training as your first move on any imbalanced tabular problem.</strong> Set class_weight='balanced' in sklearn or scale_pos_weight in XGBoost. This requires no data modification, carries no SMOTE-before-split leakage risk, and integrates cleanly into cross-validation. Reserve SMOTE for cases where the minority class is so sparse that the model literally cannot learn its decision boundary — roughly, fewer than a few hundred minority examples in training.</li><li><strong>The most common production trap: applying SMOTE to the full dataset before the train-test split.</strong> Synthetic minority samples are generated by interpolating between real minority examples. If those real examples are in both train and test, the synthetic samples are geometrically close to test-set points. The test set is contaminated with structure derived from training data. Evaluation looks strong; production collapses. Always split on real data first, then apply SMOTE only inside the training fold.</li><li><strong>Diagnose your model with a precision-recall curve, not a single threshold.</strong> Plot precision vs. recall across all possible thresholds. The shape of the curve tells you how the tradeoff behaves at your operating point. Then compute the business cost at each threshold — multiply false negative count by the cost of a missed fraud, false positive count by the cost of a false review — and pick the threshold that minimizes total expected cost. A model with recall 0.9 and precision 0.3 may be exactly right if the cost asymmetry is 200:1 in favor of catching fraud.</li><li><strong>Know the full metric menu and that resampling breaks calibration.</strong>
+
+Beyond precision/recall/PR-AUC: balanced accuracy, MCC (best single number under imbalance), macro/micro/weighted F1, specificity, FPR/FNR, and precision@K/recall@K/lift@K when action is capacity-limited. ROC-AUC isn't useless but is misleading under rare positives (huge TN pile keeps FPR tiny) — prefer PR-AUC. Crucially, class weighting and resampling shift the training class balance and inflate minority probabilities, so recalibrate (Platt/isotonic) and check the reliability curve if you need real probabilities.</li><li><strong>Validate rare events carefully, pick the sampling tool deliberately, and monitor drift.</strong>
+
+Use stratified splits (enough positives per fold), repeated CV, confidence intervals on recall/precision, and temporal splits for fraud. Beyond class weights and SMOTE: random under/oversampling, SMOTE-Tomek/SMOTE-ENN (oversample then clean the boundary), focal loss (down-weight easy majority examples), and balanced random forests. Choose the threshold by minimising expected cost = FP·cost_FP + FN·cost_FN (or to fill review capacity). In production, monitor alert volume, precision drift, and base-rate drift, handle delayed labels, and at 1:10,000+ use a two-stage high-recall-then-precision pipeline.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Accuracy on an imbalanced dataset measures how well the model predicts the majority class — which it can do by ignoring minority examples entirely. The fix starts with the metric, then the loss function, then the decision threshold. Resampling is a last resort, not a default.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Accuracy measures the majority class</strong> — a model can hit 99% by ignoring the minority entirely.</li><li><strong>Fix order:</strong> the metric first, then the loss function, then the decision threshold. Resampling is a last resort, not a default.</li><li><strong>Cost-sensitive training is the first move:</strong> `class_weight='balanced'` / `scale_pos_weight` — no data change, no leakage, clean in CV.</li><li><strong>SMOTE-before-split leaks:</strong> synthetic points interpolated from real minority rows land near test points. Split first, SMOTE inside the train fold only.</li><li><strong>PR curve over a single threshold;</strong> pick the threshold that minimizes expected cost = FP·cost_FP + FN·cost_FN.</li><li><strong>Metric menu:</strong> PR-AUC over ROC-AUC under rare positives; MCC as best single number; precision@K when action is capacity-limited. Resampling breaks calibration — recalibrate.</li><li><strong>Extreme imbalance (1:10,000+) is a systems problem:</strong> two-stage high-recall candidate generator → precision ranker/human review.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Your fraud model achieves 99.2% accuracy and your colleague is satisfied. What would you check?</p>
+      <ul class="check-opts"><li>A) Check for class imbalance in the training set and verify the model's F1 score on the test set. If F1 is above 0.9, the 99.2% accuracy is genuine and the model is working correctly.</li><li>B) Check whether the model was trained with sufficient regularization — high accuracy on imbalanced data is often a sign that L2 regularization is too weak and the model has overfit to the majority class.</li><li>C) Check the AUC-ROC score — if AUC-ROC is above 0.95, the accuracy is meaningful and the model is distinguishing fraud from legitimate transactions correctly.</li><li class="correct">D) First check baseline: if 99% of transactions are legitimate, predicting &quot;not fraud&quot; for everything yields 99% accuracy. Check recall: what fraction of actual fraud cases does the model correctly flag? A model with 99.2% accuracy and 0% recall catches no fraud. Check precision: of cases flagged as fraud, what fraction are actually fraudulent? Compute AUC-PR which directly measures performance on the minority class. High accuracy + low recall + low AUC-PR = sophisticated version of &quot;always predict not fraud&quot; = useless.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Why is applying SMOTE to the full dataset before splitting into train and test sets invalid?</p>
+      <ul class="check-opts"><li class="correct">A) SMOTE generates synthetic minority samples by interpolating between real minority samples. If applied before splitting, some synthetic samples will be geometrically near real test-set minority examples — the test set then contains synthetic data structurally similar to training points and is no longer a valid holdout. Correct: split into train/test using real data FIRST, then apply SMOTE ONLY to training set. Test set must always contain only real, unmodified examples.</li><li>B) SMOTE applied before splitting is invalid because it changes the class balance of the test set, making it impossible to compute meaningful precision and recall metrics on the held-out data.</li><li>C) SMOTE applied before splitting is invalid because it requires knowing the class labels of the test set, which means the model has implicitly seen the test labels during preprocessing.</li><li>D) SMOTE applied before splitting is computationally wasteful — synthetic samples generated from the full dataset will be discarded when the test set is held out, so applying SMOTE inside the training set is more efficient.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Compare class weighting and SMOTE: when would you choose one over the other for a 50:1 imbalanced tabular dataset?</p>
+      <ul class="check-opts"><li>A) Always use SMOTE for tabular data — class weighting only adjusts the loss function, while SMOTE physically creates new training examples that give the model more minority-class decision boundary to learn from.</li><li>B) Always use class weighting — SMOTE is only appropriate for image data where interpolating pixel values produces realistic augmented examples, not for tabular data where interpolation between rows lacks domain meaning.</li><li class="correct">C) Class weighting is almost always first choice for tabular data: no data modification, works natively in most model implementations, integrates cleanly with cross-validation, scales to any imbalance ratio. SMOTE preferred when the minority class is genuinely underrepresented in feature space — too few minority examples for model to learn a good decision boundary. For 50:1 with thousands of minority examples: class weighting sufficient. For 50:1 with only 50 minority examples: SMOTE creates denser minority region. For deep learning: class weighting almost always preferred.</li><li>D) Choose between them based on model type: class weighting works best for gradient boosted trees while SMOTE works best for logistic regression and neural networks.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> You lower classification threshold from 0.5 to 0.2 and recall increases 0.6 to 0.9 but precision drops 0.8 to 0.3. Is this an improvement?</p>
+      <ul class="check-opts"><li>A) No — the F1 score decreased. F1 is the harmonic mean of precision and recall, and a precision drop from 0.8 to 0.3 outweighs a recall gain from 0.6 to 0.9, so the lower threshold makes the model worse.</li><li class="correct">B) Depends entirely on the relative cost of false negatives vs. false positives in deployment context. Higher recall (0.9) catches 50% more actual fraud. Lower precision (0.3) means more false positives. If each fraud costs 5,000 dollars uncaught and each false positive triggers a 50-dollar manual review, threshold 0.2 is likely right. The decision cannot be made from numbers alone without knowing the business cost ratio — compute expected cost at each threshold and choose the minimum.</li><li>C) Yes — recall is the primary metric for fraud detection, and any improvement in recall is always an improvement in a fraud model regardless of the precision impact.</li><li>D) Yes — the model now catches 90% of fraud cases, which exceeds the industry standard threshold of 85% recall required for a production fraud detection system.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> What is the SMOTE failure mode when minority and majority classes heavily overlap in feature space?</p>
+      <ul class="check-opts"><li>A) When classes overlap heavily, SMOTE generates synthetic samples that are indistinguishable from majority class examples, causing the model to learn that all high-density regions belong to the minority class.</li><li>B) Heavy class overlap causes SMOTE to generate synthetic samples that are exact duplicates of existing minority samples, providing no new geometric information and negating the benefit of oversampling.</li><li>C) Heavy class overlap makes SMOTE extremely slow because the k-NN search must examine a larger fraction of the dataset to find the k nearest minority neighbors for each sample.</li><li class="correct">D) SMOTE generates synthetic minority samples by interpolating between existing minority samples. When classes overlap significantly, some minority samples are surrounded by majority samples. Synthetic points generated by interpolating between minority samples will FALL INSIDE the majority-class region — misleading/contradictory training signal. This is why SMOTE-ENN and SMOTE-Tomek exist: they apply undersampling after SMOTE to remove synthetic samples misclassified by k-NN, cleaning the decision boundary.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q6.</strong> You fix imbalance with class weighting, and the model's ranking (PR-AUC) is excellent, but downstream cost-based thresholding behaves oddly because the predicted probabilities seem systematically too high for the fraud class. What happened, and what do you do?</p>
+      <ul class="check-opts"><li>A) Nothing is wrong — class weighting never affects predicted probabilities, so the thresholding logic must have a bug.</li><li class="correct">B) Class weighting (like resampling) changes the effective class balance the model trains on, so its predicted probabilities are distorted — inflated for the minority class — even when the ranking is fine. If you need calibrated probabilities for cost-based thresholds, recalibrate after training (Platt or isotonic scaling on a held-out set) and check the reliability curve, or correct the prior back to the true base rate. Ranking metrics like PR-AUC won't reveal this because they're threshold-free.</li><li>C) Switch from class weighting to accuracy as the metric, which will make the probabilities correct.</li><li>D) The probabilities are fine; the real fix is to always use a 0.5 threshold regardless of costs.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q7.</strong> You have a 1:50,000 imbalance (a few hundred positives in tens of millions of rows) and single-classifier approaches keep failing. What overall design and validation approach fits?</p>
+      <ul class="check-opts"><li>A) Just crank class_weight higher and higher until a single classifier separates the classes — extreme imbalance is always solvable with a large enough weight.</li><li class="correct">B) At this rarity, treat it as a systems problem: a two-stage pipeline where a high-recall candidate generator narrows the tens of millions to a manageable pool, then a precision-focused ranker or human-review queue orders that pool (optimising precision@K against review capacity). Validate with stratified and temporal splits, repeated CV, and confidence intervals on recall/precision since a few hundred positives give noisy estimates — and monitor base-rate and precision drift in production, retraining on confirmed cases.</li><li>C) Randomly undersample the majority down to 1:1 and train a single logistic regression — this fully solves extreme imbalance with no downsides.</li><li>D) Report accuracy, which at 1:50,000 will be near 100% and prove the model works.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#data_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

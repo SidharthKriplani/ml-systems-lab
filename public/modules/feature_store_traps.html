@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feature Store API Traps | ML Systems Lab</title>
+  <meta name="description" content="Stale features, cold-start, versioning, deprecation">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/feature_store_traps.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/feature_store_traps.html">
+  <meta property="og:title" content="Feature Store API Traps | ML Systems Lab">
+  <meta property="og:description" content="Stale features, cold-start, versioning, deprecation">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Feature Store API Traps">
+  <meta name="twitter:description" content="Stale features, cold-start, versioning, deprecation">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Feature Store API Traps",
+  "description": "Stale features, cold-start, versioning, deprecation",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/feature_store_traps.html",
+  "keywords": "feature store, cold start, staleness, versioning"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#production_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">29 min read</span>
+      <span class="tag">feature store</span><span class="tag">cold start</span><span class="tag">staleness</span><span class="tag">versioning</span>
+    </div>
+    <h1>Feature Store API Traps</h1>
+    <p class="subtitle">Stale features, cold-start, versioning, deprecation</p>
+
+    <p>A new user signs up. Your feature &quot;average spend in last 30 days&quot; has no history for them, so the feature store returns null. The model — which only ever saw users with 30+ days of history — gets a null where its main spend signal should be. It still produces a score. The score looks plausible. It is garbage. This is the <strong>cold start</strong> problem, and it fires on the very first request for every new user, item, or account, across every feature built on history.</p>
+    <p>And nothing warns you. The null gets quietly turned into zero (shoving the model toward its most extreme low-spend prediction) or passed straight through the network (behaving however that architecture happens to behave). Either way the model was never trained for this input, and a real user gets a confidently wrong answer.</p>
+    <p>Cold start is one of four silent failure modes in production feature stores. Here are the other three.</p>
+    <hr>
+    <p><strong>Stale features.</strong> A materialization job dies overnight, the online store stops updating, and the model starts serving yesterday's — or last week's — numbers. The API call succeeds. No exception, no alert, unless you built one. The only real defense is to ship a `feature_last_updated_timestamp` in every serving response and monitor it against the freshness SLA.</p>
+    <hr>
+    <p><strong>Version deprecation in place.</strong> A team redefines &quot;user_purchase_count&quot; from a 7-day window to a 30-day window *under the same name.* A model trained on 7-day counts now silently receives 30-day counts — for a steady user, roughly 4× larger — and its predictions drift upward with no error anywhere. The fix is a rule: never change a feature's meaning in place. Give the new definition a new name and sunset the old one with notice to its consumers.</p>
+    <hr>
+    <p><strong>Backfill that leaks the future.</strong> To train on a brand-new feature you need historical values, so you backfill them. Those values must use only data that existed at each past timestamp. The classic bug: backfilling a &quot;7-day rolling average&quot; using everything up to the *backfill run date* instead of the true window at each point. Now the training set contains future information, offline metrics look great, and production disappoints.</p>
+    <hr>
+    <p><strong>The theme:</strong> don't expect the store to handle these for you. Cold-start defaults, freshness SLAs, and deprecation workflows are decisions you make *per feature.* The infrastructure computes and serves values; it has no idea what a sensible default is for a new user, what &quot;fresh enough&quot; means for your use case, or which models break when a pipeline is turned off. Those calls are yours.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Define a cold start strategy for every feature before deployment — either a carefully chosen fallback default or a separate model trained on sparse-history users.</strong>
+
+Undocumented cold start behavior is a production incident waiting to happen. Zero is almost never the right default: in a feature distribution where the median is 5, a default of zero pushes the model toward its most extreme low-value prediction for every new user. Use the population median from the training set, and add an explicit `is_new_entity` binary feature so the model can distinguish cold start inputs from established users with genuinely low feature values.</li><li><strong>Trap: backfilling a new feature incorrectly is one of the most common sources of temporal leakage in production ML.</strong>
+
+Always verify that backfilled values use only data available at each historical timestamp. The check: compare the backfilled feature distribution for last month against what you would have computed last month in real time. Any systematic difference — even a few percent — means the backfill used future data and the training set is contaminated.</li><li><strong>Diagnostic: monitor the null rate of each feature in the online store in production.</strong>
+
+A feature that was 0% null in training but 5% null in production indicates a cold start or freshness issue the model was never trained to handle. Null rate is the earliest and most reliable signal for feature store failures — it responds immediately to pipeline outages, join failures, and deprecation events, before downstream model metrics have time to degrade.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Feature store failures are silent — no exception fires when a feature is stale, null, or semantically different from what the model expects, and the only mechanism that finds them before users do is explicit monitoring that you built specifically for that purpose.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Four silent failure modes:</strong> cold start, stale features, in-place version change, backfill that leaks the future.</li><li><strong>Cold start:</strong> new entity → null → imputed to zero → confident garbage. Fires on the first request for every new user/item.</li><li><strong>Default fix:</strong> population median, never zero; add explicit `is_new_entity` binary so the model can tell cold-start from genuinely low.</li><li><strong>Stale:</strong> materialization dies, store serves last week's numbers, API still succeeds. Ship `feature_last_updated_timestamp` + monitor vs SLA.</li><li><strong>Version-in-place:</strong> redefine 7d→30d under same name → values ~4× larger → predictions drift up, no error. Rule: new meaning = new name.</li><li><strong>Backfill leak:</strong> use only data available at each past timestamp, not the backfill run date.</li><li><strong>Best signal = null rate per feature:</strong> 0% at train, 5% in prod = cold-start or freshness issue, and it responds *before* model metrics degrade.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Your recommendation model suddenly degrades in production. Feature distributions look normal on average, but P99 latency for feature retrieval spiked from 5ms to 800ms. What happened and what do you do?</p>
+      <ul class="check-opts"><li>A) A P99 spike while P50 is normal is just statistical noise in the tail; ignore it and monitor the P50 trend instead</li><li class="correct">B) High P99 retrieval latency causes the serving endpoint to timeout or fall back to null/default features; investigate Redis metrics (hot keys, memory eviction, shard distribution), implement a circuit breaker with a 50ms timeout, and scale the Redis cluster</li><li>C) The model itself is running slowly due to a software regression; P99 feature retrieval latency is always caused by model inference time</li><li>D) Degrade gracefully by disabling all personalization features until P99 returns to baseline — feature retrieval is non-essential</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> A new product launches with 10,000 new items. The recommendation model starts showing these items at very low rankings. Why and how do you fix it?</p>
+      <ul class="check-opts"><li>A) New items rank low because the model correctly infers that items with no purchase history are low quality</li><li class="correct">B) New items have null or zero engagement features (clicks, purchases, views), causing the model to rank them as low-engagement items rather than unknown items; fix with content-based features, exploration injection, warm-start from similar items, and Bayesian smoothing</li><li>C) The recommendation model needs to be retrained on the new items before it can rank them; low rankings are expected until the next training cycle</li><li>D) New items rank low because of a cold-start problem in the user side, not the item side — the fix is to update user features more frequently</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Explain how a feature version change from &quot;purchase_count_7d&quot; to &quot;purchase_count_30d&quot; with the same feature name would manifest in model performance over time.</p>
+      <ul class="check-opts"><li>A) The model would immediately produce errors because the value range has changed, triggering schema validation alerts</li><li>B) Performance would improve because the 30-day window provides more signal; version changes under the same name are encouraged when the new version is strictly better</li><li class="correct">C) The model would receive values approximately 4x larger than it trained on, causing systematically inflated predictions; prediction score distribution monitoring would show a sudden upward shift; always create new feature versions with new names, never update semantics in-place</li><li>D) The effect would be negligible because models learn relative patterns rather than absolute feature values</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> How do you implement a testing strategy for a feature pipeline to catch backfill inconsistencies before they reach training data?</p>
+      <ul class="check-opts"><li>A) Run the new pipeline on live data only — backfill testing is unnecessary because historical data is immutable</li><li class="correct">B) Store expected feature values for 100 sampled entities at 10 historical timestamps; on pipeline changes, assert recomputed values match within tolerance; also run PSI comparison between old and new pipeline on the same date range; fail and alert before backfilled data enters training</li><li>C) Compare the new pipeline's output schema against the old schema; if column names and types match, the backfill is consistent</li><li>D) Backfill inconsistencies can only be caught after model retraining by comparing offline AUC between old and new models</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#production_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Versioning and Pipelines | ML Systems Lab</title>
+  <meta name="description" content="Models are only reproducible if both code and data are versioned — and production ML breaks when training and serving compute features differently.">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/data_versioning_and_pipelines.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/data_versioning_and_pipelines.html">
+  <meta property="og:title" content="Data Versioning and Pipelines | ML Systems Lab">
+  <meta property="og:description" content="Models are only reproducible if both code and data are versioned — and production ML breaks when training and serving compute features differently.">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Data Versioning and Pipelines">
+  <meta name="twitter:description" content="Models are only reproducible if both code and data are versioned — and production ML breaks when training and serving compute features differently.">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Data Versioning and Pipelines",
+  "description": "Models are only reproducible if both code and data are versioned — and production ML breaks when training and serving compute features differently.",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/data_versioning_and_pipelines.html",
+  "keywords": "DVC, feature store, data versioning, training-serving skew, pipeline orchestration, reproducibility"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#data_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">40 min read</span>
+      <span class="tag">DVC</span><span class="tag">feature store</span><span class="tag">data versioning</span><span class="tag">training-serving skew</span><span class="tag">pipeline orchestration</span>
+    </div>
+    <h1>Data Versioning and Pipelines</h1>
+    <p class="subtitle">Models are only reproducible if both code and data are versioned — and production ML breaks when training and serving compute features differently.</p>
+
+    <p>A model you shipped six months ago starts misbehaving: performance on iOS users has fallen off a cliff since October. You go to investigate — and hit a wall. You have *no record* of what data that model was trained on, what the pipeline looked like before a September change, or which features that change touched. So begins two weeks of archaeology. Now imagine the alternative: you `git log` the pipeline, run one command to check out the *exact* dataset the model trained on, re-run training, and find the bug in two hours. That is what <strong>data versioning</strong> buys you.</p>
+    <p>The core idea is simple: <strong>a model is a function of three things — its training data, its code, and its hyperparameters — and to reproduce a model you must be able to recover all three.</strong> Code versioning (Git) is second nature. The piece teams forget is the *data*. Tools like <strong>DVC</strong> fix this by storing a tiny pointer file — essentially a fingerprint of the dataset — right next to your code in Git, so checking out any past commit gives you back both the code *and* the exact data as it was then. A tool like <strong>MLflow</strong> captures the third leg, logging each run's code version, data fingerprint, hyperparameters, and results, so any past experiment can be rebuilt from its run ID instead of from memory.</p>
+    <hr>
+    <h3>The other silent killer: training-serving skew</h3>
+    <p>Here is a failure that bites far more teams than expect it. The logic that computes your features usually gets written *twice* — once in Python for training, once in SQL or Java for the live serving system. Over time the two quietly drift apart: a timezone handled differently, a null treated differently, a rounding difference in an aggregate. Now the model is fed inputs at serving time that are subtly different from anything it trained on. Offline it scores <strong>91%</strong>; in production it scores <strong>77%</strong> — and *nothing errors*.</p>
+    <p>There is only one real fix, and it is structural: compute each feature in *one* canonical place that both training and serving use. This is exactly what a <strong>feature store</strong> (Feast, Tecton, Hopsworks) does — it keeps a single definition of each feature and serves it to both the training pipeline and the live system, so the two can never drift apart.</p>
+    <hr>
+    <h3>Is this overkill for a small team?</h3>
+    <p>It is tempting to skip all this as heavyweight process. But the maths is stark. Adding DVC to a repo costs a couple of hours, once. The *first* time a silent data bug causes a production incident without it, you lose days digging — and you may not be able to confidently roll back at all, because you cannot reproduce the good state. A good test of whether you are actually versioned: *could a teammate who was never on the project reproduce this exact model from scratch in half an hour, given only the commit hash?* If not, you do not really have a versioned pipeline yet.</p>
+    <hr>
+    <h3>The fourth leg: environment and dependencies</h3>
+    <p>Code + data + hyperparameters isn't quite the whole story — the *environment* is a fourth leg of reproducibility. A different scikit-learn version can change a default and shift results; a different CUDA/cuDNN or GPU can change floating-point outputs; an un-pinned dependency can silently upgrade under you. So version the environment too: <strong>lockfiles</strong> (Conda, Poetry, pip freeze), a <strong>Docker image</strong> (or documented base image + CUDA/library versions), and a note of the hardware/runtime. &quot;It reproduced on my machine&quot; isn't reproducibility until the machine itself is pinned.</p>
+    <hr>
+    <h3>The model registry and its lifecycle</h3>
+    <p>Trained artifacts need governance, which is what a <strong>model registry</strong> (MLflow Registry, SageMaker, Vertex) provides. It tracks each model version through <strong>lifecycle stages</strong> — Experiment → Staging → Production → Archived — with <strong>approval gates</strong> between them, one-command <strong>rollback</strong> to a prior version, <strong>lineage</strong> back to the training run, and a <strong>model card</strong> documenting intended use, metrics, and limitations. This is what turns &quot;which model is live and how do I revert it?&quot; from an incident into an API call.</p>
+    <hr>
+    <h3>Pipeline orchestration</h3>
+    <p>The steps (ingest → features → train → evaluate → deploy) run as an orchestrated <strong>DAG</strong> in tools like Airflow, Prefect, Dagster, or Kubeflow. What the orchestrator buys you: <strong>retries</strong> and failure <strong>alerts</strong>, <strong>scheduling</strong> and <strong>backfills</strong> (re-run a date range after a fix), and — critically — <strong>idempotency</strong> (re-running a step on the same input produces the same output with no duplicates). Without idempotency you can't safely retry, and without alerts a silent stage failure becomes next month's mystery.</p>
+    <hr>
+    <h3>Feature store: two stores, freshness, materialization</h3>
+    <p>The feature store that cures training-serving skew has real internal structure worth knowing. It has an <strong>offline store</strong> (historical values, point-in-time-correct, for building training sets) and an <strong>online store</strong> (the latest value per entity, low-latency, for serving). <strong>Materialization</strong> is the job that computes features and writes them to both; each feature has a <strong>freshness SLA</strong> and often a <strong>TTL</strong>. The hard parts are keeping online <strong>latency</strong> low and getting <strong>backfill correctness</strong> right — recomputing historical features with point-in-time correctness so training and serving see the same values.</p>
+    <hr>
+    <h3>Data contracts and experiment tracking, spelled out</h3>
+    <p>A <strong>data contract</strong> is the enforceable interface a producing team commits to: <strong>schema</strong>, <strong>types</strong>, <strong>null-rate</strong> ceiling, <strong>value ranges</strong>, <strong>cardinality</strong>, <strong>uniqueness</strong>, <strong>volume</strong>, <strong>freshness SLA</strong>, and clear <strong>ownership</strong> — so an upstream breaking change is caught at the boundary. <strong>Experiment tracking</strong> should capture everything needed to rebuild and compare a run: <strong>code commit</strong>, <strong>dataset hash</strong>, <strong>feature-set version</strong>, <strong>config file</strong>, <strong>random seeds</strong>, <strong>split IDs</strong>, <strong>hyperparameters</strong>, <strong>metrics</strong>, and per-slice <strong>evaluation reports</strong>. If a run can't be rebuilt from its logged record alone, the tracking is incomplete.</p>
+    <hr>
+    <h3>CI/CD for ML, and end-to-end lineage</h3>
+    <p>ML needs its own <strong>CI/CD</strong>: <strong>unit tests</strong> for feature logic, <strong>data-validation tests</strong> on incoming batches, <strong>training smoke tests</strong> (does a tiny run complete?), <strong>model-performance gates</strong> (block deploy if a metric regresses), and <strong>canary</strong> rollouts with automated rollback. Tying it all together is <strong>lineage</strong>: for any production prediction you should be able to trace *backward* — prediction → model version → the exact feature values used → the feature-computation code → the raw data snapshot → the training run. That backward trace is what makes an incident debuggable in hours instead of weeks, and it's the ultimate payoff of versioning code, data, environment, and pipeline together.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Add DVC to any project the moment you have a second training run — tracking data versions retroactively is harder than starting upfront. DVC adds fewer than 5 lines to your Makefile and zero overhead to training.</strong>
+
+For the iOS debugging scenario: `dvc checkout` restores the exact dataset used six months ago. Without DVC, the training table has been updated, overwritten, or partitioned differently since then. Reproducing the model state is impossible, not just hard.</li><li><strong>Trap: versioning model artifacts but not data. If you can reproduce the model checkpoint but not the training data, you cannot audit why the model behaves the way it does. Data versioning is more important than model versioning.</strong>
+
+MLflow saves the trained model weights. DVC saves the dataset hash. You need both. Model weights tell you what the model learned; the dataset hash tells you what it learned from. Without the dataset, you cannot audit for label errors, investigate training distribution, or reproduce a retraining run.</li><li><strong>Diagnostic: ask yourself &quot;can I reproduce this model from scratch in under 30 minutes?&quot; If the answer is no, you do not have a versioned pipeline.</strong>
+
+The test is concrete: given only the Git commit hash for a past training run, a colleague who was not on the project should be able to reproduce the model checkpoint within 30 minutes. If this is not possible — because data is untracked, pipeline stages are undocumented, or hyperparameters were set interactively — the pipeline is not versioned in any meaningful sense.</li><li><strong>Reproducibility has four legs, and production ML needs a registry, orchestration, and a feature store.</strong>
+
+Code + data + hyperparameters + environment — pin dependencies with lockfiles and a Docker image (CUDA/library versions included), since a package bump can silently change results. A model registry manages lifecycle (Experiment → Staging → Production → Archived) with approval gates, one-command rollback, lineage, and model cards. Orchestrators (Airflow/Prefect/Dagster/Kubeflow) give retries, alerts, backfills, and idempotency. The feature store has an offline store (point-in-time history for training) and online store (latest value, low latency for serving), joined by materialization with a freshness SLA.</li><li><strong>Formalise data contracts and experiment tracking, and wire ML CI/CD with full lineage.</strong>
+
+A data contract commits a producer to schema, types, null-rate, ranges, cardinality, uniqueness, volume, freshness SLA, and ownership. Experiment tracking must log code commit, dataset hash, feature-set version, config, seeds, split IDs, hyperparameters, metrics, and per-slice reports — enough to rebuild the run. ML CI/CD adds unit tests for feature logic, data-validation tests, training smoke tests, performance gates, and canary rollouts. The payoff is end-to-end lineage: trace any production prediction back through model version → feature values → feature code → raw data snapshot → training run.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>A model is a function of code, data, and hyperparameters together — versioning only the code leaves the debugging problem half-solved, and the half that is missing is usually the one that caused the incident.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>A model is a function of code, data, and hyperparameters together</strong> — versioning only code leaves the half that caused the incident missing.</li><li><strong>Version data, not just model artifacts:</strong> weights say *what* it learned; the dataset hash says what it learned *from*. You need both (DVC + MLflow).</li><li><strong>Add DVC at the second training run</strong> — `dvc checkout` restores the exact past dataset; retroactive versioning is near-impossible.</li><li><strong>The 30-minute test:</strong> given only a Git commit, a colleague reproduces the checkpoint in &lt;30 min — else the pipeline isn't versioned.</li><li><strong>Reproducibility has four legs:</strong> code + data + hyperparameters + environment (pin lockfiles + Docker; a package bump silently changes results).</li><li><strong>Production ML needs a registry</strong> (lifecycle, rollback, model cards), <strong>orchestration</strong> (retries, backfills, idempotency), and a <strong>feature store</strong> (offline point-in-time + online low-latency).</li><li><strong>End-to-end lineage is the payoff:</strong> trace prediction → model version → feature values → feature code → raw snapshot → training run — hours, not weeks.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> A model trained and evaluated in offline pipeline shows 91% AUC. After deployment, production AUC is 77%. No distribution shift detected in features monitored at prediction time. What is the most likely cause?</p>
+      <ul class="check-opts"><li>A) The model overfits the offline evaluation set because the offline pipeline uses a fixed train-test split rather than cross-validation, making the 91% AUC estimate optimistically biased.</li><li class="correct">B) Training-serving skew — features used during serving computed differently from features used during training. Monitoring features at prediction time confirms distribution is stable (ruling out distribution shift), but if feature VALUES themselves are wrong (different logic, null handling, time windows), model receives inputs it was never trained on. Common examples: training pipeline used batch SQL snapshot with specific cutoff time; serving system computes from live database including same-day transactions. Or timezone handling differs. Fix: audit feature computation code in both pipelines and compare output values for same raw input on held-out sample.</li><li>C) The 14-point AUC gap is within normal variance for real-world ML deployments and does not indicate a specific technical problem — it reflects the inherent difficulty of generalizing from offline evaluation to production conditions.</li><li>D) The production AUC drop indicates that the model's hyperparameters were tuned for the offline distribution and need to be re-tuned on production data before redeployment.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> You need to reproduce a model trained 8 months ago to debug a regression. You have the training code at the exact commit, but you cannot reproduce the results. What is missing?</p>
+      <ul class="check-opts"><li>A) The random seed used during training is missing — without fixing the random seed for train-test splitting and model initialization, the same code will always produce a different model.</li><li>B) The hyperparameter configuration is missing — without the exact learning rate, regularization strength, and tree depth used in the original training run, the same code will converge to a different model.</li><li>C) The Python package versions are missing — without the exact dependency versions (scikit-learn, pandas, numpy), the same code running on a different package version will produce different numerical results.</li><li class="correct">D) Data versioning is missing. Training code alone insufficient to reproduce a model — also need exact dataset used to train it. Eight months ago, training set had specific rows, feature values, and label assignments. Since then, upstream data has likely changed: new rows added, old rows updated/deleted, feature engineering pipelines modified. Without DVC (or equivalent), cannot recover exact dataset state from 8 months ago. Fix for future: use DVC to commit .dvc pointer file alongside each model training run so dataset version permanently associated with code version.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> What is point-in-time correctness in a feature store and what goes wrong without it?</p>
+      <ul class="check-opts"><li class="correct">A) Point-in-time correctness ensures that when assembling training example for model predicting on date T, you use feature values AS THEY EXISTED at time T — not as they exist when you assemble the training data (possibly months later). Without it: temporal leakage — for a customer churn model, if you use today's &quot;30-day purchase count&quot; to label a training example from 6 months ago, you INCLUDE purchases from the 5 months AFTER the label date. Feature value contaminated by future information. Feature store with point-in-time support queries feature values &quot;as of&quot; specified timestamp. Without this: every historical training example contaminated by future data, producing inflated accuracy that collapses in production.</li><li>B) Point-in-time correctness ensures that training and serving use the same timestamp format (UTC vs. local time) to prevent timezone-related feature skew. Without it, features computed in training and serving will have different values for the same raw events.</li><li>C) Point-in-time correctness ensures that the feature store's online layer serves features with latency below the model's SLA. Without it, serving latency spikes cause the model to fall back to default feature values, degrading prediction quality.</li><li>D) Point-in-time correctness ensures that the same version of each feature is used across all folds of cross-validation. Without it, different folds may use features computed from different snapshots of the upstream data, introducing fold-to-fold variance in the CV estimate.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> An upstream team renames a column from 'transaction_value' to 'txn_amount' without notifying your team. Your retraining pipeline runs successfully with no errors. Six weeks later, model performance dropped. What happened and how would a data contract have prevented it?</p>
+      <ul class="check-opts"><li class="correct">A) The pipeline read renamed column as null (old column name no longer exists; many SQL engines return nulls for missing columns rather than erroring). Imputer filled in mean of now-null column — likely 0 or historical mean from previous imputer. Model retrained on version of transaction value feature that was entirely imputed noise, silently degraded, not discovered for 6 weeks. Data contract would prevent this: specifies upstream table MUST contain column named &quot;transaction_value&quot; of type FLOAT with null rate below 1%. Data validation step runs this check before any feature computation, and when column is absent, pipeline FAILS IMMEDIATELY with descriptive error — blocking corrupted retraining run and alerting team on day 1.</li><li>B) The pipeline automatically mapped the old column name to the new one using fuzzy string matching, but the mapping introduced a one-day lag that shifted all temporal features by 24 hours, gradually degrading time-sensitive predictions.</li><li>C) The renamed column caused a schema mismatch that the pipeline silently handled by dropping the column entirely; the model retrained without the feature, which reduced its predictive power by the amount attributable to transaction value.</li><li>D) The pipeline cached the old column schema from the previous training run and continued reading the correct data for 6 weeks until the cache expired, at which point the column name mismatch surfaced as a performance drop.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> You can reproduce a model's exact weights from 8 months ago (you versioned code, data, hyperparameters, and seeds), but running the same pipeline today gives slightly different numeric results. What did you likely miss, and how do you fix it?</p>
+      <ul class="check-opts"><li>A) Nothing — identical code, data, and seeds always produce bit-identical results regardless of anything else, so the difference must be a measurement error.</li><li class="correct">B) The environment is unversioned — a different library version (scikit-learn/pandas/numpy), a different CUDA/cuDNN, or different hardware can change defaults and floating-point results even with identical code, data, and seeds. Reproducibility has a fourth leg beyond code/data/hyperparameters: pin the environment with lockfiles (Conda/Poetry) and a Docker image capturing library and CUDA versions, and record the runtime/hardware.</li><li>C) The random seed must not have been fixed after all; re-fixing the seed is the only thing that affects reproducibility.</li><li>D) The dataset hash changed on its own; recompute it and the results will match.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q6.</strong> Your team can reproduce models but debugging a bad production prediction still takes weeks. What capability is missing, and what does it let you do?</p>
+      <ul class="check-opts"><li>A) You need a faster GPU — debugging speed is purely a compute problem.</li><li class="correct">B) End-to-end lineage is missing: the ability to trace a specific production prediction backward through the model version that produced it → the exact feature values it used → the feature-computation code → the raw data snapshot → the training run. With lineage wired in (plus a model registry, orchestration, and a feature store), you follow the chain from a bad prediction to its root cause in hours instead of reconstructing everything from memory over weeks.</li><li>C) You need to retrain more frequently, which prevents bad predictions from occurring and removes the need to debug them.</li><li>D) You need to disable monitoring, since alerts slow down the debugging process.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#data_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

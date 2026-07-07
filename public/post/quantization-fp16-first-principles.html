@@ -38,8 +38,8 @@
       "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
     }
   },
-  "datePublished": "2026-06-20",
-  "dateModified": "2026-06-20",
+  "datePublished": "2026-07-07",
+  "dateModified": "2026-07-07",
   "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/quantization-fp16-first-principles.html",
   "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
   "keywords": "Deep Learning, Quantization, FP16, BF16, INT8, LLM Inference, Serving"
@@ -72,24 +72,24 @@
     <div class="meta">Deep Learning &middot; ML Systems Lab</div>
     <h1>Quantization from First Principles: What FP16 Throws Away and When It Matters</h1>
     <p class="excerpt">Quantization promises 2× throughput and half the memory with &quot;no accuracy loss.&quot; It delivers on throughput. It delivers on memory. The accuracy loss part is where teams find surprises. FP16 has a 10-bit mantissa vs FP32&#39;s 23 bits. For most models, this is fine. For LLMs with activation outliers, it&#39;s catastrophic. Here&#39;s the bit-level reasoning that tells you when quantization is safe and when it destroys your model.</p>
-    <p>Quantization trades precision for speed. The marketing says "no accuracy loss." The reality is more nuanced. Whether quantization works depends entirely on how your model\'s activations and weights distribute — something you need to understand at the bit level to predict failure.</p>
+    <p>Quantization trades precision for speed. The marketing says "no accuracy loss." The reality is more nuanced. Whether quantization works depends entirely on how your model's activations and weights distribute — something you need to understand at the bit level to predict failure.</p>
 <h2>The floating point bit layout:</h2>
 <p>FP32: 1 sign bit, 8 exponent bits, 23 mantissa bits. FP16: 1 sign bit, 5 exponent bits, 10 mantissa bits. BF16: 1 sign bit, 8 exponent bits, 7 mantissa bits.</p>
-<p>The exponent bits determine range: what\'s the maximum and minimum representable value? The mantissa bits determine precision: how finely values within that range are represented.</p>
+<p>The exponent bits determine range: what's the maximum and minimum representable value? The mantissa bits determine precision: how finely values within that range are represented.</p>
 <h2>What FP16 throws away: precision</h2>
-<p>By reducing mantissa bits from 23 to 10, FP16 has roughly 2× the relative error of FP32 for any given value. For neural network inference, this is usually acceptable. Weights after training are typically in [-1, 1] with similar-magnitude activations. The precision loss doesn\'t materially change predictions for most architectures.</p>
+<p>By reducing mantissa bits from 23 to 10, FP16 has roughly 2× the relative error of FP32 for any given value. For neural network inference, this is usually acceptable. Weights after training are typically in [-1, 1] with similar-magnitude activations. The precision loss doesn't materially change predictions for most architectures.</p>
 <h2>When FP16 breaks: activation outliers</h2>
-<p>Some models have neurons with activation magnitudes 100–1000× larger than typical. When you quantise to FP16, the representable range doesn\'t shrink (5 exponent bits still covers a wide range), but if activations exceed ~65,504 (FP16 max), they overflow to infinity or NaN.</p>
+<p>Some models have neurons with activation magnitudes 100–1000× larger than typical. When you quantise to FP16, the representable range doesn't shrink (5 exponent bits still covers a wide range), but if activations exceed ~65,504 (FP16 max), they overflow to infinity or NaN.</p>
 <p>Large language models are uniquely vulnerable. Attention heads in LLaMA, GPT, and similar architectures routinely produce outlier activations of 100–500×. Naive FP16 inference on these models produces incoherent outputs — not subtle degradation, but complete failure.</p>
 <h2>The solution: mixed precision and selective dequantisation</h2>
 <p>LLM.int8() (Dettmers et al., 2022) handles this by identifying outlier dimensions and computing them in higher precision while keeping non-outliers in INT8. The result: 2–4× speedup with minimal quality loss.</p>
-<p>The more general pattern: don\'t quantise every layer uniformly. Attention layers and layer normalisation are quantisation-sensitive. Keep them in FP32 or FP16. Linear layers in transformer blocks are robust to INT8.</p>
+<p>The more general pattern: don't quantise every layer uniformly. Attention layers and layer normalisation are quantisation-sensitive. Keep them in FP32 or FP16. Linear layers in transformer blocks are robust to INT8.</p>
 <h2>BF16 vs FP16: why exponent bits matter</h2>
-<p>BF16 trades mantissa precision (7 bits) for exponent range (8 bits, same as FP32). It can represent values up to ~3.4 × 10^38. FP16\'s 5 exponent bits limit it to ~65,504.</p>
+<p>BF16 trades mantissa precision (7 bits) for exponent range (8 bits, same as FP32). It can represent values up to ~3.4 × 10^38. FP16's 5 exponent bits limit it to ~65,504.</p>
 <p>For LLMs: BF16 is almost always preferable to FP16. Activation outliers fit in the range without overflow. The reduced mantissa precision (7 vs 23 bits) is acceptable for inference.</p>
 <p>Modern GPUs (A100, H100) support BF16 at the same throughput as FP16. If your hardware supports it, use BF16 for LLM inference.</p>
 <h2>INT8 and INT4: dynamic range compression</h2>
-<p>INT8 represents values as 8-bit integers in [-128, 127]. There\'s no exponent — the numeric range is fixed. Quantisation maps floats to this fixed range via a scale factor.</p>
+<p>INT8 represents values as 8-bit integers in [-128, 127]. There's no exponent — the numeric range is fixed. Quantisation maps floats to this fixed range via a scale factor.</p>
 <p>Per-tensor quantisation: one scale factor for the entire weight matrix. If the matrix has a few very large values, those dominate the scale and small values lose precision.</p>
 <p>Per-channel quantisation: separate scale factor per output channel. More expensive but much better quality. This is the standard for production INT8 quantisation.</p>
 <p>INT4 halves the memory of INT8. A 7B parameter LLM fits in ~3.5GB. The quality cost is significant but manageable with mixed precision and groupwise quantisation (separate scales per group of weights).</p>
@@ -102,15 +102,15 @@
 <p>Training? BF16 mixed precision with FP32 master weights.</p>
 <h2>Calibration: choosing the right scale factors</h2>
 <p>Static INT8 quantisation requires a calibration dataset: representative inputs run through the model before quantisation. Calibration collects activation distributions at each layer, used to choose optimal scale factors.</p>
-<p>A calibration dataset that doesn\'t match your production distribution produces poor scale factors and quality degradation. 100–1000 representative inputs is typically sufficient.</p>
+<p>A calibration dataset that doesn't match your production distribution produces poor scale factors and quality degradation. 100–1000 representative inputs is typically sufficient.</p>
 <p>TensorRT, ONNX Runtime, and llama.cpp all implement calibration-based quantisation. Using these correctly requires knowing which layers are quantisation-sensitive (attention, layer norm) and keeping them in higher precision.</p>
 <h2>Practice this in Deep Learning serving to understand when quantization is safe, how to detect failures, and how to optimise inference for your specific model and hardware.</h2>
-<p>\`\`\`python import torch from torch.cuda.amp import autocast, GradScaler</p>
+<p>```python import torch from torch.cuda.amp import autocast, GradScaler</p>
 <p>def train_mixed_precision(model, loader, optimizer, epochs=3): """BF16/FP16 mixed precision: FP16 forward pass, FP32 master weights. ~2× faster, ~50% less GPU memory. GradScaler prevents underflow.""" scaler = GradScaler()   # dynamic loss scaling — handles FP16 underflow</p>
 <p>for epoch in range(epochs): for batch in loader: optimizer.zero_grad()</p>
 <p>with autocast(dtype=torch.float16):  # use bfloat16 on Ampere+ GPUs loss = model(batch).loss          # forward in FP16</p>
 <p>scaler.scale(loss).backward()         # backward scales gradients scaler.unscale_(optimizer) torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0) scaler.step(optimizer)                # updates in FP32 master weights scaler.update()</p>
-<p># Production note: bf16 is preferred over fp16 on A100/H100 — larger dynamic range, # no gradient underflow, no GradScaler needed. Use torch.bfloat16 where hardware allows. \`\`\`</p>
+<p># Production note: bf16 is preferred over fp16 on A100/H100 — larger dynamic range, # no gradient underflow, no GradScaler needed. Use torch.bfloat16 where hardware allows. ```</p>
 
     <div class="cta">
       <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>

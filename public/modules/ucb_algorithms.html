@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upper Confidence Bound Algorithms | ML Systems Lab</title>
+  <meta name="description" content="UCB1, Lai-Robbins optimality, UCB variants, confidence bound construction">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/ucb_algorithms.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/ucb_algorithms.html">
+  <meta property="og:title" content="Upper Confidence Bound Algorithms | ML Systems Lab">
+  <meta property="og:description" content="UCB1, Lai-Robbins optimality, UCB variants, confidence bound construction">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Upper Confidence Bound Algorithms">
+  <meta name="twitter:description" content="UCB1, Lai-Robbins optimality, UCB variants, confidence bound construction">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Upper Confidence Bound Algorithms",
+  "description": "UCB1, Lai-Robbins optimality, UCB variants, confidence bound construction",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/ucb_algorithms.html",
+  "keywords": "UCB, UCB1, confidence bound, optimism, KL-UCB, MOSS"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#bandits_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">45 min read</span>
+      <span class="tag">UCB</span><span class="tag">UCB1</span><span class="tag">confidence bound</span><span class="tag">optimism</span><span class="tag">KL-UCB</span>
+    </div>
+    <h1>Upper Confidence Bound Algorithms</h1>
+    <p class="subtitle">UCB1, Lai-Robbins optimality, UCB variants, confidence bound construction</p>
+
+    <p>Epsilon-greedy's fundamental problem is that it allocates exploration uniformly — it has no mechanism for deciding which arms deserve more exploration. UCB solves this with a principled principle: always pull the arm whose true mean could plausibly be highest given what has been observed. The UCB index is μ̂_a + confidence_bonus, where the bonus shrinks as an arm accumulates data and grows as t increases.</p>
+    <p>An arm that is either genuinely high-reward or under-explored will win the argmax — and if it wins because it was over-estimated, the next observation corrects that, shrinking its UCB. Over-optimism is self-correcting. UCB1 achieves O(log T) regret matching the Lai-Robbins lower bound. In production, UCB's determinism (fully reproducible, no random coin flips) makes it auditable — but naive UCB scales poorly to millions of arms because maintaining per-arm confidence intervals becomes expensive.</p>
+
+    <h2>Key points</h2>
+    <ul><li>**UCB1:
+
+$a_t = argmax_a [μ̂_a + √(2 ln t / N_a(t))].** The confidence bonus √(2 ln t / N_a) has two properties: it de$
+
+cays as N_a grows (arm is better understood, exploration less urgent) and grows as t increases (global pressure to revisit under-pulled arms). An arm never pulled at all has infinite UCB by convention and gets pulled first — this is the natural cold-start solution.</li><li><strong>UCB1 regret bound: E[R_T] ≤ Σ_{a: Δ_a &gt; 0} [8 ln T / Δ_a + (1 + π²/3)·Δ_a].</strong> The 8/Δ_a factor means near-optimal arms (small Δ_a) get pulled more — which is correct, because they take many observations to identify as suboptimal. Arms with large gaps are eliminated quickly; arms close to optimal require persistent exploration until the confidence intervals separate.</li><li><strong>Optimism principle: UCB acts as if each arm's mean is at its most optimistic plausible value.</strong> If the true mean really is that high, pulling the arm is correct. If the true mean is lower, the next observation shrinks the confidence interval and the arm's UCB falls. Over-optimism generates the exploration needed to correct itself — this is why UCB never ignores an uncertain arm forever.</li><li><strong>UCB1-tuned replaces the fixed 1/4 variance bound with empirical variance: UCB = μ̂_a + √(min(1/4, V_a(t)) · ln t / N_a) where V_a accounts for both estimated variance and the uncertainty in that estimate.</strong> Arms with low variance get tighter confidence intervals, focusing exploration budget on arms where variance is genuinely high. Empirically outperforms UCB1 when reward variance differs substantially across arms.</li><li>**KL-UCB uses the KL divergence between empirical and true mean as the confidence bound:
+
+$UCB_a = max{q : N_a · KL(μ̂_a, q) ≤ ln t + c ln ln t}.** This is t$
+
+ighter than Hoeffding-based bounds (which UCB1 uses) and achieves the Lai-Robbins lower bound with matching constant. More computationally expensive — requires solving a one-dimensional optimisation per arm — but asymptotically optimal in a way UCB1 is not.</li><li>**MOSS (Minimax Optimal Strategy in Stochastic case): UCB
+
+$index = μ̂_a + √(max(0, ln(T/(K·N_a))) / N_a).** Achieves minimax-optimal O(√(KT)) over worst-case instances. UCB1 is$
+
+instance-optimal (low regret when gaps are large) but not minimax-optimal. Use UCB1 when you have reason to believe gaps are large; use MOSS when you need worst-case robustness.</li><li><strong>For continuous arm spaces, naive discretisation into K = T^{1/3} bins achieves O(T^{2/3}) regret.</strong> Kernel UCB or GP-UCB handle smooth reward functions by using a GP posterior as the confidence bound — O(T^{(d+1)/(d+2)}) regret in d dimensions. The GP's posterior variance is the uncertainty measure, and the acquisition function is the UCB index.</li><li><strong>At web scale with K=10M arms, naive argmax is O(K) per step — infeasible at thousands of QPS.</strong> Practical approaches: two-stage retrieval (ANN on embeddings to get top-100 candidates, then UCB over 100); pre-compute UCB scores in batch and store in Redis; hierarchical UCB (tree over arm categories, UCB at each level to select which subtree to descend).</li><li><strong>Heavy-tailed rewards (Cauchy, Pareto) break Hoeffding-based UCB confidence bounds, causing under-covering and insufficient exploration.</strong> The empirical mean itself has high variance for heavy-tailed distributions. Use robust mean estimators (trimmed mean, median of means) with correspondingly modified confidence intervals when reward distributions have heavy tails.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>UCB's self-correcting optimism is the key mechanism: if an arm wins the argmax because it was over-estimated, the next observation corrects that estimate and shrinks its UCB — over-optimism generates exactly the exploration needed to correct itself. The 1/Δ_a regret factor matters: near-optimal arms (small gap) require O(log T / Δ_a) pulls to identify as suboptimal, because small distributional differences need many observations to resolve. Arms with large gaps are eliminated quickly; arms close to the best take persistent exploration.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>UCB1 index:</strong> $a_t = argmax_a [μ̂_a + √(2 ln t / N_a(t))]$ — bonus decays with N_a, grows with t.</li><li><strong>Optimism principle:</strong> act as if each arm's mean is its most optimistic plausible value; over-optimism self-corrects on the next pull.</li><li><strong>Never-pulled arm has infinite UCB:</strong> natural cold-start solution.</li><li><strong>O(log T) regret with 8/Δ_a factor:</strong> near-optimal arms get pulled more — they take longest to eliminate.</li><li><strong>Variants:</strong> UCB1-tuned (empirical variance), KL-UCB (tighter, matches Lai-Robbins constant), MOSS (minimax O(√(KT))).</li><li><strong>Web scale K=10M:</strong> naive argmax O(K) infeasible — use two-stage ANN retrieval, batched Redis scores, or hierarchical UCB.</li><li><strong>Heavy tails break Hoeffding bounds:</strong> use robust mean estimators (trimmed mean, median of means).</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You have K=5 arms with true means [0.9, 0.8, 0.5, 0.3, 0.1]. After t=100 rounds with UCB1, arm 1 has been pulled N_1=30 times and arm 5 has been pulled N_5=5 times. Compute the UCB scores and explain what the algorithm will do.</p>
+      <ul class="check-opts"><li>A) UCB_1 ≈ 1.454, UCB_5 ≈ 1.457; the algorithm pulls arm 1 because it has the higher empirical mean</li><li>B) UCB_1 ≈ 1.454, UCB_5 ≈ 1.457; the algorithm pulls arm 5 because both arms have similar UCB scores but arm 5 has higher variance</li><li class="correct">C) UCB_1 ≈ 1.454, UCB_5 ≈ 1.457; the algorithm pulls arm 5 because its exploration bonus (N_5=5) dominates — demonstrating how UCB naturally gives under-explored arms the benefit of the doubt despite low empirical means</li><li>D) UCB_1 ≈ 0.9, UCB_5 ≈ 0.1; the algorithm always pulls the arm with the highest empirical mean</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Why does UCB1's regret bound have a 1/Δ_a factor? What does this imply about performance when arms are very close in quality?</p>
+      <ul class="check-opts"><li>A) The 1/Δ_a factor is a mathematical artifact; it does not affect practical performance</li><li class="correct">B) Near-optimal arms (small Δ_a) require O(ln T / Δ_a²) pulls to confidently identify as suboptimal — the confidence interval must shrink to width &lt; Δ_a. Per-pull regret Δ_a times number of pulls gives O(ln T / Δ_a) per arm. When arms are nearly equal, both lower and upper bounds diverge: any algorithm must explore heavily to distinguish them</li><li>C) The 1/Δ_a factor means UCB performs better when arms are close in quality because it allocates more exploration to resolve near-ties</li><li>D) The 1/Δ_a factor appears because UCB overestimates the confidence bound by a factor of Δ_a</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> You're designing an ad serving system with 10 million ads. Describe a practical UCB architecture that is computationally feasible.</p>
+      <ul class="check-opts"><li class="correct">A) Two-stage selection (ANN retrieval to top-100 candidates, then UCB over 100), combined with pre-computed UCB scores in Redis updated in batches, hierarchical UCB over ad categories, and tiered exploration only for ads with &lt; 1000 impressions — amortizing O(K) compute across batches and O(log K) per request</li><li>B) Run UCB over all 10M ads per request using distributed computing — modern hardware can handle this at reasonable QPS</li><li>C) Reduce the problem to a standard A/B test over 10 representative ads, ignoring the full 10M ad catalog</li><li>D) Pre-sort ads by CTR weekly and serve the top 100 greedily without any UCB computation</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> What is the difference between instance-optimal regret (UCB1) and minimax-optimal regret (MOSS)? When does each matter?</p>
+      <ul class="check-opts"><li>A) They are equivalent — both achieve O(log T) in all settings</li><li>B) UCB1 is always superior because instance-optimal means it adapts to each specific bandit problem</li><li class="correct">C) Instance-optimal (UCB1, KL-UCB) minimizes regret per specific arm-gap configuration achieving O(Σ log T / Δ_a) — good when gaps are large. Minimax-optimal (MOSS) minimizes worst-case regret achieving O(√(KT)) — preferable when gaps are unknown or small. In practice Thompson Sampling often outperforms both by adapting implicitly to instance difficulty</li><li>D) MOSS is always preferred over UCB1 because minimax guarantees are strictly stronger than instance-optimal ones</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#bandits_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

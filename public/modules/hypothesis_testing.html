@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hypothesis Testing | ML Systems Lab</title>
+  <meta name="description" content="p-values, Type I/II errors, t-test, chi-squared, multiple comparisons">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/hypothesis_testing.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/hypothesis_testing.html">
+  <meta property="og:title" content="Hypothesis Testing | ML Systems Lab">
+  <meta property="og:description" content="p-values, Type I/II errors, t-test, chi-squared, multiple comparisons">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Hypothesis Testing">
+  <meta name="twitter:description" content="p-values, Type I/II errors, t-test, chi-squared, multiple comparisons">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Hypothesis Testing",
+  "description": "p-values, Type I/II errors, t-test, chi-squared, multiple comparisons",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/hypothesis_testing.html",
+  "keywords": "statistics, hypothesis testing, p-values, A/B testing"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#math_stats_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">26 min read</span>
+      <span class="tag">statistics</span><span class="tag">hypothesis testing</span><span class="tag">p-values</span><span class="tag">A/B testing</span>
+    </div>
+    <h1>Hypothesis Testing</h1>
+    <p class="subtitle">p-values, Type I/II errors, t-test, chi-squared, multiple comparisons</p>
+
+    <p>Your team builds a new checkout button — different color, slightly repositioned. You run it for two weeks. 10,000 users see the new version; 10,000 see the old one. Conversion: 3.2% versus 3.0%. The difference is 0.2 percentage points. Is this real, or did you just get lucky?</p>
+    <p>The question you need to answer: if the button had no effect whatsoever — if both groups were drawn from the same underlying population — how often would random sampling produce a gap of at least 0.2 percentage points just by chance? That probability is the p-value. A p-value of 0.03 means: if the null hypothesis were true, you would see a difference this large or larger about 3% of the time by chance alone.</p>
+    <p>If p falls below your threshold α (commonly 0.05), you reject the null. Type I error (false positive): you rejected when the null was true — happens with probability α. Type II error (false negative): you failed to reject when there was a real effect. The probability of *detecting* a real effect is power $= 1 - β$. Power is not determined by p-values — it is determined before the experiment by choosing your sample size.</p>
+    <p>Now suppose your product manager runs 20 A/B tests simultaneously, each at α = 0.05. Under the null, each test has a 5% chance of a false positive. With 20 tests, you expect $20 \times 0.05 = 1$ false positive. Finding three &quot;significant&quot; results is entirely consistent with all null hypotheses being true. The Bonferroni correction divides α by the number of tests: test each at $α/20 = 0.0025$. The Benjamini-Hochberg procedure controls the false discovery rate — the fraction of significant results that are false — and is less conservative.</p>
+    <p><strong>NOT this.</strong> Most people read p &lt; 0.05 as &quot;there is a 95% probability the effect is real.&quot; Wrong. The p-value is a property of the *data* under the null hypothesis, not a probability about the hypothesis. It says nothing about P(null is true). To compute that, you need a prior — Bayesian territory. A p-value of 0.001 on a 10-million-user dataset can come from a conversion difference of 0.001%, which is statistically real but commercially irrelevant. Statistical significance is not practical significance. Always pair p-values with effect sizes and confidence intervals.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Use hypothesis testing when you need to decide whether an observed difference exceeds what chance alone can explain.</strong> Pre-commit to your α and the minimum detectable effect size before collecting data. The sample size formula $n = 2(z_{α/2} + z_β)^2 σ^2 / δ^2$ requires specifying $δ$ (the smallest effect you care about) and $β$ (acceptable miss rate) before a single observation. Post-hoc power calculations — done after seeing the results — are not valid.</li><li><strong>The production trap: peeking.</strong> Checking p-values as data accumulates and stopping when p &lt; 0.05 inflates Type I error far above α. If you check after every 100 users, the effective false positive rate can reach 20–30% even at a nominal α = 0.05. Use sequential testing methods (always-valid p-values or alpha-spending functions) if you need continuous monitoring, or commit to a fixed sample size and look once.</li><li><strong>The diagnostic: separate statistical significance from practical significance.</strong> With n = 1,000,000, a 0.001% conversion lift achieves p &lt; 0.001 — statistically significant, practically irrelevant. Report Cohen`s d, percent lift, or absolute conversion change alongside every p-value. If the effect size is smaller than the minimum you pre-specified as meaningful, the result does not justify a ship decision regardless of the p-value.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>A p-value measures how often chance produces this result, not how probable the hypothesis is. Effect size tells you whether the result matters. You need both before making a decision.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>p-value = P(data this extreme | null true)</strong>, a property of the data — NOT P(hypothesis is true).</li><li><strong>Type I (α) = false positive when null true; Type II (β) = miss.</strong> Power = 1−β, fixed by sample size beforehand.</li><li><strong>Multiple comparisons:</strong> 20 tests at α=0.05 → expect 1 false positive; finding 3 &quot;significant&quot; is consistent with all nulls.</li><li><strong>Corrections:</strong> Bonferroni tests each at α/m (conservative, FWER); Benjamini-Hochberg controls FDR (less conservative).</li><li><strong>Statistical ≠ practical significance:</strong> at n=1M, a 0.001% lift is p&lt;0.001 but commercially irrelevant.</li><li><strong>Peeking inflates Type I error to 20–30%</strong> — use sequential/always-valid methods or fix n and look once.</li><li><strong>Always pair the p-value with effect size (Cohen's d, % lift) and a confidence interval</strong> before deciding.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You run a t-test comparing two groups and get p=0.048. Your colleague says 'we have 95.2% confidence that the effect is real.' What is wrong with this interpretation?</p>
+      <ul class="check-opts"><li>A) The statement is almost correct but uses the wrong confidence level. p=0.048 means 1−p = 95.2% is the confidence that the effect is real. The technically precise statement would be '95% confidence' (using the standard threshold), not '95.2% confidence' — the colleague is incorrectly using the exact complement of the p-value rather than rounding to the nearest standard confidence level.</li><li>B) The colleague's statement is correct for a one-sided test but wrong for the two-sided t-test that was run. For a two-sided test, p=0.048 means 97.6% confidence on each side, giving 95.2% total. The colleague should have said '97.6% confidence that the effect is in the observed direction.'</li><li>C) The statement conflates power and significance. p=0.048 describes the Type I error rate at this threshold, while 95.2% confidence would describe 1−β (power). Power cannot be computed from the p-value alone — it requires the true effect size and sample size. The correct statement would be 'we reject the null at α=0.05,' not a confidence statement about the effect being real.</li><li class="correct">D) The p-value is NOT the probability that the null hypothesis is false, nor is it 1 − P(null is true). p=0.048 means: IF the null hypothesis were true (zero effect), there is a 4.8% probability of observing a test statistic as extreme as or more extreme than what we observed, purely by chance. The p-value says nothing about P(H₀ is false) — that requires a prior (Bayesian framework). The correct interpretation: 'If there were truly no effect, we would observe data this extreme or more extreme about 4.8% of the time.' Multiple comparison issues: if you ran 100 tests, you expect ~5 to have p &lt; 0.05 by chance, even if all null hypotheses are true. The colleague's statement confuses frequentist and Bayesian probability — a very common error.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> A clinical trial detects p=0.001 with a treatment effect of 0.2 points on a 100-point quality-of-life scale. N=50,000. Is this finding clinically meaningful? Explain statistical vs practical significance.</p>
+      <ul class="check-opts"><li>A) Statistical significance (p=0.001) and clinical significance are different. With N=50,000, the standard error is SE ≈ σ/√N — very small, so tiny effects produce very small p-values. A 0.2-point improvement on a 100-point scale is 0.2% — far below any clinical threshold of meaningful improvement (typically 5-10 points on quality-of-life scales). The p-value answers 'is the effect nonzero?' — yes. Clinical significance answers 'is the effect large enough to matter?' — no. Report the effect size (Cohen's d = 0.2/σ, likely very small), confidence intervals (CI: [0.15, 0.25] with N=50,000), and domain thresholds. In ML: a 0.1% improvement in accuracy with N=1M test samples may be statistically significant but operationally irrelevant. Always report effect sizes alongside p-values.</li><li class="correct">B) Yes, p=0.001 is clinically meaningful because it passes the stringent 0.001 threshold, which is far below the typical 0.05 cutoff. A result significant at p=0.001 has survived a much higher bar than p=0.05, providing three times more evidence of a real effect. The 0.2-point effect size should be reported but does not undermine the statistical significance.</li><li>C) The finding has borderline clinical significance. A 0.2-point improvement is small but not negligible — over N=50,000 patients, the aggregate benefit across the population is 0.2 × 50,000 = 10,000 patient-points of improvement, which is substantial. Population-level impact metrics should supplement individual effect sizes when evaluating clinical trials.</li><li>D) The finding is not statistically significant. p=0.001 means there is a 0.1% chance the result is real — not strong enough for clinical applications which require p &lt; 0.0001 to account for multiple comparison corrections across the many endpoints in a typical trial. The 0.2-point effect size is consistent with a trial that is slightly underpowered.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> You run 20 A/B tests simultaneously. 3 tests show p &lt; 0.05. How many would you expect by chance, and what correction do you apply?</p>
+      <ul class="check-opts"><li class="correct">A) Under the null hypothesis (all 20 effects are zero), each test has P(p &lt; 0.05) = 0.05. Expected false positives = 20 × 0.05 = 1. So finding 3 'significant' tests is plausible even if all nulls are true. Bonferroni correction: to maintain family-wise error rate (FWER) at α=0.05, use threshold α/m = 0.05/20 = 0.0025 per test — only a test with p &lt; 0.0025 would be considered significant. This is conservative (controls FWER). Benjamini-Hochberg procedure (FDR correction): ranks p-values p₁≤...≤p₂₀, rejects H_k if p_k ≤ k·α/m. Controls the false discovery rate at α — the expected proportion of significant results that are false positives. In ML/industry A/B testing, FDR correction is standard: a 5% false discovery rate is acceptable when running many experiments simultaneously.</li><li>B) Expected false positives = 20 × 0.05 = 1. Finding 3 significant tests suggests all 3 are likely real — the expected count under null is 1, and the Poisson probability of observing 3 or more by chance when λ=1 is P(X≥3) ≈ 0.08, small enough to conclude at least some tests are detecting real effects. No correction is needed when fewer than 5% of tests are significant.</li><li>C) Expected false positives = 20 × 0.05² = 0.05. Under the null, the probability of any false positive across 20 tests is 1−(1−0.05)²⁰ ≈ 0.64, meaning there is a 64% chance at least one false positive occurs. Finding 3 significant results is more than the 0.05 expected, suggesting all 3 are likely true positives. Bonferroni is only needed when more than 10% of tests are significant.</li><li>D) Expected false positives = 3 × 0.05 = 0.15 — only the 3 significant tests contribute to false positive expectations. The other 17 non-significant tests cannot produce false positives. Bonferroni correction divides the significance threshold by the number of significant tests: 0.05/3 ≈ 0.017. All 3 tests show p &lt; 0.05, not p &lt; 0.017, so after correction none are significant.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#math_stats_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

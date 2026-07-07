@@ -38,8 +38,8 @@
       "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
     }
   },
-  "datePublished": "2026-06-20",
-  "dateModified": "2026-06-20",
+  "datePublished": "2026-07-07",
+  "dateModified": "2026-07-07",
   "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/how-netflix-became-an-ml-company.html",
   "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
   "keywords": "Netflix, Case Study, Recommendation Systems, ML Industry, Feature Stores"
@@ -100,10 +100,10 @@
 <p>If you work at Netflix in any product capacity, you eventually learn about one metric more than any other: the predicted probability that a user will play the next recommended title within 60 seconds of landing on the home screen. Teams across the company — content acquisition, original production, thumbnail design, notification timing, UI layout — are all ultimately optimising toward or away from that moment.</p>
 <p>The entire Netflix ML enterprise, which now employs several hundred ML and data scientists, exists in service of improving that one number by fractions of a percent. A 1% improvement in that probability is estimated to retain millions of subscribers who would otherwise churn. At $15–20 per month per subscriber, the math on a single basis point of recommendation quality is extraordinary.</p>
 <p>This is the third and most important lesson from Netflix: find the one number, instrument it perfectly, and align everything — engineering, product, content, design — around moving it. The ML follows naturally.</p>
-<p>\`\`\`python import numpy as np</p>
+<p>```python import numpy as np</p>
 <p>class NetflixStyleRetriever: """Two-tower retrieval: user tower + item tower → ANN candidate set."""</p>
 <p>def __init__(self, user_tower, item_embeddings: dict): self.user_tower  = user_tower                          # callable: features → (d,) self.item_ids    = list(item_embeddings.keys()) self.item_matrix = np.stack(list(item_embeddings.values()))  # (N, d) # In prod: item_matrix lives in an ANN index (FAISS / ScaNN). # You never do exact search over 200M items — ANN retrieves top-1000 in <50ms.</p>
-<p>def retrieve(self, user_features: dict, k: int = 100) -> list: u      = self.user_tower(user_features)                # (d,) u_norm = u / (np.linalg.norm(u) + 1e-9) item_norms = self.item_matrix / ( np.linalg.norm(self.item_matrix, axis=1, keepdims=True) + 1e-9) scores  = item_norms @ u_norm                          # cosine similarity top_idx = np.argpartition(scores, -k)[-k:] ranked  = top_idx[np.argsort(scores[top_idx])[::-1]] return [self.item_ids[i] for i in ranked] # Next stage: pass these k candidates to a heavier ranking model (GBM / transformer) \`\`\`</p>
+<p>def retrieve(self, user_features: dict, k: int = 100) -> list: u      = self.user_tower(user_features)                # (d,) u_norm = u / (np.linalg.norm(u) + 1e-9) item_norms = self.item_matrix / ( np.linalg.norm(self.item_matrix, axis=1, keepdims=True) + 1e-9) scores  = item_norms @ u_norm                          # cosine similarity top_idx = np.argpartition(scores, -k)[-k:] ranked  = top_idx[np.argsort(scores[top_idx])[::-1]] return [self.item_ids[i] for i in ranked] # Next stage: pass these k candidates to a heavier ranking model (GBM / transformer) ```</p>
 
     <div class="cta">
       <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>

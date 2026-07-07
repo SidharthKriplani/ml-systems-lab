@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SGD and Mini-Batch Training | ML Systems Lab</title>
+  <meta name="description" content="Why noisy gradients help, batch size effects, and the implicit regularization of SGD.">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/sgd_and_minibatch.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/sgd_and_minibatch.html">
+  <meta property="og:title" content="SGD and Mini-Batch Training | ML Systems Lab">
+  <meta property="og:description" content="Why noisy gradients help, batch size effects, and the implicit regularization of SGD.">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SGD and Mini-Batch Training">
+  <meta name="twitter:description" content="Why noisy gradients help, batch size effects, and the implicit regularization of SGD.">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "SGD and Mini-Batch Training",
+  "description": "Why noisy gradients help, batch size effects, and the implicit regularization of SGD.",
+  "proficiencyLevel": "Foundational",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/sgd_and_minibatch.html",
+  "keywords": "sgd, mini-batch, noise, batch-size, regularization"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#optimization_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Foundational</span>
+      <span class="read-time">40 min read</span>
+      <span class="tag">sgd</span><span class="tag">mini-batch</span><span class="tag">noise</span><span class="tag">batch-size</span><span class="tag">regularization</span>
+    </div>
+    <h1>SGD and Mini-Batch Training</h1>
+    <p class="subtitle">Why noisy gradients help, batch size effects, and the implicit regularization of SGD.</p>
+
+    <p>You are training a 500,000-parameter network on 10 million examples. To take *one* honest gradient step, plain gradient descent must first run all 10 million examples through the network. On a GPU chewing through a thousand examples a second, that is nearly three hours — per step. One step, wait three hours, one step, wait three hours. Training would take decades. Before mini-batching, this was the actual wall people hit.</p>
+    <p>The fix is almost cheeky in hindsight: do not measure the slope from all 10 million examples. Grab a small *random handful* — say 32 — and estimate the slope from those. It is like working out which way is downhill by feeling the ground under a few random footsteps instead of surveying the whole mountain. Any single estimate is a little *noisy* — a different handful gives a slightly different direction — but on average it points the right way, and you can compute it in a blink. Trading one perfect step every three hours for a slightly-wobbly step every fraction of a second is a spectacular deal: with batches of 32, you go from *one* update per pass through the data to over 300,000. That is <strong>mini-batch stochastic gradient descent (SGD)</strong>, and it is how essentially every neural network is trained.</p>
+    <hr>
+    <h3>The surprise: the noise actually helps</h3>
+    <p>Here is the twist nobody saw coming. That gradient noise, which sounds like a necessary evil, turns out to make the final model *better*.</p>
+    <p>Picture the loss landscape as having two kinds of valleys: narrow, steep-walled <strong>sharp</strong> pits, and wide, gently-sloping <strong>flat</strong> basins. A perfectly noiseless optimizer slides straight into whichever valley is nearest and stops — sharp pit or not. But a *noisy* optimizer keeps getting jostled. In a narrow sharp pit, a jostle easily knocks it back out; in a wide flat basin, the same jostle is not enough to escape. So the noise acts like a filter: the optimizer keeps getting bounced out of sharp pits until it settles into a flat basin — and flat basins are exactly the ones that <strong>generalize</strong> better to new data. The messiness is doing quiet regularization work, for free.</p>
+    <hr>
+    <h3>Batch size is a dial, not just a memory setting</h3>
+    <p>Most people pick batch size by &quot;whatever fits in GPU memory.&quot; But because the batch size controls how much noise there is, it is really a *regularization dial*. Bigger batches mean *less* noise (each estimate averages more examples), so the optimizer behaves more like the noiseless one — faster and smoother, but drawn toward those sharp, worse-generalizing pits. Push the batch very large and you can match the training loss of a small-batch run while landing a couple of points *worse* on test accuracy, purely from the lost noise. So sensible defaults are modest batches (32 to 256); go bigger only when you truly need the speed, and expect to add explicit regularization (like weight decay) to make up for the noise you removed.</p>
+    <hr>
+    <h3>One rule you cannot skip: shuffle</h3>
+    <p>Finally, a practical trap that quietly ruins training: <strong>shuffle your data before every pass</strong>. The whole &quot;noisy but right on average&quot; guarantee assumes each mini-batch is a random sample. If your data happens to be sorted by class — all the cats, then all the dogs — an unshuffled batch contains *only cats*, and its gradient screams &quot;get better at cats&quot; while forgetting dogs entirely. Consecutive batches then yank the model in wildly different directions. Shuffle before each epoch and every batch becomes a fair little snapshot of the whole dataset, which is what makes the estimate honest.</p>
+    <hr>
+    <h3>Epoch, step, iteration — pin down the vocabulary</h3>
+    <p>These get muddled constantly, so be exact. One <strong>epoch</strong> is one full pass through the entire dataset. One <strong>step</strong> (also called one <strong>iteration</strong>) is a single mini-batch update. The relationship: <strong>updates per epoch = ceil(N / batch_size)</strong>. So 1,000,000 examples at batch size 256 is ⌈1,000,000 / 256⌉ = 3,907 steps per epoch. When a paper says &quot;trained for 100k steps&quot; versus &quot;100 epochs,&quot; these mean different amounts of compute unless you also know N and the batch size — always convert to one consistent unit before comparing runs.</p>
+    <hr>
+    <h3>&quot;Small batch generalises better&quot; is a tendency, not a law</h3>
+    <p>The flat-minima story is real but *not universal*. Whether small batches actually generalise better depends on the <strong>learning rate</strong>, the <strong>dataset size</strong>, the <strong>architecture</strong>, whether you use <strong>normalisation</strong>, the <strong>schedule</strong>, and the <strong>training budget</strong>. With careful warmup, LR scaling, and enough steps, large-batch training can close much of the gap (this is how models train on thousands of GPUs). So don't state &quot;small batch = better generalisation&quot; as a rule — state it as a default tendency that a well-tuned large-batch setup can partly overcome.</p>
+    <hr>
+    <h3>Scaling the learning rate to the batch has limits</h3>
+    <p>The <strong>linear scaling rule</strong> (multiply LR by k when you multiply batch size by k) works — but only up to a regime. Past a few thousand examples per batch it breaks down: the implied LR gets so large that early training destabilises, which is exactly why <strong>warmup</strong> (ramping the LR up over the first epochs) becomes essential at large batch. Some setups find <strong>square-root scaling</strong> (LR ∝ √k) safer than linear at scale. The takeaway: LR-vs-batch scaling is an approximation with a ceiling, not a guaranteed equivalence.</p>
+    <hr>
+    <h3>BatchNorm couples training to the batch size</h3>
+    <p>If your network uses <strong>BatchNorm</strong>, batch size stops being just a noise/speed knob because BatchNorm computes its normalisation *statistics from the current batch*. <strong>Very small batches</strong> give noisy mean/variance estimates that destabilise training (a batch of 2 has almost meaningless statistics). <strong>Very large batches</strong> give near-exact statistics, which changes BatchNorm's own regularisation behaviour. This is a big reason transformers favour <strong>LayerNorm</strong> (which normalises per-example and doesn't depend on batch size). When you change batch size on a BatchNorm model, you're changing more than the gradient noise.</p>
+    <hr>
+    <h3>SGD versus Adam, fairly</h3>
+    <p>&quot;SGD generalises better than Adam&quot; is too blunt. <strong>Adam/AdamW</strong> often *wins* — it's the standard for transformers and shines on sparse gradients and NLP. <strong>SGD-with-momentum</strong> can generalise better in some classic vision/CNN settings when well-tuned. The honest summary: AdamW is the default for modern deep learning; SGD+momentum remains competitive or better in specific well-studied regimes. Pick based on the domain and tune both before declaring a winner.</p>
+    <hr>
+    <h3>Big batches live across many GPUs: distributed training</h3>
+    <p>At scale the batch is split across devices, which adds vocabulary. <strong>Global batch size</strong> is the total across all GPUs; <strong>per-device batch size</strong> is what each one processes. <strong>Gradient accumulation</strong> simulates a large batch on limited memory by summing gradients over several forward/backward passes before one update. <strong>Data parallelism</strong> replicates the model on each GPU and all-reduces the gradients — which costs <strong>communication</strong> bandwidth, often the real bottleneck at scale. So &quot;batch size 8,192&quot; usually means a global batch spread over many devices, not one machine's memory.</p>
+    <hr>
+    <h3>Rare classes can get squeezed out of batches</h3>
+    <p>Random mini-batching assumes every batch is a fair sample — but under heavy imbalance a batch of 32 from a 0.1%-positive dataset frequently contains *zero* positives, so many steps carry no signal about the rare class. Fixes: <strong>stratified batches</strong> (force a minimum number of rare-class examples per batch), <strong>weighted sampling</strong> (oversample the rare class into batches), and <strong>hard-example mining</strong> (bias batches toward the examples the model currently gets wrong). Under imbalance, how you *build* the batch matters as much as its size.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Default to modest batch sizes (32–256); go bigger only when speed forces it, and pay for it with extra regularization.</strong>
+
+Small batches supply the noise that finds flat, well-generalizing minima. If your GPU is sitting mostly idle, the batch is too small and you are wasting throughput; if test accuracy is a point or more below published numbers for the same architecture, the batch may be too large. When you do scale the batch up by k, scale the learning rate up by about k too (the &quot;linear scaling rule&quot;) — but know that this only fixes step size, not the lost noise, so generalization still slips once batches get very large.</li><li><strong>The trap: cranking the batch size for speed without realising you switched off the free regularization.</strong>
+
+The symptom is sneaky: training loss matches the benchmarks, but test accuracy sits 1–3% low, so you blame the data or the architecture. The real culprit is a batch of 4,096 where the benchmark used 256. Fix it by shrinking the batch, or by adding explicit regularization (weight decay, dropout) to replace the noise you removed — and always report batch size alongside the generalization gap.</li><li><strong>The diagnostic: watch training and validation loss, and how the loss moves per step versus per epoch.</strong>
+
+Validation loss much higher than training loss points to too large a batch (a sharp minimum, overfitting). A loss that is jittery step-to-step but steadily falling epoch-to-epoch is healthy mini-batch behaviour. A loss that is perfectly smooth every single step means you are effectively doing full-batch descent — worth asking whether you actually want that, and what it is costing you in generalization.</li><li><strong>Pin the vocabulary and qualify the small-batch claim.</strong>
+
+One epoch = one full pass; one step/iteration = one mini-batch update; updates per epoch = ceil(N / batch_size), so &quot;100k steps&quot; and &quot;100 epochs&quot; differ unless you know N and batch size. &quot;Small batch generalises better&quot; is a tendency, not a law — it depends on LR, dataset size, architecture, normalisation, schedule, and budget, and well-tuned large-batch training (with warmup) closes much of the gap. The linear LR-scaling rule holds only up to a regime; beyond a few thousand it needs warmup and sometimes √-scaling is safer.</li><li><strong>Watch BatchNorm coupling, judge SGD-vs-Adam fairly, and handle scale and imbalance.</strong>
+
+With BatchNorm, batch size changes the normalisation statistics themselves — very small batches destabilise, very large ones alter its regularisation (a reason transformers use batch-independent LayerNorm). Don't blanket-claim SGD beats Adam: AdamW is the modern default and wins for transformers/sparse gradients, while SGD+momentum can win in some tuned vision settings. At scale, distinguish global vs per-device batch, use gradient accumulation for limited memory, and mind all-reduce communication cost. Under heavy imbalance, random batches can contain zero rare-class examples — use stratified batches, weighted sampling, or hard-example mining.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Mini-batch SGD was invented for computational feasibility; its gradient noise turned out to be the mechanism that finds flat, generalizing minima — making batch size a generalization hyperparameter, not just a throughput setting.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Full-batch is infeasible at scale:</strong> to take *one* honest step it runs all 10M examples through the network first — ~3 hours per step on a GPU doing 1k examples/sec. One step, wait three hours: training would take decades. This was a real wall before mini-batching.</li><li><strong>Mini-batch SGD:</strong> estimate the slope from a small random handful (say 32) instead of the whole dataset — any one estimate is a little noisy but on average points the right way, and you go from 1 update per pass to 300,000+. This is how essentially every neural net is trained.</li><li><strong>The noise turns out to help:</strong> a noiseless optimizer slides into whatever valley is nearest, sharp or not; a noisy one keeps getting jostled out of narrow sharp pits but stays in wide flat basins — and flat basins generalize better. Free regularization, for nothing.</li><li><strong>Batch size is a regularization dial, not just a memory setting:</strong> bigger batch = each estimate averages more examples = *less* noise = the optimizer drifts toward sharper, worse-generalizing minima. Push it very large and you can match training loss but land a couple of points worse on test accuracy.</li><li><strong>Shuffle before every epoch:</strong> the &quot;noisy but right on average&quot; guarantee assumes each batch is a random sample. Data sorted by class gives all-cats-then-all-dogs batches whose gradients scream &quot;get better at cats&quot; and yank the model around — shuffling makes every batch a fair snapshot.</li><li><strong>Pin the vocabulary:</strong> one epoch = one full pass over the data; one step / iteration = one mini-batch update; updates per epoch = ceil(N / batch_size). &quot;100k steps&quot; and &quot;100 epochs&quot; mean different compute unless you also know N and the batch size — always convert to one unit before comparing runs.</li><li><strong>Know the caveats so you don't overstate them:</strong> &quot;small batch generalizes better&quot; is a *tendency* (depends on LR, data size, architecture, norm, schedule, budget), the linear LR-scaling rule breaks past a few thousand and needs warmup, BatchNorm couples training to batch size, and heavy class imbalance can leave batches with zero rare-class examples (use stratified/weighted sampling).</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Team A uses B=32; Team B uses B=2048 with 64× the learning rate (linear scaling rule). Both reach the same training loss, yet Team B generalizes worse. Why?</p>
+      <ul class="check-opts"><li>`A) The linear scaling rule keeps the average step size about right, but it cannot put the noise back. Team B's huge batch gives a much more accurate gradient, so it slides precisely into the nearest (often sharp) minimum. Team A's noisier gradient keeps bouncing it out of sharp pits toward flatter, better-generalizing basins — hence the gap.`</li><li>`B) Team B's 64× learning rate overshoots the minimum during training, so even at the same training loss its final weights are left oscillating around the minimum rather than settled in it, which shows up as worse test loss.`</li><li>`C) Processing 64× more examples per step makes Team B overfit to the average behaviour of large batches rather than to individual examples, so it misses the local variations that a batch of 32 forces the model to handle.`</li><li>`D) They should generalize equally — the linear scaling rule is designed to make large-batch training match small-batch training in every respect, so any gap must be a bug or too little training time, not the batch size.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Why is shuffling the data before each epoch necessary for correct SGD, not just a speed tweak?</p>
+      <ul class="check-opts"><li>`A) It only matters when the classes are imbalanced; on a balanced dataset consecutive batches naturally hold a fair mix, so the gradients stay unbiased even without any shuffling.`</li><li>`B) It is mainly a speed optimization — it varies the memory access patterns and reduces cache contention; the math of the gradient estimate is unaffected because the average over any run of batches still equals the true gradient.`</li><li>`C) It only matters for the first epoch; after that the weights have moved enough that batch order no longer affects the gradient, so re-shuffling mostly just stops the model memorising the data order.`</li><li>`D) Without shuffling, batches come from consecutive rows. If the data is sorted by class, a batch is all one class, and its gradient pushes to fit that class while hurting the others — consecutive steps then yank the model in opposite directions. Shuffling makes each batch a fair random sample of the whole dataset, which is exactly what keeps the estimate unbiased on average.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> What does &quot;implicit regularization of SGD&quot; mean, and what tends to happen if you swap SGD for Adam without changing anything else?</p>
+      <ul class="check-opts"><li>`A) It refers to a weight-decay term SGD applies as a side effect of its built-in gradient clipping; switch to Adam and you lose that, so you must add an explicit L2 penalty or the model overfits.`</li><li>`B) It means SGD's noisy updates, with no penalty term added to the loss, quietly bias it toward flat, wide minima that generalize well. Adam's per-parameter adaptive steps damp that noise in some directions, so it explores less and can settle in sharper minima — swapping to Adam often trains faster but ends a bit worse on tasks where SGD was well-tuned. The usual fix is AdamW (weight decay) and maybe a lower learning rate.`</li><li>`C) It means SGD averages gradients over all training examples before each update, filtering out per-example noise; Adam's moving averages add even more of that filtering, so switching to Adam usually improves generalization rather than hurting it.`</li><li>`D) It is identical to dropout — both inject randomness that stops the model leaning on any one parameter; Adam's adaptive scaling makes the update deterministic, so to compensate you must add dropout at a higher rate.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> On N=1,000,000 examples, compare full-batch GD with B=256 mini-batch SGD on gradient accuracy per step, updates per epoch, and convergence.</p>
+      <ul class="check-opts"><li>`A) Full-batch has a noisy gradient (averaging a million examples adds sampling error) and 1 update per epoch; mini-batch gives an exact gradient for its 256 examples and 3,906 updates per epoch, so mini-batch is the more accurate one per step.`</li><li>`B) The two are equivalent for convergence if you scale the learning rate with batch size, so full-batch always wins on any machine with enough memory because it avoids the overhead of thousands of separate kernel launches.`</li><li>`C) Full-batch: an exact gradient (zero noise) but only 1 update per epoch — smooth, stable, and painfully slow, since a million forward passes buy a single step. Mini-batch (B=256): a noisy gradient but 3,906 updates per epoch; each step is less accurate, yet you take thousands more per pass, so it reaches a good solution in far fewer total computations — and the noise often lands it in a better-generalizing minimum.`</li><li>`D) Full-batch is exact with 1 update per epoch; mini-batch has 3,906 updates but non-monotone convergence. For a million examples full-batch is always better, because at that scale the landscape is effectively convex and the noise buys nothing.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> Your model uses BatchNorm and trained well at batch size 128. You drop to batch size 4 (memory limit) and training becomes unstable, with worse accuracy even holding everything else fixed. Why, and what's a fix?</p>
+      <ul class="check-opts"><li>`A) Batch size never affects BatchNorm, so the instability must be an unrelated bug in the data loader.`</li><li>`B) BatchNorm computes its normalisation mean and variance from the current batch, so a batch of 4 gives extremely noisy statistics that shift every step and destabilise training. Fixes: use GroupNorm or LayerNorm (batch-independent), use gradient accumulation to keep an effective batch of 128, or switch to a normalisation that doesn't rely on batch statistics.`</li><li>`C) Small batches always improve generalisation, so the accuracy drop is impossible — recheck your metric rather than the batch size.`</li><li>`D) The only issue is the learning rate; halving it whenever you halve the batch fully fixes any BatchNorm instability.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q6.</strong> You're training a fraud classifier where 0.1% of examples are positive, using random mini-batches of 32. Training is unstable and the model barely learns fraud. What's a likely cause tied to batching, and how do you fix it?</p>
+      <ul class="check-opts"><li>`A) The batch size is too large; drop to 8 so each positive example has more influence.`</li><li>`B) At 0.1% positives, a random batch of 32 usually contains zero fraud examples, so most steps carry no gradient signal about the positive class and the rare-class updates are swamped by noise. Fix by shaping the batches: stratified batches that guarantee a minimum number of positives, weighted/oversampled sampling of the rare class into batches, or hard-example mining — how you build the batch matters as much as its size under heavy imbalance.`</li><li>`C) Random mini-batches are always fine for imbalance; the real fix is switching from SGD to Adam, which handles rare classes automatically.`</li><li>`D) Shuffle more aggressively — reshuffling within each batch several times will introduce the missing positive examples.`</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#optimization_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

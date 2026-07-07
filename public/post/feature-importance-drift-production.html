@@ -38,8 +38,8 @@
       "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
     }
   },
-  "datePublished": "2026-06-20",
-  "dateModified": "2026-06-20",
+  "datePublished": "2026-07-07",
+  "dateModified": "2026-07-07",
   "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/feature-importance-drift-production.html",
   "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
   "keywords": "Feature Importance, Concept Drift, Monitoring, SHAP, Calibration, Production ML"
@@ -74,8 +74,8 @@
     <p class="excerpt">Your model&#39;s top 3 features — the ones that dominate predictions and deliver 60% of the model&#39;s lift — silently stopped working in production. They&#39;re still in the model. They&#39;re still computing. But their relationship with the target has decayed. This is feature importance drift, and it&#39;s invisible to PSI monitoring because the feature distributions haven&#39;t changed — only their predictive power has.</p>
     <p>Feature importance drift is different from covariate shift. Covariate shift means your input features X are moving away from the training distribution. Feature importance drift means the features are stable in distribution, but their predictive relationship with the target has shifted. P(X) is unchanged. P(Y|X) is not.</p>
 <h2>The concrete scenario:</h2>
-<p>Your model predicts loan default. The top feature by SHAP importance is \`debt_to_income_ratio\`. During training, users with debt-to-income > 0.5 had a 42% default rate. Users with ratio < 0.3 had a 2% default rate. The feature is powerful.</p>
-<p>Six months post-launch, the feature's SHAP importance has fallen 30%. The distribution of \`debt_to_income_ratio\` is identical to training (PSI = 0.08, well below the alert threshold). But the predictive relationship has decayed: users with ratio > 0.5 now have a 15% default rate. The ratio still matters — but half as much.</p>
+<p>Your model predicts loan default. The top feature by SHAP importance is `debt_to_income_ratio`. During training, users with debt-to-income > 0.5 had a 42% default rate. Users with ratio < 0.3 had a 2% default rate. The feature is powerful.</p>
+<p>Six months post-launch, the feature's SHAP importance has fallen 30%. The distribution of `debt_to_income_ratio` is identical to training (PSI = 0.08, well below the alert threshold). But the predictive relationship has decayed: users with ratio > 0.5 now have a 15% default rate. The ratio still matters — but half as much.</p>
 <p>Why? A regulatory change, a macro event, or a shift in the user population (new marketing channel attracting a different segment) has altered the causal relationship between the feature and the outcome. The feature didn't go stale — it went uncorrelated.</p>
 <h2>Why this is invisible to standard monitoring:</h2>
 <p>PSI (Population Stability Index) checks if P(feature_value_today) matches P(feature_value_at_training). It does. Your alert doesn't fire.</p>

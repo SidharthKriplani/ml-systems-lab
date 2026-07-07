@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Convex Optimization &amp; Gradient Descent | ML Systems Lab</title>
+  <meta name="description" content="Convergence guarantees, learning rate, momentum, Adam">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/convex_optimization.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/convex_optimization.html">
+  <meta property="og:title" content="Convex Optimization &amp; Gradient Descent | ML Systems Lab">
+  <meta property="og:description" content="Convergence guarantees, learning rate, momentum, Adam">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Convex Optimization &amp; Gradient Descent">
+  <meta name="twitter:description" content="Convergence guarantees, learning rate, momentum, Adam">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Convex Optimization & Gradient Descent",
+  "description": "Convergence guarantees, learning rate, momentum, Adam",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/convex_optimization.html",
+  "keywords": "optimisation, gradient descent, Adam, convergence"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#math_stats_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">28 min read</span>
+      <span class="tag">optimisation</span><span class="tag">gradient descent</span><span class="tag">Adam</span><span class="tag">convergence</span>
+    </div>
+    <h1>Convex Optimization &amp; Gradient Descent</h1>
+    <p class="subtitle">Convergence guarantees, learning rate, momentum, Adam</p>
+
+    <p>You are training L2-regularized logistic regression. You are minimizing L(w) = Σ log(1 + exp(-y_i w^T x_i)) + λ‖w‖². This function is convex — every local minimum is the global minimum, gradient descent is guaranteed to converge, and convergence rates are provable. Now train a 5-layer neural network instead. L(w) is non-convex, has countless saddle points and local minima of varying quality, and has no convergence guarantee. The mathematical gulf between these two problems is the difference between a well-posed optimization problem and one that works empirically.</p>
+    <p>A convex set C: for any x, y in C and t ∈ [0,1], the point tx + (1-t)y is also in C. The line segment between any two points stays inside the set. A convex function satisfies f(tx + (1-t)y) ≤ tf(x) + (1-t)f(y) — the function lies below the chord connecting any two points. First-order condition: f is convex if and only if f(y) ≥ f(x) + ∇f(x)^T(y-x) for all x, y. The tangent plane is a global lower bound on the function. This is why gradient information is sufficient for global optimization of convex problems.</p>
+    <p>What convexity buys: a unique global minimum with no need to worry about local optima, gradient descent convergence guaranteed with appropriate step size, strong duality holding so the dual problem gives the same solution, and theoretical convergence rates — O(1/t) for gradient descent, O(1/t²) for Nesterov acceleration.</p>
+    <p>SVMs, logistic regression, lasso, ridge — all convex. Neural networks: not convex. But empirically, modern overparameterized networks rarely get trapped in bad local minima. In overparameterized regimes where the number of parameters exceeds the number of training examples, loss surfaces have many saddle points but almost all local minima are approximately globally optimal.</p>
+    <p><strong>NOT this.</strong> Non-convex optimization is not practically hopeless. Modern neural network training is non-convex optimization that works reliably in practice because of a structural property of overparameterized loss surfaces: most critical points are saddle points, not local minima, and most local minima have similar loss values to the global minimum. The theory of why gradient descent on non-convex neural networks generalizes well is still being developed — but empirically, the non-convexity is not the obstacle it appears to be in theory.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Verify whether your objective is convex before choosing an optimizer.</strong> For convex problems, SGD with a decaying learning rate is provably convergent to the global minimum. For non-convex problems, convergence is only guaranteed to a stationary point — a point where the gradient is zero, which could be a saddle point. This determines whether you should trust a single run or require multiple restarts.</li><li><strong>Trap: using gradient descent on an ill-conditioned convex problem without checking convergence.</strong> A function can be convex but have a condition number κ = λ_max/λ_min that is extremely large — meaning the loss surface is a narrow, elongated valley. Gradient descent zigzags across the valley rather than descending efficiently. The convergence rate is (κ-1)/(κ+1) per step. Use Adam or L-BFGS for ill-conditioned convex problems, not vanilla gradient descent.</li><li><strong>Diagnostic: if optimization is converging slowly on a problem you believe is convex, compute the condition number of the Hessian at your current point.</strong> If κ &gt; 1000, the problem is ill-conditioned — standardize your features or add regularization. For logistic regression, feature scaling directly improves the condition number of the Hessian and can reduce the number of gradient steps needed by an order of magnitude.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Convexity guarantees that every local minimum is global — but it does not guarantee fast convergence. The condition number of the loss landscape determines convergence speed, and a highly convex but ill-conditioned problem can be slower to optimize than a well-conditioned non-convex one.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Convex function lies below its chords;</strong> first-order: f(y) ≥ f(x) + ∇f(x)ᵀ(y−x) — tangent is a global lower bound.</li><li><strong>Convexity buys a unique global min, guaranteed GD convergence, strong duality, and provable rates.</strong></li><li><strong>Rates:</strong> O(1/t) for gradient descent, O(1/t²) for Nesterov acceleration.</li><li><strong>SVM / logistic / lasso / ridge are convex; neural nets are not</strong> — but overparam nets rarely hit bad local minima.</li><li><strong>Non-convex isn't hopeless:</strong> most critical points are saddles, and most local minima ≈ global in loss.</li><li><strong>Ill-conditioning, not non-convexity, is the real slowdown:</strong> GD zigzags at rate (κ−1)/(κ+1); standardise features.</li><li><strong>Slow on a convex problem? Compute the Hessian condition number</strong> — κ &gt; 1000 means rescale or use Adam/L-BFGS.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> A function f is convex. You find a local minimum. Prove it is a global minimum.</p>
+      <ul class="check-opts"><li>A) By contradiction: if x* is a local minimum but not global, there exists y with f(y) &lt; f(x*). For small enough λ ∈ (0,1), z = λy+(1−λ)x* lies arbitrarily close to x*. By convexity: f(z) ≤ λf(y)+(1−λ)f(x*) &lt; f(x*). But z is inside the local minimum ball around x* (for small λ), contradicting x* being a local minimum. Therefore no such y exists: x* is global.</li><li class="correct">B) Suppose x* is a local minimum of convex f, but not global — there exists y with f(y) &lt; f(x*). Since x* is a local minimum, f(x*) ≤ f(z) for all z in a ball around x*. By convexity of f: for any λ ∈ (0,1), f(λy + (1−λ)x*) ≤ λf(y) + (1−λ)f(x*) &lt; λf(x*) + (1−λ)f(x*) = f(x*). For small enough λ, the point λy + (1−λ)x* is inside the local minimum ball around x* (since it is arbitrarily close to x* as λ→0). But we just showed f(λy + (1−λ)x*) &lt; f(x*), contradicting the fact that x* is a local minimum. Therefore no such y exists, and x* is a global minimum. This is the fundamental reason why convex problems are tractable — no gradient-based algorithm can get permanently trapped.</li><li>C) A local minimum of a convex function is global because convex functions have only one minimum by definition. A function is convex if and only if it has a unique minimiser — the existence of a local minimum proves both that the minimiser exists and that it is unique. The proof follows from the strict convexity of the sublevel sets.</li><li>D) Convexity implies the function has no local minima at all except at the global minimum, because any local minimum immediately satisfies the first-order condition ∇f(x*)=0, and for convex functions ∇f(x*)=0 is both necessary and sufficient for global minimality. Therefore finding a point where the gradient is zero is equivalent to finding the global minimum.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Gradient descent is given function f(x) = x⁴. The gradient is ∇f = 4x³. Starting from x₀=2.0 with learning rate α=0.1, what is x₁? Does gradient descent converge for this non-strongly-convex function?</p>
+      <ul class="check-opts"><li class="correct">A) x₁ = x₀ − α·∇f(x₀) = 2.0 − 0.1·(4·8) = 2.0 − 3.2 = −1.2. Gradient descent converges for f(x)=x⁴, but slowly. The function is convex (f''=12x²≥0) but not strongly convex (f''(0)=0 — the curvature at the minimum is zero). For strongly convex functions, gradient descent converges geometrically (exponential rate). For convex but not strongly convex functions, the rate is O(1/t) — much slower. For f(x)=x⁴, near x=0: x_{t+1} = x_t − 4α·x_t³. Convergence rate analysis shows O(t^{-1/2}) for the final approach. Note: x₁=−1.2 overshoots the minimum (x=0) and becomes negative — the algorithm will still converge but oscillates initially, requiring a small enough α.</li><li>B) x₁ = x₀ − α·∇f(x₀) = 2.0 − 0.1·(4·4) = 2.0 − 1.6 = 0.4. Gradient descent does not converge for f(x)=x⁴ because the function is not strongly convex (the Hessian f''=12x² is zero at x=0). Without strong convexity, gradient descent oscillates around the minimum indefinitely with a fixed learning rate. A decaying learning rate α_t = α/√t is required for convergence.</li><li>C) x₁ = 2.0 − 0.1·(2·2³) = 2.0 − 1.6 = 0.4. Gradient descent converges for any convex function with a bounded Hessian. Since f''(x) = 12x² ≤ 48 for x ∈ [0,2], the smoothness constant L=48 and learning rate 0.1 &lt; 1/L=0.021 is too large — but the step still reduces f from 16 to 0.026, showing rapid convergence.</li><li>D) x₁ = 2.0 − 0.1·(4·2³) = 2.0 − 3.2 = −1.2. Gradient descent diverges for f(x)=x⁴ because x⁴ is not strongly convex. The step overshoots to negative x, then the next gradient 4·(−1.2)³ = −6.9 pushes to x₂ = −1.2 − 0.1·(−6.9) = −0.51, then x₃ diverges. Non-strongly-convex functions always cause gradient descent to diverge unless momentum is added.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> What is a Lagrange multiplier, and how is it used to solve the constrained optimisation problem: min f(x) subject to g(x)=0?</p>
+      <ul class="check-opts"><li>A) A Lagrange multiplier λ is added to the objective: min f(x) + λ·g(x). The parameter λ penalises violations of g(x)=0 — larger λ means stronger enforcement of the constraint. Setting ∂(f+λg)/∂x = 0 and solving for x gives the constrained optimum. λ must be tuned manually or via a dual optimisation loop.</li><li>B) The Lagrange multiplier method converts the constrained problem to unconstrained via: find saddle points of L(x,λ) = f(x) + λ·g(x). Saddle points satisfy ∂L/∂x = 0 and ∂L/∂λ = 0. The second condition ∂L/∂λ = g(x) = 0 automatically enforces the constraint. This method works only when g is linear in x; for nonlinear constraints, KKT conditions with inequality constraints are required instead.</li><li class="correct">C) The Lagrangian is L(x,λ) = f(x) + λ·g(x). At a constrained optimum, the KKT conditions must hold: ∇_x L = ∇f(x) + λ∇g(x) = 0 (stationarity) and g(x) = 0 (feasibility). The Lagrange multiplier λ is the sensitivity of the optimal value to the constraint: if we relax g(x)=0 to g(x)=ε, the optimal value changes by approximately −λε. Geometrically: at the optimum, the gradient of f must be parallel to the gradient of g (otherwise, we could move along the constraint surface g=0 to decrease f — contradicting optimality). λ scales ∇g to exactly cancel ∇f. Example: max wᵀΣw s.t. ‖w‖²=1 leads to Σw=λw — the eigenvector equation. The Lagrange multiplier λ is the eigenvalue, which equals the variance in direction w — the quantity being maximized.</li><li>D) A Lagrange multiplier replaces the constraint g(x)=0 with a barrier function B(x) = −μ·log(−g(x)), yielding an unconstrained problem min f(x) + B(x). As μ→0, the barrier enforces the constraint in the limit. Lagrange multipliers are the limiting values of μ at the optimum and measure the constraint's binding force.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#math_stats_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

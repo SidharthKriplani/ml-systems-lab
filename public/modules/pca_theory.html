@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PCA from First Principles | ML Systems Lab</title>
+  <meta name="description" content="Covariance matrix, explained variance, when PCA fails">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/pca_theory.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/pca_theory.html">
+  <meta property="og:title" content="PCA from First Principles | ML Systems Lab">
+  <meta property="og:description" content="Covariance matrix, explained variance, when PCA fails">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="PCA from First Principles">
+  <meta name="twitter:description" content="Covariance matrix, explained variance, when PCA fails">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "PCA from First Principles",
+  "description": "Covariance matrix, explained variance, when PCA fails",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/pca_theory.html",
+  "keywords": "PCA, dimensionality reduction, covariance"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#math_stats_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">26 min read</span>
+      <span class="tag">PCA</span><span class="tag">dimensionality reduction</span><span class="tag">covariance</span>
+    </div>
+    <h1>PCA from First Principles</h1>
+    <p class="subtitle">Covariance matrix, explained variance, when PCA fails</p>
+
+    <p>You are building a face recognition system. Each image is 100×100 pixels — 10,000 numbers per image. Training a model on raw 10,000-dimensional inputs is slow and prone to overfitting. But most of those dimensions carry redundant information: neighboring pixels are highly correlated, and faces share common structure — eyes roughly here, nose here, mouth here.</p>
+    <p>The naive fix is to drop some features. But which ones? Dropping pixel 4,512 and keeping pixel 4,513 is arbitrary — both carry similar information. What you want is to find the *directions* where faces actually vary, and represent each face as its coordinates along those directions.</p>
+    <p>PCA does exactly this. Centre the data (subtract the mean face). Compute the covariance matrix $Sigma = X^T X / (n-1)$ — a 10,000 × 10,000 matrix encoding how every pixel correlates with every other pixel. Find the eigenvectors of this matrix. The eigenvector with the largest eigenvalue is the direction along which face images vary most. Project every image onto the top $k$ eigenvectors. You have compressed 10,000 dimensions down to $k$ — say 50 — while retaining whatever fraction of variance those 50 directions explain. A scree plot of eigenvalues sorted in descending order shows the &quot;elbow&quot; where additional components stop explaining much variance.</p>
+    <p>Two things make PCA fail. First, scale: a feature measured in dollars has 10,000× the variance of one measured in cents. PCA will identify &quot;dollars direction&quot; as the first principal component — not because it contains more signal, but because it has a larger unit. Always standardise (z-score) before running PCA unless features share a natural common scale.</p>
+    <p><strong>NOT this.</strong> Most people think &quot;PCA removes correlated features.&quot; PCA does not select a subset of original features. It creates entirely new features that are linear combinations of *all* original features. The new features — principal components — are uncorrelated with each other by construction. But each PC mixes every original feature together. You cannot look at a principal component and say &quot;this is pixel 4,512.&quot; The confusion matters because PCA cannot be used for feature selection if you need interpretability in the original feature space.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Use PCA to reduce compute and overfitting, not to select features.</strong> When downstream models are slow or overfit on high-dimensional inputs, project to the top $k$ PCs first. Choose $k$ to retain 95% of variance, or use the scree plot elbow. Computing PCA via SVD of the data matrix $X$ is numerically superior to eigendecomposition of $X^T X$ — it avoids squaring the condition number.</li><li><strong>The production trap: scale sensitivity.</strong> A pixel value in [0, 255] has 65,000× the variance of a binary indicator in [0, 1]. PCA will identify the pixel direction as the first principal component — not because it is more informative, but because it is numerically larger. Always z-score before PCA unless all features share a natural common unit. After PCA, whitening (dividing each PC score by $\sqrt{lambda_k}$) gives unit variance in every direction and is required before k-means or GMMs.</li><li><strong>The diagnostic: compare PCA-compressed model accuracy against label-supervised baselines.</strong> If 95% of variance explains only 70% of classification accuracy, the remaining 5% likely contains the discriminative signal. Try LDA (Linear Discriminant Analysis) — it maximises between-class variance rather than total variance, and will find directions PCA discards when classes differ in low-variance directions. If PCA`s reconstruction quality is high but downstream task quality is poor, switch to a supervised reduction method.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>PCA keeps high-variance directions and discards low-variance ones. Always verify that the discarded variance does not contain the label signal — the information your classifier needs most may live exactly in the directions PCA throws away.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>PCA finds directions of max variance, not a subset of features</strong> — each PC mixes all original features.</li><li><strong>Recipe:</strong> center data → covariance Σ = XᵀX/(n−1) → eigenvectors → project onto top-k.</li><li><strong>PCs are uncorrelated by construction;</strong> eigenvalue ratio = fraction of variance explained per direction.</li><li><strong>Scale sensitivity is the trap:</strong> dollars vs cents inflates variance 10,000×; always z-score first.</li><li><strong>PCA is not feature selection</strong> — you can't say a PC &quot;is pixel 4,512&quot;, so it loses original-space interpretability.</li><li><strong>95% variance ≠ 95% accuracy:</strong> the label signal may live in the low-variance directions PCA discards.</li><li><strong>If PCA hurts the downstream task, use a supervised reduction (LDA/PLS)</strong> that maximises between-class variance.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You have a dataset with covariance matrix Σ. Describe the PCA algorithm as an eigendecomposition problem, and explain what the principal components represent.</p>
+      <ul class="check-opts"><li>A) PCA solves the linear system Σw = 0 to find directions of zero variance — these are the null space vectors of Σ. Principal components are the directions orthogonal to the null space, i.e., the column space of Σ. The explained variance for component k is tr(Σ) − λₖ, measuring how much variance remains after removing that direction.</li><li class="correct">B) PCA: find orthonormal directions w₁, w₂, ..., wₖ in order of maximum variance. w₁ = argmax_{‖w‖=1} wᵀΣw. This is the eigenvector problem: Σw = λw. w₁ is the eigenvector of Σ with the largest eigenvalue λ₁ = Var(projection onto w₁). w₂ is the eigenvector with second-largest eigenvalue, subject to w₂ ⊥ w₁. Etc. The principal components are the projections of data onto these eigenvectors. Geometrically: Σ is a positive semidefinite matrix; its eigenvectors are the principal axes of the data's covariance ellipsoid; eigenvalues are the squared semiaxis lengths. PCA rotates the coordinate system so that axes align with directions of maximum variance. The explained variance ratio for component k is λₖ/Σλᵢ — how much total variance is captured by keeping only k components.</li><li>C) PCA computes the gradient ∇_w wᵀΣw = 2Σw and follows it to convergence. This is the power iteration algorithm: starting from random w, repeatedly compute Σw and normalise. The algorithm converges to the largest eigenvector. Subsequent components are found by deflation: subtract the rank-1 contribution of the found component and repeat.</li><li>D) PCA minimises the reconstruction error ‖X − XWWᵀ‖²_F over orthonormal W. Setting the gradient to zero gives ΣW = WΛ where Λ is diagonal. This is equivalent to finding the eigenvectors of Σ but via an optimisation perspective rather than the spectral perspective. The principal components are the columns of W that minimise reconstruction error.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> PCA on a dataset with 1000 features gives first two PCs explaining 95% of variance. A colleague uses these 2 PCs as features for a random forest. What might go wrong?</p>
+      <ul class="check-opts"><li>A) The random forest will be slower than on the original 1000 features because PCA produces dense features (every original feature contributes to each PC), making tree splits computationally expensive. Sparse original features allow faster tree construction via efficient split-point search.</li><li>B) The 2 PCs may not span enough dimensions for the random forest to split meaningfully — a random forest needs at least sqrt(n_features) dimensions per tree, so 2 PCs is far below the recommended sqrt(1000) ≈ 32. The forest will underfit regardless of how much variance the PCs explain.</li><li>C) PCA produces correlated features when only 2 PCs are used, because the first 2 PCs both contain information from the same underlying features. Random forests are sensitive to feature correlation — the variable importance scores become unreliable, and correlated PCs cause the forest to double-count certain directions.</li><li class="correct">D) The 95% variance explained is for reconstruction, not for prediction of the target. The remaining 5% variance may be disproportionately predictive: if the label is correlated with directions of small variance in x (e.g., a subtle pattern that does not dominate the feature variance), those dimensions will be discarded by PCA but are critical for the classifier. Example: if features are pixel intensities and label is 'has small tumor in bottom-right corner', the tumor may be a tiny fraction of pixel variance (5%) but entirely label-predictive. Using only the 2 PCs, the tumor signal is discarded. Supervised dimensionality reduction (LDA, PLS) preserves dimensions correlated with the label, not just high-variance dimensions. In practice: compare model performance with and without PCA reduction; always check if the compressed features still allow the target to be predicted accurately on validation data.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Why must you subtract the mean before applying PCA? What goes wrong if you do not?</p>
+      <ul class="check-opts"><li class="correct">A) PCA finds directions of maximum variance in the data. Variance is measured relative to the mean: Var(X) = E[(X−μ)(X−μ)ᵀ]. If we compute the covariance matrix without subtracting the mean: Σ_wrong = E[XXᵀ] (second moment matrix). The first principal component of E[XXᵀ] is the direction of maximum E[(xᵀw)²], which is dominated by the mean: the direction pointing toward the mean of the data. If the data mean is large, the first PC is essentially the mean direction, regardless of the actual structure of variance. After centering: Σ = E[(X−μ)(X−μ)ᵀ], and the first PC genuinely captures the direction of maximum spread/variation. In sklearn, PCA always centers by default. If you want whitening without centering (preprocessing for neural networks), you use ZCA whitening with explicit mean subtraction.</li><li>B) Mean subtraction has no effect on the eigenvectors of the covariance matrix — it only shifts the eigenvalues by a constant. Without centering, the eigenvalues of E[XXᵀ] are equal to those of E[(X−μ)(X−μ)ᵀ] plus ‖μ‖², so the PCs are identical but the explained variances are inflated. Centering is optional and is only necessary when you want accurate explained variance percentages.</li><li>C) Without mean subtraction, PCA on E[XXᵀ] finds the correct covariance structure as long as the data is standardised (zero mean forced by normalisation). The mean-subtraction requirement is specific to sklearn's implementation choice; mathematically, you only need E[XXᵀ] to be positive definite, which holds when the data spans all dimensions.</li><li>D) Mean subtraction converts PCA from an unsupervised to a supervised method: centering by the class-conditional mean (as in Fisher's LDA) introduces label information. Without centering by the global mean, PCA is purely unsupervised. Subtracting the mean biases the first PC toward the decision boundary between classes rather than the direction of maximum marginal variance.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#math_stats_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

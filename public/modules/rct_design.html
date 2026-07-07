@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RCT Design | ML Systems Lab</title>
+  <meta name="description" content="Randomisation, SUTVA, Intent-to-Treat, treatment effect heterogeneity">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/rct_design.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/rct_design.html">
+  <meta property="og:title" content="RCT Design | ML Systems Lab">
+  <meta property="og:description" content="Randomisation, SUTVA, Intent-to-Treat, treatment effect heterogeneity">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="RCT Design">
+  <meta name="twitter:description" content="Randomisation, SUTVA, Intent-to-Treat, treatment effect heterogeneity">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "RCT Design",
+  "description": "Randomisation, SUTVA, Intent-to-Treat, treatment effect heterogeneity",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/rct_design.html",
+  "keywords": "RCT, randomised controlled trial, A/B test, ITT"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#causal_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">32 min read</span>
+      <span class="tag">RCT</span><span class="tag">randomised controlled trial</span><span class="tag">A/B test</span><span class="tag">ITT</span>
+    </div>
+    <h1>RCT Design</h1>
+    <p class="subtitle">Randomisation, SUTVA, Intent-to-Treat, treatment effect heterogeneity</p>
+
+    <p>An e-commerce company wants to test a new checkout flow. They split users 50/50: treatment sees the new flow, control sees the old one. After 2 weeks, conversion rate in treatment: 4.8%, control: 4.3%. The 0.5% lift is statistically significant (p = 0.02). Do they ship it?</p>
+    <p>The RCT is the gold standard because randomization creates balance on all confounders — observed and unobserved. If assignment is truly random, treatment and control groups are identical in expectation across every dimension: age, income, device type, time of day, past behavior. The only systematic difference is the treatment. Any observed outcome difference is attributable to the treatment. This is what separates an RCT from every observational method — it does not require measuring the right confounders because the randomization makes confounders irrelevant by construction.</p>
+    <p>Design choices matter before you randomize. Unit of randomization: user-level gives each user a consistent experience and prevents within-user contamination; session-level gives more power but the same user can see both variants; page-level has the most power and highest contamination risk. Stratification by key covariates (device, geography) ensures balance in smaller samples and improves statistical power. Block randomization within strata ensures equal assignment counts. Sample size: run a power analysis before starting. Power = P(reject null | true effect exists). At 80% power and α = 0.05, calculate the minimum sample size to detect the smallest effect that matters to the business.</p>
+    <p>Interference still threatens the estimate even after correct randomization. If users share carts, a friend who sees the new checkout might describe it to another — the control group is indirectly treated. Randomization at the user level does not help if the treatment propagates through the social graph.</p>
+    <p>What &quot;statistical significance&quot; does not mean: the experiment succeeded. The test succeeded if randomization was valid (no selection bias, no contamination), the primary metric was pre-specified, the run duration matched the planned duration, and the result is practically significant. A p = 0.001 result with a 0.01% effect size that costs $500K to implement is not a success. Significance tells you the estimate is reliably nonzero; it says nothing about whether it is worth acting on.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Run a power analysis before starting — calculate the minimum detectable effect at 80% power and α = 0.05.</strong> This tells you the required sample size and experiment duration. Running an underpowered experiment and concluding &quot;no effect&quot; is a false negative that can kill good product ideas. The confidence interval of an underpowered experiment is wide enough to contain the true effect; the null result is not evidence of zero, it is evidence of insufficient sensitivity.</li><li><strong>Trap: peeking at results and extending the experiment when it looks close.</strong> Deciding to run longer after seeing &quot;almost significant&quot; inflates Type I error from 5% to well above 30% depending on how many times you peek. Use sequential testing (SPRT or always-valid inference) if you need to monitor results during the experiment. Committing to the analysis plan before looking at the data is the only protection against this form of p-hacking.</li><li><strong>Diagnostic: after the experiment ends, run an AA test — randomly split the control group into two halves and test for a significant difference on your primary metric.</strong> The AA test should show no significant difference. If it does, your randomization has a systematic bias: some feature of the assignment mechanism is creating groups that were not exchangeable before treatment began. Fix the randomization before trusting any AB result from the same infrastructure.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Randomization eliminates confounding by construction, but SUTVA violations, non-compliance, the wrong unit of randomization, and underpowered designs can each silently invalidate the estimate even when the coin flip was executed correctly.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>The RCT is the gold standard because randomisation balances *all* confounders — observed AND unobserved — in expectation:</strong> the only systematic difference between arms is the treatment, so it needs no measuring of the right confounders, unlike every observational method.</li><li><strong>Unit of randomisation is a design trade-off:</strong> user-level gives each user a consistent experience and low contamination; session-level gives more power but the same user can see both variants; page-level has the most power and the highest contamination risk.</li><li><strong>Run a power analysis first:</strong> at 80% power and α = 0.05, compute the sample size needed to detect the smallest effect that matters to the business — an underpowered &quot;no effect&quot; is a false negative that can kill a good idea, not evidence of zero.</li><li><strong>Interference still bites even after correct randomisation:</strong> if treatment propagates through the social graph (a treated friend describes the new checkout to a control user), the &quot;control&quot; group is indirectly treated and the estimate is contaminated.</li><li><strong>Peeking inflates Type I error</strong> from 5% to well over 30% depending on how often you look — commit to the analysis plan before seeing data, or use sequential / always-valid testing if you must monitor.</li><li><strong>Run an AA test to validate the randomisation:</strong> split the control group in two and test for a difference on the primary metric — a significant one means the assignment infrastructure is biased and no AB result from it can be trusted.</li><li><strong>Statistical significance ≠ success:</strong> p = 0.001 tells you the estimate is reliably nonzero, not that it's worth acting on — a 0.01% effect costing $500K to ship is a significant failure.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> In your A/B test for a new email feature, 20% of users assigned to treatment never opened the email. You report ITT. What are you estimating, and how would you estimate the effect on those who actually used the feature?</p>
+      <ul class="check-opts"><li>A) ITT estimates the effect on compliers only; to get the population ATE you should exclude non-openers and compare openers to the full control group</li><li class="correct">B) ITT estimates effect of being assigned to treatment — includes non-openers (attenuated toward zero). To estimate effect on those who would actually use the feature (CACE/LATE): CACE = ITT / compliance_rate = ITT / 0.80. Uses assignment as instrument for actual feature usage. Monotonicity required: no one in control would use feature if assigned to treatment (trivially true here).</li><li>C) ITT overestimates the true effect because non-openers inflate the treatment group size; divide ITT by the non-compliance rate (0.20) to recover the true ATE</li><li>D) ITT and CACE are equivalent when non-compliance is below 30%; at 20% non-compliance, no adjustment is needed and ITT is the correct estimate of feature effectiveness</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> You run a marketplace experiment: treated cities see new pricing tool; control cities do not. No effect on GMV after two weeks. Colleague says 'underpowered'; another says 'SUTVA violation.' How do you diagnose?</p>
+      <ul class="check-opts"><li>A) Run Hausman test: if it rejects exogeneity of city assignment, SUTVA is violated; if it fails to reject, the experiment is underpowered</li><li>B) Check the pre-experiment balance between treated and control cities — large baseline GMV differences indicate SUTVA violation; similar baselines indicate underpowering</li><li>C) Extend the experiment to four weeks: if an effect emerges, the original test was underpowered; if GMV in control cities rises relative to baseline, that confirms SUTVA violation</li><li class="correct">D) For underpowering: check pre-specified MDE vs observed confidence interval. If CI is wide and MDE not within it, extend test. For SUTVA: look for evidence control cities behaved differently post-experiment vs baseline — if control-city GMV increased during test (spillover), that's contamination. Additional diagnostic: compare cities geographically closer vs farther from treated cities — stronger contamination for close cities confirms spillover.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Your A/B test shows statistically significant positive effect on 7-day retention (p=0.02) but you also ran 15 secondary metrics and found significance on 3. How do you interpret this?</p>
+      <ul class="check-opts"><li class="correct">A) With 15 metrics at α=0.05, expect 0.75 false positives under null — finding 3 significant is consistent with multiple testing inflation. Key: was 7-day retention pre-registered as primary metric? If yes, p=0.02 is valid; secondaries are exploratory. If no pre-specification, apply Bonferroni correction: α_corrected = 0.05/15 = 0.0033, check if any survive. Always pre-register one primary metric before running test.</li><li>B) Finding 3 out of 15 significant metrics at p=0.05 suggests a real effect because the expected false positive rate is 0.75, and observing 3 is significantly more than the null expectation</li><li>C) The primary metric p=0.02 is valid regardless of secondary metrics because the primary metric was analyzed first; secondary metrics are irrelevant to the primary metric's interpretation</li><li>D) All 4 significant results (1 primary + 3 secondary) are valid because multiple testing corrections only apply when you have no a priori hypotheses, and retention was clearly a hypothesis</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> Why does cluster-level randomisation reduce statistical power, and when is it unavoidable?</p>
+      <ul class="check-opts"><li>A) Cluster randomisation reduces power because it requires larger clusters, and the administrative overhead of managing clusters introduces measurement error that inflates variance</li><li>B) Cluster randomisation reduces power because between-cluster variance is higher than within-cluster variance, making it impossible to detect small effects even with many clusters</li><li class="correct">C) Cluster randomisation reduces power due to intra-cluster correlation (ICC): DEFF ≈ 1 + (m-1)×ICC. If ICC=0.1 and clusters have 100 users, DEFF≈10.9 → need ~11x more users. Unavoidable when SUTVA requires it: social features (treating one affects friends), marketplace features (supply-demand interact within region), or city-level policies. With few large clusters (e.g., 5 cities), power ≈ zero regardless of user count.</li><li>D) Cluster randomisation does not reduce power if cluster sizes are equal; power reduction only occurs with highly unequal cluster sizes where small clusters dominate the variance</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#causal_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

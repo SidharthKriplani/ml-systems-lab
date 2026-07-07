@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Concentration Inequalities | ML Systems Lab</title>
+  <meta name="description" content="Markov, Chebyshev, Hoeffding — generalisation bounds">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/concentration_inequalities.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/concentration_inequalities.html">
+  <meta property="og:title" content="Concentration Inequalities | ML Systems Lab">
+  <meta property="og:description" content="Markov, Chebyshev, Hoeffding — generalisation bounds">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Concentration Inequalities">
+  <meta name="twitter:description" content="Markov, Chebyshev, Hoeffding — generalisation bounds">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Concentration Inequalities",
+  "description": "Markov, Chebyshev, Hoeffding — generalisation bounds",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/concentration_inequalities.html",
+  "keywords": "concentration, generalisation, PAC learning, bounds"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#math_stats_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">26 min read</span>
+      <span class="tag">concentration</span><span class="tag">generalisation</span><span class="tag">PAC learning</span><span class="tag">bounds</span>
+    </div>
+    <h1>Concentration Inequalities</h1>
+    <p class="subtitle">Markov, Chebyshev, Hoeffding — generalisation bounds</p>
+
+    <p>You need to estimate the mean click-through rate from 100 samples. Your estimate is 0.043. How confident should you be that the true mean is within 0.01 of this estimate? This is a concentration question: how tightly does a sample statistic concentrate around its true value as the sample size grows? Without formal bounds, you are reporting confidence based on intuition rather than proof.</p>
+    <p>Markov's inequality: P(X ≥ a) ≤ E[X]/a for non-negative X. Weak but requires only a finite mean — it applies even when variance is infinite. Chebyshev's inequality: P(|X - μ| ≥ kσ) ≤ 1/k². Requires both mean and variance to be finite. Better than Markov but still loose — the bound decays only polynomially in k. Hoeffding's inequality: for bounded independent random variables X_i ∈ [a_i, b_i], the sample mean X̄ satisfies P(|X̄ - E[X̄]| ≥ t) ≤ 2 exp(-2n²t² / Σ(b_i - a_i)²). Exponentially tighter than Chebyshev for bounded variables — the bound shrinks double-exponentially as t increases.</p>
+    <p>Union bound (Bonferroni): P(A₁ ∪ A₂ ∪ ... ∪ A_k) ≤ Σ P(A_i). This is used in ML theory to get uniform convergence bounds — proving that the model holds simultaneously over all test examples, not just on average. Combined with Hoeffding, it gives bounds on the generalization gap of a model class.</p>
+    <p>VC dimension and generalization: the generalization error is bounded by O(√(d_VC log(n/d_VC) / n)) where d_VC is the VC dimension of the hypothesis class and n is training size. More data always helps. More complex models need more data to generalize. For modern overparameterized networks with VC dimension far exceeding training size, these classical bounds are vacuous — the implicit regularization from gradient descent produces tighter practical guarantees.</p>
+    <p><strong>NOT this.</strong> Concentration inequalities are not only relevant in theory. These bounds are exactly why you can trust a sample size calculation. Hoeffding's inequality tells you that for click-through rates bounded in [0,1], you need n ≥ log(2/δ) / (2ε²) samples to guarantee P(|X̄ - μ| ≥ ε) ≤ δ with no distributional assumption. Every power calculation in data science is a concentration inequality with a distributional assumption substituted in. The normal approximation underlying t-tests and z-tests is just a special case with a Gaussian assumption; Hoeffding works without any distributional assumption at all.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Use Hoeffding's inequality for sample size estimation when your data is bounded.</strong> For click-through rates in [0,1], n ≥ log(2/δ) / (2ε²) samples guarantees P(|X̄ - μ| ≥ ε) ≤ δ. This requires no distributional assumption beyond boundedness — it works whether the true distribution is Bernoulli, Beta, or anything else. For ε = 0.01 and δ = 0.05, that is n ≥ log(40) / 0.0002 ≈ 18,444 samples.</li><li><strong>Trap: applying CLT-based confidence intervals when n is small or the distribution is heavy-tailed.</strong> The CLT requires finite variance and sufficiently large n. Hoeffding's bound is distribution-free and valid for any n as long as the variable is bounded. For small-sample A/B tests or metrics with extreme outliers, use Hoeffding or bootstrap confidence intervals instead of assuming normality.</li><li><strong>Diagnostic: if your model selection gives inconsistent results across runs with the same data, compute the generalization bound for your model complexity versus training size.</strong> If the bound is loose (greater than 0.5), you do not have enough data to reliably distinguish between models — differences in validation performance are within the noise band of the bound, not real differences in generalization.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Concentration inequalities are the mathematical foundation of every sample size calculation and every generalization bound. Hoeffding's inequality gives distribution-free guarantees for bounded variables — understanding it is what separates a rigorous sample size justification from an intuitive one.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Concentration = how tightly a sample statistic hugs its true value</strong> as n grows — turns intuition into proof.</li><li><strong>Markov:</strong> P(X ≥ a) ≤ E[X]/a — weakest, needs only a finite mean.</li><li><strong>Chebyshev:</strong> P(|X−μ| ≥ kσ) ≤ 1/k² — needs finite variance, decays only polynomially.</li><li><strong>Hoeffding (bounded vars):</strong> P(|X̄−E[X̄]| ≥ t) ≤ 2exp(−2n²t²/Σ(bᵢ−aᵢ)²) — exponentially tighter, distribution-free.</li><li><strong>Sample size from Hoeffding:</strong> n ≥ log(2/δ)/(2ε²); for ε=0.01, δ=0.05 → n ≈ 18,444.</li><li><strong>Union bound</strong> P(∪Aᵢ) ≤ ΣP(Aᵢ) + Hoeffding → uniform convergence / generalisation-gap bounds.</li><li><strong>VC bound:</strong> gen error ≤ O(√(d_VC log(n/d_VC)/n)); classical bounds go vacuous for overparam nets.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You sample 1000 values from a distribution with mean 5 and variance 4. Using Chebyshev's inequality, bound P(|X̄ − 5| ≥ 0.5).</p>
+      <ul class="check-opts"><li>A) Apply Chebyshev to the raw variable X (not the mean): P(|X−5| ≥ 0.5) ≤ Var(X)/0.5² = 4/0.25 = 16. This bound exceeds 1 so it is trivially satisfied. The sample mean X̄ is not the right quantity — Chebyshev applies to single observations, not averages, so n=1000 does not help unless we know the distribution family.</li><li>B) Chebyshev applied to X̄: P(|X̄ − μ| ≥ ε) ≤ Var(X̄)/ε² = (σ²/n)/ε². With σ²=4, n=1000, ε=0.5: Var(X̄) = 4/1000 = 0.004. Bound = 0.004/0.25 = 0.016. But Chebyshev requires the distribution to be symmetric, so for general distributions the correct bound doubles: P(|X̄ − 5| ≥ 0.5) ≤ 0.032 = 3.2%.</li><li class="correct">C) X̄ is the sample mean of n=1000 i.i.d. samples. By LLN, E[X̄] = μ = 5. Var(X̄) = σ²/n = 4/1000 = 0.004. Chebyshev applied to X̄: P(|X̄ − μ| ≥ ε) ≤ Var(X̄)/ε² = 0.004/0.25 = 0.016. So P(|X̄ − 5| ≥ 0.5) ≤ 0.016 = 1.6%. The true probability (for normal or near-normal distributions) would be much smaller, but Chebyshev requires no distributional assumptions beyond finite variance — a distribution-free bound. The key insight: averaging reduces variance by 1/n, so concentration around the mean improves as n grows. The bound scales as σ²/(n·ε²) — to halve the error bound, quadruple n or halve ε.</li><li>D) P(|X̄ − 5| ≥ 0.5) ≤ 2·exp(−2nε²/range²). We need the range of X. Without knowing the range, we cannot apply Chebyshev — only Hoeffding, which requires bounded support. Chebyshev only applies to individual observations X, not to sample means X̄. For sample means, Hoeffding's inequality is the correct tool.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Hoeffding's inequality gives a tighter bound than Chebyshev for bounded random variables. Why? What is the bound on P(|X̄ − E[X̄]| ≥ ε) for n i.i.d. Xᵢ ∈ [0,1]?</p>
+      <ul class="check-opts"><li class="correct">A) Hoeffding's bound for n i.i.d. Xᵢ ∈ [0,1]: P(|X̄ − E[X̄]| ≥ ε) ≤ 2exp(−2n·ε²). Chebyshev would give: P ≤ Var(X̄)/ε² = σ²/(n·ε²) where σ² ≤ 1/4 for bounded [0,1] variables, so P ≤ 1/(4n·ε²). Hoeffding's bound is exponential in n, while Chebyshev is polynomial in n. For n=100, ε=0.1: Hoeffding ≤ 2exp(−2)≈0.27; Chebyshev ≤ 1/(4·100·0.01)=0.25 — similar here. For n=1000, ε=0.1: Hoeffding ≤ 2exp(−20)≈4×10⁻⁸; Chebyshev ≤ 2.5×10⁻³. The exponential dominates for large n. Why Hoeffding is tighter: it uses the boundedness condition more strongly than just variance — the MGF of bounded variables is more constrained than what Markov/Chebyshev assume.</li><li>B) Hoeffding's bound for Xᵢ ∈ [0,1]: P(|X̄ − E[X̄]| ≥ ε) ≤ exp(−n·ε²/2). Chebyshev's bound is 1/(4nε²). For n=1000, ε=0.1: Hoeffding ≤ exp(−5) ≈ 0.0067; Chebyshev ≤ 0.0025. Chebyshev is tighter in this regime because it uses variance information (σ² ≤ 1/4 exactly), while Hoeffding uses only range information (width = 1). Hoeffding's advantage appears only for very large n or very small ε.</li><li>C) Hoeffding's bound: P(|X̄ − E[X̄]| ≥ ε) ≤ 2exp(−nε²). This is tighter than Chebyshev P ≤ σ²/(nε²) ≤ 1/(4nε²) for all n. At n=50, ε=0.1: Hoeffding ≤ 2exp(−0.5)≈1.21 &gt; 1 (vacuous). Chebyshev ≤ 0.5 (tighter). Hoeffding is tighter only when 2exp(−nε²) &lt; 1/(4nε²), which requires n &gt; log(8nε²)/ε² — roughly n &gt; 100 for ε=0.1. The 2n factor in Hoeffding is the key difference from the correct formula.</li><li>D) Hoeffding's bound equals Chebyshev's bound for variables in [0,1]: both give P ≤ 1/(4nε²). The difference is that Hoeffding's bound is exact (an equality, not inequality) while Chebyshev's is a loose upper bound. Hoeffding's is 'tighter' in the sense of being achievable by Bernoulli(0.5) variables, while Chebyshev can never be achieved — the Paley-Zygmund inequality gives the achievable lower bound on P.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> The VC dimension of linear classifiers in ℝ² is 3. What does this mean, and how does VC dimension connect to generalisation bounds?</p>
+      <ul class="check-opts"><li>A) VC dimension 3 means linear classifiers in ℝ² can separate at most 3 data points perfectly. With more than 3 points, there exists some configuration that cannot be classified correctly — this is the fundamental limit of linear models. The generalisation bound says: test error ≤ train error + C/√n where C depends on VC dimension.</li><li class="correct">B) VC dimension 3 means: (1) there exist 3 points that can be shattered (classified in all 2³=8 possible ways by some linear classifier), and (2) no set of 4 points can be shattered. The 3 points are any three non-collinear points in ℝ²: any labeling ±1 of these three points corresponds to a halfspace that separates them correctly. Four points cannot all be shattered because XOR patterns cannot be implemented by a linear classifier. Generalisation bound (Vapnik-Chervonenkis): with probability ≥1−δ over training sample of size n: test error ≤ train error + √(d·log(2n/d) + log(4/δ))/√n, where d is the VC dimension. The bound says: larger VC dimension (more expressive class) requires more data n for the generalisation gap to be small. This gives the classical statistical learning theory tradeoff: complex models need large n to generalise.</li><li>C) VC dimension 3 means linear classifiers require at least 3 training examples to be fully specified. With fewer than 3 points, the classifier is underdetermined and multiple decision boundaries are consistent with the training data. With exactly 3 non-collinear points, the linear boundary is uniquely determined up to a scale factor. The generalisation bound: with 3 degrees of freedom, you need at least n=3/ε² examples to achieve ε test error.</li><li>D) VC dimension 3 means the growth function m_H(n) = O(n³) — the number of distinct labelings achievable on n points is at most polynomial of degree 3. For n ≤ 3, the growth function equals 2ⁿ (exponential). For n &gt; 3, the polynomial bound kicks in. The Sauer-Shelah lemma: m_H(n) ≤ (en/d)^d where d is VC dimension. The generalisation bound uses log(m_H(n))/n → 0, guaranteeing uniform convergence.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#math_stats_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

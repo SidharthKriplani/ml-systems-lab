@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gradient Boosting &amp; XGBoost | ML Systems Lab</title>
+  <meta name="description" content="Residual fitting, shrinkage, XGBoost regularisation, early stopping">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/gradient_boosting.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/gradient_boosting.html">
+  <meta property="og:title" content="Gradient Boosting &amp; XGBoost | ML Systems Lab">
+  <meta property="og:description" content="Residual fitting, shrinkage, XGBoost regularisation, early stopping">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Gradient Boosting &amp; XGBoost">
+  <meta name="twitter:description" content="Residual fitting, shrinkage, XGBoost regularisation, early stopping">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Gradient Boosting & XGBoost",
+  "description": "Residual fitting, shrinkage, XGBoost regularisation, early stopping",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/gradient_boosting.html",
+  "keywords": "gradient boosting, XGBoost, LightGBM, ensemble"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#classical_ml_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">30 min read</span>
+      <span class="tag">gradient boosting</span><span class="tag">XGBoost</span><span class="tag">LightGBM</span><span class="tag">ensemble</span>
+    </div>
+    <h1>Gradient Boosting &amp; XGBoost</h1>
+    <p class="subtitle">Residual fitting, shrinkage, XGBoost regularisation, early stopping</p>
+
+    <p>In 1988 two researchers, Kearns and Valiant, asked a question that sounds almost like a riddle: if all you have is a pile of *weak* learners — models barely better than a coin flip — could you somehow combine them into one *strong* learner that is nearly always right? Nobody knew. Two years later Robert Schapire proved the answer is <strong>yes</strong>, and the recipe he found is called <strong>boosting</strong>. It grew into AdaBoost, then into gradient boosting, and finally into <strong>XGBoost</strong> — the single algorithm that has won more competitions on tabular data than anything else ever built. Here is the idea, from the riddle to the champion.</p>
+    <hr>
+    <h3>Why a random forest hits a wall</h3>
+    <p>Picture a random forest on loan-default data. It reaches 88% accuracy and just... stops. You add more trees — nothing. You tune for two days — still 88%. Here is why. In a forest, every tree is trying to predict default from scratch, on its own, and then they all vote. Because they are all doing the same job in the same way, they tend to make the *same* mistakes. The handful of borrowers the forest gets wrong on tree number 1, it also gets wrong on tree number 500. Averaging a thousand opinions that share the same blind spot cannot remove the blind spot.</p>
+    <p>So we need a genuinely different idea. Do not train the trees independently and vote. Train them <strong>one after another</strong>, and make each new tree focus entirely on the mistakes the team has made so far.</p>
+    <hr>
+    <h3>Watching it fix its own mistakes</h3>
+    <p>Let us run it on four houses. Their real prices are 150k, 200k, 400k, and 600k.</p>
+    <p>Start with the laziest possible guess: predict the average price, 337.5k, for everyone. Now look at how far off that is — the <strong>misses</strong>. The two cheap houses were badly over-guessed (−187.5k and −137.5k); the two expensive ones badly under-guessed (+62.5k and +262.5k).</p>
+    <p>Now here is the move. Train a tiny tree — not to predict the price, but to predict those *misses*. A tiny tree can manage that much: &quot;small houses, subtract a lot; big houses, add a lot.&quot; Add its correction on top of the average guess (and only a fraction of it, to stay safe). Re-check the misses: they have roughly halved. Train a second tiny tree on the new, smaller misses, add it, and they shrink again. And again. Each tree is never predicting the answer — it is chipping away at whatever the current team still gets wrong. That is boosting.</p>
+    <hr>
+    <h3>The deep idea: this is gradient descent in disguise</h3>
+    <p>Here is the part that turns a neat trick into a general engine. You have met gradient descent before: to train a model, you nudge its numbers a little in the direction that lowers the loss, over and over. Boosting is doing the very same thing — except instead of nudging a set of *numbers*, each step nudges the whole *prediction function*, by bolting on one more small tree.</p>
+    <p>And the &quot;misses&quot; we have been fitting are not just intuitive — they *are* the gradient. For squared-error loss, the direction that lowers the loss fastest at each house is exactly its miss (its residual). So &quot;fit a tree to the misses&quot; is a gradient step, precisely. Swap in a different loss and only the formula for the &quot;miss&quot; changes: for classification with log loss the miss becomes (actual − predicted probability); for ranking, or for predicting the 90th percentile instead of the average, it is something else again. The recipe itself never changes — always fit a tree to the negative gradient and add it on. That is why gradient boosting can chase almost any goal you can write down as a loss: you hand it the target, and it works out its own correction.</p>
+    <hr>
+    <h3>Keeping it under control</h3>
+    <p>Two dials keep boosting from wrecking itself. First, the trees are kept deliberately <strong>weak</strong> — usually just depth 3 to 5. This is the opposite of a random forest, where deeper is better. In boosting each tree is a single step, and a big greedy step chases the noise in the current misses and overshoots. Shallow trees take careful steps. Second, the <strong>learning rate</strong> shrinks each tree's contribution before adding it — many small steps generalise better than a few big ones, at the cost of needing more trees. And you never guess the number of trees: you use <strong>early stopping</strong> — keep adding trees, watch the score on a held-out set, and stop the moment it stops improving. The model finds its own best length.</p>
+    <hr>
+    <h3>What made XGBoost the champion</h3>
+    <p>Plain gradient boosting works, but XGBoost won by being smarter and faster in a few ways. It bakes <strong>regularisation right into how it picks splits</strong>: a split has to clear a minimum-benefit bar or XGBoost refuses to make it, so it does not sprout pointless leaves that only fit noise. It also looks not just at the *slope* of the loss but at its *curvature* — a second-order view that tells it how big a step it can safely take in each region, so it stays cautious in flat, uncertain areas. Add years of engineering (clever handling of missing values, and heavy use of every CPU core) and you get a model that is both more accurate and much faster than the textbook version. Its cousin <strong>LightGBM</strong> pushes speed further by growing trees one leaf at a time and bucketing feature values, which really pays off on very large datasets.</p>
+    <p>So the map is simple. Reach for a <strong>random forest</strong> when you want a strong, hands-off baseline that shrugs off noise and needs almost no tuning. Reach for <strong>gradient boosting (XGBoost or LightGBM)</strong> when you want the last few points of accuracy and are willing to tune the learning rate, the tree depth, and the stopping carefully — because here each tree is a step, and steps can overshoot.</p>
+    <hr>
+    <h3>Where AdaBoost fits in</h3>
+    <p>Boosting's first hit was <strong>AdaBoost</strong>, and its mechanism is worth contrasting. AdaBoost doesn't fit residuals — it <strong>reweights rows</strong>: after each weak tree, the examples it got wrong get *heavier*, so the next tree is forced to focus on them, and the trees are combined with weights based on their accuracy. <strong>Gradient boosting</strong> generalises this: instead of reweighting rows, it fits each tree to the *negative gradient* of any differentiable loss. AdaBoost turns out to be (approximately) gradient boosting with a specific exponential loss — so gradient boosting is the strictly more general framework, which is why it took over.</p>
+    <hr>
+    <h3>How boosting does classification</h3>
+    <p>For regression the &quot;miss&quot; is the plain residual. For <strong>binary classification</strong> it's subtler and a favourite interview probe: the trees don't fit the raw 0/1 labels, they fit the gradient of <strong>log loss in logit (log-odds) space</strong>, which works out to (actual − predicted probability). So boosting accumulates trees that output <strong>margins/logits</strong>, and only at the end are those passed through a sigmoid to become probabilities — exactly like logistic regression's pipeline, but with a sum of trees producing the logit instead of a linear equation.</p>
+    <hr>
+    <h3>XGBoost's objective, written down</h3>
+    <p>XGBoost's edge is an explicit objective: <strong>training loss + a regularisation term over the trees</strong>, roughly</p>
+    <p>$\text{Obj} = \sum_i L(y_i, \hat{y}_i) + \sum_t \big[\,\gamma T_t + \tfrac{1}{2}\lambda \lVert w_t \rVert^2\,\big]$</p>
+    <p>where $T_t$ is the number of leaves in tree $t$, $w_t$ its leaf values, $\gamma$ penalises adding leaves, and $\lambda$ shrinks leaf values (L2). To decide each split it computes a <strong>gain</strong> using the first derivative (gradient, $g$) *and* the second derivative (Hessian, $h$) of the loss, minus $\gamma$. A split is only made if its gain clears $\gamma$ — that's the &quot;minimum-benefit bar,&quot; made precise. This is why XGBoost resists overfitting where plain gradient boosting sprouts noisy leaves.</p>
+    <hr>
+    <h3>The hyperparameters that matter</h3>
+    <p>Know these by name: `learning_rate` (eta) — step size; `n_estimators` — number of trees (let early stopping set it); `max_depth` — tree depth (shallow, 3–6); `min_child_weight` — minimum Hessian per leaf, a stronger overfitting guard than min-samples; `gamma` — the minimum split gain; `subsample` and `colsample_bytree` — row and column sampling for diversity; `reg_lambda` (L2) and `reg_alpha` (L1) on leaf weights; `scale_pos_weight` for imbalance; and `eval_metric` for the early-stopping signal. The high-leverage tuning trio is learning_rate × n_estimators (traded off) plus max_depth.</p>
+    <hr>
+    <h3>Boosting is a leakage magnet</h3>
+    <p>Because boosting relentlessly hunts the residual, it will happily latch onto a leaky feature and inflate your validation score in a way a forest would partly average away. So validation discipline matters more here than anywhere: use <strong>time-based splits</strong> for temporal data and <strong>group-based splits</strong> when rows cluster (per user), and run <strong>early stopping on a proper validation fold — never on the test set</strong>, or you leak the test set into model selection. A boosting model that looks too good usually has a leak.</p>
+    <hr>
+    <h3>Reading importances, and the three flavours</h3>
+    <p>XGBoost exposes three different importance types and they disagree: <strong>weight</strong> (how often a feature is split on), <strong>cover</strong> (how many samples its splits touch), and <strong>gain</strong> (how much its splits improved the loss — usually the most meaningful). Don't quote &quot;feature importance&quot; without saying which. And as with forests, all of them get distorted by correlated features, so cross-check with permutation importance or SHAP.</p>
+    <hr>
+    <h3>XGBoost vs LightGBM vs CatBoost</h3>
+    <p>They're not interchangeable. <strong>XGBoost</strong> is the stable, general-purpose default. <strong>LightGBM</strong> grows trees leaf-wise and buckets feature values, so it's usually much faster on large data (at a slightly higher overfitting risk on small data). <strong>CatBoost</strong> handles categorical features natively with ordered target statistics and often wins on categorical-heavy datasets with less preprocessing. Rough guide: large data → LightGBM, lots of categoricals → CatBoost, safe default → XGBoost.</p>
+    <hr>
+    <p><strong>Under imbalance.</strong> Boosting handles rare classes better than most, but still tune `scale_pos_weight` (roughly negatives/positives) to up-weight the minority, move the decision threshold, and judge with PR-AUC or recall@K rather than accuracy. And check calibration — heavy imbalance plus regularisation can leave the predicted probabilities off even when ranking is good.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>What gradient boosting is, and when to reach for it: trees trained in a line, each one fixing the team's leftover mistakes.</strong>
+
+Once it is tuned, gradient boosting is usually the most accurate thing you can run on tabular data — it chips away at both bias and variance, where a random forest only fights variance. That accuracy is why it wins most structured-data competitions. Use XGBoost or LightGBM instead of the basic scikit-learn version: both are faster, come with regularisation built in, and support early stopping out of the box. Lean on LightGBM for very large datasets (its leaf-by-leaf growth is quicker) and XGBoost for smaller ones, where the extra caution against overfitting helps.</li><li><strong>The trap: fixing the number of trees up front instead of letting early stopping choose it.</strong>
+
+With a learning rate of 0.1 and 1000 trees hard-coded, the held-out loss usually bottoms out somewhere around 200–400 trees and then starts climbing as the extra trees begin memorising noise. Hard-code the count and you sail right past the best point into an overfit model. Instead, always turn on early stopping (stop after about 50 rounds with no improvement) and let the model pick its own tree count. Then, to squeeze out a little more, lower the learning rate and re-run — smaller steps often reach a slightly better place.</li><li><strong>The check to run: plot the training loss and the held-out loss against the number of trees.</strong>
+
+Held-out loss still falling means you are underfitting — add trees or lower the learning rate. Held-out loss flat and close to the training loss means you are in good shape. Held-out loss creeping up while training loss keeps dropping means you are overfitting — stop earlier, use shallower trees, or let each tree see only a random subset of the rows. If the held-out loss never comes down at all, your learning rate is probably too high; start it around 0.05 to 0.1.</li><li><strong>Place it in the family and know the objective: AdaBoost reweights rows, gradient boosting fits the gradient of any loss, and XGBoost regularises explicitly.</strong>
+
+AdaBoost up-weights misclassified rows; gradient boosting generalises that to fitting each tree to the negative gradient of a differentiable loss (AdaBoost ≈ gradient boosting with exponential loss). For binary classification the trees fit the log-loss gradient (actual − predicted probability) in logit space and are squashed to probabilities only at the end. XGBoost's objective is loss + $\gamma T + \tfrac12\lambda\lVert w\rVert^2$, and it scores splits with gradients *and* Hessians minus $\gamma$ — a split must clear $\gamma$ to be made.</li><li><strong>Boosting is leakage-sensitive, so tune the right knobs and validate honestly.</strong>
+
+Because it hunts the residual, boosting will exploit a leaky feature that a forest averages away — so use time-based or group-based splits and run early stopping on a validation fold, never the test set. Key knobs: `learning_rate`×`n_estimators` (traded off), `max_depth`, `min_child_weight`, `gamma`, `subsample`/`colsample_bytree`, `reg_lambda`/`reg_alpha`, and `scale_pos_weight` for imbalance. Rough library map: large data → LightGBM (leaf-wise, fast), categorical-heavy → CatBoost (native handling), safe default → XGBoost. And name which importance you mean — weight, cover, or gain (gain is usually most meaningful) — since they disagree and correlated features distort all three.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Gradient boosting trains trees in a line, each one fitting the team's current misses — and those misses are literally the loss gradient, so every tree is one careful step of gradient descent on the prediction function. That is why it handles any goal you can write as a loss, why the trees stay shallow and the steps small, and why early stopping (not a fixed tree count) is how you size it. XGBoost won by baking regularisation and curvature into every split.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Gradient boosting = trees trained in a line,</strong> each fitting the team's current misses.</li><li><strong>Those misses are literally the loss gradient</strong> — every tree is one gradient-descent step in function space.</li><li><strong>Handles any goal you can write as a loss;</strong> trees stay shallow, steps (learning rate) stay small.</li><li><strong>Size it with early stopping, not a fixed tree count</strong> — plot train + held-out loss vs number of trees.</li><li><strong>Family:</strong> AdaBoost reweights rows, gradient boosting fits the gradient, XGBoost regularises explicitly + uses curvature.</li><li><strong>Leakage-sensitive</strong> — tune the right knobs and validate honestly.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> A random forest on your data plateaus at 88% no matter how many trees you add. Why does boosting have a real shot at doing better?</p>
+      <ul class="check-opts"><li>`A) Boosting simply uses deeper trees than a forest, and deeper trees always capture more of the pattern, so it breaks past any accuracy ceiling a shallow-tree forest happens to run into.`</li><li>`B) In a forest every tree predicts from scratch and votes, so they share the same blind spots and averaging cannot remove them. Boosting trains trees in sequence, each one aimed only at the mistakes the team still makes, so it keeps attacking the errors a forest is stuck on.`</li><li>`C) Boosting can train far more trees than a forest ever could, and past roughly 10,000 trees the sheer number is enough to average away any error the forest happened to be stuck with.`</li><li>`D) Boosting uses a completely different base model — linear models instead of trees — and linear models simply do not share the blind spots that make a forest of trees plateau in the first place.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> In gradient boosting for a regression problem, what is each new tree actually trained to predict?</p>
+      <ul class="check-opts"><li>`A) The true house price directly, exactly like every tree in a random forest — the trees are then averaged together at the end to smooth out their individual errors into one prediction.`</li><li>`B) A reweighted copy of the original target, where the rows the team got wrong are duplicated many times so the next tree naturally ends up paying them more attention than the rest.`</li><li>`C) The current misses — how far off the team's running prediction is on each row. It adds a shrunk version of that correction on top, so each tree chips away at the leftover error instead of predicting the price from scratch.`</li><li>`D) A yes/no flag for whether the current prediction is too high or too low, which the ensemble then uses to nudge every prediction by one fixed amount in the flagged direction.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> You train XGBoost with 1000 trees at learning rate 0.1. The held-out loss bottoms out around tree 200, then starts rising. What is going on, and what do you do?</p>
+      <ul class="check-opts"><li>`A) The rise after tree 200 means the learning rate is too high and the steps are overshooting; drop it to 0.01, keep all 1000 trees, and the loss will now fall smoothly all the way to the very end.`</li><li>`B) The extra trees past 200 are memorising training noise — that is overfitting, and the real best size is about 200 trees, not 1000. Turn on early stopping (stop after ~50 rounds with no improvement) so the model picks that point itself; then optionally lower the learning rate and re-run for a bit more.`</li><li>`C) The flattening at tree 200 means the model has fully converged, and the later rise is just noise in the held-out estimate; keep all 1000 trees, since removing any of them would hurt real-world predictions.`</li><li>`D) The rising loss means your held-out set is simply too small to measure reliably; switch to reporting the training loss instead, which keeps decreasing and gives you a stable, trustworthy stopping signal.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> Why is gradient boosting called &quot;gradient descent in function space,&quot; and why does that let it handle classification, ranking, and custom goals with the same algorithm?</p>
+      <ul class="check-opts"><li>`A) Ordinary gradient descent nudges a set of numbers to lower the loss; boosting instead nudges the whole prediction function, by adding a small tree each step. That tree is fit to the negative gradient of the loss — which for squared error is exactly the misses — so changing the loss only changes the gradient formula, and the same recipe fits any differentiable goal.`</li><li>`B) Because each tree literally stores the derivative of the loss in its leaves, so summing the trees is the same as summing derivatives — which is exactly Newton's method, and Newton's method already works on any loss you hand it.`</li><li>`C) Because boosting searches over the space of every possible function at once and picks the single best one, so no matter which loss you choose it can always jump straight to the global optimum in a single pass.`</li><li>`D) Because the trees are secretly linear models sitting in a transformed feature space, and linear models can be trained under any loss, which is the property that carries over to classification and ranking.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> How does AdaBoost differ from gradient boosting, and how does gradient boosting do binary classification?</p>
+      <ul class="check-opts"><li>`A) AdaBoost and gradient boosting are the same algorithm under two names; both fit residuals, and for classification both fit the raw 0/1 labels directly with a squared-error loss.`</li><li>`B) AdaBoost reweights misclassified rows so the next tree focuses on them; gradient boosting instead fits each tree to the negative gradient of any differentiable loss (AdaBoost ≈ the exponential-loss special case). For binary classification the trees fit the log-loss gradient (actual − predicted probability) in logit space, and a sigmoid converts the accumulated logits to probabilities only at the end.`</li><li>`C) AdaBoost fits gradients of a general loss while gradient boosting only reweights rows, so gradient boosting is the older and less flexible of the two.`</li><li>`D) Gradient boosting cannot do classification at all — it is regression-only — which is why AdaBoost, a separate classification-only method, still has to be used for any yes/no task.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q6.</strong> Your XGBoost model scores a suspiciously high 0.99 AUC on a random 80/20 split of time-ordered transaction data. What is the most likely problem?</p>
+      <ul class="check-opts"><li>`A) Nothing is wrong — XGBoost is simply that accurate on tabular data, so 0.99 AUC on the random split is a trustworthy estimate of production performance.`</li><li>`B) The learning rate is too low, which inflates AUC on the validation split; raise it and the 0.99 will settle to a realistic number.`</li><li>`C) A random split of time-ordered data lets the model train on future rows and predict past ones, and boosting aggressively exploits any resulting leakage — so the 0.99 is optimistic. Use a time-based (and group-based, if rows cluster) split, and run early stopping on a proper validation fold rather than the test set.`</li><li>`D) The AUC is high because XGBoost has too many trees; cap n_estimators at 50 and the leakage will disappear along with the inflated score.`</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#classical_ml_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

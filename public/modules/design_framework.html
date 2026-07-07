@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The 6-Step ML System Design Framework | ML Systems Lab</title>
+  <meta name="description" content="Clarify → scope → data → model → serving → monitoring">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/design_framework.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/design_framework.html">
+  <meta property="og:title" content="The 6-Step ML System Design Framework | ML Systems Lab">
+  <meta property="og:description" content="Clarify → scope → data → model → serving → monitoring">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="The 6-Step ML System Design Framework">
+  <meta name="twitter:description" content="Clarify → scope → data → model → serving → monitoring">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "The 6-Step ML System Design Framework",
+  "description": "Clarify → scope → data → model → serving → monitoring",
+  "proficiencyLevel": "Foundational",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/design_framework.html",
+  "keywords": "system design, framework, ML design interview"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#system_design_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Foundational</span>
+      <span class="read-time">22 min read</span>
+      <span class="tag">system design</span><span class="tag">framework</span><span class="tag">ML design interview</span>
+    </div>
+    <h1>The 6-Step ML System Design Framework</h1>
+    <p class="subtitle">Clarify → scope → data → model → serving → monitoring</p>
+
+    <p>Most failed ML projects don't fail on the model — they fail because the problem was never properly scoped. An engineer proposes a transformer for something a gradient-boosted tree would have solved, or designs offline batch scoring for a system that needs sub-50ms online inference. Both are the same mistake: jumping to architecture before the constraints are known.</p>
+    <hr>
+    <h3>The framework forces constraints to surface before any architectural decision</h3>
+    <p>(1) Clarify requirements — QPS, latency SLA, label availability, the cost asymmetry between a false positive and a false negative. (2) Frame as an ML problem — is this ranking, classification, regression, retrieval? (3) Data strategy — where do labels come from, how fresh, how biased. (4) Model design. (5) Serving architecture. (6) Monitoring. The single most common interview failure is skipping to step 4.</p>
+    <hr>
+    <p><strong>Why the ordering is load-bearing.</strong> Every downstream choice is a function of the earlier answers. A 200ms transformer is disqualified the instant the SLA turns out to be 50ms. A supervised model is disqualified the instant you learn there are no labels and none are coming. If you pick the model first, you discover these walls after weeks of work instead of in the first five minutes.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Steps 1–3 constrain every architecture decision: clarify, frame, and plan data before touching a model.</strong> Without QPS, latency SLA, label availability, and the cost asymmetry between error types, every later decision is a guess. Concretely: a &quot;design a spam filter&quot; prompt has no single right answer until you know whether it blocks the email synchronously (needs &lt;100ms) or quarantines async (can take seconds), and whether a false positive (real mail lost) costs more than a false negative (spam delivered).</li><li><strong>Steps 4–5 are coupled, not sequential: model choice and serving architecture must be solved together.</strong> A model requiring 50GB RAM cannot run on one server; a 200ms model cannot serve real-time. Choosing the model first and discovering the serving wall later wastes the most expensive weeks of a project.</li><li><strong>Step 6 is not optional: a deployed model has no built-in signal for its own decay.</strong> Without monitoring input distributions, prediction distributions, and the business metric, the first symptom of failure is a revenue drop days after the damage began. Define the retraining trigger before launch, not after the first incident.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>ML system design is constraint-propagation: the latency SLA, label availability, and error-cost asymmetry established in steps 1–3 disqualify most architectures before you ever compare models — which is why jumping to step 4 is the defining junior mistake.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>The 6 steps in order:</strong> clarify requirements → frame as an ML problem → data strategy → model → serving → monitoring. Jumping straight to &quot;model&quot; (step 4) is the single most common interview failure — the classic junior tell.</li><li><strong>Steps 1–3 are load-bearing constraints, not preamble:</strong> QPS, latency SLA, label availability, and the FP-vs-FN cost asymmetry disqualify most architectures up front. A 200ms transformer dies the instant the SLA turns out to be 50ms; a supervised model dies the instant you learn there are no labels coming. Elicit these in the first five minutes, not after weeks of work.</li><li><strong>Model and serving are coupled, solve them together:</strong> a 200ms model can't serve real-time, a 50GB-RAM model can't run on one box. Choose the model first and you discover the serving wall after the most expensive weeks are spent.</li><li><strong>Monitoring (step 6) is not optional:</strong> a deployed model has no built-in signal for its own decay, so without monitoring input distributions, prediction distributions, and the business metric, the first symptom of failure is a revenue drop days after the damage began. Define the retraining trigger before launch.</li><li><strong>Cost asymmetry shapes the whole design, not just training:</strong> if a false positive (blocking a legit transaction) costs far more than a false negative, you may need a two-stage design (cheap model auto-approves, expensive model reviews the rest) plus a human-in-the-loop — architectural choices that must be decided before modeling, not tuned as class weights inside it.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You're asked to &quot;design a spam filter for email.&quot; Which opening move best separates a senior from a junior answer?</p>
+      <ul class="check-opts"><li>A) State the model architecture (a fine-tuned transformer over email text) and the training-data size you'd target, then refine from there.</li><li class="correct">B) Establish scale/QPS, whether filtering is synchronous (blocks delivery, &lt;100ms) or asynchronous, label source and freshness, and the precision/recall cost asymmetry — because each answer eliminates whole classes of designs.</li><li>C) Propose the evaluation metric (F1) and the deployment environment first, since evaluation drives everything downstream.</li><li>D) Enumerate the feature set (sender reputation, links, n-grams) so the model design can begin immediately.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> A candidate designs a 180ms deep model, then at the end learns the product SLA is 40ms. What does the framework say went wrong?</p>
+      <ul class="check-opts"><li>A) Nothing structural — they should now quantize and distill the 180ms model down to 40ms and keep the design.</li><li>B) The evaluation metric was chosen too late; had they fixed the metric first, the latency issue would have surfaced.</li><li class="correct">C) Latency is a step-1 requirement. It should have been elicited before model design (step 4); discovering a hard SLA after the architecture is chosen means re-doing the design, which is the exact failure the ordering prevents.</li><li>D) The monitoring plan was missing, so the latency regression wasn't caught — add step 6 and the problem is solved.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> For a fraud-blocking system, why does the false-positive vs false-negative cost asymmetry belong in step 1 rather than step 4?</p>
+      <ul class="check-opts"><li>A) It doesn't — cost asymmetry is a modeling detail handled by class weighting during training in step 4.</li><li class="correct">B) Because the asymmetry sets the operating point and even the framing: if blocking a legitimate transaction is far costlier than missing fraud, you may need a two-stage design (cheap model auto-approves, expensive model reviews the rest) and a human-in-the-loop — architectural choices that must be known before modeling.</li><li>C) Because regulators require the cost ratio to be documented before deployment, independent of design.</li><li>D) Because the cost ratio determines the learning rate and batch size used in training.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#system_design_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

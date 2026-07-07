@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Policy Gradients | ML Systems Lab</title>
+  <meta name="description" content="REINFORCE, log-derivative trick, high variance, baselines, why PG beats value-based">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/policy_gradients.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/policy_gradients.html">
+  <meta property="og:title" content="Policy Gradients | ML Systems Lab">
+  <meta property="og:description" content="REINFORCE, log-derivative trick, high variance, baselines, why PG beats value-based">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Policy Gradients">
+  <meta name="twitter:description" content="REINFORCE, log-derivative trick, high variance, baselines, why PG beats value-based">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Policy Gradients",
+  "description": "REINFORCE, log-derivative trick, high variance, baselines, why PG beats value-based",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/policy_gradients.html",
+  "keywords": "policy gradient, reinforce, log-derivative, variance reduction, baseline, continuous actions"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#rl_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">50 min read</span>
+      <span class="tag">policy gradient</span><span class="tag">reinforce</span><span class="tag">log-derivative</span><span class="tag">variance reduction</span><span class="tag">baseline</span>
+    </div>
+    <h1>Policy Gradients</h1>
+    <p class="subtitle">REINFORCE, log-derivative trick, high variance, baselines, why PG beats value-based</p>
+
+    <p>Consider a robotic arm reaching for a target. The state is joint angles and velocities — continuous. The action is torques applied to each joint — also continuous, varying smoothly across a large range. Q-learning requires taking the argmax over all actions to compute the optimal next step. Over a continuous torque space, this argmax is an optimization problem that must be solved at every step, for every transition in the replay buffer. It is computationally infeasible. Policy gradient methods sidestep this entirely: instead of learning Q values and deriving a policy from them, parameterize the policy directly as π_θ(a | s) = N(μ_θ(s), σ²_θ(s)). The neural network outputs a mean and variance, and actions are sampled from that Gaussian. Update θ to increase the probability of actions that led to high returns.</p>
+    <p>The Policy Gradient Theorem gives the gradient: ∇_θ J(θ) = E_π[∇_θ log π_θ(a|s) · Q^π(s, a)]. Increase the log-probability of action a in state s proportionally to how good that action was. The log-derivative trick makes this computable: ∇_θ π_θ(a|s) = π_θ(a|s) · ∇_θ log π_θ(a|s), which converts the gradient of an expectation into an expectation of a gradient — sampleable from trajectories. The environment's transition model never appears. This is model-free.</p>
+    <p>REINFORCE is the direct implementation: sample a full episode, compute G_t at each timestep, update θ ← θ + α Σ_t G_t ∇_θ log π_θ(a_t | s_t). The problem is that G_t includes all future rewards — noise unrelated to a_t's actual contribution. A good action followed by bad luck is indistinguishable from a genuinely bad action. Gradient estimates have enormous variance.</p>
+    <p>Baseline subtraction solves this. Replace G_t with (G_t - b(s_t)) where b depends only on the state, not the action. The expected gradient is unchanged — any state-dependent term subtracts to zero because the policy log-gradient sums to zero over actions. But variance drops by centering returns around the state's average value. The optimal baseline is V^π(s_t) itself, giving the advantage A(s_t, a_t) = G_t - V^π(s_t) — how much better this action was than average.</p>
+    <p>NOT this: policy gradients are unbiased because they use sampled returns. Unbiased in expectation does not mean useful in practice. REINFORCE has extremely high variance for long-horizon tasks, and the gradient estimate from a single trajectory is dominated by random noise. This is why actor-critic methods — which replace G_t with a learned critic estimate — dominate in practice.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Always subtract a baseline from returns in policy gradient updates.</strong>
+
+Using the mean return or a learned value function as baseline reduces variance by 10–100× with zero bias cost — the baseline integrates to zero over the policy distribution. Skipping the baseline is skipping the most important and cheapest variance reduction available.</li><li><strong>If σ_θ(s) → 0 early in training, the policy has collapsed to deterministic and exploration has stopped — gradient signal becomes zero.</strong>
+
+Add an entropy bonus H[π_θ] to the loss to maintain policy spread throughout training. Without it, the network converges to the first good-looking action it found and stops exploring whether there is something better.</li><li><strong>If policy gradient training is noisy with high variance in returns across episodes, you need more environment samples per update — not a learning rate change.</strong>
+
+Gradient signal-to-noise ratio improves as √(num_samples). Doubling the number of parallel environments halves gradient noise. Collect longer rollouts or more parallel workers before tuning any other hyperparameter.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Policy gradients optimize the policy directly by increasing the log-probability of actions proportionally to how much better than average they were — and subtracting a state-value baseline from the returns is mandatory, not optional, because it reduces gradient variance by 10–100× at zero bias cost.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>PG parameterizes the policy directly</strong> $\pi_\theta(a|s)$ — sidesteps the infeasible argmax over continuous actions.</li><li><strong>Policy Gradient Theorem:</strong> $\nabla_\theta J = E_\pi[\nabla_\theta \log \pi_\theta(a|s) \cdot Q^\pi(s,a)]$; log-derivative trick makes it sampleable, model-free.</li><li><strong>REINFORCE</strong> uses full-episode $G_t$ — enormous variance because good action + bad luck looks like a bad action.</li><li><strong>Baseline subtraction is mandatory:</strong> $A = G_t - V^\pi(s_t)$ cuts variance 10–100× at zero bias.</li><li><strong>Any state-only baseline is unbiased</strong> — policy log-gradient sums to zero over actions.</li><li><strong>$\sigma_\theta \to 0$ early = policy collapsed to deterministic;</strong> add an entropy bonus to keep exploring.</li><li><strong>Noisy returns? Add samples, not learning rate</strong> — signal-to-noise scales as $\sqrt{N}$.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Derive why E_{a~π}[b(s) · ∇_θ log π_θ(a|s)] = 0 for any baseline b that depends only on the state, not the action.</p>
+      <ul class="check-opts"><li class="correct">A) E_{a~π}[b(s) · ∇_θ log π_θ(a|s)] = 0 because b(s) factors out of the expectation over a, and Σ_a ∇_θ π_θ(a|s) = ∇_θ Σ_a π_θ(a|s) = ∇_θ 1 = 0; the policy always sums to 1 over actions, so its gradient with respect to θ sums to zero; only action-dependent baselines would bias the estimate</li><li>B) The expectation equals zero because the log-derivative trick produces a cancellation with the policy denominator, and any baseline multiplied by a cancelled term must be zero regardless of what the baseline depends on</li><li>C) The result holds because b(s) is subtracted symmetrically from all actions, so the positive contributions from good actions exactly cancel the negative contributions from bad actions in expectation</li><li>D) E_{a~π}[b(s) · ∇_θ log π_θ(a|s)] = 0 only approximately, not exactly; the approximation error is bounded by the variance of the baseline and vanishes as the number of samples grows to infinity</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> You are training a continuous-control robot with REINFORCE and the policy fails to improve despite 50,000 episodes. What is likely happening and what changes do you make?</p>
+      <ul class="check-opts"><li>A) The problem is insufficient data; 50,000 episodes is simply not enough for REINFORCE to converge on continuous control; switch to a model-based approach that can learn from far fewer interactions</li><li class="correct">B) REINFORCE gradients are likely dominated by variance from the full episode return G_t; fixes include: add a value baseline V_φ(s) to get advantage A_t = G_t - V_φ(s_t), use n-step returns, switch to actor-critic (A2C/PPO) for lower-variance gradient estimates, check policy entropy to ensure exploration, and normalise rewards to a stable scale</li><li>C) The policy network architecture is too small to represent the continuous control policy; increase network capacity with more layers and wider hidden dimensions until the policy can represent the optimal action for every state</li><li>D) The issue is that REINFORCE uses the full episode return which creates a non-stationary learning signal; the fix is to use a fixed discount factor γ=1.0 so all timesteps receive equal weight and the gradient is stationary</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> In a two-player zero-sum game like poker, why is a stochastic optimal policy strictly necessary, and what does this mean for the choice of algorithm?</p>
+      <ul class="check-opts"><li>A) Stochastic policies are not strictly necessary in poker; deterministic policies can be optimal if the opponent does not observe the agent's action distribution</li><li>B) A stochastic optimal policy is needed because the game tree has too many states for a deterministic policy to memorise all optimal actions; the mixed strategy compresses this into a simple probability distribution</li><li class="correct">C) Any deterministic policy in a zero-sum adversarial game is exploitable — the opponent can learn and play the best response, winning with certainty; the Nash equilibrium requires a mixed strategy (e.g., 1/3 each in rock-paper-scissors); value-based methods cannot represent this because argmax Q*(s,a) always produces a deterministic policy; policy gradient methods parameterising π_θ(a|s) as a distribution CAN converge to the mixed strategy via self-play or CFR</li><li>D) Stochastic policies are needed in poker specifically because partial observability (hidden cards) makes any deterministic policy exploitable; in fully observable zero-sum games, deterministic optimal policies always exist</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#rl_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

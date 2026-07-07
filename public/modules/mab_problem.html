@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-Armed Bandit Problem | ML Systems Lab</title>
+  <meta name="description" content="Exploration-exploitation tradeoff, regret formulation, stochastic vs adversarial MAB">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/mab_problem.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/mab_problem.html">
+  <meta property="og:title" content="Multi-Armed Bandit Problem | ML Systems Lab">
+  <meta property="og:description" content="Exploration-exploitation tradeoff, regret formulation, stochastic vs adversarial MAB">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Multi-Armed Bandit Problem">
+  <meta name="twitter:description" content="Exploration-exploitation tradeoff, regret formulation, stochastic vs adversarial MAB">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Multi-Armed Bandit Problem",
+  "description": "Exploration-exploitation tradeoff, regret formulation, stochastic vs adversarial MAB",
+  "proficiencyLevel": "Foundational",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/mab_problem.html",
+  "keywords": "bandit, exploration, regret, exploration-exploitation, stochastic"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#bandits_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Foundational</span>
+      <span class="read-time">35 min read</span>
+      <span class="tag">bandit</span><span class="tag">exploration</span><span class="tag">regret</span><span class="tag">exploration-exploitation</span><span class="tag">stochastic</span>
+    </div>
+    <h1>Multi-Armed Bandit Problem</h1>
+    <p class="subtitle">Exploration-exploitation tradeoff, regret formulation, stochastic vs adversarial MAB</p>
+
+    <p>A/B testing commits samples to both arms for the full experiment duration, even if one arm is clearly losing early. In online settings — recommending ads, articles, treatments — every suboptimal recommendation has a real cost. Multi-armed bandits formalise the exploration-exploitation tradeoff: you must try options to learn their value (explore), but you want to choose the best option as often as possible (exploit). Doing both simultaneously is the core challenge.</p>
+    <p>Regret — the accumulated cost of not always choosing the best arm — is the right metric for this problem, not reward prediction accuracy: a perfect reward model with a greedy policy still incurs linear regret if it never explores and fails to discover a better arm. The Lai-Robbins lower bound (Ω(log T)) is the key theoretical anchor: any consistent algorithm must pull suboptimal arms at a rate proportional to log T divided by the KL divergence between arm distributions. You cannot beat log T; you can only match it.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Regret is the right metric, not reward accuracy.</strong> Pseudo-regret
+
+$R_T = T·μ* − Σ_t μ_{a_t} measures the cumulative gap betwe$
+
+en the optimal arm's expected reward and your policy's expected rewards. A model that predicts rewards perfectly but selects greedily has zero exploration. If it happened to underestimate the best arm early, it never corrects and incurs linear regret O(T) — the prediction accuracy is high but the decision quality is permanently compromised.</li><li>**Expected regret decomposes as
+
+$R_T = Σ_{a≠a*} Δ_a · E[N_a(T)] where Δ_a = μ* − μ_a is the suboptimality gap for arm a an$
+
+d N_a(T) is the number of times you pull it.** Minimising regret means minimising pulls on suboptimal arms — but identifying which arms are suboptimal requires the exploration you are trying to limit. This is the circular dependency that makes the problem hard.</li><li><strong>Lai-Robbins lower bound (1985): for any consistent algorithm (sub-polynomial regret on every instance), expected regret satisfies E[R_T] ≥ Σ_{a: Δ_a &gt; 0} Δ_a / KL(μ_a, μ*) · ln T.</strong> This is Ω(log T) and cannot be beaten asymptotically. Algorithms achieving O(log T) regret are optimal. The KL term tells you why near-optimal arms are expensive: if two arms are very similar (small KL), you need many pulls to distinguish them, and each suboptimal pull costs Δ_a.</li><li><strong>Instance regret vs minimax regret are different goals.</strong> UCB-type algorithms achieve O(log T) on specific instances but O(√(KT)) in the worst case. EXP3 achieves O(√(KT ln K)) in the fully adversarial setting without any distributional assumptions. An algorithm optimal for T = 10^6 may underperform at T = 1000 — asymptotic optimality says nothing about finite-horizon performance where prior warm-starting and instance-specific constants dominate.</li><li><strong>Stochastic MAB assumes rewards are i.i.d. from fixed but unknown distributions.</strong> The optimal arm is fixed. Most recommendation and ad-serving problems are approximately stochastic over short windows. UCB and Thompson Sampling are designed for this setting and achieve O(log T) regret.</li><li><strong>Adversarial MAB removes all distributional assumptions — the environment can choose reward sequences after seeing your algorithm (but not your random coin flips).</strong> Relevant for strategic actors, financial markets, and settings where the reward distribution shifts in response to your policy. EXP3 is the algorithm for this setting.</li><li><strong>Production applications: online ad serving (each ad is an arm, reward is click/conversion, up to tens of millions of arms), recommendation ranking (which item at position 1, with delayed feedback), clinical trials (adaptive randomisation toward better treatments — with major statistical and regulatory complications), and hyperparameter tuning (Hyperband allocates compute budget across configurations).</strong></li><li><strong>Finite horizon matters.</strong> Most theory is asymptotic (T → ∞) and instance-dependent factors (Δ values, K) dominate at realistic horizons. In production, content has short lifecycles — an article is relevant for hours. At T = 1000 and K = 20, priors and warm-start heuristics matter more than matching the Lai-Robbins asymptotic constant.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Regret — not reward prediction accuracy — is the right objective for bandit problems, because a model that predicts rewards correctly but selects greedily incurs linear regret whenever it initially underestimates the best arm. The Lai-Robbins lower bound (Ω(log T)) means no consistent algorithm can do better than O(log T) regret on all instances, and the KL term in the bound tells you why: near-optimal arms require many pulls to eliminate, because small distributional differences are hard to detect.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Explore vs exploit:</strong> try arms to learn value, pick the best as often as possible — do both at once.</li><li><strong>Regret, not reward accuracy:</strong> greedy on a perfect reward model still incurs linear O(T) regret if it never explores.</li><li><strong>Regret decomposes:</strong> $R_T = Σ_{a≠a*} Δ_a · E[N_a(T)]$ — minimise pulls on suboptimal arms.</li><li><strong>Lai-Robbins lower bound Ω(log T):</strong> any consistent algorithm pulls suboptimal arms ∝ ln T / KL(μ_a, μ*).</li><li><strong>KL term = cost of near-optimal arms:</strong> small gap → many pulls to distinguish.</li><li><strong>Stochastic vs adversarial:</strong> i.i.d. fixed distributions (UCB/TS, O(log T)) vs no assumptions (EXP3, O(√(KT ln K))).</li><li><strong>Finite horizon matters:</strong> theory is asymptotic; at T=1000, K=20, priors and warm-starts dominate the constant.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You have a news article recommendation system with 500 candidate articles. Each user visit is a bandit round. Why is regret a better objective than classification accuracy of click prediction?</p>
+      <ul class="check-opts"><li>A) Click prediction accuracy directly measures revenue, making it superior to regret for business optimization</li><li class="correct">B) Regret measures the cumulative opportunity cost of the policy — a greedy high-accuracy model that never explores may permanently miss the best article, incurring linear regret even with perfect per-round predictions</li><li>C) Regret is easier to compute than classification accuracy in online settings</li><li>D) Classification accuracy ignores the reward signal, so it is always a worse metric regardless of the policy used</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> What is the difference between pseudo-regret and expected regret? Which is typically analyzed in theory?</p>
+      <ul class="check-opts"><li class="correct">A) Pseudo-regret is the expectation over algorithm randomness of the gap using true arm means; expected regret further averages over reward noise. Theory typically analyzes pseudo-regret because reward noise cancels in expectation, focusing analysis on arm selection sub-optimality</li><li>B) They are equivalent terms — theory uses whichever is notationally convenient</li><li>C) Expected regret is the stronger bound because it includes reward noise; pseudo-regret ignores noise and is therefore easier but less meaningful for practice</li><li>D) Pseudo-regret is only defined for adversarial settings; expected regret applies to stochastic bandits</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> In a clinical trial with 4 treatments and 200 patients total, should you use a bandit algorithm? What ethical constraints interact with regret minimization?</p>
+      <ul class="check-opts"><li>A) No — bandit algorithms are inappropriate for clinical trials because they violate patient consent requirements</li><li>B) Yes, but only if the trial is non-randomized and outcomes are binary</li><li>C) Yes, but only for internal rapid-iteration decisions; bandit algorithms are generally not appropriate for regulated clinical trials without pre-registered stopping rules, corrected inference, and careful handling of delayed outcomes and SUTVA violations</li><li class="correct">D) Bandit algorithms are always preferred in clinical trials because minimizing regret directly minimizes patient harm</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> The Lai-Robbins lower bound is Ω(log T). Does this mean no algorithm can do better than O(log T) regret? What assumptions does the bound depend on?</p>
+      <ul class="check-opts"><li>A) Yes, no algorithm can ever achieve sub-logarithmic regret under any assumptions</li><li>B) The bound only applies to adversarial settings; stochastic MAB algorithms routinely achieve O(1) regret</li><li class="correct">C) No consistent algorithm can uniformly beat O(log T) across all stochastic instances; the bound requires i.i.d. rewards from a parametric family, algorithm consistency, and is instance-dependent via KL divergence. In the adversarial setting the minimax lower bound is Ω(√(KT)) instead</li><li>D) The bound applies only when K &gt; log T; with few arms sub-logarithmic regret is achievable</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#bandits_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

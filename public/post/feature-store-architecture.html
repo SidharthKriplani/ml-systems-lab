@@ -38,8 +38,8 @@
       "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
     }
   },
-  "datePublished": "2026-06-20",
-  "dateModified": "2026-06-20",
+  "datePublished": "2026-07-07",
+  "dateModified": "2026-07-07",
   "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/feature-store-architecture.html",
   "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
   "keywords": "Feature Store, Architecture, Online Features, Data Engineering"
@@ -75,22 +75,22 @@
     <p>A feature store has three jobs: compute features consistently, serve them fast, and keep them fresh. Most teams get the first one wrong, the second one right-ish, and ignore the third until it causes an incident.</p>
 <h2>The offline layer:</h2>
 <p>Typically Hive, BigQuery, or Delta Lake. Stores historical feature values at entity-timestamp granularity (user_id, timestamp → feature_values). Used for: training data generation (point-in-time correct joins), batch scoring, backfilling.</p>
-<p>Point-in-time correct joins are non-negotiable. If you\'re training a model to predict purchase at time T, you must use feature values as they existed at time T — not the values that existed when you ran the training job. This requires an \`asof\` join on timestamp, which is expensive but correct.</p>
+<p>Point-in-time correct joins are non-negotiable. If you're training a model to predict purchase at time T, you must use feature values as they existed at time T — not the values that existed when you ran the training job. This requires an `asof` join on timestamp, which is expensive but correct.</p>
 <h2>The online layer:</h2>
 <p>Redis, DynamoDB, Bigtable, or Cassandra. Stores the latest feature values per entity for real-time lookup. Used for: live inference requests.</p>
 <p>Key design decision: who writes to the online layer? Two patterns: (1) Stream processor (Flink/Kafka Streams): computes features from event stream, writes to online store in near-real-time. Good for session features. (2) Batch materialization: offline pipeline runs, materialises to online store. Acceptable for features that change hourly or daily.</p>
 <h2>The consistency problem:</h2>
 <p>The training data was generated from the offline store at time T. The online store serves features computed by a possibly different code path. If these diverge (different null handling, different timestamp semantics, different aggregation windows) you have training-serving skew.</p>
-<p>The fix is a single feature definition that runs in both contexts. Feast, Tecton, and Hopsworks solve this by providing a Python SDK that generates both offline SQL and online computation from the same feature definition. If you\'re not using one of these, you need strict engineering discipline and integration tests that compare offline vs online feature values on known entities.</p>
+<p>The fix is a single feature definition that runs in both contexts. Feast, Tecton, and Hopsworks solve this by providing a Python SDK that generates both offline SQL and online computation from the same feature definition. If you're not using one of these, you need strict engineering discipline and integration tests that compare offline vs online feature values on known entities.</p>
 <h2>Late-arriving data:</h2>
 <p>Event timestamps and processing timestamps differ. A purchase that happened at 14:00 might arrive in your pipeline at 14:03. If your feature window is 1-hour, features computed at 14:01 will be missing the last 3 minutes of purchases. Strategies: (1) Watermarks: process events up to max_timestamp - delay_tolerance. (2) Lambda architecture: fast path for recent data, batch correction pass for accuracy. (3) Design features to be robust to 5-minute staleness.</p>
 <h2>Feature versioning:</h2>
 <p>Training run 42 used features_v3. Training run 57 used features_v5. When you investigate why run 57 underperformed in production, you need to reproduce the exact features that run 42 used. This requires: (1) Store feature definitions with immutable versioning. (2) Log which feature version was used in each training run. (3) Keep old feature computation code runnable.</p>
-<p>\`\`\`python from datetime import datetime from feast import FeatureStore</p>
+<p>```python from datetime import datetime from feast import FeatureStore</p>
 <p>store = FeatureStore(repo_path=".")</p>
 <p># ── Training: point-in-time correct historical features ────────────────── # Each row gets features as of its own event_timestamp — no future leakage training_df = store.get_historical_features( entity_df=training_events,          # must have entity_id + event_timestamp features=[ "user_stats:purchase_count_7d", "user_stats:avg_session_duration", "item_stats:view_count_24h", ], ).to_df()</p>
 <p># ── Serving: real-time features for a single prediction ───────────────── # Uses the SAME feature computation logic as training — no skew online_features = store.get_online_features( features=["user_stats:purchase_count_7d", "item_stats:view_count_24h"], entity_rows=[{"user_id": "u_123", "item_id": "i_456"}], ).to_dict()</p>
-<p># The guarantee: training_df and online_features compute the same way. # This is the core promise of a feature store. \`\`\`</p>
+<p># The guarantee: training_df and online_features compute the same way. # This is the core promise of a feature store. ```</p>
 
     <div class="cta">
       <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>

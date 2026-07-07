@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forecast Evaluation | ML Systems Lab</title>
+  <meta name="description" content="MASE, pinball loss, Winkler score, Diebold-Mariano, rolling vs expanding window">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/forecast_evaluation.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/forecast_evaluation.html">
+  <meta property="og:title" content="Forecast Evaluation | ML Systems Lab">
+  <meta property="og:description" content="MASE, pinball loss, Winkler score, Diebold-Mariano, rolling vs expanding window">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Forecast Evaluation">
+  <meta name="twitter:description" content="MASE, pinball loss, Winkler score, Diebold-Mariano, rolling vs expanding window">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Forecast Evaluation",
+  "description": "MASE, pinball loss, Winkler score, Diebold-Mariano, rolling vs expanding window",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/forecast_evaluation.html",
+  "keywords": "MASE, MAPE, pinball loss, Winkler score, Diebold-Mariano, backtesting, lookahead bias"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#time_series_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">45 min read</span>
+      <span class="tag">MASE</span><span class="tag">MAPE</span><span class="tag">pinball loss</span><span class="tag">Winkler score</span><span class="tag">Diebold-Mariano</span>
+    </div>
+    <h1>Forecast Evaluation</h1>
+    <p class="subtitle">MASE, pinball loss, Winkler score, Diebold-Mariano, rolling vs expanding window</p>
+
+    <p>MAPE is the default metric most teams use, and it has three distinct failure modes that make it actively misleading. It's undefined when actuals are near zero (division by zero). It systematically biases selection toward models that underpredict, because over-forecasts generate larger percentage errors than under-forecasts of equal absolute magnitude. And it's not comparable across series with different scales. MASE solves all three by normalising against the in-sample naïve forecast — scale-free, symmetric, defined when Y_t = 0, and interpretable (MASE &lt; 1 means you beat the naïve baseline). But metric choice is the second problem. The first is backtesting design: a rolling-origin evaluation that faithfully simulates production conditions is the only reliable proxy for live performance. Fitting normalisation scalers on the full dataset including the test period is ubiquitous and inflates reported performance by 5-15% — not from overfitting the model, but from the preprocessing pipeline implicitly seeing the future.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>MAPE fails in three distinct ways.</strong> Division by zero: any series with zero values on some days breaks it — daily new user counts, SKU-level sales with stockouts, any count series. Asymmetric penalty: over-forecasting by 50% produces a larger MAPE contribution than under-forecasting by 50% — MAPE is minimised by systematically underforecasting, biasing model selection toward conservative forecasters even when over-forecasting is equally costly. Scale dependence: MAPE on a series with mean 10 versus mean 10,000 are not comparable, making cross-series performance comparison meaningless.</li><li><strong>MASE (Hyndman &amp; Koehler 2006) solves all three MAPE failure modes.</strong> MASE = MAE / (MAE of in-sample naïve forecast). MASE &lt; 1 means the model beats the naïve baseline on average. Scale-free: the normalisation makes MASE comparable across series with different scales. Symmetric: over- and under-forecasting of equal magnitude contribute equally. Defined when Y_t = 0: the denominator uses historical naïve errors which are well-defined even when actuals are zero. The M4 competition chose MASE as the primary metric — treat it as the default.</li><li><strong>Probabilistic forecast evaluation captures what point metrics miss.</strong> A point forecast of 100 with ±5 uncertainty and ±500 uncertainty have identical point forecast errors but completely different decision implications for inventory or capacity planning. Pinball (quantile) loss: L_q(y, ŷ) = q(y - ŷ) if y ≥ ŷ, else (1-q)(ŷ - y). Averaging over all quantiles gives CRPS — the gold standard for distributional forecasts. Winkler score penalises interval width plus extra penalty for actuals outside the interval, directly measuring calibration and sharpness.</li><li><strong>Diebold-Mariano test: statistically tests whether two forecasters have equal expected loss.</strong> Test statistic based on d_t = L(e₁_t) − L(e₂_t), using Newey-West standard errors for autocorrelated loss differentials. Both models must be evaluated on the same test set at the same horizon. For a portfolio of 1000 series: compute per-series MASE difference d_i, run a paired t-test or Wilcoxon signed-rank on {d_i}. Report effect size (median MASE difference) alongside p-value — a statistically significant difference of 0.001 MASE is operationally irrelevant.</li><li><strong>Rolling vs expanding window: expanding window uses all available history (training window grows over time) — correct for stationary DGPs where more data always helps.</strong> Rolling window uses a fixed training size — simulates non-stationary environments where only recent data is relevant. Rolling gives more evaluation cutoffs per total dataset length. Start with expanding; switch to rolling if model performance degrades systematically on more recent cutoffs (a signal of non-stationarity in the DGP).</li><li><strong>Lookahead bias is the most common way backtesting results fail to transfer to production.</strong> Four forms: (1) Using future covariate values at forecast time — the most obvious form. (2) Fitting normalisation (mean, std) on the full dataset including the test period — the scaler &quot;knows&quot; the future level. (3) Feature lag calculation errors without proper temporal shifts — feature at time t accidentally includes values from t+1. (4) Selecting the model with best test MAPE and reporting it as unbiased — the test set has been implicitly used for selection. The fix: strict temporal split, all preprocessing fitted on training data only, a validation set for model selection, and the test set touched exactly once for final unbiased evaluation.</li><li><strong>Lookahead bias magnitude: fitting a Z-score normaliser on training + test combined inflates performance because test-period values are included in the mean and standard deviation.</strong> If the test period has a higher mean (trending series), the full-dataset normalisation partially de-trends the test values, making the model appear more accurate than it would be in production. Empirically, this inflates reported MASE by 5-15% for non-stationary series. Always fit preprocessing on training data only and apply to test using training-fitted parameters.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>MAPE misleads in three ways simultaneously: it's undefined for zero-valued series, penalises over-forecasting more than under-forecasting of equal absolute magnitude, and can't be compared across series with different scales. MASE solves all three and should be the default metric. The more consequential failure mode is backtesting design: fitting preprocessing (normalisation, scaling) on the full dataset including test data is a ubiquitous form of lookahead bias that inflates reported MASE by 5-15% — not from overfitting the model, but from the scaler implicitly encoding future level information.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>MAPE fails 3 ways:</strong> undefined at Y=0, penalises over- more than under-forecasting, not scale-comparable.</li><li><strong>MASE = MAE / naïve-MAE</strong> — scale-free, symmetric, defined at zero; &lt;1 beats naïve. Default metric (M4).</li><li><strong>Probabilistic eval:</strong> pinball/quantile loss → CRPS; Winkler score penalises width + misses.</li><li><strong>Diebold-Mariano</strong> tests equal expected loss; across many series use paired t-test/Wilcoxon on per-series MASE.</li><li><strong>Effect size &gt; p-value:</strong> a significant 0.001 MASE gap is operationally irrelevant.</li><li><strong>Expanding window</strong> (stationary DGP) vs <strong>rolling window</strong> (non-stationary); rolling gives more cutoffs.</li><li><strong>Lookahead bias inflates MASE 5-15%:</strong> fit ALL preprocessing on train only; touch test set exactly once.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You have two models. Model A has MAPE = 8%, Model B has MAPE = 12%. Model A looks better. But 15% of your series have true values below 5. Which model should you trust and how do you decide?</p>
+      <ul class="check-opts"><li>A) Trust Model A unconditionally — MAPE is the industry standard metric and a 4-percentage-point gap is large enough that it holds even after excluding the near-zero series.</li><li class="correct">B) MAPE is unreliable when 15% of series have Y_t &lt; 5, as those series dominate the average with inflated percentage errors. Compute MASE (robust to near-zero), separately evaluate the near-zero subset, and compare MAPE excluding near-zero series. Use MAE/MASE as primary metric if business cost is proportional to absolute error.</li><li>C) Exclude the 15% near-zero series from evaluation entirely; MAPE is valid and comparable for the remaining 85% of series where Y_t ≥ 5.</li><li>D) Apply symmetric MAPE (sMAPE) instead of MAPE to both models; sMAPE is well-defined for near-zero values and will give the correct comparison between Model A and Model B.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> You are comparing two forecasting models across 1,000 series. How do you statistically test which model is better, controlling for the multiple-series problem?</p>
+      <ul class="check-opts"><li>A) Run the Diebold-Mariano test once on the concatenated forecast errors from all 1000 series; treating the full error sequence as a single time series controls for the multiple-comparison problem automatically.</li><li>B) Apply a Bonferroni correction: run Diebold-Mariano per-series at significance level α/1000; a model wins if it is significantly better on the majority of series after correction.</li><li class="correct">C) Compute per-series MASE for each model, compute d_i = MASE₁_i − MASE₂_i, run a paired t-test (or Wilcoxon signed-rank) on {d_i}, bootstrap for robustness. Effect size matters more than p-value: report median MASE and fraction of series each model wins.</li><li>D) Use a fixed-effects panel regression of forecast errors on a model-indicator variable with series fixed effects; the coefficient on the model indicator is the average performance difference controlling for series-level heterogeneity.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> You fit your preprocessing pipeline (including Z-score normalisation) on the full training+test set combined, evaluate on the held-out test, and get MASE = 0.83. What is wrong and how large could the bias be?</p>
+      <ul class="check-opts"><li>A) Nothing is wrong — Z-score normalisation is a linear transformation that cannot introduce lookahead bias; only non-linear preprocessing steps (e.g., Box-Cox) create evaluation artifacts.</li><li>B) The issue is that MASE = 0.83 is suspiciously close to 1.0; the bias comes from normalising the entire dataset, which makes the naïve benchmark appear artificially strong rather than the model appearing artificially accurate.</li><li class="correct">C) Lookahead bias in preprocessing: Z-score computed on training + test uses test-period mean and std, so the scaler encodes future level information. This biases MASE toward underestimating error, inflating reported accuracy by 5-15% for non-stationary series. Fix: fit scaler on training data only, apply training-fitted parameters to test.</li><li>D) The bias direction is toward overestimating error (pessimistic), not underestimating; including test-period variance in the scaler inflates the denominator of Z-score, making test errors appear larger than they are in production.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> A PM asks why your 95% prediction interval contains the actual value only 81% of the time in production. What are the likely causes and how do you diagnose them?</p>
+      <ul class="check-opts"><li>A) 81% coverage with a 95% PI is within acceptable sampling variation; for a test set of &lt;500 observations, the confidence interval around 95% coverage is wide enough that 81% is not statistically significant.</li><li>B) The coverage gap is caused exclusively by parameter uncertainty not propagated through MAP estimation; switching from MAP to MCMC will restore 95% coverage without needing further diagnosis.</li><li>C) The 95% PI containing actuals only 81% of the time means intervals are too wide, not too narrow; over-confident interval means PI is too broad and contains too few actuals.</li><li class="correct">D) 95% PI with 81% coverage means intervals are too narrow (overconfident). Causes: Gaussian likelihood underestimates tails, MAP estimation does not propagate parameter uncertainty, structural breaks after fitting, or perfect covariates in backtesting vs forecasted covariates in production. Diagnose via empirical coverage by horizon h, residual vs assumed distribution comparison, and PIT histogram.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#time_series_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

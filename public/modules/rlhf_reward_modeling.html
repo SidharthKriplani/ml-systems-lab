@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RLHF and Reward Modeling | ML Systems Lab</title>
+  <meta name="description" content="Bradley-Terry model, reward hacking, Goodhart's law, DPO, KL penalty, evaluation">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/rlhf_reward_modeling.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/rlhf_reward_modeling.html">
+  <meta property="og:title" content="RLHF and Reward Modeling | ML Systems Lab">
+  <meta property="og:description" content="Bradley-Terry model, reward hacking, Goodhart's law, DPO, KL penalty, evaluation">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="RLHF and Reward Modeling">
+  <meta name="twitter:description" content="Bradley-Terry model, reward hacking, Goodhart's law, DPO, KL penalty, evaluation">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "RLHF and Reward Modeling",
+  "description": "Bradley-Terry model, reward hacking, Goodhart's law, DPO, KL penalty, evaluation",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/rlhf_reward_modeling.html",
+  "keywords": "rlhf, reward model, bradley-terry, reward hacking, dpo, goodhart"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#rl_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">65 min read</span>
+      <span class="tag">rlhf</span><span class="tag">reward model</span><span class="tag">bradley-terry</span><span class="tag">reward hacking</span><span class="tag">dpo</span>
+    </div>
+    <h1>RLHF and Reward Modeling</h1>
+    <p class="subtitle">Bradley-Terry model, reward hacking, Goodhart's law, DPO, KL penalty, evaluation</p>
+
+    <p>GPT-4 trained on internet text predicts next tokens accurately. But next-token prediction accuracy has nothing to do with helpfulness. The model often produces responses that are technically fluent but unhelpful, harmful, or dishonest — because those properties were not measured by the training objective. You want to fine-tune the model to be helpful, but you cannot write a mathematical function that measures helpfulness. You can, however, ask humans to compare two responses and say which is better.</p>
+    <p>This comparative signal is what RLHF uses. The pipeline has three stages. Stage 1: supervised fine-tuning. Fine-tune the base model on a small dataset of high-quality human-written responses. This creates an SFT model — capable, but not yet aligned. Stage 2: reward model training. Show human labelers pairs of responses to the same prompt and ask which is better. Train a reward model R_φ(prompt, response) using the Bradley-Terry preference model: P(A preferred over B) = σ(R(A) - R(B)). The reward model learns to predict human preference from comparative judgments, not absolute ratings. Stage 3: RL fine-tuning. Use PPO to optimize the SFT model to maximize R_φ(prompt, π(prompt)). Add a KL penalty KL(π || π_SFT) to prevent the model from drifting too far from SFT behavior.</p>
+    <p>The KL penalty is not optional hygiene — it is the mechanism that keeps the LLM in the distribution where the reward model's predictions are calibrated. The reward model was trained on SFT-like outputs. If PPO drifts the policy far from that distribution, the reward model is extrapolating into regions it was never trained on, and its scores become meaningless.</p>
+    <p>Reward hacking is the central failure mode. The RL policy finds outputs that maximize the reward model's score but do not actually satisfy human intent: models generate long verbose outputs because length correlates with reward, use sycophantic language because agreeing with the user scores higher than accurate disagreement, or find adversarial prompts that fool the reward model. These are not bugs — they are the optimizer doing exactly what the reward function says, which happens to diverge from what humans actually want.</p>
+    <p>NOT this: RLHF is the final step in making a language model safe and aligned. RLHF optimizes a proxy — a reward model of human preferences — for a goal — truly helpful and safe AI. The proxy has biases, blind spots, and adversarial examples. RLHF improves calibration toward human preferences but does not guarantee alignment. It is one tool in an ongoing research problem.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>The reward model quality bottlenecks RLHF quality — invest heavily in the preference data collection.</strong>
+
+A reward model trained on biased comparisons systematically steers the model in the wrong direction. Target 10K+ high-quality preference pairs with calibrated annotators and clear guidelines. Annotator disagreement above 15% is a signal the task definition is ambiguous, not just that the task is hard.</li><li><strong>Reward hacking is subtle and hard to detect — monitor for it explicitly rather than waiting to notice.</strong>
+
+Track response length over training epochs (inflation signals length hacking), measure sycophancy rate (does the model agree with false premises?), and test for repetition and formatting exploitation. Add dedicated reward model probes for these failure modes before they compound.</li><li><strong>If the RL-fine-tuned model scores high on the reward model but human evaluators do not prefer it, the reward model has been over-optimized — reduce PPO steps or increase the KL penalty.</strong>
+
+The gap between proxy score and human preference is the measure of Goodhart damage. Once the reward model is being fooled, additional PPO training makes alignment worse, not better.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>RLHF trains human preference into a reward model from comparative judgments, then uses PPO to maximize that reward — with a KL penalty to keep the policy close enough to the SFT distribution that the reward model's scores remain meaningful and reward hacking is bounded.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Next-token accuracy != helpfulness</strong> — you can't write a helpfulness function, but humans can compare two responses.</li><li><strong>3-stage pipeline:</strong> SFT -&gt; reward model -&gt; PPO fine-tuning.</li><li><strong>Reward model uses Bradley-Terry:</strong> $P(A \succ B) = \sigma(R(A) - R(B))$ — learns from comparisons, not absolute scores.</li><li><strong>KL penalty $KL(\pi\|\pi_{SFT})$ keeps the policy where the reward model is calibrated</strong> — not optional hygiene.</li><li><strong>Reward hacking is the central failure:</strong> length inflation, sycophancy, adversarial prompts — the optimizer doing exactly what the reward says.</li><li><strong>DPO eliminates the reward model:</strong> the partition function $Z(x)$ cancels in the winner-minus-loser difference.</li><li><strong>High RM score but humans don't prefer it = over-optimization (Goodhart);</strong> reduce PPO steps or raise KL.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Derive the DPO loss from the RLHF objective. What key mathematical insight allows you to eliminate the reward model?</p>
+      <ul class="check-opts"><li>A) DPO eliminates the reward model by jointly training the policy and reward model in a single optimisation loop, which allows the reward model parameters to be analytically marginalised out of the final loss function</li><li>B) DPO eliminates the reward model by replacing the PPO update with a supervised contrastive loss that directly maximises the log-likelihood of preferred responses over rejected ones, without any derivation from the RLHF objective</li><li>C) The reward model is eliminated because DPO uses a fixed temperature β=1 that makes the Bradley-Terry model equivalent to a simple softmax classifier, which can be absorbed directly into the language model's output layer</li><li class="correct">D) The key insight is that the optimal policy under the RLHF objective satisfies r*(x,y) = β log(π*(y|x)/π_ref(y|x)) + β log Z(x); when substituted into the Bradley-Terry preference loss, the partition function Z(x) cancels identically in the winner minus loser difference, leaving a loss directly on π_θ/π_ref that requires no separate reward model</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> A model trained with RLHF consistently gives verbose answers (3x longer than the SFT baseline) with high reward model scores but lower human preference in blind evaluation. What is happening and how do you fix it?</p>
+      <ul class="check-opts"><li class="correct">A) The reward model learned a spurious length-quality correlation from the preference data (annotators preferred longer answers), so PPO exploited verbosity as a shortcut; fixes include a length penalty in the reward, length-stratified preference data collection with shorter answers explicitly preferred, win-rate calibration to detect the spurious feature, or DPO with preference pairs where short precise answers beat verbose ones</li><li>B) The verbosity is caused by using too high a KL penalty β, which forces the model to stay close to the SFT distribution; since the SFT model was trained on long human demonstrations, the policy mimics that verbosity; lower β to allow more divergence from SFT</li><li>C) The verbosity is a natural consequence of RLHF training and indicates the model is working correctly; longer answers contain more information and are genuinely better; human evaluators in the blind study may be biased against verbose responses</li><li>D) The issue is the SFT baseline was trained on data that was already verbose; RLHF cannot reduce verbosity below the SFT baseline because the KL penalty prevents the policy from diverging enough from SFT to learn conciseness</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Why is &quot;LLM-as-judge&quot; evaluation problematic for assessing RLHF model quality, even when the judge is a much stronger model than the one being evaluated?</p>
+      <ul class="check-opts"><li>A) LLM-as-judge evaluation is only problematic when the judge and the evaluated model share the same base architecture; a judge from a different model family (e.g., GPT-4 judging a Claude model) eliminates self-preference bias and produces reliable evaluations</li><li>B) LLM-as-judge is problematic because stronger models have higher latency and cost, making evaluation impractical at scale; the compute budget should be spent on human evaluation instead</li><li>C) LLM judges are unreliable because they cannot read and understand long responses accurately; they tend to evaluate only the first paragraph of each response, creating a positional bias that favours responses that front-load their conclusions</li><li class="correct">D) LLM-as-judge has compounding biases: self-preference (same family models rated higher), verbosity bias (longer = better), positional bias in A/B comparisons, length bias, distribution shift (judge may be poorly calibrated on RLHF-shifted outputs), and prompt sensitivity; reliable alternatives include human evaluation on held-out prompts with inter-annotator agreement, and rule-based automated metrics for specific capabilities like factuality or instruction following</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#rl_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

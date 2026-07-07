@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SimCLR | ML Systems Lab</title>
+  <meta name="description" content="Data augmentation, projection head, large-batch contrastive learning, SimCLRv2">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/simclr.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/simclr.html">
+  <meta property="og:title" content="SimCLR | ML Systems Lab">
+  <meta property="og:description" content="Data augmentation, projection head, large-batch contrastive learning, SimCLRv2">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SimCLR">
+  <meta name="twitter:description" content="Data augmentation, projection head, large-batch contrastive learning, SimCLRv2">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "SimCLR",
+  "description": "Data augmentation, projection head, large-batch contrastive learning, SimCLRv2",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/simclr.html",
+  "keywords": "SimCLR, contrastive learning, data augmentation, projection head, batch size"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#self_supervised_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">45 min read</span>
+      <span class="tag">SimCLR</span><span class="tag">contrastive learning</span><span class="tag">data augmentation</span><span class="tag">projection head</span><span class="tag">batch size</span>
+    </div>
+    <h1>SimCLR</h1>
+    <p class="subtitle">Data augmentation, projection head, large-batch contrastive learning, SimCLRv2</p>
+
+    <p>A batch of 256 images becomes 512 views. Each image passes through ResNet-50, producing a 2048-dimensional representation h. A 2-layer MLP maps h to a 128-dimensional z. NT-Xent loss runs on z. At fine-tuning time, the MLP is thrown away and a linear layer attaches to h. That discard is the central puzzle of SimCLR: something you train and then immediately delete turns out to be critical.</p>
+    <p>The key to SimCLR's performance is not the architecture and not the loss—it is the augmentation composition. Random crop plus color jitter plus Gaussian blur forces the encoder to produce representations invariant to photometric and spatial perturbations. Ablate random cropping and accuracy drops sharply. Ablate color jitter and it drops further. Two random crops of the same 224×224 image can overlap by as little as 10% of the original area; the encoder must recognize the same object despite seeing drastically different local regions, which means texture matching fails and semantic encoding becomes necessary.</p>
+    <p>The projection head protects the encoder from a destructive force. Contrastive loss pressures representations to be invariant to augmentations. Color invariance is useful for the pretext task but harmful downstream—it destroys medical imaging features, defeats texture-based recognition, and removes color cues. The head takes this damage so the encoder does not have to. The encoder retains more information precisely because the loss does not reach it directly. This is not a subtle effect: removing the head and applying NT-Xent directly to h drops linear probe accuracy by roughly 10 percentage points.</p>
+    <p>SimCLR's practical bottleneck is the large-batch dependency. Good performance requires 4,096–8,192 batch size, which demands 32+ TPU cores for 100 epochs. This is not a fundamental constraint of contrastive SSL—it is an artifact of using in-batch negatives. MoCo solves this structurally with a momentum encoder and queue, decoupling negative count from batch size entirely.</p>
+    <p><strong>NOT this.</strong> &quot;You need a huge batch size for contrastive learning&quot; is wrong—MoCo achieves the same representation quality at batch size 256 on a single 8-GPU machine. SimCLR's large-batch requirement is specific to the in-batch negative design, not to contrastive learning as a paradigm. Understanding why MoCo's queue solves the problem that SimCLR's batch size created is the conceptual test.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>SimCLR's augmentation pipeline is the performance driver: random crop plus color jitter plus Gaussian blur encodes a prior about which invariances representations should have, and ablating any one transformation drops accuracy sharply.</strong>
+
+Two random crops of the same 224×224 image can overlap by as little as 10% of the original area. The encoder must recognize object identity across drastically different local regions—local texture matching fails, semantic encoding becomes necessary. The augmentation strategy is not a hyperparameter; it is a design decision about what information the representation should preserve.</li><li><strong>The projection head is always discarded at fine-tuning because it absorbs the destructive invariances that contrastive loss imposes—color, crop, blur—protecting the encoder from losing information useful downstream.</strong>
+
+NT-Xent pressures representations to be augmentation-invariant. Color invariance helps the pretext task but destroys features that matter downstream. The head takes this damage; the encoder does not. Remove the head and apply loss directly to the encoder output: linear probe accuracy drops ~10 points because the encoder is now forced to discard the same information.</li><li><strong>SimCLR's TPU-scale requirement is an artifact of in-batch negatives, not a fundamental property of contrastive SSL—MoCo's queue decouples negative count from batch size and achieves comparable performance at batch size 256.</strong>
+
+At N=256, each anchor has 510 negatives; the InfoNCE bound is loose. At N=4096 each anchor has 8190 negatives; the bound tightens and the encoder learns finer distinctions. MoCo achieves 65,536 negatives without a large batch by maintaining a queue of keys from a slowly-updating momentum encoder. Same information-theoretic benefit, fraction of the compute cost.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>SimCLR's projection head is discarded at fine-tuning not out of habit but because the contrastive loss forces it to absorb destructive invariances—color, crop, blur—that would harm downstream tasks if they reached the encoder. The augmentation strategy is the actual performance driver: random crop forces semantic encoding by making local texture matching geometrically impossible, and this principle—not the architecture—is what transfers to new domains.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Augmentation is the performance driver:</strong> random crop + color jitter + Gaussian blur; ablate any one and accuracy drops sharply.</li><li><strong>Random crop forces semantics:</strong> two crops can overlap ~10% → texture matching fails, object identity must be encoded.</li><li><strong>Projection head is discarded at fine-tuning</strong> — it absorbs destructive invariances (color/crop/blur); apply NT-Xent directly to the encoder and linear probe drops ~10 points.</li><li><strong>Encoder (2048-dim) stays rich; head (128-dim) compresses to augmentation-invariant.</strong></li><li><strong>Large-batch need (4,096–8,192) is an in-batch-negatives artifact, not fundamental</strong> — MoCo hits the same quality at batch 256 on 8 GPUs.</li><li><strong>Domain matters:</strong> in medical imaging color is diagnostic, so color jitter hurts — pick invariances the domain allows.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> If you remove the projection head and apply the NT-Xent loss directly to the encoder`s output, what happens and why?</p>
+      <ul class="check-opts"><li>A) Performance improves because the encoder directly optimizes the contrastive objective without the bottleneck of the head</li><li class="correct">B) Linear probe accuracy drops ~10% because the contrastive loss now directly pressures the encoder output to be augmentation-invariant, forcing it to discard useful downstream information (color, texture) that the head would otherwise absorb</li><li>C) There is no effect — the projection head is purely for dimensionality reduction and does not affect what the encoder learns</li><li>D) The model collapses without the projection head because the encoder cannot produce L2-normalized outputs</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> A team replicates SimCLR on a proprietary medical image dataset and finds it does not benefit from the color jitter augmentation that is critical for ImageNet. Explain why and what they should do instead.</p>
+      <ul class="check-opts"><li>A) Color jitter is always beneficial — the team must have implemented it incorrectly</li><li class="correct">B) In medical imaging, color (staining intensity, Hounsfield units) is diagnostically meaningful rather than spurious; forcing color invariance discards useful signal; use domain-appropriate augmentations like elastic deformations, intensity perturbation within clinical ranges, and random region masking instead</li><li>C) Color jitter should be increased in medical imaging because medical images have lower color diversity than natural images</li><li>D) Medical imaging SSL requires supervised pretraining first; SimCLR augmentations are designed for natural images and cannot transfer</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Explain the information bottleneck interpretation of the projection head. What information does each layer encode?</p>
+      <ul class="check-opts"><li>A) The encoder encodes augmentation-invariant features; the projection head adds back augmentation-sensitive features for the contrastive loss</li><li class="correct">B) The encoder (2048-dim) retains rich spatial, semantic, color, and texture features; the projection head (128-dim) compresses to augmentation-invariant representations, discarding color and exact position; discarding the head at fine-tuning recovers the richer encoder representation that retains augmentation-sensitive information useful downstream</li><li>C) Both the encoder and projection head encode identical information — the dimensionality reduction is purely for computational efficiency</li><li>D) The projection head encodes class-discriminative features; the encoder retains low-level features; the head is discarded because class information is already encoded in the encoder weights after training</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#self_supervised_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

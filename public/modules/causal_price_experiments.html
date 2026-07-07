@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Causal Price Experiments: A/B, Geo &amp; Switchback | ML Systems Lab</title>
+  <meta name="description" content="Why you almost never A/B test price at the user level, and how geo holdouts and switchback designs recover an unbiased elasticity">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/causal_price_experiments.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/causal_price_experiments.html">
+  <meta property="og:title" content="Causal Price Experiments: A/B, Geo &amp; Switchback | ML Systems Lab">
+  <meta property="og:description" content="Why you almost never A/B test price at the user level, and how geo holdouts and switchback designs recover an unbiased elasticity">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Causal Price Experiments: A/B, Geo &amp; Switchback">
+  <meta name="twitter:description" content="Why you almost never A/B test price at the user level, and how geo holdouts and switchback designs recover an unbiased elasticity">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Causal Price Experiments: A/B, Geo & Switchback",
+  "description": "Why you almost never A/B test price at the user level, and how geo holdouts and switchback designs recover an unbiased elasticity",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/causal_price_experiments.html",
+  "keywords": "Pricing, experimentation, geo experiments, switchback"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#pricing_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">28 min read</span>
+      <span class="tag">Pricing</span><span class="tag">experimentation</span><span class="tag">geo experiments</span><span class="tag">switchback</span>
+    </div>
+    <h1>Causal Price Experiments: A/B, Geo &amp; Switchback</h1>
+    <p class="subtitle">Why you almost never A/B test price at the user level, and how geo holdouts and switchback designs recover an unbiased elasticity</p>
+
+    <p>You cannot read elasticity off observational data — so you experiment. But price is the one variable where the obvious experiment, randomizing the price *per user*, is usually the wrong design: it is often unfair or illegal, and even when allowed it <strong>leaks and interferes</strong>, quietly breaking the assumptions that make an A/B test valid.</p>
+    <hr>
+    <p><strong>Per-user price randomization violates SUTVA and invites legal risk.</strong> A clean A/B test assumes the Stable Unit Treatment Value Assumption: one user's treatment doesn't affect another's outcome. Prices break this because <strong>users talk and compare</strong> — showing person A $9 and person B $12 for the identical item means B can see A's price, feel cheated, and change behavior (churn, screenshot, complain). The treatment leaks across units. On top of the interference, charging different people different prices for the same good is a fairness and often a <strong>legal</strong> problem. So the per-user RCT is frequently off the table before the stats even matter.</p>
+    <hr>
+    <p><strong>Geo experiments randomize the market, not the person.</strong> Assign whole cities/regions to treatment (new price) or control (old price), then read the effect with <strong>difference-in-differences</strong> (compare the treated-vs-control change over the pre/post window) or <strong>synthetic control</strong> (build a weighted combination of control cities that tracks the treated city pre-period, then measure the divergence after). Everyone *in* a market sees the same price, so it's fair and consistent; randomization is at the market level, so there are usually few units — the key limitation is statistical power and needing good matched controls.</p>
+    <hr>
+    <p><strong>Switchback designs randomize price over *time* — the fix for strong interference.</strong> In a marketplace where supply and demand slosh across the whole system (rideshare, food delivery), even a geo split interferes: a price change in one zone spills into neighbors. Switchbacks turn the *entire market's* price on and off in short randomized time windows (e.g., 30-minute blocks alternating high/low) and compare outcomes across windows. Because the whole market is treated at once, cross-unit spillover within a window is absorbed rather than contaminating a control group. The catch is temporal autocorrelation (adjacent windows aren't independent) and carryover, which the analysis must account for. Whichever design you pick, the payoff is the same: an <strong>unbiased %ΔQ / %ΔP</strong> — the causal elasticity that observational data could never give you.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Per-user price randomization breaks SUTVA and courts legal risk.</strong> Users compare prices, so one person's price affects another's behavior (interference/leakage) — and charging different people different prices for the same item is a fairness and often legal problem. The obvious A/B test is usually off the table.</li><li><strong>Geo experiments randomize markets, not people.</strong> Assign whole cities to old vs new price; everyone in a market sees the same price (fair, consistent). Read the effect with difference-in-differences or synthetic control. The trade-off is few randomization units → limited power and a need for well-matched controls.</li><li><strong>Switchback designs randomize price over time to handle strong interference.</strong> In marketplaces where supply/demand slosh system-wide, even geo splits spill over. Turning the whole market's price high/low in short randomized windows absorbs within-window spillover; the cost is temporal autocorrelation and carryover the analysis must model.</li><li><strong>All three designs exist to recover an unbiased %ΔQ / %ΔP.</strong> The experiment is how you get the causal elasticity that observational data cannot: it forces price to vary for reasons unrelated to demand, breaking the endogeneity that biases naive regressions.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>You experiment on price because observational data is endogenous, but the naive per-user A/B test usually fails twice: it violates SUTVA (users compare prices, so treatments leak) and it is unfair/illegal to charge different people different prices for the same good. Geo experiments randomize whole markets (read via diff-in-diff or synthetic control) and switchback designs randomize the whole market's price over short time windows (the fix for system-wide marketplace spillover) — both trading power/complexity for an unbiased causal elasticity.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Per-user price randomization usually fails twice:</strong> it breaks SUTVA (users compare prices → treatment leaks across users) and it is unfair/illegal to charge different people different prices for the same good. Off the table before the stats matter.</li><li><strong>Geo experiments randomize markets, not people:</strong> whole cities get old vs new price (fair, consistent within a market). Read via difference-in-differences or synthetic control. Cost: few units → limited power, needs matched controls.</li><li><strong>Switchback designs randomize price over time:</strong> flip the whole market high/low in short randomized windows; within-window system-wide spillover is absorbed rather than contaminating a control group. Cost: temporal autocorrelation and carryover to model.</li><li><strong>Choose by interference:</strong> clean markets → geo; strong system-wide marketplace spillover → switchback. Per-user only in the rare fair/legal, no-comparison case.</li><li><strong>The payoff is a causal %ΔQ / %ΔP:</strong> the experiment forces price to move independently of demand, breaking the endogeneity that biases observational elasticity.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Why is randomizing price at the individual-user level usually a poor experimental design for measuring elasticity?</p>
+      <ul class="check-opts"><li>A) It has too few units to reach statistical significance.</li><li class="correct">B) It violates SUTVA because users compare prices — one person's price affects another's behavior (interference/leakage) — and it is a fairness/legal problem to charge different people different prices for the same item. Both issues undermine the test before the statistics matter.</li><li>C) Individual randomization biases the estimate toward zero via measurement error.</li><li>D) It works fine; per-user price A/B tests are the industry standard.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> A rideshare company wants to test a fare change but worries that a change in one zone spills into neighboring zones. Which design best isolates the effect?</p>
+      <ul class="check-opts"><li>A) A per-user A/B test, since randomizing individuals removes all spillover.</li><li class="correct">B) A switchback design: turn the whole market's price high/low in short randomized time windows and compare across windows, so system-wide supply/demand spillover is absorbed within each window rather than contaminating a separate control group. Account for temporal autocorrelation and carryover.</li><li>C) A simple pre/post comparison in one city, which needs no control at all.</li><li>D) A geo experiment is the only valid design; switchbacks cannot measure fare effects.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> In a geo price experiment, why is synthetic control often used to read out the effect rather than a raw treated-minus-control difference?</p>
+      <ul class="check-opts"><li>A) Synthetic control eliminates the need for randomization entirely.</li><li class="correct">B) With few markets, no single control city matches the treated city well; synthetic control builds a weighted combination of control cities that tracks the treated city's pre-period trend, giving a credible counterfactual to measure post-period divergence against.</li><li>C) Synthetic control converts the geo experiment into a per-user test, raising power.</li><li>D) It removes temporal autocorrelation, which is the main threat in geo designs.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#pricing_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Activation Functions | ML Systems Lab</title>
+  <meta name="description" content="Sigmoid, tanh, ReLU, Leaky ReLU, GELU, Swish — saturation and dying neurons">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/activations.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/activations.html">
+  <meta property="og:title" content="Activation Functions | ML Systems Lab">
+  <meta property="og:description" content="Sigmoid, tanh, ReLU, Leaky ReLU, GELU, Swish — saturation and dying neurons">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Activation Functions">
+  <meta name="twitter:description" content="Sigmoid, tanh, ReLU, Leaky ReLU, GELU, Swish — saturation and dying neurons">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Activation Functions",
+  "description": "Sigmoid, tanh, ReLU, Leaky ReLU, GELU, Swish — saturation and dying neurons",
+  "proficiencyLevel": "Foundational",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/activations.html",
+  "keywords": "activations, ReLU, GELU, vanishing gradients"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#dl_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Foundational</span>
+      <span class="read-time">29 min read</span>
+      <span class="tag">activations</span><span class="tag">ReLU</span><span class="tag">GELU</span><span class="tag">vanishing gradients</span>
+    </div>
+    <h1>Activation Functions</h1>
+    <p class="subtitle">Sigmoid, tanh, ReLU, Leaky ReLU, GELU, Swish — saturation and dying neurons</p>
+
+    <p>Build a 10-layer network, train it for an hour, and watch the loss barely budge. Peek inside: the last couple of layers are learning — their weights are moving — but the first eight are *frozen*. Now change one thing: swap the sigmoid activation for <strong>ReLU</strong>, retrain from scratch, and the whole thing comes alive — the loss drops, every layer updates, it converges. Nothing else changed. That single swap is one of the reasons deep learning became possible, and it comes down to one piece of arithmetic.</p>
+    <p>The <strong>activation function</strong> is the little non-linear squash applied after each layer — it is what lets a network bend space instead of only drawing straight lines. But it also decides whether the learning signal survives the trip backward through the layers.</p>
+    <hr>
+    <h3>Sigmoid: the gradient killer</h3>
+    <p>A sigmoid's slope is at most 0.25, and usually much smaller. Backprop multiplies that slope in at every layer, so through 10 sigmoid layers the signal reaching the first layer is scaled by about 0.25¹⁰ — around one in a million; through 20, essentially zero. The early layers stop learning, and a 10-layer network effectively acts like a 2-layer one. The fix is an activation whose slope does *not* shrink the signal — that is <strong>ReLU</strong> (just &quot;keep positives, zero out negatives&quot;), whose slope is a clean 1 for any active neuron. It passes the signal through untouched, and that is what finally made 20-plus-layer networks trainable.</p>
+    <hr>
+    <h3>ReLU's own flaw: the dead neuron</h3>
+    <p>ReLU brought a new failure. If a neuron's input is negative for *every* training example — often after one too-large gradient step shoves its bias down — then ReLU outputs zero, its slope is zero, and it receives zero gradient *forever*. It is dead and never comes back. <strong>Leaky ReLU</strong> fixes this cheaply by giving negatives a tiny slope (0.01) instead of a flat zero, so a trickle of gradient always flows. <strong>GELU</strong> goes further with a smooth curve that never fully flatlines and softly gates each input by how positive it is — which is why BERT, GPT, and essentially every modern Transformer use it.</p>
+    <hr>
+    <h3>One rule that is not up for debate: the output activation</h3>
+    <p>All of the above is about the *hidden* layers. The *output* activation is a correctness constraint, not a preference. For a probability (binary classification) you must use <strong>sigmoid</strong>; for a set of class probabilities, <strong>softmax</strong>; for a plain number (regression), no activation at all. Putting a ReLU on the output of a classifier would let it emit nonsensical values — you match the output activation to what the answer is supposed to *be*, and that is a rule, not a tuning knob.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Use GELU for hidden layers in Transformers and deep MLPs; use ReLU when compute is tight and the network is shallow (under 6 layers); use sigmoid only as an output activation for binary classification.</strong> The output activation is a semantic constraint, not a tuning choice: sigmoid for probability outputs, softmax for multi-class distributions, linear for regression targets. Changing the output activation to match the loss function is correctness, not experimentation.</li><li><strong>The production trap: dying ReLU neurons that silently reduce model capacity.</strong> A network trained with too-high a learning rate can have 20–30% of its ReLU neurons permanently dead after the first epoch — those neurons contribute nothing to any forward pass but still consume memory and compute. You will not notice from the loss curve alone. Monitor the fraction of dead neurons by checking how many neurons produce exactly zero output across a validation batch. Anything above 10% is a capacity problem. Fix: lower the learning rate, use a better initialiser, or switch to Leaky ReLU or GELU.</li><li><strong>The diagnostic: gradient norm ratio between first and last hidden layer.</strong> Log the mean absolute gradient at each layer's weights after one backward pass. In a healthy 10-layer network with ReLU, the ratio should be within 10× between first and last layer. With sigmoid, expect 10⁶× or more — every layer of sigmoid compresses gradients by 4×. If you see a large ratio with ReLU, dying neurons are the cause: neurons with zero output contribute zero gradient to the weight update for that layer.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>The history of activation functions is a sequence of gradient-flow fixes: sigmoid killed gradients through saturation, ReLU fixed saturation but introduced dead neurons, GELU eliminated both — and each step unlocked a new generation of viable network depth.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Activation = the non-linear squash applied after each layer:</strong> it's what lets a network bend space instead of only drawing straight lines — and it also decides whether the learning signal survives the trip backward through the layers. The whole history of activations is a sequence of gradient-flow fixes.</li><li><strong>Sigmoid kills gradients:</strong> its slope is at most 0.25, multiplied in at every layer → ~0.25¹⁰ ≈ one-in-a-million after 10 layers. The early layers stop learning and a 10-layer network effectively acts like a 2-layer one — the reason deep nets were so fragile before ReLU.</li><li><strong>ReLU fixes saturation:</strong> &quot;keep positives, zero out negatives&quot; gives a clean slope of 1 for any active neuron, so it passes the backward signal through untouched — the single change that finally made 20-plus-layer networks trainable.</li><li><strong>ReLU's own flaw — the dead neuron:</strong> if a neuron's input is negative for *every* example (often after one too-large gradient step shoves its bias down), it outputs 0, its slope is 0, and it receives zero gradient *forever* — dead and never recovers. Leaky ReLU gives negatives a tiny slope (0.01) so a trickle of gradient always flows; GELU does the same with a smooth curve.</li><li><strong>GELU:</strong> a smooth curve that never fully flatlines and softly gates each input by how positive it is (weighting it by its probability of being positive under N(0,1)) — which is why BERT, GPT, and essentially every modern Transformer use it over ReLU.</li><li><strong>Output activation is a correctness constraint, not a preference:</strong> all of the above is about *hidden* layers. For the output you must match the answer's type — sigmoid for a probability (binary), softmax for a class distribution, and no activation at all for a plain regression number. Putting ReLU on a classifier's output is a bug, not a tuning choice.</li><li><strong>Diagnostic — dead-neuron fraction:</strong> count how many neurons output exactly zero across a validation batch; above 10% is a capacity problem (a too-high LR can kill 20–30% of ReLUs in one epoch, invisible on the loss curve). Fix by lowering the learning rate, using a better initialiser, or switching to Leaky ReLU / GELU.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> ReLU has a 'dying ReLU' problem. Explain mechanistically what causes it and what Leaky ReLU does to fix it.</p>
+      <ul class="check-opts"><li>A) Dying ReLU occurs because ReLU saturates at large positive values — when pre-activations are very large, ReLU outputs the maximum representable float value and gradients become numerically unstable. Leaky ReLU prevents this by capping positive outputs at a maximum value, preventing the saturation that causes the dying problem.</li><li class="correct">B) Dying ReLU: if a neuron's pre-activation aᵢ = Wᵢx + bᵢ is negative for all training inputs, ReLU(aᵢ) = 0. Backward: ∂ReLU/∂a = 0 when a &lt; 0. The gradient ∂L/∂Wᵢ = (∂L/∂hᵢ) × 0 = 0 for all samples. Weights receive zero gradient and never update — the neuron is permanently dead. This can happen after a large gradient step that pushes bᵢ very negative, or if weights initialise such that aᵢ &lt; 0 for all training points. The proportion of dead neurons increases as learning rate increases. Leaky ReLU: f(a) = max(αa, a) where α = 0.01. For a &lt; 0: f'(a) = α = 0.01 — small but nonzero gradient. Dead neurons can still receive a (small) gradient signal and potentially recover. Empirically, Leaky ReLU reduces the fraction of dead neurons but does not eliminate it entirely if α is very small.</li><li>C) Dying ReLU is caused by the vanishing gradient problem propagating backward through the network — neurons in early layers die because the gradient from the output layer has vanished by the time it reaches them, leaving their weights with zero updates. Leaky ReLU fixes this by amplifying the gradient for all neurons, ensuring even early layer neurons receive sufficient gradient signal.</li><li>D) Dying ReLU occurs because ReLU compresses both positive and negative pre-activations toward zero (similar to sigmoid saturation) — neurons with near-zero pre-activations have gradient ≈ 0. Leaky ReLU avoids this by adding a linear region that maintains gradient of 1 for both large positive and large negative pre-activations, preventing compression.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Why does GELU outperform ReLU in transformer architectures? What is its mathematical definition?</p>
+      <ul class="check-opts"><li>A) GELU uses a piecewise-quadratic approximation: GELU(x) = x² for x &gt; 0 and 0 for x ≤ 0. This quadratic positive region provides stronger gradient signal than ReLU's linear positive region, allowing transformer attention layers to learn more complex nonlinear relationships. The smooth transition at x=0 also prevents the dead neuron problem that ReLU causes.</li><li>B) GELU is defined as GELU(x) = x · sigmoid(x), making it equivalent to Swish. It outperforms ReLU in transformers because it maintains a gradient everywhere — the sigmoid component ensures no hard zero for negative inputs. Transformers benefit from Swish-style activations because their bidirectional attention requires smooth gradient flow in both positive and negative directions.</li><li class="correct">C) GELU(x) = x · Φ(x) where Φ(x) is the CDF of the standard normal. Approximation: GELU(x) ≈ 0.5x(1 + tanh(√(2/π)(x + 0.044715x³))). GELU is a smooth, non-monotonic function: for large positive x, GELU ≈ x; for large negative x, GELU ≈ 0; near 0, GELU has a smooth transition with a slight dip below zero around x ≈ -0.17. GELU outperforms ReLU in transformers for: (1) Smoothness — no hard kink at x=0, which may improve gradient flow and optimisation landscape. (2) Probabilistic interpretation — GELU weights each input by its 'probability of being positive' under N(0,1), acting as a soft gating mechanism. (3) The slight negative region provides a form of regularisation (can produce negative activations). Empirically: BERT, GPT-2, and subsequent models consistently achieve lower perplexity with GELU than with ReLU.</li><li>D) GELU is defined as GELU(x) = max(0, x) + min(0, 0.01x), identical to Leaky ReLU with α=0.01. The renaming to GELU is specific to the transformer context where the same function is applied in a different architectural position (after layer normalisation rather than after a dense layer), which changes its effective behaviour relative to standard Leaky ReLU usage.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Softmax output sums to 1 and is non-negative, so it is a valid probability distribution. However, neural networks trained with softmax are overconfident. Why?</p>
+      <ul class="check-opts"><li class="correct">A) Softmax produces a probability distribution but does not guarantee calibration — the values are not necessarily probabilities of correctness. During training, cross-entropy loss drives the network to make the softmax output as close as possible to a one-hot distribution (1 for the correct class, 0 for others). To make softmax output approach 1 for the correct class, the model increases the logit for the correct class relative to others: softmax(z_correct/T)→1 as z_correct→∞. The model learns to output large logit gaps, making softmax outputs near 0 or 1. In test data: the model applies the same large-logit behavior even for inputs it has never seen or that are ambiguous. The high-confidence prediction comes from the trained weight magnitudes, not from actual reliability. Fix: temperature scaling, label smoothing (which prevents the model from driving logits to infinity during training).</li><li>B) Softmax overconfidence is a mathematical property of the softmax function itself: regardless of input logit values, softmax always amplifies the highest logit toward 1 and suppresses others toward 0. This amplification is proportional to the number of classes — more classes means more overconfidence — which is why overconfidence is primarily a problem in large multi-class settings rather than binary classification.</li><li>C) Softmax is overconfident because it produces a uniform distribution by default (when all logits are equal) rather than a maximally uncertain distribution (uniform should represent maximum uncertainty). Networks are trained to move away from the default uniform distribution, but this movement inherently pushes toward overconfidence because cross-entropy only penalises underconfidence in the correct class, not overconfidence in wrong classes.</li><li>D) Overconfidence arises because softmax normalises raw logits that can take any real value — the normalisation step itself introduces confidence that is not present in the underlying logits. A logit of 5 represents a very uncertain prediction, but after softmax normalisation it becomes 0.99 probability. The true confidence information is in the logit magnitudes, not the normalised probabilities.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#dl_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

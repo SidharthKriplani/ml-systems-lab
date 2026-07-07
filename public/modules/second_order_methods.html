@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Second-Order Methods | ML Systems Lab</title>
+  <meta name="description" content="Newton's method, why the Hessian is impractical, and when L-BFGS is used.">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/second_order_methods.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/second_order_methods.html">
+  <meta property="og:title" content="Second-Order Methods | ML Systems Lab">
+  <meta property="og:description" content="Newton's method, why the Hessian is impractical, and when L-BFGS is used.">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Second-Order Methods">
+  <meta name="twitter:description" content="Newton's method, why the Hessian is impractical, and when L-BFGS is used.">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Second-Order Methods",
+  "description": "Newton's method, why the Hessian is impractical, and when L-BFGS is used.",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/second_order_methods.html",
+  "keywords": "newton, hessian, l-bfgs, curvature, quasi-newton"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#optimization_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">45 min read</span>
+      <span class="tag">newton</span><span class="tag">hessian</span><span class="tag">l-bfgs</span><span class="tag">curvature</span><span class="tag">quasi-newton</span>
+    </div>
+    <h1>Second-Order Methods</h1>
+    <p class="subtitle">Newton's method, why the Hessian is impractical, and when L-BFGS is used.</p>
+
+    <p>Gradient descent uses only the first derivative of the loss: which direction is downhill from here. It does not know how steep that downhill is or how quickly it levels off — it cannot see curvature.</p>
+    <p>This is why the learning rate must be tuned so carefully: it is a proxy for curvature information the optimizer does not have. Newton's method has that information. The Hessian H is the matrix of second derivatives — it encodes the curvature in every parameter direction simultaneously. Newton's step θ ← θ − H^{-1}·∇L is the exact minimizer of the local quadratic approximation of the loss. For a perfectly quadratic loss, one Newton step lands at the minimum. For smooth strongly convex functions, convergence is quadratic — the error roughly halves the number of its decimal places at each step.</p>
+    <p>The fundamental problem is scale: the Hessian of a network with n parameters is n×n. For n=10^6, the Hessian has 10^12 entries requiring 4 TB of memory, and inverting it requires 10^18 floating-point operations. At the compute capacity of a modern GPU, one Newton step takes over a day — before any training has occurred. Quasi-Newton methods approximate the inverse Hessian from gradient information across recent steps rather than computing it exactly. L-BFGS builds a low-rank approximation using the last m gradient pairs at O(mn) cost. It is the right tool when n is small enough (below roughly 10^5 parameters) and full-batch gradient evaluation is affordable — scientific computing, physics simulations, hyperparameter optimization inner loops. At the scale of deep learning, it is not used in production because the cost of even an approximate Hessian exceeds the cost of many gradient steps.</p>
+    <hr>
+    <h3>Raw Newton overshoots: line search and trust regions</h3>
+    <p>The clean &quot;one step to the minimum&quot; story only holds for a *truly quadratic* loss. Real losses aren't quadratic, so the full Newton step H⁻¹∇L can badly <strong>overshoot</strong> — the local quadratic model is only accurate near the current point. So practical second-order methods never take the raw step. They add a <strong>line search</strong> (compute the Newton *direction*, then search along it for a step length that actually decreases the loss) or a <strong>trust region</strong> (only trust the quadratic model within a bounded radius, and cap the step to that region, shrinking it when the model proves inaccurate). Newton without damping or line search is a good way to diverge.</p>
+    <hr>
+    <h3>The Hessian can point the wrong way</h3>
+    <p>Newton's method assumes the Hessian is <strong>positive definite</strong> (the loss curves *up* in every direction, a bowl). In the non-convex landscapes of deep nets that's often false: at a <strong>saddle point</strong> the Hessian is <strong>indefinite</strong> (curves up some ways, down others). Then H⁻¹∇L can point *toward* the saddle or even a local *maximum* rather than a minimum — the raw Newton step actively moves the wrong way. This is why non-convex second-order methods must <strong>modify</strong> the Hessian (add damping λI to make it positive definite, or flip negative curvature) before inverting. Raw Newton is a convex-optimisation tool.</p>
+    <hr>
+    <h3>What ML actually uses: Gauss-Newton and the Fisher</h3>
+    <p>Because the true Hessian is expensive *and* can be indefinite, ML rarely uses it directly. Two better-behaved substitutes dominate. The <strong>Gauss-Newton</strong> matrix approximates the Hessian using only first-derivative (Jacobian) information and is <strong>guaranteed positive semi-definite</strong> — no wrong-way steps. The closely-related <strong>Fisher information matrix</strong> underlies <strong>natural gradient</strong> methods (and K-FAC), which precondition the gradient by the Fisher instead of the Hessian. Both give curvature-aware steps without the true Hessian's indefiniteness — which is why &quot;second-order in ML&quot; almost always means Gauss-Newton / Fisher / natural-gradient, not literal Newton.</p>
+    <hr>
+    <h3>Where L-BFGS shines — and where it doesn't</h3>
+    <p>Sharpen the use-map. L-BFGS is excellent for <strong>small, deterministic, full-batch</strong> objectives: classical ML models (logistic regression, CRFs), scientific/physics optimisation, style-transfer-style problems, and small full-batch fine-tuning where you can afford exact gradients. It is a <strong>poor</strong> fit for <strong>noisy, large-scale mini-batch</strong> deep learning, because batch noise corrupts the gradient-difference curvature estimates (they can go indefinite and point uphill), and full-batch gradients over millions of examples cost as much as many SGD steps. Rule of thumb: L-BFGS when the gradient is exact and parameters are modest; SGD/Adam when the gradient is a noisy mini-batch estimate.</p>
+    <hr>
+    <h3>Adam is not literally diagonal Newton</h3>
+    <p>A common over-statement: &quot;Adam is a diagonal approximation to the Hessian.&quot; Be precise — Adam divides by the running <strong>second moment of the *gradients</strong>* (E[g²]), which is *not* the diagonal of the Hessian (that would be second *derivatives*). It's better described as <strong>curvature-*like* adaptive preconditioning</strong>: dividing by the gradient's recent magnitude gives each parameter its own effective step, which *behaves* somewhat like inverse-curvature scaling but isn't derived from the Hessian. Useful intuition, imprecise identity — worth stating correctly in an interview.</p>
+    <hr>
+    <h3>The optimizer decision tree (and a precision note)</h3>
+    <p>Choosing among them comes down to a few axes: dataset/parameter size, gradient noise (batch vs full-batch), and objective stability. <strong>AdamW</strong> — the default for large, noisy, mini-batch deep learning (transformers, most nets). <strong>SGD+momentum</strong> — competitive/better in well-tuned vision/CNN settings. <strong>L-BFGS</strong> — small-to-medium, full-batch, deterministic objectives and classical ML. <strong>Newton / IRLS</strong> — very small, convex, well-conditioned problems (IRLS is Newton's method for logistic-regression-style GLMs). <strong>K-FAC / natural gradient</strong> — when the per-step second-order gain outweighs 2–5× overhead, mostly research. (One precision footnote: the &quot;4 TB Hessian&quot; figure assumes float32; in float64 it's 8 TB — the exact number depends on precision, but the point that it's hopeless stands either way.)</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Gradient descent's learning rate problem exists because the optimizer has no curvature information.</strong> The optimal step size in any direction is 1/(curvature in that direction). Without the Hessian, you must guess this — which is why the learning rate is the most sensitive hyperparameter. Newton's method eliminates this problem by computing the step directly from curvature: θ ← θ − H^{-1}∇L.</li><li><strong>Newton's step solves the local quadratic approximation exactly.</strong> If the loss were truly quadratic (a bowl), one Newton step would land at the minimum regardless of starting point. For non-quadratic losses, Newton's method requires iteration but converges quadratically: after reaching the basin of the minimum, each step roughly doubles the number of correct digits. Gradient descent converges linearly — it takes a fixed fraction off the remaining error at each step, never accelerating.</li><li><strong>The Hessian is impractical at modern network sizes.</strong> For n parameters, H has n² entries. At n=10^6: 10^12 float32 values = 4 TB of memory. Inverting H costs O(n^3) = 10^18 operations. A GPU computing at 10^14 FLOP/s would need 10,000 seconds per training step — compared to milliseconds for a gradient step. The theoretical optimality of Newton's method is irrelevant when the method is computationally infeasible.</li><li><strong>L-BFGS circumvents full Hessian storage by approximating H^{-1} from the last m gradient difference pairs.</strong> At each step it records δ_t = θ_t − θ_{t-1} and γ_t = ∇L_t − ∇L_{t-1}. The two-loop recursion computes H^{-1}·∇L using only these pairs, at O(mn) cost per step. With m=10–30, this is a 1000–100,000x reduction in cost over exact Newton. The catch: L-BFGS requires full-batch gradients to build a reliable curvature model. Mini-batch gradient differences are corrupted by batch noise, making the approximation unreliable.</li><li><strong>L-BFGS requiring full-batch gradients is the barrier to large-scale deep learning use.</strong> At N=1M training examples, one L-BFGS step requires evaluating the gradient over all 1M examples — as expensive as many SGD steps. Additionally, the curvature model is only valid for a region around the current parameters; for large networks navigating a complex loss landscape, the approximation degrades quickly. L-BFGS is used in deep learning only for small fine-tuning tasks, some meta-learning inner loops, and classical ML models with few parameters.</li><li><strong>K-FAC approximates the Fisher information matrix using the Kronecker product structure of neural network layers.</strong> Each layer's curvature block is approximated as a Kronecker product of two much smaller matrices, reducing memory from O(n²) to O(n). K-FAC has achieved faster convergence per step than SGD on ResNets, but each step costs 2–5x more in wall-clock time — and the benefit does not reliably outweigh the overhead in production training pipelines.</li><li><strong>Deep learning uses first-order methods not because they are theoretically superior but because they are the only methods that scale.</strong> Second-order information would improve every training step. The problem is that gathering and using that information costs more than taking many first-order steps in its place. Adam is a cheap *curvature-like* adaptive preconditioner — dividing by the running second moment of the *gradients* (not the Hessian's diagonal, which would be second derivatives) — and that is the best practical approximation available at million-parameter scale.</li><li><strong>Raw Newton is unsafe on real losses — it needs damping, and ML prefers PSD substitutes.</strong> The full step H⁻¹∇L overshoots on non-quadratic losses (fix with line search or a trust region) and, at a saddle point where the Hessian is indefinite, can point toward a saddle or maximum (fix by adding λI to make it positive definite). This is why ML rarely uses the true Hessian: Gauss-Newton and the Fisher information matrix are positive-semi-definite by construction, so natural-gradient / K-FAC methods get curvature-aware steps without the wrong-way risk.</li><li><strong>Pick the optimizer by scale, noise, and stability.</strong> AdamW for large noisy mini-batch deep learning; SGD+momentum for well-tuned vision/CNNs; L-BFGS for small-to-medium full-batch deterministic objectives and classical ML (it fails on noisy mini-batches because gradient-difference curvature goes indefinite); Newton/IRLS for tiny convex problems (IRLS is Newton for GLMs); K-FAC/natural gradient only when the per-step gain beats the 2–5× overhead. The &quot;4 TB Hessian&quot; figure is float32 — float64 doubles it, but either way it's infeasible.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Second-order methods would give optimal steps if you could afford them. Newton's method converges in a handful of steps for well-conditioned problems. The Hessian for a million-parameter network requires 4 TB of memory and 10^18 operations to invert — which is why we use gradient descent. Every adaptive optimizer from AdaGrad to Adam is a practical approximation to diagonal Newton steps, not a theoretical preference for first-order methods.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Plain GD sees no curvature at all:</strong> it only knows the slope, so the learning rate is a single hand-tuned proxy for the per-direction curvature it can't measure — the root of the ravine/condition-number problem.</li><li><strong>Newton's step uses the full curvature:</strong> θ ← θ − H⁻¹∇L exactly minimizes the local quadratic and gives *quadratic* convergence (the number of correct digits doubles each step) on well-conditioned problems — a handful of steps to converge.</li><li><strong>But the Hessian is infeasible at scale:</strong> for n=10⁶ parameters it has 10¹² entries (~4 TB in float32) and costs O(n³) ≈ 10¹⁸ operations to invert — which is exactly why we settle for gradient descent and cheap curvature approximations.</li><li><strong>L-BFGS approximates H⁻¹</strong> from just the last m gradient/step pairs at O(mn) cost — excellent for small-to-medium, *full-batch*, deterministic objectives (classical ML), but it fails on noisy mini-batches because the gradient-difference curvature estimate goes indefinite.</li><li><strong>Raw Newton is actually unsafe on real losses:</strong> it overshoots non-quadratic bowls (needs a line search or trust region) and steps the *wrong way* at indefinite saddle points where some curvatures are negative (needs damping) — you can't just apply the formula.</li><li><strong>ML uses PSD substitutes instead:</strong> Gauss-Newton and the Fisher matrix (natural gradient, K-FAC) are always positive semi-definite, so they're curvature-aware without ever taking a wrong-way step — use them only when the per-step gain beats the 2–5× overhead.</li><li><strong>Adam is *not* diagonal Newton:</strong> it divides by the gradients' second moment E[g²], not the Hessian's diagonal — curvature-*like* preconditioning that helps in practice, but don't claim it as the true second-order identity in an interview.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> A 3-parameter loss function has Hessian H = [[4, 0, 0], [0, 1, 0], [0, 0, 100]] and gradient g = [2, 1, 10]. Compare the gradient descent step (α=0.01) to the Newton step. What does this reveal about condition number?</p>
+      <ul class="check-opts"><li>`A) Gradient descent step: δ = −α·g = [−0.02, −0.01, −0.1]. Newton step: δ = −H^{-1}·g = [−0.5, −1.0, −0.1]. In the first parameter (curvature 4), Newton takes 0.5 while gradient descent takes 0.02. In the second parameter (curvature 1), Newton takes 1.0 while gradient descent takes 0.01. In the third parameter (curvature 100), both take 0.1. The condition number is 100/1 = 100. Gradient descent with one learning rate cannot simultaneously be optimal for curvature 1 (wants α=1) and curvature 100 (wants α=0.01). Newton's method automatically adapts the step to each direction's curvature.`</li><li>`B) Gradient descent step: δ = [−0.02, −0.01, −0.1]. Newton step: δ = [−0.5, −0.5, −0.5] — Newton's method takes equal steps in all directions because it normalizes by the trace of the Hessian divided by 3, computing an isotropic approximate curvature. The condition number measures how far this approximation is from the true per-direction curvature, and a condition number of 100 means Newton's approximation is 100x off from gradient descent in the worst-case direction.`</li><li>`C) Gradient descent and Newton's method produce identical steps when the Hessian is diagonal. For diagonal H, H^{-1}·g = [g_1/H_11, g_2/H_22, g_3/H_33] = [0.5, 1.0, 0.1], which matches gradient descent step [0.02, 0.01, 0.1] scaled by 1/α. The condition number of 100 indicates that Newton's method takes 100x larger steps than gradient descent, which is why Newton's method converges faster but may require line search to remain stable.`</li><li>`D) Newton's step is always identical to the gradient descent step when α = 1/max_eigenvalue. For H with max eigenvalue 100, α=0.01 makes gradient descent take the same step as Newton only for the third parameter (curvature 100). The condition number 100/1 = 100 quantifies how many learning rates would be needed to match Newton in all directions simultaneously — with condition number 100, you need 100 different learning rates to achieve Newton-like behavior with gradient descent.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Why does L-BFGS require full-batch gradients rather than mini-batch gradients? What happens when you try to use mini-batch gradients with L-BFGS?</p>
+      <ul class="check-opts"><li>`A) L-BFGS builds its Hessian approximation from gradient differences: γ_t = ∇L(θ_t) − ∇L(θ_{t-1}). With full-batch gradients, γ_t accurately reflects how the true gradient changes as parameters move — the Hessian approximation captures real curvature information. With mini-batch gradients, γ_t = ∇L_{B_t}(θ_t) − ∇L_{B_{t-1}}(θ_{t-1}) where B_t and B_{t-1} are different batches. The difference reflects both the change in gradient from the parameter update AND the different data batches — these are confounded. The Hessian approximation is corrupted by batch noise. In practice, stochastic L-BFGS updates are erratic, the curvature estimates become indefinite (non-positive-definite), and the quasi-Newton direction can point uphill. The algorithm degenerates to something worse than SGD.`</li><li>`B) L-BFGS requires full-batch gradients because its line search procedure is only valid when the loss function is deterministic. With mini-batch gradients, the same parameter vector θ gives different gradient values at each step, violating the Armijo sufficient decrease condition that L-BFGS's line search relies on. The line search either never terminates or accepts steps that increase the true loss. Full-batch gradients make the loss deterministic at each θ, allowing the line search to function correctly.`</li><li>`C) L-BFGS requires full-batch gradients only for convergence guarantees, not for correctness. With mini-batch gradients, L-BFGS converges to a neighborhood of the minimum rather than the minimum itself, with the neighborhood size proportional to the gradient variance. Practitioners often use L-BFGS with large mini-batches (B=10,000+) to get a good trade-off between speed and convergence quality. The degradation to worse-than-SGD only occurs at very small batch sizes.`</li><li>`D) L-BFGS cannot use mini-batch gradients because its memory buffer stores gradient vectors rather than gradient differences. With B=32 mini-batches, each stored gradient vector reflects a random subset of 32 examples, and the m=20 stored vectors represent 20 different random subsets. The Hessian approximation built from these vectors reflects the curvature of 20 different loss functions simultaneously, not the curvature of the true loss function, producing an incoherent direction that diverges.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> K-FAC achieves faster convergence in steps than SGD for ResNet training. Yet practitioners still use SGD for production ImageNet training. Why?</p>
+      <ul class="check-opts"><li>`A) Practitioners use SGD because K-FAC's faster per-step convergence only applies to the first 50% of training. In later training, SGD's implicit regularization from gradient noise helps it find flatter minima, while K-FAC's precise updates converge to the nearest local minimum. The total training time for both methods is similar, and SGD produces better test accuracy in the second half of training, making it the preferred choice.`</li><li>`B) K-FAC is not actually faster in practice — the faster convergence is observed in controlled experiments with specific small datasets where the Fisher matrix approximation is accurate. On ImageNet's diverse and noisy gradient signal, K-FAC's Fisher estimate drifts rapidly and converges at the same rate as SGD. The step-count advantage disappears at N=1.2M examples because the Fisher information estimate is never stable enough to be useful.`</li><li>`C) The reason practitioners use SGD is regulatory: ImageNet competition rules and academic benchmark standards require SGD with specific hyperparameters for comparison purposes. K-FAC produces better results technically but cannot be used in standard benchmarks because it is not a fair comparison with published SGD baselines. This is an institutional constraint, not a technical one.`</li><li>`D) K-FAC requires computing and inverting per-layer Fisher information matrices at each step. Even with the Kronecker factorization trick, this adds 2-5x computational cost per step compared to SGD. If K-FAC converges in 2x fewer steps but each step costs 4x more, total wall-clock time is 2x longer. Additionally: (1) K-FAC has more hyperparameters (damping coefficient, update frequency of Fisher factors, inversion frequency) that are sensitive and dataset-dependent — practitioners have decades of intuition for SGD hyperparameters, not for K-FAC. (2) K-FAC's Fisher matrix is re-estimated periodically but drifts as parameters change between updates — this approximation error accumulates. (3) The flat minima argument: SGD's noise finds better-generalizing solutions; K-FAC's more accurate updates may find sharper minima. The generalization gap may be worse even at matched training loss.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> You implement raw Newton's method (θ ← θ − H⁻¹∇L) on a non-convex neural-net loss and it sometimes moves the loss *up* or diverges. What are the two core reasons, and how are they addressed?</p>
+      <ul class="check-opts"><li>`A) Newton's method is simply buggy on GPUs due to floating-point error in the matrix inverse; use float64 and it will always descend.`</li><li>`B) Two reasons. (1) On a non-quadratic loss the local quadratic model is only accurate nearby, so the full step overshoots — addressed with a line search along the Newton direction or a trust region that caps the step. (2) At a saddle point the Hessian is indefinite (not positive definite), so H⁻¹∇L can point toward the saddle or a maximum — addressed by modifying the Hessian (add λI / damping to make it positive definite, or use the positive-semi-definite Gauss-Newton or Fisher matrix instead). Raw undamped Newton is a convex-optimisation tool.`</li><li>`C) It diverges only because the learning rate is missing; multiply the Newton step by a small α like 0.001 and it behaves exactly like gradient descent, which never moves the loss up.`</li><li>`D) The problem is that the Hessian is too large to invert, so the inverse is approximate and points randomly; the fix is to use the exact inverse, after which Newton always descends on any loss.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> An interviewer says &quot;Adam is basically a diagonal approximation to Newton's method.&quot; How would you make that statement more precise?</p>
+      <ul class="check-opts"><li>`A) It's exactly right — Adam computes the diagonal of the Hessian (the second derivatives) and divides the gradient by it, which is literally diagonal Newton.`</li><li>`B) It's a useful intuition but imprecise. Adam divides by the running second moment of the *gradients* (E[g²]), which is not the diagonal of the Hessian — that would require actual second derivatives. It's better called curvature-*like* adaptive preconditioning: scaling each parameter's step by its recent gradient magnitude behaves somewhat like inverse-curvature scaling, but it isn't derived from the Hessian. True second-order info in ML comes from Gauss-Newton or the Fisher matrix.`</li><li>`C) It's completely wrong — Adam has nothing to do with curvature; it only implements momentum, and any resemblance to second-order methods is coincidental.`</li><li>`D) It's precise as stated because the Fisher information matrix equals the Hessian for all losses, and Adam's second moment estimates the Fisher diagonal exactly.`</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#optimization_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

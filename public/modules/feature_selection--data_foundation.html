@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feature Selection | ML Systems Lab</title>
+  <meta name="description" content="Reduce dimensionality to fight overfitting, cut training cost, and build models that generalize.">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/feature_selection--data_foundation.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/feature_selection--data_foundation.html">
+  <meta property="og:title" content="Feature Selection | ML Systems Lab">
+  <meta property="og:description" content="Reduce dimensionality to fight overfitting, cut training cost, and build models that generalize.">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Feature Selection">
+  <meta name="twitter:description" content="Reduce dimensionality to fight overfitting, cut training cost, and build models that generalize.">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Feature Selection",
+  "description": "Reduce dimensionality to fight overfitting, cut training cost, and build models that generalize.",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/feature_selection--data_foundation.html",
+  "keywords": "feature selection, curse of dimensionality, LASSO, RFE, mutual information, multicollinearity"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#data_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">45 min read</span>
+      <span class="tag">feature selection</span><span class="tag">curse of dimensionality</span><span class="tag">LASSO</span><span class="tag">RFE</span><span class="tag">mutual information</span>
+    </div>
+    <h1>Feature Selection</h1>
+    <p class="subtitle">Reduce dimensionality to fight overfitting, cut training cost, and build models that generalize.</p>
+
+    <p>A data warehouse dumps <strong>500 features</strong> into your fraud model — transaction details, user behaviour, device fingerprints, merchant info, and hundreds of derived aggregates. Training on all 500 takes four hours, inference crawls at 900ms per request, and the serving box runs out of memory. You need to get under 50 features. But *which* 50?</p>
+    <p>There are four families of ways to choose, trading speed for smartness — and one trap that snares all of them.</p>
+    <hr>
+    <h3>Filter methods — score each feature alone</h3>
+    <p>The fastest approach ranks each feature on its own — how strongly does it relate to fraud, by correlation or mutual information — and keeps the top ones. Cheap and parallel. The catch is baked in: it judges features *one at a time*, so it will happily throw away two features that are useless alone but powerful *together*. Interactions are invisible to it.</p>
+    <hr>
+    <h3>Wrapper methods — let the model judge</h3>
+    <p>These actually train the model on different feature subsets and keep whichever scores best. <strong>Recursive feature elimination</strong> trains on all 500, drops the single weakest, retrains, and repeats down to 50 — around 450 model fits, but every decision is *model-aware*, so it can tell when two features are redundant given the others.</p>
+    <hr>
+    <h3>Embedded methods — select while training</h3>
+    <p><strong>L1 (Lasso)</strong> regularisation drives useless features' weights to exactly zero *during* fitting, so selection and training happen in one run — no separate step. (Ridge/L2 shrinks weights toward zero but almost never all the way, so it does not select.)</p>
+    <hr>
+    <h3>Permutation importance — the honest referee</h3>
+    <p>Train any model, then *shuffle* one feature's values and see how much performance drops on held-out data. A big drop means the feature was pulling its weight; no drop means it was redundant or noise. This is the method to trust, because it measures real, out-of-sample usefulness — and it catches a nasty trap that tree-based importance falls into. That trap: a tree's built-in importance is biased toward *high-cardinality* columns. Feed it a `customer_id` and it will &quot;split&quot; on individual IDs to memorise the training set, scoring the ID as hugely important — while on new customers it is worth exactly nothing. Permutation importance on validation data exposes this instantly (shuffling the ID changes nothing), where the tree's own numbers are fooled.</p>
+    <hr>
+    <h3>The trap that snares all four: correlation is not importance</h3>
+    <p>It is tempting to say &quot;these two features are 95% correlated, drop one.&quot; Resist it. Two correlated features can still both help — keeping both can make the model steadier when one of them drifts at serving time. Correlation describes the *inputs*; it does not tell you the *predictive contribution*. So decide what to keep by measuring importance directly — permutation importance on validation data — not by eyeballing a correlation matrix.</p>
+    <hr>
+    <h3>Selection is preprocessing — do it inside the CV folds</h3>
+    <p>The trap that quietly inflates every method above: <strong>feature selection uses the labels, so it leaks if done on the full data before splitting.</strong> Rank features by correlation/MI/importance across the whole dataset, then cross-validate, and the &quot;held-out&quot; folds already helped choose the features — your score is optimistic. Selection (filter, wrapper, embedded, RFE, target-based) must run <strong>inside each CV fold</strong> on the training portion only, exactly like a scaler or encoder. Wrap it in a Pipeline so it can't be skipped.</p>
+    <hr>
+    <h3>Is the selection stable?</h3>
+    <p>A feature set from one run can be a fluke of that sample. <strong>Stability selection</strong> reruns the choice across bootstraps or folds and keeps only the features chosen *consistently* — a feature that appears in 90% of runs is real signal, one that flickers in and out is noise dressed as signal. This matters most with <strong>correlated features</strong>, where which one gets picked can flip run to run (Lasso is notorious for this). Stable selections generalise; one-run selections often don't.</p>
+    <hr>
+    <h3>Caveats on the tools you'll reach for</h3>
+    <p><strong>Mutual information</strong> catches non-linear dependence (unlike correlation) but as usually applied is <strong>univariate</strong> (misses features that only matter in combination) and is noisy and <strong>sample-size/binning sensitive</strong>. <strong>SHAP</strong> attributes predictions well but <strong>splits credit among correlated features</strong> (a truly important feature can look weak because its twin absorbed the attribution) and shows what the *model* used, <strong>not causation</strong> — high SHAP ≠ causal. <strong>Embedded tree selection</strong> isn't just &quot;use importance&quot;: the tree's own knobs (`min_child_weight`, `gamma`, `max_depth`, `colsample_bytree`, feature subsampling) *are* a form of regularised selection, pruning weak features during training. Read all of them with the correlation caveat.</p>
+    <hr>
+    <h3>Selection versus reduction, and the cost you forget</h3>
+    <p>Keep <strong>feature selection</strong> (keeps a subset of your *original, explainable* features) separate from <strong>dimensionality reduction</strong> like PCA (invents new latent components — compact but no longer interpretable). Choose selection when you must explain the model, reduction when you only need fewer numbers. And selection isn't only about accuracy: weigh the <strong>operational cost</strong> of each feature — its serving <strong>latency</strong>, <strong>freshness</strong> requirements, <strong>compute</strong> cost, upstream <strong>data-dependency risk</strong>, and whether it's even <strong>available</strong> at prediction time. A feature that adds 0.1% AUC but depends on a flaky third-party call at serving time is usually not worth keeping. Finally, on <strong>redundancy</strong>: correlated features can actually *help stability* (keep both as insurance against drift), but genuine <strong>duplicates, proxies, and leaky features</strong> should still be removed.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Use L1 regularization as your default feature selector for linear models — it zeros vestigial weights during training, giving you feature selection for free without a separate selection step.</strong>
+
+For the 500-feature fraud dataset: L1 on a logistic regression will drive most of the 450+ redundant or noisy features to exactly zero during a single training run. You get a sparse model with a built-in audit trail of which features are nonzero. No separate RFE pipeline needed.</li><li><strong>Trap: computing feature importance on the training set. Training-set importance reflects memorization; use a held-out validation set or permutation importance on the same evaluation data used for model selection.</strong>
+
+A tree trained on 500 features will assign high importance to features it memorized in training — including unique identifiers and near-duplicate features. Permutation importance on validation data measures whether shuffling the feature actually hurts predictive performance on unseen examples. These two rankings regularly disagree by large margins.</li><li><strong>Diagnostic: if removing the bottom 50% of features by importance hurts validation AUC by less than 0.5 points, those features were vestigial. If it hurts by more than 2 points, the importance ranking is likely wrong — the features are correlated and removing one changed others' apparent importance.</strong>
+
+This threshold test takes one additional evaluation run and tells you whether you have a clean selection or a collinearity problem. If the second case applies, switch from marginal importance ranking to permutation importance or SHAP values, which account for feature interactions.</li><li><strong>Selection uses the labels, so do it inside the CV folds and check stability.</strong>
+
+Ranking features on the full dataset before splitting leaks the held-out folds into the choice and inflates your score — run filter/wrapper/embedded/target-based selection inside each fold on the training portion only, in a Pipeline. And a one-run selection can be a fluke: stability selection reruns the choice across bootstraps/folds and keeps features chosen consistently (in ~90% of runs), which matters most with correlated features where the pick flips run to run (Lasso especially).</li><li><strong>Read the tools' caveats, separate selection from PCA, and weigh operational cost.</strong>
+
+Mutual information catches non-linearity but is univariate and sample-size-sensitive; SHAP splits credit among correlated features and shows model use, not causation; tree knobs (min_child_weight, gamma, colsample) are themselves regularised selection. Keep feature selection (subset of original, explainable features) separate from PCA (new uninterpretable components). And select on more than accuracy — serving latency, freshness, compute, data-dependency risk, and availability at prediction time all count; correlated features can aid stability, but duplicates/proxies/leaky features must go.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Feature selection is a bias-variance decision: too many features and the model memorizes noise; too few and it misses signal — and because correlation is not importance, the right ranking method matters as much as the threshold.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Feature selection is a bias-variance decision:</strong> too many features memorize noise, too few miss signal — and correlation is not importance.</li><li><strong>L1 as the default selector for linear models:</strong> it zeros vestigial weights during training — selection for free, with a sparse audit trail.</li><li><strong>Importance on train reflects memorization</strong> (IDs, near-duplicates rank high) — use held-out permutation importance instead.</li><li><strong>Threshold test:</strong> dropping the bottom 50% costs &lt;0.5 AUC → vestigial; &gt;2 AUC → collinearity is fooling the ranking, switch to permutation/SHAP.</li><li><strong>Selection uses the labels</strong> — run it inside CV folds on the training portion, and check stability across bootstraps (Lasso picks flip run to run).</li><li><strong>Tool caveats:</strong> mutual info is univariate + sample-sensitive; SHAP splits credit among correlated features and shows use, not causation.</li><li><strong>Select on more than accuracy:</strong> serving latency, freshness, compute, data-dependency risk, availability — a flaky 0.1%-AUC feature isn't worth it.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You filter features by Pearson correlation with target and retain only top 20. Your model performs worse than with all 100 features. What most likely went wrong?</p>
+      <ul class="check-opts"><li>A) Retaining only 20 features likely dropped several highly correlated features that were providing redundant but stabilizing signal; ridge regression on all 100 features would have been a better choice than filter-based selection.</li><li>B) The top-20 Pearson correlation cutoff was too aggressive — retaining the top 40 features would have preserved enough signal for good performance while still reducing overfitting.</li><li class="correct">C) Pearson correlation measures linear dependence between a single feature and target IN ISOLATION. Features with weak marginal correlation may still be essential when combined with other features (capture interaction effects). Additionally, non-linear relationships (quadratic, U-shaped) have near-zero Pearson correlation but strong predictive value. Filter methods cannot detect this — they evaluate features one at a time. Fix: use mutual information (captures non-linear dependence) or wrapper methods (evaluate feature subsets via model performance, capturing interactions).</li><li>D) The model overfit to the 20 selected features because the smaller feature set gave gradient descent fewer parameters to regularize, causing the model to memorize the training data more aggressively.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Why does LASSO shrink some coefficients to exactly zero while Ridge (L2) rarely does?</p>
+      <ul class="check-opts"><li>A) LASSO uses a higher default regularization strength than Ridge, causing more aggressive shrinkage; if Ridge were tuned to the same regularization strength as LASSO, it would also produce exact zeros.</li><li class="correct">B) Geometry of constraint region differs between L1 and L2. L2 adds penalty proportional to sum of squared coefficients — a smooth sphere in coefficient space. The optimization minimum almost never hits a coordinate axis, so coefficients pushed toward (but not to) zero. L1 adds penalty proportional to sum of absolute values — a diamond in coefficient space. Corners of the diamond lie on coordinate axes (where one or more coefficients are exactly zero). The optimization landscape intersects the L1 constraint region AT THESE CORNERS, producing exact zeros. Elastic Net (mixture of L1+L2) provides sparsity while stabilizing selection among correlated features.</li><li>C) LASSO uses coordinate descent optimization while Ridge uses gradient descent; coordinate descent naturally produces exact zeros as a numerical artifact of updating one coefficient at a time.</li><li>D) LASSO applies the penalty to the raw coefficient values while Ridge applies it to the squared coefficients; squaring small values makes them even smaller, which paradoxically prevents Ridge from reaching zero.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> You compute feature importance from a gradient boosted tree and find that 'customer_id' is the second most important feature. What has happened?</p>
+      <ul class="check-opts"><li>A) Customer IDs encode temporal information — older customers have lower IDs and newer customers have higher IDs — so the model has learned to use ID as a proxy for customer tenure, which is a legitimate predictive signal.</li><li>B) The gradient boosted tree has discovered that certain customer IDs belong to VIP customers with systematically different behavior; this is a valid signal that should be preserved as a categorical feature.</li><li>C) The feature importance computation has a bug — customer_id should have been excluded from the feature matrix before training, and the impurity reduction scores for all other features need to be recomputed without it.</li><li class="correct">D) Tree feature importance (total impurity reduction across splits) is BIASED TOWARD HIGH-CARDINALITY FEATURES. &quot;customer_id&quot; is a unique identifier with cardinality = number of rows. The tree can use it to memorize training set: split on customer_id = 12345 perfectly isolates a single customer's rows → large impurity reductions at training time but generalizes to ZERO for new customers. Fix: remove identifier columns before training, or use PERMUTATION IMPORTANCE (measures actual performance degradation from shuffling feature rather than training-time impurity reduction).</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> A linear model has two features that are 0.97 correlated (e.g., 'height_cm' and 'height_inches'). What specific failure mode does this cause and fix?</p>
+      <ul class="check-opts"><li class="correct">A) Two near-identical features → model can achieve same prediction by assigning large positive weight to one and large negative to other — infinitely many coefficient combinations produce identical predictions. Normal equations become numerically near-singular: small data changes cause large coefficient swings. VIF likely &gt;50. Symptoms: unstable coefficients across bootstrap samples, inability to interpret which feature is &quot;important,&quot; coefficients may flip sign. Fix: (1) drop one correlated feature; (2) apply Ridge regression (L2 stabilizes under collinearity); (3) create single combined feature (average or principal component).</li><li>B) Two near-identical features cause the model to double-count the effect of height, producing coefficients that are half the true value for each feature. The fix is to divide both coefficients by 2 after fitting.</li><li>C) Near-perfect correlation between features causes gradient descent to oscillate during training, requiring a much smaller learning rate to converge. The fix is to reduce the learning rate by a factor proportional to the correlation coefficient.</li><li>D) Two features with 0.97 correlation will produce a VIF of exactly 33.3 (= 1/(1-0.97²)); if this is below 50, multicollinearity is not severe enough to require intervention.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> You rank all 500 features by mutual information with the target on the full dataset, keep the top 50, then run cross-validation and report the CV score. Why is that score optimistic?</p>
+      <ul class="check-opts"><li>A) It isn't — mutual information is unsupervised, so ranking on the full dataset can't leak.</li><li class="correct">B) Feature selection used the labels of the whole dataset, including the rows that later serve as CV validation folds — so those held-out folds already helped choose which features exist, and the model is partly evaluated on data that influenced its feature set. That's selection leakage, and it inflates the CV score. The fix is to run the MI ranking (and any target-based selection) inside each CV fold on the training portion only, e.g. inside a Pipeline.</li><li>C) The score is optimistic only because 50 features is too few; keeping 100 would remove the bias.</li><li>D) Mutual information is the wrong metric; switching to correlation and keeping the same procedure removes the optimism.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q6.</strong> A feature adds a genuine but tiny 0.1% AUC improvement, but computing it at serving time requires a call to a flaky third-party API with 300ms latency. A colleague insists on keeping it &quot;because it helps.&quot; How should you frame the decision?</p>
+      <ul class="check-opts"><li>A) Keep it — any feature that improves validation AUC should always be included regardless of anything else.</li><li class="correct">B) Feature selection isn't only about accuracy: weigh each feature's operational cost — serving latency, freshness, compute, upstream data-dependency risk, and availability at prediction time. A 0.1% AUC gain that adds 300ms and a flaky external dependency usually fails a cost-benefit test, since the dependency risk and latency can hurt the product far more than the tiny accuracy gain helps. Drop it unless the 0.1% is business-critical and the dependency can be made reliable.</li><li>C) Keep it but cache the API response for a week, which eliminates all dependency and freshness concerns for any feature.</li><li>D) The decision is purely statistical — if the 0.1% gain is significant at p&lt;0.05, keep the feature; operational cost is not a modeling concern.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#data_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

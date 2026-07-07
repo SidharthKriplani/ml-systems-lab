@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DAGs and Confounding | ML Systems Lab</title>
+  <meta name="description" content="Directed acyclic graphs, backdoor criterion, collider bias, d-separation">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/dag_confounding.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/dag_confounding.html">
+  <meta property="og:title" content="DAGs and Confounding | ML Systems Lab">
+  <meta property="og:description" content="Directed acyclic graphs, backdoor criterion, collider bias, d-separation">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="DAGs and Confounding">
+  <meta name="twitter:description" content="Directed acyclic graphs, backdoor criterion, collider bias, d-separation">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "DAGs and Confounding",
+  "description": "Directed acyclic graphs, backdoor criterion, collider bias, d-separation",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/dag_confounding.html",
+  "keywords": "DAG, confounding, collider bias, d-separation"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#causal_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">32 min read</span>
+      <span class="tag">DAG</span><span class="tag">confounding</span><span class="tag">collider bias</span><span class="tag">d-separation</span>
+    </div>
+    <h1>DAGs and Confounding</h1>
+    <p class="subtitle">Directed acyclic graphs, backdoor criterion, collider bias, d-separation</p>
+
+    <p>You observe that coffee drinkers have higher lung cancer rates. Should coffee drinkers stop? Probably not — because smoking confounds the relationship. Smokers both drink more coffee and have higher cancer rates. The Coffee → Cancer association is a spurious path through the confounder Smoking. Without a way to represent this structure, you would add &quot;coffee drinker&quot; as a control variable in a cancer regression and be satisfied. But whether that controls for the right thing, blocks the wrong thing, or introduces new bias depends entirely on the causal structure — and the regression output will not tell you which case you are in.</p>
+    <p>Directed Acyclic Graphs (DAGs) make that structure explicit. Nodes are variables. Directed arrows are direct causal claims. Three path types determine which variables to condition on. A confounding path runs Smoking → Coffee AND Smoking → Cancer: the backdoor path Treatment ← Confounder → Outcome. It must be blocked — condition on the confounder. A mediation path runs Treatment → Mediator → Outcome: the indirect causal channel. Conditioning on the mediator blocks the path you want to measure and underestimates the total effect. A collider is caused by both Treatment and Outcome: A → Collider ← B. Conditioning on the collider opens a spurious path between A and B that was never causally present. Classic collider bias: conditioning on hospitalization (collider of disease severity and treatment choice) creates spurious correlation between diseases and treatments within the hospitalized sample.</p>
+    <p>The backdoor criterion formalizes this. If you can find a set Z that blocks all backdoor paths (confounding paths from Treatment to Outcome) without blocking any frontdoor paths and without containing any descendant of Treatment, you can identify the causal effect by conditioning on Z.</p>
+    <p>What this is not: &quot;control for everything.&quot; Controlling for a collider creates bias where none existed before. Controlling for a mediator blocks the path you want to measure. Controlling for a post-treatment variable that is a descendant of Treatment can do both. You need the DAG to know which variables to condition on and which to leave out. A &quot;control for everything&quot; strategy without a DAG is a systematic way to introduce collider bias while believing you removed confounding.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Draw the DAG before selecting control variables in any regression.</strong> Identify the backdoor paths (confounding) and frontdoor paths (mediation). Control for variables that block backdoor paths. Do not control for mediators or colliders. A 10-minute DAG review prevents hours of debugging spurious results — the regression will run and return a coefficient regardless of whether the conditioning set was correct.</li><li><strong>Trap: conditioning on a descendant of treatment (post-treatment variable).</strong> A variable caused by the treatment is either a mediator or a collider of treatment and a confounder. Including it as a control blocks the causal path you want (mediator) or opens a spurious path you do not want (collider). Always verify whether each control variable was determined before or after treatment assignment, and trace its arrows in the DAG before including it.</li><li><strong>Diagnostic: if adding a control variable changes your effect estimate by more than 50%, either you have added a strong confounder (expected, good) or introduced collider bias (bad).</strong> Draw the DAG and determine which case applies. If the variable has arrows coming in from both Treatment and Outcome, it is a collider — removing it from the control set is the correct response, not refining the model further.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Which variables you control for is a causal decision, not a statistical one — the regression cannot tell you whether your conditioning set was right, only what coefficient it produces given that set.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>DAGs make causal structure explicit:</strong> nodes are variables, directed arrows are direct causal claims — and which variables you condition on is a *causal* decision the regression output can never tell you, because it returns a coefficient regardless of whether your conditioning set was right.</li><li><strong>Confounder</strong> (e.g. Smoking → Coffee and Smoking → Cancer): creates a backdoor path Treatment ← Confounder → Outcome that produces a *spurious* association — you must *block* it by conditioning on the confounder.</li><li><strong>Mediator</strong> (T → M → Y): sits on the causal path you're trying to measure, so conditioning on it *blocks* that path and *underestimates* the total effect — the opposite of what you want.</li><li><strong>Collider</strong> (A → C ← B, caused by both): conditioning on it *opens* a spurious path between A and B that was never causally there — e.g. conditioning on hospitalisation (a collider of disease severity and treatment) manufactures correlations within the hospitalised sample.</li><li><strong>Backdoor criterion:</strong> you identify the effect by conditioning on a set Z that blocks all backdoor (confounding) paths, blocks no frontdoor (mediating) paths, and contains no descendant of the treatment.</li><li><strong>&quot;Control for everything&quot; is a mistake, not a safe default:</strong> it systematically opens collider bias and blocks mediators while you believe you're removing confounding — you need the DAG to know which variables to include and which to leave out.</li><li><strong>Diagnostic:</strong> if adding a control shifts the estimate by more than ~50%, it's either a real confounder (good — expected) or a collider you just opened (bad) — draw the DAG to tell which. Arrows coming *into* it from both T and Y = collider, remove it.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You want to estimate the effect of exercise (T) on heart disease (Y). You have data on body weight (W). Draw two plausible DAGs and explain what you should do in each case.</p>
+      <ul class="check-opts"><li>A) In both DAGs W should be controlled for — as either a confounder or mediator, conditioning on W always reduces bias in the exercise-heart disease estimate</li><li class="correct">B) DAG 1 — W is confounder (Diet→W, Diet→Y, Diet→T): must control for W to block backdoor path. DAG 2 — W is mediator (T→W→Y): controlling for W blocks indirect effect and gives only direct effect; if want total effect, do NOT control for W. Most realistic: W is both mediator AND has confounders (Diet→W and T→W→Y) — controlling for W in this case blocks mediated path and introduces bias; need mediation analysis or frontdoor criterion.</li><li>C) W should never be controlled for because body weight is always a collider between exercise and heart disease, and conditioning on it opens a spurious backdoor path</li><li>D) The correct approach is to control for W only when its coefficient in the regression is statistically significant, otherwise omit it from the model</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> A researcher conditions on 'hospitalisation status' when studying the effect of a drug on mortality. Why might this create collider bias?</p>
+      <ul class="check-opts"><li>A) Conditioning on hospitalisation is always valid because it ensures comparability — patients in the same hospital are comparable on unmeasured severity confounders</li><li>B) Hospitalisation is a confounder rather than a collider: it causes both drug use and mortality, so failing to condition on it (not conditioning on it) creates bias</li><li>C) Hospitalisation status introduces measurement error because patients who are not hospitalised have missing mortality data, biasing the drug effect estimate downward</li><li class="correct">D) Hospitalisation is caused by both illness severity (→mortality) and drug decision (sicker patients more likely to be treated) → hospitalisation is a collider. Conditioning on it opens a spurious path between drug and illness severity. Within hospitalised patients, being on drug is negatively correlated with illness severity (some hospitalised due to drug, not illness). Drug appears more harmful/less beneficial than actually is — exactly the bias in COVID observational studies restricted to hospitalised patients.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> What is the difference between the backdoor criterion and the frontdoor criterion, and when would you use the frontdoor criterion?</p>
+      <ul class="check-opts"><li class="correct">A) Backdoor: adjust for common causes of T and Y (requires measuring confounders). Frontdoor: used when can't measure confounders but there's a mediator M such that (1) all causal paths from T to Y go through M, (2) no unblocked backdoor paths T to M, (3) all backdoor paths M to Y blocked by T. When these hold, can identify causal effect even with unmeasured T-Y confounding. Classic example: smoking (T) → tar in lungs (M) → cancer (Y). Rarely applicable but powerful when it is.</li><li>B) The backdoor criterion applies only in DAGs with one confounder; the frontdoor criterion is a generalization for multiple confounders and should always be preferred over the backdoor criterion</li><li>C) The frontdoor criterion is used when there are too many confounders to measure, and it works by conditioning on the outcome to isolate the direct treatment effect</li><li>D) Both criteria are equivalent — the frontdoor criterion is simply a computational shortcut for applying the backdoor criterion when the adjustment set is large</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> You run a regression of salary on years of experience and performance rating. You find a negative coefficient on performance rating. Should you be alarmed?</p>
+      <ul class="check-opts"><li>A) No — a negative coefficient on performance is expected because high performers are often newer employees with fewer years of experience, and the coefficient reflects this compositional effect</li><li>B) No — the negative coefficient indicates multicollinearity between experience and performance, which inflates standard errors but does not bias the individual coefficients</li><li class="correct">C) Yes — sign of collider bias. Plausible DAG: experience → salary, performance → salary (both cause salary which is a collider). Conditioning on salary (or job level proxy) opens spurious negative path between experience and performance within fixed salary band. Alternatively employment is a collider of performance and tenure. Negative coefficient on performance is an artifact of conditioning on a collider, not evidence high performers earn less.</li><li>D) Yes — the negative coefficient signals severe omitted variable bias from an unmeasured confounder; the fix is to add more control variables until the coefficient becomes positive</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#causal_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

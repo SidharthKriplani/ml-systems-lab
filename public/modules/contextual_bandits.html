@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contextual Bandits | ML Systems Lab</title>
+  <meta name="description" content="Context-dependent rewards, LinUCB, LinTS, offline evaluation, NeuralUCB">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/contextual_bandits.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/contextual_bandits.html">
+  <meta property="og:title" content="Contextual Bandits | ML Systems Lab">
+  <meta property="og:description" content="Context-dependent rewards, LinUCB, LinTS, offline evaluation, NeuralUCB">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Contextual Bandits">
+  <meta name="twitter:description" content="Context-dependent rewards, LinUCB, LinTS, offline evaluation, NeuralUCB">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Contextual Bandits",
+  "description": "Context-dependent rewards, LinUCB, LinTS, offline evaluation, NeuralUCB",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/contextual_bandits.html",
+  "keywords": "contextual bandit, LinUCB, LinTS, exploration, function approximation"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#bandits_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">55 min read</span>
+      <span class="tag">contextual bandit</span><span class="tag">LinUCB</span><span class="tag">LinTS</span><span class="tag">exploration</span><span class="tag">function approximation</span>
+    </div>
+    <h1>Contextual Bandits</h1>
+    <p class="subtitle">Context-dependent rewards, LinUCB, LinTS, offline evaluation, NeuralUCB</p>
+
+    <p>Standard A/B testing treats all users identically — it asks &quot;which variant is better on average?&quot; But users are different, and the best variant for one user segment may be the worst for another. Contextual bandits extend MAB by observing a feature vector at each round and learning which arm is best as a function of that context, not on average. This is the difference between finding the best treatment on average and finding the best treatment for each patient.</p>
+    <p>The naive alternative — train a supervised reward model and select greedily — fails because arms underrepresented in the logging policy have poorly calibrated reward estimates and are either permanently avoided or over-trusted. LinUCB's uncertainty bonus √(x^T A^{-1} x) is the key mechanism: it is largest exactly when the current context is far from previously observed data, targeting exploration where knowledge is genuinely lacking.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Contextual bandit formulation: at round t, observe context x_t ∈ R^d, choose arm a_t ∈ {1,...,K}, observe reward r_t = f(x_t, a_t) + noise.</strong> Goal: minimise Σ_t [f(x_t, a*_t) − f(x_t, a_t)] where a*_t = argmax_a f(x_t, a). Every round is potentially different because the context changes — the same arm may be optimal for one user and suboptimal for another.</li><li><strong>Contextual bandits subsume classical A/B testing.</strong> A standard A/B test has context (user features) but ignores it during allocation — both variants are shown randomly regardless of user. A contextual bandit learns which variant is better for which user, discovering heterogeneous treatment effects while running the experiment. The allocation becomes personalised and the learnt policy is more valuable.</li><li>**LinUCB: assumes
+
+$r_t = θ_a^T x_t + ε_t.** Estimates θ_a via ridge regression over (context, r$
+
+eward) pairs. UCB for arm a at context x = θ̂_a^T x + α√(x^T A_a^{-1} x) where A_a = X_a^T X_a + λI. The exploration bonus x^T A_a^{-1} x measures how far the current context is from previously observed contexts — large for novel contexts, small for familiar ones. This is the right signal: explore when the context is unfamiliar, exploit when it is not.</li><li><strong>LinTS: Gaussian posterior over θ_a with mean θ̂_a and covariance σ²A_a^{-1}.</strong> At each round sample θ̃_a ~ N(θ̂_a, σ²A_a^{-1}) and select argmax_a θ̃_a^T x_t. Same regret bounds as LinUCB but empirically better, especially with informative priors. Prior misspecification matters here: a flat prior is the wrong choice when historical data is available to initialise θ̂_a.</li><li><strong>Offline policy evaluation (OPE): logged (context, arm, reward) data from a behaviour policy can evaluate new policies without online deployment.</strong> OPE is essential because online deployment is expensive and risky. Key estimators: Direct Method (DM) trains a reward model and evaluates offline — low variance but biased when the reward model is wrong for contexts the behaviour policy did not cover. Importance Sampling (IS) reweights logged rewards by π_e/π_b — unbiased but high variance when policies diverge. Doubly Robust (DR) combines both — consistent if either the reward model or propensities are correct.</li><li><strong>Greedy supervised learning is the wrong baseline.</strong> Train a reward model on logs and select the highest-predicted-reward arm each round. This fails because arms underrepresented in the logging policy have reward estimates with high uncertainty — and the greedy policy either perpetually avoids them (if their logged reward is low) or over-trusts them (if they happened to have high reward on the few occasions they were logged). No uncertainty bonus means no correction for this.</li><li><strong>Neural models improve reward estimation but break exact uncertainty quantification.</strong> NeuralTS uses last-layer Thompson Sampling: train a neural feature extractor to embed (context, arm) pairs, fix it periodically, run LinTS on the linear head over the embeddings. The neural network provides expressive reward modelling; LinTS provides principled uncertainty quantification on the last layer.</li><li><strong>Regret bounds: LinUCB achieves O(d√T ln K) regret where d is the context dimension.</strong> Context adds a √d factor over pure MAB O(√(KT)) — learning a linear reward function in d dimensions requires more exploration than learning K scalar arm means. Higher-dimensional or more complex reward functions require proportionally more data before the algorithm can exploit reliably.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Contextual bandits learn which arm is best for which user, not just which arm is best on average — this is the gap between standard A/B testing and personalised allocation. The critical failure mode of greedy supervised learning is exploration bias: arms underrepresented in the logging policy remain poorly estimated forever and are either permanently avoided or over-trusted. LinUCB's uncertainty bonus √(x^T A^{-1} x) is largest for contexts far from previously observed data — it targets exploration exactly where knowledge is lacking.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Formulation:</strong> observe context x_t, pick arm a_t, learn which arm is best as a function of context — not on average.</li><li><strong>Subsumes A/B testing:</strong> a standard A/B test has context but ignores it; contextual bandits learn heterogeneous treatment effects while running.</li><li><strong>LinUCB:</strong> $r_t = θ_a^T x_t + ε_t$; index = θ̂_a^T x + α√(x^T A_a^{-1} x); bonus large for novel contexts.</li><li><strong>LinTS:</strong> sample θ̃_a ~ N(θ̂_a, σ²A_a^{-1}); same bounds as LinUCB, empirically better with informative priors.</li><li><strong>Greedy supervised = wrong baseline:</strong> no uncertainty bonus → under-logged arms permanently avoided or over-trusted.</li><li><strong>OPE estimators:</strong> DM (low variance, biased), IS (unbiased, high variance), DR (consistent if either model is right).</li><li><strong>Regret O(d√T ln K):</strong> context adds √d over pure MAB — richer reward functions need more exploration.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> How does a contextual bandit differ from a supervised learning model + greedy selection? What goes wrong with the greedy approach?</p>
+      <ul class="check-opts"><li class="correct">A) Contextual bandits add uncertainty-based exploration: the exploration bonus ensures the model improves on under-explored regions, providing O(d√T) regret guarantees. Greedy supervised learning has no exploration, leaves arms undersampled by the logging policy permanently poorly calibrated, and has no regret guarantee</li><li>B) They are equivalent — a well-trained supervised model with high accuracy behaves like a contextual bandit</li><li>C) The greedy approach is superior because supervised learning converges faster and does not waste traffic on exploration</li><li>D) Contextual bandits differ only in using online updates; the greedy approach performs identically if the supervised model is retrained daily</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> You are building a contextual bandit for mobile push notification personalization. Context = 50-dim user features. K=20 notification types. How do you choose between LinUCB (disjoint), LinUCB (hybrid), and NeuralTS?</p>
+      <ul class="check-opts"><li>A) Always choose NeuralTS because neural networks have the highest capacity and will outperform linear models</li><li>B) Choose LinUCB disjoint when arms have very different response patterns and you have sufficient per-arm data; LinUCB hybrid when arms share feature response structure and sample efficiency matters; NeuralTS only when you have &gt;&gt;K·d total observations and cross-validation confirms non-linear interactions that linear models cannot capture</li><li class="correct">C) Start with NeuralTS and fall back to LinUCB only if training is too slow</li><li>D) LinUCB disjoint is always the best starting point regardless of data volume or feature structure</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Describe a contextual bandit deployment pipeline for news article recommendation. What are the main engineering challenges?</p>
+      <ul class="check-opts"><li>A) The main challenge is choosing the right reward function — once that is done, deployment is straightforward</li><li class="correct">B) The pipeline is: context construction → candidate generation → UCB scoring → serving → async feedback logging → online parameter updates. Main challenges: delayed feedback (click arrives after impression), covariate shift (user distribution changes), O(d²) matrix updates (Sherman-Morrison), cold start for new articles, and OPE-based evaluation before each policy change</li><li>C) The only significant engineering challenge is latency — all other aspects are handled by standard ML infrastructure</li><li>D) Contextual bandits cannot be deployed for news recommendation because articles expire too quickly for the model to learn</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#bandits_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

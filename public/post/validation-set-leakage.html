@@ -3,29 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Validation Set Leakage: Why Your Offline Metrics Are Lying to You — ML Systems Lab</title>
-  <meta name="description" content="Your model scores 0.91 AUC in validation. You ship it. Production AUC is 0.79. The model didn&#39;t degrade — it was never 0.91. Your validation set was contaminated during preprocessing, and the gap betw…" />
-  <meta name="keywords" content="Feature Engineering, Data Leakage, Validation, Cross-Validation, Model Selection, ML Systems Lab, senior MLE, machine learning interview" />
+  <title>The Validation Set Is Lying to You: Four Leakage Patterns Nobody Warns You About — ML Systems Lab</title>
+  <meta name="description" content="Your model hits 0.94 AUC on validation. You deploy. Two weeks later, production AUC is 0.71. The model didn&#39;t degrade — your validation set was infected from the start. Leakage is the most reliably ca…" />
+  <meta name="keywords" content="Leakage, Cross-validation, Evaluation, Preprocessing, Production ML, ML Systems Lab, senior MLE, machine learning interview" />
   <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/validation-set-leakage.html" />
 
   <meta property="og:type" content="article" />
   <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/validation-set-leakage.html" />
-  <meta property="og:title" content="Validation Set Leakage: Why Your Offline Metrics Are Lying to You" />
-  <meta property="og:description" content="Your model scores 0.91 AUC in validation. You ship it. Production AUC is 0.79. The model didn&#39;t degrade — it was never 0.91. Your validation set was contaminated during preprocessing, and the gap betw…" />
+  <meta property="og:title" content="The Validation Set Is Lying to You: Four Leakage Patterns Nobody Warns You About" />
+  <meta property="og:description" content="Your model hits 0.94 AUC on validation. You deploy. Two weeks later, production AUC is 0.71. The model didn&#39;t degrade — your validation set was infected from the start. Leakage is the most reliably ca…" />
   <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
-  <meta property="article:section" content="Feature Engineering" />
+  <meta property="article:section" content="Model Evaluation" />
 
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Validation Set Leakage: Why Your Offline Metrics Are Lying to You" />
-  <meta name="twitter:description" content="Your model scores 0.91 AUC in validation. You ship it. Production AUC is 0.79. The model didn&#39;t degrade — it was never 0.91. Your validation set was contaminated during preprocessing, and the gap betw…" />
+  <meta name="twitter:title" content="The Validation Set Is Lying to You: Four Leakage Patterns Nobody Warns You About" />
+  <meta name="twitter:description" content="Your model hits 0.94 AUC on validation. You deploy. Two weeks later, production AUC is 0.71. The model didn&#39;t degrade — your validation set was infected from the start. Leakage is the most reliably ca…" />
   <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
 
   <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "Article",
-  "headline": "Validation Set Leakage: Why Your Offline Metrics Are Lying to You",
-  "description": "Your model scores 0.91 AUC in validation. You ship it. Production AUC is 0.79. The model didn't degrade — it was never 0.91. Your validation set was contaminated during preprocessing, and the gap betw…",
+  "headline": "The Validation Set Is Lying to You: Four Leakage Patterns Nobody Warns You About",
+  "description": "Your model hits 0.94 AUC on validation. You deploy. Two weeks later, production AUC is 0.71. The model didn't degrade — your validation set was infected from the start. Leakage is the most reliably ca…",
   "author": {
     "@type": "Person",
     "name": "ML Systems Lab"
@@ -38,11 +38,11 @@
       "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
     }
   },
-  "datePublished": "2026-06-20",
-  "dateModified": "2026-06-20",
+  "datePublished": "2026-07-07",
+  "dateModified": "2026-07-07",
   "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/validation-set-leakage.html",
   "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
-  "keywords": "Feature Engineering, Data Leakage, Validation, Cross-Validation, Model Selection"
+  "keywords": "Leakage, Cross-validation, Evaluation, Preprocessing, Production ML"
 }
   </script>
 
@@ -69,30 +69,26 @@
 </head>
 <body>
   <article>
-    <div class="meta">Feature Engineering &middot; ML Systems Lab</div>
-    <h1>Validation Set Leakage: Why Your Offline Metrics Are Lying to You</h1>
-    <p class="excerpt">Your model scores 0.91 AUC in validation. You ship it. Production AUC is 0.79. The model didn&#39;t degrade — it was never 0.91. Your validation set was contaminated during preprocessing, and the gap between offline and online metrics is the cost of that mistake. This happens more often than the industry admits.</p>
-    <p>Validation set leakage is not the same as training-serving skew. Training-serving skew is about the gap between how features are computed at training time versus serving time. Validation set leakage is about contaminating your evaluation signal during model development — making your model appear better than it is before you ever deploy it.</p>
-<p>The result: you select the wrong model, tune hyperparameters toward a mirage, and ship with misplaced confidence.</p>
-<h2>Form 1: Preprocessing fitted on the full dataset</h2>
-<p>The classic. You load your data, call \`scaler.fit_transform(X)\`, then split into train and validation. The scaler has seen the validation data. Its mean and standard deviation reflect the full dataset, including validation examples.</p>
-<p>The correct procedure: split first, then fit the scaler on train only, then transform both train and validation with the train-fitted scaler. In sklearn: use \`Pipeline\` to enforce this. A Pipeline fitted on X_train will only transform X_val with statistics from X_train.</p>
-<p>This seems obvious. It\'s broken in the majority of Kaggle notebooks and a non-trivial fraction of production ML codebases.</p>
-<h2>Form 2: Feature selection using the full dataset</h2>
-<p>You\'re building a model with 500 candidate features. You run a correlation analysis or mutual information score on the full dataset (train + validation), select the top 50 features, then train and evaluate. Your feature selection has seen the validation labels. The selected features are implicitly optimised for the validation set, not a truly held-out evaluation.</p>
-<p>Correct procedure: feature selection is part of the model pipeline. Run it inside cross-validation folds, fitted on training data only. If you\'re selecting features outside of CV, you\'re leaking.</p>
-<h2>Form 3: Target encoding without out-of-fold logic</h2>
-<p>Target encoding replaces a categorical value with the mean target value for that category. If you compute the target encoding on the full dataset, categories that appear in the validation set are encoded using validation labels. The model receives direct information about the target.</p>
-<p>Correct procedure: target encoding must be computed fold-by-fold in cross-validation (out-of-fold encoding). Libraries like category_encoders provide this with \`TargetEncoder(smoothing=1.0)\` used inside a pipeline.</p>
-<h2>Form 4: Time series with random splits</h2>
-<p>You have 2 years of daily data. You do a random 80/20 train/val split. Your validation set contains examples from across the 2 years, including examples whose timestamps are earlier than some training examples. The model has seen the future.</p>
-<p>For time series data: always split by time. Train on [day 1 → day 547], validate on [day 548 → day 730]. No random shuffling.</p>
-<h2>How to audit your pipeline for leakage</h2>
-<p>1. <strong>Permutation test:</strong> Shuffle your target labels randomly and retrain. Your model should now score near chance. If it doesn\'t, you have data leakage — the model is fitting to something other than the signal.</p>
-<p>2. <strong>Baseline comparison:</strong> A model with no useful features (constant predictions, simple averages) has a known AUC ceiling. If your model beats this by more than your domain knowledge suggests is plausible, suspect leakage.</p>
-<p>3. <strong>Train AUC ≈ Val AUC with no regularisation:</strong> If your training and validation metrics are suspiciously close on a complex model with no regularisation, your validation set is not independent.</p>
-<h2>The cost of not catching this</h2>
-<p>Wrong model selection. Hyperparameters tuned to a leaky metric. False confidence in a model that will perform poorly in production. And crucially: the production degradation looks like "model drift" when it was never as good as you thought.</p>
+    <div class="meta">Model Evaluation &middot; ML Systems Lab</div>
+    <h1>The Validation Set Is Lying to You: Four Leakage Patterns Nobody Warns You About</h1>
+    <p class="excerpt">Your model hits 0.94 AUC on validation. You deploy. Two weeks later, production AUC is 0.71. The model didn&#39;t degrade — your validation set was infected from the start. Leakage is the most reliably career-damaging mistake in applied ML, and it hides in places most practitioners never check.</p>
+    <p>Leakage means your model has access to information during training that it won't have at prediction time. The validation set is supposed to catch this. It doesn't — because in most pipelines, the validation set is infected by the same leakage that corrupts the training set.</p>
+<h2>Type 1: Target leakage (the classic)</h2>
+<p>A feature is computed from or correlated with the target after the fact. Example: a credit default model includes "number of late payment notices sent" as a feature. Late notices are sent after the default is already detected — the feature is a consequence of the label, not a cause. In training data, this feature perfectly predicts the label. In production, it doesn't exist at prediction time.</p>
+<p>The diagnostic: plot feature values for positive vs negative labels. A feature with AUC > 0.95 on its own should be investigated immediately. Either it's extremely good (rare) or it leaks from the label.</p>
+<h2>Type 2: Temporal leakage</h2>
+<p>Future data is used to compute features for past events. The most common version: you compute a 30-day rolling average user activity as a feature for a purchase event. But you forgot to anchor the window to the event timestamp — it uses data from after the purchase. In batch training pipelines, this is easy to introduce and hard to detect without explicit timestamp audits.</p>
+<p>The fix: point-in-time correct joins. For every event at time T, features must be computed using only data available at T - epsilon. This requires either a time-travel-capable feature store or explicit timestamp filtering in every feature computation.</p>
+<h2>Type 3: Preprocessing leakage</h2>
+<p>Your scaler, imputer, or encoder is fitted on the full dataset (including validation) before the train/val split. This means the validation set has already "touched" the training distribution through the preprocessing step.</p>
+<p>The correct order: 1. Split first (train, val, test) 2. Fit scaler/encoder on train only 3. Transform val and test using train-fitted parameters</p>
+<p>Using sklearn Pipeline ensures this order is preserved. Fitting on the full dataset before splitting is the mistake. It's subtle: your scaler.mean_ incorporates validation set statistics, giving your model slight information about validation examples during training.</p>
+<h2>Type 4: Group leakage</h2>
+<p>Your dataset has natural groups (users, patients, products) and multiple examples per group. A random 80/20 split puts some examples from user_id=12345 in training and others in validation. Any user-level features (historical engagement, spending patterns, demographics) are now shared between train and validation via the group. Your model learns user-specific patterns that generalize perfectly to the other rows from the same user in validation — but not to new users in production.</p>
+<p>The fix: group-aware splits. All rows from a given entity (user, patient, product) must be in the same split. sklearn provides GroupShuffleSplit. If you have time-ordered data, use a chronological split where validation contains only events that happen after all training events.</p>
+<h2>The meta-lesson:</h2>
+<p>Leakage usually isn't visible in code. It's visible in unrealistically good validation metrics. If your validation AUC is > 0.95 for a hard problem, or your RMSE is suspiciously low, investigate before celebrating. Strong validation performance is a diagnostic signal, not just a success metric.</p>
+<p>The question to ask for every feature: "At prediction time in production, is this value available, and is it computed the same way as at training time?" If the answer is "I'm not sure," audit the feature.</p>
 
     <div class="cta">
       <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>

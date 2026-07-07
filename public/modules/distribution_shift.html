@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Distribution Shift | ML Systems Lab</title>
+  <meta name="description" content="The core assumption of supervised learning — train and deploy distributions match — is almost always violated in production.">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/distribution_shift.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/distribution_shift.html">
+  <meta property="og:title" content="Distribution Shift | ML Systems Lab">
+  <meta property="og:description" content="The core assumption of supervised learning — train and deploy distributions match — is almost always violated in production.">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Distribution Shift">
+  <meta name="twitter:description" content="The core assumption of supervised learning — train and deploy distributions match — is almost always violated in production.">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Distribution Shift",
+  "description": "The core assumption of supervised learning — train and deploy distributions match — is almost always violated in production.",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/distribution_shift.html",
+  "keywords": "distribution shift, covariate shift, concept drift, label shift, model monitoring, KS test"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#data_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">55 min read</span>
+      <span class="tag">distribution shift</span><span class="tag">covariate shift</span><span class="tag">concept drift</span><span class="tag">label shift</span><span class="tag">model monitoring</span>
+    </div>
+    <h1>Distribution Shift</h1>
+    <p class="subtitle">The core assumption of supervised learning — train and deploy distributions match — is almost always violated in production.</p>
+
+    <p>You trained a recommendation model on January user data and shipped it in March. By May, engagement is down <strong>30%</strong>. No error, the API responds, the model happily returns predictions. They are just *wrong*. Welcome to <strong>distribution shift</strong> — the quiet killer of production models, and the reason &quot;it worked in testing&quot; is never the end of the story.</p>
+    <p>Here is the trap that makes it so dangerous: <strong>the model never tells you it is lost.</strong> A confidence score measures how far an input sits from the model's decision boundary — *not* how far that input sits from anything the model was trained on. So a user unlike anyone in training can still get a *high-confidence* prediction that happens to be completely wrong. You do not find out from the model. You find out weeks later, when the real engagement numbers arrive.</p>
+    <p>The world can shift in three different ways, and telling them apart decides whether you need a five-minute fix or a two-week data effort.</p>
+    <hr>
+    <h3>Covariate shift — the inputs move</h3>
+    <p>The *kinds of users* changed (a February product change brought new behaviour), but the underlying rule linking behaviour to engagement still holds. Your old labels are still correct; you just have fewer training examples that look like today's users. This one you can sometimes patch *without* retraining, by <strong>importance weighting</strong> — lean harder on the training examples that resemble current traffic and less on the ones that do not.</p>
+    <hr>
+    <h3>Concept drift — the rule itself moves (the bad one)</h3>
+    <p>Now the *meaning* of the features changed. Fraudsters in 2024 have learned to make fraudulent transactions look legitimate, so a pattern that screamed &quot;fraud&quot; in your training data now looks perfectly innocent. Reweighting old data cannot save you — the old labels are simply *wrong* about today's world. There is no shortcut: you need <strong>fresh labelled data and a retrain.</strong></p>
+    <hr>
+    <h3>Prior shift — just the mix changes (the easy one)</h3>
+    <p>The fraud *rate* rose from 0.1% to 0.3%, but fraud itself still looks the same. Here you can adjust the model's outputs by re-estimating the new class balance — no retrain required.</p>
+    <hr>
+    <h3>You cannot fix what you cannot see</h3>
+    <p>All of this is invisible without monitoring, so detection has to come *before* diagnosis. Watch each important feature's distribution against its training baseline — a common gauge is <strong>PSI</strong> (population stability index): under 0.1 is calm, over 0.2 says &quot;go investigate.&quot; Watch the *prediction* distribution too; if it drifts while the inputs look stable, that is a fingerprint of concept drift. And a neat trick to confirm covariate shift: train a quick classifier to tell &quot;training row&quot; from &quot;production row&quot; — if it succeeds easily, the two worlds really have diverged. Build this monitoring in from day one, or the business will discover the shift before you do.</p>
+    <hr>
+    <h3>The three shifts, in notation</h3>
+    <p>The names map cleanly to which probability moved. <strong>Covariate shift</strong>: P(X) changes, P(Y|X) holds — the inputs move but the rule is intact. <strong>Label/prior shift</strong>: P(Y) changes, P(X|Y) holds — the class mix moves but each class still looks the same. <strong>Concept drift</strong>: P(Y|X) changes — the *rule itself* moves, which is the one no reweighting can fix. Being able to say &quot;which distribution changed?&quot; is exactly how you pick the response, so it's worth carrying the notation, not just the stories.</p>
+    <hr>
+    <h3>Detection has a metric menu, not just PSI</h3>
+    <p>PSI is the industry default, but know the alternatives and when they're better. The <strong>KS test</strong> measures the largest gap between two CDFs (good for continuous features). <strong>Wasserstein (earth-mover) distance</strong> captures *how far* the mass moved, which PSI's binning can miss. <strong>KL / Jensen-Shannon divergence</strong> quantify distributional difference (JS is symmetric and bounded). <strong>MMD</strong> (maximum mean discrepancy) is a kernel-based two-sample test that works in high dimensions. For <strong>categorical</strong> features, compare frequencies (chi-squared) and watch for new categories. Use several — a shift that hides from one metric often shows in another.</p>
+    <hr>
+    <h3>Label shift can be estimated without new labels</h3>
+    <p>Prior/label shift has a neat property: you can often correct it *without* fresh labels. <strong>Black Box Shift Estimation (BBSE)</strong> uses your existing model's confusion matrix plus the *distribution of its predictions* on the new data to estimate the new class priors, then reweights the outputs. So if only the class balance moved (fraud rate 0.1% → 0.3%, fraud still looks the same), you re-estimate the prior and adjust — no relabelling, no retrain. This is why diagnosing the shift *type* pays off: label shift is the cheapest to fix.</p>
+    <hr>
+    <h3>Adaptation strategies, cheapest to most involved</h3>
+    <p>Match the response to the shift. <strong>Importance weighting</strong> for covariate shift (up-weight training rows resembling current traffic). <strong>Prior/output correction (BBSE)</strong> for label shift. <strong>Domain adaptation</strong> methods (align feature representations between source and target) when you have unlabelled target data. <strong>Online / continual learning</strong> to keep updating from a stream, and <strong>test-time adaptation</strong> (adjust batch-norm statistics or a few parameters to the incoming batch) for mild drift. And for concept drift, the honest answer remains <strong>fresh labels and a retrain</strong> — there is no free lunch when the underlying rule has genuinely changed.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Use PSI per feature as your first production monitoring signal, not aggregate accuracy.</strong> PSI buckets a feature's distribution into deciles and computes weighted divergence from the training baseline. PSI &lt; 0.1 is stable; 0.1–0.2 warrants investigation; &gt; 0.2 is a retraining trigger. Track per-feature, not aggregate — a single important feature shifting while others are stable will be invisible in any aggregate metric. Also monitor the prediction distribution: if P($\hat{y}$) shifts without any feature shift, you have concept drift.</li><li><strong>The most common production trap: scheduled retraining (weekly, monthly) in a domain where shift happens in days.</strong> Fraudsters observe your model's behaviour and adapt within weeks of a new deployment. A fixed monthly retraining schedule is already two to four weeks behind by the time it fires. Build trigger-based retraining: fire when PSI exceeds 0.2 on a key feature, or when performance on a labeled validation window drops beyond a threshold. Scheduled retraining is acceptable in stable domains; in adversarial or fast-moving domains, it guarantees you are always working with stale assumptions.</li><li><strong>Diagnose shift type before choosing a response.</strong> Stable feature PSI but degraded performance = concept drift signature (P(X) unchanged, P(Y|X) changed) — requires new labeled data and retraining, no shortcut. Shifted feature PSI but degraded performance = covariate shift candidate — try importance weighting first, which can buy weeks before a full retrain. To confirm covariate shift, train a logistic regression to classify &quot;is this example from training or production?&quot; If it classifies with high accuracy, the distributions are meaningfully different and importance weighting is appropriate.</li><li><strong>Name which distribution moved, and detect with more than PSI.</strong>
+
+Covariate shift = P(X) moves, P(Y|X) holds (importance-weight); label/prior shift = P(Y) moves, P(X|Y) holds (correct the prior); concept drift = P(Y|X) moves (retrain, no shortcut). Beyond PSI, detect with the KS test and Wasserstein distance for continuous features, KL/Jensen-Shannon and MMD for distributions, and chi-squared/new-category checks for categoricals — a shift hidden from one metric often shows in another.</li><li><strong>Match the fix to the shift, cheapest first — and label shift needs no new labels.</strong>
+
+Label shift can be corrected without relabelling via Black Box Shift Estimation (use the model's confusion matrix and its prediction distribution on new data to re-estimate class priors, then reweight outputs). Adaptation ladder: importance weighting (covariate), prior/output correction (label), domain adaptation with unlabelled target data, online/continual learning and test-time adaptation (mild drift), and fresh labels + retrain for genuine concept drift. Diagnosing the shift type is what tells you whether you need five minutes or two weeks.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>A model outputs confident predictions on shifted data — no error fires, no uncertainty is signaled, and performance degrades silently until ground-truth labels arrive. Whether you can fix it without new labels depends on what type of shift occurred. Only monitoring catches it before the business does.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Shift is silent:</strong> the model outputs confident predictions on shifted data, degrading until ground-truth labels arrive. Only monitoring catches it first.</li><li><strong>Name which distribution moved:</strong> covariate shift = P(X) moves, P(Y|X) holds; label shift = P(Y) moves; concept drift = P(Y|X) moves.</li><li><strong>Monitor per-feature PSI, not aggregate accuracy:</strong> &lt;0.1 stable, 0.1–0.2 investigate, &gt;0.2 retrain — one shifting feature is invisible in aggregates.</li><li><strong>Diagnose type before responding:</strong> stable PSI + degraded performance = concept drift (no shortcut); shifted PSI = covariate shift (try importance weighting).</li><li><strong>Confirm covariate shift</strong> by training a classifier to tell train-vs-production apart — high accuracy means the distributions genuinely differ.</li><li><strong>Label shift needs no new labels:</strong> BBSE re-estimates class priors from the confusion matrix + prediction distribution, then reweights outputs.</li><li><strong>Scheduled retraining fails in fast/adversarial domains</strong> — fraudsters adapt in days; fire on PSI/performance triggers, not a monthly calendar.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Your fraud model was trained in 2022. In 2024, fraudsters adopt a new technique that makes fraudulent transactions look like legitimate ones. What type of shift is this and can it be fixed without new labels?</p>
+      <ul class="check-opts"><li>A) This is covariate shift: P(X) has changed because fraudulent transactions now have different feature distributions. It can be corrected by importance weighting old training data to match the new transaction distribution without requiring new labels.</li><li>B) This is label shift: P(Y) has changed because the fraud rate has decreased as fraudsters succeed in mimicking legitimate transactions. It can be corrected using Black Box Shift Estimation to adjust the predicted probability distribution.</li><li class="correct">C) This is concept drift: P(Y|X) has changed. In 2022, feature patterns predicting fraud were valid. In 2024, new fraud technique mimics legitimate transaction patterns — same feature values now have different labels. CANNOT be corrected by reweighting old training data — the 2022 labels are simply wrong for describing the 2024 relationship. Only fix: fresh labeled data (examples of new fraud pattern, labeled by human reviewers or rule-based systems) and retraining/fine-tuning. Covariate shift CAN sometimes be corrected by importance weighting without new labels, but concept drift CANNOT.</li><li>D) This is both covariate shift and concept drift simultaneously; the only reliable fix is a complete model rebuild using only data from 2024 with all 2022 training data discarded.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Describe what happens to a model's confidence scores under distribution shift, and why this makes shift especially dangerous.</p>
+      <ul class="check-opts"><li>A) Under distribution shift, model confidence scores decrease toward 0.5 as the model becomes uncertain about inputs it has not seen before — this provides a natural detection signal that can trigger alerts when average confidence drops below a threshold.</li><li class="correct">B) Model's confidence score is determined by learned parameters applied to input features — it is a function of the model's internal state, NOT of whether input is representative of training distribution. Under distribution shift, shifted inputs often land in regions where model produces HIGH-CONFIDENCE predictions. The model continues outputting 95% confidence even as accuracy collapses. Unlike a database query that errors on invalid input, the model SILENTLY returns a wrong answer with 95% confidence. No automatic error signal — only external ground truth labels or sophisticated distribution-level tests can detect it.</li><li>C) Distribution shift causes confidence scores to become perfectly calibrated — the model's 70% confidence predictions are correct exactly 70% of the time — making it easier to detect shift by comparing calibration curves between training and production.</li><li>D) Under mild distribution shift, confidence scores remain stable; only severe distribution shift (PSI &gt; 0.5) causes confidence scores to diverge from their training-time distribution in a detectable way.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> What is the difference between covariate shift and concept drift, and why does the distinction determine whether you can avoid retraining?</p>
+      <ul class="check-opts"><li>A) Covariate shift affects numeric features while concept drift affects categorical features; the distinction determines which type of reweighting or re-encoding strategy is needed.</li><li>B) Covariate shift happens gradually over months while concept drift happens suddenly in response to discrete events; the distinction determines whether to use a sliding window or a full historical dataset for retraining.</li><li>C) Covariate shift and concept drift are two names for the same phenomenon — any change in the input distribution that causes model performance to degrade. Both require the same fix: trigger-based retraining when PSI exceeds 0.2.</li><li class="correct">D) Covariate shift: P(X) changes but P(Y|X) stays same — old labeled training data is still correct, just underrepresents current input distribution. CAN be corrected by importance weighting: up-weight training examples resembling production, without collecting new labels. Concept drift: P(Y|X) changes — same feature values now predict different outcomes. Old training labels are WRONG under new relationship. Importance weighting on wrong labels produces wrong model. NEW LABELS are required. The distinction determines the fix: one requires reweighting (no new labels), the other requires new labeled data.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> You run a KS test comparing training and production distributions of your top 5 features and find p &lt; 0.01 for one feature. What does this mean and what should you do?</p>
+      <ul class="check-opts"><li class="correct">A) p &lt; 0.01 on KS test means you can reject H₀ (same distribution) with 99% confidence — feature distribution has statistically significantly shifted. Next steps: (1) investigate MAGNITUDE of shift, not just significance — with large samples, even trivial shifts become significant. Use PSI: PSI &gt; 0.1 warrants concern, PSI &gt; 0.2 requires action; (2) investigate CAUSE: data collection change? new user cohort? seasonal variation?; (3) check whether downstream model performance has degraded — if still on target, shift may not be impacting predictions; (4) if performance degraded: trigger retraining or rollback.</li><li>B) p &lt; 0.01 means the feature distribution has shifted and the model must be immediately retrained before serving any additional predictions — statistical significance at this level indicates the model's outputs are no longer valid.</li><li>C) p &lt; 0.01 is below the standard significance threshold of 0.05, which means the null hypothesis is rejected too strongly — this is likely a false positive caused by the large sample size, and no action is needed unless p &lt; 0.001.</li><li>D) p &lt; 0.01 means the single shifted feature has invalidated the entire model; all 5 features should be re-engineered from scratch using only production data collected after the shift was detected.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> A model deployed in January shows 89% AUC. By June, AUC has drifted to 78%. Feature distribution monitoring shows stable PSI across all features. What type of shift does this suggest?</p>
+      <ul class="check-opts"><li>A) The stable PSI rules out any form of distribution shift — the AUC drop must be caused by a bug introduced in the model serving infrastructure between January and June, not by data-related issues.</li><li>B) The combination of stable feature distributions and degraded performance suggests label shift: P(Y) has changed (the overall fraud rate has increased) but P(X|Y) is stable (fraudulent transactions look the same). Fix: use BBSE to reweight predicted probabilities without retraining.</li><li class="correct">C) Stable feature distributions (low PSI) but degraded model performance (AUC drop) = signature of CONCEPT DRIFT: P(X) unchanged (hence stable PSI) but P(Y|X) changed (hence degraded accuracy). The model's learned mapping from features to labels was calibrated to the January relationship — that relationship has since changed. Common causes: seasonal shifts, competitive changes, policy changes, external events. Fix: new labeled data from post-shift period and retraining. Feature monitoring alone (PSI) is insufficient — also need model output distribution and ground-truth label accuracy tracking.</li><li>D) Stable PSI with degraded AUC indicates covariate shift in features not being monitored — the top 5 features are stable but secondary features have shifted. Fix: expand PSI monitoring to all features before considering retraining.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#data_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

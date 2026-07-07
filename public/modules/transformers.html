@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transformer Architecture | ML Systems Lab</title>
+  <meta name="description" content="Self-attention, positional encoding, encoder vs decoder, pre-norm vs post-norm">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/transformers.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/transformers.html">
+  <meta property="og:title" content="Transformer Architecture | ML Systems Lab">
+  <meta property="og:description" content="Self-attention, positional encoding, encoder vs decoder, pre-norm vs post-norm">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Transformer Architecture">
+  <meta name="twitter:description" content="Self-attention, positional encoding, encoder vs decoder, pre-norm vs post-norm">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Transformer Architecture",
+  "description": "Self-attention, positional encoding, encoder vs decoder, pre-norm vs post-norm",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/transformers.html",
+  "keywords": "Transformer, architecture, positional encoding, encoder-decoder"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#dl_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">29 min read</span>
+      <span class="tag">Transformer</span><span class="tag">architecture</span><span class="tag">positional encoding</span><span class="tag">encoder-decoder</span>
+    </div>
+    <h1>Transformer Architecture</h1>
+    <p class="subtitle">Self-attention, positional encoding, encoder vs decoder, pre-norm vs post-norm</p>
+
+    <p>Attention has a surprising blind spot. Because it looks at all the words at once and just computes weighted averages, it does not inherently know their *order* — &quot;the dog bit the man&quot; and &quot;the man bit the dog&quot; contain the exact same words, and to raw attention they look identical. So the first thing a <strong>Transformer</strong> has to add is a sense of *position*.</p>
+    <hr>
+    <h3>Positional encoding: telling the model where each word sits</h3>
+    <p>The fix is to stamp each word's representation with a position signal before the first layer — a little pattern that says &quot;I am word 1,&quot; &quot;I am word 2,&quot; and so on. The original Transformer used sine and cosine waves of different frequencies for this (they extend smoothly to positions longer than anything seen in training); modern models like LLaMA use <strong>RoPE</strong>, which bakes *relative* position straight into the attention comparison. Either way, once positions are added, the model can finally tell word order apart.</p>
+    <hr>
+    <h3>The Transformer block</h3>
+    <p>Stack the pieces and you get the repeating block every Transformer is built from: normalise the inputs, run <strong>multi-head attention</strong> (words look at each other), add the result back through a <strong>residual shortcut</strong>, normalise again, run a small two-layer <strong>feed-forward network</strong> (FFN) on each word, and add that back too. Two details matter. The FFN is deliberately *wide* — usually 4× the model's width in the middle — because it acts as the model's *memory*, where a lot of its factual knowledge is stored; shrink it and the model measurably forgets facts. And the <strong>residual shortcuts</strong> are not decoration: they give the gradient a direct path back to every layer, which is the only reason you can stack dozens of these blocks without the signal dying (exactly the vanishing-gradient fix from earlier).</p>
+    <hr>
+    <h3>Two flavours: encoder and decoder</h3>
+    <p>The same block comes in two modes, set by *who is allowed to look at whom*. <strong>Encoder-only</strong> (BERT-style) lets every word see every other word, in both directions — great for *understanding* tasks like classification, where you want the fullest possible context. <strong>Decoder-only</strong> (GPT-style) masks the future, so each word can only see the words *before* it — which is exactly what you need to *generate* text one token at a time. Decoder-only models also get a training bonus: *every* token in a sequence is a prediction target at once, giving them far more learning signal per pass than BERT's &quot;predict just the 15% we masked,&quot; which is a big part of why decoder-only models dominate at scale.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Encoder-only for understanding (classification, NER, QA); decoder-only for generation (language models, chat); encoder-decoder for sequence-to-sequence tasks (translation, summarisation).</strong> The architecture determines the training objective, which determines what the model can do. A decoder-only model cannot be directly used for tasks requiring bidirectional context (e.g., masked span filling) without changing its attention pattern. Use Pre-LN (LayerNorm before attention and FFN sub-layers) — every modern large model (LLaMA, GPT-3, PaLM) uses Pre-LN because Post-LN (original Transformer) causes gradient norms to blow up in early training and requires very careful warmup schedules to stabilise.</li><li><strong>The production trap: reducing d_ff below 4×d_model to cut compute.</strong> The FFN stores factual knowledge in its weight matrices. Reducing d_ff from 4× to 2× on a large language model produces a measurable drop in downstream knowledge-intensive task performance — not just a small accuracy delta but a loss of specific factual associations the model can no longer store. Profile d_ff reduction on your specific tasks before accepting this tradeoff. The attention heads are frequently a safer target for compute reduction (fewer heads, or smaller d_k per head) without losing as much stored knowledge.</li><li><strong>The diagnostic: check training loss curve shape in the first 1000 steps.</strong> A healthy Transformer training run shows a rapid initial drop followed by smooth decay. A loss spike in the first 500 steps (then recovery) is the signature of insufficient learning rate warmup — Adam's moment estimates were too noisy for the initial learning rate. A flat loss that does not decrease at all is the signature of a missing or inverted causal mask in a decoder model — the model is attending to future tokens and the prediction task is trivially solved (training loss looks low, generation is random). Both are diagnosable before committing GPU hours.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>The Transformer's power rests on three mutually dependent components: direct all-to-all attention for O(1) path length, residual connections that route gradients to every layer simultaneously, and a 4×-expanded FFN that stores and retrieves factual knowledge — each degrades measurably without the others.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Attention's blind spot — no sense of order:</strong> raw self-attention is permutation-equivariant, so &quot;dog bit man&quot; and &quot;man bit dog&quot; produce the same (reordered) outputs. It sees a *set* of words, not a sequence.</li><li><strong>Positional encoding fixes it:</strong> add a position-dependent vector to each token's embedding. Sinusoidal encodings (sin/cos at many frequencies) extrapolate to unseen lengths because PE(pos+k) is a linear function of PE(pos); modern models use RoPE, which encodes *relative* position directly in the attention scores and generalises well to longer sequences.</li><li><strong>The block, in order:</strong> norm → multi-head attention → residual add → norm → feed-forward network (FFN) → residual add. Pre-norm (norm inside the residual branch) is the stable modern default.</li><li><strong>The FFN is deliberately ~4× wide:</strong> it's the model's *memory* where factual knowledge is stored and retrieved — shrink it and the model measurably forgets facts, even though it's often overlooked next to attention.</li><li><strong>Residual shortcuts route gradients to every layer at once</strong> — ∂L/∂x keeps a direct identity path back regardless of the block's transform, which is the only reason you can stack dozens of Transformer blocks and still train them.</li><li><strong>Two flavours:</strong> encoder-only (BERT — bidirectional, both-sides context, best for *understanding* tasks) and decoder-only (GPT — masks future tokens so it can only look left, best for *generation*, and since every token is a training target it gets denser signal per pass).</li><li><strong>Pre-LN over Post-LN:</strong> every modern large model uses Pre-LN because Post-LN blows up gradient norms early in training and needs careful warmup to survive — a stability property, not a preference.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Why does the transformer use positional encodings, and why does standard sinusoidal encoding allow the model to generalise to longer sequences than seen in training?</p>
+      <ul class="check-opts"><li>A) Transformers use positional encodings because self-attention operates on the full sequence simultaneously rather than step-by-step, so the model needs explicit position markers to distinguish sequential order. Sinusoidal encoding doesn't generalise to longer sequences better than learned embeddings — both fail at positions beyond the training maximum. The advantage of sinusoidal is that it doesn't require storing learned position embeddings in memory, saving parameters.</li><li>B) Positional encodings are needed because Transformers cannot process variable-length sequences without them — the fixed-size attention matrices require every position to have the same embedding dimension, and positional encodings provide this consistent dimensionality. Sinusoidal encoding generalises to longer sequences because higher-frequency components have short wavelengths that repeat at regular intervals, giving the model familiar sub-patterns even at unseen positions.</li><li class="correct">C) Self-attention is permutation-equivariant: swapping the order of input tokens produces outputs in the same swapped order — no positional information is inherently captured. Without positional encodings, 'The cat sat' and 'Cat the sat' would produce the same attention outputs (just reordered). Positional encodings inject position information by adding a position-dependent vector to each token embedding. Sinusoidal encoding: PE(pos, 2i) = sin(pos/10000^{2i/d_model}), PE(pos, 2i+1) = cos(pos/10000^{2i/d_model}). The sinusoidal functions generalise beyond training length because they are defined for any position — the patterns (relative positions are encoded via sin/cos addition formulas: PE(pos+k) is a linear function of PE(pos)) extrapolate smoothly. Learned positional embeddings fail at lengths beyond training because there are no learned embeddings for unseen positions. RoPE (rotary positional encoding) is now preferred: encodes relative positions directly in the attention scores, with strong length generalisation.</li><li>D) Transformers use positional encodings to compensate for the lack of recurrent connections — RNNs implicitly encode position through their sequential hidden state updates, but Transformers process all positions in parallel and therefore need explicit position information added to embeddings. Sinusoidal encoding generalises to longer sequences because the sinusoidal frequency bands are designed to match the natural frequency spectrum of language, which remains consistent regardless of sequence length.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> The feed-forward sublayer in a transformer block has two linear layers with a nonlinearity in between: FFN(x) = W₂·ReLU(W₁x + b₁) + b₂. What is the role of this sublayer, and why is its hidden dimension typically 4× the model dimension?</p>
+      <ul class="check-opts"><li class="correct">A) The FFN sublayer adds position-wise nonlinear computation after the attention sublayer has mixed information across positions. Attention is fundamentally a linear operation over value vectors (the values are linearly combined by attention weights) — the FFN provides the essential nonlinearity. The FFN processes each position independently (the same W₁, W₂ are applied to each position's embedding separately). The 4× expansion (d_ff = 4×d_model, e.g., 2048 for d_model=512) creates a bottleneck architecture: project up to higher dimension (allowing the model to use more features), apply nonlinearity (ReLU or GELU), project back down. This is analogous to the 'key-value memory' interpretation: the first layer selects which 'memories' are active (sparse activation in high-dimensional space), the second layer reads out their values. Empirically, the 4× ratio is robust across model scales from BERT to GPT-3.</li><li>B) The FFN sublayer provides cross-position communication: unlike attention which only computes weighted sums of values, the FFN can mix information between positions through its matrix multiplications. The 4× expansion is needed because cross-position mixing requires a high-dimensional intermediate space to avoid information bottlenecks — reducing d_ff below 4× forces the model to use attention exclusively for cross-position mixing, which is less efficient.</li><li>C) The FFN sublayer acts as a content-addressable memory that stores factual associations learned during pre-training. The 4× expansion specifically encodes this factual capacity: the 4× ratio was empirically determined to provide enough neurons (~4×512 = 2048 in BERT-base) to store the most important factual associations in the pre-training corpus, with each neuron specialising in one concept or entity.</li><li>D) The FFN sublayer normalises the attention output to prevent the attention mechanism from producing representations with unbounded magnitude. Without the FFN's compression back to d_model dimensions, attention outputs would grow in magnitude with sequence length (due to summing over more values). The 4× expansion allows the compression to be non-linear, giving the model flexibility in how it normalises across different sequence lengths.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Why does training a transformer require a learning rate warmup, and what happens without it?</p>
+      <ul class="check-opts"><li>A) Learning rate warmup is needed because transformer weights are initialised with values distributed around zero (Xavier/He initialisation). Full learning rate from step 1 causes the first gradient steps to overshoot the optimal initialisation point, scrambling the carefully balanced initialisation before the model has seen enough data to correct. Warmup allows the model to take small steps that preserve the initialisation properties that make transformers trainable at depth.</li><li>B) Warmup is required because the transformer's residual connections create a gradient magnitude imbalance at initialisation — layers close to the loss receive full gradient magnitude, while early layers receive near-zero gradient due to residual summation. Full learning rate from step 1 causes the late layers to diverge while early layers barely update. Warmup gradually increases the rate to let early layers accumulate sufficient gradient history before large updates are applied.</li><li>C) Warmup prevents the transformer's positional encodings from being overwritten in early training. At step 1, positional encoding values are the largest signals in the first-layer input (random weights produce near-zero outputs), so full learning rate immediately updates the embedding layer to suppress positional information. Gradual warmup allows the model to learn to use positional encodings before the gradient updates are large enough to change the embedding layer significantly.</li><li class="correct">D) Without warmup, at step t=1 with Adam: the second moment v₁ is nearly zero (v₁ = (1−β2)·g₁² with β2=0.999, so v₁ = 0.001·g₁²). The bias-corrected denominator √(v₁/(1−β2^1)) = |g₁| is fine. But the problem is that early gradients in transformer layers can have very different scales — embedding layers may have large gradients, attention layers small gradients. With a full learning rate immediately applied, the optimizer takes full-sized steps (α=1e-4) when the second moment estimates are noisy and unreliable (based on only 1-2 batches of history). This causes early parameter updates to be in potentially bad directions (the gradient direction is unstable with sparse, high-variance early batches). Warmup linearly increases α from near-zero over 2000-4000 steps, allowing the Adam moments to accumulate enough history (achieve lower variance) before large updates are applied. Without warmup, transformers often diverge in the first hundred steps.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#dl_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

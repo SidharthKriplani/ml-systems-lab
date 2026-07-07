@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Random Variables &amp; Distributions | ML Systems Lab</title>
+  <meta name="description" content="PMF, PDF, CDF, expectation, variance, common distributions">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/random_variables.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/random_variables.html">
+  <meta property="og:title" content="Random Variables &amp; Distributions | ML Systems Lab">
+  <meta property="og:description" content="PMF, PDF, CDF, expectation, variance, common distributions">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Random Variables &amp; Distributions">
+  <meta name="twitter:description" content="PMF, PDF, CDF, expectation, variance, common distributions">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Random Variables & Distributions",
+  "description": "PMF, PDF, CDF, expectation, variance, common distributions",
+  "proficiencyLevel": "Foundational",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/random_variables.html",
+  "keywords": "distributions, expectation, variance"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#math_stats_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Foundational</span>
+      <span class="read-time">32 min read</span>
+      <span class="tag">distributions</span><span class="tag">expectation</span><span class="tag">variance</span>
+    </div>
+    <h1>Random Variables &amp; Distributions</h1>
+    <p class="subtitle">PMF, PDF, CDF, expectation, variance, common distributions</p>
+
+    <p>You are predicting whether a transaction is fraud. The outcome is 0 or 1 — but the transaction amounts are continuous. Two completely different mathematical objects. Without the right vocabulary, you will confuse notation and make probability statements that are incoherent — like asking P(X = 3.14159) for a continuous variable, which is always exactly 0.</p>
+    <p>Random variables are the bridge between raw data and probability theory. A random variable is a function that assigns a real number to each outcome in a sample space. The type — discrete or continuous — determines which mathematical machinery applies, and mixing them up silently produces wrong answers.</p>
+    <p>Discrete random variables: P(X = k) is a valid statement. The PMF (probability mass function) sums to 1 over all k. Bernoulli(p) is your fraud indicator — 1 with probability p, 0 otherwise. Binomial(n, p) counts frauds in n transactions. Poisson(λ) counts events in a fixed time window.</p>
+    <p>Continuous random variables: P(X = 3.14) = 0 exactly — a single point has measure zero in a continuous space. What you can compute is P(a ≤ X ≤ b) = ∫_a^b f(x)dx. The PDF (probability density function) integrates to 1 over the real line. The Gaussian N(μ, σ²) is continuous. The Exponential distribution measures time between events.</p>
+    <p>Expected value: E[X] = Σ x·P(X=x) for discrete, ∫ x·f(x)dx for continuous. This is the probability-weighted average — the long-run mean if you drew forever. Variance: Var(X) = E[(X - E[X])²] = E[X²] - (E[X])². The standard deviation σ = √Var(X) is in the same units as X — interpretable. The gap E[X²] - (E[X])² is always non-negative, and zero only when X is constant. Never report a model's mean prediction without its variance — the variance is what tells you whether that mean is trustworthy.</p>
+    <p><strong>NOT this.</strong> Probability and statistics are not interchangeable terms. Probability reasons forward from a known model to predictions about data. Statistics reasons backward from observed data to inferences about the model. Random variables live in probability. Estimators live in statistics. Confusing the direction leads to conditioning on the wrong thing and drawing the wrong conclusions. Asking P(X = 3.14) for transaction amounts is not a rounding question — it is a category error about the type of the variable.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Always verify whether a variable is discrete or continuous before writing a probability statement.</strong> P(X = x) means something for discrete variables and nothing for continuous ones — for continuous X, P(X = x) = 0 for every single x. The mathematical framework (PMF vs PDF) determines what operations are valid. Writing a PMF for a continuous variable is not approximately wrong, it is completely wrong.</li><li><strong>Trap: confusing E[f(X)] with f(E[X]).</strong> Jensen's inequality: for a convex function, E[f(X)] ≥ f(E[X]). The expected loss of a model is not the loss at the expected parameter. Concretely: E[X²] ≥ (E[X])², with equality only when X is constant. This matters for Bayesian prediction — the mean of a distribution over predictions is not the prediction at the mean of the distribution.</li><li><strong>Diagnostic: if you compute a probability that exceeds 1.0 or is negative, you have misidentified the variable type or mixed PMF and PDF formulas.</strong> Check whether your probability statement requires summing (discrete) or integrating (continuous). A PDF value f(x) can exceed 1 — it is a density, not a probability. Only the integral of f over an interval is a probability.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Discrete and continuous random variables require completely different probability machinery. Misidentifying the type produces probability statements that are not just inaccurate but meaningless — P(X = x) for a continuous variable is always exactly 0, no matter how precisely you specify x.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Discrete vs continuous is a type, not a detail:</strong> $P(X=x)$ is valid for discrete, always 0 for continuous.</li><li><strong>Discrete = PMF sums to 1; continuous = PDF integrates to 1.</strong> A PDF value can exceed 1 (it's a density).</li><li><strong>Expectation = probability-weighted average:</strong> $E[X]=\sum x\,P(X{=}x)$ or $\int x f(x)dx$.</li><li><strong>Variance = $E[X^2]-(E[X])^2$</strong>, always ≥ 0, zero only when X is constant. σ shares X's units.</li><li><strong>Jensen:</strong> for convex f, $E[f(X)] \geq f(E[X])$ — expected loss ≠ loss at the mean parameter.</li><li><strong>Probability reasons forward (model→data); statistics reasons backward (data→model).</strong> Don't mix directions.</li><li><strong>Sanity check:</strong> a probability &gt;1 or &lt;0 means you mixed PMF and PDF formulas or misread the type.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> A discrete random variable X has PMF P(X=k) = C × (1/2)^k for k=1,2,3,... Find C and compute E[X].</p>
+      <ul class="check-opts"><li>A) C=1/2, E[X]=4. Find C: Σ C·(1/2)^k = C·1 = 1, so C=1/2. But since the sum starts at k=1, we use Σ_{k=1}^∞ (1/2)^k = 1, so C=1/2. E[X] = Σ k·(1/2)^{k+1} = 4.</li><li>B) C=1, E[X]=4. Find C: Σ C·(1/2)^k from k=1 equals C·1=1, giving C=1. E[X]=Σ k·(1/2)^k. Using Σ k·r^k = r/(1-r)² at r=1/2: E[X]=(1/2)/(1/4)=2. But this underestimates because the sum starts at k=1, not k=0, so we add 1: E[X]=4.</li><li class="correct">C) Find C: Σ_{k=1}^∞ C·(1/2)^k = C·(1/2)/(1−1/2) = C·1 = 1, so C=1. E[X] = Σ_{k=1}^∞ k·(1/2)^k. Using the formula Σ_{k=1}^∞ k·r^k = r/(1−r)² for |r|&lt;1 with r=1/2: E[X] = (1/2)/(1/2)² = (1/2)/(1/4) = 2. Sanity check: the distribution puts most weight near small k (P(X=1)=1/2, P(X=2)=1/4, etc.), so E[X]=2 makes sense — the mean is just one step above the most probable value.</li><li>D) C=2, E[X]=2. Find C: Σ_{k=1}^∞ C·(1/2)^k = 1 requires C=2 since Σ(1/2)^k = 1/2. E[X] = Σ k·2·(1/2)^k = 2·(1/2)/(1/4) = 4.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> X ~ N(0,1) and Y = X². What is the distribution of Y, and what is E[Y]?</p>
+      <ul class="check-opts"><li class="correct">A) Y = X² where X ~ N(0,1) follows a chi-squared distribution with 1 degree of freedom: Y ~ χ²(1). This is because the chi-squared distribution is defined as the sum of squares of independent standard normal variables. E[Y] = E[X²] = Var(X) + (E[X])² = 1 + 0 = 1 (using Var(X) = E[X²] − (E[X])²). More directly: E[X²] = ∫_{-∞}^{∞} x²·(1/√(2π))·e^{-x²/2}dx = 1 (this integral equals the variance of N(0,1) since E[X]=0). The χ²(1) distribution has mean k=1 (where k is degrees of freedom), confirming E[Y]=1.</li><li>B) Y = X² where X ~ N(0,1) follows a half-normal distribution, since squaring removes the sign. E[Y] = E[|X|] = √(2/π) ≈ 0.798. The half-normal is the natural distribution for the absolute value of a standard normal, and squaring a half-normal gives a scaled chi-squared.</li><li>C) Y = X² follows a F-distribution with (1,1) degrees of freedom, since it is a ratio of chi-squared variables. E[Y] = 1/(1-2) which is undefined — the F(1,1) distribution has an infinite mean because of its heavy tails.</li><li>D) Y = X² follows a log-normal distribution because taking a nonlinear function of a normal variable produces a log-normal. E[Y] = E[X²] = 2 because the second moment of N(0,1) equals the sum of variance and squared mean: σ² + μ² = 1 + 1 = 2.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Why is E[f(X)] ≠ f(E[X]) in general? When does equality hold?</p>
+      <ul class="check-opts"><li>A) E[f(X)] ≠ f(E[X]) because the expectation operator distributes over sums but not over arbitrary functions. Equality holds when f is monotone (strictly increasing or decreasing) since monotone functions preserve the ordering of outcomes. For non-monotone f like f(x)=x², the inequality direction depends on the sign of x.</li><li>B) E[f(X)] ≠ f(E[X]) whenever f is nonlinear, because the average of f(X) over the distribution of X is taken before applying f, whereas f(E[X]) applies f to the mean first. Equality holds only when X is symmetric — symmetric distributions ensure the Jensen gap cancels. For asymmetric X, E[f(X)] &gt; f(E[X]) always.</li><li>C) E[f(X)] ≠ f(E[X]) in general because of sampling variability. Equality only holds in the limit n→∞ when the law of large numbers ensures the sample mean converges to E[X], at which point the continuous mapping theorem guarantees convergence of f(X̄) to f(μ).</li><li class="correct">D) Jensen's inequality: E[f(X)] ≥ f(E[X]) for convex f, and ≤ for concave f. Equality holds if and only if f is linear (affine: f(x) = ax+b) or X is a constant (no randomness). Example: E[X²] ≥ (E[X])² with equality only when Var(X) = 0. Practical implications: E[1/X] ≠ 1/E[X] (Jensen's, 1/x is convex for x&gt;0); E[√X] ≤ √E[X] (concave); E[log X] ≤ log E[X] (concave). In ML: if you have E[loss(prediction)] ≠ loss(E[prediction]) — the expected loss of averaging predictions differs from the loss at the average prediction. For squared loss: E[(X−c)²] = Var(X) + (E[X]−c)² — minimised at c=E[X], showing that the optimal point estimator for squared loss is the mean.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#math_stats_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

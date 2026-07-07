@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Regression Discontinuity Design | ML Systems Lab</title>
+  <meta name="description" content="Sharp and fuzzy RDD, bandwidth selection, manipulation test, local randomisation">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/rdd.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/rdd.html">
+  <meta property="og:title" content="Regression Discontinuity Design | ML Systems Lab">
+  <meta property="og:description" content="Sharp and fuzzy RDD, bandwidth selection, manipulation test, local randomisation">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Regression Discontinuity Design">
+  <meta name="twitter:description" content="Sharp and fuzzy RDD, bandwidth selection, manipulation test, local randomisation">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Regression Discontinuity Design",
+  "description": "Sharp and fuzzy RDD, bandwidth selection, manipulation test, local randomisation",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/rdd.html",
+  "keywords": "RDD, regression discontinuity, bandwidth, local randomisation, sharp RDD"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#causal_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">30 min read</span>
+      <span class="tag">RDD</span><span class="tag">regression discontinuity</span><span class="tag">bandwidth</span><span class="tag">local randomisation</span><span class="tag">sharp RDD</span>
+    </div>
+    <h1>Regression Discontinuity Design</h1>
+    <p class="subtitle">Sharp and fuzzy RDD, bandwidth selection, manipulation test, local randomisation</p>
+
+    <p>A scholarship is awarded to students who score ≥ 70 on an entrance exam. You want to know if the scholarship improves graduation rates. You cannot randomize scholarship receipt — it is rule-based. But students just above and just below 70 are essentially identical in every way except scholarship receipt. A student scoring 69 and one scoring 71 have the same underlying ability, preparation, and motivation — they differ only in their eligibility. Comparing outcomes for students just above and just below the threshold identifies the causal effect of the scholarship without measuring any confounders, because near the cutoff the assignment is locally as-good-as-random.</p>
+    <p>RDD exploits a threshold rule in treatment assignment. The running variable (exam score) determines treatment. The key identifying assumption: no other variable changes discontinuously at the cutoff. Any discontinuity in the outcome at the cutoff is caused by the treatment, because nothing else jumped there.</p>
+    <p>Sharp RDD: exactly at the cutoff, treatment probability jumps from 0 to 1. Local linear regression fits separately on each side of the cutoff within a bandwidth h. The treatment effect equals the difference in the regression line values at the cutoff — the discontinuity. Fuzzy RDD: at the cutoff, treatment probability jumps from p to p′ but not all the way. Use the threshold indicator as an instrument (IV), estimating LATE for compliers at the cutoff.</p>
+    <p>Bandwidth selection is the central technical tradeoff. Too narrow: too few observations, high variance. Too wide: units far from the cutoff are not locally comparable, high bias. The Calonico-Cattaneo-Titiunik (CCT) data-driven selector minimizes MSE. Report estimates at multiple bandwidths — a result that changes dramatically with bandwidth choice is not robust.</p>
+    <p>What RDD requires that must always be checked: units cannot precisely manipulate which side of the cutoff they land on. If students can adjust their score to land just above 70, the units just above are not comparable to units just below — they are systematically different in their ability or motivation to game the system. Always test for bunching in the running variable distribution using the McCrary density test. Significant bunching at or just above the cutoff means the local randomization assumption is violated.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Always run the McCrary density test before reporting RDD results.</strong> If the density of the running variable has a discontinuity at the cutoff, there is strategic manipulation — units just above the cutoff are not comparable to units just below. This takes two lines of code and catches the most common RDD validity threat. A visible spike in the histogram before the formal test is already a red flag.</li><li><strong>Trap: using global polynomial regression on the full sample instead of local linear regression near the cutoff.</strong> Higher-order polynomials fit poorly near the boundaries and are sensitive to outliers far from the cutoff. Local linear regression with MSE-optimal bandwidth (rdrobust package) is the standard. The polynomial degree should be chosen by cross-validation, not by visual appeal of the fit.</li><li><strong>Diagnostic: run the RDD on placebo outcomes — pre-treatment outcomes, or outcomes that should not be affected by the treatment.</strong> If there is a discontinuity in these outcomes at the cutoff, something else is causing a jump at the threshold. Your continuity assumption is violated. Significant covariate jumps at the cutoff (from pre-treatment variables) are the same signal: something other than the treatment is discontinuous there.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>RDD achieves high local credibility without measuring confounders — but only near the cutoff, only when units did not manipulate their running variable, and only if nothing else changes discontinuously at the same threshold.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>RDD exploits a threshold rule in treatment assignment:</strong> a student scoring 69 vs 71 on a scholarship-at-70 exam has the same underlying ability and motivation, differing only in eligibility — so near the cutoff assignment is locally as-good-as-random and you identify the effect *without measuring any confounders*.</li><li><strong>The key identifying assumption:</strong> *no other* variable changes discontinuously at the cutoff — so any jump in the outcome at the threshold is caused by the treatment, because nothing else jumped there.</li><li><strong>Sharp RDD:</strong> exactly at the cutoff, treatment probability jumps 0→1; fit a local linear regression on each side within a bandwidth and the effect is the vertical discontinuity between the two fits at the cutoff.</li><li><strong>Fuzzy RDD:</strong> treatment probability jumps only from p to p′ (not all the way), so use the threshold indicator as an *instrument* (IV) and estimate the LATE for compliers at the cutoff.</li><li><strong>Bandwidth is the central trade-off:</strong> too narrow = too few observations = high variance; too wide = units far from the cutoff aren't comparable = high bias. The CCT data-driven selector minimises MSE — report estimates at several bandwidths, since a result that swings wildly with bandwidth isn't robust.</li><li><strong>Manipulation test — McCrary density:</strong> units must not be able to precisely control which side of the cutoff they land on. Bunching in the running-variable density at or just above the cutoff means they gamed it, and the local-randomisation assumption is violated.</li><li><strong>Placebo checks:</strong> run the RDD on pre-treatment outcomes and covariates — a jump at the cutoff in something the treatment can't have affected means the continuity assumption is broken and something else is discontinuous there.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> A university gives scholarships to students who score above 70 on entrance exam. You want to estimate the effect on graduation rates using RDD. What are your main validity checks?</p>
+      <ul class="check-opts"><li>A) Check balance on post-treatment covariates (GPA after enrollment, attendance rate) on both sides of the cutoff — if these are balanced, the RDD estimate is valid</li><li>B) Estimate the RDD with multiple functional forms (linear, quadratic, cubic) and verify that the treatment effect estimate is consistent across all specifications</li><li class="correct">C) Four checks: (1) McCrary density test — plot density of scores around 70; spike just above = manipulation, formal test via rddensity package; (2) covariate balance test — regress pre-determined covariates on running variable and test for jump at 70; (3) bandwidth sensitivity — re-estimate at multiple bandwidths (±5, ±10, ±15), check stability; (4) placebo cutoffs — run RDD at false cutoffs (60, 80) where no policy discontinuity; significant effects at placebo cutoffs signal confounding.</li><li>D) Verify that the scholarship amount is large enough to plausibly affect graduation rates, and check that students scoring just below 70 applied for alternative financial aid — if they did, the RDD estimate is the net effect of the scholarship</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> You run sharp RDD and get significant effect with bandwidth ±10. With ±5 the effect is larger; with ±15 it shrinks to near zero. What does this pattern tell you?</p>
+      <ul class="check-opts"><li>A) The pattern is expected — narrower bandwidths always produce larger RDD estimates because they use only the most comparable units; the ±15 estimate is less credible because it includes units too far from the cutoff</li><li class="correct">B) Non-monotonic sensitivity is a warning sign. Well-identified RDD should be relatively stable across bandwidths. Two explanations: (1) nonlinearity in running variable-outcome relationship (linear extrapolation overestimates with narrow bandwidth — use local quadratic); (2) localised manipulation (units in ±5 successfully manipulated score, including wider band dilutes their influence — check McCrary density in ±5 range). Correct response: plot RDD with CIs at multiple bandwidths, use CCT optimal bandwidth as primary, report and explain sensitivity, investigate ±5 region for manipulation.</li><li>C) The shrinking effect at ±15 confirms the RDD is valid — the treatment effect is local to the cutoff and appropriately weakens as you include units farther away where local randomization is less plausible</li><li>D) The larger effect at ±5 indicates the RDD estimate is being driven by regression to the mean — students who score just above 70 had unusually high scores relative to their true ability, and the scholarship has no real effect</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> A government policy provides business subsidies to firms with revenue below £500k. McCrary test shows significant bunching just below £500k. Can you still use RDD?</p>
+      <ul class="check-opts"><li>A) Yes — bunching below £500k confirms firms are aware of the threshold, which means the treatment (subsidy) is salient and its effects are well-identified; the RDD estimate is actually more credible with bunching</li><li>B) Yes — apply a density-weighting correction that downweights observations near the bunching region; this adjusts for the manipulation and recovers an unbiased RDD estimate</li><li>C) Yes — restrict the sample to firms that did not change their revenue year-over-year; firms with stable revenues are not manipulating and provide a valid comparison group for RDD</li><li class="correct">D) Bunching just below £500k indicates deliberate manipulation — firms keeping revenue below threshold to retain eligibility. This violates continuity assumption: firms just below are NOT comparable to just above, they made an active choice. Standard RDD invalid near cutoff. Partial remedies: (1) Donut RDD — exclude bunching region (£475k-£500k), estimate using firms in donut (£450k-£475k vs £500k-£525k); (2) Model manipulation explicitly with bunching estimator modeling counterfactual distribution; (3) Acknowledge RDD provides only lower bound if manipulation is asymmetric.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#causal_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

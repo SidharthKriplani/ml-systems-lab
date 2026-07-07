@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RecSys Stack Deep-Dive (4-Stage Funnel) | ML Systems Lab</title>
+  <meta name="description" content="Retrieval → pre-ranking → ranking → re-ranking, latency budgets, feedback loops">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/recsys_stack.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/recsys_stack.html">
+  <meta property="og:title" content="RecSys Stack Deep-Dive (4-Stage Funnel) | ML Systems Lab">
+  <meta property="og:description" content="Retrieval → pre-ranking → ranking → re-ranking, latency budgets, feedback loops">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="RecSys Stack Deep-Dive (4-Stage Funnel)">
+  <meta name="twitter:description" content="Retrieval → pre-ranking → ranking → re-ranking, latency budgets, feedback loops">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "RecSys Stack Deep-Dive (4-Stage Funnel)",
+  "description": "Retrieval → pre-ranking → ranking → re-ranking, latency budgets, feedback loops",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/recsys_stack.html",
+  "keywords": "RecSys, ranking, pre-ranking, candidate generation"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#system_design_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">26 min read</span>
+      <span class="tag">RecSys</span><span class="tag">ranking</span><span class="tag">pre-ranking</span><span class="tag">candidate generation</span>
+    </div>
+    <h1>RecSys Stack Deep-Dive (4-Stage Funnel)</h1>
+    <p class="subtitle">Retrieval → pre-ranking → ranking → re-ranking, latency budgets, feedback loops</p>
+
+    <p>The gap between a recommender *prototype* and a recommender *system* is the entire engineering stack around the model. A prototype runs a ranker over a few thousand items and prints results. Production has to serve millions of users inside a ~100ms budget, A/B-test each stage independently, degrade gracefully when any component dies, and correct position bias so the ranker doesn't just resurface whatever the last model showed.</p>
+    <hr>
+    <p><strong>Modern stacks have four stages, not three.</strong> Between cheap retrieval and the expensive ranker sits a <strong>pre-ranking</strong> (a.k.a. coarse-ranking) stage: a lightweight model that trims thousands of retrieved candidates to a few hundred before the heavy ranker runs. Without it, the full ranker either blows the latency budget or is forced to score too few candidates. Retrieval (10M→5k, ~1ms) → pre-rank (5k→500, ~5ms) → rank (500→50, ~20ms) → re-rank (50→10, ~5ms).</p>
+    <hr>
+    <p><strong>Latency is allocated, not hoped for.</strong> Each stage has a hard millisecond budget and a single overrunning stage cascades. If feature retrieval slips from 10ms to 25ms, only 15ms remains for ranking — forcing fewer candidates or a simpler model, both of which cost quality. Measure the budget end-to-end in production, never from component microbenchmarks.</p>
+    <hr>
+    <p><strong>The hardest correctness problem is the feedback loop.</strong> The ranker trains on interactions shaped by what the *previous* ranker chose to show. Position 1 gets clicks regardless of quality; train on raw clicks and you teach the model to reproduce position effects, not relevance. Inverse-propensity weighting and counterfactual learning are the tools that recover an unbiased relevance estimate.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Pre-ranking is the stage most people forget.</strong> Retrieval returns thousands; the full ranker can't afford to score thousands in-budget. A cheap pre-ranker (small two-tower or GBM) cuts 5k→500 so the expensive ranker only scores hundreds. Consistency matters: if the pre-ranker and ranker disagree wildly, good candidates get cut before the ranker ever sees them (pre-ranking/ranking consistency is its own tuning problem).</li><li><strong>Each stage is independently trained, monitored, and deployed — that's an organizational choice as much as technical.</strong> It lets a 10-person team improve retrieval this week without re-testing ranking. Blur the boundaries and the pipeline becomes one un-shippable unit.</li><li><strong>Latency budgets are hard allocations measured end-to-end.</strong> A stage that overruns steals from the next. The bottleneck is usually feature retrieval, not inference — profile the whole request path in production before committing to a model size.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Production RecSys is a 4-stage funnel — retrieval, pre-ranking, ranking, re-ranking — where pre-ranking exists precisely because the heavy ranker can't score thousands of candidates in-budget, and every stage runs on its own hard latency allocation with position-bias correction stitched through.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Production RecSys is a 4-stage funnel, not 3:</strong> retrieval (10M→5k, ~1ms) → pre-rank (5k→500, ~5ms) → rank (500→50, ~20ms) → re-rank (50→10, ~5ms). The gap between a *prototype* and a *system* is this entire stack — serving millions inside ~100ms, A/B-testing each stage, degrading gracefully, correcting position bias.</li><li><strong>Pre-ranking (coarse-ranking) is the stage interviews forget:</strong> a lightweight model (small two-tower or GBM) trims thousands → hundreds so the heavy ranker fits its budget — without it the ranker either blows latency or scores too few candidates. Its own tuning problem is *pre-rank/rank consistency*: if the two disagree wildly, good candidates get cut before the ranker ever sees them.</li><li><strong>Latency is allocated, not hoped for — a hard per-stage budget measured end-to-end.</strong> One overrunning stage cascades: if feature fetch slips 10ms→25ms, ranking loses 15ms and must drop candidates or simplify. Profile the whole request path in production; the bottleneck is usually feature retrieval, not inference.</li><li><strong>Each stage is independently trained, monitored, and deployed</strong> — an organizational choice as much as technical, letting a small team improve retrieval this week without re-testing ranking. Blur the boundaries and the pipeline becomes one un-shippable unit.</li><li><strong>The feedback loop is the hardest correctness bug:</strong> the ranker trains on interactions shaped by what the *previous* ranker showed, and position 1 gets clicks regardless of quality — train on raw clicks and you learn position effects, not relevance. Fix with inverse-propensity weighting (weight by 1/P(click|position)) plus occasional randomization for unbiased data.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Your ranker takes 95ms for 1000 candidates; total budget is 100ms, leaving nothing for retrieval or features. Besides shrinking the model, what architectural change most directly fixes this?</p>
+      <ul class="check-opts"><li>A) Increase the candidate pool to 2000 for more context, then filter harder afterward.</li><li class="correct">B) Insert a pre-ranking stage: a cheap model trims 1000→200 so the heavy ranker scores 200 instead of 1000, cutting ranking latency ~5× while a consistency-tuned pre-ranker keeps good candidates from being dropped early.</li><li>C) Switch to asynchronous serving and return the previous request's cached scores while the new ones compute.</li><li>D) Add more ranker layers to improve quality so fewer candidates need re-ranking downstream.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Your LTR ranker shows higher precision@1 for items that were historically shown at low positions than high positions. Cause and fix?</p>
+      <ul class="check-opts"><li>A) Label noise — low-position items have fewer clicks and noisier labels; collect more editorial judgments for them.</li><li class="correct">B) Position bias — top positions accrue clicks regardless of relevance, so training on raw clicks teaches the model to resurface previously-top items (a self-reinforcing loop). Fix with inverse-propensity weighting (weight each example by 1/P(click|position)) plus occasional randomization to gather unbiased data.</li><li>C) Overfitting to head queries shown at top positions; fix with query-frequency-weighted sampling.</li><li>D) Feature leakage from popularity features correlated with historical position; remove all popularity features.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Why is a pre-ranker that's simply a smaller copy of the ranker still worth having, even though it's less accurate?</p>
+      <ul class="check-opts"><li>A) It isn't — if it's less accurate you should just run the real ranker on fewer retrieved candidates.</li><li class="correct">B) Because accuracy on the *full* candidate set isn't the pre-ranker's job — its job is a cheap, recall-oriented cut from thousands to hundreds so the accurate ranker fits the latency budget. Running the real ranker on fewer retrieved candidates instead lowers recall at retrieval, which is the ceiling you most want to protect.</li><li>C) Because the pre-ranker's weights can be copied directly into the ranker to speed up training.</li><li>D) Because a smaller model is inherently better calibrated, improving final scores.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#system_design_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

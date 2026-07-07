@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ranking Metrics | ML Systems Lab</title>
+  <meta name="description" content="NDCG, MAP, MRR — search and recommendation quality">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/ranking_metrics.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/ranking_metrics.html">
+  <meta property="og:title" content="Ranking Metrics | ML Systems Lab">
+  <meta property="og:description" content="NDCG, MAP, MRR — search and recommendation quality">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Ranking Metrics">
+  <meta name="twitter:description" content="NDCG, MAP, MRR — search and recommendation quality">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Ranking Metrics",
+  "description": "NDCG, MAP, MRR — search and recommendation quality",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/ranking_metrics.html",
+  "keywords": "NDCG, MAP, MRR, ranking, RecSys"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#eval_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">30 min read</span>
+      <span class="tag">NDCG</span><span class="tag">MAP</span><span class="tag">MRR</span><span class="tag">ranking</span><span class="tag">RecSys</span>
+    </div>
+    <h1>Ranking Metrics</h1>
+    <p class="subtitle">NDCG, MAP, MRR — search and recommendation quality</p>
+
+    <p>You type &quot;Python tutorial for beginners&quot; into a search box and get back ten results. Suppose the truly useful ones sit at positions 1, 3, and 7. A metric that just counts &quot;3 of 10 are relevant&quot; scores this 0.30 — and would give the *same* 0.30 if those three results were buried at positions 8, 9, and 10. But you know that is wrong: nobody reads past the first couple of results once they have their answer. Any metric that ignores *position* is nearly useless for search and recommendation.</p>
+    <p>So the whole family of ranking metrics is built on one idea: a relevant result near the top is worth far more than the same result near the bottom. They differ in how much detail they capture.</p>
+    <hr>
+    <h3>MRR — where is the first good one?</h3>
+    <p>The simplest is <strong>Mean Reciprocal Rank</strong>. It cares about one thing: the position of the *first* relevant result. If it is at position 1 you score 1/1 = 1.0; at position 3, 1/3 = 0.33. Average that across all your queries and you have MRR. It fits perfectly when the user has a single need and stops at the first good answer — a fact lookup, an FAQ, a &quot;just take me to X&quot; query. It is the wrong choice the moment users want *several* relevant results, because it ignores everything after the first hit.</p>
+    <hr>
+    <h3>MAP — did you find them all, and early?</h3>
+    <p><strong>Mean Average Precision</strong> rewards surfacing relevant results both early *and* completely. For one query, walk down the list, and each time you hit a relevant result note the precision so far; average those, then divide by the total number of relevant results. For our example (relevant at 1, 3, 7, three relevant total): (1/3)(1/1 + 2/3 + 3/7) ≈ 0.70. Average across queries to get MAP. It only needs yes/no relevance labels, which makes it cheap to collect.</p>
+    <hr>
+    <h3>NDCG — the industry standard</h3>
+    <p><strong>Normalized Discounted Cumulative Gain</strong> adds the one thing MAP lacks: *grades* of relevance. A result can be perfect (grade 3), okay (grade 1), or useless (grade 0), not just relevant or not. NDCG folds in two moves: each result contributes (2^grade − 1), so a perfect hit counts far more than a so-so one; and each position is discounted by log₂(position + 1), so position 1 counts fully, position 3 about half, position 10 under a third. Divide by the score of the *ideal* ordering and you get a number from 0 to 1 that is comparable across queries. This is what commercial search and recommendation teams actually use, when they have graded human judgments and position matters.</p>
+    <hr>
+    <h3>Which one? Match the metric to what users do</h3>
+    <p>There is no single best ranking metric — the right one mirrors real behavior. If users scan a vertical list and stop at the first hit, use <strong>MRR</strong>. If they expect to find all the relevant results and would be annoyed to see any buried, use <strong>MAP</strong>. If you have graded labels and care about exact ordering, use <strong>NDCG</strong>. And if every shown slot is equally prominent regardless of order — a grid of products, a row of ad slots — plain <strong>Precision@K</strong> is fine. Pick by what the interface makes people do, not by which formula looks most impressive.</p>
+    <hr>
+    <h3>Retrieval's own metrics: recall@K and hit-rate@K</h3>
+    <p>Big systems rank in two stages — a cheap <strong>candidate generator</strong> pulls a few hundred items from millions, then an expensive <strong>ranker</strong> orders them. These stages need different metrics. For retrieval the question isn't &quot;is the order perfect?&quot; but &quot;did we even *retrieve* the relevant items into the candidate set?&quot; That's <strong>recall@K</strong> (of all relevant items, how many made it into the top K) and <strong>hit-rate@K</strong> (did at least one relevant item land in the top K). A ranker can't fix what retrieval never surfaced, so you measure recall@K on the generator and NDCG/MAP on the ranker — diagnosing the wrong stage is a classic mistake.</p>
+    <hr>
+    <h3>Relevance isn't the only goal</h3>
+    <p>Pure relevance metrics miss things a real recommender must balance. <strong>Coverage</strong> — what fraction of the catalog ever gets shown (a system that only recommends the top 100 items starves the long tail). <strong>Diversity</strong> — are the top results varied, or ten near-duplicates? <strong>Novelty / serendipity</strong> — does it surface things the user wouldn't have found alone, not just the obvious? <strong>Freshness</strong> — new content shown before it goes stale. <strong>Creator fairness</strong> — is exposure spread across creators or concentrated? A model that maxes NDCG by always showing the same popular items can quietly wreck coverage and diversity, and the business notices even though the relevance metric looks great.</p>
+    <hr>
+    <h3>The elephant: position bias in click labels</h3>
+    <p>If your relevance labels come from *clicks*, they're contaminated. The item at position 1 gets more clicks <strong>because it was shown first</strong>, not because it's more relevant — so training or evaluating on raw clicks teaches the model to reproduce the old ranking's position effects rather than true relevance, a self-reinforcing loop. The fixes are their own field: <strong>inverse-propensity weighting</strong> to down-weight clicks that only happened due to position, <strong>interleaving</strong> (blend two rankers' results and see which gets clicked, which cancels position bias), and <strong>counterfactual evaluation</strong>. Never treat click data as clean relevance.</p>
+    <hr>
+    <h3>Metric@K: K is a product decision</h3>
+    <p>NDCG@1, @3, @10, @50 answer *different* questions, and K should match how the interface is actually used. NDCG@1 is for &quot;I feel lucky&quot; single-answer surfaces; NDCG@10 for a first page of ten; NDCG@50 for a scroll-heavy feed or a candidate pool feeding a downstream reranker. Set K to the viewport and session behaviour, not to a default — reporting NDCG@10 for a mobile screen that shows three results is measuring the wrong thing.</p>
+    <hr>
+    <h3>Ties and unjudged documents</h3>
+    <p>Two practical hazards. <strong>Ties</strong> (items with equal score) make the metric depend on arbitrary tiebreak order — resolve them deterministically or you'll see phantom metric swings. And <strong>unjudged ≠ irrelevant</strong>: with millions of documents, only a pooled subset gets human labels, so a genuinely relevant document nobody judged is scored 0 by default, penalising a new system that surfaces it. This <strong>pooling bias</strong> is why a better retriever can look worse offline; judge the novel results before trusting the comparison.</p>
+    <hr>
+    <h3>You can't optimise these metrics directly</h3>
+    <p>A final subtlety interviewers probe: NDCG, MAP, and MRR are based on *sorting*, which is not differentiable, so you can't gradient-descend on them directly. Ranking models therefore optimise a <strong>surrogate loss</strong> — pairwise (learn &quot;A should rank above B,&quot; as in RankNet/LambdaRank) or listwise (score the whole list, as in ListNet) — that correlates with the target metric while being differentiable. LambdaMART's trick is to weight those pairwise gradients by their NDCG impact, getting a ranking-aware signal without needing NDCG to be differentiable.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Match the metric to the user's behavior, not to mathematical elegance.</strong>
+
+Graded labels and position matters (commercial search)? Use NDCG. User wants one answer and stops at the first hit (question-answering, lookups)? Use MRR. Every shown slot equally prominent regardless of order (a product grid, an ad row)? Use Precision@K. Choose the wrong one and you optimise a proxy that does not track the real experience — NDCG@10 can even climb while MRR falls, if the model improves positions 4–10 while making position 1 worse.</li><li><strong>The trap: judging against an incomplete set of relevance labels.</strong>
+
+Raters can only score a small pool of documents out of millions. If that pool was built from the old system's top results, a new system that surfaces genuinely relevant documents nobody ever judged will see them scored as &quot;not relevant&quot; by default — so it looks worse on NDCG even though it found better results. When a change is big (a new retrieval or ranking model), judge the new system's novel results before comparing scores.</li><li><strong>The diagnostic: look at NDCG@1 versus NDCG@10 separately.</strong>
+
+If NDCG@10 is healthy but NDCG@1 is much lower, the relevant results are in the top ten but the best one is not landing first — your re-ranking is the bottleneck, not retrieval. If NDCG@1 and NDCG@10 are both low and roughly equal, the relevant documents are not even in the candidate set — retrieval is the bottleneck. The split tells you which stage to go fix.</li><li><strong>Measure the right stage with the right metric, and don't trust raw click labels.</strong>
+
+Candidate generation is judged by recall@K / hit-rate@K (did the relevant items make it into the pool?), the ranker by NDCG/MAP — diagnosing the wrong stage wastes weeks. Set K to the actual viewport (NDCG@1/@3/@10/@50 answer different product questions). And clicks are position-biased: the top slot gets clicks because it was shown first, so debias with inverse-propensity weighting, interleaving, or counterfactual evaluation before treating clicks as relevance.</li><li><strong>Relevance isn't the whole story, and you can't optimise these metrics directly.</strong>
+
+Balance NDCG against coverage, diversity, novelty/serendipity, freshness, and creator fairness — a model that maxes relevance by always showing the same popular items wrecks the catalog and long tail. Handle ties deterministically and remember unjudged ≠ irrelevant (pooling bias makes a better retriever look worse offline). Since NDCG/MAP/MRR rely on non-differentiable sorting, ranking models train on pairwise (RankNet/LambdaRank) or listwise (ListNet) surrogate losses — LambdaMART weights pairwise gradients by NDCG impact to stay ranking-aware.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>All ranking metrics embed a model of user attention — MRR says users stop after the first hit, MAP says they care about every relevant item equally, NDCG says attention decays with position and highly relevant results matter more — so choosing the metric is choosing which user behaviour you believe, not which formula is standard.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Any metric that ignores position is useless for search/recsys:</strong> relevant results at positions 1, 3, 7 score the same &quot;3 of 10&quot; as results buried at 8, 9, 10 — but nobody reads past the first couple. The whole family is built on one idea: a relevant result near the top is worth far more than the same result near the bottom.</li><li><strong>MRR = 1/rank of the *first* relevant result:</strong> position 1 → 1.0, position 3 → 0.33, averaged across queries. It fits when the user has one need and stops at the first good answer (fact lookup, FAQ, &quot;just take me to X&quot;) — wrong the moment users want several relevant results.</li><li><strong>MAP rewards finding them all, and early:</strong> walk down the list, note precision-so-far at each relevant hit, average those, divide by total relevant. For relevant at 1, 3, 7 (three total): (1/3)(1/1 + 2/3 + 3/7) ≈ 0.70. Needs only binary yes/no labels, so it's cheap to collect.</li><li><strong>NDCG is the industry standard because it adds *graded* relevance:</strong> each result contributes $(2^{grade}-1)$ gain (a perfect hit counts far more than a so-so one) discounted by $\log_2(pos+1)$, divided by the ideal ordering's score for a 0–1 number comparable across queries. Use it when you have graded human judgments and exact ordering matters.</li><li><strong>Match the metric to user behaviour, not to which formula looks impressive:</strong> scan-and-stop → MRR; expect to find all relevant items → MAP; graded labels + care about order → NDCG; every shown slot equally prominent (a product grid, an ad row) → plain <strong>Precision@K</strong>.</li><li><strong>Two stages need two different metrics:</strong> a cheap candidate generator is judged by recall@K / hit-rate@K (did the relevant items even reach the candidate set?), the expensive ranker by NDCG/MAP — a ranker can't fix what retrieval never surfaced, so diagnosing the wrong stage wastes weeks.</li><li><strong>Watch three traps:</strong> click labels are position-biased (top slot gets clicks because it was shown first — debias with IPW, interleaving, or counterfactual eval); pure relevance ignores coverage/diversity/novelty/freshness/creator-fairness (maxing NDCG by always showing popular items wrecks the catalog); and NDCG/MAP/MRR rely on non-differentiable sorting, so rankers train on pairwise (RankNet/LambdaRank) or listwise (ListNet) surrogates — LambdaMART weights pairwise gradients by NDCG impact.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> A search engine retrieves 3 relevant documents at ranks 1, 3, 5, out of 5 total relevant documents. Compute Average Precision (AP).</p>
+      <ul class="check-opts"><li>A) AP = 0.60 — the average of P@1, P@3, and P@5 weighted by the 3 relevant documents that were actually retrieved</li><li class="correct">B) AP = 0.453 — add the precision at each rank where a relevant doc appears (1.0, 2/3, 3/5) and divide by the total relevant count, 5: (1/5)(1.0 + 0.667 + 0.6) = 0.453</li><li>C) AP = 0.333 — the plain mean of P@1, P@3, and P@5 with no division by the total number of relevant documents</li><li>D) AP = 0.50 — since 3 of the 5 relevant docs were found, AP is just the recall of 0.60 blended together with precision</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Your recommendation system shows NDCG@10 = 0.85 offline, but users complain the results feel irrelevant. What could explain the gap?</p>
+      <ul class="check-opts"><li class="correct">A) The NDCG was likely computed on click-based labels that bake in position bias, or the offline test set is stale, or the average hides poor performance on tail queries, or relevance was scored per item while the real experience is per session — offline NDCG and felt relevance can diverge for any of these reasons.</li><li>B) NDCG@10 = 0.85 is simply too low — results only start to feel relevant once NDCG climbs above 0.95, so the fix is just to push the model harder.</li><li>C) The model is overfitting the test set; 0.85 on held-out data alongside complaints means the test set is unrepresentative, and nothing else could be going on.</li><li>D) Users are scrolling past position 10, so the entire problem lives below the top ten, somewhere NDCG@10 cannot see it at all.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> A search system has MRR = 0.60. A manager wants 0.75. What does that mean concretely, and what would you change?</p>
+      <ul class="check-opts"><li>A) Going from 0.60 to 0.75 is a 25% relative lift, so the move is to improve overall ranking quality evenly, nudging every position up by the same amount.</li><li>B) MRR only ever looks at the first relevant result, so raising it means fully re-ranking the entire result set for every single query from scratch.</li><li class="correct">C) MRR = 0.60 means the first relevant result sits at rank ≈ 1.67 on average; 0.75 means ≈ 1.33. So focus on the queries where the first relevant result is at rank 3 or worse — improve query understanding, and improve retrieval recall so the re-ranker actually has the right document to put first.</li><li>D) It means increasing the share of queries that return any relevant result at all, so the effort should go entirely into recall-oriented retrieval improvements.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> You have graded relevance labels (0-3) and want to compare two rankers. Should you use MAP or NDCG?</p>
+      <ul class="check-opts"><li class="correct">A) Use NDCG — MAP requires binary relevance and cannot use graded scores; NDCG with 2^rel amplifies differences between highly relevant (rel=3, contribution 7) and somewhat relevant (rel=1, contribution 1) items, making it strictly more informative for graded labels</li><li>B) Use MAP — it is more interpretable than NDCG and can handle graded labels by treating each grade as a separate binary threshold</li><li>C) Use MRR — graded relevance labels are best handled by finding the first highly-relevant (rel=3) result, which MRR measures directly</li><li>D) Either is fine — MAP and NDCG are mathematically equivalent when applied to graded relevance labels</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> A new retrieval model surfaces documents the old system never showed, and offline NDCG comes out lower than the old model. What is the likely explanation before you conclude the new model is worse?</p>
+      <ul class="check-opts"><li>A) The new model is simply worse — a lower NDCG on the same labeled test set is definitive, so revert to the old model.</li><li class="correct">B) Pooling bias: the relevance labels were pooled from the old system's results, so the new model's genuinely relevant but never-judged documents default to &quot;not relevant&quot; and are scored 0. That drags NDCG down unfairly. Judge the new system's novel results before comparing — unjudged is not the same as irrelevant.</li><li>C) The new model has a bug in its tie-breaking, which is the only thing that can lower NDCG when better documents are retrieved.</li><li>D) NDCG can't be compared across models at all, so the lower number is meaningless and you should use accuracy instead.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q6.</strong> An interviewer asks: &quot;Why can't you train a ranking model by directly minimising 1 − NDCG with gradient descent?&quot;</p>
+      <ul class="check-opts"><li>A) You can — NDCG is smooth and differentiable, so 1 − NDCG is a perfectly standard loss and most rankers use it directly.</li><li>B) Because NDCG is bounded in [0, 1], and gradient descent only works on unbounded losses; you'd have to rescale it first.</li><li class="correct">C) NDCG depends on the sorted order of items, and sorting is a step function — a tiny change in scores either doesn't change the ranking (zero gradient) or flips two items (a discontinuous jump), so NDCG has no useful gradient. Rankers optimise a differentiable surrogate instead: pairwise losses (RankNet/LambdaRank) or listwise losses (ListNet), with LambdaMART weighting pairwise gradients by NDCG impact.</li><li>D) NDCG can only be computed with human graded labels, which aren't available during training, so there's simply nothing to differentiate.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#eval_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

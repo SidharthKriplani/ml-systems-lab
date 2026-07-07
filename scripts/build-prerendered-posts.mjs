@@ -13,48 +13,72 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import vm from 'node:vm'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
 const GRADIENT_PATH = join(ROOT, 'src/tabs/GradientTab.jsx')
 const OUT_DIR = join(ROOT, 'public/post')
-const DOMAIN = 'https://ml-systems-lab-v9xe.vercel.app'
+const DOMAIN = process.env.SITE_BASE_URL || 'https://ml-systems-lab-v9xe.vercel.app'
 
 if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true })
 
 const source = readFileSync(GRADIENT_PATH, 'utf8')
 
-// Extract each post block by id markers.
-const posts = []
-const idRegex = /^\s+id:\s+(\d+),\s*$/gm
-const starts = []
-let m
-while ((m = idRegex.exec(source)) !== null) {
-  starts.push({ id: parseInt(m[1], 10), index: m.index })
+// ── Balanced-bracket / string-aware scanner ──────────────────────────────────
+// Regex-based field extraction broke on posts using double-quoted title/excerpt
+// strings (needed when the text itself contains an apostrophe, e.g. "It's a
+// Product Problem"). This scans real bracket/string structure instead — same
+// approach as scripts/prerender-modules.cjs — so it's robust to quote style,
+// and also to real duplicate `id`/`slug` values that exist in the source data
+// (deduped by slug below rather than silently keeping only the regex-matched
+// subset).
+function findMatchingEnd(str, startIdx) {
+  const stack = [str[startIdx]]
+  let i = startIdx + 1
+  while (stack.length > 0 && i < str.length) {
+    const c = str[i]
+    const top = stack[stack.length - 1]
+    if (top === "'" || top === '"' || top === '`') {
+      if (c === '\\') { i += 2; continue }
+      if (top === '`' && c === '$' && str[i + 1] === '{') { stack.push('{'); i += 2; continue }
+      if (c === top) { stack.pop(); i++; continue }
+      i++; continue
+    }
+    if (c === "'" || c === '"' || c === '`') { stack.push(c); i++; continue }
+    if (c === '[' || c === '{' || c === '(') { stack.push(c); i++; continue }
+    if (c === ']' || c === '}' || c === ')') { stack.pop(); i++; continue }
+    i++
+  }
+  return i
 }
 
-for (let i = 0; i < starts.length; i++) {
-  const start = starts[i].index
-  const end = i + 1 < starts.length ? starts[i + 1].index : source.length
-  const block = source.slice(start, end)
+const postsMarker = 'const POSTS = ['
+const postsStart = source.indexOf(postsMarker)
+if (postsStart === -1) {
+  console.error('Could not find "const POSTS = [" in GradientTab.jsx')
+  process.exit(1)
+}
+const openBracket = postsStart + postsMarker.length - 1
+const postsEnd = findMatchingEnd(source, openBracket)
+const postsArrayText = source.slice(openBracket, postsEnd)
+const rawPosts = vm.runInNewContext(`(${postsArrayText})`, { console })
 
-  const slugMatch    = block.match(/^\s+slug:\s+'([^']+)',\s*$/m)
-  const titleMatch   = block.match(/^\s+title:\s+'([^']+(?:\\'[^']*)*)',\s*$/m)
-  const excerptMatch = block.match(/^\s+excerpt:\s+'([\s\S]+?)',\s*$/m)
-  const categoryMatch= block.match(/^\s+category:\s+'([^']+)',\s*$/m)
-  const tagsMatch    = block.match(/^\s+tags:\s+\[([^\]]+)\],\s*$/m)
-  const bodyMatch    = block.match(/^\s+body:\s+`([\s\S]+?)`,\s*$/m)
-
-  if (!slugMatch || !titleMatch || !bodyMatch) continue
-
+// Dedupe by slug (two ids share a slug in the source data — keep first).
+const posts = []
+const seenSlugs = new Set()
+for (const p of rawPosts) {
+  if (!p || !p.slug || !p.title || !p.body) continue
+  if (seenSlugs.has(p.slug)) continue
+  seenSlugs.add(p.slug)
   posts.push({
-    id: starts[i].id,
-    slug: slugMatch[1],
-    title: titleMatch[1].replace(/\\'/g, "'"),
-    excerpt: excerptMatch ? excerptMatch[1].replace(/\\'/g, "'") : '',
-    category: categoryMatch ? categoryMatch[1] : '',
-    tags: tagsMatch ? tagsMatch[1].split(',').map(s => s.trim().replace(/^['"]|['"]$/g, '')) : [],
-    body: bodyMatch[1],
+    id: p.id,
+    slug: p.slug,
+    title: p.title,
+    excerpt: p.excerpt || '',
+    category: p.category || '',
+    tags: Array.isArray(p.tags) ? p.tags : [],
+    body: p.body,
   })
 }
 

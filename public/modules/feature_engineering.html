@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feature Engineering | ML Systems Lab</title>
+  <meta name="description" content="Transform raw columns into representations that expose the signal a model can actually learn from.">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/feature_engineering.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/feature_engineering.html">
+  <meta property="og:title" content="Feature Engineering | ML Systems Lab">
+  <meta property="og:description" content="Transform raw columns into representations that expose the signal a model can actually learn from.">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Feature Engineering">
+  <meta name="twitter:description" content="Transform raw columns into representations that expose the signal a model can actually learn from.">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Feature Engineering",
+  "description": "Transform raw columns into representations that expose the signal a model can actually learn from.",
+  "proficiencyLevel": "Foundational",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/feature_engineering.html",
+  "keywords": "feature engineering, transformations, cyclical encoding, interaction terms, log transform"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#data_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Foundational</span>
+      <span class="read-time">45 min read</span>
+      <span class="tag">feature engineering</span><span class="tag">transformations</span><span class="tag">cyclical encoding</span><span class="tag">interaction terms</span><span class="tag">log transform</span>
+    </div>
+    <h1>Feature Engineering</h1>
+    <p class="subtitle">Transform raw columns into representations that expose the signal a model can actually learn from.</p>
+
+    <p>You want to predict credit default, and you have three raw columns: income in dollars, account age in days, and the date of the last transaction. You feed them straight into a model and it does poorly. The tempting move is to grab more data or a fancier model. Both are wrong. The problem is that the raw columns do not present the information in a shape the model can use — and reshaping them is called <strong>feature engineering</strong>.</p>
+    <p>The key thing to internalise: a model sees *nothing but numbers*. It has no idea that income is measured in dollars, that an account opened last week is a different animal from a decade-old one, or that income only means something *relative* to debt. Your job is to bake that knowledge into the numbers themselves. Let us do it column by column.</p>
+    <hr>
+    <h3>Income: fix the scale</h3>
+    <p>To a raw model, the jump from 50,000 to 51,000 and the jump from 50,000 to 100,000 are just &quot;1,000&quot; and &quot;50,000&quot; apart — so it treats the second as fifty times more important. But for credit risk, doubling someone's income matters enormously while a 1,000 bump is noise. A <strong>log transform</strong> fixes this: on a log scale, 50K → 100K is a big step while 900K → 950K is almost nothing. It stretches out the low range where the real variation lives and squashes the giant tail. The model is not smarter afterward — the *shape* of the feature is finally right.</p>
+    <hr>
+    <h3>Account age: hand it the domain knowledge</h3>
+    <p>The raw numbers 7 days versus 3,650 days do not capture that a brand-new account behaves nothing like a ten-year one. Bucketing into &quot;new / established / long-term,&quot; or building a ratio like &quot;transactions per account-year,&quot; gives the model the thing an expert already knows: the first year is a different world from year ten.</p>
+    <hr>
+    <h3>Last transaction date: turn a calendar into a signal</h3>
+    <p>A raw date means nothing on its own. But &quot;days since last transaction&quot; is a direct *recency* signal, and &quot;transactions in the last 30 days&quot; is a *velocity* signal. Neither exists in the original data — you compute them against a reference time. These are <strong>temporal features</strong>, earned by realising the model wants a time gap, not a calendar entry. And when a time field is *cyclical* — hour of day, day of week — encoding it as a plain integer is a trap: hour 23 and hour 0 are one hour apart in reality but 23 apart as integers, so a sin/cos pair placing each hour on a circle is what keeps midnight next to 11pm.</p>
+    <hr>
+    <h3>Income and debt together: the interaction</h3>
+    <p>Income alone does not tell you whether someone is overextended, and neither does debt alone — but the <strong>income-to-debt ratio</strong> does. This is an <strong>interaction feature</strong>: a joint signal that neither parent carries by itself. A tree model can sometimes discover it on its own; a linear model never will unless you hand it the ratio explicitly.</p>
+    <hr>
+    <h3>Doesn't deep learning make this obsolete?</h3>
+    <p>For images and text, largely yes — raw pixels and words already carry rich structure a network can exploit. But for *tabular* data like this, no. The model just sees bare numbers with no idea what they mean, so even gradient boosting — which handles non-linearities well — routinely gains 5–20% from good ratios, log transforms, and time lags. Feature engineering is not busywork; it is the craft of encoding what you know into the geometry of the input, so that a solvable problem actually becomes solvable.</p>
+    <hr>
+    <h3>Categorical columns need encoding too</h3>
+    <p>The columns above were numeric; categorical columns (&quot;country,&quot; &quot;device,&quot; &quot;merchant&quot;) have to be turned into numbers, and the choice matters. Quick map: <strong>one-hot</strong> for low-cardinality categories (a column per value), <strong>ordinal</strong> when the categories have a real order, <strong>target encoding</strong> (replace a category with the average outcome for it) for high-cardinality columns, <strong>frequency/count encoding</strong> when popularity itself is predictive, the <strong>hashing trick</strong> for huge or unbounded vocabularies, and <strong>learned embeddings</strong> for neural nets. Each has a different leakage and cardinality profile — the dedicated encoding lesson goes deep; the point here is that &quot;engineer the features&quot; includes choosing a categorical encoding, not just transforming numbers.</p>
+    <hr>
+    <h3>Aggregation and window features: where the real signal often lives</h3>
+    <p>For behavioural data, the strongest features are usually *aggregates over time*, not raw columns. The classic frame is <strong>RFM</strong> — <strong>Recency</strong> (days since last transaction), <strong>Frequency</strong> (how many in the last N days), <strong>Monetary</strong> (total/average spend) — and it generalises: <strong>rolling</strong> statistics (mean/std/count over a trailing window), <strong>expanding</strong> windows (cumulative to date), and <strong>lag</strong> features (the value k steps ago). These compress a user's history into a few predictive numbers. The non-negotiable rule attached to all of them is the <strong>point-in-time join</strong>: every aggregate must be computed using only data available *strictly before* the label timestamp, or you leak the future — the single most common way aggregate features go wrong.</p>
+    <hr>
+    <h3>High-cardinality columns need special care</h3>
+    <p>A &quot;merchant_id&quot; or &quot;zip_code&quot; column with 50,000 values can't be one-hot encoded sanely (50,000 columns, most nearly always zero). Options: <strong>group rare categories</strong> into &quot;Other&quot; below a count threshold, the <strong>hashing trick</strong> (map categories into a fixed number of buckets, accepting some collisions), and <strong>smoothed target encoding</strong> — replace each category with a blend of its own outcome average and the global average, shrinking rare categories toward the global mean so a category seen twice doesn't get a wild estimate. And target encoding is a leakage magnet, so it must be done <strong>out-of-fold</strong> inside cross-validation (each row encoded using only the *other* folds), never on the full data.</p>
+    <hr>
+    <h3>Text, images, embeddings: where engineering becomes representation learning</h3>
+    <p>For unstructured inputs the &quot;features&quot; are learned, not hand-built. Text becomes <strong>TF-IDF</strong> vectors (classic) or <strong>embeddings</strong> from a pretrained model (modern); images become activations from a pretrained CNN; and you often <strong>reduce dimension</strong> afterward. The line to notice: at this point feature engineering has become <strong>representation learning</strong> — the network *learns* the features instead of you crafting them, which is exactly why deep learning displaced hand-engineering for images and text but not for tabular data.</p>
+    <hr>
+    <h3>A feature has to exist at prediction time</h3>
+    <p>An engineered feature is worthless if you can't compute it live with the same values. <strong>Serving parity</strong> is the discipline: the offline (training) computation and the online (serving) computation must produce identical results, the feature must be <strong>fresh</strong> enough at request time, and <strong>backfilling</strong> it for historical training rows must respect point-in-time correctness. This is what feature stores exist to enforce. A feature that's brilliant offline but arrives stale, or is computed differently online, produces train-serving skew — the model scores on values it never learned from.</p>
+    <hr>
+    <h3>Validate new features by ablation</h3>
+    <p>Don't trust &quot;accuracy went up after I added 40 features.&quot; Validate the way you'd validate a model change: start from a <strong>baseline</strong> with raw features, add one <strong>feature family at a time</strong>, and measure the lift on an <strong>untouched validation/test set</strong> — features selected or tuned against the same set you report on will look better than they are. Pair this with redundancy checks (drop features correlated with existing ones), permutation importance, and a look at whether the picks are <strong>stable across folds</strong>. A feature family that doesn't move held-out performance is overfitting risk, not signal.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Use log and sqrt transforms when a continuous feature is right-skewed and your model is not a tree.</strong> Income, transaction counts, prices, and time durations almost always need this. The rule of thumb: if the 95th percentile is more than 10× the median, the raw scale is hurting you. Apply log(x + 1) to handle zeros. For tree-based models, skip it — the relative ordering is all that matters and log transforms change nothing about optimal split thresholds.</li><li><strong>The most common production trap: computing temporal features without a strict temporal join.</strong> A &quot;7-day rolling transaction count&quot; sounds clean until you realize it was computed using the label day itself. The feature includes the day you are trying to predict. In training this inflates performance; in production the feature is computed before the outcome is known. Every lag feature, rolling mean, or &quot;days since&quot; feature must be computed using only data available strictly before the label timestamp. Validate this by running your feature pipeline on a single row and verifying the computation cutoff date.</li><li><strong>Diagnose which features are earning their place with permutation importance, not training loss.</strong> Shuffle a feature's values across the validation set and measure the drop in performance. A genuinely useful feature causes a large drop when shuffled. A spurious feature or a duplicate of another feature causes no drop. Features that do not move permutation importance are adding noise and overfitting risk — remove them. Run this check after any batch of new features before shipping to production.</li><li><strong>Aggregate over time with point-in-time joins, and handle high-cardinality categoricals carefully.</strong>
+
+The strongest behavioural features are RFM-style aggregates — recency, frequency, monetary, plus rolling/expanding/lag windows — but every one must be computed strictly before the label timestamp (point-in-time join) or it leaks the future. For high-cardinality columns (merchant_id, zip), group rare categories into &quot;Other,&quot; use the hashing trick, or smoothed target encoding done out-of-fold in CV (never on the full data, or you leak the label). Encoding choice is part of feature engineering: one-hot for low cardinality, target/frequency/hashing for high, embeddings for neural nets.</li><li><strong>A feature must survive to serving, and new features earn their place by ablation.</strong>
+
+Serving parity is non-negotiable: the offline and online computations must match, the value must be fresh at request time, and backfills must be point-in-time correct — a feature that's great offline but stale or differently-computed online creates train-serving skew. For unstructured data (text/images), features become learned representations (TF-IDF/embeddings), which is where engineering shades into representation learning. Validate additions by ablation — baseline, add one feature family at a time, measure lift on an untouched test set, check stability across folds — rather than trusting a single accuracy bump.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Raw features encode what was recorded; engineered features encode what the model needs to find the pattern. The right representation can replace millions of additional training rows — the wrong one makes the signal invisible regardless of model complexity.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Raw features encode what was recorded; engineered features encode what the model needs</strong> — the right representation can replace millions of rows.</li><li><strong>Log/sqrt right-skewed inputs for non-tree models</strong> (95th pctile &gt;10× median); use `log(x+1)` for zeros. Trees don't care — ordering is all that matters.</li><li><strong>Temporal features must use a strict point-in-time join:</strong> a 7-day rolling count that includes the label day leaks the future.</li><li><strong>Permutation importance, not training loss,</strong> decides which features earn their place — shuffle it; no drop means no signal.</li><li><strong>High-cardinality categoricals:</strong> group rare into Other, hashing trick, or out-of-fold smoothed target encoding (never on full data).</li><li><strong>Serving parity is non-negotiable:</strong> offline and online computations must match, values must be fresh, backfills point-in-time correct — else train-serving skew.</li><li><strong>Validate additions by ablation:</strong> baseline, add one feature family at a time, measure lift on an untouched test set, check stability across folds.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You have a 'time_of_day' feature encoded as integer 0-23. Your model performs poorly on predictions for late-night events. What is the encoding problem and fix?</p>
+      <ul class="check-opts"><li>A) The integer encoding creates a class imbalance between daytime and nighttime hours; the fix is to oversample late-night training examples using SMOTE.</li><li>B) Integer encoding treats midnight as the midpoint of the day rather than a boundary; the fix is to shift all values by 12 so that noon maps to 0.</li><li>C) Integer encoding assigns too much weight to the hour feature relative to other features; the fix is to standardize the hour column with StandardScaler.</li><li class="correct">D) Raw integer encoding places hour 23 and hour 0 at maximum distance (23 apart), when they are 1 hour apart on the circular clock. The model cannot learn that midnight behavior resembles 11pm. Fix: sin/cos encoding — create sin(2π·hour/24) and cos(2π·hour/24). Together these encode each hour as a point on the unit circle: hour 23 and hour 0 geometrically close. Essential for all cyclical features: day-of-week (period 7), month-of-year (period 12), degrees (period 360).</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Why does log-transforming an income feature help a linear regression model but not a random forest?</p>
+      <ul class="check-opts"><li class="correct">A) Linear regression assumes a linear relationship between each feature and the target. Right-skewed income causes the linear model to devote its coefficient's power to distinguishing extreme values, ignoring variation among typical earners. Log-transforming compresses the upper tail, making the linear relationship more valid. Random forest splits on thresholds — monotone transformations like log don't change which threshold is optimal. Log transform matters for models assuming distributional properties (linear, SVM, neural nets) and is largely irrelevant for tree-based models.</li><li>B) Log transformation improves both model types equally; the difference in practice is that random forests already regularize through bagging, so the benefit is masked by that regularization.</li><li>C) Log transformation helps linear regression because it removes outliers; random forests are not affected because they naturally ignore outliers through their majority-vote ensemble mechanism.</li><li>D) Log transformation converts multiplication relationships into addition relationships, which only matters for linear regression when the true relationship is multiplicative rather than additive.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> You are building a fraud detection model and add interaction term: transaction_amount × is_international. What does this feature capture?</p>
+      <ul class="check-opts"><li>A) It captures the total transaction volume for international merchants, which is the same signal as summing all international transaction amounts over a time window.</li><li>B) It captures geographic risk independent of amount — flagging all international transactions regardless of their size, which is equivalent to using is_international alone.</li><li class="correct">C) It captures the combined effect: high-value international transactions as a fraud signal — high amounts suspicious specifically when the transaction is international, not when domestic. Individually, transaction_amount captures scale and is_international captures geography. Neither alone captures that their COMBINATION is the key fraud signal. The product is large only when both conditions hold. Linear models cannot discover this from original features; for tree models the explicit feature can speed up training.</li><li>D) It captures the variance in transaction amounts across international vs. domestic transactions, which is better estimated by computing the ratio of international mean to domestic mean.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> A data scientist creates 200 interaction features from 20-feature dataset and reports improved validation accuracy. What risk does this improvement mask?</p>
+      <ul class="check-opts"><li>A) The risk is multicollinearity — 200 interaction features will be highly correlated with their parent features, making coefficient estimates unstable and impossible to interpret.</li><li class="correct">B) With 200 additional features (mostly noise), the model has dramatically more capacity to overfit. If the validation set was used to tune hyperparameters or features were selected based on validation performance, the reported improvement is optimistic. To verify: need a held-out test set never touched during feature construction. Also check the training vs. validation accuracy gap — a much larger gap after adding interaction features signals overfitting. Correct approach: select interaction features using domain knowledge or statistical tests on training fold only, before any validation evaluation.</li><li>C) The risk is that the 200 interaction features may not be available at serving time if the underlying raw features are computed in different pipelines with different latency requirements.</li><li>D) The validation accuracy improvement is real but temporary — the model will degrade within a few retraining cycles as the interaction features cause numerical instability in gradient descent.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> You engineer a &quot;transactions in the last 7 days&quot; feature for a fraud model and validation AUC jumps to 0.97, but production performance is far worse. The feature itself is predictive. What's the likely bug?</p>
+      <ul class="check-opts"><li>A) The feature is simply too predictive, so the model overfits to it; the fix is to remove it.</li><li class="correct">B) The rolling-window aggregate was almost certainly computed without a strict point-in-time join — it included transactions from the label day itself (or after), so in training the feature secretly contained future information. In production the same window can only use data available before the decision, so the feature is weaker and AUC collapses. Recompute every aggregate/lag/rolling feature using only data strictly before the label timestamp, and verify the cutoff on a single row.</li><li>C) The 7-day window is too short; extending it to 30 days will make training and production match.</li><li>D) Production simply has fewer transactions, so the feature is noisier there — nothing to fix in the pipeline.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q6.</strong> Your tabular model uses a &quot;merchant_id&quot; column with 40,000 distinct values. Why is one-hot encoding a poor choice, and what are better options?</p>
+      <ul class="check-opts"><li>A) One-hot is ideal here — 40,000 binary columns give the model maximum information about each merchant.</li><li class="correct">B) One-hot would create ~40,000 mostly-zero columns (huge, sparse, and starved of data per column). Better: group rare merchants into &quot;Other&quot; below a count threshold, use the hashing trick to map ids into a fixed number of buckets, or use smoothed target encoding (blend each merchant's outcome average toward the global mean so rare ids aren't wildly estimated) — done out-of-fold within CV to avoid label leakage. For neural nets, a learned embedding is the standard high-cardinality solution.</li><li>C) One-hot is fine but must be followed by StandardScaler on the 40,000 columns to balance their magnitudes.</li><li>D) The only valid option is ordinal encoding (assign each merchant an integer 1–40,000), which preserves all the information compactly.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#data_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

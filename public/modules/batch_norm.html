@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Batch Normalisation &amp; Regularisation | ML Systems Lab</title>
+  <meta name="description" content="BatchNorm, LayerNorm, Dropout, weight decay — why each works">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/batch_norm.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/batch_norm.html">
+  <meta property="og:title" content="Batch Normalisation &amp; Regularisation | ML Systems Lab">
+  <meta property="og:description" content="BatchNorm, LayerNorm, Dropout, weight decay — why each works">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Batch Normalisation &amp; Regularisation">
+  <meta name="twitter:description" content="BatchNorm, LayerNorm, Dropout, weight decay — why each works">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Batch Normalisation & Regularisation",
+  "description": "BatchNorm, LayerNorm, Dropout, weight decay — why each works",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/batch_norm.html",
+  "keywords": "batch norm, layer norm, dropout, regularisation"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#dl_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">31 min read</span>
+      <span class="tag">batch norm</span><span class="tag">layer norm</span><span class="tag">dropout</span><span class="tag">regularisation</span>
+    </div>
+    <h1>Batch Normalisation &amp; Regularisation</h1>
+    <p class="subtitle">BatchNorm, LayerNorm, Dropout, weight decay — why each works</p>
+
+    <p>Take a 10-layer network mid-training. Layer 5 tweaks its weights — fine. But layer 6 had learned to expect a certain *distribution* of numbers coming from layer 5, and that distribution just moved. So layer 6 scrambles to adjust, which shifts what layer 7 sees, and so on up the stack. Every layer is chasing a moving target created by the layers below it. To keep this from blowing up, you are forced to use a tiny learning rate so no single update destabilises everything above it — and training crawls. This wobble was one of the big reasons deep networks were so fragile to train before 2015.</p>
+    <p><strong>Batch normalisation</strong> fixed it with a simple idea: at each layer, before passing the numbers on, *re-centre and re-scale them* so they have a consistent, tidy distribution (mean 0, spread 1) across the batch. Now layer 6 always sees inputs in a familiar range no matter what layer 5 did, and the moving-target problem largely goes away. (It also keeps a pair of learned dials, γ and β, that let the network re-stretch the numbers if the task actually needs it, so nothing is lost.) The payoff is big: you can crank the learning rate 5–10× higher, the network stops caring so much about initialisation, and training converges much faster.</p>
+    <hr>
+    <h3>A happy side effect: free regularisation</h3>
+    <p>Here is a subtlety that turns out to matter. The mean and spread used to normalise are computed from the *current mini-batch* — so the exact same example gets normalised a little differently depending on which other examples happen to share its batch. That tiny, ever-changing jitter acts like a mild regulariser: the network cannot lean too hard on any one example's exact representation, because that representation keeps shifting. (Later work argued this &quot;smoothing the loss landscape&quot; effect, more than the moving-target story, is the real reason batch norm helps so much.)</p>
+    <hr>
+    <h3>Batch norm vs layer norm — not interchangeable</h3>
+    <p>There is a second normaliser, <strong>layer norm</strong>, and picking the wrong one is a genuine error, not a tuning choice. Batch norm normalises each feature *across the batch* — which only makes sense if the examples in a batch are comparable. In a Transformer chewing through tokens from different positions in different sentences, &quot;the average of this feature across the batch&quot; is semantic nonsense. Layer norm instead normalises *across the features of a single example*, so it is well-defined for one token at a time, at any position, with any batch size. That is why every Transformer uses layer norm, and CNNs on images use batch norm.</p>
+    <p>(One practical gotcha with batch norm: at inference you have no batch, so it switches to running averages collected during training. Forget to flip the model into eval mode and a single-example prediction gets normalised against a batch of one — which quietly produces garbage, with no error.)</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Batch norm for CNNs on images (batch size ≥ 16); layer norm for Transformers, RNNs, and any variable-length or small-batch task.</strong>
+
+The choice comes from what the statistics *mean*, not from tuning. Batch norm needs a batch of at least ~8 comparable examples or its per-batch estimates are too noisy to help. And always switch the model to eval mode at inference, so it uses the running averages instead of a (possibly size-1) batch — forgetting this is the single most common silent failure in deployed vision models.</li><li><strong>The trap: batch norm's train-versus-inference mismatch.</strong>
+
+During training each example is normalised using its mini-batch's mean and spread; at inference the model uses running averages collected during training. If the input distribution shifts — new data source, different camera, different preprocessing — those stored averages are stale and the normalisation is wrong, and accuracy degrades with no error, no NaN, no warning. Fix it by running a few forward passes over data from the new distribution (in train mode) to refresh the running statistics before switching back to eval.</li><li><strong>The diagnostic: compare training loss at a large batch versus a small one.</strong>
+
+If the same model trains noticeably worse and noisier at batch size 4 than at 32, batch norm is the culprit — with only four samples the per-batch mean and variance are poor estimates and destabilise the normalisation. Swap in group norm or layer norm and re-run; if the gap closes, that confirms it.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Normalisation stabilises the optimisation landscape so training converges; regularisation reduces capacity so the solution generalises — conflating the two is the source of most tuning mistakes.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>The problem — a moving target:</strong> when a layer updates its weights, the distribution of numbers it emits shifts, so the layer above (which had learned to expect the old distribution) must scramble to re-adjust — and so on up the stack. Every layer chases a moving target, forcing a tiny learning rate so no update destabilises everything above it. Training crawls.</li><li><strong>Batch norm:</strong> before passing numbers on, re-centre and re-scale each layer's outputs to mean 0, spread 1 *across the batch*, so the next layer always sees a familiar range. A learned pair of dials (γ scale, β shift) lets the network re-stretch if the task actually needs it, so nothing is lost.</li><li><strong>Payoff:</strong> you can crank the learning rate 5–10× higher, the network stops caring so much about initialisation, and training converges much faster — this is what made pre-2015 deep nets far less fragile.</li><li><strong>Free regularisation:</strong> the mean/spread come from the *current* mini-batch, so the same example is normalised slightly differently depending on its batch-mates. That ever-changing jitter mildly regularises — the network can't lean on any one example's exact representation (later work argues this loss-landscape smoothing, not the moving-target story, is the real reason BN helps).</li><li><strong>Batch norm vs layer norm is a correctness choice, not a knob:</strong> BN normalises a feature *across the batch*, which only makes sense if the batch's examples are comparable — meaningless for tokens from different sentence positions. LN instead normalises *across a single example's features*, well-defined for one token at any position with any batch size. So CNNs on images use BN; Transformers, variable-length, and small-batch tasks use LN.</li><li><strong>Batch norm inference gotcha:</strong> at inference there's no batch, so BN switches to running averages collected during training. Forget to call `model.eval()` and a single-example prediction gets normalised against a batch of one — silently producing garbage with no error thrown.</li><li><strong>Diagnostic:</strong> if the same model trains much noisier and worse at batch 4 than at 32, BN's per-batch mean/variance estimates are too poor with few samples — swap in group norm or layer norm and if the gap closes, that confirms it.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Batch normalisation has four parameters per feature: γ, β, μ_batch, σ_batch. Which are learned and which are computed? What happens at inference time?</p>
+      <ul class="check-opts"><li>A) Structural difference: Batch Norm normalises across the batch dimension (for each feature/channel, normalize over all samples in the batch). Layer Norm normalises across the feature dimension (for each sample, normalize over all features). BN is preferred for: CNNs with large batch sizes on image tasks — normalising per-channel over the batch is stable and effective. BN struggles when batch size is small (batch statistics are noisy) or when examples are dissimilar (different sequence lengths, etc.). Layer Norm is preferred for: Transformers, RNNs, and NLP tasks — sequences have varying lengths, making batch normalisation across unaligned sequence positions incoherent. Each token's representation is normalised over its own feature dimensions, which is well-defined regardless of batch size or sequence length. LN is batch-size-independent, making it reliable for small-batch or online learning.</li><li>B) All four are learned during training: γ and β are trained by gradient descent to restore expressive capacity after normalisation; μ_batch and σ_batch are trained via exponential moving averages to track the data distribution. At inference, the same four learned parameters are used directly without recomputing anything from the current input.</li><li>C) Only γ (scale) is learned; β (shift), μ_batch (mean), and σ_batch (std) are all computed from the data. At inference time, β is computed from the running average of biases across training, and μ_batch and σ_batch are computed fresh from each inference batch to maintain accurate normalisation statistics.</li><li class="correct">D) Computed from data (not learned): μ_batch = mean over batch; σ_batch = std over batch — these are statistics computed from the current mini-batch during training. Learned (trainable parameters): γ (scale) and β (shift) per feature — these allow the network to undo normalisation if needed, restoring representational power. At inference time: no batches, so batch statistics cannot be computed. Instead, running averages of mean and variance accumulated during training are used: μ_running and σ_running. These are not trained by gradient descent; they are maintained using exponential moving averages: μ_running ← 0.9·μ_running + 0.1·μ_batch at each training step. At test time: output = γ·(x − μ_running)/σ_running + β — fully deterministic, using fixed statistics.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Why does batch normalisation act as a regulariser, reducing the need for dropout? Explain the mechanism.</p>
+      <ul class="check-opts"><li>A) BN acts as a regulariser because it clips extreme activation values by normalising to unit variance — any activation more than a few standard deviations from the mean gets compressed toward zero. This clipping prevents neurons from learning to rely on extreme activation patterns, which is the same mechanism by which weight decay prevents over-reliance on any single weight dimension.</li><li class="correct">B) BN's regularisation comes from the stochasticity of batch statistics: each mini-batch has different μ_batch and σ_batch (random samples from the full dataset). The normalised value x̂ᵢ = (xᵢ − μ_batch)/σ_batch depends on all other examples in the batch — the normalisation creates a noisy transformation. This noise acts like a regulariser: the network cannot memorise the training set as easily because the representation of any example changes depending on which other examples appear in the batch. Larger batch sizes reduce this noise (means and variances converge to constants) — this is why very large-batch training (B=4096+) benefits less from BN's regularisation effect. Additionally, BN smooths the loss landscape, allowing higher learning rates and faster convergence, which can itself act as implicit regularisation.</li><li>C) BN regularises by forcing all intermediate activations to have identical distributions (zero mean, unit variance) — this prevents co-adaptation between layers where one layer's output distribution is tuned to another layer's input preferences. Dropout regularises by preventing co-adaptation within a single layer's neurons, so they address different types of co-adaptation and are entirely complementary with no overlap in regularisation effect.</li><li>D) BN acts as a regulariser by increasing gradient magnitudes uniformly across all layers, which counteracts the tendency of gradient descent to make large updates to weights in layers with high activation variance. The more uniform gradient flow prevents any single layer from being updated disproportionately, distributing the regularisation effect across the network depth.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Layer normalization vs batch normalization: when do you use each, and what is the key structural difference?</p>
+      <ul class="check-opts"><li class="correct">A) Structural difference: Batch Norm normalises across the batch dimension (for each feature/channel, normalize over all samples in the batch). Layer Norm normalises across the feature dimension (for each sample, normalize over all features). BN is preferred for: CNNs with large batch sizes on image tasks — normalising per-channel over the batch is stable and effective. BN struggles when batch size is small (batch statistics are noisy) or when examples are dissimilar (different sequence lengths, etc.). Layer Norm is preferred for: Transformers, RNNs, and NLP tasks — sequences have varying lengths, making batch normalisation across unaligned sequence positions incoherent. Each token's representation is normalised over its own feature dimensions, which is well-defined regardless of batch size or sequence length. LN is batch-size-independent, making it reliable for small-batch or online learning.</li><li>B) Structural difference: Batch Norm normalises across all features within each sample (same as Layer Norm), but Batch Norm additionally learns a separate scale/shift per sample (γᵢ, βᵢ for sample i), while Layer Norm uses a single shared γ and β across the entire batch. Use BN when you have consistent sample types in each batch; use LN when samples are heterogeneous or come from different distributions.</li><li>C) Layer Norm and Batch Norm differ only in whether they use a moving average at inference: BN uses exponential moving averages of batch statistics computed during training, while LN recomputes fresh statistics from each inference sample. For CNNs, LN is preferred because image classification batches are typically homogeneous, so fresh per-sample statistics are more accurate than accumulated moving averages.</li><li>D) Structural difference: Layer Norm normalises across the batch dimension (computing mean and variance over all samples in the batch for each feature), while Batch Norm normalises across the feature dimension (computing mean and variance over all features for each sample). This is the opposite of their common descriptions — Layer Norm's name refers to its application to entire network layers, not to the normalisation axis.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#dl_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

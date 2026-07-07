@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Epsilon-Greedy Exploration | ML Systems Lab</title>
+  <meta name="description" content="Simplest exploration strategy, annealing schedules, failure modes, non-stationary rewards">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/epsilon_greedy.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/epsilon_greedy.html">
+  <meta property="og:title" content="Epsilon-Greedy Exploration | ML Systems Lab">
+  <meta property="og:description" content="Simplest exploration strategy, annealing schedules, failure modes, non-stationary rewards">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Epsilon-Greedy Exploration">
+  <meta name="twitter:description" content="Simplest exploration strategy, annealing schedules, failure modes, non-stationary rewards">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Epsilon-Greedy Exploration",
+  "description": "Simplest exploration strategy, annealing schedules, failure modes, non-stationary rewards",
+  "proficiencyLevel": "Foundational",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/epsilon_greedy.html",
+  "keywords": "epsilon-greedy, exploration, annealing, non-stationary"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#bandits_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Foundational</span>
+      <span class="read-time">30 min read</span>
+      <span class="tag">epsilon-greedy</span><span class="tag">exploration</span><span class="tag">annealing</span><span class="tag">non-stationary</span>
+    </div>
+    <h1>Epsilon-Greedy Exploration</h1>
+    <p class="subtitle">Simplest exploration strategy, annealing schedules, failure modes, non-stationary rewards</p>
+
+    <p>You have 5 headlines for the same news article and no idea which gets the highest CTR. The traditional approach commits equal traffic to all 5 until you have 10K samples per variant, then picks the winner. While you're collecting that data, 80% of readers see a non-optimal headline — every one of those impressions is a missed opportunity. Epsilon-greedy attacks this directly: with probability ε, pick a random headline; otherwise show whichever has the highest estimated CTR so far. After 1,000 impressions you already have a leading candidate, and the exploit step sends most traffic there. Exploration keeps running in the background to correct initial estimates and catch changes.</p>
+    <p>The mechanism is straightforward but hides a critical flaw: it explores uniformly. Headline A with estimated CTR 3.1%, headline C with 4.2%, and headline D with 2.1% all get the same ε/K share of exploration traffic. Headline D is clearly worse — spending exploration budget there wastes capacity that could go toward distinguishing A from C. There is no mechanism to focus exploration where it matters.</p>
+    <p>The second flaw is deeper. With ε=0.1, every round has a 10% chance of random arm selection. In every such round, the expected per-step regret is ε·Δ̄ where Δ̄ is the average gap to the best arm. Over T rounds, total exploration regret ≥ ε·T·Δ̄ — linear in T. No matter how small ε is, as long as it is fixed and positive, regret grows without bound. Annealing ε to zero is not optional — it is mathematically necessary for sub-linear regret.</p>
+    <p><strong>NOT this.</strong> &quot;Smaller ε is always better after initial exploration.&quot; If the arm rewards are non-stationary — headline CTR changes as the news cycle evolves — a decaying ε that goes to 0 stops adapting. The algorithm freezes on whatever was best when exploration stopped, even as the world changes. For non-stationary settings, maintain a minimum ε floor or switch to a method that tracks changing rewards explicitly.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Fixed ε causes linear regret: exploration cost ε·T·Δ̄ grows without bound.</strong>
+
+In every exploration round, the expected per-step regret is ε times the average suboptimality gap Δ̄. Over T rounds this is ε·T·Δ̄ — linear regardless of how small ε is. Annealing ε_t = c/t reduces the total exploration cost to c·Δ̄·Σ_t 1/t = O(log T). The annealing is not a nice-to-have: fixed ε is guaranteed to produce linear regret in stationary settings.</li><li><strong>Uniform exploration is the core inefficiency: ε/K exploration budget goes to every arm regardless of how obviously inferior it is.</strong>
+
+With K=5 headlines and ε=0.1, headline D (CTR 2.1% vs headline C's 4.2%) receives the same 2% exploration share as headline B (CTR 2.8%, genuinely uncertain). UCB and Thompson Sampling avoid this by allocating exploration proportional to uncertainty — clearly inferior arms receive negligible exploration as their estimates converge.</li><li><strong>Cold start and stale means are the two production failure modes.</strong>
+
+Cold start: a new headline with K=50 and ε=0.1 gets 0.2% of traffic — at 10,000 daily impressions that is 20 impressions per day, far too few for rapid evaluation. Stale means: if CTR drops 30% due to creative fatigue, an arm with 90 days of data has 1 day's new signal barely moving its mean. Both require patches — forced exploration budgets for new arms, sliding window or discounted means for staleness — that UCB and Thompson Sampling handle more naturally.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Fixed ε causes linear regret because the exploration cost ε·T grows without bound — annealing ε_t → 0 is mathematically required, not optional. Uniform exploration is the core inefficiency: ε/K budget goes to every arm equally, wasting capacity on clearly inferior arms that UCB and Thompson Sampling would deprioritize automatically. The two critical production failure modes are cold start and stale means, both of which require patches that principled algorithms handle natively.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Mechanism:</strong> with prob ε pick random arm, else exploit highest estimated CTR.</li><li><strong>Fixed ε → linear regret:</strong> exploration cost ε·T·Δ̄ grows without bound, however small ε is.</li><li><strong>Annealing is mandatory:</strong> ε_t = c/t drops exploration cost to O(log T).</li><li><strong>Uniform exploration = core flaw:</strong> ε/K goes to every arm, wasting budget on clearly inferior arms.</li><li><strong>Cold start:</strong> new arm with K=50, ε=0.1 gets 0.2% traffic — far too little.</li><li><strong>Stale means:</strong> old data barely moves the mean after a 30% CTR drop from creative fatigue.</li><li><strong>NOT this:</strong> decaying ε→0 freezes under non-stationarity — keep an ε floor or track changing rewards.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You deploy ε=0.1 greedy for ad serving with K=50 ads. After 3 months, CTR on most ads has dropped 30% due to creative fatigue, but a new batch of ads was just added. What happens and how do you fix it?</p>
+      <ul class="check-opts"><li>A) Only the cold start problem matters here — creative fatigue does not affect ε-greedy because the exploit step automatically adjusts to new CTR levels</li><li class="correct">B) Two problems occur: (1) stale empirical means cause the exploit step to serve degraded ads whose historical CTR no longer reflects current performance; (2) new ads get only ε/K = 0.2% of traffic each, far too little for rapid evaluation. Fix with discounted means, forced exploration budgets for new ads, and/or switching to Thompson Sampling</li><li>C) ε-greedy handles this well because the 10% exploration traffic continuously samples all ads including new ones</li><li>D) The fix is simply to increase ε to 0.5 temporarily, which gives new ads more traffic without changing the algorithm</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Prove informally that ε-greedy with fixed ε has linear regret (O(T)) even with optimal ε.</p>
+      <ul class="check-opts"><li>A) Fixed ε causes linear regret because the algorithm never converges — it keeps switching between arms forever</li><li>B) Linear regret follows because exploration rounds cause the empirical mean to oscillate, never settling on the best arm</li><li>C) Fixed ε causes linear regret because exploration rounds cause variance in the estimate to grow with T</li><li class="correct">D) In every round, exploration contributes expected per-step regret ε·Δ̄ (average suboptimality gap), so total exploration regret ≥ ε·T·Δ̄ — linear in T regardless of how small ε is. Sub-linear regret requires ε_t → 0; with ε_t = c/t, total regret = O(log T)</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> In a production system you A/B test two versions of ε-greedy: (a) ε=0.05, (b) adaptive ε_t = 1/√t. After T=10,000 rounds with K=10 arms, which achieves lower regret and why might (a) still be preferred in engineering practice?</p>
+      <ul class="check-opts"><li class="correct">A) Adaptive ε_t achieves lower asymptotic regret (O(K log T) vs O(T)) because exploration cost decreases over time. Fixed ε=0.05 may still be preferred in practice for stationarity robustness, operational interpretability, and insensitivity to t=0 resets — especially when effective horizon T per cohort is short</li><li>B) Fixed ε=0.05 always achieves lower regret because adaptive schedules are unstable</li><li>C) They achieve identical regret in practice; the theoretical difference only manifests at T &gt; 10^9</li><li>D) Adaptive ε_t achieves lower regret only when K &gt; 20; for K=10 fixed ε is superior</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#bandits_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

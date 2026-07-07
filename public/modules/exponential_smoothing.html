@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exponential Smoothing &amp; ETS | ML Systems Lab</title>
+  <meta name="description" content="SES, Holt, Holt-Winters, ETS state space, connection to ARIMA, MLE tuning">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/exponential_smoothing.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/exponential_smoothing.html">
+  <meta property="og:title" content="Exponential Smoothing &amp; ETS | ML Systems Lab">
+  <meta property="og:description" content="SES, Holt, Holt-Winters, ETS state space, connection to ARIMA, MLE tuning">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Exponential Smoothing &amp; ETS">
+  <meta name="twitter:description" content="SES, Holt, Holt-Winters, ETS state space, connection to ARIMA, MLE tuning">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Exponential Smoothing & ETS",
+  "description": "SES, Holt, Holt-Winters, ETS state space, connection to ARIMA, MLE tuning",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/exponential_smoothing.html",
+  "keywords": "exponential smoothing, ETS, Holt-Winters, state space, SES, MLE"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#time_series_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">40 min read</span>
+      <span class="tag">exponential smoothing</span><span class="tag">ETS</span><span class="tag">Holt-Winters</span><span class="tag">state space</span><span class="tag">SES</span>
+    </div>
+    <h1>Exponential Smoothing &amp; ETS</h1>
+    <p class="subtitle">SES, Holt, Holt-Winters, ETS state space, connection to ARIMA, MLE tuning</p>
+
+    <p>ARIMA requires ACF/PACF identification to choose p, d, q — a manual process that breaks at scale and fails for practitioners without time series expertise. Exponential smoothing methods sidestep this by imposing a simple structural assumption: past observations should be weighted by recency, with exponentially decaying weights. SES does this for level; Holt's method adds a trend component; Holt-Winters adds seasonality.</p>
+    <p>The mistake is treating these as heuristic update rules. ETS (Error-Trend-Seasonality) is a proper statistical state space model — it has a likelihood function, parameters estimated via MLE, and AIC-based model selection across 30 component combinations.</p>
+    <p>This means ETS implicitly performs ARIMA order selection without the ACF/PACF identification step, which is why ETS consistently outperforms ARIMA on large benchmark datasets like M3 and M4.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>ARIMA order selection requires ACF/PACF interpretation, which is manual, error-prone, and impossible at scale.</strong> ETS bypasses this entirely: it assumes exponentially decaying weights on past observations, estimates the decay parameter α via MLE, and selects among Error-Trend-Seasonality component combinations via AIC. The automation is the point — ETS delivers ARIMA-quality forecasts without per-series manual identification.</li><li><strong>Simple Exponential Smoothing (SES): ŷ_{t+1} = αY_t + (1-α)ŷ_t = Σ α(1-α)^j Y_{t-j}. α ∈ (0,1) controls recency weighting — α=1 is a naïve forecast (only yesterday matters), α→0 weights all history equally.</strong> Optimal α is estimated by MLE. SES is the optimal forecast for a random walk with Gaussian noise — it is exactly equivalent to ARIMA(0,1,1) with
+
+$θ = 1-α. A high fitted α (e.g., 0.92) means the series has near-$
+
+random-walk dynamics: past values beyond one period ago carry almost no predictive information.</li><li><strong>Holt's double exponential smoothing adds a trend component.</strong> Level:
+
+$L_t = αY_t + (1-α)(L_{t-1} + b_{t-1}). Slope: b_t = β(L_t - L_{t-1}) + (1-β)b_{t-1}. Forecast: ŷ_{t+h} = L_t + hb_t$
+
+. Linear trend extrapolation at long horizons is dangerous — a series that has been trending up for 2 years is not guaranteed to continue. The damped trend variant (damped-trend Holt) multiplies the slope by φ^h with φ ∈ (0.8, 0.98): the slope shrinks toward zero at long horizons. This is one of the most reliable improvements for medium-horizon forecasting.</li><li><strong>Holt-Winters adds a seasonal component.</strong> Additive: S_t = γ(Y_t - L_{t-1} - b_{t-1}) + (1-γ)S_{t-s}. Multiplicative:
+
+$S_t = γ(Y_t / (L_{t-1} + b_{t-1})) + (1-γ)S_{t-s}. All parameters (α, β, γ) are estimated jointly by MLE — not$
+
+independently. Multiplicative seasonality handles the case where seasonal amplitude scales with level; log-transforming and using additive is an equivalent approach.</li><li><strong>ETS(E, T, S) notation: E ∈ {A, M} for error type (additive or multiplicative), T ∈ {N, A, Ad, M, Md} for trend (none, additive, additive damped, multiplicative, multiplicative damped), S ∈ {N, A, M} for seasonality.</strong> Up to 30 valid combinations. AIC over all valid ETS variants selects the best automatically — this is the equivalent of Box-Jenkins order selection done via likelihood comparison rather than ACF/PACF reading.</li><li><strong>ETS-ARIMA equivalence proves that exponential smoothing is not ad hoc.</strong> SES (ETS(A,N,N)) = ARIMA(0,1,1). Holt's method (ETS(A,A,N)) = ARIMA(0,2,2). Holt-Winters additive (ETS(A,A,A)) = ARIMA(0,1,m+1)(0,1,0)[m]. ETS implicitly selects ARIMA order via structural assumptions rather than ACF/PACF exploration. This equivalence explains why ETS and ARIMA perform similarly on benchmark datasets — they're fitting the same class of models via different parameterisations.</li><li><strong>ETS outperforms ARIMA in practice for two reasons.</strong> Parsimony: ETS has fewer parameters with stronger regularisation via structural assumptions, reducing overfitting on short series. Multiplicative error models: ETS(M,...) handles heteroskedasticity (variance increasing with level) naturally by multiplying the noise term by the current level. ARIMA with Gaussian errors assumes constant variance, which misspecifies series with growing amplitude. Holt-Winters multiplicative error produces correct prediction intervals for heteroskedastic series where ARIMA does not.</li><li><strong>Croston's method handles intermittent demand (series with many zeros) — separately exponentially smooths demand size and inter-demand interval.</strong> SES and Holt-Winters produce nonzero forecasts even when zeros dominate, which is wrong by construction for spare-parts or SKU-level intermittent series. For series with more than 30-50% zeros, Croston or ADIDA (Aggregated-Disaggregated Intermittent Demand Approach) are the correct starting points.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>ETS is not a heuristic — it is a proper state space model whose parameters are estimated by MLE and whose AIC-selected variant implicitly performs ARIMA order selection without the ACF/PACF identification step. The ETS-ARIMA equivalence (SES = ARIMA(0,1,1), Holt = ARIMA(0,2,2)) proves these are the same underlying model class in different parameterisations. The practical M4 conclusion: always ensemble ETS with ARIMA and a simple baseline, because model uncertainty across forecast horizons is large enough that combination consistently dominates any single method.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Exponential smoothing = recency-weighted average</strong>, sidesteps ACF/PACF identification.</li><li><strong>SES (level) → Holt (+trend) → Holt-Winters (+seasonality)</strong>; all params estimated jointly by MLE.</li><li><strong>Damped trend</strong> (slope × φ^h, φ∈0.8–0.98) — most reliable medium-horizon improvement.</li><li><strong>ETS(E,T,S)</strong> = proper state space model; AIC over ~30 variants auto-selects (Box-Jenkins via likelihood).</li><li><strong>ETS-ARIMA equivalence:</strong> SES=ARIMA(0,1,1), Holt=ARIMA(0,2,2) — same model class, different parameterisation.</li><li><strong>Multiplicative-error ETS handles heteroskedasticity</strong> (variance grows with level) where Gaussian ARIMA misspecifies.</li><li><strong>Croston's for intermittent demand</strong> (&gt;30-50% zeros); <strong>M4 lesson:</strong> always ensemble ETS+ARIMA+baseline.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You fit SES to a daily sales series and find the optimal α = 0.92 via MLE. What does this imply about the data and what model class does SES correspond to at this parameter value?</p>
+      <ul class="check-opts"><li class="correct">A) α = 0.92 means almost all weight is on recent observations, implying near-random-walk dynamics (very little autocorrelation at lags &gt; 1). SES with α ≈ 1 corresponds to ARIMA(0,1,1) with θ = 1 − α ≈ 0.08 — a near-random-walk where point forecasts collapse to the last observation.</li><li>B) α = 0.92 is an unusually high value indicating the MLE optimisation has converged to a local minimum; constrain α to [0.1, 0.5] and re-fit to obtain a more reliable parameter estimate.</li><li>C) α = 0.92 indicates strong long-range autocorrelation because the high weight on recent observations causes information from many past periods to accumulate in the smoothed level.</li><li>D) SES with α = 0.92 corresponds to ARIMA(1,0,0) with φ = 0.92, because exponential smoothing and autoregression are mathematically equivalent at all values of α.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Your ETS model is ETS(M,A,M) — multiplicative error, additive trend, multiplicative seasonality. What forecast distribution does this imply and why are prediction intervals different from ETS(A,A,A)?</p>
+      <ul class="check-opts"><li>A) Both ETS(M,A,M) and ETS(A,A,A) produce Gaussian prediction intervals; the only difference is that ETS(M,A,M) requires more observations to estimate parameters reliably.</li><li>B) ETS(M,A,M) produces narrower intervals than ETS(A,A,A) because multiplicative errors self-correct — deviations from trend are proportionally smaller as the level grows.</li><li>C) ETS(M,A,M) uses additive errors internally despite the M notation; the multiplicative label refers only to the seasonality component, so prediction interval formulas are identical to ETS(A,A,A).</li><li class="correct">D) ETS(M,A,M) has multiplicative errors (variance grows with level — heteroskedastic), implying an approximately log-normal forecast distribution. Prediction intervals must be computed via simulation, not the Gaussian formula used for ETS(A,A,A) which has constant variance and analytical PI.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> The M4 forecasting competition showed that ETS and ARIMA individually perform worse than simple combination methods. How does this affect how you should use ETS in production?</p>
+      <ul class="check-opts"><li class="correct">A) Model uncertainty is large enough that ensembling reduces variance without proportionally increasing bias. In production: ensemble ARIMA + ETS + Prophet, use the theta method as a baseline, estimate combination weights on a validation window or use equal weights; computation overhead is dominated by data IO so ensembling is cheap even at 50k+ series.</li><li>B) The M4 result applies only to the specific dataset distribution used in the competition; for domain-specific series (retail, energy), a single well-tuned ETS model outperforms naive combinations.</li><li>C) The M4 result means ETS should be abandoned in favour of gradient-boosted tree models; the competition showed that statistical methods are outclassed by machine learning regardless of combination strategy.</li><li>D) Use ETS only as a component of combinations, never as a standalone model; always combine with at least 5 other methods to reproduce the M4 accuracy gains in production.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#time_series_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

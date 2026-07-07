@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Matrix Calculus | ML Systems Lab</title>
+  <meta name="description" content="Gradient of loss wrt weights, numerator/denominator layout">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/matrix_calculus.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/matrix_calculus.html">
+  <meta property="og:title" content="Matrix Calculus | ML Systems Lab">
+  <meta property="og:description" content="Gradient of loss wrt weights, numerator/denominator layout">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Matrix Calculus">
+  <meta name="twitter:description" content="Gradient of loss wrt weights, numerator/denominator layout">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Matrix Calculus",
+  "description": "Gradient of loss wrt weights, numerator/denominator layout",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/matrix_calculus.html",
+  "keywords": "matrix calculus, gradients, backpropagation"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#math_stats_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">26 min read</span>
+      <span class="tag">matrix calculus</span><span class="tag">gradients</span><span class="tag">backpropagation</span>
+    </div>
+    <h1>Matrix Calculus</h1>
+    <p class="subtitle">Gradient of loss wrt weights, numerator/denominator layout</p>
+
+    <p>You have linear regression with loss L = ‖Xw - y‖² = (Xw - y)^T(Xw - y). You want ∂L/∂w to take the gradient step. Expanding: L = w^T X^T X w - 2y^T Xw + y^T y. The gradient is ∇_w L = 2X^T Xw - 2X^T y. Setting to zero gives X^T Xw = X^T y — the normal equations. You just derived the closed-form solution to linear regression using matrix calculus. Without it, you would be working element-wise and making sign errors constantly.</p>
+    <p>Gradient of a scalar by a vector: ∂f/∂x ∈ ℝⁿ, the same shape as x. Key identities: ∂(x^T a)/∂x = a. ∂(x^T A x)/∂x = (A + A^T)x. For symmetric A: 2Ax. These identities cover almost everything in linear models, regularized regression, and Kalman filters.</p>
+    <p>Jacobian: the derivative of a vector-valued function. If f: ℝⁿ → ℝᵐ, then J = ∂f/∂x ∈ ℝ^{m×n} where J_{ij} = ∂f_i/∂x_j. The Jacobian of the softmax is (diag(s) - ss^T) where s = softmax(x). This is what the backward pass through softmax must compute — a matrix product, not a scalar multiplication.</p>
+    <p>Chain rule in matrix form: ∂L/∂X = ∂L/∂Y · ∂Y/∂X. The dimensions must work out: if Y = f(X), the Jacobian ∂Y/∂X has shape (dim Y × dim X). For a neural network linear layer z = Wx + b, the gradient with respect to W is ∂L/∂W = (∂L/∂z) · x^T — the outer product of the upstream gradient and the input. This one identity covers every fully-connected layer.</p>
+    <p><strong>NOT this.</strong> You do not need matrix calculus if you use autograd — this is false. Autograd computes gradients correctly, but you need matrix calculus to debug shape errors in custom operations, to verify that backpropagation through a novel layer is correct, and to understand why certain operations are expensive to differentiate. Every custom PyTorch layer that implements a backward() method is matrix calculus. If you cannot derive the gradient manually, you cannot verify that your custom backward pass is correct.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Memorize the identity ∇_w (Aw)^T B(Aw) = 2A^T BA w for symmetric B.</strong> This is the gradient of a quadratic form and appears in every regularized linear model, least-squares problem, and Kalman filter update. Setting it to zero gives the normal equations. Deriving it from scratch each time is error-prone and slow.</li><li><strong>Trap: layout convention inconsistency.</strong> Numerator layout and denominator layout conventions differ between textbooks — the Matrix Cookbook (Petersen &amp; Pedersen) uses denominator layout; most ML papers use numerator layout. Mixing conventions within a derivation produces a Jacobian that is transposed relative to what you need, giving a gradient update applied in the wrong direction. Pick one convention and never mix.</li><li><strong>Diagnostic: if your manually implemented backward pass does not match autograd's gradient, try transposing the Jacobian.</strong> 80% of manual backward pass bugs are layout convention errors — the gradient has the right values but the wrong shape. The fix is to check whether you need J or J^T in the chain rule expression, which depends on your chosen layout convention.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>The gradient of a scalar loss with respect to any weight matrix is the outer product of the upstream gradient and the input activation. That one pattern covers every fully-connected layer. Layout convention errors are the most common silent bug in custom backpropagation.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Normal equations from matrix calculus:</strong> ∇_w‖Xw−y‖² = 2XᵀXw − 2Xᵀy = 0 ⟹ XᵀXw = Xᵀy.</li><li><strong>Key identities:</strong> ∂(xᵀa)/∂x = a; ∂(xᵀAx)/∂x = (A+Aᵀ)x; for symmetric A, 2Ax.</li><li><strong>Jacobian J ∈ ℝ^{m×n}, J_{ij}=∂f_i/∂x_j;</strong> softmax Jacobian = diag(s) − ssᵀ.</li><li><strong>Linear-layer gradient = outer product:</strong> ∂L/∂W = (∂L/∂z)·xᵀ — covers every fully-connected layer.</li><li><strong>Autograd doesn't remove the need</strong> — you need matrix calculus to write and debug any custom backward().</li><li><strong>Layout convention is the silent bug:</strong> numerator vs denominator layout differ; mixing gives a transposed Jacobian.</li><li><strong>Backward-pass mismatch with autograd? Try transposing the Jacobian</strong> — 80% of manual bugs are layout errors (right values, wrong shape).</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> The Jacobian of a function f: ℝⁿ → ℝᵐ at point x is a matrix J. What are its dimensions and what does each element J_{ij} represent?</p>
+      <ul class="check-opts"><li class="correct">A) J is m×n. Element J_{ij} = ∂fᵢ/∂xⱼ — the partial derivative of the i-th output with respect to the j-th input. The Jacobian is the best linear approximation to f near x: f(x+δ) ≈ f(x) + J·δ for small δ. Rows correspond to outputs, columns to inputs. For a scalar function (m=1), J reduces to the gradient ∇f — a 1×n row vector (same information as the n×1 column gradient, just transposed). In backpropagation: ∂L/∂x = Jᵀ·(∂L/∂f), where Jᵀ is the transposed Jacobian (vector-Jacobian product, VJP). This VJP is what automatic differentiation libraries compute efficiently using reverse mode — the 'gradient' returned by loss.backward() is the VJP ∂L/∂x for each intermediate variable.</li><li>B) J is n×m. Element J_{ij} = ∂xᵢ/∂fⱼ — how much the j-th output changes the i-th input, measuring the inverse sensitivity. For a scalar loss (m=1), J is a column vector ∈ ℝⁿ. The backpropagation update uses J directly (without transposing) because the gradient flows in the same direction as the Jacobian's column structure.</li><li>C) J is n×m. Element J_{ij} = ∂fⱼ/∂xᵢ. The Jacobian rows correspond to inputs and columns to outputs. For a scalar function (m=1), J is an n×1 column vector identical to the gradient ∇f. In backpropagation, the gradient update ∂L/∂x = J·(∂L/∂f) multiplies the Jacobian directly by the upstream gradient without transposing — a layout convention called denominator layout.</li><li>D) J is m×m — a square matrix regardless of input/output dimensions. Element J_{ij} = ∂fᵢ/∂fⱼ measures how outputs co-vary. The diagonal elements J_{ii} = 1 always (each output is perfectly correlated with itself). Off-diagonal elements capture how changing one output requires changing another, which determines gradient flow between neurons.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Compute ∂/∂W(tr(WᵀAW)) where A is symmetric n×n and W is n×k.</p>
+      <ul class="check-opts"><li>A) ∂/∂W tr(WᵀAW) = AW + AᵀW = 2AW (since A is symmetric). This follows from the product rule: d(WᵀAW) = (dW)ᵀAW + WᵀA(dW), so tr(d(WᵀAW)) = tr(WᵀA dW) + tr(WᵀA dW) = tr(2WᵀA dW), giving gradient 2AW.</li><li>B) ∂/∂W tr(WᵀAW) = WᵀA + AW. Using the identity ∂tr(XᵀBX)/∂X = (B+Bᵀ)X: here X=W, B=A (symmetric), so gradient = 2AW. But the denominator layout convention gives Wᵀ·A on the left: (WᵀA)ᵀ = AW, so both conventions agree on 2AW.</li><li class="correct">C) Let f(W) = tr(WᵀAW). Differentiating: df = tr(d(WᵀAW)) = tr((dW)ᵀAW + Wᵀ A dW) = tr((dW)ᵀAW) + tr(WᵀA dW). For the first term: tr((dW)ᵀAW) = tr(((dW)ᵀAW)ᵀ) = tr(WᵀAᵀdW) = tr(WᵀAdW) (using A=Aᵀ). So df = tr(WᵀA dW) + tr(WᵀA dW) = tr(2WᵀA dW) = tr((2AW)ᵀ dW). By the trace inner product definition: ∂f/∂W = 2AW. This result appears in PCA: the objective is max_W tr(WᵀΣW) subject to WᵀW=I; the unconstrained gradient is 2ΣW, leading (via Lagrange multipliers) to the eigenvector equation ΣW = WΛ.</li><li>D) ∂/∂W tr(WᵀAW) = tr(A)·W. The trace of a product tr(WᵀAW) = tr(A)·tr(WᵀW) when A and WᵀW are both symmetric, so the gradient is tr(A)·∂tr(WᵀW)/∂W = tr(A)·2W.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> What is the gradient of the softmax cross-entropy loss with respect to the pre-softmax logits z? Derive the clean form.</p>
+      <ul class="check-opts"><li>A) ∂L/∂z_k = p_k·(1−p_k) for k=y (true class) and −p_k·p_y for k≠y. This follows from the softmax Jacobian: ∂pᵢ/∂zⱼ = pᵢ(δᵢⱼ−pⱼ). Applying chain rule with ∂L/∂pᵢ = −1/p_y·δᵢy gives the above. The gradient is bounded by the product of probabilities, explaining why softmax prevents gradient saturation for the cross-entropy loss.</li><li>B) ∂L/∂z = −e_y/p_y where e_y is a one-hot vector. The gradient of cross-entropy L = −log(p_y) with respect to z is: ∂L/∂z_k = ∂/∂z_k(−log p_y) = −(1/p_y)·∂p_y/∂z_k. For k=y: ∂p_y/∂z_y = p_y(1−p_y), so ∂L/∂z_y = −(1−p_y). For k≠y: ∂p_y/∂z_k = −p_y·p_k, so ∂L/∂z_k = p_k. In vector form: ∂L/∂z = p − e_y, which is not simply −e_y/p_y.</li><li>C) ∂L/∂z_k = p_k for all k, including the true class k=y. The softmax cross-entropy gradient simply equals the predicted probability vector p because the derivative of log(softmax(z)) with respect to z is (I − 11ᵀ/n)·p in the numerator layout. Setting the gradient to zero means all probabilities must be equal — the uniform distribution is the critical point.</li><li class="correct">D) Let z be the logit vector, softmax output p = softmax(z) where pᵢ = e^{zᵢ}/Σⱼe^{zⱼ}. Cross-entropy loss: L = −log(p_y) = −z_y + log(Σⱼe^{zⱼ}) where y is the true class. ∂L/∂z_k: for k=y: ∂/∂z_y(−z_y + log Σe^{zⱼ}) = −1 + e^{z_y}/Σe^{zⱼ} = −1 + p_y = p_y − 1. For k≠y: ∂/∂z_k(log Σe^{zⱼ}) = e^{z_k}/Σe^{zⱼ} = p_k. Combined: ∂L/∂z = p − e_y where e_y is a one-hot vector at class y. The gradient is simply the probability vector minus the one-hot label vector. This clean form (as in logistic regression) arises because the cross-entropy's 1/p derivative cancels with the softmax's p(1−p) Jacobian terms, eliminating saturation problems.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#math_stats_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

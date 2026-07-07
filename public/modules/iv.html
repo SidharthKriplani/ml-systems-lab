@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instrumental Variables | ML Systems Lab</title>
+  <meta name="description" content="Exclusion restriction, weak instruments, 2SLS, LATE">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/iv.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/iv.html">
+  <meta property="og:title" content="Instrumental Variables | ML Systems Lab">
+  <meta property="og:description" content="Exclusion restriction, weak instruments, 2SLS, LATE">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Instrumental Variables">
+  <meta name="twitter:description" content="Exclusion restriction, weak instruments, 2SLS, LATE">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Instrumental Variables",
+  "description": "Exclusion restriction, weak instruments, 2SLS, LATE",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/iv.html",
+  "keywords": "IV, instrumental variables, 2SLS, LATE, exclusion restriction"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#causal_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">30 min read</span>
+      <span class="tag">IV</span><span class="tag">instrumental variables</span><span class="tag">2SLS</span><span class="tag">LATE</span><span class="tag">exclusion restriction</span>
+    </div>
+    <h1>Instrumental Variables</h1>
+    <p class="subtitle">Exclusion restriction, weak instruments, 2SLS, LATE</p>
+
+    <p>Does education increase earnings? The confound is ability. Smart people get more education and earn more regardless of education level — so any observed correlation between education and earnings contains both the causal effect of education and a spurious component from ability. You need variation in education that is unrelated to ability. A valid instrument: distance from college. Students born close to a college are more likely to attend (the instrument predicts treatment). But distance from college affects earnings only through education — it does not directly affect a person's earnings potential except by influencing whether they went to college (exclusion restriction). This isolates variation in education driven only by geography, not ability.</p>
+    <p>An instrumental variable Z requires three conditions. Relevance: Z is correlated with the treatment T. Distance predicts college attendance — testable with the first-stage F-statistic. Exclusion restriction: Z affects the outcome Y only through T, not through any other path. Distance does not directly affect earnings except by influencing education — this is argued on subject-matter grounds, not verified statistically. Independence: Z is uncorrelated with T-Y confounders. Where you were born was not chosen based on your cognitive ability.</p>
+    <p>Two-Stage Least Squares (2SLS) operationalizes this. Stage 1: regress T on Z and controls, get fitted values T̂ — the variation in T predicted only by the instrument. Stage 2: regress Y on T̂ instead of T. The first stage extracts only the exogenous variation in T; the second stage estimates the causal effect of that variation on Y.</p>
+    <p>IV estimates the Local Average Treatment Effect (LATE): the causal effect for compliers — units whose treatment status changes in response to the instrument. Non-compliers (always-takers, never-takers) are excluded. The LATE is not the ATE — it is the treatment effect for a specific subpopulation defined by the instrument.</p>
+    <p>What this is not: any variable correlated with treatment is a valid instrument. The exclusion restriction is almost never testable. A weak instrument (first-stage F &lt; 10) produces estimates with enormous variance and finite-sample bias toward OLS that defeats the purpose of the IV approach entirely. A good instrument is extremely hard to find — this is why natural experiments are so valuable in applied causal inference.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Always report the first-stage F-statistic — F &lt; 10 indicates a weak instrument that biases IV estimates toward OLS.</strong> The Stock-Yogo weak instrument test gives formal critical values. Weak instruments are the most common failure mode in applied IV. An F of 4 means the IV confidence interval is so wide the estimate conveys no actionable information; the bias toward OLS compounds this by making the interval centered in the wrong place.</li><li><strong>Trap: the exclusion restriction is untestable and can be violated in subtle ways.</strong> For distance-as-instrument: distance might directly affect earnings through local labor market access, independent of education. Always think through every possible path from Z to Y and argue why each either does not exist or is controlled for. Stating the exclusion restriction holds &quot;by assumption&quot; is not a defense — it is a request for the reader to accept an unverified claim.</li><li><strong>Diagnostic: estimate the effect using IV and compare to OLS.</strong> If IV &gt; OLS, the OLS confounder was downward-biasing the estimate (e.g., ability bias in the education example). If IV &lt; OLS, OLS was upward-biasing. If the estimates have opposite signs, there is a strong confound or a violated exclusion restriction — investigate before publishing. The direction of the OLS-IV gap tells you about the direction of the unmeasured confounding.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>IV trades the ignorability assumption for the exclusion restriction — both untestable — and estimates LATE for compliers only; a weak instrument adds enormous variance and biases the estimate toward OLS, defeating the purpose of the approach.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>IV isolates the variation in the treatment that's unrelated to the confounder:</strong> for education↔ability, distance-to-college shifts who attends but (arguably) not their innate ability, so 2SLS uses only the geography-driven variation in education to estimate its effect on earnings.</li><li><strong>Three conditions a valid instrument Z must meet:</strong> relevance (Z is correlated with T — testable via the first-stage F-statistic), exclusion (Z affects Y *only* through T, no other path), and independence (Z is uncorrelated with the T–Y confounders).</li><li><strong>2SLS operationalises it in two stages:</strong> stage 1 regress T on Z to get fitted T̂ (the exogenous, instrument-driven part of T); stage 2 regress Y on T̂ instead of T — the effect of that clean variation on the outcome.</li><li><strong>IV estimates the LATE, not the ATE:</strong> it recovers the effect only for *compliers* — units whose treatment status actually flips in response to the instrument — excluding always-takers and never-takers, so it's a specific subpopulation's effect.</li><li><strong>A weak instrument (first-stage F &lt; 10) defeats the whole method:</strong> it gives enormous variance *and* finite-sample bias back toward the OLS estimate you were trying to escape — the most common failure mode in applied IV (Stock-Yogo gives formal critical values).</li><li><strong>The exclusion restriction is almost never testable:</strong> you must reason through *every* path from Z to Y and argue each away on subject-matter grounds (e.g. distance affecting earnings via local labour markets) — &quot;holds by assumption&quot; is not a defence.</li><li><strong>Diagnostic — compare IV to OLS:</strong> the direction of the gap reveals the direction of the unmeasured confounding (IV &gt; OLS ⇒ the confounder was downward-biasing OLS; opposite signs ⇒ strong confound or a violated exclusion restriction — investigate before publishing).</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You want to estimate the causal effect of price increases on demand. Propose a valid instrument and explain how you would test its validity.</p>
+      <ul class="check-opts"><li>A) Use lagged price as the instrument — it is correlated with current price (relevance) and cannot be caused by current demand (temporal precedence ensures exclusion restriction)</li><li class="correct">B) Valid instrument: input cost shocks (e.g., oil prices for airline/trucking) — affects prices (relevance) but consumers don't directly change demand in response to oil prices, only to the ticket price they observe. Testing: relevance via first-stage F &gt; 10; exclusion via mechanism argument (does oil price affect demand through channel other than firm's own prices?); over-identification test if multiple instruments; placebo test (regress instrument on lagged demand before any price change — if predicts lagged demand, correlated with demand-side confounder).</li><li>C) Use competitor prices as the instrument — competitor prices are correlated with own prices (relevance) and don't directly affect own-firm demand because consumers only respond to the firm's own posted prices</li><li>D) Use random price variation from A/B pricing experiments as the instrument — experimental assignment is by construction independent of demand, guaranteeing exclusion restriction without any additional testing</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Your IV estimate of effect of education on earnings is 15% per year of schooling, but OLS estimate is 8%. Hausman test rejects exogeneity. Why might IV be higher than OLS?</p>
+      <ul class="check-opts"><li>A) IV is higher because the instrument (college proximity) violates the exclusion restriction — it has a direct positive effect on earnings through local labor market access, inflating the IV estimate</li><li>B) IV is higher because of weak instrument bias — low first-stage F causes 2SLS to overestimate the causal effect; the Hausman rejection confirms this upward bias</li><li>C) IV and OLS should converge with large samples; the 15% vs 8% gap indicates the instrument is invalid and the IV estimate should be discarded in favor of OLS</li><li class="correct">D) IV estimates LATE for compliers — people who changed education level in response to the instrument (e.g., attended college because nearby, wouldn't have otherwise). These marginal students — medium-ability people for whom college has high return — may have higher returns than average. High-ability students always attend (never-takers of no-college state); low-ability never attend (always-takers of college state). So compliers are the marginal group with potentially highest returns. IV &gt; OLS suggests returns to education are higher at the margin than the average.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> An economist uses distance to nearest abortion clinic as instrument for abortion rates, studying effect on child outcomes. What are the threats to the exclusion restriction?</p>
+      <ul class="check-opts"><li class="correct">A) Exclusion requires distance affects child outcomes ONLY through abortion rates. Violations: (1) geographic sorting — families far from clinics differ in income/religion/healthcare access generally, these affect child outcomes directly; (2) healthcare access generally — distance to abortion clinic correlates with distance to all rural healthcare; (3) urbanicity — distance correlates with rural/urban which predicts outcomes through schools/labor markets/peers. Testing: check if distance predicts other outcomes it shouldn't affect under exclusion (healthcare utilisation unrelated to reproductive health, adult earnings for cohorts before clinics opened).</li><li>B) The main threat is weak instrument bias — distance to clinic may only weakly predict abortion rates, causing the first-stage F to fall below 10 and biasing the IV estimate toward OLS</li><li>C) The exclusion restriction is satisfied as long as distance is measured at the time of pregnancy rather than childhood; time-specific distance measurement eliminates all direct effects on child outcomes</li><li>D) The only exclusion restriction threat is reverse causality — families with children may move closer to clinics after birth, creating a spurious correlation between distance and child outcomes</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> What is the difference between LATE and ATE, and why does it matter for policy?</p>
+      <ul class="check-opts"><li>A) LATE and ATE are equivalent when the instrument is strong (F &gt; 10); the distinction only matters with weak instruments where LATE estimates are biased toward the null</li><li>B) LATE estimates the effect for compliers who voluntarily selected into treatment; ATE includes never-takers and always-takers. For policy, LATE is always preferred because it captures the effect for those most likely to respond to the policy intervention</li><li class="correct">C) ATE = effect for full population: E[Y(1)-Y(0)]. LATE = effect for compliers only — subset who change treatment status in response to instrument. LATE ≠ ATE unless treatment effect homogeneous. Policy relevance: if job training program evaluated via lottery instrument, LATE estimates effect for lottery-induced participants (marginal enrollers), not always-takers (attend regardless) or never-takers (wouldn't attend even if required). Citing LATE to justify universal mandate is an error — effect on never-takers may be zero or negative if training ineffective for unmotivated participants.</li><li>D) ATE = effect averaged over the full population; LATE = effect only for treated units (ATT). The difference matters for policy when the treatment group is a non-representative subsample of the full population</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#causal_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

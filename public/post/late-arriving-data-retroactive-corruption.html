@@ -38,8 +38,8 @@
       "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
     }
   },
-  "datePublished": "2026-06-20",
-  "dateModified": "2026-06-20",
+  "datePublished": "2026-07-07",
+  "dateModified": "2026-07-07",
   "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/late-arriving-data-retroactive-corruption.html",
   "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
   "keywords": "Feature Engineering, Late-Arriving Data, Data Pipeline, Training Data Integrity, Feature Store"
@@ -75,7 +75,7 @@
     <p>Late-arriving data is a normal operational reality in data engineering. Transactions settle over 24–72 hours. User activity logs arrive with delay. External data sources batch-deliver with variable latency. The standard response: run a late-data correction job that reprocesses recent windows and backfills updated values.</p>
 <p>This response is correct for data completeness. It is a training data integrity problem that most teams do not notice until a model retrain produces unexpectedly different results.</p>
 <h2>The retroactive corruption mechanism</h2>
-<p>You have a feature \`transactions_last_7d\` for each user, computed by a nightly batch job. On 2024-01-15 at 02:00 UTC, the job runs and computes features for 2024-01-14. It writes feature rows with timestamp 2024-01-14.</p>
+<p>You have a feature `transactions_last_7d` for each user, computed by a nightly batch job. On 2024-01-15 at 02:00 UTC, the job runs and computes features for 2024-01-14. It writes feature rows with timestamp 2024-01-14.</p>
 <p>Some transactions from 2024-01-13 and 2024-01-14 arrive late — they were delayed in transit from a payment processor. On 2024-01-16, your late-data correction job reprocesses the 2024-01-14 window and rewrites the feature rows, now including the late transactions.</p>
 <p>The feature row in your store for timestamp 2024-01-14 now reflects reality as of 2024-01-16 — not reality as of 2024-01-14 at 02:00 UTC when it was first computed.</p>
 <h2>Why training is inconsistent</h2>
@@ -87,9 +87,9 @@
 <p>In a credit scoring context: users with many transactions are high-activity customers. If their features are consistently overestimated (because late transactions always add to their totals), your model learns that high transaction volume is predictive of creditworthiness by a larger margin than it actually is. The bias is invisible in offline metrics because your validation set has the same correction bias as your training set.</p>
 <h2>The two patterns that prevent this</h2>
 <h2>Pattern 1: Immutable feature rows with a write timestamp.</h2>
-<p>Never overwrite a feature row. Instead, append a new row with the corrected value and a new \`availability_timestamp\`. Your point-in-time join retrieves the row that was available at training time — the original, uncorrected value. Training is reproducible because it always reads the as-of-training-time snapshot, not the current snapshot.</p>
+<p>Never overwrite a feature row. Instead, append a new row with the corrected value and a new `availability_timestamp`. Your point-in-time join retrieves the row that was available at training time — the original, uncorrected value. Training is reproducible because it always reads the as-of-training-time snapshot, not the current snapshot.</p>
 <h2>Pattern 2: Correction awareness in feature computation.</h2>
-<p>Accept that features will be incomplete at first computation. Compute features with an explicit \`completeness_timestamp\`: the earliest time at which this feature value is considered final. Your training pipeline only uses rows where \`event_timestamp + correction_window <= training_run_timestamp\`. You exclude the most recent data from training until it is final.</p>
+<p>Accept that features will be incomplete at first computation. Compute features with an explicit `completeness_timestamp`: the earliest time at which this feature value is considered final. Your training pipeline only uses rows where `event_timestamp + correction_window <= training_run_timestamp`. You exclude the most recent data from training until it is final.</p>
 <h2>How to detect retroactive corruption</h2>
 <p>Run your training pipeline twice with a 7-day gap between runs, using identical training window bounds. Compute the feature-level correlation between the two datasets for matching entity-timestamp pairs. If feature values differ for more than 2% of rows, your pipeline has retroactive corrections altering the training data.</p>
 <p>Also: if retrained models show unexpected performance divergence from their predecessors with no apparent distribution shift in production, retroactive feature corruption is a primary suspect.</p>

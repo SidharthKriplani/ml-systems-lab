@@ -38,8 +38,8 @@
       "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
     }
   },
-  "datePublished": "2026-06-20",
-  "dateModified": "2026-06-20",
+  "datePublished": "2026-07-07",
+  "dateModified": "2026-07-07",
   "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/cold-start-problem.html",
   "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
   "keywords": "Cold Start, Recommendation Systems, ML System Design, Exploration"
@@ -87,10 +87,10 @@
 <p>This is the hardest form. You have no historical interactions at all.</p>
 <p>Sequence of phases: (1) Popularity-based serving. Log everything. (2) Content-based model. Build from item metadata + contextual features. No interaction data needed. (3) Collaborative signals. Once you have enough interactions (typically 100k+ user-item events), matrix factorisation or two-tower starts outperforming content-based. (4) Hybrid model. Blend content-based scores with collaborative scores, weighting toward collaborative as interaction data grows.</p>
 <p>The mistake is trying to jump to phase 3 too early. A collaborative model trained on 1000 interactions is worse than a well-designed content-based model.</p>
-<p>\`\`\`python def route_recommendation_request(user_id: str, interaction_count: int, catalog_metadata: dict) -> dict: """ Route cold vs warm vs hot users to the right model. Cold  = < 5 interactions  → content-based + UCB exploration Warm  = 5–50 interactions → hybrid collaborative + content Hot   = 50+ interactions  → full collaborative filtering """ if interaction_count < 5: # Cold start: use item content features + explore broadly candidates = content_based_retrieval(catalog_metadata) # UCB score = estimated_reward + sqrt(log(t) / n_shown) candidates = ucb_explore(candidates, user_id) model_used = "content_ucb"</p>
+<p>```python def route_recommendation_request(user_id: str, interaction_count: int, catalog_metadata: dict) -> dict: """ Route cold vs warm vs hot users to the right model. Cold  = < 5 interactions  → content-based + UCB exploration Warm  = 5–50 interactions → hybrid collaborative + content Hot   = 50+ interactions  → full collaborative filtering """ if interaction_count < 5: # Cold start: use item content features + explore broadly candidates = content_based_retrieval(catalog_metadata) # UCB score = estimated_reward + sqrt(log(t) / n_shown) candidates = ucb_explore(candidates, user_id) model_used = "content_ucb"</p>
 <p>elif interaction_count < 50: # Transitional: blend collaborative signal with content fallback collab_score   = collaborative_model.score(user_id, candidates) content_score  = content_model.score(catalog_metadata, candidates) blended        = 0.6 * collab_score + 0.4 * content_score model_used     = "hybrid"</p>
 <p>else: # Full collaborative: user embedding has enough signal candidates = two_tower_retrieve(user_id, top_k=500) model_used = "collaborative"</p>
-<p>return {"candidates": candidates, "model": model_used, "interaction_count": interaction_count} \`\`\`</p>
+<p>return {"candidates": candidates, "model": model_used, "interaction_count": interaction_count} ```</p>
 
     <div class="cta">
       <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>

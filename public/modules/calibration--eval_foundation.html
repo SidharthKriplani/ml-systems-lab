@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calibration &amp; Brier Score | ML Systems Lab</title>
+  <meta name="description" content="Reliability diagrams, Platt scaling, isotonic regression, Brier decomposition">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/calibration--eval_foundation.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/calibration--eval_foundation.html">
+  <meta property="og:title" content="Calibration &amp; Brier Score | ML Systems Lab">
+  <meta property="og:description" content="Reliability diagrams, Platt scaling, isotonic regression, Brier decomposition">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Calibration &amp; Brier Score">
+  <meta name="twitter:description" content="Reliability diagrams, Platt scaling, isotonic regression, Brier decomposition">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Calibration & Brier Score",
+  "description": "Reliability diagrams, Platt scaling, isotonic regression, Brier decomposition",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/calibration--eval_foundation.html",
+  "keywords": "calibration, Brier score, Platt scaling, reliability diagram"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#eval_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">28 min read</span>
+      <span class="tag">calibration</span><span class="tag">Brier score</span><span class="tag">Platt scaling</span><span class="tag">reliability diagram</span>
+    </div>
+    <h1>Calibration &amp; Brier Score</h1>
+    <p class="subtitle">Reliability diagrams, Platt scaling, isotonic regression, Brier decomposition</p>
+
+    <p>A model can rank perfectly and still lie to you. Picture a mortality-risk model with a flawless <strong>AUC of 1.0</strong> — it always ranks sicker patients above healthier ones. A doctor reads &quot;90% risk&quot; off it and prepares for the worst. But among all the patients this model stamps &quot;90%,&quot; only 60% actually die. The *ranking* is perfect; the *number* is badly wrong. And the moment a real decision hangs on that number — a treatment, a price, an alert threshold — the wrong number costs you.</p>
+    <p>That gap has a name. <strong>Calibration</strong> asks: when the model says 0.9, does the thing happen 90% of the time? It is a completely separate question from *ranking* (which is what AUC measures). A model can nail one and fail the other.</p>
+    <hr>
+    <h3>Seeing it: the reliability diagram</h3>
+    <p>Bucket the model's predictions (everything near 0.1, near 0.2, and so on) and, for each bucket, plot the predicted probability against the *actual* fraction that came true. A perfectly calibrated model sits on the diagonal where &quot;predicted = actual.&quot; Points that fall *below* the diagonal mean overconfidence — the model says 0.8 for things that happen only 0.55 of the time. Modern neural networks are almost always overconfident, and it gets worse toward the high end, because they are trained with a loss that rewards confident predictions even on noisy labels.</p>
+    <hr>
+    <h3>Putting a number on it: ECE and Brier</h3>
+    <p>Two numbers summarise calibration. <strong>ECE</strong> (expected calibration error) is just the average gap between those buckets and the diagonal — lower is better, zero is perfect. It is handy but coarse: a low ECE can still hide bad miscalibration in one probability range, so always look at the diagram too, not only the single number.</p>
+    <p>The <strong>Brier score</strong> goes further. It is simply the mean squared error of the probabilities — the average of (predicted − actual)², where actual is 0 or 1. Lower is better. What makes it special is that it rolls *both* things you care about into one number: how well the model *separates* the classes (discrimination) *and* how honest its probabilities are (calibration). So a model with great AUC but poor calibration shows a good discrimination part and a bad calibration part inside its Brier score — which is exactly why a model with *lower* AUC can still have the *lower* (better) Brier score, by paying its way in calibration.</p>
+    <hr>
+    <h3>Fixing it — on a separate calibration set</h3>
+    <p>You do not usually retrain; you patch the probabilities afterward, using a held-out <strong>calibration set</strong> (never the training or test data). Three common tools, cheapest first. <strong>Temperature scaling</strong> (for neural nets): divide the logits by a single number T before the softmax — T &gt; 1 softens overconfident outputs, and it never changes which class wins, only the probabilities. One parameter, impossible to overfit, and it fixes the most common kind of neural-net miscalibration, so try it first. <strong>Platt scaling</strong>: fit a small logistic curve on top of the scores — good for the smooth, one-directional miscalibration of SVMs and boosting, and it works with little data. <strong>Isotonic regression</strong>: fit a flexible staircase that can straighten any shape of miscalibration — more powerful, but it needs more data or it just memorises. And the rule you cannot break: fit the correction on a *separate* slice. Calibrate on training data and it is fooled by memorised outputs; calibrate on test data and you have spoiled your only honest score.</p>
+    <hr>
+    <h3>The Brier decomposition, by its actual terms</h3>
+    <p>We said Brier folds two things together — here they are precisely. The Murphy decomposition splits it into three: <strong>Brier = reliability − resolution + uncertainty</strong>. <strong>Reliability</strong> is the calibration error (how far predictions sit from the true rate in their bucket) — you want it *low*. <strong>Resolution</strong> is how much the predictions vary from the base rate and correctly separate outcomes (discrimination) — you want it *high*, and it's *subtracted*. <strong>Uncertainty</strong> is the irreducible difficulty set by the base rate, which no model controls. The critical consequence: a <strong>lower Brier does not always mean better calibration</strong> — it can drop purely because *resolution* improved (better discrimination) while calibration stayed the same or worsened. So don't read Brier as a pure calibration metric; it mixes calibration, discrimination, and base-rate difficulty. sklearn warns about exactly this.</p>
+    <hr>
+    <h3>ECE's fine print</h3>
+    <p>ECE is more fragile than its single number suggests. It depends heavily on <strong>bin count</strong> (10 bins vs 20 gives different ECE) and bin placement; <strong>empty or tiny bins</strong> make the estimate noisy; <strong>equal-width bins</strong> waste resolution when predictions cluster (fixable with <strong>adaptive/equal-count binning</strong>). And in multiclass you must choose *what* to measure: <strong>top-label ECE</strong> (is the confidence in the predicted class honest?) versus <strong>classwise ECE</strong> (is every class's probability honest?) — they answer different questions and can disagree. Always pair ECE with the reliability diagram so a small number can't hide localised miscalibration.</p>
+    <hr>
+    <h3>Calibrating more than two classes</h3>
+    <p>Multiclass calibration is genuinely harder. The one-vs-rest approach fits <strong>one calibrator per class</strong>, but then the per-class probabilities no longer sum to 1 and need <strong>renormalising</strong>. You also decide between calibrating the <strong>top label</strong> only versus <strong>classwise</strong> (every class), and you inspect <strong>classwise reliability diagrams</strong> rather than one curve. Temperature scaling is popular here precisely because scaling all logits by a single T keeps the softmax normalised and sidesteps the renormalisation headache.</p>
+    <hr>
+    <h3>Model-specific miscalibration patterns</h3>
+    <p>Different models miscalibrate in characteristic directions. <strong>Random forests</strong> are pushed *away* from 0 and 1 by tree-averaging (a truly-positive case rarely gets every tree to vote yes), giving a <strong>sigmoid</strong>-shaped reliability curve — under-confident at the extremes. <strong>Modern neural networks</strong> are commonly <strong>overconfident</strong> (curve sags below the diagonal), though this is a tendency, not a universal law — it depends on architecture, loss, and regularisation. Knowing your model's usual distortion tells you which correction shape to expect.</p>
+    <hr>
+    <h3>Calibration decays after deployment — monitor it</h3>
+    <p>Calibration measured at launch is not permanent. <strong>Covariate shift</strong> (the input mix moves) and <strong>base-rate shift</strong> (the positive rate changes) both break it even when the original test calibration looked perfect. So calibration is something to <strong>monitor</strong> in production — track ECE/reliability over time and, crucially, *by cohort*: time window, geography, device, and segment, since a model well-calibrated overall can be badly off for a subgroup whose prevalence shifted.</p>
+    <hr>
+    <h3>Calibration is not thresholding</h3>
+    <p>Keep the two steps separate. <strong>Calibration</strong> makes the probability *truthful* (0.7 means 70%). <strong>Thresholding</strong> picks the *decision cutoff* that turns a probability into an action, chosen from costs and capacity. They're related — an honest probability makes the threshold meaningful and transferable across contexts — but distinct: you calibrate so the number can be trusted, *then* threshold so the decision is optimal. Fixing one does not fix the other.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Calibration and ranking are different things — a model can ace one and fail the other.</strong>
+
+Ranking (AUC) asks whether riskier cases score higher than safer ones. Calibration asks whether &quot;0.9&quot; actually happens 90% of the time. A model that always predicts the base rate is perfectly calibrated yet useless; a model with AUC 1.0 can be 30 points overconfident. You need both, and which matters more depends on whether a real decision reads the probability itself (medical risk, pricing, fraud thresholds, or feeding another model) or only the order (top-k ranking, where calibration barely matters).</li><li><strong>See miscalibration with a reliability diagram; summarise it with ECE or Brier.</strong>
+
+Bucket the predictions and plot predicted probability against the actual rate — points below the diagonal mean overconfidence. ECE is the average distance from that diagonal (simple, but it can hide trouble in one range, so look at the diagram too). The Brier score — mean squared error of the probabilities — is richer: it folds discrimination and calibration into one number, which is why a model with lower AUC can still post the better (lower) Brier score by being better calibrated.</li><li><strong>The fix is a post-hoc patch on a separate calibration set — start with the simplest.</strong>
+
+Temperature scaling (divide neural-net logits by one number T) is the first thing to try: it fixes typical overconfidence, cannot overfit, and never changes which class wins. Platt scaling (a small logistic curve on the scores) suits the smooth miscalibration of SVMs and boosting. Isotonic regression can fix any shape but needs more data. Whichever you pick, fit it on a held-out calibration slice — never on training or test.</li><li><strong>Read Brier and ECE carefully — neither is a pure calibration number.</strong>
+
+Brier = reliability − resolution + uncertainty, so a lower Brier can come entirely from better discrimination (resolution) while calibration is flat or worse — check the reliability term or diagram directly. ECE is binning-sensitive (bin count, empty bins; use adaptive/equal-count bins) and in multiclass you must choose top-label vs classwise ECE, which can disagree. Random forests miscalibrate *away* from 0/1 (sigmoid curve, under-confident at extremes) while neural nets are commonly — not universally — overconfident.</li><li><strong>Handle multiclass, monitor for drift, and keep calibration separate from thresholding.</strong>
+
+One-vs-rest multiclass calibration needs renormalising (per-class probabilities won't sum to 1); temperature scaling avoids this by scaling all logits together. Calibration decays under covariate and base-rate shift even when AUC is unchanged, so monitor ECE/reliability over time and by cohort (geography, device, segment) and re-fit on recent data. And calibration (making the probability truthful) is a different step from thresholding (choosing the decision cutoff from costs) — fixing one doesn't fix the other.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>AUC measures whether a model ranks correctly and calibration measures whether its probability estimates are honest — these are independent, so for any application where the probability output drives a real-world decision, calibration must be evaluated and fixed separately from discrimination.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Ranking and calibration are independent — a model can ace one and fail the other:</strong> an AUC-1.0 model ranks every sicker patient above every healthier one, yet among the patients it stamps &quot;90%,&quot; only 60% may actually die. AUC asks whether risky cases score higher; calibration asks whether &quot;0.9&quot; happens 90% of the time. The moment a real decision reads the *number* (treatment, price, threshold), the wrong number costs you.</li><li><strong>See miscalibration with a reliability diagram:</strong> bucket predictions and plot predicted probability against the *actual* fraction that came true — a perfectly calibrated model sits on the diagonal, and points *below* it mean overconfidence (says 0.8 for things that happen 0.55 of the time). Modern neural nets are almost always overconfident, worse toward the high end.</li><li><strong>Summarise with ECE and Brier:</strong> ECE = average gap from the diagonal (simple but coarse — a low ECE can hide bad miscalibration in one range). Brier = mean squared error of the probabilities, which folds *both* discrimination and calibration into one number — which is why a model with *lower* AUC can post the *lower* (better) Brier by being better calibrated.</li><li><strong>Fix with a post-hoc patch on a *separate* calibration set, simplest first:</strong> temperature scaling (divide neural-net logits by one T, T&gt;1 softens overconfidence, never changes which class wins, can't overfit — try first) → Platt scaling (a small logistic curve, good for SVM/boosting) → isotonic regression (any shape, but needs more data). Never fit the correction on training or test data.</li><li><strong>Brier = reliability − resolution + uncertainty, so a lower Brier isn't proof of better calibration:</strong> reliability is the calibration error (want low), resolution is discrimination (want high, and it's subtracted), uncertainty is irreducible base-rate difficulty. Brier can drop purely from better resolution while calibration stays flat or worsens — check the reliability term or the diagram directly.</li><li><strong>ECE is binning-sensitive:</strong> bin count and placement change it, empty/tiny bins make it noisy, and equal-width bins waste resolution when predictions cluster (use adaptive/equal-count bins). In multiclass, choose top-label ECE (is the predicted class's confidence honest?) vs classwise ECE (is every class honest?) — they can disagree, so always pair ECE with the diagram.</li><li><strong>Calibration decays after deployment even when AUC is stable:</strong> covariate shift and base-rate shift both break it because the score→true-rate mapping depends on the distribution. Monitor ECE/reliability over time and *by cohort* (geography, device, segment) and re-fit on recent data. And calibration (making the probability truthful) is a separate step from thresholding (choosing the decision cutoff from costs) — fixing one doesn't fix the other.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> A model has AUC = 0.91 and ECE = 0.15. What does this mean and what do you do?</p>
+      <ul class="check-opts"><li class="correct">A) AUC=0.91 means excellent discrimination; ECE=0.15 means probabilities are off by 15 percentage points on average — for any use case where probability drives a decision, apply Platt scaling or isotonic regression on a held-out calibration set; the high AUC tells you the ranking is strong and recalibration preserves it</li><li>B) The model is well-calibrated — ECE=0.15 is below the standard threshold of 0.20 and no action is needed</li><li>C) AUC=0.91 and ECE=0.15 cannot coexist — high AUC always implies low ECE because good discrimination requires good calibration</li><li>D) ECE=0.15 means the model is underconfident; apply temperature scaling with T &lt; 1 to sharpen the probabilities</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Your reliability diagram shows the model is overconfident at high probabilities (0.8-1.0 bucket shows actual positive rate of 0.55). What could cause this and how do you fix it?</p>
+      <ul class="check-opts"><li>A) The model has insufficient training data at high-probability predictions; the fix is to oversample examples where the model assigns high confidence</li><li>B) Overconfidence in the 0.8-1.0 bucket is expected for all classifiers — probabilities above 0.8 are always miscalibrated without explicit isotonic regression</li><li>C) The reliability diagram is measuring the wrong thing — overconfidence at high probabilities is a sign that the binarization threshold of 0.5 should be raised</li><li class="correct">D) Log loss training rewards confident predictions even on noisy labels, and neural networks are systematically overconfident without calibration; fix with temperature scaling (T &gt; 1) to compress high probabilities, or label smoothing during training</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Two models: Brier score for Model A = 0.08, for Model B = 0.12 on the same dataset. Model B has higher AUC. How do you interpret this?</p>
+      <ul class="check-opts"><li>A) Model B is strictly better — AUC is the primary evaluation metric and Brier score differences are secondary</li><li>B) Model A is strictly better — lower Brier score always dominates higher AUC because Brier score measures both calibration and discrimination jointly</li><li class="correct">C) Model A has better overall probability quality (lower Brier score) despite lower AUC — it is significantly better calibrated, which matters for decisions based on the probability output; decompose both Brier scores into resolution and reliability to see if recalibrating Model B would close the gap</li><li>D) The models are equivalent — AUC and Brier score measure the same underlying property from different angles</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> A colleague says &quot;our Brier score dropped from 0.12 to 0.09 after the last change, so the model is better calibrated now.&quot; Why is that conclusion not guaranteed?</p>
+      <ul class="check-opts"><li>A) It's fully guaranteed — Brier score is a pure calibration metric, so any drop means better calibration by definition.</li><li class="correct">B) Brier decomposes as reliability − resolution + uncertainty: reliability is the calibration error (want low) and resolution is discrimination (want high, and it's subtracted). A lower Brier can come entirely from improved resolution (better discrimination) while calibration stayed the same or even worsened. To claim better calibration you must look at the reliability term (or the reliability diagram) directly, not the Brier total.</li><li>C) The drop is meaningless because Brier score is not comparable across model versions on the same data.</li><li>D) It's wrong because a lower Brier score always means worse calibration and better discrimination — the two always move in opposite directions.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> A binary model was well-calibrated at launch (ECE 0.02). Three months later the base rate of positives has shifted and users complain the probabilities feel off, though ranking is unchanged. What's happening and what should have been in place?</p>
+      <ul class="check-opts"><li>A) Ranking unchanged means nothing is wrong — calibration can't drift if AUC is stable, so the complaints must be a UI issue.</li><li class="correct">B) Calibration decays under covariate and base-rate shift even when ranking (AUC) is unchanged, because the mapping from score to true rate depends on the distribution. Calibration should be monitored in production over time and by cohort (geography, device, segment) — not treated as a one-time launch fix — and re-fit on recent data when ECE crosses a threshold.</li><li>C) The model simply needs more training epochs; overconfidence always returns after a few months and retraining longer fixes it permanently.</li><li>D) Nothing can be done — once a model is deployed its calibration is frozen, so the only option is a full model rebuild from scratch.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#eval_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Categorical Encoding | ML Systems Lab</title>
+  <meta name="description" content="Convert categories into numbers without lying to your model about distance, order, or information from the target.">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/categorical_encoding.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/categorical_encoding.html">
+  <meta property="og:title" content="Categorical Encoding | ML Systems Lab">
+  <meta property="og:description" content="Convert categories into numbers without lying to your model about distance, order, or information from the target.">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Categorical Encoding">
+  <meta name="twitter:description" content="Convert categories into numbers without lying to your model about distance, order, or information from the target.">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Categorical Encoding",
+  "description": "Convert categories into numbers without lying to your model about distance, order, or information from the target.",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/categorical_encoding.html",
+  "keywords": "encoding, one-hot, target encoding, ordinal, cardinality, embeddings"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#data_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">45 min read</span>
+      <span class="tag">encoding</span><span class="tag">one-hot</span><span class="tag">target encoding</span><span class="tag">ordinal</span><span class="tag">cardinality</span>
+    </div>
+    <h1>Categorical Encoding</h1>
+    <p class="subtitle">Convert categories into numbers without lying to your model about distance, order, or information from the target.</p>
+
+    <p>You are predicting customer churn, and one of your columns is `city` — with 5,000 different values. Models only eat numbers, so you have to turn those city names into numbers somehow. And *how* you do it turns out to matter a lot, because every method quietly makes a *claim* about the categories, and the wrong claim hurts you.</p>
+    <hr>
+    <h3>The obvious way, and why it strains at scale</h3>
+    <p>The default is <strong>one-hot encoding</strong>: make one yes/no column per city (is it San Francisco? is it Austin? …). For a handful of categories this is perfect. But 5,000 cities means 5,000 near-empty columns, and with 100,000 rows many cities have only a few examples each — so their column is basically noise. The model can &quot;memorise&quot; that San Francisco churned a lot in your training window without learning anything that generalises.</p>
+    <hr>
+    <h3>Target encoding: one dense, informative column</h3>
+    <p>A better move at high cardinality is <strong>target encoding</strong>: replace each city with the average churn rate *of that city*. San Francisco, with plenty of examples, gets a stable estimate; &quot;Smalltown, OH&quot; with three examples gets nudged toward the overall average so its tiny sample cannot run wild. Instead of 5,000 sparse columns you get *one* meaningful number per row — and for tree models this often beats one-hot outright.</p>
+    <p>But target encoding has a sharp, specific trap: <strong>leakage</strong>. If you compute a city's average churn using the whole dataset and then feed it back as a feature, each row's encoded value was partly computed from *its own label* — you have handed the model the answer. A city with a single row gets encoded with that row's exact outcome. The fix is to compute the averages *out-of-fold* — each row encoded using only *other* rows — which the `category_encoders` library does for you with one setting.</p>
+    <hr>
+    <h3>A quick decision guide</h3>
+    <p>- <strong>Low cardinality</strong> (under ~15: payment method, device type): <strong>one-hot</strong> is fine — few columns, no leakage worry.
+- <strong>Medium</strong> (15–50): one-hot, unless there is a *real* order (education: high-school &lt; college &lt; grad), in which case <strong>ordinal</strong> encoding respects it. Do not impose an order where none exists.
+- <strong>High</strong> (50+: cities, merchants): <strong>target encoding</strong> (out-of-fold), or frequency encoding.
+- <strong>Very high, with a neural network</strong> (user IDs, product IDs): <strong>embeddings</strong> — the network learns a small dense vector per category, and categories that behave alike end up close together in that space.</p>
+    <p>One myth to retire: &quot;LightGBM handles categoricals natively, so I can skip all this.&quot; Its built-in handling is fine for modest cardinality but degrades past a couple hundred values — for a 5,000-city column, explicit out-of-fold target encoding still wins, and it is one line of code.</p>
+    <hr>
+    <h3>Target encoding with smoothing: the actual formula</h3>
+    <p>&quot;Nudge rare categories toward the global average&quot; has a precise form worth carrying. The smoothed encoding for a category is a *count-weighted blend* of its own mean and the global mean:</p>
+    <p>encoded = (n·category_mean + m·global_mean) / (n + m)</p>
+    <p>where <strong>n</strong> is how many rows that category has and <strong>m</strong> is a smoothing strength. When a category is common (n ≫ m) the encoding ≈ its own mean; when it's rare (n small) it's pulled toward the global mean, so &quot;Smalltown with 3 rows&quot; can't produce a wild estimate. Bigger m means more shrinkage. This smoothing is what makes target encoding safe on long-tailed categories.</p>
+    <hr>
+    <h3>The full CV-safe protocol</h3>
+    <p>Getting target encoding right end-to-end has three stages, and mixing them up is the classic bug. <strong>For the training set</strong>, use out-of-fold encoding (each row encoded from the *other* folds) so no row sees its own label. <strong>For the test set (and inference)</strong>, encode using statistics computed from the *entire* training set — the test rows never contribute to any mean. So: OOF within train, full-train stats applied to test. Fitting one encoder on all the data, or using OOF stats for the test set, both break it.</p>
+    <hr>
+    <h3>Frequency and count encoding</h3>
+    <p>A cheaper cousin of target encoding: replace each category with <strong>how often it appears</strong> (its count or frequency). It's useful precisely when *popularity itself is predictive* — a rare merchant may be riskier than a common one — and it has a nice property target encoding lacks: it <strong>doesn't touch the label</strong>, so there's no leakage to guard against. It handles high cardinality in one dense column at almost no cost. It's weaker than target encoding when the outcome, not the frequency, is what matters — but it's a strong, safe default to try alongside.</p>
+    <hr>
+    <h3>Hashing: cheap and unbounded, but blind</h3>
+    <p>The <strong>hashing trick</strong> maps categories into a fixed number of buckets via a hash function — so it handles *unbounded* vocabularies (new categories just hash into existing buckets) at fixed memory. The costs: <strong>collisions</strong> (different categories share a bucket, blurring them together — worse for rare categories that collide with common ones), total <strong>loss of interpretability</strong> (you can't read a bucket back to a category), and a real <strong>choice of bucket count</strong> (too few = heavy collisions, too many = sparse). Use it when the vocabulary is huge or streaming and you can tolerate some collision noise, not when you need to explain the model.</p>
+    <hr>
+    <h3>Embeddings: dimension, cold start, minimum frequency</h3>
+    <p>Learned embeddings are powerful for neural nets but have their own knobs. <strong>Dimension</strong>: a rough heuristic is min(50, cardinality^0.25 · few) — bigger for higher-cardinality columns, but too large overfits. <strong>Minimum frequency</strong>: categories seen only a handful of times can't learn a good vector, so group rare ones into a shared &quot;rare&quot; token. <strong>Cold start</strong>: a brand-new category at inference has no trained embedding — you need a reserved &quot;unknown&quot; embedding to fall back on. And embeddings need <strong>enough data per category</strong> and some <strong>regularisation</strong> or they memorise. They're not free lunch; they're target encoding's expressive, data-hungry sibling.</p>
+    <hr>
+    <h3>Native categorical handling differs by library</h3>
+    <p>&quot;The tree library handles categoricals&quot; is true but the *details* differ and matter. <strong>LightGBM</strong> has native categorical splits (good to a few hundred values). <strong>XGBoost</strong> added native categorical support more recently. <strong>CatBoost</strong> is the standout: it uses <strong>ordered target statistics</strong> — a target-encoding scheme computed in a way that structurally avoids the leakage plain target encoding suffers — which is why it often wins on categorical-heavy data with minimal preprocessing. So if your data is dominated by high-cardinality categoricals, CatBoost is worth trying specifically for this reason.</p>
+    <hr>
+    <h3>Rare categories and new categories in production</h3>
+    <p>Two operational rules. <strong>Rare-category policy</strong>: fold categories below a minimum-count threshold into an explicit &quot;Other&quot; bucket rather than trusting three-row estimates. <strong>New-category monitoring</strong>: production will see categories that never appeared in training, so define the fallback (global mean for target encoding, a hash bucket, an &quot;unknown&quot; embedding) *and* monitor the <strong>rate of unseen categories</strong> — a rising unknown rate means your encoding is increasingly guessing, and it's an early signal that the category space has drifted and you should retrain.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Use target encoding with 5-fold isolation for any categorical feature with cardinality above 50 — it is the highest-signal encoding for tree models and takes one line of code with the category-encoders library.</strong>
+
+For the 5,000-city feature: target encoding produces a single dense column where each city's value reflects actual churn signal from training data. One-hot produces 5,000 sparse columns where most cities have fewer than 20 training examples — a regime that guarantees memorization rather than generalization.</li><li><strong>Trap: computing target encoding statistics before the train/test split. This leaks test-set label information into training features and is one of the most common sources of inflated offline metrics.</strong>
+
+The mechanism: mean churn rate per city is computed across the full dataset. Each row's city feature is now a function of that row's own label (plus its neighbors'). For cities with few rows, the encoded value is nearly the target itself. Fix: compute within folds using category-encoders' cross-val encoding or TargetEncoder with cv parameter.</li><li><strong>Diagnostic: if a target-encoded feature shows near-100% feature importance in a tree model, check for leakage — the encoding likely included the target row's own label in the mean.</strong>
+
+A legitimately useful encoding produces moderate, plausible importance. An encoding that accidentally includes row-level label information will dominate feature importance because it is effectively a noisy copy of the target. Check by comparing feature importance on train vs. validation — a leaking feature will show much higher importance on training data.</li><li><strong>Smooth target encoding by count, and know frequency/hashing/embedding trade-offs.</strong>
+
+Smoothed target encoding blends category mean with global mean by count: (n·cat_mean + m·global_mean)/(n+m), pulling rare categories toward the global average. The CV-safe protocol: out-of-fold encoding within train, full-train stats applied to test/inference. Frequency/count encoding is a leakage-free alternative when popularity is predictive. Hashing handles unbounded vocabularies but brings collisions and no interpretability. Embeddings need a chosen dimension, a minimum frequency (group rare into a shared token), and an &quot;unknown&quot; vector for cold start.</li><li><strong>Library categorical support differs, and production needs a rare/new-category policy.</strong>
+
+LightGBM and XGBoost have native categorical splits (good to a few hundred values); CatBoost's ordered target statistics structurally avoid the leakage plain target encoding suffers, so it often wins on categorical-heavy data with minimal preprocessing. Operationally: fold categories below a minimum count into &quot;Other,&quot; define the unseen-category fallback (global mean / hash bucket / unknown embedding), and monitor the rate of unseen categories in production — a rising unknown rate means the category space is drifting and it's time to retrain.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Every encoding asserts something about category structure — the wrong assertion is not a preprocessing detail but a false claim the model learns as if it were true, and at high cardinality the wrong choice costs measurable AUC.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Every encoding asserts something about category structure</strong> — the wrong assertion is a false claim the model learns as true.</li><li><strong>High cardinality (&gt;50):</strong> target encoding gives one dense signal-bearing column; one-hot on 5,000 cities is sparse and forces memorization.</li><li><strong>Target encoding leaks</strong> if computed before the split — the encoded value becomes a noisy copy of the row's own label. Compute out-of-fold.</li><li><strong>Leakage tell:</strong> a target-encoded feature at ~100% importance, much higher on train than validation.</li><li><strong>Smooth by count:</strong> `(n·cat_mean + m·global_mean)/(n+m)` pulls rare categories toward the global average.</li><li><strong>Menu:</strong> frequency/count (leakage-free when popularity predicts), hashing (unbounded vocab, collisions), embeddings (need dim + min-freq + unknown vector).</li><li><strong>Production needs a rare/new-category policy:</strong> fold below-min into Other, define the unseen fallback, monitor unseen rate — rising = drift = retrain.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You apply ordinal encoding to a 'city' feature with 50 unique values and train a linear regression. What exactly goes wrong?</p>
+      <ul class="check-opts"><li>A) Ordinal encoding increases the cardinality of the feature, causing gradient descent to converge more slowly than with one-hot encoding.</li><li>B) Ordinal encoding introduces a dummy variable trap because the integers 0–49 sum to a predictable total, creating perfect multicollinearity with the intercept term.</li><li>C) Ordinal encoding forces the model to treat all 50 cities as equally spaced on a continuous scale, which slightly underestimates the effect of the most common city category.</li><li class="correct">D) Ordinal encoding assigns integers 0-49 in arbitrary order. Linear regression learns a single coefficient for the city feature, multiplied by the integer. The model is forced to assume city 49 has exactly 49× the effect of city 1 — no basis in reality. Cities with adjacent integers are treated as similar; high integers get disproportionate weight. The model fits a meaningless linear trend across an arbitrary ordering. One-hot encoding gives independent coefficients for each city. Tree models are less affected (they learn threshold splits not linear relationships).</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Walk through exactly why target encoding without cross-validation causes data leakage.</p>
+      <ul class="check-opts"><li class="correct">A) When computing target encoding by taking mean target for all rows with category X, you INCLUDE the row you're about to use as a training example. That row's own target value contributes to the encoded feature value. In the extreme case: a category with only one row → encoded value IS the target (direct copy of what model is predicting → artificially perfect training accuracy). Fix: leave-one-out (exclude current row's target from mean) or fold-based encoding (compute means from training folds only).</li><li>B) Target encoding without cross-validation leaks because the encoding is fitted on the validation set instead of the training set, allowing validation labels to contaminate training feature values.</li><li>C) Target encoding causes leakage by allowing the model to memorize category-level statistics instead of learning the underlying patterns, which inflates training accuracy but not test accuracy.</li><li>D) Target encoding without cross-validation leaks because the global mean target used as a fallback for unseen categories reveals the class balance of the full dataset including the test set.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> At inference time, your model receives a city it has never seen in training. How does each encoding strategy handle this, and which is most robust?</p>
+      <ul class="check-opts"><li>A) All encoding strategies raise a KeyError for unseen categories; the only robust approach is to add an explicit &quot;unknown&quot; category during training with enough examples to learn a meaningful representation.</li><li>B) One-hot encoding and target encoding both fail silently for unseen categories; ordinal encoding is the most robust because it can always assign the next available integer.</li><li class="correct">C) One-hot: sets all city indicator columns to 0 (silent implicit &quot;other&quot; category, may produce unpredictable behavior). Ordinal: no valid integer for unseen city — must assign &quot;unknown&quot; integer or raise error. Target encoding: no mean target for unseen city — typical fallback is global mean target (reasonable but loses per-category signal). Hash encoding: maps new city to bucket automatically via hash function — ALWAYS produces valid bucket index, most naturally robust to new categories.</li><li>D) Target encoding is most robust for unseen categories because the global mean fallback produces the same prediction as the base rate, which is always the safest default for unknown inputs.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> A feature has 5,000 unique merchant IDs and you are training a neural network. Why is one-hot encoding a bad choice?</p>
+      <ul class="check-opts"><li>A) One-hot encoding 5,000 merchant IDs is computationally feasible but semantically wrong — the binary representation falsely implies that all merchants are equidistant from each other in feature space.</li><li class="correct">B) One-hot 5,000 merchant IDs → 4,999 binary columns. With 100,000 rows, each column has average 20 non-zero values — extremely sparse input. Neural networks learn poorly from sparse inputs: gradient flow through nearly-all-zero feature vectors is weak, weight updates small, most neurons learn nothing from most examples. Embedding layer: directly looks up learned dense vector for each merchant ID without constructing 5,000-dimensional sparse input, uses same 5,000 × d parameters, can capture semantic similarity between merchants.</li><li>C) One-hot encoding 5,000 IDs creates the dummy variable trap at scale — the 5,000 columns sum to exactly 1 for every row, producing perfect multicollinearity that causes gradient descent to diverge.</li><li>D) One-hot encoding is a bad choice because merchant IDs change over time as new merchants onboard, requiring the model to be retrained from scratch whenever a new merchant appears.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> You target-encode a high-cardinality column and a category that appears only twice in training gets an encoded value equal to those two rows' average outcome — a wild, unreliable estimate. What technique tames this, and how does it work?</p>
+      <ul class="check-opts"><li>A) Drop every category with fewer than 100 rows, since rare categories can never be encoded reliably.</li><li class="correct">B) Smoothing: encode as a count-weighted blend of the category's own mean and the global mean — (n·category_mean + m·global_mean)/(n+m). For a category with n=2, the small n means the estimate is pulled strongly toward the global mean, so its two-row average can't dominate; common categories (large n) keep their own mean. The smoothing strength m controls how aggressively rare categories are shrunk.</li><li>C) Switch to one-hot encoding, which never produces unreliable estimates for rare categories.</li><li>D) Multiply every encoded value by the category's frequency, which automatically down-weights rare categories to zero.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q6.</strong> Your dataset is dominated by several high-cardinality categorical columns. A colleague suggests CatBoost specifically. What's the technical reason CatBoost is well-suited here?</p>
+      <ul class="check-opts"><li>A) CatBoost one-hot encodes all categoricals internally, which is always optimal for high cardinality.</li><li class="correct">B) CatBoost uses ordered target statistics — a target-encoding scheme computed over a randomized ordering so that each row's encoding never uses its own label — which structurally avoids the leakage that plain target encoding suffers, while still capturing the strong signal target encoding provides. That makes it strong on categorical-heavy data with minimal manual preprocessing. (LightGBM/XGBoost also have native categorical splits, but CatBoost's ordered scheme is the specific reason it shines here.)</li><li>C) CatBoost ignores categorical columns entirely and trains only on numeric features, which prevents overfitting to categories.</li><li>D) CatBoost requires no validation set because its categorical handling eliminates all forms of overfitting automatically.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#data_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

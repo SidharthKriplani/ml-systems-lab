@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feature Store Architecture | ML Systems Lab</title>
+  <meta name="description" content="Offline store, online store, registry, materialisation, latency SLAs">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/feature_store.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/feature_store.html">
+  <meta property="og:title" content="Feature Store Architecture | ML Systems Lab">
+  <meta property="og:description" content="Offline store, online store, registry, materialisation, latency SLAs">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Feature Store Architecture">
+  <meta name="twitter:description" content="Offline store, online store, registry, materialisation, latency SLAs">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Feature Store Architecture",
+  "description": "Offline store, online store, registry, materialisation, latency SLAs",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/feature_store.html",
+  "keywords": "feature store, MLOps, architecture, feature serving"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#production_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">29 min read</span>
+      <span class="tag">feature store</span><span class="tag">MLOps</span><span class="tag">architecture</span><span class="tag">feature serving</span>
+    </div>
+    <h1>Feature Store Architecture</h1>
+    <p class="subtitle">Offline store, online store, registry, materialisation, latency SLAs</p>
+
+    <p>Five ML teams at one company all need the same thing: &quot;user average spend in last 30 days.&quot; Each team builds its own pipeline. Five nightly SQL jobs. Five Redis keys. Five different implementations of the 30-day window, each with its own null handling, timezone quirks, and new-user edge cases. A user spends ten thousand dollars at midnight, and each team's copy of the feature updates at a slightly different time with a slightly different number. The fraud model and the recommendation model now disagree about this user's spending. Neither team can see the other's value. Neither is wrong by its own logic. Yet they are quietly inconsistent, and both models suffer for it.</p>
+    <p>A feature store fixes this by computing each feature *once,* correctly, and serving that one answer to everyone — through two storage backends built for two very different jobs.</p>
+    <hr>
+    <h3>The offline store: history, for building training sets</h3>
+    <p>It keeps every past value of a feature, stamped with time. That is what lets you ask, &quot;What was this user's 30-day average spend *as of* time T?&quot; — the point-in-time query that prevents leakage. Without it, your training pipeline reaches for *today's* values when building rows for last month's events, and every rolling aggregate silently swallows data that didn't exist yet when the prediction would have been made.</p>
+    <hr>
+    <h3>The online store: the current value, fast</h3>
+    <p>A live fraud request needs this user's spend average in under 5ms. The online store (Redis, DynamoDB, Cassandra) holds only the *latest* value per user and returns it at memory speed. No history — that's the offline store's job. It's sized for latency at peak traffic, not for storage.</p>
+    <hr>
+    <h3>The registry and materialization: the parts a plain database lacks</h3>
+    <p>The *registry* is the governance layer: it records each feature's definition, owner, freshness SLA, upstream dependencies, and which models consume it — so teams can find what already exists and know what breaks if a pipeline is retired. *Materialization* is the act of computing features from raw data and writing them to both stores: batch (Spark, Airflow, hourly/daily) when some staleness is fine, or streaming (Kafka → Flink → Redis) when 5-minute freshness matters, like fraud or live inventory.</p>
+    <p>And that's the real answer to &quot;isn't this just a database?&quot; A database stores bytes. A feature store adds four things a database won't: point-in-time-correct history, one shared computation path across online and offline, a registry for discovery and lineage, and materialization with freshness monitoring. With all four, training-serving consistency becomes a property of the *system* — not a hope resting on individual engineers remembering to match each other.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Establish point-in-time join correctness in your training pipeline before building anything else — this is the hardest invariant to get right and the primary reason feature stores exist.</strong>
+
+Everything else in a feature store is optimization. The offline store's value is precisely that it can answer &quot;what were this user's features at timestamp T&quot; using only data available before T. Without this guarantee, training datasets contain temporal leakage, offline metrics are inflated, and the gap between evaluation and production performance is structural.</li><li><strong>Trap: materialization lag creates freshness gaps that can be catastrophic for time-sensitive applications.</strong>
+
+If a feature is computed hourly and a user event happens 50 minutes into the cycle, the online store has 50-minute-old data. For fraud detection, a user who just moved 100K dollars is invisible for up to an hour. Design materialization frequency based on the feature's staleness tolerance — and monitor actual freshness, not scheduled frequency. The schedule and the actual update time are not the same thing.</li><li><strong>Diagnostic: compare feature values your model sees at training time versus at serving time for the same user events.</strong>
+
+Any systematic difference — even small — is training-serving skew that will silently degrade accuracy. The dual-write pattern makes this check explicit: run the old pipeline and the new feature store simultaneously on real traffic, compare outputs on a sample of entities, and assert identity before cutting over. Do this before the feature store is in the critical path, not after.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>A feature store is not storage — it is the infrastructure that makes training-serving consistency a structural property rather than an agreement between engineers who will eventually disagree.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Problem:</strong> five teams compute &quot;30d avg spend&quot; five ways → silent inconsistency, all models suffer.</li><li><strong>Fix = compute once, serve everyone,</strong> through two backends for two jobs.</li><li><strong>Offline store = history, stamped by time</strong> → point-in-time &quot;as of T&quot; queries that prevent leakage.</li><li><strong>Online store = latest value only, fast</strong> (Redis/DynamoDB/Cassandra), &lt;5ms, sized for latency not storage.</li><li><strong>Registry = governance:</strong> definition, owner, freshness SLA, lineage, consumers.</li><li><strong>Materialization = compute + write both stores:</strong> batch (Spark/Airflow) or streaming (Kafka→Flink→Redis) when 5-min freshness matters.</li><li><strong>Not &quot;just a database&quot;:</strong> point-in-time history + one shared path + registry + monitored freshness = consistency as a *system* property.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> A data scientist wants to reuse &quot;user_30d_purchase_count&quot; computed by another team. What does the feature store provide to make this safe?</p>
+      <ul class="check-opts"><li>A) The feature store provides a copy of the raw data so each team can recompute the feature with their own logic</li><li class="correct">B) The feature store provides the exact computation definition, data type/range, freshness SLA, upstream lineage, current consumers, and owner — plus handles all serving logistics so no custom retrieval code is needed</li><li>C) The feature store provides only the serving infrastructure; definition details must still be obtained by asking the owning team</li><li>D) The feature store guarantees identical values only if both teams use the same model architecture</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Your online store (Redis) is serving a feature at 3ms P50 but 800ms P99. What is causing this and how do you fix it?</p>
+      <ul class="check-opts"><li>A) P99 spike to 800ms while P50 is 3ms indicates systematic overload — all requests are queued and the P50 measurement is wrong</li><li>B) The feature value is too large to serialize; compress all feature vectors before storing in Redis</li><li class="correct">C) Likely causes include hot key problem on popular entities, Redis memory pressure causing evictions, network packet loss, or large feature vector deserialization; fixes include key hashing to distribute shards, monitoring hit rate and adding capacity, and implementing a circuit breaker with a 50ms timeout</li><li>D) Redis P99 spikes are always caused by garbage collection pauses; upgrade to a Redis version with concurrent GC</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Describe the materialisation pipeline for a feature &quot;user_last_7d_app_opens&quot; that needs to be available in the online store with &lt;5 minute staleness.</p>
+      <ul class="check-opts"><li>A) Run a daily Spark batch job that recomputes the 7-day count for all users and writes to Redis; 5-minute staleness is achievable if the job is scheduled frequently enough</li><li class="correct">B) Use streaming materialisation: app open events go to Kafka, a Flink job maintains a rolling 7-day count per user and writes to Redis with a 7-day TTL every 5 minutes; for training, the Flink job also writes to S3 with timestamps for point-in-time joins</li><li>C) Maintain a running total in the application database and read it directly at serving time; database reads are fast enough to meet the 5-minute SLA</li><li>D) A 5-minute staleness SLA requires an in-memory compute cluster; Redis alone cannot guarantee sub-5-minute freshness</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> A feature was deprecated 3 months ago but a model in production still uses it. The feature computation pipeline was shut down. What is the failure mode and how do you prevent it?</p>
+      <ul class="check-opts"><li>A) The model will immediately throw a key-not-found exception when the feature is missing, causing a clear and detectable outage</li><li>B) The pipeline shutdown has no effect on production because feature values are cached in the model weights</li><li class="correct">C) Redis returns the last computed value until the TTL expires, after which it returns null; the model silently imputes null as a default, causing gradual prediction degradation with no exception thrown; prevention requires registry lineage checks before deprecation, soft-deprecation alerts to consumers, and null rate monitoring</li><li>D) The failure mode only occurs if the model was retrained after the pipeline shutdown; models never read stale feature values from Redis</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#production_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

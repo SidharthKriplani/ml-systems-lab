@@ -38,8 +38,8 @@
       "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
     }
   },
-  "datePublished": "2026-06-20",
-  "dateModified": "2026-06-20",
+  "datePublished": "2026-07-07",
+  "dateModified": "2026-07-07",
   "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/auc-is-not-your-friend.html",
   "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
   "keywords": "Metrics, ROC-AUC, PR-AUC, Classification, Calibration"
@@ -72,10 +72,10 @@
     <div class="meta">Model Evaluation &middot; ML Systems Lab</div>
     <h1>AUC Is Not Your Friend: A Guide to ML Metric Selection</h1>
     <p class="excerpt">ROC-AUC is the default metric for classification problems. It&#39;s in every sklearn tutorial and every Kaggle competition leaderboard. It&#39;s also the wrong metric for most real production ML problems. Here&#39;s why — and what to use instead.</p>
-    <p>ROC-AUC measures rank ordering: given a random positive and a random negative, what\'s the probability your model scores the positive higher? This is a useful property. It\'s also completely divorced from what most production ML systems actually need.</p>
+    <p>ROC-AUC measures rank ordering: given a random positive and a random negative, what's the probability your model scores the positive higher? This is a useful property. It's also completely divorced from what most production ML systems actually need.</p>
 <h2>The class imbalance problem.</h2>
-<p>ROC-AUC uses True Positive Rate (recall) and False Positive Rate (FPR). FPR = FP / (FP + TN). With 1% positive class, you have 99× more negatives than positives. A model that correctly identifies 80% of positives but has a 10% FPR looks great on ROC-AUC (0.85+). But at 1% prevalence, that 10% FPR means for every true positive you catch, you generate ~12 false positives. In fraud detection, that\'s 12 legitimate transactions blocked for every fraud caught. Your fraud ops team will revolt.</p>
-<p><strong>PR-AUC fixes this.</strong> Precision-Recall AUC is dominated by performance on the positive class. A high PR-AUC requires both high precision (few false positives) and high recall (few false negatives) — there\'s no "free" performance from classifying negatives correctly.</p>
+<p>ROC-AUC uses True Positive Rate (recall) and False Positive Rate (FPR). FPR = FP / (FP + TN). With 1% positive class, you have 99× more negatives than positives. A model that correctly identifies 80% of positives but has a 10% FPR looks great on ROC-AUC (0.85+). But at 1% prevalence, that 10% FPR means for every true positive you catch, you generate ~12 false positives. In fraud detection, that's 12 legitimate transactions blocked for every fraud caught. Your fraud ops team will revolt.</p>
+<p><strong>PR-AUC fixes this.</strong> Precision-Recall AUC is dominated by performance on the positive class. A high PR-AUC requires both high precision (few false positives) and high recall (few false negatives) — there's no "free" performance from classifying negatives correctly.</p>
 <h2>When to use what:</h2>
 <li>Balanced classes, rank ordering matters → ROC-AUC</li>
 <li>Imbalanced classes, minority class is the target → PR-AUC</li>

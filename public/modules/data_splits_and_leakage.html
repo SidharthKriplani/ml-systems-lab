@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Splits and Leakage | ML Systems Lab</title>
+  <meta name="description" content="Understand why models that look great in development fail in production — and the exact mistakes that cause it.">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/data_splits_and_leakage.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/data_splits_and_leakage.html">
+  <meta property="og:title" content="Data Splits and Leakage | ML Systems Lab">
+  <meta property="og:description" content="Understand why models that look great in development fail in production — and the exact mistakes that cause it.">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Data Splits and Leakage">
+  <meta name="twitter:description" content="Understand why models that look great in development fail in production — and the exact mistakes that cause it.">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Data Splits and Leakage",
+  "description": "Understand why models that look great in development fail in production — and the exact mistakes that cause it.",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/data_splits_and_leakage.html",
+  "keywords": "train-test split, cross-validation, data leakage, temporal leakage, overfitting"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#data_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">50 min read</span>
+      <span class="tag">train-test split</span><span class="tag">cross-validation</span><span class="tag">data leakage</span><span class="tag">temporal leakage</span><span class="tag">overfitting</span>
+    </div>
+    <h1>Data Splits and Leakage</h1>
+    <p class="subtitle">Understand why models that look great in development fail in production — and the exact mistakes that cause it.</p>
+
+    <p>You are predicting hospital readmission from records of 5,000 patients — and some patients appear many times, once per visit. You do a normal random 80/20 split, train, and get <strong>91% validation accuracy</strong>. You ship it. Production accuracy: <strong>73%.</strong> Nothing errored. Where did 18 points go?</p>
+    <p>Here is the leak. Patient 147 has twelve visits in your data. The random split scattered ten of them into training and two into validation. So during training the model memorised patient 147 — their exact labs, age, history — and when it &quot;predicted&quot; their two validation visits, it was not generalising to a new patient at all; it was recognising someone it had already studied. Your validation score was partly measuring *memorisation*, and memorisation does not exist in production, where every patient is new. This is <strong>leakage</strong>: information from the evaluation set sneaking into training. It fires no error, the metrics look great, and the model fails on real data. It comes in four flavours.</p>
+    <hr>
+    <h3>Group leakage — the same entity on both sides</h3>
+    <p>That was patient 147: related rows (same patient, user, or household) split across train and test, so the test set is not truly independent. The fix is a <strong>group split</strong> — every row from a given patient goes entirely to one side, so validation always contains patients the model has never seen.</p>
+    <hr>
+    <h3>Temporal leakage — training on the future</h3>
+    <p>With time-ordered data, a random split lets the model train on March to predict January — the reverse of reality, where you never have tomorrow's data today. The fix is a <strong>time cutoff</strong>: train on everything before a date, validate on everything after.</p>
+    <hr>
+    <h3>Preprocessing leakage — the quiet one</h3>
+    <p>Fit a scaler (or imputer, or encoder) on all 5,000 records *before* splitting, and its mean and spread were computed partly from the validation rows — so the training transform is tainted by the data you are supposed to be judging on. Fit every transformer on the *training* data only, then apply it to validation. A pipeline enforces this so you do not have to remember.</p>
+    <hr>
+    <h3>Feature leakage — the answer hiding in a column</h3>
+    <p>A feature like &quot;rehospitalised_within_30_days&quot; on a readmission-prediction row *is the label wearing a disguise* — it could only be known after the outcome. Any feature that needs knowledge of the future is unavailable at prediction time. The classic tell: a single new feature makes accuracy jump 15 points. Real features never do that.</p>
+    <hr>
+    <p>The through-line: a held-out test set alone does not save you. If a feature was built using future information — even for rows that ended up in *training* — the model learned a pattern that will not exist once it is deployed. Real protection is structural: split *before* fitting anything, judge only on data the model never touched, and check every feature for whether you would actually have it at prediction time.</p>
+    <hr>
+    <h3>Duplicates and near-duplicates leak too</h3>
+    <p>Group leakage's cousin: <strong>exact or near-duplicate rows</strong> split across train and test. The same product listing scraped twice, the same image at two resolutions, an <strong>augmented copy</strong> of a training example, the same document under two IDs — any of these landing on both sides means the model is tested on something it effectively trained on. Deduplicate (and near-deduplicate on a similarity key) *before* splitting, and make sure augmentation happens *after* the split so an original and its augmentations never straddle the boundary.</p>
+    <hr>
+    <h3>The target-leakage taxonomy is bigger than one column</h3>
+    <p>&quot;A feature that is the label in disguise&quot; comes in several forms worth naming: <strong>post-outcome features</strong> (computed after the event), <strong>label-derived features</strong> (a transform of the target), <strong>proxy labels</strong> (an innocent column that's a near-perfect stand-in, like a case-ID range that encodes the outcome), <strong>aggregation-window leakage</strong> (a rolling stat whose window reaches past the prediction time), and <strong>future-window leakage</strong> (any feature summarising events after T). The audit question is always the same — *would this exact value exist at prediction time, knowing nothing about the future?* — but the disguises are many.</p>
+    <hr>
+    <h3>Test-set reuse and nested CV</h3>
+    <p>Leakage isn't only about features — it's also about *decisions*. Every time you tune against the same validation/test set — trying architectures, thresholds, feature sets and keeping whatever scores best — you leak your own choices into it, and the reported number drifts optimistic (you've overfit to the test set through the back door). Guard it: touch the test set once, at the very end. And when you tune hyperparameters or features aggressively, use <strong>nested cross-validation</strong> — an outer loop for the honest estimate, an inner loop for all the tuning — so the reported score reflects data the selection never saw.</p>
+    <hr>
+    <h3>Time-series CV: windows, gaps, backtesting</h3>
+    <p>A single time cutoff is the start; robust temporal validation has more structure. <strong>Expanding-window</strong> CV trains on all history to date and tests the next slice (more data, stable relationships); <strong>sliding-window</strong> trains on a fixed recent span (better under drift). Add a <strong>gap/embargo</strong> between train and test so rolling-window features can't bleed across the boundary. And <strong>backtest across multiple cutoffs</strong> rather than one — a strategy that works at one date and fails at three others isn't real. One split is an anecdote; a backtest is evidence.</p>
+    <hr>
+    <h3>Match the split to the production question</h3>
+    <p>The split should mirror what you'll actually predict. Deploying to <strong>new users</strong>? Split by user (group split). Predicting <strong>new sessions</strong> for existing users? Split by session. Scoring <strong>new transactions</strong>, <strong>new products</strong>, or <strong>future events</strong>? Split accordingly — by transaction, by product, or temporally. The distinction between <strong>entity-level</strong> and <strong>event-level</strong> deployment decides the split: if production always sees brand-new entities, your validation must too, or your number answers a question you'll never be asked.</p>
+    <hr>
+    <h3>Feature selection leaks, and features must survive to serving</h3>
+    <p>Two final structural traps. <strong>Selection leakage</strong>: correlation filtering, mutual-information ranking, PCA, RFE, and any *target-based* feature selection must happen <strong>inside</strong> the CV folds — pick features using the full data before splitting and you've let the test set influence which features exist. And <strong>production parity</strong>: every feature you keep must be *computable at prediction time* with the same freshness, latency, and timestamp constraints as offline — a feature that's trivial to compute over historical tables but unavailable (or stale) in the real-time path is a leak that only surfaces after deployment.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Use group-based splits whenever examples share an entity — patient, user, household, time series.</strong> A random split on a medical dataset with ten records per patient puts the same patient in both train and test; validation measures how well the model memorizes patients, not how well it generalizes to new ones. Group k-fold assigns all of a given patient's records to a single fold. This is non-negotiable if entity-level generalization is what you are deploying for.</li><li><strong>The most common production trap: fitting preprocessing transformers outside the cross-validation loop.</strong> Fitting a StandardScaler or SimpleImputer before the loop means its statistics were computed on data that includes every validation fold. Each fold's validation data contaminated the scaler. The correct order: inside each fold, fit all transformers on the training portion, apply fitted transformers to validation. Use sklearn Pipeline to make this structurally impossible to get wrong.</li><li><strong>Diagnose leakage with a feature correlation audit and a single-feature accuracy test.</strong> Before training on a new feature: (1) check its correlation with the target — above 0.8 on a complex real-world problem is suspicious; (2) train a model using only that single feature and check accuracy — suspiciously high single-feature performance often indicates label derivation; (3) verify the feature's computation timestamp is strictly before the label timestamp in your data pipeline. A feature that causes a 15+ point accuracy jump in isolation is almost certainly leaking.</li><li><strong>Deduplicate before splitting, expand the target-leakage taxonomy, and don't reuse the test set.</strong>
+
+Exact/near-duplicate rows (rescraped listings, augmented copies, same doc under two IDs) split across folds leak like group leakage — dedupe first and augment after the split. Target leakage includes post-outcome features, label-derived features, proxy labels, and aggregation/future-window leakage, all caught by &quot;would this value exist at prediction time?&quot; And test-set reuse is decision leakage: tuning repeatedly against the same set drifts the metric optimistic, so touch test once and use nested CV when tuning aggressively.</li><li><strong>Do temporal CV properly, match the split to deployment, and select features inside folds.</strong>
+
+Use expanding or sliding windows with a gap/embargo and backtest across multiple cutoffs, not one. The split must mirror the production question — new users → group split, new sessions → session split, future events → temporal split (entity-level vs event-level deployment decides it). Feature selection (correlation/MI/PCA/RFE/target-based) must run inside CV folds, and every kept feature must be computable at serving time with the same freshness and timestamp constraints or it's a leak that surfaces only after deploy.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Leakage fires no error and produces no warning — the model trains cleanly, metrics are excellent, and the system ships. It fails when real data arrives. The only protection is structural: enforce the split before any transformer is fit, audit every feature for temporal validity, and never reuse the test set.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Leakage fires no error:</strong> the model trains cleanly, metrics look excellent, it ships — and fails on real data.</li><li><strong>Match the split to deployment:</strong> new users → group split, new sessions → session split, future events → temporal split.</li><li><strong>Group-split shared entities</strong> (patient, user, household) — a random split with 10 rows/patient measures memorization, not generalization.</li><li><strong>Fit preprocessing inside each CV fold</strong> on the training portion only; use a Pipeline so it's structurally impossible to get wrong.</li><li><strong>Dedupe before splitting</strong> — exact/near-duplicate rows across folds leak like group leakage; augment after the split.</li><li><strong>Target-leakage test:</strong> &quot;would this value exist at prediction time?&quot; catches post-outcome, label-derived, proxy, and future-window features.</li><li><strong>Never reuse the test set</strong> — repeated tuning drifts the metric optimistic; touch test once, use nested CV when tuning hard.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You build a model to predict customer churn. You include 'support_tickets_after_churn_date' as a feature. The model achieves 98% accuracy. What is the problem?</p>
+      <ul class="check-opts"><li class="correct">A) Label leakage through a target-derived feature. &quot;Support tickets after churn date&quot; can only be known AFTER the customer has already churned — using future information (post-churn behavior) to predict whether the customer churns. At prediction time (before churn happens), this feature is unknown. The model achieves 98% because it has essentially been given the answer. In production, for currently active customers, this feature is unavailable and accuracy will collapse.</li><li>B) The model is overfitting to the support ticket count, which is a noisy signal — the fix is to add regularization and cap the feature at the 95th percentile to reduce its influence on the model.</li><li>C) The 98% accuracy is actually legitimate — support ticket behavior is a strong predictor of churn intent, and customers who submit many tickets before churning do so because they are dissatisfied.</li><li>D) The feature introduces multicollinearity because support ticket count is correlated with tenure, causing the model's coefficient estimates to be unstable and the 98% accuracy to be unreliable.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Why does random train-test splitting fail for time-series forecasting, and what is the correct splitting strategy?</p>
+      <ul class="check-opts"><li>A) Random splitting fails because it changes the class balance between train and test sets; for time-series data, stratified splitting by time period is required to maintain the correct temporal distribution.</li><li>B) Random splitting fails because time-series data has autocorrelation — randomly shuffled examples violate the independence assumption of most ML algorithms, causing inflated accuracy estimates.</li><li class="correct">C) Random splitting shuffles examples across time, so the model might be trained on March data to predict January. In production, January comes before March — March data would never be available when predicting January. The model learns temporal correlations backward, producing accuracy impossible to achieve in deployment. Correct strategy: temporal split — train on time 0 to T, validate on T to T+k. For CV: expanding or sliding window where each fold trains on earlier data and evaluates on immediately subsequent data.</li><li>D) Random splitting fails because seasonality patterns (weekly, monthly, annual) get split across train and test, causing the model to learn incomplete seasonal cycles that do not generalize to full cycles in production.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> You run 5-fold cross-validation on a medical imaging dataset with 500 patients and 20 images per patient. You get CV accuracy of 94%. You deploy and get 71%. What happened?</p>
+      <ul class="check-opts"><li>A) The 5-fold CV used too few folds — with 500 patients, 10-fold or leave-one-out CV is required to get an unbiased estimate. Using only 5 folds optimistically inflates the estimated accuracy.</li><li class="correct">B) Group leakage: random 5-fold split put different images from the same patient into different folds. Patient might have 16 images in training and 4 in validation. Model learned patient-specific patterns (lighting, scanner calibration, anatomy) during training and validated on different images of patients it already knew. 94% CV measures generalization to new images of seen patients — much easier than new patients entirely. 71% is true generalization. Fix: grouped k-fold — all images of a given patient must stay in the same fold.</li><li>C) The model was trained on a dataset that included images from the same scanner, but the deployed model encounters images from different scanners — a distribution shift problem unrelated to the splitting strategy.</li><li>D) The 94% CV accuracy was computed on augmented images during training but 71% production accuracy reflects the model's performance on unaugmented images in deployment.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> List three preprocessing operations that can cause leakage when applied before the train-test split.</p>
+      <ul class="check-opts"><li>A) Feature selection, hyperparameter tuning, and model selection all cause leakage when performed before the train-test split because they use test-set performance to make decisions.</li><li>B) Outlier removal, duplicate detection, and missing value imputation all cause leakage because they use global dataset statistics that incorporate test-set rows.</li><li>C) Log transformation, binning, and interaction feature creation all cause leakage because they change the statistical properties of training features based on the full dataset distribution.</li><li class="correct">D) (1) StandardScaler and MinMaxScaler: fitting on full dataset computes mean/std/min/max across train and test together — training data normalization reflects test-set statistics; (2) SimpleImputer or KNNImputer: imputing missing values using full-dataset statistics means test-set values influence fill values used in training; (3) Target encoding: computing per-category mean target across full dataset means each row's encoded feature value reflects all other rows' labels including test set — direct channel for label information into training features.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> What is the correct order of operations for preprocessing inside a k-fold cross-validation loop?</p>
+      <ul class="check-opts"><li class="correct">A) For each fold: (1) split training indices from validation indices; (2) using ONLY training indices, fit all preprocessing transformers (scaler, imputer, encoder); (3) transform training data using fitted transformers; (4) transform validation data using same fitted transformers (fitted on training only — NEVER refit on validation); (5) train model on transformed training data; (6) evaluate model on transformed validation data. Key invariant: validation data must always be transformed using parameters derived EXCLUSIVELY from training data.</li><li>B) Fit all preprocessing transformers on the full training set before the loop, then inside each fold: transform the training and validation portions, train the model, and evaluate. This is correct because fitting on the full training set avoids fold-specific outliers from influencing the transformer.</li><li>C) Inside each fold: first evaluate the model on the raw validation data to get a baseline, then fit preprocessing transformers on the training fold, transform the training fold, retrain the model, and report the improvement over baseline.</li><li>D) Fit all preprocessing transformers once on the entire dataset (train + test) before any splitting to ensure consistent feature distributions across all folds and the final test evaluation.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q6.</strong> You aggressively tune hyperparameters and select features by repeatedly checking performance on the same held-out set, then report that set's score as your final number. Why is it optimistic, and what's the fix?</p>
+      <ul class="check-opts"><li>A) It's not optimistic — a held-out set is immune to overfitting no matter how many times you evaluate on it.</li><li class="correct">B) Repeatedly making choices (architectures, thresholds, feature sets) based on the same set leaks your decisions into it — you gradually overfit to that set through model selection, so its score drifts above true performance (decision leakage). Fix: touch the final test set only once, and when tuning aggressively use nested cross-validation — an inner loop for all tuning and an outer loop that estimates performance on data the selection never saw.</li><li>C) The score is optimistic only if the held-out set is small; making it larger removes the need to limit how often you evaluate.</li><li>D) The fix is to report training accuracy instead, which is never affected by test-set reuse.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q7.</strong> You augment your image training set (rotations, crops) and also deduplicate, but do both before the train/validation split. Why can this still leak, and what's the correct order?</p>
+      <ul class="check-opts"><li>A) It can't leak — augmentation and deduplication are preprocessing steps that are always safe to do before splitting.</li><li class="correct">B) Augmenting before the split means an original image and its rotated/cropped copies can land on opposite sides, so the validation set contains near-duplicates of training images and the model is effectively tested on what it trained on. Similarly, near-duplicate originals split across folds leak. Correct order: deduplicate (and near-deduplicate) first, split by original image (a group split so all copies of one image stay on one side), and augment only the training portion after the split.</li><li>C) The leak comes only from the crops, not the rotations, so cropping should be removed while keeping rotation augmentation before the split.</li><li>D) There's no real fix — image augmentation always leaks, so you must never augment image data.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#data_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

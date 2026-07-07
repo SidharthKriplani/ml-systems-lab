@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thompson Sampling | ML Systems Lab</title>
+  <meta name="description" content="Bayesian posterior sampling, conjugate models, empirical performance, top-2 TS">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/thompson_sampling.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/thompson_sampling.html">
+  <meta property="og:title" content="Thompson Sampling | ML Systems Lab">
+  <meta property="og:description" content="Bayesian posterior sampling, conjugate models, empirical performance, top-2 TS">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Thompson Sampling">
+  <meta name="twitter:description" content="Bayesian posterior sampling, conjugate models, empirical performance, top-2 TS">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Thompson Sampling",
+  "description": "Bayesian posterior sampling, conjugate models, empirical performance, top-2 TS",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/thompson_sampling.html",
+  "keywords": "Thompson Sampling, Bayesian, posterior, Beta-Binomial, conjugate"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#bandits_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">50 min read</span>
+      <span class="tag">Thompson Sampling</span><span class="tag">Bayesian</span><span class="tag">posterior</span><span class="tag">Beta-Binomial</span><span class="tag">conjugate</span>
+    </div>
+    <h1>Thompson Sampling</h1>
+    <p class="subtitle">Bayesian posterior sampling, conjugate models, empirical performance, top-2 TS</p>
+
+    <p>You have 5 news headlines, each with a Beta prior over its true CTR. Headline A has Beta(10, 90) — 100 impressions, about 10% estimated CTR. Headline E has Beta(1, 1) — never shown, prior is Uniform[0,1]. Thompson Sampling asks a simple question each round: given what you know, which headline is most likely to be the best? Sample one θ from each arm's posterior. Show the headline with the highest sampled θ.</p>
+    <p>The mechanism is elegant. Headline E's Beta(1,1) posterior is wide — it samples uniformly across 0 to 1. Its sampled value frequently exceeds the 10% concentrations of A through D. So TS explores headline E aggressively — not because it randomly picks an arm with probability ε, but because uncertainty genuinely warrants it. After 50 more impressions of E, its posterior narrows around whatever its true CTR turns out to be. If E is bad (true CTR 2%), its posterior concentrates near 0.02 and almost never samples above the other headlines. Exploration of E drops to near zero automatically. This is exploration proportional to P(arm is optimal) — not uniform, not confidence-bound-based, but posterior-sampling.</p>
+    <p>The update rule is trivially simple. On each impression: if click, α += 1; if no click, β += 1. The mean of Beta(α, β) is α/(α+β), which converges to the true CTR as data accumulates. The variance is α·β / (α+β)²·(α+β+1), which shrinks as α+β grows. Exploration happens automatically where it is most informative.</p>
+    <p><strong>NOT this.</strong> &quot;Thompson Sampling always requires conjugate priors — Beta for Bernoulli rewards.&quot; Beta-Binomial is the most common case, but TS generalizes to any likelihood with an appropriate prior. For Gaussian rewards (continuous feedback like watch time), use Normal-Normal conjugate. For non-conjugate settings, sample from an approximate posterior using Laplace approximation or neural last-layer variance. The conjugate prior is a computational convenience, not a theoretical requirement.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Beta-Binomial TS update: on reward r ∈ {0,1} from arm a, α_a += r, β_a += (1−r). Select arm with highest sampled θ_a ~ Beta(α_a, β_a).</strong>
+
+Arms with few observations have wide posteriors that sample high frequently — exploration happens automatically. Arms with many observations have concentrated posteriors near their true CTR — exploitation dominates. Start with Beta(1,1) for uninformative priors. In production, an informative prior Beta(10, 990) for 1% CTR dramatically reduces early over-exploration of low-CTR arms. Prior misspecification is the main failure mode: Beta(1,1) on an arm with true CTR 0.001 puts 50% probability mass above 0.5 and wastes enormous early exploration budget.</li><li><strong>TS exploration is proportional to P(arm a is optimal): arm a is pulled with probability P(θ_a &gt; θ_j for all j≠a | observations).</strong>
+
+As arm a accumulates observations and its posterior concentrates near a low value, this probability collapses toward zero. UCB in contrast applies a fixed confidence bonus √(2 ln t / N_a) regardless of how implausible it is that the arm is optimal — TS gives up on clearly inferior arms faster. This is why TS empirically outperforms UCB at finite horizons: the posterior shape adapts to the data in a way that a worst-case Hoeffding-bound formula cannot.</li><li><strong>Applying frequentist stopping rules to TS experiments inflates Type-I error.</strong>
+
+Classical A/B testing uses fixed random allocation, then applies a p-value test at a predetermined sample size. TS continuously reallocates traffic toward better variants. The allocation is no longer random — it is outcome-dependent. A p-value at a fixed sample size applied to TS data will reject the null too often because you are peeking at adaptive data. Use Bayesian stopping criteria (P(variant B is best) &gt; 0.95, or expected loss &lt; threshold) or always-valid sequential p-values that account for the adaptive allocation.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Thompson Sampling exploration is proportional to P(arm a is optimal) — as posteriors concentrate around low values for inferior arms, their pull probability collapses toward zero automatically, without any fixed formula. UCB applies a confidence bonus regardless of how implausible it is that the arm is optimal, so it gives up on inferior arms more slowly. The critical production failure mode is prior misspecification: Beta(1,1) on an arm with true CTR 0.001 puts 50% probability above 0.5 and wastes enormous early exploration budget — use informative priors in production.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Mechanism:</strong> sample θ from each arm's posterior, show the arm with the highest sample.</li><li><strong>Beta-Binomial update:</strong> on reward r∈{0,1}, α += r, β += (1−r) — trivially simple.</li><li><strong>Exploration ∝ P(arm optimal):</strong> wide posteriors sample high often; inferior arms collapse to near-zero pulls automatically.</li><li><strong>Beats UCB at finite horizons:</strong> posterior shape adapts to data; UCB's fixed Hoeffding bonus gives up on losers more slowly.</li><li><strong>Prior misspecification = main failure:</strong> Beta(1,1) on true CTR 0.001 puts 50% mass above 0.5 — use informative priors.</li><li><strong>Adaptive allocation breaks frequentist stopping:</strong> peeking inflates Type-I error — use Bayesian stopping (P(best)&gt;0.95) or always-valid p-values.</li><li><strong>NOT this:</strong> conjugate priors are a computational convenience, not required — Normal-Normal for Gaussian, Laplace/neural for non-conjugate.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Walk through one step of Beta-Binomial Thompson Sampling for 3 ads with posteriors Beta(10,90), Beta(5,45), Beta(1,1). What are the likely samples and which arm gets pulled?</p>
+      <ul class="check-opts"><li>A) All three arms have the same empirical mean (0.10), so they are pulled with equal probability</li><li>B) Arm 1 is pulled most often because it has the most observations and therefore the most reliable estimate</li><li>C) Arm 2 is pulled because it has an intermediate number of observations, balancing uncertainty and accuracy</li><li class="correct">D) Arm 3 (Beta(1,1) ≈ Uniform[0,1]) is pulled roughly 50% of the time because its wide posterior frequently samples above the concentrated posteriors of arms 1 and 2 (both near 0.10). This is correct — arm 3 is highly uncertain and TS aggressively explores it until its posterior concentrates</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Your team is running an A/B/C test (3 variants) using Thompson Sampling. After 1000 rounds, the posterior probability that variant B is best is 92%. A PM wants to stop and declare B the winner. What questions do you ask before agreeing?</p>
+      <ul class="check-opts"><li>A) No questions needed — P(B best) = 92% is a valid Bayesian stopping criterion and you should stop immediately</li><li class="correct">B) Ask whether the stopping criterion was pre-specified, whether practical significance (expected loss from choosing B) is acceptable, whether rewards are stationary, and whether 1000 rounds is representative traffic — all must be satisfied before stopping</li><li>C) Ask only whether sample size is sufficient — Bayesian methods do not require pre-specified stopping criteria</li><li>D) The only question is whether the experiment has been running long enough to achieve statistical significance under a frequentist test</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Explain why Thompson Sampling exploration is proportional to P(arm a is optimal) and why this is more efficient than UCB's exploration.</p>
+      <ul class="check-opts"><li>A) TS is not more efficient than UCB — both achieve the same Lai-Robbins bound, so efficiency is identical</li><li>B) TS is more efficient because it uses random sampling rather than deterministic formulas, reducing computation per round</li><li>C) TS and UCB explore identically at large T; the difference only appears at T &lt; 100</li><li class="correct">D) TS pulls arm a with probability P(θ_a = max_j θ_j | observations), naturally collapsing to near-zero for arms whose posterior concentrates around low values. UCB applies a fixed bonus √(2 ln t / N_a) regardless of P(arm optimal), giving up on inferior arms more slowly. This is why TS empirically outperforms UCB at finite horizons</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#bandits_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

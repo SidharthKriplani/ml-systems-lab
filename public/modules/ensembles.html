@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ensemble Methods | ML Systems Lab</title>
+  <meta name="description" content="Bagging vs boosting vs stacking, diversity principle">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/ensembles.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/ensembles.html">
+  <meta property="og:title" content="Ensemble Methods | ML Systems Lab">
+  <meta property="og:description" content="Bagging vs boosting vs stacking, diversity principle">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Ensemble Methods">
+  <meta name="twitter:description" content="Bagging vs boosting vs stacking, diversity principle">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Ensemble Methods",
+  "description": "Bagging vs boosting vs stacking, diversity principle",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/ensembles.html",
+  "keywords": "ensembles, stacking, bagging, boosting"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#classical_ml_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">28 min read</span>
+      <span class="tag">ensembles</span><span class="tag">stacking</span><span class="tag">bagging</span><span class="tag">boosting</span>
+    </div>
+    <h1>Ensemble Methods</h1>
+    <p class="subtitle">Bagging vs boosting vs stacking, diversity principle</p>
+
+    <p>In 2006 Netflix offered a one-million-dollar prize to anyone who could beat their movie-recommendation system by 10%. Teams around the world chased it for three years. And the winning entry, when it finally crossed the line, was not one brilliant model — it was a <strong>blend</strong> of dozens of different models mashed together. That was the lesson the whole field took away: a crowd of different models, combined, beats any single model, even the best one. That is <strong>ensembling</strong>.</p>
+    <p>Here it is in miniature. A bank wants to predict loan default. A decision tree scores 76%. Logistic regression: 78%. A random forest: 84%. Good, not great. Then they take all three and simply let them vote on each applicant. The combination scores 86% — higher than the best single model in the mix. How do three so-so models add up to something better than the best of them?</p>
+    <hr>
+    <h3>Why combining works — and its one condition</h3>
+    <p>The trick is that the models are wrong in *different places*. The tree blunders on some applicants; logistic regression happens to get those right; the forest covers a third set. When they vote, each model's mistakes are outvoted by the other two, while their correct answers pile up and agree. The errors cancel; the truth reinforces.</p>
+    <p>But here is the whole secret: this only works if the models make *different* mistakes. If all three fail on exactly the same applicants, voting changes nothing — you have just repeated one opinion three times. So the single thing that makes an ensemble strong is <strong>diversity</strong>: models whose errors are unrelated. Two mediocre models that fail in different places beat two excellent models that fail in the same places. Diversity, not raw accuracy, is the lever.</p>
+    <hr>
+    <h3>Three ways to build a diverse crowd</h3>
+    <p>There are three classic recipes, and you have already met two of them.</p>
+    <p><strong>Bagging</strong> builds diversity through data: train each model on a different random resample of the rows, then average. That is exactly what a random forest does, and it mainly cuts *variance* (the twitchiness).</p>
+    <p><strong>Boosting</strong> builds diversity through sequence: train models one after another, each focused on the mistakes the team has made so far. That is gradient boosting, and it mainly cuts *bias* (the systematic miss).</p>
+    <p><strong>Stacking</strong> is the most general and the most powerful. Train several genuinely different models — a tree, a linear model, maybe a neural net — then train one more small model, a <strong>meta-learner</strong>, whose only job is to learn *how much to trust each model in which situation*. It might learn &quot;trust the boosting model for high-income applicants, but lean on logistic regression for people with thin credit files.&quot; It learns to combine, rather than just averaging.</p>
+    <hr>
+    <h3>The one trap that quietly ruins stacking</h3>
+    <p>Stacking has a subtle failure mode you have to design around. To train the meta-learner, you feed it the base models' predictions. But if you let each base model predict on the very rows it was trained on, those predictions are dishonestly good — the models have partly *memorised* those rows, so their outputs look far more reliable than they will be on fresh data. The meta-learner then learns to trust a signal that vanishes at test time, and the whole stack falls apart in production.</p>
+    <p>The fix is <strong>out-of-fold predictions</strong>: split the data into folds, train each base model on some folds, and have it predict only on the folds it did *not* see. Those held-out predictions are honest — they show what the base models can really do on unseen rows — so the meta-learner learns from the truth instead of a memory.</p>
+    <hr>
+    <h3>The belief to drop</h3>
+    <p>&quot;More models always help.&quot; No — *diversity* helps. Bolt a fifth copy of the same random forest onto your ensemble and you gain essentially nothing; it makes the same mistakes as the other four, so the vote does not budge. But add a model built on a *different* idea — a linear model beside your trees — and even if it is individually weaker, it can lift the whole ensemble, because it fails in places the others do not. When an ensemble stops improving, do not add more of the same. Add something different.</p>
+    <hr>
+    <h3>Hard votes versus soft votes</h3>
+    <p>There are two ways to let classifiers vote. <strong>Hard voting</strong> counts labels — majority wins. <strong>Soft voting</strong> averages the predicted *probabilities* and then thresholds, which usually works better because a model that's 0.9 sure should outweigh one that's barely 0.51. But soft voting has a prerequisite that trips people up: it only makes sense if the base models are <strong>calibrated</strong>. If one model is systematically overconfident, its inflated probabilities dominate the average and drag the ensemble toward its mistakes. So calibrate the base models (or at least check them) before averaging probabilities — otherwise soft voting can underperform plain hard voting.</p>
+    <hr>
+    <h3>Blending versus stacking</h3>
+    <p>Two ways to make the honest meta-features, and interviewers like the distinction. <strong>Stacking</strong> uses <strong>K-fold out-of-fold</strong> predictions: every row gets a prediction from a base model that didn't train on it, so you use all the data for both levels. <strong>Blending</strong> is the simpler cousin — hold out a single validation set, train base models on the rest, and let them predict once on that holdout to build meta-features. Blending is easier and has zero fold-leakage risk, but it &quot;wastes&quot; the holdout (base models never train on it) and gives the meta-learner less data. Stacking is more data-efficient but must handle folds carefully.</p>
+    <hr>
+    <h3>Keep the meta-learner simple</h3>
+    <p>The meta-learner's input is just a handful of base-model predictions, so it needs almost no capacity. A <strong>regularised logistic regression</strong> (or plain linear model) is the standard choice, and for good reason: a complex meta-learner (another boosting model on top) easily *overfits* the base predictions, especially since those predictions are highly correlated. Simple meta-learner, honest out-of-fold features — that's the reliable recipe.</p>
+    <hr>
+    <h3>Out-of-fold must respect time and groups</h3>
+    <p>The OOF trick assumes rows are independent — and it leaks exactly like OOB does when they aren't. For <strong>time-series</strong> data, a random fold lets a base model see the future when generating a &quot;held-out&quot; prediction for the past, so the meta-features are leaked; you need time-ordered folds. For <strong>grouped</strong> data (many rows per user), all of a user's rows must fall in the same fold, or a base model trained on some of a user's rows predicts the rest. Get this wrong and the stack looks brilliant offline and collapses in production — the ensemble version of the same leakage that haunts every model here.</p>
+    <hr>
+    <h3>Ensembles aren't free</h3>
+    <p>The accuracy comes with real costs worth naming: every base model must run at inference, so <strong>latency and memory multiply</strong>; retraining and deployment get more complex; debugging a wrong prediction across five models is far harder than for one; and interpretability drops sharply. For a point or two of accuracy you may pay 5× the serving cost — sometimes worth it (a fraud model, a Kaggle prize), often not (a latency-bound real-time system). That's why production frequently ships a single boosted model or *distills* the ensemble into one smaller model.</p>
+    <hr>
+    <h3>Where diversity actually comes from</h3>
+    <p>Diversity isn't only &quot;different algorithms.&quot; You can manufacture it from different <strong>feature subsets</strong>, different <strong>training samples</strong> (bagging), different <strong>loss functions</strong>, different <strong>random seeds</strong>, different <strong>hyperparameters</strong>, different <strong>time windows</strong>, and even different <strong>target definitions</strong>. The most robust ensembles combine several of these axes at once — a tree and a linear model, on different feature sets, with different seeds — because the more *independent* the sources of disagreement, the better the errors cancel.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Reach for stacking when you already have several different models and enough data to make out-of-fold predictions.</strong>
+
+It almost always beats any single model by a point or two, because a small meta-learner can work out which base model to trust where — leaning on boosting for one kind of case and a linear model for another. The cost is training time and a bit of plumbing (the out-of-fold step). For a quick win without the plumbing, even a plain average of a few diverse models' probabilities usually edges out the best one on its own.</li><li><strong>The trap that quietly ruins a stack: feeding the meta-learner predictions the base models made on their own training rows.</strong>
+
+A base model partly memorises the rows it trained on, so its predictions there look far better than they will be on new data. Train the meta-learner on those and it learns to trust a signal that disappears at test time. Always build the meta-features from out-of-fold predictions — each base model predicts only on rows it did not train on. In scikit-learn, cross_val_predict gives you these in a single call.</li><li><strong>The check: look at whether your models actually make different mistakes.</strong>
+
+For each model, mark which examples it got wrong on a held-out set, then compare those error patterns across models. If two models are wrong on almost exactly the same examples, they are effectively one model for ensemble purposes and combining them buys nothing. When errors are that correlated, do not add another similar model — add one built on a different idea (a different algorithm, or different features), which is the only thing that will actually move the ensemble.</li><li><strong>Soft voting beats hard voting only if the base models are calibrated, and blending and stacking make honest meta-features differently.</strong>
+
+Hard voting counts labels; soft voting averages probabilities (usually better) but is dominated by an overconfident model unless the bases are calibrated first. Stacking builds meta-features from K-fold out-of-fold predictions (data-efficient); blending uses a single holdout (simpler, no fold-leakage, but wastes data). Keep the meta-learner simple — a regularised logistic/linear model — since a complex one overfits the correlated base predictions.</li><li><strong>Respect time/group boundaries in OOF, and weigh the real cost of ensembling.</strong>
+
+Out-of-fold prediction leaks exactly like OOB when rows aren't independent: use time-ordered folds for temporal data and keep each group (all of a user's rows) in one fold, or the stack looks great offline and dies in production. And ensembles aren't free — every base model runs at inference, so latency, memory, retraining complexity, debugging difficulty, and opacity all multiply for a point or two of accuracy, which is why production often ships one boosted model or distills the ensemble. Manufacture diversity from many axes: algorithms, feature subsets, samples, losses, seeds, hyperparameters, time windows, target definitions.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>An ensemble combines several models and beats the best single one — but only because they make different mistakes, so voting cancels the errors. Diversity, not the number of models, is the lever: bagging builds it from different data, boosting from fixing mistakes in sequence, and stacking by training a meta-learner to combine genuinely different models — using out-of-fold predictions, or the whole thing leaks.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Ensemble = combine several models, beat the best single one</strong> — because they make different mistakes and voting cancels errors.</li><li><strong>Diversity, not count, is the lever.</strong></li><li><strong>Bagging</strong> builds diversity from different data; <strong>boosting</strong> from fixing mistakes in sequence; <strong>stacking</strong> trains a meta-learner over different models.</li><li><strong>Stacking must use out-of-fold predictions</strong> — feed the meta-learner base predictions on their own training rows and it leaks.</li><li><strong>Soft voting beats hard voting only if base models are calibrated.</strong></li><li><strong>Respect time/group boundaries in OOF, and weigh the real cost of ensembling.</strong></li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Your stacking ensemble looks great in training but flops on validation. The base models' predictions on their own training rows were used as the meta-learner's inputs. What went wrong, and what is the fix?</p>
+      <ul class="check-opts"><li>`A) The meta-learner is too complex and simply memorised the base models' outputs; swap it for a plain linear model with no regularisation and the training-to-validation gap will close on its own.`</li><li>`B) The base models are too similar, so their outputs are correlated and confuse the meta-learner into chasing spurious patterns; drop all but one of them and the ensemble will stop overfitting.`</li><li>`C) Leakage. On rows they trained on, the base models partly memorised the labels, so their predictions there look far too good — the meta-learner learns to trust a signal that will not exist on new data. Fix it with out-of-fold predictions: each base model predicts only on rows it did not train on, so the meta-learner learns from honest outputs.`</li><li>`D) The training set is too big for the meta-learner, which finds patterns in the base outputs that do not generalise; subsample it down to roughly ten times the number of base models before fitting the meta-learner.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Three so-so models combine into an ensemble that beats the best of them. What makes that possible?</p>
+      <ul class="check-opts"><li>`A) The ensemble quietly picks whichever single model is best on each example and copies its answer, so it can never do worse than the strongest member and usually just matches it exactly.`</li><li>`B) The models are wrong in different places, so when they vote each one's mistakes get outvoted by the others while their correct answers agree and pile up. This works only when their errors differ — combining models that fail on the same examples gains nothing.`</li><li>`C) Averaging always beats any single model mathematically, regardless of which models are involved, because it reduces error by a fixed factor equal to the number of models in the ensemble.`</li><li>`D) Each model corrects the previous one's leftover errors in turn, so the mistakes shrink step by step — which is why three weak models chained together beat the strongest single one.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Two models are wrong on exactly the same examples. What does combining them get you, and what does that show?</p>
+      <ul class="check-opts"><li>`A) A big jump — combining two models always multiplies their strengths, so even identical-error models produce an ensemble comfortably above either one on its own.`</li><li>`B) The higher of the two accuracies, because probability averaging amplifies the more confident model's correct answers and quietly discards the weaker model's mistakes.`</li><li>`C) An undefined result, because two models agreeing on wrong answers make the ensemble's output mathematically unstable until a third, independent model is added to break the tie.`</li><li>`D) Nothing — with identical errors there is nothing to cancel, so the ensemble scores the same as either model alone. It shows that diversity, not model count, is what makes ensembles work: unrelated errors cancel, identical ones do not.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> You switch a voting ensemble from hard voting to soft voting (averaging probabilities) and it gets worse. One base model is badly overconfident. Why did soft voting hurt?</p>
+      <ul class="check-opts"><li>`A) Soft voting is always worse than hard voting because averaging probabilities discards the majority signal; revert to hard voting as a rule.`</li><li>`B) Soft voting averages predicted probabilities, so an uncalibrated, overconfident model pushes extreme values (near 0 or 1) that dominate the average and drag the ensemble toward its mistakes. Calibrate the base models first (or check calibration) before averaging probabilities — otherwise hard voting can beat soft voting.`</li><li>`C) The overconfident model has too few trees, so its probabilities are noisy; adding more trees to just that model fixes soft voting without any calibration step.`</li><li>`D) Soft voting requires all base models to be the same algorithm; mixing a tree with a linear model is what actually broke it, not calibration.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> You're stacking models on time-ordered transaction data and generate out-of-fold meta-features with a plain random K-fold split. What's the risk?</p>
+      <ul class="check-opts"><li>`A) No risk — out-of-fold predictions are leak-proof by construction, so a random split is always safe for stacking regardless of the data type.`</li><li>`B) The only risk is slower training; random folds are statistically fine for time-series stacking, just less efficient than time-ordered ones.`</li><li>`C) A random fold lets a base model train on future rows and produce a 'held-out' prediction for a past row, leaking the future into the meta-features. The stack looks excellent offline and collapses in production. Use time-ordered folds (and keep each user/group's rows in one fold) so the OOF predictions stay honest.`</li><li>`D) The risk is that the meta-learner overfits, which you fix by using a more powerful meta-learner such as a boosting model on top of the base predictions.`</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#classical_ml_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

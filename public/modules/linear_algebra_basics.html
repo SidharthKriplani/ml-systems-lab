@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vectors &amp; Matrices | ML Systems Lab</title>
+  <meta name="description" content="Dot product, matrix operations, rank, norms">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/linear_algebra_basics.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/linear_algebra_basics.html">
+  <meta property="og:title" content="Vectors &amp; Matrices | ML Systems Lab">
+  <meta property="og:description" content="Dot product, matrix operations, rank, norms">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Vectors &amp; Matrices">
+  <meta name="twitter:description" content="Dot product, matrix operations, rank, norms">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Vectors & Matrices",
+  "description": "Dot product, matrix operations, rank, norms",
+  "proficiencyLevel": "Foundational",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/linear_algebra_basics.html",
+  "keywords": "linear algebra, matrices, norms"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#math_stats_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Foundational</span>
+      <span class="read-time">26 min read</span>
+      <span class="tag">linear algebra</span><span class="tag">matrices</span><span class="tag">norms</span>
+    </div>
+    <h1>Vectors &amp; Matrices</h1>
+    <p class="subtitle">Dot product, matrix operations, rank, norms</p>
+
+    <p>You have 10,000 training images, each 64×64 pixels × 3 channels = 12,288 numbers per image. These 10,000 images form a matrix X ∈ ℝ^{10000 × 12288}. Every ML operation on this dataset — normalizing features, computing covariances, running regression, doing PCA, forward passes through a neural network — is a matrix operation. If you do not know what a matrix product computes geometrically, you are manipulating ML pipelines you cannot understand or debug.</p>
+    <p>Vectors carry direction and magnitude. The dot product a·b = ‖a‖ ‖b‖ cos(θ) measures directional alignment — it is large and positive when two vectors point in similar directions, and zero when they are perpendicular. Orthogonal vectors have dot product zero. This is why cosine similarity works for semantic search: aligned embeddings have high dot products, reflecting similar meaning.</p>
+    <p>Matrix multiplication AB = C means C[i,j] = row i of A dotted with column j of B. It is not commutative: AB ≠ BA in general. Dimensions must match: A (m×k) times B (k×n) gives C (m×n). A matrix is a linear transformation — it stretches, rotates, and projects vectors. The matrix inverse A⁻¹ satisfies A⁻¹A = I. For linear regression, the normal equations give θ = (X^T X)⁻¹ X^T y — the closed-form solution via the Gram matrix X^T X.</p>
+    <p>Column space of A: all vectors reachable as Ax for some x. Rank: the dimension of the column space — the number of linearly independent directions A can produce. Rank deficiency means X^T X is singular, meaning the normal equations have no unique solution. You need regularization to fix this.</p>
+    <p><strong>NOT this.</strong> Linear algebra is not just matrix arithmetic for solving linear systems. Every gradient descent step in a neural network is a matrix-vector multiplication. Every embedding lookup is a dot product. PCA is eigenvector decomposition of the covariance matrix. Attention is softmax(QK^T / √d)V — three matrix products. The Gram matrix X^T X appears in every regularized linear model. Linear algebra is the operational language of every ML computation, and understanding it geometrically — as transformations of space — is what lets you reason about what information your model is processing.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>When a matrix operation fails or gives unexpected results, check dimensions first.</strong> Almost all linear algebra bugs are shape mismatches. Write out the expected shape of every tensor before the operation and verify them in code. In numpy, `.shape` before every new operation is not paranoia — it is the cheapest debugging step you have.</li><li><strong>Trap: computing the matrix inverse to solve Ax = b.</strong> The inverse A⁻¹ is numerically unstable for ill-conditioned matrices and costs O(n³) to compute. Use scipy.linalg.solve(A, b) instead — it uses LU decomposition, is faster, and is more numerically stable. The only reason to compute A⁻¹ explicitly is if you need to multiply by the same inverse many times.</li><li><strong>Diagnostic: if X^T X is near-singular (condition number &gt; 1e10), you have multicollinear features or rank-deficient data.</strong> Add L2 regularization to form X^T X + λI, which is always invertible for λ &gt; 0. This is exactly what Ridge regression does — it is not an arbitrary regularizer, it is the minimum-norm solution to the otherwise ill-posed normal equations.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Every ML forward pass is matrix multiplication and nonlinearities. Rank tells you where information is irreversibly lost. Norms tell you what geometry an algorithm assumes. Both predict failure modes before you run a single experiment.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Every ML op is a matrix op:</strong> normalise, covariance, regression, PCA, forward pass — all linear algebra.</li><li><strong>Dot product $a\cdot b=\|a\|\|b\|\cos\theta$</strong> measures alignment; 0 = orthogonal. Basis of cosine similarity.</li><li><strong>Matrix product = row·column; not commutative</strong> (AB ≠ BA); shapes must match (m×k)(k×n)→(m×n).</li><li><strong>Rank = number of independent directions.</strong> Rank-deficient X → XᵀX singular → normal equations have no unique solution.</li><li><strong>Normal equations:</strong> $\theta=(X^TX)^{-1}X^Ty$ — the Gram matrix XᵀX appears in every linear model.</li><li><strong>Debug shapes first</strong> — most linear algebra bugs are shape mismatches. Don't invert to solve Ax=b; use `solve`.</li><li><strong>Near-singular XᵀX (κ &gt; 1e10) = multicollinearity;</strong> Ridge adds λI to make it invertible — the min-norm fix.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> A system Ax=b where A is 3×5 (3 equations, 5 unknowns). What can you say about the solution set? When does a solution exist?</p>
+      <ul class="check-opts"><li class="correct">A) A is 3×5 with rank r ≤ min(3,5) = 3. If rank(A) = 3 (full row rank): the system Ax=b is consistent (has a solution) for every b (the column space of A spans ℝ³). The solution is not unique: there are 5−3 = 2 free variables, so the solution set is an affine subspace of dimension 2 (a plane in ℝ⁵). If rank(A) &lt; 3: A is rank-deficient. For some b not in col(A), no solution exists. For b in col(A), the solution set is an affine subspace of dimension 5−rank(A) &gt; 2. The minimum-norm solution (if one exists) is x_min = Aᵀ(AAᵀ)⁻¹b (the Moore-Penrose pseudoinverse applied to b), which lies in the row space of A and is the unique solution with the smallest ‖x‖₂.</li><li>B) A is 3×5 so the system has more equations than unknowns — it is overdetermined and generically has no exact solution. We use least squares: x̂ = (AᵀA)⁻¹Aᵀb. AᵀA is 5×5 and full rank when A has rank 5, so the system is uniquely solvable via the normal equations.</li><li>C) A is 3×5 with 3 equations and 5 unknowns, giving 5−3=2 degrees of freedom. A solution always exists because the system is underdetermined — there are always more unknowns than equations, so b is always reachable. The unique minimum-norm solution is x̂ = Aᵀ(AAᵀ)⁻¹b regardless of rank.</li><li>D) A is 3×5, so the column space of A has dimension at most 5. The system Ax=b has a unique solution when rank(A)=3 and b is in the column space, and infinitely many solutions when rank(A)&lt;3. There are always exactly 5−3=2 free variables in either case.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> You compute the dot product of two vectors: u·v = ‖u‖‖v‖cos(θ) = 0. What does this mean geometrically, and what does it mean in ML for feature representations?</p>
+      <ul class="check-opts"><li>A) u·v = 0 means either u = 0 or v = 0 — at least one vector is the zero vector. Geometrically, the zero vector has no direction. In ML, if a feature representation u = 0, that data point has no learned embedding and will receive uniform attention weights from all queries, making it effectively invisible to the model.</li><li>B) u·v = 0 means the vectors have equal magnitude (‖u‖ = ‖v‖). Geometrically, equal-length vectors that differ only in direction have zero dot product when aligned symmetrically around the origin. In ML, this means the two representations encode the same amount of information but in completely different directions.</li><li>C) u·v = 0 means u and v are linearly dependent — one is a scalar multiple of the other. Geometrically, they point in exactly the same or exactly opposite directions. In ML, linearly dependent feature vectors indicate that two data points have proportional feature activations — they are on the same ray through the origin.</li><li class="correct">D) u·v = 0 means the angle θ = 90° — the vectors are orthogonal. They are geometrically perpendicular in ℝⁿ. In ML: if u and v are feature representations of two data points, u·v = 0 means the features share no common activation patterns — they are uncorrelated in the linear projection sense. For embeddings (word2vec, etc.): u·v = 0 means the two entities (words, items) have no learned similarity. After normalisation: cos(θ) = u·v/(‖u‖‖v‖) = cosine similarity. Cosine similarity = 0 means orthogonal (dissimilar), = 1 means identical (most similar), = −1 means maximally opposite. PCA computes orthogonal basis vectors — principal components — which are orthogonal because they capture maximally different directions of variance in the data.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> The matrix A = [[2, 1], [4, 2]] is singular. How can you tell, and what does singularity mean for the linear system Ax=b?</p>
+      <ul class="check-opts"><li>A) det(A) = 2×2 − 1×4 = 0, but this only means the matrix has a repeated eigenvalue, not that it is singular. The system Ax=b has a unique solution for any b because the columns span ℝ² — the singularity only affects the eigenvalue structure, not the solvability of the linear system.</li><li class="correct">B) det(A) = 2×2 − 1×4 = 4 − 4 = 0 → A is singular. Also: row 2 = 2 × row 1, so the rows are linearly dependent. The matrix has rank 1 (only one linearly independent row/column). For Ax=b: the column space of A is one-dimensional (a line through the origin in ℝ²). If b lies on that line, there are infinitely many solutions (a 1-dimensional affine subspace). If b does not lie on that line, no solution exists. Geometrically: A maps ℝ² onto a 1D line (the column space), collapsing the entire input to a lower-dimensional output. Any input in the null space (here, vectors parallel to [−1, 2]ᵀ) are mapped to zero, meaning different inputs can produce the same output — A is not invertible.</li><li>C) Row 2 = 2 × row 1, so the rows are linearly dependent and det(A) = 0. For Ax=b: the system always has infinitely many solutions because the null space is non-trivial — the extra degree of freedom means we can always shift any particular solution by a null space vector. The system is never inconsistent.</li><li>D) det(A) = 4 − 4 = 0 and the trace = 2+2 = 4. A singular matrix with equal diagonal elements means both eigenvalues are 2. For Ax=b: the matrix is rank-deficient so we need the pseudoinverse A⁺ = VΣ⁺Uᵀ which gives the minimum-norm least-squares solution for any b.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#math_stats_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

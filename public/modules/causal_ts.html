@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Causal Inference in Time Series | ML Systems Lab</title>
+  <meta name="description" content="Granger causality, ITS, synthetic control, CausalImpact, DiD, temporal autocorrelation">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/causal_ts.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/causal_ts.html">
+  <meta property="og:title" content="Causal Inference in Time Series | ML Systems Lab">
+  <meta property="og:description" content="Granger causality, ITS, synthetic control, CausalImpact, DiD, temporal autocorrelation">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Causal Inference in Time Series">
+  <meta name="twitter:description" content="Granger causality, ITS, synthetic control, CausalImpact, DiD, temporal autocorrelation">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Causal Inference in Time Series",
+  "description": "Granger causality, ITS, synthetic control, CausalImpact, DiD, temporal autocorrelation",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/causal_ts.html",
+  "keywords": "Granger causality, CausalImpact, synthetic control, interrupted time series, DiD, BSTS"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#time_series_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">65 min read</span>
+      <span class="tag">Granger causality</span><span class="tag">CausalImpact</span><span class="tag">synthetic control</span><span class="tag">interrupted time series</span><span class="tag">DiD</span>
+    </div>
+    <h1>Causal Inference in Time Series</h1>
+    <p class="subtitle">Granger causality, ITS, synthetic control, CausalImpact, DiD, temporal autocorrelation</p>
+
+    <p>Granger causality is the most widely misused concept in applied time series work. It answers a predictive question — does X help predict Y beyond Y's own past? — not a causal one. A shared upstream cause Z that affects both X and Y with different lags produces Granger causality between X and Y with zero direct relationship. Knowing that search volume Granger-causes sales tells you nothing about whether investing in SEO will increase sales. The tools that actually support causal claims — synthetic control, CausalImpact, interrupted time series, difference-in-differences — all require a credible counterfactual: what would have happened to the treated unit absent the intervention.</p>
+    <p>The harder problem in practice is staggered rollouts, where different units receive treatment at different times. Standard two-way fixed effects DiD is biased under treatment effect heterogeneity in this case — already-treated units contaminate the control group — and the fix (Callaway-Sant'Anna) is not widely known.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Granger causality tests whether lagged X improves prediction of Y beyond lagged Y alone — it is a predictive test, not a causal test.</strong> A shared upstream cause Z that affects both X and Y with different lags produces Granger causality X → Y with no direct mechanism. TV advertising that simultaneously increases search volume and sales will produce Granger causality from search to sales even if search has no causal effect on sales. The correct interpretation: &quot;X has predictive information about Y beyond Y's own past.&quot; The incorrect interpretation: &quot;changing X will change Y.&quot;</li><li>**Interrupted Time Series (ITS): OLS regression
+
+$Y_t = β₀ + β₁T + β₂D_t + β₃(T − T*)D_t + ε_t, where D_t = 1{t ≥ T*}. β₂ is the immediate level change; β₃ is t$
+
+he slope change post-intervention.** Critical assumptions: no other intervention coincides at T*, the pre-period trend extrapolates cleanly, and residuals are not autocorrelated (autocorrelated residuals underestimate SE — use Prais-Winsten or Newey-West correction). ITS works without any control unit but requires a credible counterfactual from the pre-period trend extrapolation.</li><li><strong>Synthetic control (Abadie et al.): constructs a weighted combination of control units that matches the treated unit's pre-treatment outcomes as closely as possible.</strong> The post-treatment gap (treated − synthetic control) is the estimated treatment effect. The critical advantage over DiD: pre-treatment fit quality is directly observable — you can see whether the synthetic control matches the treated unit before claiming an effect. If pre-period fit is poor, the counterfactual is unreliable and the treatment effect estimate is invalid.</li><li><strong>CausalImpact (Brodersen et al., Google 2015): Bayesian Structural Time Series fitted on the pre-intervention treated series using control series as regressors.</strong> Post-intervention: extrapolate the counterfactual; treatment effect = observed − counterfactual with full posterior credible intervals. Key assumption: the relationship between treated and control series is stable across the intervention. If control series were independently affected by the intervention (spillover), the counterfactual is polluted and the effect estimate is biased.</li><li><strong>Difference-in-Differences: DiD = (Y_{treated,post} − Y_{treated,pre}) − (Y_{control,post} − Y_{control,pre}).</strong> The parallel trends assumption requires that the treated and control units would have moved identically absent the treatment. Temporal autocorrelation within units inflates t-statistics — cluster standard errors at the unit level. Always plot pre-trend event study coefficients to validate parallel trends before reporting a single DiD estimate.</li><li><strong>Staggered DiD and the TWFE bias: when different units receive treatment at different times, two-way fixed effects (TWFE) regression uses already-treated units as controls for later-treated units.</strong> With heterogeneous treatment effects (e.g., the effect grows over time), TWFE produces estimates that can be negatively weighted — some comparisons literally subtract true treatment effects. Callaway-Sant'Anna computes cohort-specific ATTs (average treatment effects for each treatment cohort) using only clean controls (never-treated or not-yet-treated) and aggregates properly.</li><li><strong>Temporal autocorrelation breaks standard causal methods in specific ways.</strong> IV exclusion restrictions become implausible when instrument and outcome share autocorrelated common trends. Regression discontinuity with time as the running variable is especially fragile — observations near the cutoff are highly correlated, conflating the treatment effect with local autocorrelation. Time-varying confounding requires marginal structural models (MSM) with inverse probability of treatment weighting (IPTW), not cross-sectional propensity score matching.</li><li><strong>Event study (dynamic DiD): estimate effects at each relative time period with Y_{it} = αᵢ + λ_t + Σ_{k≠-1} δ_k 1{t − G_i = k} + ε_{it}.</strong> Pre-treatment δ_k coefficients (k &lt; 0) test parallel trends — a joint F-test on pre-treatment periods is the validation. Post-treatment coefficients show dynamic effect trajectory. Always visualise as an event study plot before reporting a single DiD estimate — if pre-treatment effects are nonzero, the parallel trends assumption fails and the DiD estimate is biased.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Granger causality is the most frequently misused concept in applied time series work: it measures predictive priority, not causation, and a common upstream cause produces Granger causality between two otherwise unrelated series. The second most important insight for applied causal time series is that TWFE DiD is biased under staggered rollouts with heterogeneous treatment effects — already-treated units contaminate the control group, and the fix is Callaway-Sant'Anna, not just clustering standard errors. Always run an event study plot before reporting any DiD estimate.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Granger = predictive, NOT causal:</strong> a shared upstream cause Z produces Granger causality with no direct mechanism.</li><li><strong>ITS:</strong> pre-period trend extrapolation as counterfactual; correct autocorrelated residuals (Newey-West/Prais-Winsten).</li><li><strong>Synthetic control:</strong> weighted control units matching pre-treatment — pre-fit quality is directly observable.</li><li><strong>CausalImpact (BSTS):</strong> counterfactual from control regressors; breaks if controls hit by spillover.</li><li><strong>DiD needs parallel trends</strong> — always plot event-study pre-trend coefficients before reporting an estimate.</li><li><strong>Staggered TWFE is biased</strong> under heterogeneous effects (already-treated as controls, negative weights) → Callaway-Sant'Anna.</li><li><strong>No holdout = strong untestable assumptions;</strong> the real fix is a prospective holdout design for future launches.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You find that Google search volume for your brand Granger-causes weekly sales (F-test p &lt; 0.001). A PM wants to invest in SEO to increase search volume and thereby increase sales. What is the problem with this reasoning?</p>
+      <ul class="check-opts"><li>A) The problem is the lag specification; if the PM re-runs the Granger test with lags 1-4 instead of lags 1-8, the significance will disappear and the causal claim will be invalidated.</li><li class="correct">B) Granger causality shows lagged search predicts sales beyond sales` own history — it does NOT establish that increasing search will increase sales. Alternatives: common cause (TV advertising affects both), reverse causality with lag. Distinguish via experiment, instrumental variable, or controlling for advertising spend in the Granger VAR.</li><li>C) The reasoning is correct; Granger causality at p &lt; 0.001 is strong enough statistical evidence to justify the SEO investment, since it demonstrates that search is a leading indicator of sales.</li><li>D) The Granger test is invalid because weekly sales data violates the stationarity assumption required for VAR estimation; first difference both series and re-run before drawing any conclusion.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> You are measuring the impact of a new feature launched to users in Germany on January 15. You have daily active users (DAU) data for Germany (treated) and France (control) from January 2023 onwards. How do you use CausalImpact and what assumptions must hold?</p>
+      <ul class="check-opts"><li>A) Fit BSTS on France DAU using Germany DAU as regressor during the pre-period, then extrapolate post-launch to estimate the counterfactual France trajectory. Assumptions: no spillover to France, stable cross-country relationship, adequate pre-period length.</li><li>B) Run a simple pre-post t-test on Germany DAU before and after January 15; CausalImpact is only needed when you have multiple control units, not a single control country.</li><li>C) Use both Germany and France data in a DiD estimator with country and time fixed effects; CausalImpact is only appropriate when you have no control group at all.</li><li class="correct">D) Set pre-period = before Jan 15, post-period = after. Fit BSTS on Germany DAU using France DAU as regressor pre-launch, extrapolate counterfactual post-launch. Assumptions: stable Germany-France relationship, no spillover to France, adequate pre-period (3x post length), parallel pre-trends. Report posterior causal effect with 95% CI.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Your company rolls out a pricing change to different markets in different months over a 6-month window. You use TWFE DiD to estimate the effect. A colleague says your estimate is biased. Why and what do you do?</p>
+      <ul class="check-opts"><li>A) TWFE is biased because staggered rollout violates the parallel trends assumption; adding market-specific linear time trends to the TWFE regression will correct the bias without changing the estimator.</li><li>B) TWFE DiD is unbiased under staggered rollout as long as you cluster standard errors at the market level; the colleague is confusing standard error bias with point estimate bias.</li><li class="correct">C) Staggered timing invalidates TWFE because already-treated markets are used as controls for later-treated markets. With heterogeneous treatment effects, TWFE weights can be negative. Use Callaway-Sant`Anna (cohort-specific ATTs with clean controls only) or Sun-Abraham estimator. Plot event-study coefficients to detect heterogeneity.</li><li>D) TWFE is biased only when treatment assignment is non-random; since the rollout schedule was set by the company, treatment is as-good-as-random and TWFE gives an unbiased estimate of the average treatment effect.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> You want to estimate the causal effect of an algorithm change on user engagement, but the change was rolled out gradually to all users with no holdout group. CausalImpact, synthetic control, and ITS all require a control group or counterfactual. What do you do?</p>
+      <ul class="check-opts"><li>A) Use a pre-post comparison with a paired t-test on engagement metrics before and after the rollout; without a control group this is the only valid causal identification strategy.</li><li>B) Retrospectively identify a set of users who adopted the new algorithm later as a natural control group; compare early adopters to late adopters using standard DiD.</li><li>C) Apply CausalImpact using a competitor platform`s engagement metric as the control regressor; competitor metrics are always valid synthetic controls for internal product changes.</li><li class="correct">D) Without a holdout group, options include: ITS with internal counterfactual (pre-change BSTS extrapolation), regression discontinuity in time at the rollout date (with CCT bandwidth and robust SE for temporal autocorrelation), or external series as synthetic control donors. Honest answer: causal ID without a holdout requires strong untestable assumptions — the right fix is a prospective holdout design for future launches.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#time_series_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

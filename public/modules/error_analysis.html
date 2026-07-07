@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Error Analysis | ML Systems Lab</title>
+  <meta name="description" content="Confusion matrix drill-down, error slicing, systematic failures">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/error_analysis.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/error_analysis.html">
+  <meta property="og:title" content="Error Analysis | ML Systems Lab">
+  <meta property="og:description" content="Confusion matrix drill-down, error slicing, systematic failures">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Error Analysis">
+  <meta name="twitter:description" content="Confusion matrix drill-down, error slicing, systematic failures">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Error Analysis",
+  "description": "Confusion matrix drill-down, error slicing, systematic failures",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/error_analysis.html",
+  "keywords": "error analysis, failure modes, slicing, debugging"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#eval_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">30 min read</span>
+      <span class="tag">error analysis</span><span class="tag">failure modes</span><span class="tag">slicing</span><span class="tag">debugging</span>
+    </div>
+    <h1>Error Analysis</h1>
+    <p class="subtitle">Confusion matrix drill-down, error slicing, systematic failures</p>
+
+    <p>An NLP intent classifier scores <strong>94% accuracy</strong>. The product team is ready to ship. Before you sign off, you pull 200 of its mistakes and actually read them. The breakdown is stark: 67% are short 3-word commands (&quot;turn on light&quot;), 18% are code-switching (Spanish phrases mixed into English), 12% are negations (&quot;don't turn on&quot;). The model looks great on paper and fails on exactly the inputs your core users send most. That single accuracy number hid all of it.</p>
+    <p>That is what <strong>error analysis</strong> is for: turning &quot;the model has 6% error&quot; into &quot;the model fails on 3-word commands, and here is why.&quot; The aggregate metric tells you a problem *exists*; error analysis tells you *which* group has it, *what kind* it is, and *what will fix it*.</p>
+    <hr>
+    <h3>The five steps</h3>
+    <p>1. <strong>Sample the errors — but not uniformly.</strong> Sort by confidence and look hardest at the *high-confidence* mistakes (the model said 0.95, the truth was the opposite). Those are not noise; they are the model confidently doubling down on a wrong pattern, and it will keep doing it.</p>
+    <p>2. <strong>Tag each error by cause.</strong> A bad training label? Not enough signal for this input type? A rare pattern with too few examples? Or genuine ambiguity that humans disagree on too? Drop every error into a bucket.</p>
+    <p>3. <strong>Count each bucket</strong> — both its error rate and how many of the total errors it accounts for.</p>
+    <p>4. <strong>Prioritise by impact × feasibility.</strong> A bucket that is 30% of your errors with a known fix beats one that is 5% with a mysterious cause. And weight by *cost*, not just frequency: those 12% negation errors, where the assistant does the exact opposite of what a user asked, may hurt far more than a mangled 3-word command.</p>
+    <p>5. <strong>Trace to root cause.</strong> Is it a *data* gap (no examples of this type), a *feature* gap (the model cannot even represent the pattern), or a *distribution* mismatch (production looks different from training)?</p>
+    <hr>
+    <h3>Why it pays off</h3>
+    <p>Back to the classifier: two-thirds of the errors are short commands, because the model saw too few of them in training and its vocabulary came from longer queries. The fix is not a bigger model or a new architecture — it is collecting 200 labelled 3-word commands, retraining, and re-measuring that bucket's error rate. One cheap data effort clears the majority of the errors. That is the recurring lesson: systematic errors cluster by group or pattern and have targeted fixes, and collecting data for the worst bucket usually moves the metric more than any architecture change. (Errors that cluster by nothing are just irreducible noise — more data will not help those.)</p>
+    <p>And never let a high headline number end the conversation. A model that is 96% accurate but fails 100% of the time on one demographic, or a 98% spam filter that misses every email in one language, is not acceptable. Break errors down by subgroup, confidence, input length, and any business-critical slice. The aggregate metric is the *last* thing you report, not the first.</p>
+    <hr>
+    <h3>Small slices lie — check the support before you react</h3>
+    <p>The most common error-analysis mistake is over-reacting to a tiny slice. &quot;Group X has 40% error!&quot; means nothing if group X has 5 examples — that's 2 errors, pure noise. Always report the <strong>slice size</strong> alongside its error rate, put a <strong>confidence interval</strong> on the rate (a 40% error on n=5 might really be anywhere from 5% to 85%), and set a <strong>minimum-support threshold</strong> (say, ignore slices under 30–50 examples) before drawing conclusions. A large slice with a modestly elevated error rate usually matters more than a tiny slice with a scary-looking one.</p>
+    <hr>
+    <h3>The sharper root-cause taxonomy</h3>
+    <p>&quot;Data / feature / distribution&quot; is a good start, but name the fuller set so you can match a fix to each: <strong>label noise</strong> (the ground truth is wrong), <strong>data scarcity</strong> (too few examples of this pattern), <strong>distribution shift</strong> (production differs from training), <strong>feature blindness</strong> (the inputs can't even represent the distinction), <strong>annotation ambiguity</strong> (humans genuinely disagree, so no model can be &quot;right&quot;), a <strong>preprocessing bug</strong> (a pipeline error corrupts this slice), or a <strong>threshold/calibration issue</strong> (the model ranks fine but the cutoff is wrong for this group). Each points to a different fix — collecting more data won't cure a calibration bug or annotation ambiguity.</p>
+    <hr>
+    <h3>Slice false positives and false negatives separately</h3>
+    <p>Don't lump all errors together — <strong>FPs and FNs usually have different causes and different costs.</strong> In fraud, the FNs (missed fraud) might cluster in a new merchant category while the FPs (false alarms) cluster in high-velocity legitimate users — two unrelated problems needing two different fixes. And their business costs differ (a missed fraud vs an annoyed customer). Always build the error breakdown twice, once for each error type.</p>
+    <hr>
+    <h3>From notebook to monitor</h3>
+    <p>Error analysis shouldn't be a one-time notebook exercise you do before launch and forget. The slices you discover — 3-word commands, code-switching, new merchant categories — should become <strong>monitored production slices</strong>, tracked continuously so you catch when a slice's error rate creeps up after deploy. A finding that lives only in a notebook decays; a finding wired into monitoring keeps paying off.</p>
+    <hr>
+    <h3>The human side: labels and adjudication</h3>
+    <p>When errors trace to *annotation ambiguity*, the fix is a labeling process, not a model change. Measure <strong>inter-annotator agreement</strong> — if two humans disagree on a slice, the model can't be blamed for missing it. Set up an <strong>adjudication</strong> step for disputed cases, <strong>update the labeling guidelines</strong> to resolve the ambiguity, and accept that some errors are &quot;<strong>ambiguous but acceptable</strong>&quot; — genuinely reasonable answers the rigid label just didn't credit. Not every error is a bug.</p>
+    <hr>
+    <h3>Prove the fix with a counterfactual check, and prioritise with the real formula</h3>
+    <p>Before claiming a fix works, run an <strong>ablation</strong>: remove the suspicious feature, or add the targeted data, or apply the augmentation — then compare the *slice* metric before and after, not just the aggregate. And prioritise slices with more than a raw error count: <strong>impact = slice volume × error rate × cost per error × fix feasibility.</strong> A big, expensive, easily-fixed slice beats a small, cheap, mysterious one — the count of total errors alone will point you at the wrong work.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Always stratify errors by confidence level first — high-confidence wrong predictions (model says 0.95 positive, it is negative) indicate systematic bias, not random noise. These are your priority.</strong>
+
+For the intent classifier: sample 100 errors. Group them into confidence buckets: errors where model confidence was 0.5–0.7, 0.7–0.9, and 0.9–1.0. High-confidence errors in the 0.9–1.0 bucket are the model doubling down on a wrong pattern — a systematic feature or data problem. Low-confidence errors near 0.5 are boundary cases where the model is appropriately uncertain. Fix the high-confidence bucket first. In sklearn: sort errors by abs(predicted_prob - 0.5) descending, inspect the top 30. They will cluster by a specific pattern almost every time.</li><li><strong>Trap: sampling errors uniformly and concluding that common categories matter most. A rare error category that happens to affect high-value users or safety-critical decisions matters more than a common category that does not. Weight by business impact, not frequency.</strong>
+
+For the intent classifier: 12% of errors are negation patterns (&quot;don't turn on&quot;). This seems small. But those are the errors where the assistant does the opposite of what was asked — a user explicitly said not to do something and the system did it anyway. The business impact of acting on a negation error is catastrophically higher than misclassifying a benign 3-word utterance. Prioritize by cost(error type) × frequency(error type), not frequency alone. The cost matrix is a business decision, not a modeling decision.</li><li><strong>Diagnostic: if error categories do not have obvious fixes, you have a data gap — collect 200 examples from the hardest category and retrain. This typically moves more metric than any architectural change.</strong>
+
+For the intent classifier: code-switching errors (Spanish phrases in English queries) represent 18% of all errors. The model has almost no Spanish-English mixed examples in training. The fix is not a larger model or a better architecture — it is 200 labeled code-switching examples added to the training set. Retrain. Measure the category error rate on a held-out slice of code-switching examples. If it drops from 60% to 20%, the data gap was the problem. If it stays high, there is a feature representation problem. Data collection is cheaper than architecture search and should come first.</li><li><strong>Check slice support, name the real root cause, and slice FP/FN separately.</strong>
+
+Don't react to a 40%-error slice of 5 examples — report slice size, a confidence interval on the rate, and a minimum-support threshold before concluding. Match the fix to the real cause: label noise, data scarcity, distribution shift, feature blindness, annotation ambiguity, preprocessing bug, or threshold/calibration issue — more data won't cure a calibration bug or genuine ambiguity. And build the breakdown twice, once for false positives and once for false negatives, since they usually have different causes and costs.</li><li><strong>Wire findings into monitoring, handle the human side, and prove fixes counterfactually.</strong>
+
+Turn discovered slices into continuously-monitored production slices rather than one-off notebook findings. When errors trace to annotation ambiguity, fix the labeling process — measure inter-annotator agreement, adjudicate disputes, update guidelines, accept &quot;ambiguous but acceptable&quot; errors. Before claiming a fix, ablate (remove feature / add data / augment) and compare the slice metric before vs after. Prioritise by impact = slice volume × error rate × cost per error × fix feasibility, not raw error count.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Aggregate metrics tell you that a problem exists — error slicing by confidence, subgroup, and input type tells you which specific subpopulation has the problem — and targeting 200 examples of the hardest error category almost always moves more metric than any architectural change.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>The aggregate metric says a problem *exists*; error analysis says *which* group has it, *what kind*, and *what fixes it*.</strong> A 94%-accurate classifier can fail on exactly the inputs core users send most (3-word commands, code-switching, negations) — the single number hides all of it.</li><li><strong>Five steps:</strong> (1) sample errors non-uniformly, favouring *high-confidence* mistakes; (2) tag each by cause (bad label, no signal, rare pattern, genuine ambiguity); (3) count each bucket's error rate and share of total; (4) prioritise by impact × feasibility; (5) trace to root cause (data gap, feature gap, or distribution mismatch).</li><li><strong>High-confidence errors are systematic bias, not noise:</strong> when the model says 0.95 and the truth is the opposite, it's confidently doubling down on a wrong pattern and will keep doing it. Sort errors by |predicted − 0.5| descending, inspect the top ~30 — they cluster by a specific pattern almost every time. Fix these first.</li><li><strong>Weight by cost, not frequency:</strong> 12% negation errors (&quot;don't turn on&quot; → the assistant does the opposite) can hurt far more than 67% of mangled benign commands. Prioritise by cost(error type) × frequency, and the cost is a business decision, not a modeling one.</li><li><strong>A data gap usually beats an architecture change:</strong> if two-thirds of errors are short commands the model rarely saw in training, collecting 200 labelled 3-word commands and retraining clears most of the errors — cheaper and higher-impact than a bigger model. (Errors that cluster by nothing are irreducible noise; more data won't help those.)</li><li><strong>Small slices lie — check support before reacting:</strong> &quot;group X has 40% error!&quot; is meaningless if X has 5 examples (2 errors, a CI from ~5% to 85%). Report slice size, put a confidence interval on the rate, and set a minimum-support threshold (~30–50) before drawing conclusions. A large slice with a modestly elevated rate usually matters more than a tiny scary one.</li><li><strong>Slice FP and FN separately, wire findings into monitoring, prioritise with the real formula:</strong> FPs and FNs usually have different causes and costs (missed fraud clusters in a new merchant category; false alarms in high-velocity legit users) so build the breakdown twice. Turn discovered slices into monitored production slices, and prioritise by impact = slice volume × error rate × cost per error × fix feasibility — not raw error count.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Your NLP classifier has 88% overall accuracy but stakeholders are unhappy. How do you diagnose what is wrong?</p>
+      <ul class="check-opts"><li>A) Retrain with a larger model — 88% accuracy on NLP tasks indicates the model is underfitting and needs more capacity</li><li>B) Collect more labelled data — accuracy below 95% on NLP tasks is always a data insufficiency problem</li><li class="correct">C) Compute per-class precision and recall, slice accuracy by text length/domain/source/date, sample 100 errors and categorize them, check the confusion matrix for concentrated error pairs, and check confidence distribution on errors to distinguish systematic from irreducible failures</li><li>D) Report F1 instead of accuracy — stakeholder dissatisfaction with 88% accuracy always stems from the wrong metric being reported</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> You sample 100 FPs from a fraud detection model and find that 60% involve transactions from a new merchant category launched 2 months ago. What do you do?</p>
+      <ul class="check-opts"><li>A) Remove the merchant category feature — if a new category causes 60% of FPs, the feature is introducing noise and should be dropped</li><li>B) Flag this as random variance — 60% of FPs from one category is within normal statistical fluctuation for fraud models</li><li>C) Retrain with higher regularization — FP clustering by merchant category indicates the model is overfitting to merchant-specific patterns</li><li class="correct">D) This is systematic failure from distribution shift — collect labelled examples from this new category, add a &quot;merchant category is new&quot; uncertainty feature, consider a temporary rule for this category, check other new categories for elevated FP rates, and add it as a monitored production slice</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> You have two models both with F1=0.82. How do you choose which to deploy using error analysis?</p>
+      <ul class="check-opts"><li>A) Choose the simpler model — identical F1 means equivalent performance and simpler models are always preferable</li><li class="correct">B) Compare confusion matrices to see which class each model fails on, compare error slices for the most critical business segment, compare error confidence and calibration, and compare error correlation to assess ensembling potential — identical F1 with different error structures means the models are solving the problem differently</li><li>C) Run both in shadow mode and choose whichever has higher precision on the first day of live traffic</li><li>D) Flip a coin — identical F1 means the models are statistically indistinguishable and any choice is equally valid</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> What is the difference between error slicing and subgroup fairness analysis? When does one become the other?</p>
+      <ul class="check-opts"><li>A) They are the same analysis — error slicing always constitutes fairness analysis whenever slices are defined by user characteristics</li><li>B) Error slicing is only valid on numerical features while fairness analysis applies to categorical protected attributes — the distinction is purely technical</li><li>C) Error slicing uses statistical tests while fairness analysis uses business rules — error slicing becomes fairness analysis when the statistical test reveals significant disparities</li><li class="correct">D) Error slicing is a debugging technique asking &quot;where is the model wrong so I can fix it?&quot;; fairness analysis is a normative assessment asking &quot;is the model wrong more for certain protected groups in a way that causes harm?&quot; — they become the same when your error slices are by protected attributes and significantly different error rates raise legal and ethical implications beyond just &quot;collect more data&quot;</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> In your error slicing, one segment shows a 45% error rate versus 8% overall — but that segment has only 6 examples. What's the right move?</p>
+      <ul class="check-opts"><li>A) Treat it as the top-priority failure immediately — a 45% error rate is nearly 6x the baseline, so it's clearly the biggest problem.</li><li class="correct">B) With n=6, a 45% error rate is 2-3 errors and the confidence interval is enormous (roughly 12%–80%) — it may be pure noise. Report the slice size, put a CI on the rate, and apply a minimum-support threshold before acting; gather more examples from that segment before concluding anything. Prioritise larger slices with reliable elevated rates first.</li><li>C) Delete those 6 examples from the dataset, since a segment that small can't be modeled reliably anyway.</li><li>D) Immediately collect 200 examples for that segment and retrain — small-but-high-error slices always indicate a data gap.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q6.</strong> You've decided which error slice to fix first. Which prioritisation best reflects real-world impact?</p>
+      <ul class="check-opts"><li>A) Rank slices purely by the raw count of errors in each — the slice with the most total errors is always the one to fix first.</li><li>B) Rank by error rate alone — the slice where the model is most often wrong is the highest priority regardless of anything else.</li><li class="correct">C) Prioritise by impact = slice volume × error rate × cost per error × fix feasibility. This weighs how many users hit the slice, how often it fails, how costly each failure is, and how tractable the fix is — so a large, expensive, easily-fixed slice outranks a small, cheap, mysterious one, which raw error count would get wrong.</li><li>D) Always fix whichever slice the loudest stakeholder complains about, since business alignment matters more than any metric.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#eval_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

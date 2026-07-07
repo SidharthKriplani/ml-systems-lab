@@ -38,8 +38,8 @@
       "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
     }
   },
-  "datePublished": "2026-06-20",
-  "dateModified": "2026-06-20",
+  "datePublished": "2026-07-07",
+  "dateModified": "2026-07-07",
   "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/forecast-failure-modes.html",
   "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
   "keywords": "Time Series, Forecasting, ARIMA, Prophet, Stationarity, Seasonality, Production Failures"
@@ -77,7 +77,7 @@
 <p>ARIMA learns the seasonal pattern from historical data and assumes it will persist. When seasonality shifts — amplitude changes, frequency changes, or seasonality disappears entirely — ARIMA extrapolates the learned pattern blindly.</p>
 <p>Production signal: your model forecasts with consistent MAPE during training, but its error spikes at the onset of a new season. January is typically high-volume, but a pandemic year shows flat demand. The model forecast January as high; actual is flat.</p>
 <p>Detection: run autocorrelation analysis (ACF) on the residuals. If residuals show the same seasonal pattern the model was supposed to capture, seasonality is changing.</p>
-<p>Fix: don't assume seasonality is stable. Use Prophet with \`yearly_seasonality=False\` for series where annual seasonality is expected to shift. Better: use a rolling forecasting window and retrain monthly.</p>
+<p>Fix: don't assume seasonality is stable. Use Prophet with `yearly_seasonality=False` for series where annual seasonality is expected to shift. Better: use a rolling forecasting window and retrain monthly.</p>
 <h2>2. Non-stationarity ignored — the model fits the trend instead of the pattern</h2>
 <p>ARIMA assumes the series is stationary (after differencing). If you fit ARIMA to a non-stationary series without proper differencing, the model fits the overall trend rather than the deviations around the trend.</p>
 <p>Production signal: your forecast follows the historical trend perfectly through the holdout period, then diverges. If historical data was rising, the model forecasts continued rise — even when the series mean-reverts.</p>
@@ -106,10 +106,10 @@
 <h2>The production checkpoint:</h2>
 <p>Before deploying a forecast model: (1) Plot the series and identify obvious structural breaks or seasonality changes. (2) Run stationarity tests. (3) Backtest with a proper walk-forward validation where the model never sees future data. (4) Verify your evaluation metric aligns with what operations actually cares about. (5) Validate that your holdout MAPE is within 20% of your cross-validation MAPE. If not, you have a problem — likely one of the six above.</p>
 <h2>Practice this in Time Series to diagnose failures and apply the right preventive checks for your data.</h2>
-<p>\`\`\`python import numpy as np</p>
+<p>```python import numpy as np</p>
 <p>def walk_forward_cv(series, model_fn, horizon=7, min_train=90): """Walk-forward validation — the only honest time series backtest. Never lets the model see future data. Each fold: fit on [0:t], predict [t:t+h].""" errors = [] for t in range(min_train, len(series) - horizon): train  = series[:t] actual = series[t : t + horizon] model  = model_fn(train) pred   = model.predict(horizon) mape   = np.mean(np.abs((actual - pred) / (np.abs(actual) + 1e-9))) * 100 errors.append(mape)</p>
 <p>cv_mape   = np.mean(errors) # Sanity check: if holdout MAPE >> cv_mape, you likely have leakage or non-stationarity return {'cv_mape': round(cv_mape, 2), 'n_folds': len(errors)}</p>
-<p># Red flag: cv_mape=4.2% but holdout_mape=38.1% → one of the 6 failure modes above \`\`\`</p>
+<p># Red flag: cv_mape=4.2% but holdout_mape=38.1% → one of the 6 failure modes above ```</p>
 
     <div class="cta">
       <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>

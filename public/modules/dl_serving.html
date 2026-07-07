@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DL Model Serving | ML Systems Lab</title>
+  <meta name="description" content="Batching, model parallelism, TorchScript/ONNX, GPU memory, latency SLAs">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/dl_serving.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/dl_serving.html">
+  <meta property="og:title" content="DL Model Serving | ML Systems Lab">
+  <meta property="og:description" content="Batching, model parallelism, TorchScript/ONNX, GPU memory, latency SLAs">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="DL Model Serving">
+  <meta name="twitter:description" content="Batching, model parallelism, TorchScript/ONNX, GPU memory, latency SLAs">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "DL Model Serving",
+  "description": "Batching, model parallelism, TorchScript/ONNX, GPU memory, latency SLAs",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/dl_serving.html",
+  "keywords": "model serving, ONNX, TorchScript, GPU, latency"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#dl_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">29 min read</span>
+      <span class="tag">model serving</span><span class="tag">ONNX</span><span class="tag">TorchScript</span><span class="tag">GPU</span><span class="tag">latency</span>
+    </div>
+    <h1>DL Model Serving</h1>
+    <p class="subtitle">Batching, model parallelism, TorchScript/ONNX, GPU memory, latency SLAs</p>
+
+    <p>You put a GPT-2 model behind an API. The obvious way to serve it: take one request, run it, return the answer, take the next. Each forward pass takes 50ms, so you get 20 requests per second. But watch the GPU while this happens — it is 95% idle. A GPU is a machine built to do thousands of multiplications at once, and you are feeding it one request at a time. It is a delivery truck making one trip per parcel.</p>
+    <p>So fill the truck. Stack 32 requests together and run them in a single forward pass. Because the GPU was mostly empty, those 32 finish in roughly the same 50ms as one did — <strong>640 requests per second from the exact same hardware, no model change at all.</strong> Batching is the first and biggest lever in serving.</p>
+    <hr>
+    <h3>Dynamic batching: don't wait forever for a full truck</h3>
+    <p>Waiting for exactly 32 requests is bad if traffic is slow — early requests sit around. The production fix is *dynamic batching:* set a small deadline, say 5ms, and run whatever has arrived by then. Ten requests? Batch the ten. Forty? Take a batch and queue the rest. You capture most of the batching gain while keeping the wait bounded. Every serving framework (vLLM, TGI, ONNX Runtime) does this with one config flag.</p>
+    <hr>
+    <h3>Generation has a second problem batching can't fix</h3>
+    <p>When an LLM writes a reply one token at a time, producing token number *t* means paying attention to all *t−1* tokens before it. Do this naively and every new token re-computes the attention for every earlier token — the total work grows like n², so a long reply gets punishingly slow near the end.</p>
+    <p>The fix is the <strong>KV cache.</strong> The first time you process a token, you compute its attention &quot;key&quot; and &quot;value&quot; and *save them.* Every later token just reuses the saved keys and values instead of recomputing them — the work drops from n² to n. For a 512-token reply that is roughly a 512× cut in attention compute. The cost is memory: those saved tensors pile up with every token and every concurrent user. For LLaMA-7B a single token's cache is ~524 KB, so a 512-token chat holds ~256 MB — and an 80 GB A100 (model already loaded) fits only ~300 such chats before it has to start queuing. This is why long context is expensive: the cache, not the weights, runs you out of memory.</p>
+    <hr>
+    <h3>Speculative decoding: guess ahead, verify in bulk</h3>
+    <p>One more trick for generation speed. Let a small, fast &quot;draft&quot; model guess the next K tokens, then have the big model check all K *in one forward pass* — which costs about the same as generating a single token. When the draft guessed right, you got K tokens for the price of one; typical speedups are 2–3×. The whole theme of serving: the bottleneck is almost never raw model size — it is how well you keep the GPU full through batching, caching, and quantization.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Implement dynamic batching before any other optimization — it is the single highest-leverage change for throughput, often 10–30× improvement with zero accuracy cost.</strong>
+
+The math is simple: at batch size 1, GPU utilization on a typical LLM inference workload is 5–15%. At batch size 32, it is 60–80%. Matrix multiply FLOP/byte ratio scales with the batch dimension — larger batches use the GPU's memory bandwidth more efficiently. Every serving framework (vLLM, TGI, ONNX Runtime) implements dynamic batching; enabling it takes one configuration flag.</li><li><strong>Trap: KV cache grows linearly with sequence length — at long context (16K+ tokens), KV cache can exceed model weight memory. Set max_sequence_length based on actual P99 request lengths, not the theoretical maximum.</strong>
+
+For LLaMA-7B with 16K context: KV cache per request = 524KB/token × 16,384 tokens = 8.3GB. On an 80GB A100 with ~60GB available after model weights, that supports 7 concurrent requests at 16K context — versus 200+ at 512 tokens. Profile your actual P99 sequence length from traffic logs before configuring context limits. Allowing 16K context for a workload whose P99 is 1K wastes 16× the KV memory.</li><li><strong>Diagnostic: profile GPU utilization during serving. If under 60%, you are under-batching. If over 95% with high latency, you have over-batched or the model is too large for your SLA — consider quantization or a smaller model.</strong>
+
+NVIDIA's `nvidia-smi dmon` gives per-second GPU utilization. Under-batching (low utilization) and over-batching (high utilization, high latency) have opposite fixes. The target operating point is 70–85% utilization at your P99 latency budget. Below that: increase max batch size or reduce batch timeout. Above that: add more GPUs, quantize to reduce per-request compute, or use a smaller model.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Throughput and latency are opposing objectives — batching 32 requests gives 32× throughput but adds queuing time, and KV cache gives 512× compute reduction for generation but consumes memory that limits concurrency — optimize for one explicitly before touching model size or architecture.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>One request at a time wastes the GPU:</strong> 50ms/pass = 20 req/s, GPU 95% idle. A GPU wants thousands of multiplies at once.</li><li><strong>Batching = fill the truck:</strong> 32 requests in one pass finish in ~the same 50ms → 640 req/s, no model change. The biggest serving lever.</li><li><strong>Dynamic batching:</strong> set a small deadline (~5ms), run whatever arrived — most of the gain, bounded wait. One config flag in vLLM/TGI/ONNX.</li><li><strong>KV cache fixes generation's n² problem:</strong> save each token's key/value, reuse them → work drops n² → n (~512× for a 512-token reply).</li><li><strong>KV cache cost is memory:</strong> ~524KB/token for LLaMA-7B → ~256MB per 512-token chat; an 80GB A100 fits only ~300 chats. Long context runs you out of memory — the cache, not the weights.</li><li><strong>Speculative decoding:</strong> small draft model guesses K tokens, big model verifies all K in one pass → 2–3× when the guess is right.</li><li><strong>Diagnostic:</strong> target 70–85% GPU utilization at P99 budget — under 60% = under-batching; over 95% with high latency = over-batched or model too big.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> A transformer model has 175B parameters in FP16. How much GPU memory is required for model weights alone? How many A100 80GB GPUs do you need?</p>
+      <ul class="check-opts"><li>A) KV cache stores key and value tensors from previous tokens to avoid recomputation during autoregressive generation. Without KV-cache: generating token t requires attention over tokens 1,...,t. For each new token, we recompute keys and values for all t-1 previous tokens — O(t) compute per token, O(t²) total for a sequence of length t. With KV-cache: at each step, only compute K, V for the new token and append to the cache. Per-step compute is O(1) (just the new token's Q, and attention over cached KV). Total compute: O(t) instead of O(t²). Memory cost: GPT-3 has 96 layers, 96 attention heads, d_head = 128. Per token, KV cache stores: 2 × 96 × 96 × 128 × 2 bytes ≈ 4.5 MB per token. For 1000 tokens: 4.5 GB per sequence.</li><li>B) 175B parameters × 2 bytes/parameter (FP16) = 350 billion bytes = 350 GB just for weights. But FP16 requires storing both the weights and their FP32 master copies for precision, so the actual memory requirement is 350 GB × 1.5 = 525 GB. For weights only: ceil(525/80) = 7 GPUs minimum. In practice, 8 A100 80GB GPUs are required for the standard tensor-parallel configuration.</li><li class="correct">C) 175B parameters × 2 bytes/parameter (FP16) = 350 billion bytes = 350 GB just for weights. One A100 80GB has 80 GB — cannot fit the model alone. For weights only: ceil(350/80) = 5 GPUs. But inference also requires activations, KV cache, and intermediate buffers. The KV cache for generating a batch of 32 sequences of length 2048 with 96 layers and d_model=12288: 2 × batch × seq_len × n_layers × d_model × 2 bytes = 2 × 32 × 2048 × 96 × 12288 × 2 ≈ 300 GB. Total: ~650 GB for weights + KV cache ≈ 9 A100s for 175B inference. In practice, minimum deployment configurations use 8× A100 80GB for FP16 (Megatron tensor parallelism) or 4× A100 with INT8 quantization (350 GB → 175 GB weights).</li><li>D) 175B parameters × 2 bytes/parameter (FP16) = 350 GB. But tensor-parallel sharding across GPUs requires 2× overhead for communication buffers (sending activations between GPUs during all-reduce operations). So effective memory per GPU = 350 GB × 2 / n_GPUs. For n=8 GPUs: 700 GB / 8 = 87.5 GB per GPU — marginally over the 80 GB limit. Minimum 16 GPUs are needed for FP16 inference with tensor parallelism.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Batching requests increases GPU utilization but increases latency. How does dynamic batching work, and what is the p99 latency problem?</p>
+      <ul class="check-opts"><li>A) Dynamic batching groups requests by output length — requests expected to generate similar numbers of tokens are batched together. This eliminates the static batching problem where short requests wait for long ones to finish. The p99 latency problem disappears because all batch members complete at approximately the same time. The tradeoff is that length prediction is imperfect, so dynamic batching introduces occasional mispredictions that still cause occasional long waits.</li><li>B) Dynamic batching works by pre-allocating a fixed batch size (e.g., B=32) and padding shorter requests with zeros until the batch is full. The GPU is always processing exactly B requests simultaneously. The p99 latency problem occurs because padding wastes GPU computation on zero-valued tokens — requests at the 99th percentile pay a disproportionate compute cost because they require more padding to align with the longest request in their batch.</li><li>C) Dynamic batching requires knowing each request's output length before processing, which is impossible for generative models. Instead, dynamic batching groups requests by input length — requests with similar input lengths are batched together to minimise attention mask padding. The p99 latency problem arises because input-length-sorted batching creates systematic queuing: very short requests queue behind many similar-length requests rather than being processed immediately.</li><li class="correct">D) Dynamic batching: instead of processing each request immediately (batch size 1), the serving system waits for a short time window (e.g., 10ms) and collects all requests that arrive in that window into a batch, processing them together. GPU utilization is higher because matrix multiplications on larger batches are more hardware-efficient (better FLOP/byte ratio). Latency tradeoff: a request that arrives alone must wait 10ms for the window before processing starts — adding fixed latency. Average latency may be acceptable, but p99 (99th percentile) latency suffers: an unlucky request might wait up to window_size ms just for batching, then the actual generation time is longer for a larger batch. The p99 problem: SLA contracts are often defined at p99 or p95, not mean. A system with mean latency 100ms might have p99=500ms if 1% of requests are delayed by batching waits. Solution: adaptive batch size limits (cap batch size at B_max based on current load), or continuous batching (new requests join mid-generation, dramatically improving utilization without fixed wait windows).</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> KV-cache stores key and value tensors from previous tokens to avoid recomputation during autoregressive generation. How does it save computation, and what is its memory cost for GPT-3 (175B) generating a sequence of length 1000?</p>
+      <ul class="check-opts"><li class="correct">A) Without KV-cache: generating token t requires attention over tokens 1,...,t. For each new token, we recompute keys and values for all t-1 previous tokens — O(t) compute per token, O(t²) total for a sequence of length t. With KV-cache: at each step, only compute K, V for the new token and append to the cache. Retrieve all previous K, V from cache. Attention computation uses these cached values. Per-step compute is O(1) (just the new token's Q, and attention over cached KV). Total compute: O(t) instead of O(t²). Memory cost: GPT-3 has 96 layers, 96 attention heads, d_head = 128. Per token, KV cache stores: 2 (K and V) × 96 (layers) × 96 (heads) × 128 (d_head) × 2 bytes (FP16) = 4,718,592 bytes ≈ 4.5 MB per token. For 1000 tokens: 4.5 GB per sequence. For a batch of 10 sequences: 45 GB — already comparable to the model's weight memory. KV-cache is the dominant memory cost in transformer serving.</li><li>B) KV-cache saves computation by avoiding the softmax recomputation for previous tokens — without cache, the full softmax over all previous keys is recomputed at each step. With cache, only the new key is added to the existing distribution using an incremental softmax update. Memory cost: GPT-3's KV cache is 2 × 175B_params × 2_bytes × (seq_len / model_dim) ≈ 0.35 TB × (1000 / 12288) ≈ 28 GB per sequence, requiring 4× A100 80GB GPUs just for the KV cache of a single 1000-token sequence.</li><li>C) KV-cache eliminates the need to store intermediate attention matrices during generation — without cache, the full attention matrix (seq_len × seq_len × n_heads) must be recomputed from scratch at each step. With cache, only the attention scores for the new token need to be computed. Memory cost: the attention matrix for 1000 tokens with 96 heads = 1000 × 1000 × 96 × 4 bytes = 384 MB per sequence — much smaller than weight memory and not a bottleneck.</li><li>D) KV-cache trades computation for memory: instead of recomputing Q, K, V projections at each generation step (O(d²) per step), the cache stores precomputed projections (O(seq_len × d) memory). The computation savings are 3× (K and V are cached; only Q must be recomputed). Memory cost for GPT-3: 2 vectors × d_model × n_layers × seq_len × 2 bytes = 2 × 12288 × 96 × 1000 × 2 = 4.7 GB per sequence — comparable to KV-only cache calculations since d_head × n_heads = d_model.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#dl_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

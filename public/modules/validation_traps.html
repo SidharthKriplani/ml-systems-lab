@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Validation Set Traps &amp; Data Leakage | ML Systems Lab</title>
+  <meta name="description" content="Leakage taxonomy: temporal, group, label leakage, how to audit">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/validation_traps.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/validation_traps.html">
+  <meta property="og:title" content="Validation Set Traps &amp; Data Leakage | ML Systems Lab">
+  <meta property="og:description" content="Leakage taxonomy: temporal, group, label leakage, how to audit">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Validation Set Traps &amp; Data Leakage">
+  <meta name="twitter:description" content="Leakage taxonomy: temporal, group, label leakage, how to audit">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Validation Set Traps & Data Leakage",
+  "description": "Leakage taxonomy: temporal, group, label leakage, how to audit",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/validation_traps.html",
+  "keywords": "data leakage, validation, temporal split, label leakage"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#eval_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">30 min read</span>
+      <span class="tag">data leakage</span><span class="tag">validation</span><span class="tag">temporal split</span><span class="tag">label leakage</span>
+    </div>
+    <h1>Validation Set Traps &amp; Data Leakage</h1>
+    <p class="subtitle">Leakage taxonomy: temporal, group, label leakage, how to audit</p>
+
+    <p>You are building a model to predict next-week stock returns. Among your features you include one called &quot;average return over the next 7 days.&quot; You train, validate, and get <strong>95% accuracy</strong> — numbers you have never seen. You ship it. In production, accuracy is <strong>2%.</strong> What happened?</p>
+    <p>The feature cheated. &quot;Average return over the next 7 days&quot; is computed from the very thing you are trying to predict. The model did not learn anything — it read the answer straight off that feature. During validation the answer was sitting right there in the inputs; in production that information does not exist yet, so the model is worthless. This is <strong>data leakage</strong>: information from the future, or from the outcome itself, sneaking into the training features.</p>
+    <p>The dangerous part is that a normal train/test split does *not* catch it — because both halves are contaminated the same way. Leakage comes in three main flavours, each with its own fix.</p>
+    <hr>
+    <h3>Temporal leakage — peeking at the future</h3>
+    <p>You have time-ordered data and you split it into train/test by picking rows at random. Now some training rows come from *after* the test rows' prediction time, so the model gets to peek ahead. The fix is a strict time cutoff: every feature for a row must be built only from data that existed *before* that row's prediction moment. Train on the past, test on the future — never a random shuffle across dates.</p>
+    <hr>
+    <h3>Group leakage — the same subject on both sides</h3>
+    <p>The same user (or patient, or store) shows up in both train and test. Your fraud model trains on some transactions from users A, B, C and is tested on *other* transactions from those same users — so it memorises each person's spending habits, patterns that simply will not exist for brand-new users at deployment. The fix is to split by *group*: every row from a given user goes entirely to one side.</p>
+    <hr>
+    <h3>Label leakage — the right time, the wrong direction</h3>
+    <p>This one is subtle. The feature has a valid timestamp, but it is a *consequence* of the outcome rather than a cause of it. Classic example: predicting whether a patient was hospitalised, using &quot;days in the ICU&quot; as a feature — that number only exists *because* they were hospitalised. The audit question is not &quot;when was this computed?&quot; but &quot;does this feature come *before* the outcome in the causal chain, or *after* it?&quot;</p>
+    <hr>
+    <h3>The one question that catches almost everything</h3>
+    <p>For every feature, ask: *would this exact value exist at the moment of prediction in production, knowing nothing about future events?* If the answer is no, it is leakage — full stop. And a few red flags should trigger an immediate audit: validation AUC above 0.97 on a problem where even human experts disagree; one feature towering over all the others in importance; train and validation accuracy nearly identical with no gap; or a mediocre model suddenly looking brilliant right after you added one new feature group.</p>
+    <hr>
+    <h3>Preprocessing leaks too — fit everything on the training fold only</h3>
+    <p>Leakage isn't just about features you engineer; it hides in *preprocessing*. Any step that *learns something from the data* — a StandardScaler's mean and variance, an imputer's fill values, a PCA's components, feature selection, SMOTE oversampling, target encoding — must be <strong>fit on the training fold only</strong>, then *applied* to validation/test. Fit your scaler on the whole dataset before splitting and the training rows already &quot;know&quot; the test set's statistics. The clean fix is a scikit-learn <strong>Pipeline</strong> that bundles every transform with the model, so cross-validation re-fits the whole chain inside each fold and leakage becomes structurally impossible.</p>
+    <hr>
+    <h3>The fuller leakage taxonomy</h3>
+    <p>Beyond temporal, group, and label leakage, name the rest: <strong>train-test contamination</strong> (a preprocessing step or a duplicate bleeds test info into train); <strong>duplicate / near-duplicate leakage</strong> (the same row, or an augmented copy, in both splits); <strong>proxy leakage</strong> (a feature that's an innocent-looking stand-in for the label, like a customer-ID range that encodes signup cohort); <strong>post-outcome features</strong> (computed after the event you're predicting); <strong>aggregation-window leakage</strong> (a rolling average whose window reaches past the prediction time); and <strong>survivorship bias</strong> (training only on entities that survived — e.g. still-active accounts — so the model never sees the ones that churned/failed).</p>
+    <hr>
+    <h3>Three timestamps, not one</h3>
+    <p>&quot;When is this feature available?&quot; is really three questions. The <strong>event timestamp</strong> (when the thing happened), the <strong>feature-computation timestamp</strong> (when your pipeline calculated it), and the <strong>data-availability timestamp</strong> (when the value was actually queryable in production). A value can *exist* historically but not have been *available* at decision time — a label confirmed a week later, a nightly-batch feature not ready until 2am. Point-in-time correctness means joining features as of their <strong>availability</strong> timestamp, not their event timestamp. Feature stores exist largely to get this join right.</p>
+    <hr>
+    <h3>Real systems need group and time splits together</h3>
+    <p>The splits aren't mutually exclusive. A fraud or churn system usually needs <strong>both</strong>: hold out *future* data (temporal) *and* make sure a held-out user's rows never appear in training (group). A pure temporal split can still leak a user's identity across the cutoff; a pure group split can still let the model peek at the future. The split you choose should mirror the production question — new users, new sessions, new transactions, or future events — and often that's a combined group-plus-time holdout.</p>
+    <hr>
+    <h3>Negative controls: sanity tests that catch leaks</h3>
+    <p>A few cheap experiments smoke out leakage. <strong>Shuffle the labels</strong> and retrain — a properly-built model should collapse to chance; if it still scores well, a feature is leaking the label. <strong>Compare a random split against a temporal split</strong> — a big gap means temporal leakage. <strong>Drop the top suspicious feature</strong> — if AUC craters from 0.97 to 0.75, that feature was carrying the leak. <strong>Train on future-only features</strong> as a deliberate check of what's genuinely available. These controls turn &quot;I have a bad feeling&quot; into evidence.</p>
+    <hr>
+    <h3>How leakage shows up in production</h3>
+    <p>Leakage often isn't caught offline at all — it surfaces after deploy. The signatures: an <strong>offline-online collapse</strong> (0.97 validation, 0.64 live), a <strong>null-rate spike</strong> on a feature that turns out to be unavailable at serving time, <strong>feature-freshness</strong> violations (a value that was instant offline takes hours to compute live), or a top feature that simply *can't be computed* in the real-time path. Monitoring these in production is your last line of defence when the offline audit misses a leak.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>When to audit for leakage: any time validation looks too good to be true.</strong>
+
+Red flags: AUC above 0.95 on a problem where domain experts only manage 70–80%; a single feature with far higher importance than all the others (can it even be known at prediction time?); train and validation accuracy within a point or two of each other with no regularisation (the test set is probably contaminated); or AUC jumping ten-plus points right after you add one new feature group (check that group's causal link to the label).</li><li><strong>The most common trap: target encoding computed on the full dataset before the split.</strong>
+
+Target encoding replaces a category with the average outcome for that category. Compute those averages over the whole dataset (test rows included) and each test row's feature now carries information from its own label — a direct leak. Fix: compute the encodings out-of-fold (each row encoded using only the other folds), or wrap it in a scikit-learn Pipeline inside cross-validation. It is easy to miss because the code looks completely innocent.</li><li><strong>The diagnostic: for every feature, ask whether its value would exist at the exact moment of prediction.</strong>
+
+For each feature, write down what data it uses, when that data becomes available, and whether that is before or after the prediction time. Any feature whose data only arrives after the prediction moment is leakage. You can do this whole audit in a spreadsheet. Inheriting a model? Check its top five features by importance and confirm each one passes the timestamp test.</li><li><strong>Preprocessing leaks too, and the taxonomy is bigger than three types.</strong>
+
+Anything that learns from data — scaler, imputer, PCA, feature selection, SMOTE, target encoding — must be fit on the training fold only; wrap it in a scikit-learn Pipeline so CV re-fits it inside each fold. Beyond temporal/group/label, watch for duplicate/near-duplicate leakage, proxy features (an ID range encoding cohort), post-outcome features, aggregation-window leakage (a rolling window reaching past prediction time), and survivorship bias. And distinguish three timestamps — event, feature-computation, and data-availability — joining features as of *availability* (what point-in-time feature-store joins enforce).</li><li><strong>Mirror production in the split, prove it with negative controls, and monitor after deploy.</strong>
+
+Real systems often need a combined group-plus-time holdout (future data AND unseen users), matched to the production question (new user/session/transaction/event). Catch leaks with negative controls: shuffle labels (a clean model drops to chance), compare random vs temporal split (a gap = temporal leak), and drop the top suspicious feature (a crater = it carried the leak). Leakage frequently surfaces only in production — an offline-online collapse, a feature null-rate spike, a freshness violation, or a top feature that can't be computed in the serving path — so monitor these as the last line of defence.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Data leakage is a data engineering error, not a modeling error — the fix is upstream in feature computation, and the single question that catches most leakage is whether each feature value would exist at the exact moment of prediction in production with no knowledge of future events.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Leakage = future or outcome information sneaking into features</strong> — a feature like &quot;average return over the next 7 days&quot; reads the answer straight off, giving 95% validation and 2% production. A normal train/test split doesn't catch it because both halves are contaminated the same way.</li><li><strong>Temporal leakage — peeking at the future:</strong> a random split of time-ordered data lets some training rows come from *after* the test rows' prediction time. Fix with a strict time cutoff — every feature built only from data that existed before that row's prediction moment; train on the past, test on the future.</li><li><strong>Group leakage — the same subject on both sides:</strong> patient/user 142's January visit trains the model and their June visit tests it, so it memorises habits that won't exist for brand-new subjects at deployment. Fix by splitting by group — all of one subject's rows go entirely to one side.</li><li><strong>Label leakage — right time, wrong causal direction:</strong> the feature has a valid timestamp but is a *consequence* of the outcome, not a cause (&quot;days in ICU&quot; only exists because the patient was hospitalised). The audit isn't &quot;when was it computed?&quot; but &quot;does it come before or after the outcome in the causal chain?&quot;</li><li><strong>The one question that catches almost everything:</strong> would this exact value exist at the moment of prediction in production, knowing nothing about future events? If no, it's leakage. Red flags: AUC &gt; 0.97 where experts disagree, one feature towering over all others, no train/val gap, or a mediocre model suddenly brilliant after one new feature group.</li><li><strong>Preprocessing leaks too — fit on the training fold only:</strong> anything that *learns* from data (StandardScaler's mean/variance, imputer fills, PCA components, feature selection, SMOTE, target encoding) must be fit on train and applied to val/test. Wrap it all in a scikit-learn Pipeline so CV re-fits the whole chain inside each fold and leakage becomes structurally impossible.</li><li><strong>Real systems need group + time together, proven with negative controls, monitored in prod:</strong> hold out future data AND unseen users, matched to the production question. Confirm with negative controls (shuffle labels → a clean model collapses to chance; compare random vs temporal split → a gap means temporal leak; drop the top feature → a crater means it carried the leak). Leakage often surfaces only after deploy — an offline-online collapse, a feature null-rate spike, a freshness violation — so monitor these as the last line of defence.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You build a churn prediction model with AUC=0.97. In production, AUC drops to 0.64. What went wrong and how do you debug?</p>
+      <ul class="check-opts"><li>A) The model overfit — AUC=0.97 on validation with 0.64 in production means training data was insufficient; collect more data and retrain</li><li>B) Production data has shifted — the drop indicates concept drift and the model needs continuous retraining</li><li>C) The model is correct — 0.97 offline and 0.64 online is a normal offline-online gap for churn models; no action needed</li><li class="correct">D) This is a strong signal of data leakage — check if the train/test split was random on time-series data, audit top-5 features for post-churn values (e.g., &quot;account closed=1&quot;), check preprocessing fit on full dataset, and check for group leakage; the 0.97 was an illusion and 0.64 is the true performance</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> A colleague uses a random 80/20 split on a dataset of 500,000 website visits by 50,000 unique users. What is the problem and how do you fix it?</p>
+      <ul class="check-opts"><li class="correct">A) Random row-level split puts the same user in both train and test — the model memorises user-level patterns that will not generalise to new users; fix by splitting at the user level, so all visits from a user go to exactly one side.</li><li>B) The 80/20 ratio is too aggressive — switch to 70/30 to give the test set more samples for a more reliable evaluation.</li><li>C) 500,000 rows is simply too large for random splitting — use stratified sampling instead to make sure the class balance is preserved.</li><li>D) The real problem is insufficient feature engineering — the split method does not matter much as long as the features themselves are well-constructed.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> What is target encoding leakage, and how does k-fold target encoding fix it?</p>
+      <ul class="check-opts"><li>A) It happens when the category names are semantically related to the label; k-fold fixes it by swapping the names for anonymised category IDs before encoding.</li><li>B) It is really just group leakage under another name; k-fold fixes it by making sure each category appears in only one fold of the data.</li><li class="correct">C) It happens because computing category means on the full dataset folds each test row's own label into its feature; k-fold target encoding fixes this by encoding each row using only out-of-fold data, so no row's label ever contributes to its own encoding.</li><li>D) It happens when rare categories get noisy mean estimates; k-fold fixes it by averaging those estimates across several folds for extra stability.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> You join a company and are handed a model achieving AUC=0.94 on historical data. How do you quickly audit for leakage before trusting this number?</p>
+      <ul class="check-opts"><li>A) Re-train the model from scratch on a clean dataset — inherited models always have unknown leakage that cannot be audited without retraining</li><li class="correct">B) Check the train/test split method (random rows on time-series data is wrong), inspect top feature importances for any single dominating feature that may not be available at prediction time, and compare train vs test AUC for absence of generalization gap</li><li>C) Run a shadow deployment and compare production AUC — the only reliable leakage audit is live traffic comparison</li><li>D) Check if AUC=0.94 is above published benchmarks for similar problems — if so, leakage is confirmed</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> You fit StandardScaler and SelectKBest on the full dataset, then run 5-fold cross-validation on the transformed data and get a great score. Why is the score optimistic, and what's the fix?</p>
+      <ul class="check-opts"><li>A) It's not optimistic — scaling and feature selection are deterministic transforms, so fitting them before CV has no effect on the score.</li><li class="correct">B) Both the scaler (mean/variance) and SelectKBest (which features to keep) learned from the entire dataset, including the rows that later act as validation folds — so every fold's &quot;held-out&quot; data already influenced the preprocessing. Wrap the scaler, selector, and model in a scikit-learn Pipeline and pass that to cross_val_score, so all transforms are re-fit on each fold's training portion only.</li><li>C) The problem is only SelectKBest; scaling is safe to fit on the full dataset because it doesn't use the labels.</li><li>D) The fix is to use 10 folds instead of 5, which dilutes the leakage enough to make the score trustworthy.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q6.</strong> You suspect a churn model with AUC 0.96 has a leak but can't spot the feature. Which negative control most directly confirms leakage?</p>
+      <ul class="check-opts"><li>A) Retrain with a larger max_depth — if AUC rises further, there's no leak.</li><li class="correct">B) Shuffle the labels randomly and retrain: a correctly-built model should collapse to ~0.5 AUC because there's no real signal left. If it still scores well above chance, a feature is carrying label information — a leak. Pair this with a random-vs-temporal split comparison and dropping the top feature to localise it.</li><li>C) Add more training data — if AUC stays at 0.96, the model is fine and there's no leak.</li><li>D) Switch from AUC to accuracy — if accuracy is also high, the 0.96 is validated and no leak exists.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#eval_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

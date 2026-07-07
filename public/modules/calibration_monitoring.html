@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calibration Monitoring in Production | ML Systems Lab</title>
+  <meta name="description" content="Reliability diagrams from logged predictions, ECE over time, recalibration triggers">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/calibration_monitoring.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/calibration_monitoring.html">
+  <meta property="og:title" content="Calibration Monitoring in Production | ML Systems Lab">
+  <meta property="og:description" content="Reliability diagrams from logged predictions, ECE over time, recalibration triggers">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Calibration Monitoring in Production">
+  <meta name="twitter:description" content="Reliability diagrams from logged predictions, ECE over time, recalibration triggers">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Calibration Monitoring in Production",
+  "description": "Reliability diagrams from logged predictions, ECE over time, recalibration triggers",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/calibration_monitoring.html",
+  "keywords": "calibration, ECE, reliability, production monitoring"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#monitoring_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">35 min read</span>
+      <span class="tag">calibration</span><span class="tag">ECE</span><span class="tag">reliability</span><span class="tag">production monitoring</span>
+    </div>
+    <h1>Calibration Monitoring in Production</h1>
+    <p class="subtitle">Reliability diagrams from logged predictions, ECE over time, recalibration triggers</p>
+
+    <p>An insurance pricing model outputs a claim probability. On launch day it's beautifully calibrated: a prediction of 0.15 really does mean a 15% claim rate — dead on the reliability diagram's diagonal. Three months later, the same 0.15 predictions are actually claiming at 22%. The model is now *underestimating* risk by 7 points in that bucket. And the pricing team feeds its output straight into premiums, so for three months it has been silently undercharging exactly the high-risk customers. No alert fired. AUC is a steady 0.82.</p>
+    <hr>
+    <h3>AUC will never catch this, because AUC measures a different thing</h3>
+    <p>AUC measures *ranking* — does the model put riskier customers above safer ones? Calibration measures *probability accuracy* — does 0.15 actually mean 15%? These are independent. A model can rank every customer perfectly (great AUC) while being wrong about every customer's *absolute* risk (terrible calibration). Anywhere the output is used as a real probability — pricing, risk scoring, expected-value math — you must monitor both, separately.</p>
+    <hr>
+    <h3>Why calibration drifts even when ranking holds</h3>
+    <p>As the input distribution shifts, the model's probability estimates stop matching the true rates in the new population — even though it still knows *who* is riskier than whom. It just no longer knows *by how much.* You quantify this with Expected Calibration Error:</p>
+    <p>$ECE = \sum_{bins} (n_{bin}/n)\,|\,\text{confidence}_{bin} - \text{accuracy}_{bin}\,|$</p>
+    <p>An ECE tripling from 0.03 at launch to 0.09 in three months isn't a footnote — it's mispricing at scale.</p>
+    <hr>
+    <h3>Fixing it rarely means retraining</h3>
+    <p>*Platt scaling* fits a small logistic regression on top of the model's outputs using recent labeled data — a few hours with ~1,000 examples. *Temperature scaling* uses a single scalar T: new_prob = σ(logit / T). Both are fast and leave the base model untouched. Trigger recalibration when ECE runs 0.03 above baseline for three days straight.</p>
+    <p>And kill the assumption that &quot;stable AUC means calibration is fine.&quot; A model can post AUC 0.90 with ECE 0.15 — ranking everyone right while its probabilities are off by 15 points. For a fraud model, that means your chosen threshold no longer buys the precision-recall tradeoff you designed. For pricing, it means systematic mispricing. Monitor both, independently, on every batch of labels that arrives.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Monitor ECE on every batch of ground truth labels that arrives — calibration drift is silent and systematic, exactly the kind of error that causes financial mispricing or risk misallocation to compound undetected.</strong> Plot the reliability diagram alongside the ECE scalar: ECE tells you the magnitude, the diagram tells you which buckets are miscalibrated and in which direction.</li><li><strong>Trap: applying temperature scaling fit on stale data.</strong> If you recalibrate using labels from 6 months ago, you are correcting for past calibration drift, not current. Fit recalibration only on recent labels from the last 30–60 days. A recalibration model trained on stale data can shift the current calibration in the wrong direction, making ECE worse instead of better.</li><li><strong>Diagnostic: if ECE is increasing but AUC is stable, apply temperature scaling as the first-line fix — it corrects the overall miscalibration in one parameter without retraining.</strong> If ECE improvement from temperature scaling is greater than 0.03, the recalibration was justified. If improvement is less than 0.01, the problem is per-bucket conditional miscalibration rather than a uniform scaling issue, and isotonic regression is required instead.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Calibration drift is invisible to AUC — monitor ECE on every label batch, recalibrate with Platt or temperature scaling on recent data when ECE crosses threshold, and never wait for a business stakeholder to notice the mispricing.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>AUC ≠ calibration:</strong> ranking (who is riskier) is independent of probability accuracy (does 0.15 mean 15%).</li><li><strong>Calibration drifts when inputs shift:</strong> model still knows who is riskier, not by how much.</li><li><strong>ECE:</strong> $ECE = \sum_{bins} (n_{bin}/n)\,|\text{confidence}_{bin} - \text{accuracy}_{bin}|$; tripling 0.03→0.09 is mispricing at scale.</li><li><strong>Fix without retraining:</strong> Platt scaling (small logistic) or temperature scaling ($\sigma(\text{logit}/T)$) on recent labels.</li><li><strong>Fit only on recent labels (30–60 days):</strong> stale recalibration can push ECE the wrong way.</li><li><strong>Trigger at ECE 0.03 above baseline for 3 straight days.</strong></li><li><strong>Temperature scaling first</strong>; if improvement &lt;0.01 it's per-bucket miscalibration — use isotonic regression.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> A loan default model's ECE has increased from 0.03 (at deployment) to 0.09 (current) over 4 months. Reliability diagram shows the model is now overconfident for predictions &gt; 0.7. What is your response?</p>
+      <ul class="check-opts"><li>A) No action needed yet — ECE of 0.09 is still below the commonly cited 0.1 threshold; schedule a review next quarter when data volume is larger</li><li>B) Retrain the full model immediately — calibration degradation always indicates concept drift, and recalibration without retraining only masks the underlying problem</li><li>C) Run a chi-squared test on the prediction distribution to confirm the calibration shift is statistically significant before committing to any remediation</li><li class="correct">D) ECE tripling (0.03→0.09) is significant; lower the decision threshold as a temporary fix, recalibrate with Platt or temperature scaling on recent labelled data, then investigate whether concept drift requires full retraining</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> A pricing model holds AUC steady at 0.90 for three months, yet its 0.15 predictions now claim at 22%. Why can ranking be perfect while probabilities are wrong?</p>
+      <ul class="check-opts"><li class="correct">A) AUC and calibration measure independent things — AUC scores whether risky customers rank above safe ones, calibration scores whether 0.15 truly means 15%</li><li>B) AUC of 0.90 is not high enough to guarantee calibration; only an AUC above 0.95 makes probability estimates reliable in production</li><li>C) The AUC computation lags the calibration computation by one label batch, so the steady AUC is simply stale and will drop next month</li><li>D) Calibration drift always drags AUC down with it, so a steady AUC means the reliability diagram was actually mismeasured</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> You apply temperature scaling and ECE improves by only 0.008. What does this small improvement tell you?</p>
+      <ul class="check-opts"><li>A) The recalibration was applied to stale labels, so refit temperature scaling on the last 30–60 days and the ECE will drop as expected</li><li>B) Temperature scaling is never sufficient alone, so full retraining on recent data is the only remaining option for this model</li><li class="correct">C) A uniform single-parameter rescale barely helped, so the miscalibration is per-bucket conditional and isotonic regression is needed instead</li><li>D) An improvement under 0.01 confirms the model was already well calibrated, so no further recalibration is warranted at all</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#monitoring_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

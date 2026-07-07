@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bellman Equations | ML Systems Lab</title>
+  <meta name="description" content="V(s), Q(s,a), optimality equations, contraction mapping, curse of dimensionality">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/bellman_equations.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/bellman_equations.html">
+  <meta property="og:title" content="Bellman Equations | ML Systems Lab">
+  <meta property="og:description" content="V(s), Q(s,a), optimality equations, contraction mapping, curse of dimensionality">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Bellman Equations">
+  <meta name="twitter:description" content="V(s), Q(s,a), optimality equations, contraction mapping, curse of dimensionality">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Bellman Equations",
+  "description": "V(s), Q(s,a), optimality equations, contraction mapping, curse of dimensionality",
+  "proficiencyLevel": "Foundational",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/bellman_equations.html",
+  "keywords": "bellman, value function, dynamic programming, contraction, tabular"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#rl_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Foundational</span>
+      <span class="read-time">45 min read</span>
+      <span class="tag">bellman</span><span class="tag">value function</span><span class="tag">dynamic programming</span><span class="tag">contraction</span><span class="tag">tabular</span>
+    </div>
+    <h1>Bellman Equations</h1>
+    <p class="subtitle">V(s), Q(s,a), optimality equations, contraction mapping, curse of dimensionality</p>
+
+    <p>Consider a 4×4 grid world with γ = 0.9. You want to know: what is the expected total reward — the value — of being at position (2,3) if you follow the optimal policy? To answer this, you need to know the value of neighboring positions, because your value here depends on where you can move next. But those values depend on their neighbors too. The circular dependency seems impossible to resolve — yet this is exactly what the Bellman equations do: they express the value of a state as a function of the values of its successors, turning a circular problem into a recursive one with a guaranteed fixed point.</p>
+    <p>The state value function under a policy π is V^π(s) = E_π[R_{t+1} + γ V^π(S_{t+1}) | S_t = s]. The value of a state equals immediate expected reward plus discounted expected value of the next state. This is the Bellman expectation equation — self-consistent, recursive, and for a fixed policy, linear enough to solve directly.</p>
+    <p>The optimal value function is V*(s) = max_a [R(s,a) + γ Σ_{s'} P(s'|s,a) V*(s')]. The value of the best possible policy equals the action that maximizes immediate reward plus discounted future value. The action-value function Q*(s, a) = R(s,a) + γ Σ_{s'} P(s'|s,a) max_{a'} Q*(s', a') is more practically useful: it tells you the value of taking action a in state s and then acting optimally, which means you can select actions directly via argmax_a Q*(s, a) without needing to model transitions.</p>
+    <p>Value iteration starts with an arbitrary value estimate and repeatedly applies the Bellman operator until convergence. Contraction mapping theory guarantees this converges to V* for finite MDPs. Policy iteration alternates between evaluating the current policy exactly and then improving it greedily. Both are guaranteed to find the optimal policy — but only in the tabular case.</p>
+    <p>NOT this: you need to know the transition model T(s, a, s') to use Bellman equations. Model-based RL uses the equations directly with a known or learned T. Model-free RL — Q-learning, TD learning — uses samples to estimate the Bellman updates without ever modeling T explicitly. The Bellman structure guides both approaches by telling you what quantity to estimate.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Learn the Q-function Q*(s, a), not V*(s), for most RL applications.</strong>
+
+Q*(s, a) tells you which action to take directly — argmax_a Q*(s, a) — without needing transition probabilities. V*(s) tells you how good a state is but not what to do, so unless you have a model of transitions, V alone cannot produce a policy.</li><li><strong>Tabular Q-learning is infeasible for large or continuous state spaces — this is not a performance issue, it is a physical impossibility.</strong>
+
+A robot with 6 joint angles discretized at 100 positions per joint has 10^12 states. Storing a Q-table for this requires more memory than exists. The moment the state space is too large to enumerate, you need function approximation — neural networks — which breaks the convergence guarantee.</li><li><strong>If Q-values grow without bound during training, the Bellman backup is diverging due to a feedback loop between the prediction and the target.</strong>
+
+The target y = R + γ max Q_θ(s') depends on the same θ being updated, so each gradient step shifts both the prediction and the target. Fix this with a target network: freeze θ^- for K steps so the target is stationary, then copy θ into θ^-.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>The Bellman equation turns the circular problem of value estimation into a recursive fixed point: the value of a state equals immediate reward plus discounted value of the best next state — and iterating this update is guaranteed to find the answer.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Bellman turns circular value estimation into a recursive fixed point.</strong></li><li><strong>Expectation eq:</strong> $V^\pi(s) = E_\pi[R_{t+1} + \gamma V^\pi(S_{t+1})]$ — linear for a fixed policy.</li><li><strong>Optimality eq is nonlinear</strong> because of the `max` operator: $V^*(s) = \max_a[R + \gamma \sum P(s'|s,a)V^*(s')]$.</li><li><strong>Learn $Q^*(s,a)$, not $V^*$:</strong> `argmax_a Q` gives the action with no transition model needed.</li><li><strong>Value/policy iteration converge</strong> via contraction mapping — but only in the tabular case.</li><li><strong>Tabular is a physical impossibility at scale:</strong> 6 joints × 100 positions = $10^{12}$ states. Need function approximation.</li><li><strong>Unbounded $Q$ during training = diverging Bellman backup.</strong> Fix with a frozen target network.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Write the Bellman optimality equation for Q*(s,a) and explain what makes it &quot;nonlinear,&quot; unlike the Bellman expectation equation.</p>
+      <ul class="check-opts"><li>A) Q*(s,a) = R(s,a) + γ Σ_{s'} P(s'|s,a) max_{a'} Q*(s',a') is nonlinear because P(s'|s,a) is a nonlinear stochastic function of the state and action</li><li>B) The Bellman optimality equation is nonlinear because Q*(s,a) appears on both sides of the equation, creating a circular dependency that cannot be resolved by matrix algebra</li><li class="correct">C) Q*(s,a) = R(s,a) + γ Σ_{s'} P(s'|s,a) max_{a'} Q*(s',a') is nonlinear due to the max_{a'} operator, unlike the Bellman expectation equation which uses Σ_{a'} π(a'|s') Q^π(s',a') — a linear weighted sum solvable as V^π = (I-γP^π)^{-1}R^π</li><li>D) The Bellman optimality equation is nonlinear because the discount factor γ multiplies Q* by itself recursively, producing a geometric series that requires nonlinear solvers</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> In policy iteration, why is policy improvement guaranteed to produce a policy at least as good as the current one? What is the formal argument?</p>
+      <ul class="check-opts"><li>A) Policy improvement is guaranteed because at each step the algorithm tries all possible policies and selects the best one, so it can never select a worse policy than the current one</li><li class="correct">B) The policy improvement theorem holds because π'(s) = argmax_a Q^π(s,a) means V^π(s) ≤ Q^π(s,π'(s)); expanding this inequality inductively through all future steps shows V^{π'}(s) ≥ V^π(s) everywhere, with strict improvement unless π was already optimal</li><li>C) Policy improvement is guaranteed to be non-decreasing because the greedy policy minimises the Bellman error, which by the contraction mapping theorem implies the policy value is at least as high</li><li>D) The guarantee follows from the fact that Q^π(s,a) ≥ V^π(s) for all actions a, so any policy derived from the Q-function will have a value at least as high as the current policy</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> You are implementing Q-learning with a neural network and notice Q-values growing unboundedly during training. What is happening and how do you fix it?</p>
+      <ul class="check-opts"><li class="correct">A) Q-value divergence is caused by bootstrapping instability: the target y = R + γ max_{a'} Q_θ(s',a') depends on the same θ being updated, creating a positive feedback loop; fixes include a target network (freeze θ^- for K steps), gradient/reward clipping, and a lower learning rate</li><li>B) Unbounded Q-values are caused by a reward function that is not bounded; the fix is to clip rewards to [-1, 1] and the problem will resolve itself without any architectural changes</li><li>C) The issue is that the neural network has too many parameters, causing it to memorise the training data and extrapolate Q-values to infinity for unseen states; the fix is to reduce network size</li><li>D) Q-value divergence is caused by using a replay buffer with too many transitions; old transitions from earlier in training have incorrect Q-value targets that destabilise current training</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> How many states does a simplified Atari game environment like Pong have, and why does this make tabular DP completely impractical?</p>
+      <ul class="check-opts"><li>A) Pong has approximately 10^6 states (discretised pixel values), which is borderline tractable but too slow for real-time training without specialised hardware</li><li>B) Pong has roughly 10^20 states after preprocessing, which is large but could in theory be handled by distributed computing across a data centre</li><li>C) Pong has exactly 84×84×3 = 21,168 states after DQN preprocessing, which makes tabular DP tractable in theory but too slow in practice due to the large action space</li><li class="correct">D) Pong preprocessed to 84×84 grayscale pixels has 2^{7056} states — vastly larger than the atoms in the observable universe (~2^{266}); tabular DP requires storing V*(s) for every s and running Bellman updates over all states, which is physically impossible; DQN parameterises the value function in a compressed ~10M-parameter space instead</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#rl_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

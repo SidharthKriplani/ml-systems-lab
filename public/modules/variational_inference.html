@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Variational Inference | ML Systems Lab</title>
+  <meta name="description" content="ELBO, KL divergence, mean field VI, CAVI, stochastic VI — when to use over MCMC">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/variational_inference.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/variational_inference.html">
+  <meta property="og:title" content="Variational Inference | ML Systems Lab">
+  <meta property="og:description" content="ELBO, KL divergence, mean field VI, CAVI, stochastic VI — when to use over MCMC">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Variational Inference">
+  <meta name="twitter:description" content="ELBO, KL divergence, mean field VI, CAVI, stochastic VI — when to use over MCMC">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Variational Inference",
+  "description": "ELBO, KL divergence, mean field VI, CAVI, stochastic VI — when to use over MCMC",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/variational_inference.html",
+  "keywords": "variational inference, ELBO, KL divergence, mean field, CAVI, stochastic VI"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#probabilistic_ml_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">60 min read</span>
+      <span class="tag">variational inference</span><span class="tag">ELBO</span><span class="tag">KL divergence</span><span class="tag">mean field</span><span class="tag">CAVI</span>
+    </div>
+    <h1>Variational Inference</h1>
+    <p class="subtitle">ELBO, KL divergence, mean field VI, CAVI, stochastic VI — when to use over MCMC</p>
+
+    <p>You want to fit a topic model (LDA) to 100,000 documents. The exact posterior P(topics | documents) requires summing over all possible topic assignments for every word in every document — exponential in the number of words. You cannot compute it. MCMC could sample from it, but running chains long enough to converge on 100,000 documents takes hours to days. You need a tractable alternative that scales with the data. This is the problem variational inference solves.</p>
+    <p>Variational inference reframes posterior computation as optimization. Instead of computing the true posterior p(z|x), you pick a simpler family of distributions q(z; φ) — typically factorized Gaussians or Dirichlet distributions — and find the member of that family closest to the true posterior. &quot;Closest&quot; is measured by KL divergence. You minimize KL(q ‖ p) by maximizing the ELBO (Evidence Lower Bound): ELBO = E_q[log p(x, z)] - E_q[log q(z)]. The ELBO is a lower bound on log p(x). Maximizing it pushes q as close to p as possible while keeping q tractable.</p>
+    <p>The mechanism: ELBO = log p(x) - KL[q(z) ‖ p(z|x)]. Since KL ≥ 0, ELBO ≤ log p(x) always. Maximizing ELBO is exactly equivalent to minimizing KL[q ‖ p(z|x)] — they are the same objective. Once you can compute and differentiate the ELBO, the posterior approximation reduces to gradient descent. Stochastic VI uses minibatch gradient estimates, reducing cost to O(batch_size) per update. This is how VI scales to millions of examples — making LDA at scale, SVGP, and VAE training all tractable.</p>
+    <p><strong>NOT this.</strong> &quot;Variational inference always gives accurate posteriors.&quot; The approximation quality depends entirely on the variational family. Mean-field VI — the fully factorized assumption q(z) = ∏ᵢ qᵢ(zᵢ) — assumes all latent variables are independent. Real posteriors almost always have correlations. Mean-field ignores all of them. The result: predictions are overconfident because the approximate posterior is too narrow. The forward KL[q ‖ p] is mode-seeking — it concentrates on one posterior mode and ignores others, systematically underestimating posterior variance. When posterior accuracy matters more than speed (clinical decision making, scientific inference), use richer variational families (normalizing flows) or MCMC. Mean-field VI is not a universal approximate Bayesian method; it is a fast approximation with known failure modes.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>The ELBO (Evidence Lower Bound): log p(x) = ELBO(q) + KL[q(z) ‖ p(z|x)].</strong> Since KL ≥ 0, ELBO ≤ log p(x) always. Maximising the ELBO is equivalent to minimising KL[q(z) ‖ p(z|x)]. Written out: ELBO = E_q[log p(x|z)] + E_q[log p(z)] - E_q[log q(z)] — reconstruction quality plus how close q is to the prior. This is why VAEs maximise a lower bound rather than the true likelihood: the true likelihood requires integrating over z, which is the integral we're trying to avoid.</li><li><strong>Mean field VI assumes q(z) = ∏ᵢ qᵢ(zᵢ) — each latent variable is independent in the approximate posterior.</strong> Real posteriors almost always have correlations between latent variables. Mean field ignores all of them. The result: each marginal qᵢ can look correct individually while the joint approximation is completely wrong — a diagnostic you only catch by inspecting the joint samples, not the marginals.</li><li><strong>CAVI (Coordinate Ascent Variational Inference) updates each qᵢ(zᵢ) one at a time, holding all others fixed.</strong> The optimal update is qᵢ*(zᵢ) ∝ exp(E_{−i}[log p(z,x)]). With conjugate priors, these updates have closed forms that look like EM. Without conjugacy, you need gradient-based VI via the reparameterisation trick — which is what makes VAEs trainable.</li><li><strong>Why VI underestimates uncertainty: VI minimises KL[q ‖ p] = E_q[log q - log p].</strong> This penalises q for putting mass where p is small, but never penalises q for failing to cover regions where p is large. The result: q concentrates on one mode of a multimodal posterior and ignores the rest. The reverse KL[p ‖ q] is mass-covering — it would spread q across all modes — but it's computationally harder. The choice of forward KL is what makes VI tractable and also what makes it systematically overconfident.</li><li><strong>Stochastic VI scales CAVI to large datasets.</strong> Standard CAVI sweeps all n points per update — O(n) per iteration. Stochastic VI uses minibatch ELBO gradient estimates with SGD/Adam, reducing cost to O(batch_size) per update. This is how VI runs on millions of examples — used in LDA at scale, SVGP, and the encoder-decoder training loop of VAEs. The price is noisier gradient estimates, but the variance is usually manageable with standard variance reduction.</li><li><strong>VI vs MCMC: MCMC is asymptotically exact — given infinite time, it converges to the true posterior.</strong> VI is biased — it converges to the best approximation within the chosen family, not the true posterior. Use VI when n is large and approximate uncertainty is acceptable. Use MCMC when exact uncertainty is the actual deliverable — scientific inference, clinical decision support — and you can afford the runtime. The choice is not about which is &quot;better&quot; but about whether you need exact uncertainty or approximate uncertainty quickly.</li><li><strong>Amortised VI trains an inference network to predict q(z|x) directly from x, rather than running iterative CAVI per datapoint.</strong> VAEs use this: the encoder outputs μ(x), σ(x) defining q(z|x) = N(μ(x), σ(x)²). Inference at test time is one forward pass. The cost is that the encoder is a single learned function shared across all datapoints — it trades per-datapoint accuracy for inference speed.</li><li><strong>The most common VI failure: the ELBO converges but posteriors are too narrow and predictions are overconfident, because Q is too restrictive for the true posterior.</strong> A diagonal Gaussian mean field cannot represent correlated latent variables. If the ELBO at convergence is much lower than the log evidence from a short MCMC run, the variational gap is large — you need a richer family such as normalising flows or hierarchical VI.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>VI is biased by construction: it minimises KL[q ‖ p], which is mode-seeking, so it concentrates on one posterior mode and systematically underestimates uncertainty. Tight VI posteriors do not mean the true posterior is tight — they may mean VI found one mode and ignored the rest. The practical choice is: VI when scalability matters and approximate uncertainty is acceptable; MCMC when exact uncertainty is the deliverable and you can afford the runtime.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>VI reframes inference as optimisation:</strong> pick tractable $q(z;φ)$, minimise $KL[q | p]$ by maximising the ELBO.</li><li><strong>ELBO = log p(x) − KL[q ‖ p(z|x)]</strong> — a lower bound (KL ≥ 0); maximising ELBO ≡ minimising KL to the true posterior.</li><li><strong>Mean-field $q(z)=prod_i q_i(z_i)$ assumes independence</strong> — real posteriors are correlated; marginals can look right while the joint is wrong.</li><li><strong>Forward $KL[q | p]$ is mode-seeking</strong> — concentrates on one mode, systematically underestimates uncertainty (overconfident).</li><li><strong>Stochastic VI scales it:</strong> minibatch ELBO gradients, $O(	ext{batch})$/step → runs on millions (LDA, SVGP, VAEs).</li><li><strong>Amortised VI:</strong> an inference network predicts $q(z|x)$ in one forward pass (the VAE encoder) — trades per-datapoint accuracy for speed.</li><li><strong>VI biased, MCMC asymptotically exact:</strong> VI when scale matters and approx uncertainty is fine; MCMC when exact uncertainty is the deliverable.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Explain why the ELBO is a lower bound on log p(x) and why maximising it is equivalent to minimising KL[q ‖ p(z|x)].</p>
+      <ul class="check-opts"><li>A) The ELBO is a lower bound because log p(x) ≥ 0 by definition; maximising it tightens the bound from below until it reaches the true log-likelihood.</li><li>B) The ELBO lower-bounds log p(x) via the Cauchy-Schwarz inequality; maximising ELBO is equivalent to minimising the reverse KL[p(z|x) ‖ q], which spreads q across all posterior modes.</li><li class="correct">C) By Jensen's inequality (log is concave), log E_q[p(x,z)/q(z)] ≥ E_q[log p(x,z)/q(z)] = ELBO. The gap equals KL[q ‖ p(z|x)] ≥ 0, so maximising ELBO over q exactly minimises KL[q ‖ p(z|x)].</li><li>D) The ELBO lower-bounds log p(x) because it omits the reconstruction term; maximising it is equivalent to maximising the prior entropy of q.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Your mean field VI model gives very tight posteriors (narrow q distributions) but makes poor predictions. What is likely happening and how do you diagnose it?</p>
+      <ul class="check-opts"><li class="correct">A) VI has converged to a single posterior mode due to the mode-seeking forward KL. Diagnose by comparing ELBOs across random initialisations, running short MCMC chains for comparison, and checking posterior predictive sample diversity.</li><li>B) The learning rate is too high, causing the ELBO to oscillate rather than converge; reduce the learning rate and rerun.</li><li>C) The model is underfitting because the variational family is too expressive; switch to a simpler mean-field family with fewer parameters.</li><li>D) Tight posteriors always indicate correct convergence; poor predictions mean the likelihood function is misspecified and unrelated to VI.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> What is the difference between CAVI and black-box variational inference (BBVI), and when does each apply?</p>
+      <ul class="check-opts"><li>A) CAVI uses stochastic gradients while BBVI uses exact gradients; CAVI is faster but requires GPU hardware while BBVI runs on CPU.</li><li class="correct">B) CAVI requires conjugate prior-likelihood pairs for closed-form coordinate updates; BBVI estimates ELBO gradients via Monte Carlo and applies to any differentiable model, using reparameterisation to reduce gradient variance.</li><li>C) CAVI and BBVI are equivalent algorithms with different names; the choice is purely stylistic.</li><li>D) BBVI requires conjugate priors while CAVI works for any model; CAVI is used in VAEs and BBVI in LDA.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#probabilistic_ml_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

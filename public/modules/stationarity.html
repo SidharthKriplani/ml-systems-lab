@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stationarity &amp; Differencing | ML Systems Lab</title>
+  <meta name="description" content="Unit root tests, spurious regression, integration order, cointegration">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/stationarity.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/stationarity.html">
+  <meta property="og:title" content="Stationarity &amp; Differencing | ML Systems Lab">
+  <meta property="og:description" content="Unit root tests, spurious regression, integration order, cointegration">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Stationarity &amp; Differencing">
+  <meta name="twitter:description" content="Unit root tests, spurious regression, integration order, cointegration">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Stationarity & Differencing",
+  "description": "Unit root tests, spurious regression, integration order, cointegration",
+  "proficiencyLevel": "Foundational",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/stationarity.html",
+  "keywords": "stationarity, unit-root, differencing, cointegration, ADF, KPSS"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#time_series_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Foundational</span>
+      <span class="read-time">35 min read</span>
+      <span class="tag">stationarity</span><span class="tag">unit-root</span><span class="tag">differencing</span><span class="tag">cointegration</span><span class="tag">ADF</span>
+    </div>
+    <h1>Stationarity &amp; Differencing</h1>
+    <p class="subtitle">Unit root tests, spurious regression, integration order, cointegration</p>
+
+    <p>Regress two independent random walks against each other and you'll get R² near 1 and t-statistics in double digits — not because they're related, but because both are trending. That's spurious regression, and it invalidates every downstream conclusion.</p>
+    <p>It's the reason stationarity matters: non-stationary series have growing variance and shifting means, so the statistical tests that assume constant moments produce completely unreliable results. The ADF and KPSS tests tell you whether you have a unit root; differencing removes trends; seasonal differencing removes periodicity. The flip side of non-stationarity is cointegration — two non-stationary series can share a long-run equilibrium whose spread is stationary, and error correction models exploit that structure rather than discarding it.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Two random walks regressed against each other will look strongly related — R² &gt; 0.5, |t| &gt; 2 — with zero true relationship.</strong> The tell is Durbin-Watson near 0: residuals are nearly perfectly autocorrelated, which is the signature of a spurious regression between two non-stationary series. OLS standard errors assume independent residuals; when they're serially correlated, standard errors are severely underestimated and all inference collapses. This is not a small-sample problem — it gets worse with more data.</li><li><strong>Weak (covariance) stationarity requires three properties: constant mean E[Y_t] = μ, constant variance Var(Y_t) = σ², and autocovariance Cov(Y_t, Y_{t-k}) = γ(k) that depends only on lag k, not on t.</strong> A random walk
+
+$Y_t = Y_{t-1} + ε_t violates all three — variance grows as tσ², so the series wanders without bound. O$
+
+ne difference gives ΔY_t = ε_t, which is stationary. The I(d) notation means d differences are needed to achieve stationarity.</li><li><strong>ADF test has H₀: unit root present, H₁: stationary.</strong> Includes lags of ΔY_t to purge residual autocorrelation. Critical values are non-standard (more negative than t-distribution). The test has low power in small samples and often fails to reject even when the series is trend-stationary. KPSS flips the null: H₀ is stationary, H₁ is unit root. Running both together resolves ambiguity: ADF rejects and KPSS doesn't reject → stationarity. ADF doesn't reject and KPSS rejects → unit root. Both rejecting → possible fractional integration or local non-stationarity.</li><li><strong>Trend-stationary and difference-stationary series look similar in plots but require different treatment.</strong> A trend-stationary series (Y_t = α + βt + ε_t) should be detrended — regress out the linear trend and model residuals. A difference-stationary series needs differencing. The error matters: detrending a difference-stationary series leaves residuals that still have a unit root. Differencing a trend-stationary series removes real signal and induces unnecessary MA structure.</li><li><strong>Cointegration is the productive flip side of non-stationarity.</strong> Two I(1) series X_t and Y_t are cointegrated when there exists β such that Y_t − βX_t is I(0). The spread is stationary even though the individual series are not. Economically, the series share a long-run equilibrium. The Engle-Granger test runs ADF on the residuals of a regression of Y on X. The Johansen trace/max-eigenvalue test handles multiple cointegrating vectors simultaneously.</li><li><strong>Error Correction Model: ΔY_t = α(Y_{t-1} − βX_{t-1}) + short-run dynamics.</strong> The error-correction term α(Y_{t-1} − βX_{t-1}) pulls the system back toward equilibrium; α &lt; 0 ensures mean reversion. If you difference cointegrated series without including the error-correction term, you throw away the long-run relationship. The short-run model (first differences) tells you about dynamics; the error-correction term tells you about the equilibrium.</li><li><strong>Stationarity is not a one-time check at model training time.</strong> A series that was stationary from 2015-2019 can develop a unit root after a structural shift (new competitor, regulatory change, macroeconomic shock). Rolling ADF tests with a sliding window, CUSUM tests on residuals, or online variance monitoring catch this. A single ADF on historical data at training time is insufficient for a deployed model — stationarity must be monitored continuously in production.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Stationarity is not a box to check once at model training time — spurious regression is the immediate consequence of skipping it, and structural breaks mean a series that was stationary at training time may not be stationary in production. The most important inference to demonstrate is knowing when two non-stationary series should be modelled jointly (cointegration + ECM preserves the long-run relationship) versus separately in first differences (when no cointegrating vector exists and the long-run relationship is meaningless).</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Spurious regression:</strong> two random walks → R²&gt;0.5, |t|&gt;2, DW≈0, zero true relation.</li><li><strong>Weak stationarity = constant mean + variance + lag-only autocovariance γ(k).</strong></li><li><strong>ADF (H₀: unit root) + KPSS (H₀: stationary) run together resolve ambiguity.</strong></li><li><strong>Trend-stationary → detrend; difference-stationary → difference.</strong> Wrong choice leaves a unit root or induces MA noise.</li><li><strong>Cointegration:</strong> two I(1) series, spread I(0) — model jointly via ECM, don't difference away the equilibrium.</li><li><strong>ECM:</strong> `α(Y_{t-1}−βX_{t-1})` term, α&lt;0 pulls back to equilibrium.</li><li><strong>Not a one-time check:</strong> structural breaks kill stationarity in production — monitor with rolling ADF/CUSUM.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You regress daily revenue on daily temperature for 3 years and get R² = 0.72 with t-stat = 18. The DW statistic is 0.12. What is wrong and how do you fix it?</p>
+      <ul class="check-opts"><li>A) The model is correctly specified; DW near 0 confirms no autocorrelation, so the high R² reflects genuine co-movement between revenue and temperature.</li><li class="correct">B) DW ≈ 0.12 indicates near-perfect residual autocorrelation — a hallmark of spurious regression. Test both series with ADF/KPSS; if both I(1) test for cointegration; if not cointegrated work in first differences (ΔRevenue on ΔTemperature); if cointegrated use an ECM.</li><li>C) The issue is heteroskedasticity, not autocorrelation. Apply White robust standard errors and the regression remains valid.</li><li>D) DW near 0 means the model is over-differenced. Re-fit without differencing and the spurious correlation disappears.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> ADF says your series is stationary but KPSS also rejects its null. What does this mean and what do you do?</p>
+      <ul class="check-opts"><li>A) Both tests rejecting confirms the series is definitely stationary — ADF is the stronger test, so difference once and proceed.</li><li>B) The conflicting signals are a data quality issue; collect more observations and re-run both tests before drawing any conclusion.</li><li>C) KPSS rejecting can be ignored when ADF rejects stationarity; KPSS has lower power and its null rejection is unreliable in small samples.</li><li class="correct">D) Both rejecting suggests fractional integration I(d) with 0 &lt; d &lt; 1, local stationarity with structural breaks, or too-short a sample. Test for structural breaks (Zivot-Andrews), try ARFIMA, and do not blindly difference.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> You have two financial time series (stock price and its futures contract price) that are both I(1). How do you decide whether to model them separately in first differences or jointly?</p>
+      <ul class="check-opts"><li class="correct">A) Test for cointegration using the Johansen trace test. Spot and futures are theoretically cointegrated by no-arbitrage; if one cointegrating vector is found, use a VECM — modelling each in first differences ignores the long-run equilibrium and discards valuable information.</li><li>B) Always model them separately in first differences; cointegration is a theoretical concept that rarely holds in practice with real financial data.</li><li>C) Use the Engle-Granger two-step on the levels; if the residuals are I(0) then cointegration is confirmed and you can proceed with OLS on levels directly.</li><li>D) Run cross-correlation between the two series; if it is above 0.9 then model jointly, otherwise use first differences for both series independently.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> Your revenue series passes ADF stationarity test. You fit an ARIMA(1,0,1) and the residuals look clean. Six months later the model performance degrades sharply. What likely happened and how do you detect it earlier?</p>
+      <ul class="check-opts"><li>A) The ARIMA order was mis-specified at training time; re-running auto-ARIMA on the full dataset including the degraded period will identify the correct orders.</li><li>B) The model likely overfit during training; reduce the AR and MA orders to avoid capturing noise, and performance will recover.</li><li class="correct">C) A structural break changed the underlying data-generating process. Detect it earlier with rolling ADF over a 90-180 day window, CUSUM/MOSUM tests on rolling mean/variance, and a CUSUM chart on forecast errors.</li><li>D) Stationarity guarantees model stability indefinitely; the degradation is caused by an upstream data pipeline issue rather than a modelling problem.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#time_series_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feature Importance Drift | ML Systems Lab</title>
+  <meta name="description" content="SHAP drift, permutation importance over time, what it reveals">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/feature_importance_drift.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/feature_importance_drift.html">
+  <meta property="og:title" content="Feature Importance Drift | ML Systems Lab">
+  <meta property="og:description" content="SHAP drift, permutation importance over time, what it reveals">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Feature Importance Drift">
+  <meta name="twitter:description" content="SHAP drift, permutation importance over time, what it reveals">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Feature Importance Drift",
+  "description": "SHAP drift, permutation importance over time, what it reveals",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/feature_importance_drift.html",
+  "keywords": "feature importance, SHAP drift, model interpretation, monitoring"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#monitoring_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">20 min read</span>
+      <span class="tag">feature importance</span><span class="tag">SHAP drift</span><span class="tag">model interpretation</span><span class="tag">monitoring</span>
+    </div>
+    <h1>Feature Importance Drift</h1>
+    <p class="subtitle">SHAP drift, permutation importance over time, what it reveals</p>
+
+    <p>A fraud model went live six months ago. On day one its top features were `transaction_velocity` (0.32), `device_age` (0.21), `ip_reputation` (0.18). Six months later the order has flipped: `ip_reputation` (0.38), `transaction_velocity` (0.12), `device_age` (0.09). IP reputation has quietly become the model's dominant signal. Why?</p>
+    <hr>
+    <h3>The cause is the model's own side of the world</h3>
+    <p>The fraud team spent those six months aggressively blocking high-risk IPs. So the fraud that *survived* now comes from addresses that were never flagged — the leftover fraud has low-risk IP reputation. The model dutifully learned that &quot;low-reputation IP&quot; is now the reliable tell, because that's what surviving fraud looks like. The catch: it's now leaning on a signal that its own upstream actions made gameable, which makes it far more exposed to IP spoofing. The model adapted to a world that its own team reshaped.</p>
+    <hr>
+    <h3>Why this is worth monitoring at all</h3>
+    <p>Feature importance drift isn't just &quot;what the model is doing&quot; — it's a read on *how the world moved relative to the model's assumptions.* Four things drive it: a feature's distribution narrows, shrinking its discriminative power; the target population shifts (from the model's own actions or outside forces), changing which examples remain; a feature's quality degrades from a pipeline bug, going noisy or partly null; or a brand-new correlation appears as behavior changes.</p>
+    <p>To watch it, compute SHAP or permutation importance on a rolling sample of ~1,000 production predictions per week, track the top-K over time, and alert when a feature's rank moves more than 3 places or its importance changes by more than 20%.</p>
+    <hr>
+    <p><strong>The mental correction:</strong> importance is *not* a fixed property of the model. It's a joint property of the model <strong>and</strong> the input distribution — the same weights yield different importances when the inputs shift. That's what makes it such a sensitive probe: a pipeline bug that corrupts one feature shows up in importance drift within days, well before it has piled up enough label evidence to move the accuracy metric.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Monitor SHAP-based feature importance weekly on a rolling production sample — it catches feature pipeline degradation and concept drift earlier than any accuracy-based metric.</strong> A feature that drops from rank 2 to rank 15 in one week has either lost its signal (distribution collapsed) or its pipeline broke. Either way, you know where to look before accuracy confirms the damage.</li><li><strong>Trap: using training-time feature importance as the production reference.</strong> Training importance reflects the training distribution. Compute production importance from actual production traffic and compare to your deployment-day baseline, not training-day baseline. The deployment-day baseline is your &quot;healthy production&quot; reference — it captures the live feature distribution, not the historical training distribution.</li><li><strong>Diagnostic: if importance shifts without a corresponding drift in that feature's own distribution, the target-feature relationship has changed — this is concept drift.</strong> If importance shifts alongside distribution drift for that feature, the feature pipeline is the likely cause. The distinction determines whether you retrain (concept drift) or fix the pipeline (infrastructure drift). Running both feature distribution monitoring and importance monitoring in parallel gives you this diagnosis within one week.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Feature importance drift reveals how the world changed relative to the model's assumptions — a rank drop before accuracy moves means you have a week to fix a pipeline bug instead of a week after the damage is done.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Importance is joint, not fixed:</strong> a property of model AND input distribution, so it shifts when inputs shift.</li><li><strong>Rank flips reveal how the world moved:</strong> `ip_reputation` rose to #1 because blocking left only low-reputation fraud.</li><li><strong>Four drivers:</strong> narrowing distribution, population shift, pipeline degradation, or a new correlation.</li><li><strong>Compute SHAP/permutation on ~1,000 rolling predictions/week; alert on rank move &gt;3 or importance change &gt;20%.</strong></li><li><strong>Baseline against deployment-day, not training-day</strong> — training importance reflects the wrong distribution.</li><li><strong>Shift without distribution drift = concept drift; shift with it = pipeline</strong> — run both to get the diagnosis.</li><li><strong>Catches pipeline bugs in days</strong>, before enough label evidence moves accuracy.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> SHAP drift analysis shows that &quot;device_type&quot; has gone from importance rank 2 to rank 19 over the past month. What does this mean and what do you investigate?</p>
+      <ul class="check-opts"><li>A) The model has overfit to device_type during training; the rank drop means production data is restoring the correct lower importance — no investigation needed</li><li class="correct">B) device_type became much less influential; investigate data drift (new device types dominating traffic), concept drift (device_type-target relationship weakened), or a feature pipeline issue returning null/unknown for many users</li><li>C) SHAP rank changes are unreliable noise; only permutation importance on labelled data can confirm a real change — wait for weekly permutation importance results before acting</li><li>D) The rank drop confirms concept drift affecting all features equally; the correct response is immediate full retraining on the last 30 days of data</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> `ip_reputation` climbs from rank 3 to rank 1 over three months while its own input distribution stays stable. What does the stable distribution most directly imply?</p>
+      <ul class="check-opts"><li class="correct">A) The target-feature relationship changed — importance shifted without distribution drift, which points to concept drift rather than a pipeline issue</li><li>B) The feature pipeline for `ip_reputation` broke, since importance only ever moves when a feature's distribution drifts underneath it</li><li>C) Nothing actionable — a stable distribution means the rank change is SHAP sampling noise that will revert next week</li><li>D) The base rate P(Y) rose, mechanically inflating every feature's importance equally, so the rank order is unchanged in reality</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Why must production feature importance be baselined against the deployment-day reference rather than training-time importance?</p>
+      <ul class="check-opts"><li>A) Training importance is computed with a different algorithm than SHAP, so the two numbers are on incomparable scales entirely</li><li class="correct">B) Training importance reflects the training distribution; the deployment-day baseline captures the live feature distribution, which is the correct &quot;healthy production&quot; reference</li><li>C) Deployment-day importance is cheaper to compute, so it is preferred purely to reduce the weekly monitoring cost on a rolling sample</li><li>D) Training importance is unavailable after deployment because the training set is discarded once the model ships to production</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#monitoring_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

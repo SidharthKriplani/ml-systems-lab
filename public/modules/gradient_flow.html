@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gradient Flow | ML Systems Lab</title>
+  <meta name="description" content="How gradients travel backward through deep networks — and why they vanish or explode.">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/gradient_flow.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/gradient_flow.html">
+  <meta property="og:title" content="Gradient Flow | ML Systems Lab">
+  <meta property="og:description" content="How gradients travel backward through deep networks — and why they vanish or explode.">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Gradient Flow">
+  <meta name="twitter:description" content="How gradients travel backward through deep networks — and why they vanish or explode.">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Gradient Flow",
+  "description": "How gradients travel backward through deep networks — and why they vanish or explode.",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/gradient_flow.html",
+  "keywords": "gradient-flow, vanishing, exploding, resnet, chain-rule, depth"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#optimization_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">50 min read</span>
+      <span class="tag">gradient-flow</span><span class="tag">vanishing</span><span class="tag">exploding</span><span class="tag">resnet</span><span class="tag">chain-rule</span>
+    </div>
+    <h1>Gradient Flow</h1>
+    <p class="subtitle">How gradients travel backward through deep networks — and why they vanish or explode.</p>
+
+    <p>For years, deep networks were a great idea that nobody could actually train. Stack more layers and, in theory, the network learns richer things — but in practice the deep ones just refused to learn. The culprit turned out to be something subtle: how the *learning signal* travels backward through the layers.</p>
+    <p>Here is the picture. To learn, the network sends an error signal from the output back toward the input, layer by layer, telling each layer how to adjust. But at every layer that signal gets *multiplied* by the layer's local sensitivity. Multiply a number by something a bit less than 1 over and over — 0.25 × 0.25 × 0.25 … — and it shrinks toward nothing astonishingly fast. Multiply by something a bit more than 1 over and over and it blows up just as fast. So a signal that starts healthy at the output arrives at the early layers as either a <strong>vanished</strong> whisper (near zero) or an <strong>exploded</strong> scream (enormous). Either way, learning breaks.</p>
+    <hr>
+    <h3>Vanishing gradients — the whisper that fades to nothing</h3>
+    <p>The old sigmoid activation was the classic offender. Its local sensitivity is at most 0.25, and usually much less. Chain ten sigmoid layers together and the signal reaching the first layer is scaled by at most 0.25^10 — about a millionth of what left the output. The early layers get essentially *no* signal, so their weights barely move; the network learns only in its last few layers and wastes all its depth. This is exactly why deep sigmoid networks stalled.</p>
+    <p>The first fix was a better activation: <strong>ReLU</strong>, whose sensitivity is a clean 1 for any active neuron — it passes the signal through unchanged instead of shrinking it by a fraction. (ReLU has its own smaller catch: a neuron whose input stays negative outputs zero forever, a &quot;dead&quot; neuron. But it hugely reduced the vanishing problem.)</p>
+    <hr>
+    <h3>Exploding gradients — the whisper that becomes a scream</h3>
+    <p>The opposite failure shows up especially in <strong>RNNs</strong>, which process a sequence by applying the *same* weights at every time step. Unroll one over 200 steps and the signal gets multiplied by that weight matrix 200 times. If the matrix is even slightly &quot;bigger than 1&quot; in effect, 1.05 to the 200th power is about 17,000 — the signal explodes, the weights leap to absurd values, and the loss turns to NaN. The quick, blunt fix is <strong>gradient clipping</strong>: if the signal's overall size exceeds some cap, shrink it back to the cap while keeping its *direction* the same. A seatbelt, not a cure.</p>
+    <hr>
+    <h3>The real cures were architectural</h3>
+    <p>Clipping and ReLU helped, but the breakthroughs were changes to the architecture itself, all aimed at giving the signal a clean path home.</p>
+    <p><strong>Residual connections (ResNets)</strong> add a shortcut around each block: the block's output is &quot;what the block computes *plus* its own input.&quot; On the way back, that shortcut hands the signal a *direct* route to earlier layers that skips the multiplying entirely — so even a 100-layer network keeps a full-strength signal reaching layer 1. This one trick is why we can train networks hundreds of layers deep.</p>
+    <p><strong>LSTMs</strong> did the same for sequences. Instead of *multiplying* the signal through every time step (which explodes or vanishes), an LSTM carries a running memory that mostly gets *added to*. When its &quot;forget gate&quot; says &quot;hold on to this,&quot; the signal flows back across hundreds of steps almost untouched — a gradient highway through time — which is what finally let networks learn long-range patterns.</p>
+    <p><strong>Layer normalization</strong> helps too, by rescaling each layer's activations so they stay in the healthy middle range of the activation function, where the local sensitivity is largest and the signal does not get crushed.</p>
+    <p>The through-line: ReLU, clipping, residual connections, LSTM gates, and layer norm are not fancy representational upgrades. They are all *plumbing* — machinery whose entire job is to make sure the learning signal survives the trip backward through a deep network.</p>
+    <hr>
+    <h3>Initialisation: the first line of defence</h3>
+    <p>Before any of those fixes, the *starting* weights already decide whether the signal survives. If they're too large the activations explode; too small and they vanish — from step one. The principled fix is to scale the initial weights so the *variance* of the signal is preserved as it passes through each layer, in both the forward and backward directions. <strong>Xavier/Glorot</strong> initialisation does this for tanh/sigmoid (variance ≈ 1/fan_in, or 2/(fan_in+fan_out) to balance forward and backward). <strong>He/Kaiming</strong> initialisation is the ReLU version (variance ≈ 2/fan_in), the extra factor of 2 compensating for ReLU zeroing out half its inputs. Use He with ReLU, Xavier with tanh/sigmoid — the wrong one on a deep plain network reintroduces vanishing/exploding at initialisation.</p>
+    <hr>
+    <h3>BatchNorm versus LayerNorm</h3>
+    <p>Both stabilise the signal by normalising activations, but along *different axes*. <strong>BatchNorm</strong> normalises each feature *across the batch* — it depends on batch statistics, which makes it powerful for CNNs but batch-size-sensitive and awkward for variable-length sequences. <strong>LayerNorm</strong> normalises *across the features within a single example*, so it's independent of batch size and of other examples — which is exactly why it's the norm of choice in <strong>transformers and RNN-like</strong> models where sequences vary and batch statistics are unreliable. The axis is the whole distinction: BatchNorm across the batch, LayerNorm across the features.</p>
+    <hr>
+    <h3>Fixing dead ReLUs</h3>
+    <p>ReLU's &quot;dead neuron&quot; catch (input stuck negative → output zero forever → no gradient) has a family of fixes. <strong>Leaky ReLU</strong> gives a small negative slope so the neuron always passes *some* gradient. <strong>ELU</strong> and <strong>GELU</strong> (the transformer default) are smooth variants that keep a non-zero gradient for negative inputs. Beyond activations, <strong>better initialisation</strong> (He) and a <strong>lower learning rate</strong> reduce the chance a neuron gets pushed into the dead zone in the first place. If a large fraction of your ReLUs are dead (check activation histograms), that's the lever.</p>
+    <hr>
+    <h3>Transformers: residuals + norm, and where the norm goes</h3>
+    <p>Everything above is *why* transformers are built the way they are. Each transformer block wraps attention and the feed-forward network in <strong>residual connections</strong> and <strong>layer normalisation</strong> — that combination is what keeps gradients flowing through dozens of blocks. And *where* you put the norm matters: <strong>post-norm</strong> (the original, norm after the residual add) is harder to train deep and needs careful warmup; <strong>pre-norm</strong> (norm inside the residual branch, before attention/FFN) gives a cleaner gradient path and trains stably at great depth, which is why modern large models use it. &quot;Pre-norm vs post-norm&quot; is a real interview question about gradient stability, not a detail.</p>
+    <hr>
+    <h3>Reading gradient flow: the diagnostics</h3>
+    <p>You don't have to guess whether gradients are healthy — measure. <strong>Per-layer gradient norms</strong>: log the gradient magnitude at each layer; a healthy net keeps them within ~10× across layers, and a steep decay toward the input means vanishing. <strong>Activation histograms</strong>: watch for saturation (piling at the extremes) or lots of dead zeros. <strong>NaN/Inf checks</strong>: catch explosions the moment they appear. <strong>Weight-update ratios</strong>: the size of each step relative to the weight it updates should sit around 1e-3; far smaller means a layer is barely learning. These turn &quot;training is off&quot; into &quot;layer 2 is vanishing.&quot;</p>
+    <hr>
+    <h3>Symptom map, and what clipping can't fix</h3>
+    <p>Tell the two failures apart by their signatures. <strong>Vanishing</strong>: early-layer gradients near zero, those layers barely update, loss falls painfully slowly or stalls, and the network behaves shallow. <strong>Exploding</strong>: gradient norms blow up, loss oscillates wildly or goes NaN, weights leap to extremes. And be clear about clipping's limits: it's a <strong>seatbelt against catastrophic single steps</strong>, but it does *not* fix poor conditioning, a bad learning rate, bad initialisation, or slow long-term vanishing — if you're clipping on most steps, the real problem is upstream (LR too high, init wrong), and clipping is just masking it.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>The core mechanism: the backward signal is multiplied by each layer's sensitivity, so small factors vanish it and large ones explode it — exponentially with depth.</strong>
+
+Backpropagation sends the error from the output to the input one layer at a time, scaling it by each layer's local sensitivity as it goes. A chain of factors below 1 shrinks the signal toward zero (vanishing); a chain above 1 blows it up (exploding). The deeper the network, the more extreme it gets — which is why depth was so hard to train before the fixes below.</li><li><strong>Activations matter: sigmoid caused vanishing, ReLU mostly cured it.</strong>
+
+Sigmoid's sensitivity peaks at just 0.25, so ten layers can shrink the signal by a factor of a million and the early layers never learn. ReLU passes the signal through at full strength (sensitivity 1) for any active neuron, removing that per-layer shrink. ReLU's own catch is &quot;dead&quot; neurons — ones whose input stays negative and so output zero forever — but it was still the change that made deeper networks trainable.</li><li><strong>Exploding gradients hit RNNs hardest, and clipping is the seatbelt.</strong>
+
+An RNN applies the same weights at every step, so over a long sequence the signal is multiplied by that matrix again and again; if it is even slightly amplifying, the signal explodes and the weights blow up to NaN. Gradient clipping caps the overall size of the update while keeping its direction, so no single step is catastrophic. Clip by the whole-vector norm (rescale everything together), not per-component, or you distort the direction — norm clipping at 1.0 is the transformer default.</li><li><strong>The durable cures are architectural: give the signal a clean path home.</strong>
+
+Residual connections add a shortcut around each block, so the signal has a direct route back that skips the multiplying — which is why 100-plus-layer networks train. LSTMs carry a memory that is mostly *added* to rather than multiplied through, so when the forget gate says &quot;keep this,&quot; the signal flows back across hundreds of time steps almost intact. Layer normalization keeps activations in the healthy middle range where sensitivity is highest. All of it is plumbing to keep the backward signal alive.</li><li><strong>Initialisation comes first, and the normalisation axis matters.</strong>
+
+Scale initial weights to preserve signal variance forward and backward: He/Kaiming (variance 2/fan_in) for ReLU, Xavier/Glorot (1/fan_in) for tanh/sigmoid — the wrong one reintroduces vanishing/exploding at step one. BatchNorm normalises each feature across the batch (batch-size-sensitive, great for CNNs); LayerNorm normalises across features within one example (batch-independent, the transformer/RNN choice). Fix dead ReLUs with Leaky ReLU / ELU / GELU, better init, or a lower learning rate.</li><li><strong>Diagnose gradient flow directly, and know clipping's limits.</strong>
+
+Transformers stack residual connections + layer norm, and pre-norm (norm inside the residual branch) trains deeper and more stably than the original post-norm. Measure health with per-layer gradient norms (a steep decay toward the input = vanishing), activation histograms (saturation/dead zeros), NaN checks, and weight-update ratios (~1e-3). Read the symptoms: vanishing = early layers stall, loss crawls; exploding = NaN, oscillating loss, huge norms. Clipping is a seatbelt against catastrophic steps — it does not fix bad conditioning, LR, or init, so clipping on most steps means the real problem is upstream.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Gradient flow is the reason deep networks were impractical before 2010. Sigmoid saturates, vanishing the gradient. RNNs multiply the same matrix T times, exploding it. The solutions — ReLU, gradient clipping, residual connections, LSTM gates, layer norm — are all gradient infrastructure, not representational improvements. The network architectures we use today were designed around the constraint that gradients must survive the backward pass.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Core mechanism: the backward signal is multiplied by each layer's sensitivity as it propagates,</strong> so a chain of factors &lt; 1 shrinks it toward zero (vanishing) and a chain &gt; 1 blows it up (exploding) — and both compound *exponentially* with depth.</li><li><strong>Sigmoid caused the vanishing era:</strong> its sensitivity is ≤ 0.25, so $0.25^{10}$ ≈ a millionth reaches the first layer of a 10-layer net. <strong>ReLU mostly cured it</strong> with sensitivity 1 for active neurons, passing the signal through undiminished.</li><li><strong>Exploding gradients hit RNNs hardest</strong> because they multiply the *same* weight matrix T times through the sequence — even a factor slightly above 1 detonates to NaN. <strong>Gradient clipping</strong> caps the update's overall size while keeping its direction: a seatbelt against one catastrophic step.</li><li><strong>The durable cures are architectural, not tuning:</strong> residual connections give the gradient a direct identity route home, LSTM gates *add* to the cell state rather than repeatedly multiply, and layer norm keeps activations in the responsive range where sensitivities stay near 1.</li><li><strong>Initialization comes first — it's gradient flow at step zero:</strong> He (variance 2/fan_in) for ReLU, Xavier (1/fan_in) for tanh/sigmoid. The wrong recipe reintroduces vanishing or exploding from the very first forward pass, before the optimizer even runs.</li><li><strong>Norm axis is a correctness choice:</strong> BatchNorm normalizes a feature *across the batch* (batch-sensitive, used in CNNs); LayerNorm normalizes *across features* within one example (batch-independent, used in Transformers).</li><li><strong>Diagnose gradient flow directly:</strong> log per-layer gradient norms (a steep decay toward the input = vanishing), activation histograms (saturation / dead zeros), NaN checks, and weight-update ratios (~1e-3). If clipping fires on most steps, the real problem is upstream — bad conditioning, LR, or init — clipping won't fix those.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> A 20-layer sigmoid network barely trains, but a 20-layer ReLU network trains fine. What is the mechanistic difference in how the learning signal flows?</p>
+      <ul class="check-opts"><li>`A) The sigmoid outputs are stuck between 0 and 1, so its predictions collapse to 0.5 and the loss cannot drop below a floor; ReLU's unbounded outputs let it make confident predictions and reach lower loss.`</li><li>`B) Each sigmoid layer scales the backward signal by at most 0.25, so across 20 layers it shrinks by up to 0.25^20 (about 10⁻¹³) — the early layers get essentially nothing and never learn, and the network behaves like a shallow one. ReLU passes the signal at full strength (factor 1) through active neurons, so it does not shrink layer by layer the way sigmoid does.`</li><li>`C) The sigmoid network is actually exploding, not vanishing — its bounded outputs push activations toward 1 in every layer, forcing ever-larger weight updates; ReLU avoids this because its activations are not capped.`</li><li>`D) It is purely an initialization issue — sigmoid networks need very precise initial weights and fail without them, while ReLU is robust; a well-initialised sigmoid network would train just as well as the ReLU one.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Why can ResNets train with 100+ layers when a plain network of the same size cannot?</p>
+      <ul class="check-opts"><li>`A) Because ResNets put batch normalization between every block, which is what actually prevents vanishing gradients; the skip connections are secondary, and plain networks fail only because they lack batch norm.`</li><li>`B) Because the skip connections let the gradient bypass all 100 layers straight from output to input, so the optimizer only has to train each shallow residual function — while a plain network must train all 100 layers at once.`</li><li>`C) Because the skip connections start each residual block at zero, so the network begins as an identity map and only learns small deviations, which is easier than training from a random start.`</li><li>`D) Because the shortcut around each block gives the backward signal a direct route to earlier layers that skips the layer-by-layer multiplying. Even if every residual block contributed almost nothing, the signal still reaches layer 1 at full strength through the shortcuts — a gradient &quot;highway.&quot; A plain 100-layer network has no such path, so its signal must survive 100 multiplications and dies on the way.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Clipping the gradient by its norm versus by value: what is the difference, and which should you use for transformers?</p>
+      <ul class="check-opts"><li>`A) Clipping by value caps each component separately, so a component of 1000 and one of 0.001 end up wildly rescaled relative to each other — the update's direction changes. Clipping by norm rescales the whole vector together when it is too big, so every component shrinks by the same factor and the direction is preserved. Transformers use norm clipping (typically 1.0), because keeping the direction right matters, especially when different layers have very different gradient sizes.`</li><li>`B) They give identical results for transformers, because Adam already normalises each component before the clip and so undoes any directional distortion from value clipping — norm clipping only really matters for plain SGD.`</li><li>`C) Value clipping is preferred for transformers because their many attention heads act independently; norm clipping would over-shrink the small head gradients whenever one big gradient dominates the norm, while value clipping leaves the small ones alone.`</li><li>`D) They differ mainly in compute: norm clipping has to compute the vector norm, which adds real overhead on huge models, so production code often uses value clipping with a big threshold to skip that cost.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> An RNN trained on 200-character sequences shows wildly oscillating loss and NaN weights after 500 steps. What is happening, and what fixes it?</p>
+      <ul class="check-opts"><li>`A) Vanishing gradients — after 200 steps the signal for the early characters has decayed to zero, so the model ignores the start of the sequence; fix by raising the learning rate to amplify it and switching to a bidirectional RNN.`</li><li>`B) It is overfitting, not a gradient problem — the model memorised the sequences and flips between memorised and general predictions across batches; fix with heavy dropout, a smaller model, and L2 on the recurrent weights.`</li><li>`C) Exploding gradients. The same recurrent matrix is applied 200 times, so if it is even slightly amplifying, the signal grows exponentially (1.05^200 ≈ 17,000×), the weights leap to extremes, and the outputs go NaN. Fixes, in order: clip the gradient by norm (the standard first defence), switch to an LSTM or GRU (their gates keep the signal near full strength through the memory), and lower the learning rate to shrink each step.`</li><li>`D) It is a learning-rate problem unique to RNNs — touching 200 time steps at once effectively multiplies the learning rate by 200, so dividing the learning rate by 200 removes the instability entirely.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> You initialise a deep ReLU network with weights drawn from N(0, 1) and it fails to train — activations either explode or collapse across layers. What initialisation should you use and why?</p>
+      <ul class="check-opts"><li>`A) Xavier/Glorot initialisation (variance 1/fan_in), because it is the universal best choice for every activation function including ReLU.`</li><li>`B) He/Kaiming initialisation (variance 2/fan_in). Weights must be scaled to preserve the signal's variance as it passes through each layer, forward and backward; the factor of 2 specifically compensates for ReLU zeroing out roughly half its inputs. Xavier (1/fan_in) is calibrated for tanh/sigmoid and under-scales for ReLU, so on a deep ReLU net you use He.`</li><li>`C) Just make all initial weights very small (e.g. 0.001), which guarantees the signal never explodes regardless of activation.`</li><li>`D) Initialisation doesn't matter for ReLU networks because BatchNorm fixes any scaling issue, so keep N(0,1) and add BatchNorm.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q6.</strong> Why do transformers use LayerNorm rather than BatchNorm, and what does pre-norm (vs post-norm) placement change?</p>
+      <ul class="check-opts"><li>`A) LayerNorm is just a faster approximation of BatchNorm, and pre-norm vs post-norm only changes memory usage, not training stability.`</li><li>`B) BatchNorm normalises each feature across the batch, so it depends on batch statistics that are unreliable for variable-length sequences and small batches; LayerNorm normalises across the features within a single example, making it batch-independent — the right fit for transformers. Placement matters for gradient flow: post-norm (original) is harder to train deep and needs careful warmup, while pre-norm (norm inside the residual branch, before attention/FFN) gives a cleaner gradient path and trains stably at great depth, which is why modern large models use it.`</li><li>`C) Transformers use LayerNorm only because BatchNorm hadn't been invented yet; pre-norm and post-norm are mathematically identical.`</li><li>`D) LayerNorm normalises across the batch and BatchNorm across features — the opposite of the usual definitions — and pre-norm simply means normalising the inputs before training starts.`</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#optimization_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

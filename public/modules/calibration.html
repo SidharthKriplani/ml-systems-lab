@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Model Calibration | ML Systems Lab</title>
+  <meta name="description" content="Reliability diagrams, ECE, Platt scaling, isotonic regression">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/calibration.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/calibration.html">
+  <meta property="og:title" content="Model Calibration | ML Systems Lab">
+  <meta property="og:description" content="Reliability diagrams, ECE, Platt scaling, isotonic regression">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Model Calibration">
+  <meta name="twitter:description" content="Reliability diagrams, ECE, Platt scaling, isotonic regression">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Model Calibration",
+  "description": "Reliability diagrams, ECE, Platt scaling, isotonic regression",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/calibration.html",
+  "keywords": "calibration, ECE, Platt scaling, reliability"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#classical_ml_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">28 min read</span>
+      <span class="tag">calibration</span><span class="tag">ECE</span><span class="tag">Platt scaling</span><span class="tag">reliability</span>
+    </div>
+    <h1>Model Calibration</h1>
+    <p class="subtitle">Reliability diagrams, ECE, Platt scaling, isotonic regression</p>
+
+    <p>When a weather forecaster says &quot;70% chance of rain tomorrow,&quot; something quietly impressive is going on. Look back over all the days they said 70%, and it really did rain on about 70% of them. Their stated confidence matches reality. That property has a name — <strong>calibration</strong> — and it is exactly what most machine-learning models do *not* have, even good ones.</p>
+    <p>Here is the gap. A model can be excellent at *ranking* — putting the sick patients above the healthy ones, high-risk loans above low-risk ones — and still be hopeless at *probabilities*. Suppose it stamps &quot;90% chance of disease&quot; on a group of patients, but only 60% of them actually turn out sick. The ranking is fine (those patients really are higher-risk than the ones it scored 50%), but the number 0.9 is a lie. And the moment you *use* that number — to price insurance, to decide a treatment, to feed another model — the lie costs you.</p>
+    <hr>
+    <h3>Two different questions</h3>
+    <p>It helps to see that ranking and calibration answer different questions. <strong>Ranking</strong> (measured by AUC) asks: does the model put riskier cases above safer ones? <strong>Calibration</strong> asks: when the model says 0.7, does the thing happen 70% of the time? A model can ace one and flunk the other. A credit model might rank ten thousand applicants perfectly by risk yet lowball every probability — great for deciding who to approve, useless for estimating how much money you will lose. If your decision only needs the *order*, calibration may not matter. The instant it needs the actual *number*, it does.</p>
+    <hr>
+    <h3>How to see it: the reliability diagram</h3>
+    <p>There is a simple picture that reveals miscalibration at a glance. Take all the model's predictions, sort them into buckets (everything it called about 0.1, about 0.2, and so on), and for each bucket plot the predicted probability against the *actual* fraction that turned out positive. If the model is calibrated, every point lands on the diagonal line where &quot;predicted = actual.&quot; If the curve sags *below* the diagonal, the model is <strong>overconfident</strong> — it says 0.8 for things that happen only 0.6 of the time. If it rides *above*, the model is <strong>underconfident</strong>.</p>
+    <p>Miscalibration is the rule, not the exception — but the *shape* differs by model. Modern neural networks are famously <strong>overconfident</strong>: their reliability curves sag below the diagonal, saying 0.95 for things that happen 0.80 of the time. Random forests bend the *other* way: averaging many trees pushes probabilities *away* from 0 and 1 (a truly-positive case rarely gets every tree to vote yes, so the forest hesitates to say 0.99), giving a characteristic <strong>sigmoid</strong>-shaped curve — under-confident at the extremes, over-confident in the middle. Knowing your model's typical distortion tells you which correction to reach for.</p>
+    <hr>
+    <h3>The fix, and the one rule you cannot break</h3>
+    <p>You usually do not retrain to fix calibration — you patch it afterward. Hold out a separate slice of data (a <strong>calibration set</strong>), see how the model's scores line up with reality on it, and fit a small correcting function that bends the scores back onto the diagonal. Two common choices: <strong>Platt scaling</strong> fits a simple sigmoid — fast, needs little data, and works when the miscalibration is a smooth one-directional bend. <strong>Isotonic regression</strong> fits a more flexible staircase that can straighten out any shape, but it needs more data (roughly a thousand-plus points) or it just memorises the calibration set.</p>
+    <p>And the one rule you cannot break: <strong>the calibration set must be separate from both training and test.</strong> Calibrate on the training data and you are correcting against numbers the model already memorised — the fix looks perfect and fails in the wild. Calibrate on the test data and you have spoiled your only honest measure of how good the model really is. Train, calibrate, and test on three different slices. To put a single number on how calibrated you are, people use the <strong>expected calibration error (ECE)</strong> — the average gap between the buckets and the diagonal, where zero is perfect.</p>
+    <hr>
+    <h3>ECE's blind spots</h3>
+    <p>ECE is convenient but genuinely fragile, and interviewers probe this. It depends heavily on your <strong>binning</strong>: change the number of bins or use equal-width versus equal-count bins and the ECE number moves, sometimes a lot. It's biased by <strong>sample size</strong> (few points per bin makes the estimate noisy). Worst, it can <strong>hide local miscalibration</strong> — a model badly overconfident in one region and underconfident in another can post a small overall ECE because the errors average out. So don't reduce calibration to a single ECE number; always look at the reliability diagram, and consider class-conditional views.</p>
+    <hr>
+    <h3>The Brier score, and what it decomposes into</h3>
+    <p>A more complete single number is the <strong>Brier score</strong> — just the mean squared error between predicted probabilities and outcomes ($\frac{1}{N}\sum(\hat{p}_i - y_i)^2$). Its value is that it splits into three meaningful parts (the Murphy decomposition): <strong>reliability</strong> (calibration — are the probabilities honest?), <strong>resolution</strong> (discrimination — do the predictions actually separate outcomes?), and <strong>uncertainty</strong> (the irreducible base-rate difficulty). This is why Brier is richer than ECE: a model can be perfectly calibrated (great reliability) but useless (zero resolution, it always predicts the base rate), and Brier catches that where ECE alone would look fine.</p>
+    <hr>
+    <h3>Temperature scaling — the neural-network default</h3>
+    <p>For neural networks, the standard fix (from Guo et al., 2017) is <strong>temperature scaling</strong>: divide the logits by a single learned scalar T before the softmax. T &gt; 1 softens overconfident probabilities toward the middle; T &lt; 1 sharpens them. It's the simplest possible calibrator — *one* parameter fit on a validation set — and because it only rescales logits it <strong>leaves the ranking (and accuracy) completely unchanged</strong> while fixing the confidence. That single-parameter simplicity is exactly why it rarely overfits and became the go-to for deep models.</p>
+    <hr>
+    <h3>Calibrating more than two classes</h3>
+    <p>Multiclass calibration is trickier and worth flagging. You can calibrate <strong>one-vs-rest</strong> (one calibrator per class) but then the per-class probabilities no longer sum to 1 and need renormalising. You also have to decide *what* you're calibrating: <strong>top-label</strong> calibration (is the model's confidence in its top prediction honest?) versus <strong>classwise</strong> calibration (is every class's probability honest?). Multiclass ECE has to pick one of these, which is why a single multiclass calibration number is even easier to misread than the binary one. Temperature scaling sidesteps some of this by scaling all logits together.</p>
+    <hr>
+    <h3>Calibration is not thresholding</h3>
+    <p>Keep these two separate — they're often confused. <strong>Calibration</strong> fixes the *truthfulness* of the probability (0.7 should mean 70%). <strong>Thresholding</strong> picks the *decision cutoff* that turns a probability into an action, chosen from business costs. They're related — a well-calibrated probability makes threshold selection meaningful and transferable across contexts — but they're different steps. You calibrate so the number is honest, *then* threshold so the decision is optimal.</p>
+    <hr>
+    <h3>Calibration decays under drift</h3>
+    <p>Finally, calibration is not permanent. A model calibrated on last year's data can drift out of calibration as the world changes — <strong>covariate shift</strong> (the input mix moves) or <strong>concept drift</strong> (the relationship changes) both break it, even though your original test-set calibration looked perfect. So calibration is something to *monitor* in production (track ECE or reliability over time), not a one-time fix at training. When a deployed model's probabilities start lying, drift is the usual cause.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Calibration is whether the model's probabilities are literally true: when it says 0.7, does the thing happen 70% of the time?</strong>
+
+It is separate from accuracy and from ranking (AUC) — a model can rank cases perfectly yet report probabilities that are badly off. Calibration only matters when you actually *use* the probability: pricing, risk scores, medical decisions, or feeding another model in a stack. If you only need the ranking (who is riskier than whom), you can often ignore it. The moment a real number matters, check it.</li><li><strong>The trap: assuming a model's probabilities are trustworthy straight out of the box. Most are not.</strong>
+
+random forests are pushed *away* from 0 and 1 by tree-averaging (a sigmoid-shaped curve, under-confident at the extremes); modern neural networks are famously overconfident; SVMs do not really output probabilities at all. So do not read a raw score as a probability without checking. The check is a reliability diagram: bucket the predictions and compare each bucket's predicted probability to the actual rate. If the curve sags below the diagonal, the model is overconfident and needs a fix before its numbers can be trusted.</li><li><strong>The fix is a post-hoc patch on a separate calibration set — never the training or test set.</strong>
+
+Hold out a slice of data, see how the scores line up with reality on it, and fit a small correcting function: Platt scaling (a simple sigmoid, good when data is scarce and the bend is smooth) or isotonic regression (a flexible staircase, needs a thousand-plus points). Fit it on the calibration slice only. Calibrate on training data and the fix is fooled by memorised outputs; calibrate on test data and you have spoiled your honest score. Train, calibrate, and test on three different slices.</li><li><strong>Don't trust ECE alone — use the reliability diagram and the Brier score.</strong>
+
+ECE depends on binning choice and bin count, is noisy with few samples, and can hide local miscalibration (overconfident in one region, underconfident in another, averaging to a small number). The Brier score (mean squared error of probabilities) is richer because it decomposes into reliability (calibration), resolution (discrimination), and uncertainty — so it catches a perfectly-calibrated-but-useless model that always predicts the base rate. Always read the reliability diagram, not just a single scalar.</li><li><strong>Know temperature scaling, the multiclass subtleties, and that calibration ≠ thresholding — and decays under drift.</strong>
+
+Temperature scaling (Guo et al.) divides logits by one learned scalar T — the neural-network default, since it fixes confidence without changing ranking or accuracy. Multiclass calibration must choose top-label vs classwise and renormalise one-vs-rest outputs. Keep calibration (making the probability truthful) separate from thresholding (choosing the decision cutoff from costs). And calibration isn't permanent — covariate shift and concept drift break it even when the original test calibration looked perfect, so monitor ECE/reliability in production rather than treating it as a one-time fix.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>AUC tells you if a model ranks cases correctly; calibration tells you if its probabilities are actually true — when it says 0.7, does it happen 70% of the time? The two are separate, and most models (random forests, neural nets) come out overconfident. Whenever a decision uses the probability itself, plot the reliability diagram, and fix miscalibration with Platt scaling or isotonic regression on a separate calibration set — never on training or test.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>AUC = does it rank correctly. Calibration = are the probabilities literally true?</strong> Separate properties.</li><li><strong>Calibrated means: when it says 0.7, the thing happens ~70% of the time.</strong></li><li><strong>Most models come out overconfident</strong> (random forests, neural nets).</li><li><strong>Whenever a decision uses the probability itself, plot the reliability diagram.</strong></li><li><strong>Fix with Platt scaling or isotonic regression</strong> on a separate calibration set — never train or test.</li><li><strong>Don't trust ECE alone</strong> — pair it with the reliability diagram and the Brier score.</li><li><strong>Calibration ≠ thresholding, and it decays under drift.</strong></li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> A neural network stamps 0.9 on a batch of cases, but only 60% of them are actually positive. What is wrong, and how do you fix it?</p>
+      <ul class="check-opts"><li>`A) It is overconfident — its 0.9 means about 0.6 in reality. Patch it after training: on a separate calibration set, fit a correcting function (Platt or temperature scaling, or isotonic regression if you have enough data) that maps the raw scores back onto the true rates, then apply it at prediction time. Check the result on a different test set.`</li><li>`B) It is underconfident — since most of the 0.9 cases really are positive, the model is basically right, and you only need to act if the calibration error climbs above 0.15 on the full validation set.`</li><li>`C) Nothing is wrong with the probabilities; the network simply needs more epochs so the outputs settle closer to 0.6, after which those 0.9 outputs will drift down on their own with no other change.`</li><li>`D) The labels on those cases are noisy; relabel the batch so its positive rate matches 0.9, and the reported probability becomes correct again without touching the model itself.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> A credit model has a superb AUC of 0.95 but a bad calibration error. What does that combination actually mean?</p>
+      <ul class="check-opts"><li>`A) It is a contradiction — a high AUC guarantees good calibration, so one of the two numbers must have been computed incorrectly and the whole evaluation should be run again from scratch.`</li><li>`B) It ranks cases beautifully — riskier applicants really do score higher than safer ones — but its actual probability numbers are off, so it is confidently wrong about the odds. Fine for deciding who to approve; useless for estimating how much money you will lose.`</li><li>`C) It means the model is underfitting: a strong ranker with poor probabilities has simply not trained long enough, and running more epochs will pull the calibration error down while leaving the AUC untouched.`</li><li>`D) It means the test set is too small, since AUC and calibration error always agree on large datasets and only ever diverge when the sample is too tiny to measure either one reliably.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> You calibrate your model on the very same data it was trained on. Calibration looks perfect. Why is this a mistake?</p>
+      <ul class="check-opts"><li>`A) It is not a mistake — the training set is the largest slice of data you have, so calibrating on it gives you the most stable and reliable correcting function possible.`</li><li>`B) It only wastes computation, since the model has already seen those rows; the fix itself works fine, you just could have saved time by using a smaller sample of the same training data.`</li><li>`C) The model has partly memorised its training rows, so its scores there already look artificially in line with the labels. The correcting function is fooled into thinking little needs fixing, then fails on new data. Calibrate on a separate held-out slice, and test on yet another.`</li><li>`D) The only issue is speed: calibrating on training data makes the correcting function converge slowly, so it is better to use fresh data purely because it fits the calibrator faster.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> Your model reports a low overall ECE, but a colleague says it might still be badly miscalibrated. How can both be true, and what is a richer single number?</p>
+      <ul class="check-opts"><li>`A) They can't both be true — a low ECE mathematically guarantees good calibration everywhere, so the colleague is simply wrong.`</li><li>`B) ECE depends on the binning and can hide local miscalibration: a model overconfident in one region and underconfident in another averages out to a small ECE. It's also binning- and sample-size-sensitive. The Brier score is richer — it decomposes into reliability (calibration), resolution (discrimination), and uncertainty — and you should always read the reliability diagram, not just a scalar.`</li><li>`C) The discrepancy means the ECE was computed on the training set; recomputing it on the test set will make it agree with the colleague's assessment and no other metric is needed.`</li><li>`D) Low ECE with hidden miscalibration only happens for regression models, so the fix is to switch from ECE to R², which measures calibration correctly for probabilities.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> Your neural network is overconfident. You apply temperature scaling. What does it do, and what does it deliberately leave untouched?</p>
+      <ul class="check-opts"><li>`A) It retrains the final layer on a calibration set, which changes both the probabilities and the model's ranking so that accuracy improves along with calibration.`</li><li>`B) It divides the logits by a single learned scalar T before the softmax (T &gt; 1 softens overconfident probabilities). Because it only rescales the logits, it leaves the ranking and accuracy completely unchanged while fixing the confidence — its one-parameter simplicity is why it rarely overfits.`</li><li>`C) It clips every predicted probability to the range [0.05, 0.95], which removes overconfidence by brute force but also flattens the ranking between the clipped cases.`</li><li>`D) It adds a temperature feature to the input and retrains the whole network, so both the decision boundary and the probabilities shift together.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q6.</strong> An interviewer asks you to distinguish calibration from threshold tuning. What's the cleanest answer?</p>
+      <ul class="check-opts"><li>`A) They're the same operation — moving the decision threshold is exactly how you make probabilities honest, so calibrating a model just means picking the right cutoff.`</li><li>`B) Calibration makes the probability truthful (0.7 should mean 70%); thresholding picks the decision cutoff that turns a probability into an action, chosen from business costs. They're related — honest probabilities make the threshold meaningful and transferable — but separate steps: calibrate first so the number is trustworthy, then threshold so the decision is optimal.`</li><li>`C) Calibration sets the cutoff and thresholding fixes the probabilities — the two names are simply swapped in most textbooks, but they refer to one combined step done at training time.`</li><li>`D) Thresholding is only needed for calibrated models and calibration is only needed for uncalibrated thresholds, so you never actually perform both on the same model.`</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#classical_ml_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

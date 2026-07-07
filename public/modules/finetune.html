@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fine-Tuning Strategies | ML Systems Lab</title>
+  <meta name="description" content="Full fine-tune, LoRA, prefix tuning, adapter layers — when each applies">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/finetune.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/finetune.html">
+  <meta property="og:title" content="Fine-Tuning Strategies | ML Systems Lab">
+  <meta property="og:description" content="Full fine-tune, LoRA, prefix tuning, adapter layers — when each applies">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Fine-Tuning Strategies">
+  <meta name="twitter:description" content="Full fine-tune, LoRA, prefix tuning, adapter layers — when each applies">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Fine-Tuning Strategies",
+  "description": "Full fine-tune, LoRA, prefix tuning, adapter layers — when each applies",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/finetune.html",
+  "keywords": "fine-tuning, LoRA, PEFT, adapters, LLM"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#dl_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">29 min read</span>
+      <span class="tag">fine-tuning</span><span class="tag">LoRA</span><span class="tag">PEFT</span><span class="tag">adapters</span><span class="tag">LLM</span>
+    </div>
+    <h1>Fine-Tuning Strategies</h1>
+    <p class="subtitle">Full fine-tune, LoRA, prefix tuning, adapter layers — when each applies</p>
+
+    <p>You want LLaMA-2 70B to answer internal questions in your company's tone and format. The brute-force way — <strong>full fine-tuning</strong> — means updating *all 70 billion* weights. Just the bookkeeping (weights, gradients, and Adam's two running averages) needs roughly 14 bytes per parameter — about <strong>980 GB</strong> of GPU memory, a dozen top-end GPUs, days of training, and a real risk of overwriting the very abilities that made the model good. For most teams that is a non-starter. The good news: you almost never need to move all 70 billion weights.</p>
+    <hr>
+    <h3>LoRA: train a tiny add-on, freeze the rest</h3>
+    <p>The key insight behind <strong>LoRA</strong> is that the *change* a model needs to adapt to a new task is small and simple — it lives in a low-dimensional space. So instead of learning a full 4096×4096 update matrix (16.7 million numbers), LoRA learns it as the product of two skinny matrices — say 4096×8 and 8×4096 — just about <strong>65,000</strong> numbers, a 99.6% cut. The giant base model stays *frozen*; only these two little matrices train. And the elegant part: once trained, the tiny update can be *added straight back* into the original weights, so the deployed model is exactly the same size and speed as the original — <strong>zero extra inference cost.</strong> That mergeability is LoRA's edge over &quot;adapter&quot; approaches that bolt on permanent extra modules.</p>
+    <hr>
+    <h3>QLoRA: fit a 70B fine-tune on a single GPU</h3>
+    <p><strong>QLoRA</strong> pushes this further so 70B fine-tuning fits on *one* 80GB GPU. The trick: squash the frozen base model down to 4-bit numbers (from ~140GB to ~35GB), and train the small LoRA matrices in full precision on top. Because the base weights are never actually updated — all the learning happens in the little adapters — the rounding error from the 4-bit squashing barely matters. The result is near-full-fine-tuning quality at a tiny fraction of the hardware.</p>
+    <hr>
+    <h3>One distinction worth nailing down</h3>
+    <p>People sometimes call &quot;train a fresh classifier on top of a frozen model&quot; *fine-tuning* — it is not, it is <strong>feature extraction</strong>, and it can only *re-sort* the representations the model already has. True fine-tuning (including LoRA) actually changes the model's effective weights, which is what lets it learn genuinely new behaviour — a new tone, a new format, a new skill. If you need the model to *do* something new, you need real fine-tuning; if you only need to classify what it already understands, feature extraction is enough.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Start with LoRA for any fine-tuning task — it matches full fine-tuning quality in most cases with 10–100× less compute and no catastrophic forgetting risk. Use rank 8–16 for most tasks, rank 64+ only if you need to teach genuinely new knowledge.</strong>
+
+For teaching a new response format, tone, or domain-specific behavior that the pretrained model already has partial knowledge of, rank 8–16 captures the adaptation signal. For teaching a model new facts it was not exposed to in pretraining — new entities, new languages, new structured formats — higher rank or full fine-tuning is necessary. Start low and increase rank only if validation performance plateaus.</li><li><strong>Trap: fine-tuning on fewer than 1K examples with a low learning rate often gives no improvement over the base model — the signal is too weak. Either collect more data, use a stronger learning rate with warmup, or use prompt engineering instead.</strong>
+
+LoRA with rank 8 has ~65K trainable parameters for a single 4096×4096 matrix. With 500 training examples, the signal-to-noise ratio for those parameters is marginal. If validation performance is flat after 3 epochs, the problem is data volume, not architecture. LoRA at rank 16 on 500 examples is not materially different from prompt engineering — both are adapting a powerful pretrained model with very thin signal.</li><li><strong>Diagnostic: monitor training loss AND a held-out prompt that captures the target behavior. If training loss decreases but the target behavior does not improve, the fine-tuning data does not actually demonstrate the target behavior.</strong>
+
+This is the most common fine-tuning failure: the training data measures something correlated with but not identical to what you want. If you want the model to always respond in bullet points, your training data must contain bullet-point responses — training loss on paragraph responses will decrease without producing the format change. Log the target-behavior metric (format compliance, accuracy on held-out examples, human evaluation scores) separately from training loss throughout the run.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Task-specific weight updates have low intrinsic rank — LoRA exploits this to fine-tune a 70B model with 0.2% of its parameters, and because BA merges directly into W after training, the deployed model is byte-for-byte identical to the base model with zero inference overhead.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Full fine-tuning is brutal:</strong> all 70B weights → ~14 bytes/param ≈ 980GB, a dozen GPUs, and risk of overwriting what made the model good.</li><li><strong>LoRA insight:</strong> the needed update is low-rank. Learn a 4096×4096 update as two skinny matrices (4096×8, 8×4096) — ~65K numbers, a 99.6% cut. Base model frozen.</li><li><strong>LoRA merges back into W:</strong> deployed model is same size and speed as the original — zero extra inference cost (its edge over adapters).</li><li><strong>QLoRA:</strong> squash frozen base to 4-bit (~140GB → ~35GB), train full-precision LoRA on top → 70B fine-tune on one 80GB GPU; rounding error barely matters since base weights never update.</li><li><strong>Rank guidance:</strong> 8–16 for tone/format/behaviour the model partly knows; 64+ or full fine-tune for genuinely new knowledge.</li><li><strong>Feature extraction ≠ fine-tuning:</strong> a fresh classifier on a frozen model only re-sorts existing representations; real fine-tuning (incl. LoRA) changes effective weights to learn new behaviour.</li><li><strong>Diagnostic:</strong> if training loss drops but target behaviour doesn't, the data doesn't actually demonstrate the target behaviour.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You fine-tune a pre-trained BERT model on a sentiment classification task with 500 labeled examples. What are the risks, and what techniques do you use?</p>
+      <ul class="check-opts"><li class="correct">A) Risks with 500 examples: (1) Catastrophic forgetting — large updates to all BERT weights for a small-data task destroy the pre-trained representations. (2) Overfitting — BERT has 110M parameters, 500 examples is far too few to train from scratch; even fine-tuning all layers risks memorising. Techniques: (1) Freeze early layers — only fine-tune the last 2-3 transformer layers and the classification head. The early layers encode syntactic/lexical features that transfer well; only task-specific features need updating. (2) Use a small learning rate (1e-5 or 2e-5 for pre-trained layers, up to 1e-3 for the fresh classification head). (3) Few-epoch training — 3-5 epochs maximum with early stopping on validation. (4) Prompt-tuning or adapter layers — add a small trainable module while freezing all BERT weights entirely. Adapter parameters: ~0.1% of full model, dramatically reducing forgetting and overfitting risk. (5) Data augmentation: back-translation, synonym replacement to expand 500 → ~2000 effective examples.</li><li>B) The primary risk with 500 examples is underfitting — BERT needs at least 10,000 fine-tuning examples per class to adapt its representations away from general language modeling toward task-specific classification. With only 500 examples, the model will memorise training data perfectly (high training accuracy) but fail at the classification task conceptually (low validation accuracy). The technique is to use a much higher learning rate (1e-3) to force the model to adapt aggressively from the limited data.</li><li>C) With 500 examples and BERT's 110M parameters, the ratio (220,000 parameters per example) makes full fine-tuning ideal rather than risky — high parameter-to-example ratios actually help because the model can use its full capacity to represent each training example precisely, and BERT's pre-trained representations prevent the model from learning random noise. The main risk is underfitting if you use too small a learning rate.</li><li>D) The main risk is catastrophic forgetting of the classification head weights, not the pre-trained BERT layers. The 500 examples are sufficient to maintain the pre-trained BERT representations (which are robust to small-scale updates), but the randomly initialised classification head may diverge if trained with the same learning rate as BERT. Technique: use a higher learning rate for the BERT layers (1e-3) and a lower rate for the classification head (1e-5).</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> LoRA (Low-Rank Adaptation) decomposes weight updates into low-rank matrices: ΔW = BA where B ∈ ℝ^{d×r} and A ∈ ℝ^{r×k}. For d=k=1024 and r=8, how many parameters does LoRA add vs full fine-tuning? Why does this work?</p>
+      <ul class="check-opts"><li>A) LoRA adds more parameters than implied by the rank: B is 1024×8 = 8,192 parameters; A is 8×1024 = 8,192 parameters; but LoRA also requires gradient tracking for all base model weights during training to compute the correct gradients for A and B — effectively requiring the same memory as full fine-tuning during training, with savings only at inference when BA is merged.</li><li>B) LoRA saves parameters by updating only the attention layers: with 12 attention layers and 4 matrices per layer (Q, K, V, O), LoRA updates 12 × 4 × 16,384 = 786,432 parameters vs 12 × 4 × 1,048,576 = 50,331,648 for full attention fine-tuning. The efficiency comes from targeting only attention matrices, not from the low-rank factorisation — full-rank updates to the FFN layers are still required.</li><li class="correct">C) Full fine-tuning: 1024×1024 = 1,048,576 additional parameters per weight matrix. LoRA: B is 1024×8 = 8,192 parameters; A is 8×1024 = 8,192 parameters; total 16,384 per weight matrix — 64× fewer parameters than full fine-tuning. Why it works: the hypothesis is that the relevant weight update ΔW lies in a low-dimensional subspace of the full parameter space. Empirically, fine-tuning updates to large pre-trained models have low intrinsic dimensionality — most of the useful adaptation can be captured with r=8 or r=16 rank components, even for large matrices. Additionally: A is initialised with random Gaussian, B with zeros (so ΔW=BA=0 initially — the pre-trained model is unchanged at the start of fine-tuning). During training, only A and B are updated while the frozen W provides the baseline representation. At inference: W' = W + BA is materialised for no latency overhead.</li><li>D) Full fine-tuning: 1024×1024 = 1,048,576 parameters. LoRA: B is 1024×8 = 8,192 parameters; A is 8×1024 = 8,192 parameters; total 16,384 — a 64× reduction. But LoRA doesn't actually work via low intrinsic rank: the BA product always produces a full-rank update when A and B have independent random initialisations, so rank-8 LoRA can theoretically represent any full-rank update. The real reason LoRA works is implicit regularisation — the product BA introduces a regularisation bias equivalent to nuclear norm minimisation, which prevents overfitting on small datasets.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> When does RLHF (Reinforcement Learning from Human Feedback) improve a language model beyond standard fine-tuning? What is the reward model, and what can go wrong?</p>
+      <ul class="check-opts"><li>A) RLHF improves over SFT when the task has a clear correctness signal (code execution, math verification) — in these cases, the reward model is replaced by an automated verifier, and RLHF's PPO training allows the model to explore solution strategies beyond those in the SFT dataset. For subjective tasks like helpfulness, RLHF actually underperforms SFT because human preference data is too noisy to learn reliable rewards. What can go wrong: verifier hacking, where models game the automated checker without solving the underlying problem.</li><li class="correct">B) RLHF improves over SFT (supervised fine-tuning) when: (1) Human preferences are hard to encode as a loss function directly — 'helpfulness' and 'harmlessness' cannot be easily reduced to next-token cross-entropy. (2) The model needs to generate responses that maximise a global property of the output (e.g., overall helpfulness), not just fit the distribution of training examples. SFT on demonstrations may not capture the distinction between good and mediocre outputs. The reward model: a separate model trained on human preference comparisons — given (prompt, response_A, response_B), humans rate which is better. The reward model learns to score responses. RLHF: use PPO (proximal policy optimization) to update the LLM to generate responses with high reward model scores. What can go wrong: (1) Reward hacking — the LLM finds ways to get high reward model scores without being genuinely helpful (long, verbose responses that look helpful; sycophantic agreement; confident-sounding incorrect answers). (2) The reward model itself is imperfect and can be gamed. (3) Over-optimisation — too much RL training collapses diversity. (4) KL penalty prevents too much divergence from the SFT model.</li><li>C) RLHF improves over SFT only when the model is large enough (&gt;7B parameters) — smaller models don't benefit because their reward model fails to learn human preferences accurately from limited comparison data. The reward model for smaller RLHF applications is typically a logistic regression classifier on top of frozen embeddings, which provides insufficient signal for the PPO policy updates to make meaningful improvements over the SFT baseline.</li><li>D) RLHF and SFT are equivalent in expectation — both optimise the same objective (match human-preferred outputs) with the same training data (human demonstrations or comparisons). RLHF's advantage is purely computational: PPO processes preference data more efficiently than cross-entropy on demonstration data, requiring 10× less human annotation for the same downstream performance. What can go wrong: PPO's clipping parameter requires careful tuning or the policy diverges.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#dl_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

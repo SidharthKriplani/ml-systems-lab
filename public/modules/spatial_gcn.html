@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spatial &amp; Message-Passing GCNs | ML Systems Lab</title>
+  <meta name="description" content="GraphSAGE, neighbor sampling, aggregators, inductive learning, scalability">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/spatial_gcn.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/spatial_gcn.html">
+  <meta property="og:title" content="Spatial &amp; Message-Passing GCNs | ML Systems Lab">
+  <meta property="og:description" content="GraphSAGE, neighbor sampling, aggregators, inductive learning, scalability">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Spatial &amp; Message-Passing GCNs">
+  <meta name="twitter:description" content="GraphSAGE, neighbor sampling, aggregators, inductive learning, scalability">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Spatial & Message-Passing GCNs",
+  "description": "GraphSAGE, neighbor sampling, aggregators, inductive learning, scalability",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/spatial_gcn.html",
+  "keywords": "GraphSAGE, message passing, neighbor sampling, inductive, aggregation, scalability"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#graph_ml_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">45 min read</span>
+      <span class="tag">GraphSAGE</span><span class="tag">message passing</span><span class="tag">neighbor sampling</span><span class="tag">inductive</span><span class="tag">aggregation</span>
+    </div>
+    <h1>Spatial &amp; Message-Passing GCNs</h1>
+    <p class="subtitle">GraphSAGE, neighbor sampling, aggregators, inductive learning, scalability</p>
+
+    <p>Pinterest has 3 billion pins and 18 billion edges. New pins arrive every day. A spectral GCN requires the full adjacency matrix during training — it learns embeddings tied to the specific graph. Add a new pin and the model cannot embed it without retraining from scratch. At Pinterest's scale, that is not a deployment model.</p>
+    <p>GraphSAGE reframes the problem. Instead of learning fixed embeddings for each node, it learns aggregation functions — parameterized operations that map any neighborhood to an embedding. The same learned function applies to nodes never seen during training. Give it a new pin's features and its neighbors' features, run the aggregation, and you get an embedding in milliseconds. No retraining. This inductivity — generalizing to new nodes without retraining — is the architectural property that makes billion-scale GNN deployment possible.</p>
+    <p>The second key problem is neighborhood explosion. A 2-layer GNN on a node with 100 average-degree neighbors requires 100 first-hop neighbors and up to 10,000 second-hop neighbors. A 3-layer GNN requires up to 1 million. GraphSAGE samples a fixed number of neighbors at each hop — 25 at hop 1, 10 at hop 2 — capping computation at 250 nodes per target node regardless of actual degree. This bounded fan-out is what makes mini-batch training tractable.</p>
+    <p>The aggregation function choice matters. Mean aggregation treats all neighbors equally. Max-pooling picks the most activated feature across neighbors — useful when a few neighbors carry strong signal and the rest are noise. LSTM aggregation has higher capacity but breaks permutation invariance, which is a theoretical violation for graph learning.</p>
+    <p><strong>NOT this.</strong> &quot;GraphSAGE requires full-batch training.&quot; GraphSAGE was specifically designed for mini-batch training by sampling a fixed number of neighbors at each hop. Full-batch GCN requires the entire adjacency matrix in memory — infeasible for graphs with billions of nodes. GraphSAGE's fixed fan-out sampling is the mechanism that enables mini-batch training: a batch of 512 target nodes with sample sizes [25, 10] requires loading at most 128,000 nodes from the feature store, regardless of graph size. The architecture is designed around this constraint.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>GraphSAGE algorithm: for each node v, (1) sample a fixed-size neighborhood N(v) from the full neighbor set, (2) aggregate sampled neighbor features h_N(v) = AGGREGATE({h_u : u ∈ N(v)}), (3) concatenate ego + aggregated h_v = σ(W · CONCAT(h_v, h_N(v))).</strong> Repeat for K layers. After K layers, each node's embedding encodes its K-hop neighborhood. The same W and aggregation function apply to every node at every layer — generalization is structural, not node-specific.</li><li><strong>Neighbor sampling controls the otherwise exponential neighborhood expansion.</strong> Without sampling, a K-layer GNN on a node with 100 average-degree neighbors requires 100 1-hop, 10,000 2-hop, and 1M 3-hop neighbors. GraphSAGE samples a fixed |S_1| neighbors at hop 1, |S_2| at hop 2 — bounded computation per node. Sample sizes [25, 10] cap the computation at 250 nodes per target node for a 2-layer embedding, regardless of actual node degree.</li><li><strong>Mean aggregator: h_N(v) = σ(W · MEAN({h_u : u ∈ N(v) ∪ {v}})).</strong> Equivalent to GCN's normalized aggregation without self-loops. Simple and effective, but treats all neighbors equally. Concatenating the ego embedding (CONCAT(ego, MEAN(neighbors))) rather than replacing it with the mean outperforms pure mean by preserving the central node's own identity — a node in a neighborhood of high-degree hubs has different properties than the hubs themselves.</li><li><strong>LSTM aggregator: applies an LSTM to a random permutation of neighbor features.</strong> Empirically outperforms mean on some tasks despite being theoretically incorrect — LSTM is not permutation invariant, so different random orderings at inference give different embeddings. The LSTM may be exploiting a useful but spurious signal from node ID-based orderings. Use max-pooling if you want both good empirical performance and the theoretical correctness required by GNN theory.</li><li><strong>Max-pooling aggregator: h_N(v) = max({σ(W_pool · h_u + b) : u ∈ N(v)}).</strong> Applies elementwise max after a learned transformation. Captures the most activated feature across neighbors — useful when some neighbors are highly informative and most are noise. Often the best performer for node classification on heterophilic graphs where the most anomalous neighbor, not the average neighbor, carries the signal.</li><li><strong>Inductivity is the architectural insight that separates GraphSAGE from prior methods.</strong> Spectral GCN is trained with the full graph adjacency — its weights are tied to the specific graph via spectral filtering. GraphSAGE learns aggregation functions that map neighborhood features to embeddings — the same function applies to any neighborhood. New nodes: sample their neighbors, run the K-layer aggregation with trained weights, get an embedding in milliseconds. No retraining, no graph reconstruction.</li><li><strong>PinSage (Pinterest) is the reference production implementation: random-walk-based neighborhood sampling instead of uniform sampling (nodes visited more frequently in random walks from v are higher-weight neighbors); feature store (Redis/RocksDB) and graph store (adjacency lists) as separate systems; offline embedding computation via MapReduce; online serving via approximate nearest neighbor (FAISS/ScaNN).</strong> The architecture — not the GNN itself — is what makes 2B-pin scale feasible.</li><li><strong>Mini-batch training computation: for a batch of target nodes, expand neighborhoods layer by layer.</strong> For K=2 with sample sizes [10, 25]: a batch of 512 target nodes requires ~512×25 = 12,800 1-hop nodes and ~12,800×10 = 128,000 2-hop nodes. These nodes are fetched from a feature store, with neighborhood structure from a graph database. The feature lookup latency, not the GNN forward pass, dominates total training time at scale.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>GraphSAGE's key innovation is learning an aggregation function rather than node embeddings — the same function applies to any neighborhood, so previously unseen nodes get embeddings by running the same procedure without any retraining. This inductivity is the non-negotiable requirement for production deployment where new nodes arrive continuously. Neighbor sampling (fixed fan-out per hop) solves the second key problem: the exponential neighborhood explosion that makes full-batch K-layer GNNs intractable on graphs with more than ~100K nodes.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>GraphSAGE learns an aggregation function, not fixed embeddings</strong> — same function embeds unseen nodes in ms, no retraining.</li><li><strong>Inductivity is the point:</strong> new pins arrive daily; spectral GCN needs full-graph retrain, GraphSAGE doesn't.</li><li><strong>Neighbor explosion:</strong> deg-100, K=3 → up to 1M nodes. Fixed fan-out [25,10] caps at 250/target.</li><li><strong>Algorithm:</strong> sample $N(v)$ → aggregate → concat ego + neighbors → repeat K layers.</li><li><strong>Aggregators:</strong> mean (equal weight), max-pool (strongest neighbor), LSTM (higher capacity but breaks permutation invariance).</li><li><strong>Concat ego, don't replace with mean</strong> — preserves the central node's identity vs its hubs.</li><li><strong>PinSage = production reference:</strong> random-walk sampling, separate feature/graph stores, MapReduce offline embeddings, ANN serving.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> A 3-layer GraphSAGE with neighbor sample sizes [15, 10, 5] is used to embed a batch of 256 target nodes. How many total nodes might be loaded from the feature store in the worst case?</p>
+      <ul class="check-opts"><li>A) 256 × (15 + 10 + 5) = 7,680 nodes</li><li class="correct">B) Worst case (no overlap): 256 target + 256×5=1,280 depth-3 + 1,280×10=12,800 depth-2 + 12,800×15=192,000 depth-1 = 206,336 nodes; neighborhood overlap in dense graphs reduces this in practice, which is why sample sizes are kept small (5-25) and depth is limited to 2-3 layers</li><li>C) Exactly 256 × 15 × 10 × 5 = 192,000 nodes, since all three sampling levels are always fully expanded</li><li>D) The worst case is 256 × max(15, 10, 5) = 3,840 because only the widest layer matters for memory</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Your GraphSAGE model is trained on a social network. A new user signs up with 3 connections to existing users. How do you compute their embedding without retraining?</p>
+      <ul class="check-opts"><li>A) You cannot embed the new user without retraining — new nodes require full graph reconstruction</li><li class="correct">B) Run the forward pass inductively: fetch the 3 connected users' features (1-hop), sample their neighbors (2-hop), run K-layer aggregation with trained weights; no retraining required; if the user has 0 connections, fall back to ego-only embedding using content features</li><li>C) Use the average of all existing user embeddings as the new user's embedding until the next retraining cycle</li><li>D) Add the new user to the adjacency matrix and run a single forward pass of the full GCN on the updated graph</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Why is the LSTM aggregator in GraphSAGE theoretically flawed for graph learning, and under what conditions might it still be empirically useful?</p>
+      <ul class="check-opts"><li>A) LSTM is theoretically flawed because it has too many parameters, causing overfitting on graph data</li><li class="correct">B) LSTM is not permutation invariant — neighbor ordering affects the output, violating the GNN requirement; empirically it may still work because random orderings during training act as augmentation, consistent node-ID orderings provide a spurious but useful signal, and higher LSTM capacity helps on some tasks — but use max-pooling for theoretical correctness</li><li>C) LSTM is flawed because it processes only sequential data and cannot handle the variable-length neighbor sets in graphs</li><li>D) LSTM aggregators are theoretically sound — the permutation invariance requirement only applies to graph-level tasks, not node-level aggregation</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#graph_ml_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Evaluation in Production | ML Systems Lab</title>
+  <meta name="description" content="Shadow mode, champion-challenger, guardrail metrics, significance at scale">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/evaluation_in_prod.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/evaluation_in_prod.html">
+  <meta property="og:title" content="Evaluation in Production | ML Systems Lab">
+  <meta property="og:description" content="Shadow mode, champion-challenger, guardrail metrics, significance at scale">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Evaluation in Production">
+  <meta name="twitter:description" content="Shadow mode, champion-challenger, guardrail metrics, significance at scale">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Evaluation in Production",
+  "description": "Shadow mode, champion-challenger, guardrail metrics, significance at scale",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/evaluation_in_prod.html",
+  "keywords": "production evaluation, shadow mode, A/B testing, champion-challenger"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#eval_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">30 min read</span>
+      <span class="tag">production evaluation</span><span class="tag">shadow mode</span><span class="tag">A/B testing</span><span class="tag">champion-challenger</span>
+    </div>
+    <h1>Evaluation in Production</h1>
+    <p class="subtitle">Shadow mode, champion-challenger, guardrail metrics, significance at scale</p>
+
+    <p>An A/B test runs for <strong>2 days</strong>. The treatment shows <strong>+18% CTR</strong>. The team ships it. Two weeks later, revenue is <strong>down 4%.</strong> What happened?</p>
+    <p><strong>Novelty.</strong> People click new things just because they are new. Once the shine wears off, engagement settles back — and here, below baseline. The 2-day test ran entirely inside the novelty window, so it measured novelty, not the model. The team optimised for a signal that was never going to last.</p>
+    <p>Production evaluation is the craft of measuring a model's real impact in ways that survive traps like this. The guiding rule: every ship / no-ship call should ultimately rest on a *controlled experiment*. Everything else — offline metrics, shadow mode, proxy-metric checks — exists to cheaply filter candidates so you only spend real A/B tests on the few worth it.</p>
+    <hr>
+    <h3>Shadow mode first</h3>
+    <p>Before any high-stakes launch, run the new model in <strong>shadow mode</strong>: it sees the same live traffic and makes predictions, but only the current champion's predictions actually reach users. This proves the serving path works under real load, catches weird output distributions, and surfaces big disagreements between the two models — all before a single user is affected. It catches the infrastructure bugs that offline testing simply cannot.</p>
+    <hr>
+    <h3>Three A/B rules people keep breaking</h3>
+    <p>1. <strong>Run for at least two full business cycles</strong> — a minimum of two weeks, four if the product is strongly seasonal. A 2-day win has almost certainly not outlived novelty.</p>
+    <p>2. <strong>Fix the primary metric and required sample size *before* you start.</strong> Glancing at results midway and stopping the moment p &lt; 0.05 wrecks the statistics — with daily peeking at the 0.05 level, your real false-positive rate climbs to roughly 30% by day 20. If you must peek, use a sequential test built for it.</p>
+    <p>3. <strong>Set guardrail metrics up front</strong> — secondary numbers that are not allowed to get worse even if the main metric improves. A recommender that lifts CTR by pushing sensational content while tanking session length is worse than nothing; guardrails catch that before it ships.</p>
+    <hr>
+    <h3>&quot;Significant&quot; is not the same as &quot;worth it.&quot;</h3>
+    <p>A small p-value only says the effect is unlikely to be pure noise. It does not tell you the effect will *last*, that it is *big enough to matter*, or that the experiment was *run properly*. At ten million daily users, a 0.01% CTR bump hits p &lt; 0.0001 in a single day — and that is about a thousand extra clicks. Is a whole new model to retrain, deploy, and maintain worth a thousand clicks a day? &quot;Is this effect real?&quot; and &quot;Is this effect worth acting on?&quot; are different questions, and at scale the first is almost always yes. So a trustworthy test needs all of it: random assignment (a user always in the same arm), enough time, a pre-registered metric and sample size, and guardrails watched throughout.</p>
+    <hr>
+    <h3>Check the split before you read any metric: SRM</h3>
+    <p>The very first sanity check on an A/B test is <strong>sample ratio mismatch</strong>. You assigned 50/50, so the two arms should have ~equal traffic — if you observe 55/45, something is broken (a bug in assignment, a crash that drops one arm's users, bot traffic hitting one side, a logging gap). And a broken split means every downstream metric is untrustworthy, because the arms are no longer comparable populations. Run a chi-squared test on the observed counts *before* looking at the treatment effect; if SRM fails (roughly, the split deviates more than chance allows), stop and debug the pipeline — do not interpret the result.</p>
+    <hr>
+    <h3>Power, MDE, and the winner's curse</h3>
+    <p>Size the test *before* running it. <strong>Statistical power</strong> is the chance of detecting a real effect of a given size; the <strong>minimum detectable effect (MDE)</strong> is the smallest lift the test can reliably catch, and it's set by the baseline metric's <strong>variance</strong> and your sample size. An <strong>underpowered</strong> test isn't just &quot;might miss a win&quot; — worse, the wins it *does* report are <strong>exaggerated</strong> (the winner's curse): only unusually large noisy estimates cross the significance line, so significant effects from small samples are biased upward. Compute the required sample size from a target MDE and power (usually 80%) up front, and be skeptical of large effects from small tests.</p>
+    <hr>
+    <h3>Faster tests with variance reduction: CUPED</h3>
+    <p>You can reach significance sooner without more traffic by *reducing variance*. <strong>CUPED</strong> (controlled experiment using pre-experiment data) subtracts off each user's pre-experiment behaviour — a heavy pre-period spender is expected to spend heavily regardless of treatment, so removing that predictable component shrinks the metric's variance and tightens the confidence interval. Same effect, smaller error bars, shorter test. Any strong pre-experiment covariate works; CUPED is the standard packaging.</p>
+    <hr>
+    <h3>Don't jump straight to 50/50: staged ramp-up</h3>
+    <p>High-stakes launches roll out in stages, each a safety gate: <strong>shadow</strong> (no user impact) → <strong>1% canary</strong> (catch crashes and catastrophic regressions cheaply) → 5% → 10% → 25% → 50% → full, with <strong>automated rollback</strong> wired to guardrails at every step. The point is to limit blast radius: a bug that would harm 50% of users is caught at 1%. Never take a brand-new model straight to half of traffic.</p>
+    <hr>
+    <h3>When one user's treatment leaks to another: interference</h3>
+    <p>Standard A/B analysis assumes <strong>SUTVA</strong> — one user's outcome depends only on their *own* assignment. Whole classes of systems violate this. In a <strong>marketplace</strong>, giving treatment sellers a boost takes impressions *away* from control sellers, so the control group is contaminated and the measured lift is inflated. <strong>Social networks</strong> (a treated user posts more, changing their control-group friends' feeds) and <strong>shared-resource</strong> systems (a treated user consumes limited inventory) have the same problem. The fixes are cluster-level randomisation (randomise by market/region/social-cluster instead of by user) or switchback designs — plain user-level A/B tests give biased answers under interference.</p>
+    <hr>
+    <h3>Short-term wins, long-term harm: delayed metrics</h3>
+    <p>The metric that moves inside the test window is often not the one you care about. CTR responds in minutes; <strong>retention, revenue quality, refunds, churn, and lifetime value</strong> unfold over weeks or months. A model that boosts short-term clicks by pushing clickbait can simultaneously *reduce* long-term retention — and a two-week test may never see it. Guardrails plus a long-lived <strong>holdout group</strong> (a fraction of users permanently excluded from all changes) are how you catch effects that only appear after the experiment ends.</p>
+    <hr>
+    <h3>Overlapping experiments: layers and mutual exclusion</h3>
+    <p>At scale dozens of tests run at once, and they can <strong>interact</strong> — test A changes the ranking that test B is also modifying, so the effects aren't additive. Two defenses: <strong>mutual exclusion</strong> (tests touching the same surface can't share users) and <strong>experiment layers</strong> (an orthogonalisation scheme where each user is in one experiment per layer, so tests in different layers are randomised independently). Use <strong>factorial design</strong> deliberately when you *want* to measure an interaction, but only after confirming independence. Document which tests ran simultaneously so surprising results can be traced.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Always run A/B tests for at least 2 full business cycles before making a decision — novelty effects typically last 3–7 days and can fully reverse a 15% positive signal.</strong>
+
+For the recommendation test: the +18% CTR was measured on days 1–2. On days 3–14, CTR in the treatment arm declines steadily as novelty fades. By day 14, CTR in treatment is 2% below control. If the test had run for 2 weeks, the team would have seen the reversal before shipping. The diagnostic: plot daily CTR for treatment vs control separately. If treatment CTR is declining toward control CTR over the first 7 days, novelty is explaining the effect. If treatment CTR is stable and above control at day 14, the effect is real.</li><li><strong>Trap: peeking at results before the planned end date inflates Type I error. Running a sequential test that checks significance daily at α = 0.05 gives a true false positive rate of ~30% by day 20. Use sequential testing methods (mSPRT, always-valid inference) if you need to peek.</strong>
+
+For the recommendation test: the team checks results every morning. On day 3, p = 0.03. They stop the test and ship. The problem: every day of peeking at α = 0.05 is an independent opportunity to cross the significance threshold by noise alone. With 20 days of peeking, the probability of at least one false positive reaches ~30%. The fix: use an always-valid sequential test framework (Spotify's SPRT, Microsoft's ExP). These frameworks compute valid p-values at any stopping point by construction, letting you stop early when the result is clear without inflating false positive rate.</li><li><strong>Diagnostic: if your positive A/B test result reverses after shipping, check novelty curves — plot daily CTR separately for users in their first 7 days of exposure vs later. If day-1 CTR is much higher than day-7, you measured novelty.</strong>
+
+For the recommendation model: after shipping and observing revenue decline, segment users by days since first exposure to the new model. New-to-model users (day 1–3): CTR 22% above baseline. Users 4–7 days in: CTR 8% above baseline. Users 8+ days in: CTR 3% below baseline. The novelty curve is unmistakable. The model was not better — it was new. The operational fix: run all future tests for at least 14 days and require that the treatment effect is stable (non-declining) in the last 7 days before shipping.</li><li><strong>Sanity-check the split, size the test up front, and reduce variance to go faster.</strong>
+
+Before reading any metric, run a sample-ratio-mismatch (SRM) check — a 50/50 design that comes back 55/45 signals a broken pipeline and makes every downstream number untrustworthy. Compute required sample size from a target MDE and 80% power beforehand, since underpowered tests both miss real wins and exaggerate the ones they report (winner's curse). CUPED (subtracting pre-experiment behaviour) cuts metric variance and shortens tests without more traffic. Roll out in stages: shadow → 1% canary → 5/10/25/50% → full, with automated rollback on guardrails.</li><li><strong>Mind interference, delayed metrics, and overlapping experiments.</strong>
+
+User-level A/B tests assume SUTVA (one user's outcome depends only on their own arm) — marketplaces, social networks, and shared-inventory systems violate it, so cluster-randomise or use switchbacks or the measured lift is biased. Short-window metrics (CTR) can move opposite to long-run ones (retention, LTV, refunds, churn); catch these with guardrails and a permanent holdout group. When many tests run at once, prevent contamination with mutual exclusion or experiment layers, and use factorial design only when you've confirmed independence and actually want the interaction.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Statistical significance confirms the effect is unlikely to be noise — it says nothing about whether it will persist, whether it is practically meaningful, or whether the experiment was valid; a 2-day test during a novelty window with daily peeking can produce p = 0.001 on an effect that reverses completely in two weeks.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>The novelty trap: a short test measures novelty, not the model:</strong> +18% CTR over 2 days can reverse to −4% revenue in two weeks because people click new things just because they're new, then settle back. The 2-day window sat entirely inside the novelty spike.</li><li><strong>Every ship / no-ship call ultimately rests on a controlled experiment:</strong> offline metrics, shadow mode, and proxy checks exist only to cheaply filter candidates so you spend real A/B tests on the few worth it.</li><li><strong>Shadow mode first:</strong> run the new model on the same live traffic while only the champion's predictions reach users — this proves the serving path works under load, catches weird output distributions and big model disagreements, all before a single user is affected. It catches infrastructure bugs offline testing simply can't.</li><li><strong>Three A/B rules people keep breaking:</strong> run at least two full business cycles (≥2 weeks, 4 if seasonal — a 2-day win hasn't outlived novelty); fix the primary metric and sample size *before* starting (daily peeking at α=0.05 pushes the real false-positive rate to ~30% by day 20 — use a sequential test if you must peek); and set guardrail metrics up front that aren't allowed to regress.</li><li><strong>&quot;Significant&quot; is not &quot;worth it&quot;:</strong> a small p-value only says the effect is unlikely to be noise. At 10M daily users a 0.01% CTR bump hits p&lt;0.0001 in a day — about a thousand extra clicks. &quot;Is it real?&quot; and &quot;is it worth a new model to retrain, deploy, and maintain?&quot; are different questions.</li><li><strong>SRM check before reading any metric:</strong> a 50/50 design that logs 55/45 signals a broken assignment or logging pipeline (a crashed arm dropping users, bot traffic, a logging gap) — run a chi-squared test on the counts first, and if it fails, stop and debug; the arms are no longer comparable populations.</li><li><strong>Size and de-risk the test:</strong> compute sample size from a target MDE and 80% power up front (underpowered tests exaggerate their wins — winner's curse); use CUPED (subtract pre-experiment behaviour) to cut variance and finish sooner; ramp in stages (shadow → 1% canary → 5/10/25/50% → full) with automated rollback. Watch for interference (marketplaces/social/shared-inventory violate SUTVA → cluster-randomise or switchback) and delayed metrics (retention, LTV, churn need a permanent holdout group).</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Your A/B test on a recommendation system shows +2% CTR (p=0.001) after 3 days. Should you ship?</p>
+      <ul class="check-opts"><li>A) Yes — p=0.001 means the result is highly significant and the test has converged; ship immediately</li><li class="correct">B) Not yet — check guardrail metrics (session length, revenue per session), run for at least 14 days to eliminate novelty effects, verify SRM, confirm practical significance (+2% CTR translates to X revenue), and check that lift is uniform across segments before shipping</li><li>C) Ship to 10% of users — a 3-day test is sufficient for a partial rollout and monitoring will catch any issues</li><li>D) No — p=0.001 after only 3 days indicates the test was contaminated by novelty effect and the result will revert; wait 30 days</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> A/B test results show +1% revenue lift (p=0.0001) after 30 days. A colleague says &quot;p &lt; 0.05 means we should ship.&quot; What is missing from this reasoning?</p>
+      <ul class="check-opts"><li class="correct">A) p &lt; 0.0001 confirms the effect is real but does not confirm it is large enough to matter — missing: practical significance (is +1% revenue worth the deployment cost), guardrail metric checks, the confidence interval, multiple-testing correction, and whether the +1% is uniform across segments or driven by one small subgroup.</li><li>B) p &lt; 0.05 is the correct standard — at 30 days with p = 0.0001 there really are no additional checks needed before shipping the model.</li><li>C) The confidence interval is the only thing missing — a p-value on its own does not even specify the direction of the effect.</li><li>D) The test simply should have run for 60 days — 30 days is not enough to eliminate primacy effects, regardless of how small the p-value is.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> You are running 5 simultaneous A/B tests on your platform. A product manager notices that tests 2 and 4 seem to interact. How do you handle this?</p>
+      <ul class="check-opts"><li>A) Stop all 5 tests and restart with mutual exclusion — any simultaneous tests that could touch the same user must be restarted</li><li>B) Ignore the interaction — A/B test randomization ensures independence between simultaneous tests</li><li class="correct">C) Diagnose interaction by comparing users in both tests vs users in only one test; if interaction is genuine those cells are contaminated; going forward enforce mutual exclusion for tests affecting similar product areas, use factorial design only when statistical independence is confirmed, and document which tests ran simultaneously</li><li>D) Run a meta-analysis combining results from all 5 tests — simultaneous test interactions are best resolved by statistical aggregation</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> What is a holdout group and why is it more valuable than a series of A/B tests for measuring long-term model value?</p>
+      <ul class="check-opts"><li>A) A holdout group is a control group within an A/B test — it is equivalent to the control arm and provides the same information</li><li>B) A holdout group is used for hyperparameter tuning — it is more valuable than A/B tests because it prevents overfitting to the test set</li><li>C) A holdout group measures the same incremental gains as A/B tests but with lower variance — it is more valuable because the statistical power is higher</li><li class="correct">D) A holdout group is a permanently withheld user fraction that receives no model updates — it measures cumulative causal impact of all ML improvements over months vs A/B tests that only measure marginal gains; this catches cases where 12 individual +1% A/B wins sum to much less than +12% due to cannibalisation or seasonal confounding</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> You designed a 50/50 experiment, but the logged data shows 52.5% in control and 47.5% in treatment across 2 million users. What should you do before analysing the CTR lift?</p>
+      <ul class="check-opts"><li>A) Nothing — a 52.5/47.5 split is close enough to 50/50 that it won't affect the CTR comparison, so proceed to read the result.</li><li class="correct">B) This is a sample ratio mismatch, and at 2M users a 5-point deviation is far beyond chance (a chi-squared test would reject decisively). It signals a broken assignment or logging pipeline — perhaps one arm crashes and drops users, or a redirect fails — which makes the two arms non-comparable populations. Stop, find and fix the root cause, and rerun; do not interpret the CTR lift until the split is clean.</li><li>C) Reweight the treatment arm by 52.5/47.5 to correct the imbalance, then read the CTR lift normally.</li><li>D) Add more users until the split naturally converges to 50/50, then analyse — SRM always resolves itself with more data.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q6.</strong> Your company runs a two-sided marketplace and wants to A/B test giving some sellers a ranking boost. Why is a standard user/seller-level A/B test misleading here, and what's the fix?</p>
+      <ul class="check-opts"><li>A) It isn't misleading — as long as sellers are randomised 50/50, the measured lift for boosted sellers is an unbiased estimate of the boost's effect.</li><li class="correct">B) It violates SUTVA (interference): boosting treatment sellers takes impressions away from control sellers competing for the same limited buyer attention, so the control group is harmed and the measured treatment-vs-control lift is inflated — you'd overstate the boost. Fix with cluster-level randomisation (randomise by market/region so treatment and control don't compete) or a switchback design; plain per-seller A/B gives a biased answer.</li><li>C) The only issue is sample size — marketplaces need more sellers per arm, but the per-seller randomisation itself is fine.</li><li>D) The fix is to run the test longer, since interference effects average out to zero over enough time.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#eval_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

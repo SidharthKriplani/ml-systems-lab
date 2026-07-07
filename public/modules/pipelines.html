@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ML Pipeline Architecture | ML Systems Lab</title>
+  <meta name="description" content="Batch vs streaming ingestion, orchestration, idempotency, pipeline failures">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/pipelines.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/pipelines.html">
+  <meta property="og:title" content="ML Pipeline Architecture | ML Systems Lab">
+  <meta property="og:description" content="Batch vs streaming ingestion, orchestration, idempotency, pipeline failures">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="ML Pipeline Architecture">
+  <meta name="twitter:description" content="Batch vs streaming ingestion, orchestration, idempotency, pipeline failures">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "ML Pipeline Architecture",
+  "description": "Batch vs streaming ingestion, orchestration, idempotency, pipeline failures",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/pipelines.html",
+  "keywords": "MLOps, pipelines, orchestration, Airflow, idempotency"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#production_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">29 min read</span>
+      <span class="tag">MLOps</span><span class="tag">pipelines</span><span class="tag">orchestration</span><span class="tag">Airflow</span><span class="tag">idempotency</span>
+    </div>
+    <h1>ML Pipeline Architecture</h1>
+    <p class="subtitle">Batch vs streaming ingestion, orchestration, idempotency, pipeline failures</p>
+
+    <p>A team has a training script, a deployment script, and a cron job. They call it &quot;the pipeline.&quot; Six months later nobody can say which data the live model was trained on. The training script hard-codes a local file path that broke when they moved to the cloud. The last model update took a week of manual fiddling to reproduce. That isn't a pipeline — it's a pile of scripts held together by memory that is quietly fading as people forget and move on.</p>
+    <hr>
+    <h3>What a real pipeline is: eight stages, end to end</h3>
+    <p>*Ingestion* pulls the data, checks the schema, and writes a versioned snapshot. *Feature engineering* runs reproducible transforms into versioned tables. *Training* is pinned to a data version, hyperparameters, and a random seed, producing a versioned artifact. *Evaluation* scores it on a fixed holdout and compares to the current production model. *A deployment gate* auto-promotes if it clears the bar, or routes to a human if not. *Serving* looks up the model, computes online features, logs predictions. *Monitoring* watches drift and performance. *A retraining trigger* — on a schedule or an event — kicks the whole loop off again.</p>
+    <hr>
+    <h3>Three properties separate infrastructure from debt</h3>
+    <p>*Idempotency:* re-running a step on the same input gives the identical output, no duplicates — done with fixed seeds, content-hashed data, and atomic overwrites. *Fast-fail on bad data:* check availability and schema *before* any compute runs, because a model trained on 60% of the data is worse than not retraining at all. *Complete lineage:* every artifact traces back to its exact data version, code commit, and parameters — without it, debugging is archaeology.</p>
+    <p>The orchestrator you pick (Airflow, Prefect, Kubeflow, Metaflow) matters far less than whether it enforces those three.</p>
+    <hr>
+    <p><strong>The real test.</strong> Training and deployment are just two of the eight stages; without the other six you have technical debt dressed up as a system. So ask one question: can a new person reproduce the current production model from scratch, deterministically, in under two hours, without asking anyone? If yes, you have a pipeline. If no, you have scripts — and a week-long reconstruction waiting for you at the worst possible moment.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Build the evaluation step before optimizing model quality — an automated gate that compares new models to the current production model prevents regressions and eliminates manual review bottlenecks.</strong>
+
+This is the highest-leverage infrastructure investment. Without an evaluation gate, every model update requires human judgment under time pressure with incomplete information. With one, the decision was made in advance under no pressure: &quot;a challenger must match or exceed the champion on these specific metrics before promotion.&quot; That is the decision-making context you want.</li><li><strong>Trap: non-idempotent pipelines make debugging impossible — if rerunning a step produces different outputs, you can never reproduce a historical result or isolate a regression.</strong>
+
+Enforce idempotency from the start: fix random seeds, version data snapshots by content hash, use UPSERT instead of INSERT, and overwrite partitions atomically. The test is simple: run the same step twice on the same input and assert identical output. If the assertion fails, you have a non-idempotent step that will silently produce different models on different runs.</li><li><strong>Diagnostic: ask &quot;can a new team member reproduce the current production model from scratch in under 2 hours using only documented steps?&quot;</strong>
+
+If the answer is no, the pipeline has critical gaps. The gaps are exactly where the next incident will live: undocumented data transformations, implicit file path assumptions, preprocessing parameters stored in someone's local environment, or model artifacts without provenance. Name the gaps before the incident names them for you.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>A pipeline that reports success tells you nothing about whether it produced correct data — the gap between &quot;ran without errors&quot; and &quot;produced correct outputs&quot; is exactly where silent bugs live, and only data quality assertions on pipeline outputs close it.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>&quot;Training script + deploy script + cron&quot; is not a pipeline</strong> — it's a pile of scripts held together by fading memory.</li><li><strong>Eight stages:</strong> ingestion → feature engineering → training → evaluation → deployment gate → serving → monitoring → retraining trigger.</li><li><strong>Three properties separate infra from debt:</strong> idempotency, fast-fail on bad data, complete lineage.</li><li><strong>Idempotency:</strong> re-run same input → identical output. Fixed seeds, content-hashed data, atomic overwrites, UPSERT not INSERT.</li><li><strong>Fast-fail:</strong> check availability + schema *before* compute — a model trained on 60% of the data is worse than not retraining.</li><li><strong>Orchestrator choice (Airflow/Prefect/Kubeflow) matters less than whether it enforces those three.</strong></li><li><strong>The real test:</strong> can a new person reproduce prod from scratch, deterministically, in &lt;2 hours, without asking anyone?</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Your daily retraining pipeline fails on day 3 because the upstream data source was unavailable. How do you design the system to handle this gracefully?</p>
+      <ul class="check-opts"><li>A) Configure the pipeline to train on whatever data is available and deploy the resulting model — partial data is better than no update</li><li class="correct">B) Use a data availability sensor at pipeline start; if data doesn't arrive within N hours, fail fast and alert; continue serving the last good model; ensure idempotent backfill with upsert semantics once data recovers; use automatic retry with backoff for transient failures</li><li>C) Increase the pipeline's memory allocation so it can cache the previous day's data as a fallback</li><li>D) Switch to a streaming pipeline — batch pipelines are inherently fragile to upstream data unavailability</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> You need to ensure that if a feature computation step fails and is rerun, it does not create duplicate records in your feature store. How do you design this?</p>
+      <ul class="check-opts"><li>A) Add a deduplication step after every write using a SELECT DISTINCT query</li><li class="correct">B) Use UPSERT keyed on (entity_id, feature_name, computation_date) rather than INSERT; for Parquet stores, overwrite the partition atomically; use deterministic computation (fixed shuffle seeds, no current_timestamp for windows); verify idempotency in CI by running the step twice and asserting identical output</li><li>C) Use a distributed lock to prevent concurrent runs — the duplicate problem only occurs when two pipeline runs overlap</li><li>D) Idempotency is only needed for streaming pipelines; batch pipelines can safely use INSERT because retries are rare</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> A model is retrained daily. You discover that 4 days ago, a bug was introduced in the feature computation that corrupted 3 features. What is the remediation process?</p>
+      <ul class="check-opts"><li>A) Retrain with the buggy features and deploy immediately — the model will learn to compensate for the corruption</li><li class="correct">B) Halt training; audit all models trained in the past 4 days via lineage; rollback production to the last pre-bug model; fix the bug and backfill the 4 corrupted date partitions; validate backfilled distributions against pre-bug values; retrain and promote; add a regression test for the bug pattern</li><li>C) Delete the corrupted training data and retrain from scratch on historical data only</li><li>D) Deploy a hotfix to the serving pipeline to correct the features at inference time; no retraining is needed</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> What is the difference between a pipeline failure and a pipeline bug, and why does this distinction matter for ML systems?</p>
+      <ul class="check-opts"><li>A) There is no meaningful distinction — both result in a model that underperforms and should be handled the same way</li><li class="correct">B) A failure is detectable (pipeline throws an error, monitoring catches it, alerts fire); a bug is silent (pipeline succeeds, produces wrong data, model trains and deploys, and degradation surfaces weeks later through business metrics); only data quality assertions on outputs guard against bugs — monitoring success status alone is not sufficient</li><li>C) A pipeline failure affects only the current training run; a bug affects all future runs until fixed</li><li>D) Failures are caused by infrastructure issues; bugs are caused by bad data — both require the same response of rolling back to the last good model</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#production_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

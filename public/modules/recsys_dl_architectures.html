@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deep-Learning RecSys Architectures | ML Systems Lab</title>
+  <meta name="description" content="Wide &amp; Deep, DeepFM, DLRM, DIN, and sequence models (SASRec/BERT4Rec) — what each models and when it fits">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/recsys_dl_architectures.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/recsys_dl_architectures.html">
+  <meta property="og:title" content="Deep-Learning RecSys Architectures | ML Systems Lab">
+  <meta property="og:description" content="Wide &amp; Deep, DeepFM, DLRM, DIN, and sequence models (SASRec/BERT4Rec) — what each models and when it fits">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Deep-Learning RecSys Architectures">
+  <meta name="twitter:description" content="Wide &amp; Deep, DeepFM, DLRM, DIN, and sequence models (SASRec/BERT4Rec) — what each models and when it fits">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Deep-Learning RecSys Architectures",
+  "description": "Wide & Deep, DeepFM, DLRM, DIN, and sequence models (SASRec/BERT4Rec) — what each models and when it fits",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/recsys_dl_architectures.html",
+  "keywords": "RecSys, deep learning, DLRM, DIN, sequence models"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#recsys_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">26 min read</span>
+      <span class="tag">RecSys</span><span class="tag">deep learning</span><span class="tag">DLRM</span><span class="tag">DIN</span><span class="tag">sequence models</span>
+    </div>
+    <h1>Deep-Learning RecSys Architectures</h1>
+    <p class="subtitle">Wide &amp; Deep, DeepFM, DLRM, DIN, and sequence models (SASRec/BERT4Rec) — what each models and when it fits</p>
+
+    <p>Once retrieval has handed the ranker a few hundred candidates, the interesting modelling question becomes: *how do you turn a pile of categorical features — user id, item id, category, device, hour, the user's last 50 clicks — into a score?* The named architectures interviewers reach for are all answers to that one question, and each one is defined by *which interactions it can represent*.</p>
+    <hr>
+    <p><strong>Everything starts with embedding tables.</strong> A categorical feature like item_id with 10M values can't go into a network as a one-hot vector — that's a 10M-wide input. Instead each id indexes into an <strong>embedding table</strong>: a learned matrix of shape (num_ids × d), where a lookup returns a dense d-vector (d ≈ 16–128). This is the memory reality of deep RecSys: the tables, not the MLP, dominate the parameter count — a single 100M-id feature at d=64 is 6.4B parameters (~25GB in fp32), which is exactly why industrial systems (DLRM) shard embedding tables across many hosts while the dense compute stays small. A <strong>feature cross</strong> is the other primitive: the signal &quot;this *user* likes this *category*&quot; isn't in either feature alone; it lives in their conjunction, and an architecture is largely characterised by whether it learns crosses automatically or needs them hand-engineered.</p>
+    <hr>
+    <p><strong>Wide &amp; Deep and DeepFM: memorisation plus generalisation.</strong> *Wide &amp; Deep* (Google) runs two paths in parallel: a <strong>wide</strong> linear model over hand-crafted cross-product features (memorises specific &quot;user_X installed app_Y&quot; combinations seen in training) and a <strong>deep</strong> MLP over embeddings (generalises to unseen combinations via dense similarity). The wide side needs a human to specify which crosses matter. *DeepFM* removes that manual step: it replaces the wide part with a <strong>Factorization Machine</strong> that learns *all* pairwise (2nd-order) feature interactions automatically through shared embeddings, then adds a deep MLP for higher-order patterns — same embeddings feed both, no cross engineering.</p>
+    <hr>
+    <p><strong>DLRM, DIN, and sequence models.</strong> *DLRM* (Meta) is the industrial workhorse: embed every categorical, take <strong>explicit pairwise dot products</strong> between all embedding pairs (2nd-order interaction), concatenate with dense features, and pass through an MLP — its identity is the embedding-table-memory reality above. *DIN* (Alibaba) adds <strong>local activation</strong>: instead of pooling a user's behaviour history into one fixed vector, it runs <strong>attention over the history with respect to the candidate item</strong>, so a user's past interest in *running shoes* is up-weighted when scoring a *sneaker* and ignored when scoring a *blender* — the user representation becomes candidate-dependent. *Sequence models* go further and model *order*: <strong>SASRec</strong> uses <strong>unidirectional (causal) self-attention</strong> over the interaction sequence to predict the next item (left-to-right, like a language model); <strong>BERT4Rec</strong> uses <strong>bidirectional</strong> self-attention with a <strong>masked-item</strong> (&quot;cloze&quot;) objective, seeing both past and future context during training — stronger representations, but it can't be used autoregressively for pure next-item prediction the way SASRec can. The judgement call: a plain <strong>two-tower + GBDT</strong> ranker is an excellent, cheap default; you reach for these when *feature crosses matter and you don't want to hand-engineer them* (DeepFM/DLRM), when *the recent-history-vs-candidate interaction is the dominant signal* (DIN), or when *sequential order carries the intent* (SASRec/BERT4Rec).</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Embedding tables are the memory reality of deep RecSys.</strong> Each categorical id indexes a learned (num_ids × d) matrix; the tables — not the MLP — dominate parameters (100M ids × d=64 ≈ 6.4B params, ~25GB). This is why DLRM-scale systems shard embedding tables across hosts while dense compute stays small.</li><li><strong>Wide &amp; Deep vs DeepFM = the cost of feature crosses.</strong> Wide &amp; Deep memorises via hand-crafted cross-product features (wide) + generalises via an embedding MLP (deep); DeepFM replaces the manual wide part with a Factorization Machine that learns *all* 2nd-order crosses automatically through shared embeddings — no cross engineering.</li><li><strong>DLRM makes the interaction explicit; DIN makes the user representation candidate-dependent.</strong> DLRM takes pairwise dot products between all embedding pairs, then an MLP. DIN runs attention over the user's behaviour history *w.r.t. the candidate* (local activation), so relevant past behaviour is up-weighted per candidate instead of pooled into one fixed vector.</li><li><strong>SASRec vs BERT4Rec = unidirectional vs bidirectional sequence modelling.</strong> SASRec uses causal (left-to-right) self-attention to predict the next item, so it's naturally autoregressive; BERT4Rec uses bidirectional self-attention with a masked-item (cloze) objective, seeing future context in training for stronger representations but not usable for pure autoregressive next-item generation.</li><li><strong>A two-tower + GBDT ranker is the right default; reach for DL architectures for a specific reason.</strong> DeepFM/DLRM when un-engineered feature crosses matter; DIN when the history-vs-candidate interaction dominates; SASRec/BERT4Rec when sequential order carries intent. Adopting a heavier architecture without one of those reasons buys cost, not accuracy.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Deep-learning RecSys architectures are all answers to &quot;how do you turn categorical features into a score,&quot; and each is defined by which interactions it represents: Wide &amp; Deep (hand-crafted crosses + embedding MLP), DeepFM (FM learns all 2nd-order crosses automatically), DLRM (explicit pairwise dot products, with embedding tables as the memory reality), DIN (attention over history w.r.t. the candidate → candidate-dependent user vector), and SASRec/BERT4Rec (unidirectional vs bidirectional self-attention over the interaction sequence). A two-tower + GBDT ranker is the cheap strong default; you upgrade only when crosses, history-vs-candidate, or order is the dominant signal.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Embedding tables are the memory reality:</strong> each categorical id indexes a learned (num_ids × d) matrix; tables dominate params (100M ids × d=64 ≈ 6.4B, ~25GB), so DLRM-scale systems shard tables across hosts while dense compute stays small. A feature cross (&quot;user × category&quot;) lives in the conjunction, not either feature alone.</li><li><strong>Wide &amp; Deep vs DeepFM:</strong> Wide &amp; Deep = hand-crafted cross features (wide, memorises) + embedding MLP (deep, generalises). DeepFM replaces the manual wide part with a Factorization Machine that learns *all* 2nd-order crosses automatically via shared embeddings — no cross engineering — plus a deep MLP.</li><li><strong>DLRM vs DIN:</strong> DLRM embeds every categorical, takes explicit pairwise dot products (2nd-order interaction), then an MLP. DIN adds local activation — attention over the user's behaviour history *w.r.t. the candidate item* — making the user representation candidate-dependent instead of a single pooled vector.</li><li><strong>SASRec vs BERT4Rec:</strong> both model *order* via self-attention over the interaction sequence. SASRec = unidirectional/causal (next-item, naturally autoregressive); BERT4Rec = bidirectional with a masked-item (cloze) objective (stronger representations from future context in training, not a pure autoregressive generator).</li><li><strong>Default and upgrade rule:</strong> two-tower + GBDT is the cheap strong default. Upgrade to DeepFM/DLRM for un-engineered crosses, DIN for a dominant history-vs-candidate interaction, SASRec/BERT4Rec when sequential order carries intent — otherwise you buy cost, not accuracy.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> In a deep RecSys ranker with a few dense features and several high-cardinality categorical features (user_id ~100M, item_id ~10M), where does almost all the parameter count and memory live, and what is the standard consequence?</p>
+      <ul class="check-opts"><li>A) In the MLP layers — deep networks are parameter-heavy, so the fix is to prune hidden units.</li><li class="correct">B) In the embedding tables — a 100M-id feature at d=64 is ~6.4B parameters (~25GB fp32), dwarfing the dense MLP. Industrial systems (DLRM) therefore shard embedding tables across many hosts while keeping the dense compute small and replicated.</li><li>C) In the attention layers, which scale quadratically with the number of features.</li><li>D) In the output softmax over items, which is why hierarchical softmax is required.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> What precisely does DeepFM give you over Wide &amp; Deep?</p>
+      <ul class="check-opts"><li>A) It adds a wide linear path that Wide &amp; Deep lacks, improving memorisation of rare combinations.</li><li class="correct">B) It replaces Wide &amp; Deep's manually hand-crafted cross-product features with a Factorization Machine that learns *all* pairwise (2nd-order) feature interactions automatically through the shared embeddings — removing the human cross-engineering step while keeping a deep MLP for higher-order patterns.</li><li>C) It removes embedding tables entirely, so it needs far less memory than Wide &amp; Deep.</li><li>D) It uses attention over the user's history, which Wide &amp; Deep cannot do.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> A user's click history contains running shoes, a cookbook, and a phone case. DIN scores two candidates: a sneaker and a blender. What does DIN's local-activation attention do that a fixed pooled user vector cannot?</p>
+      <ul class="check-opts"><li>A) It concatenates the whole history into the MLP, giving both candidates the same richer input.</li><li class="correct">B) It attends over the history *with respect to each candidate*: for the sneaker it up-weights the running-shoes interaction (relevant) and for the blender it largely ignores it — making the user's effective representation candidate-dependent, so the same history contributes different signal per item. A single pooled vector is the same for both candidates and can't do this.</li><li>C) It sorts the history by recency and truncates to the last item, which is all that matters.</li><li>D) It applies bidirectional attention over the history, which is what distinguishes DIN from SASRec.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> You want a sequential recommender you can also run autoregressively to predict the *next* item given a prefix. Between SASRec and BERT4Rec, which fits and why?</p>
+      <ul class="check-opts"><li>A) BERT4Rec — its bidirectional attention gives the strongest representations, so it is always preferred for next-item prediction.</li><li class="correct">B) SASRec — it uses unidirectional (causal, left-to-right) self-attention trained to predict the next item, so it is naturally autoregressive. BERT4Rec's bidirectional masked-item (cloze) objective sees future context in training and yields strong representations, but it is not a pure left-to-right next-item generator.</li><li>C) Either works identically; the only difference is BERT4Rec is faster to train.</li><li>D) Neither — sequence models can't do next-item prediction; you need a two-tower retriever for that.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> Your team runs a solid two-tower retriever plus a GBDT ranker on tabular features. When is switching the ranker to DLRM or DIN actually justified, rather than cargo-culting?</p>
+      <ul class="check-opts"><li>A) Always — deep architectures strictly dominate GBDTs on tabular ranking, so any switch is an upgrade.</li><li class="correct">B) When there's a concrete signal a GBDT captures poorly: many high-cardinality categorical *crosses* you don't want to hand-engineer (DLRM's explicit pairwise interactions over embeddings), or a dominant recent-history-vs-candidate interaction (DIN's local activation). Absent such a signal, the DL model mostly adds serving cost and embedding-table memory for marginal gain.</li><li>C) Whenever offline AUC is below 0.9, since DL models are the only way past that threshold.</li><li>D) Only when the catalog exceeds 1M items, which is the point GBDTs stop training.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q6.</strong> Which statement about feature crosses across these architectures is correct?</p>
+      <ul class="check-opts"><li>A) Wide &amp; Deep and DeepFM both require the engineer to specify which crosses to model.</li><li class="correct">B) A raw MLP over concatenated embeddings does *not* automatically learn explicit low-order feature crosses well, which is exactly why DeepFM (FM component) and DLRM (explicit pairwise dot products) add a dedicated interaction mechanism — the &quot;user × category&quot; conjunction lives in neither feature alone and must be modelled explicitly to be captured reliably.</li><li>C) DLRM avoids feature crosses entirely and relies solely on its MLP, which is why it needs so many layers.</li><li>D) Factorization Machines can only model 3rd-order and higher interactions, never pairwise ones.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#recsys_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

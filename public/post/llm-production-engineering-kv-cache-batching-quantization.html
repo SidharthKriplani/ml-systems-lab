@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LLM Production Engineering: KV Cache, Continuous Batching, and Quantisation — ML Systems Lab</title>
+  <meta name="description" content="Serving a 70B parameter model is a memory bandwidth problem, not a compute problem. The KV cache is the central bottleneck, continuous batching is the throughput fix, and quantisation is the cost leve…" />
+  <meta name="keywords" content="LLM Serving, KV Cache, Quantisation, vLLM, Inference, Speculative Decoding, Deep Learning, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/llm-production-engineering-kv-cache-batching-quantization.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/llm-production-engineering-kv-cache-batching-quantization.html" />
+  <meta property="og:title" content="LLM Production Engineering: KV Cache, Continuous Batching, and Quantisation" />
+  <meta property="og:description" content="Serving a 70B parameter model is a memory bandwidth problem, not a compute problem. The KV cache is the central bottleneck, continuous batching is the throughput fix, and quantisation is the cost leve…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="ML System Design" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="LLM Production Engineering: KV Cache, Continuous Batching, and Quantisation" />
+  <meta name="twitter:description" content="Serving a 70B parameter model is a memory bandwidth problem, not a compute problem. The KV cache is the central bottleneck, continuous batching is the throughput fix, and quantisation is the cost leve…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "LLM Production Engineering: KV Cache, Continuous Batching, and Quantisation",
+  "description": "Serving a 70B parameter model is a memory bandwidth problem, not a compute problem. The KV cache is the central bottleneck, continuous batching is the throughput fix, and quantisation is the cost leve…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-07-07",
+  "dateModified": "2026-07-07",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/llm-production-engineering-kv-cache-batching-quantization.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "LLM Serving, KV Cache, Quantisation, vLLM, Inference, Speculative Decoding, Deep Learning"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=llm-production-engineering-kv-cache-batching-quantization#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">ML System Design &middot; ML Systems Lab</div>
+    <h1>LLM Production Engineering: KV Cache, Continuous Batching, and Quantisation</h1>
+    <p class="excerpt">Serving a 70B parameter model is a memory bandwidth problem, not a compute problem. The KV cache is the central bottleneck, continuous batching is the throughput fix, and quantisation is the cost lever. Here is how all three work and what they actually cost you.</p>
+    <p>Serving a language model in production is a different engineering discipline from training one. This post covers the three systems-level concepts that determine whether your LLM inference is economically viable.</p>
+<h2>The memory bandwidth problem</h2>
+<p>LLM inference has two phases: prefill (process the entire input prompt in one parallel forward pass) and decode (generate one token at a time, autoregressively). Prefill is compute-bound — you process many tokens in parallel and GPUs are good at this. Decode is memory bandwidth-bound — you load model weights once per token from HBM (GPU memory) to compute units, even though you only use them for a single token generation step.</p>
+<p>A100 peak compute: 312 TFLOPS (FP16). A100 memory bandwidth: 2 TB/s. Llama-70B weights: 140GB (FP16). Loading all weights once for one decode step: 140GB / 2TB/s = 70ms. At 70ms/token, throughput is 14 tokens/second per GPU — nowhere near the hardware's compute ceiling. The GPU is spending most of its time waiting for weights to arrive from HBM, not computing.</p>
+<p>This is why quantisation, KV cache efficiency, and batching all matter so much: they attack the memory wall, not the compute wall.</p>
+<h2>KV cache: why it exists and why it&#39;s expensive</h2>
+<p>In transformer attention, each token attends to all previous tokens using stored Key and Value matrices. Without a cache, generating the 500th token requires recomputing K and V for tokens 1–499 from scratch — 499 full forward passes through the attention layers.</p>
+<p>The KV cache stores these matrices after they're computed. Token 500 only needs to attend to the cached K/V, not recompute them. This reduces per-token compute dramatically. But: each token's KV cache requires 2 × num_layers × num_heads × head_dim × float16_bytes of memory. For Llama-70B (80 layers, 64 heads, 128 head_dim): 2 × 80 × 64 × 128 × 2 bytes ≈ 2.6MB per token position. A sequence of 4096 tokens needs 10.6GB of KV cache alone. Batching 8 such sequences fills an entire A100-80GB with KV cache.</p>
+<h2>PagedAttention and vLLM</h2>
+<p>The naive KV cache allocates memory proportional to maximum sequence length at request start. A request expected to generate 2048 tokens gets 2048 × 2.6MB = 5.3GB of KV cache pre-allocated, even if it only generates 50 tokens. 90% of that allocation is wasted.</p>
+<p>PagedAttention (vLLM) treats KV cache like virtual memory. KV cache is divided into fixed-size blocks (pages). Each sequence's KV cache is stored in non-contiguous pages, with a page table mapping logical positions to physical pages. Memory is allocated one page at a time as the sequence grows. Freed immediately when a sequence completes. This eliminates internal fragmentation and enables continuous batching — the freed pages are immediately available for new sequences.</p>
+<p>In benchmarks, vLLM achieves 2–4× higher throughput than Hugging Face Text Generation Inference with naive static batching on the same hardware.</p>
+<h2>Continuous batching (iteration-level scheduling)</h2>
+<p>Static batching: send 32 requests, wait for all 32 to finish, send the next 32. As sequences finish early, the remaining computation is wasted on padding. If 16 of 32 sequences finish at 50 tokens and the remaining 16 continue to 500 tokens, the last 450 tokens of those 16 sequences run at 50% batch efficiency.</p>
+<p>Continuous batching: the batch is rebuilt after each decode step. When a sequence finishes, a new request replaces it immediately. The GPU runs at near-maximum batch size throughout. Result: 2–4× throughput improvement vs static batching.</p>
+<p>The implementation complexity: each sequence in the dynamic batch may be at a different position in its generation. Attention masks, position encodings, and KV cache management all need to handle variable-position sequences in the same batch. vLLM, TGI (Text Generation Inference), and TensorRT-LLM all implement this.</p>
+<h2>Quantisation for serving</h2>
+<p>FP16 (16-bit floating point): full quality, 2 bytes per parameter. A 70B model = 140GB. Requires 2× A100-80GB.</p>
+<p>INT8 (8-bit integer): 1 byte per parameter, 70GB for 70B model. Quality loss: <0.5 perplexity points on standard benchmarks. Throughput: 1.3–1.8× improvement (memory bandwidth reduction). Methods: LLM.int8() (mixed-precision for outlier activations), SmoothQuant (migrates quantisation difficulty from activations to weights). Production choice for quality-sensitive deployments.</p>
+<p>INT4 (4-bit integer): 0.5 bytes per parameter, 35GB for 70B model — fits on a single A100-80GB. Quality loss: 0.5–2 perplexity points. Methods: GPTQ (requires calibration dataset, 10–30 minutes to run), AWQ (activation-aware, typically higher quality than GPTQ). Production choice when you need to serve a large model on minimal hardware or maximise throughput. Avoid for tasks where accuracy matters significantly (medical, legal, precise factual recall).</p>
+<h2>Prefill vs decode phase management</h2>
+<p>Prefill is fast and compute-bound: a 1000-token prompt is processed in one parallel pass. Decode is slow and memory-bound: generating 100 tokens requires 100 sequential forward passes.</p>
+<p>At high request rates, queued prefill work can starve decode work (and vice versa). Chunked prefill: split long prompts into fixed-size chunks, interleave with decode steps. This prevents head-of-line blocking where one long-prompt prefill delays all in-flight decode steps.</p>
+<p>For time-to-first-token (TTFT) SLAs: prioritise fast prefill scheduling (batching prompts together, not interleaving). For generation throughput (tokens/sec): prioritise efficient decode, maximise batch size during decode. The optimal policy depends on your SLA: if users care about TTFT, optimise prefill; if they care about full response latency, optimise decode.</p>
+<h2>Speculative decoding</h2>
+<p>Small draft model (Llama-7B) generates K token guesses in parallel. Large target model (Llama-70B) verifies all K guesses in one forward pass using parallel decoding. If the target accepts all K drafts: you've generated K tokens in approximately the time of 1 target-model step. Expected speedup: K × acceptance_rate.</p>
+<p>Acceptance rate is high when output is predictable: code generation, JSON formatting, common phrases. Low for creative text, high-temperature sampling. Typical production speedup: 1.5–2× for code tasks, 1.1–1.3× for creative tasks.</p>
+<p>Operational complexity: requires deploying and co-locating two models (draft + target). Shared KV cache between models requires careful engineering. Most useful when: your target model is very large (>70B), your workload is structured/predictable, and your draft model is fast.</p>
+<p><strong>Try on Colab:</strong> use the transformers library to benchmark naive autoregressive generation vs generation with KV caching enabled on a small model (GPT-2). Generate 200 tokens from a 50-token prompt. Compare: (1) time per token with KV caching, (2) time per token without KV caching (set use_cache=False). The speedup should increase with sequence length. Then quantise GPT-2 to INT8 using bitsandbytes and compare throughput again.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=llm-production-engineering-kv-cache-batching-quantization#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

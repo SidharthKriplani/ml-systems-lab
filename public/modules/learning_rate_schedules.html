@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learning Rate Schedules | ML Systems Lab</title>
+  <meta name="description" content="Warmup, cosine annealing, cyclic LR, and why the schedule shape changes what you find.">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/learning_rate_schedules.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/learning_rate_schedules.html">
+  <meta property="og:title" content="Learning Rate Schedules | ML Systems Lab">
+  <meta property="og:description" content="Warmup, cosine annealing, cyclic LR, and why the schedule shape changes what you find.">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Learning Rate Schedules">
+  <meta name="twitter:description" content="Warmup, cosine annealing, cyclic LR, and why the schedule shape changes what you find.">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Learning Rate Schedules",
+  "description": "Warmup, cosine annealing, cyclic LR, and why the schedule shape changes what you find.",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/learning_rate_schedules.html",
+  "keywords": "lr-schedule, warmup, cosine, cyclic, one-cycle"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#optimization_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">45 min read</span>
+      <span class="tag">lr-schedule</span><span class="tag">warmup</span><span class="tag">cosine</span><span class="tag">cyclic</span><span class="tag">one-cycle</span>
+    </div>
+    <h1>Learning Rate Schedules</h1>
+    <p class="subtitle">Warmup, cosine annealing, cyclic LR, and why the schedule shape changes what you find.</p>
+
+    <p>You are training a ResNet from scratch. You pick a learning rate and run 90 epochs. If you picked too high — say $α = 0.1$ when $0.01$ is appropriate — loss oscillates from epoch 1 and the model never converges. If you picked too low — $α = 0.0001$ — loss decreases smoothly but stops at 72% accuracy when the same architecture should reach 76%. Congratulations, you found a mediocre minimum and permanently settled there. No single fixed learning rate gives you both the early progress you need and the fine-grained convergence required to reach the best basin. This is not a tuning problem. It is a structural mismatch between one constant value and a landscape that requires different step sizes at different phases of training.</p>
+    <p>The solution is to make the learning rate change over time. But how? The crudest version is step decay: drop $α$ by a factor of 10 at epoch 30 and epoch 60. This is the classic ResNet schedule and it works. The problem is the suddenness. Wherever the optimizer happens to be at epoch 30, that basin is now where it will stay — a sharp drop removes the energy needed to escape. If the optimizer landed in a slightly sharp basin at epoch 29, it is now trapped there.</p>
+    <p>Before we even get to decay strategies, there is a problem at the very start. Early in training, gradient directions are unreliable: weights are far from any useful configuration, batch statistics are noisy, and Adam's second moment estimate $v_t$ has not stabilized from zero. Applying the full learning rate at step 1 means taking large steps in arbitrary directions. Warmup — linearly ramping $α$ from near-zero to the target value over the first 1%–5% of training steps — gives gradient estimates time to accumulate before large steps are applied. For transformers, skipping warmup causes early embedding corruption that is nearly impossible to recover from.</p>
+    <p><strong>NOT this.</strong> Most people think warmup is an Adam-specific trick to work around bias correction. Actually, warmup solves a different problem: gradient direction reliability. Even with perfect bias correction, the gradient direction at step 1 is computed on one mini-batch of a randomly-initialized model — it is essentially noise. Warmup says &quot;do not trust this yet, take small steps until the signal stabilizes.&quot; Bias correction fixes the magnitude of early moments; warmup is about not acting aggressively on unreliable directions.</p>
+    <p>After the stable phase, cosine annealing replaces step decay's abrupt drop with a smooth curve: $α(t) = α_{min} + 0.5(α_{max} - α_{min})(1 + cos(πt/T))$. The gradual decrease means the optimizer keeps exploring broadly early and narrows its search gradually rather than stopping abruptly. Empirically, cosine annealing finds flatter basins than step decay, delivering 0.5%–2% better test accuracy on standard benchmarks. The mechanism: in the high-$α$ phase, the optimizer can still occasionally escape mediocre basins. As $α$ decreases continuously, exploration narrows and the optimizer settles into the flattest basin it has found.</p>
+    <p>OneCycleLR (Smith, 2018) goes further: ramp $α$ up from $α_{min}$ to a peak 5–10x higher than a typical constant rate over 30% of steps, then cosine decay down over the remaining 70%. The high-$α$ peak phase is aggressive exploration. The long decay phase is fine-grained convergence. This &quot;super-convergence&quot; has achieved matching accuracy in 10–20x fewer epochs on some tasks. The canonical transformer schedule — linear warmup, cosine decay to near zero — is structurally identical: aggressive early phase, extended fine-grained final phase.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Use linear warmup for 1%–5% of total steps, then cosine decay to near zero — this is the production-proven schedule for most deep learning.</strong>
+
+For ResNets: warmup over 5 epochs, then cosine decay. For transformers: warmup over 4% of training tokens, then cosine or linear decay. Peak learning rate: $1e$-$4$ to $3e$-$4$ for transformers, $0.1$ for ResNet+SGD. Getting the warmup length wrong by 2x costs less than getting it completely absent — absent warmup on transformers causes divergence in the first few hundred steps with near-certainty.</li><li><strong>The most common production trap: using a fixed learning rate because &quot;it converged.&quot;</strong>
+
+A model that &quot;converged&quot; on a fixed LR has actually found a basin and stopped exploring. It may have found a mediocre basin early and gotten stuck. Symptom: training loss stabilizes but is 5%–10% above published benchmarks for your architecture. Fix: add cosine decay — if loss continues improving after adding the schedule, you were prematurely converged. If loss does not improve further, you have actually found a good basin and the schedule is just confirming it. The schedule costs nothing to add.</li><li><strong>Diagnostic: loss that decreases fast, then plateaus 20+ epochs before the end = the schedule dropped $α$ too early or too sharply.</strong>
+
+With step decay: plateau after a step drop means the jump was too large — the optimizer lost the ability to escape the current basin but is not yet in a flat enough one to stay. Fix: use a smaller step factor (0.5 instead of 0.1) or switch to cosine annealing. With cosine: plateau in the middle of the schedule means the peak $α$ was too low — the early phase did not explore broadly enough. Fix: increase peak $α$ by 3x and rerun. Log $α$ alongside loss at each step to see exactly when plateaus align with schedule changes.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Learning rate schedules change which regions of the loss landscape are accessible: warmup prevents corrupt early steps, cosine annealing prevents premature basin-locking, and OneCycleLR combines aggressive exploration with fine-grained convergence — together they are worth 5%–10% accuracy over a naive fixed rate.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>No single fixed LR is best across a whole run:</strong> too high and the loss oscillates from epoch 1; too low and the optimizer locks into a mediocre minimum. You want big steps early to cover ground, small steps late to settle — hence a *schedule*.</li><li><strong>Warmup ramps α from near-zero over the first ~1–5% of steps:</strong> early gradients are unreliable in *direction*, not just biased in magnitude, so a big early step on a fresh unstable model can blow it up.</li><li><strong>Warmup fixes direction reliability, not just Adam's bias:</strong> even with perfect bias correction the step-1 gradient is essentially noise, so warmup is still needed — the two are separate problems.</li><li><strong>Step decay locks the basin abruptly:</strong> dropping the rate 10× at a milestone freezes the optimizer wherever it happens to be at that moment — cosine decay anneals smoothly to near zero instead, avoiding a premature lock-in.</li><li><strong>Cosine annealing tends to find flatter basins</strong> than step decay, worth roughly 0.5–2% test accuracy on benchmarks — the smooth glide-down lets the optimizer keep settling rather than snapping into place.</li><li><strong>OneCycleLR:</strong> ramp up to a 5–10× peak over the first ~30% of steps, then cosine-decay the rest — aggressive exploration up front, fine convergence at the end.</li><li><strong>Canonical Transformer schedule = linear warmup + cosine decay to near zero,</strong> worth 5–10% accuracy over a naive fixed rate; it also pairs with early stopping so training both moves fast and lands cleanly.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> A transformer language model diverges in the first 100 training steps when trained with Adam and α=1e-4, β2=0.999. No warmup is used. What is the likely cause and fix?</p>
+      <ul class="check-opts"><li>`A) The divergence is caused by the learning rate α=1e-4 being too large for a transformer. Transformers require a much smaller initial learning rate (around 1e-6) because their attention weights are sensitive to small parameter changes. The fix is to reduce α by 2 orders of magnitude and retrain without warmup.`</li><li>`B) The divergence is caused by β2=0.999 being too high for the first 100 steps. With β2=0.999, the second moment accumulates very slowly and remains near zero for the first 100 steps, causing the effective learning rate to be α/√(near-zero) = very large — much larger than the intended 1e-4. The fix is to set β2=0.9 for the first 100 steps, then switch to 0.999 once the second moment has stabilized.`</li><li>`C) Without warmup, at step t=1 the second moment v_1 = (1−β2)·g_1² = 0.001·g_1². Bias-corrected: v̂_1 = v_1/(1−β2^1) = v_1/0.001 = g_1². The denominator √v̂_1 = |g_1| — correct. However, the first moment m̂_1 = m_1/(1−β1^1) = g_1. So the step is α·g_1/|g_1| = α·sign(g_1) — magnitude α for every parameter, regardless of gradient magnitude. This is actually unit steps for each parameter, which seems fine. The real issue is that α=1e-4 with no warmup means the scale of updates is uniform α=1e-4 per step — but for transformers, the initial gradient magnitudes in different layers can vary by orders of magnitude. The adaptive scaling handles this, but early in training, when embedding layers have very large gradients, the effective steps can still be destabilizing. Fix: use warmup over 2000-4000 steps (linear increase from α=1e-7 to α=1e-4), allowing the optimizer moments to stabilize before the full learning rate is applied.`</li><li>`D) The divergence occurs because Adam's bias correction makes early steps too large. At step t=1 with β1=0.9, the bias correction factor 1/(1−β1^1) = 10 amplifies the first moment 10x. Combined with the similarly amplified denominator, early steps are 10x the intended magnitude, causing the weights to jump to extreme values. The fix is to disable bias correction for the first 100 steps.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Why does cosine annealing consistently outperform step decay in practice, even though both eventually reduce the learning rate to the same final value?</p>
+      <ul class="check-opts"><li>`A) Step decay multiplies the learning rate by a factor (usually 0.1 or 0.5) at fixed milestones (e.g., at 30, 60, 90 epochs). At each milestone, the learning rate drops suddenly. This sudden drop &quot;freezes&quot; the optimizer in whatever basin it currently occupies — there is not enough remaining learning rate to escape. If the model happened to be in a sharp basin at the milestone, it is locked there. Cosine annealing reduces the learning rate continuously and smoothly. In the high-lr phase (early in the cosine curve), the optimizer continues exploring broad basins. As the lr decreases, exploration narrows gradually, allowing the model to settle slowly into the flat region it finds. The smooth decay is a form of graduated annealing (similar to simulated annealing) that avoids premature freezing. Empirically, the difference is 0.5-2% in test accuracy, with cosine consistently winning across vision and language benchmarks.`</li><li>`B) Cosine annealing outperforms step decay because it requires fewer hyperparameters. Step decay requires specifying both the decay factor and the milestone epochs, which are sensitive to the specific dataset and architecture. Cosine annealing only requires the total number of training steps, which is always known in advance. The performance advantage comes from avoiding the human error of choosing wrong milestones, not from any inherent mathematical property of the cosine curve.`</li><li>`C) Cosine annealing and step decay perform equivalently in terms of final test accuracy. Cosine annealing appears to win in benchmarks because it is typically compared to step decay with non-optimal milestone placement. When step decay milestones are tuned precisely to the dataset — for example, using a held-out validation set to find the optimal decay point — it matches or exceeds cosine annealing performance.`</li><li>`D) Cosine annealing outperforms step decay because it is compatible with Adam's momentum terms, while step decay is designed only for SGD. Adam accumulates momentum in m and v that must be gradually reset as the learning rate changes; the sudden drop in step decay disrupts this momentum accumulation. Cosine annealing's gradual decay allows Adam's moments to adjust proportionally, maintaining the correct effective step size throughout training.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Two models train with OneCycleLR: Model A uses a peak lr of 0.1, Model B uses a peak lr of 0.01 (standard for that architecture). Both train for the same number of steps. What are the tradeoffs?</p>
+      <ul class="check-opts"><li>`A) The two models are equivalent in expected final accuracy — OneCycleLR normalizes for peak lr by adjusting the warmup slope and annealing curve to compensate. Model A warms up faster and anneals steeper to reach the same total learning rate area under the curve. The only difference is training stability: Model A may produce NaNs during the high-lr phase if the gradient is large, while Model B is safer.`</li><li>`B) Model A (peak 0.1) will always generalize worse than Model B (peak 0.01) because a higher peak lr produces more gradient noise during the warmup phase, causing the model to memorize noise in the training data instead of generalizable patterns. The optimal OneCycleLR peak is always the minimum lr that achieves convergence, not the maximum stable lr.`</li><li>`C) Both models converge to the same minimum because the annealing phase always brings the lr to the same final value regardless of peak. The peak lr determines only the speed of the warmup, not the exploration breadth. A model that warms up to 0.1 then cools to 1e-6 takes the same path through the loss landscape as one that warms up to 0.01 then cools to 1e-6 — just with larger intermediate steps.`</li><li>`D) Model A (peak lr 0.1): the high peak lr drives more aggressive exploration of the loss landscape during the warmup and early annealing phases. The model escapes sharper minima and explores broader flat regions. However, if 0.1 is too high for the architecture (common for transformers, where 1e-3 is already aggressive), training may become unstable during the high-lr phase, producing NaNs or very oscillating loss. If the model survives the peak, it often converges to a flatter minimum with better generalization. Model B (peak lr 0.01): conservative exploration, smoother training curve, less risk of instability. More likely to find a nearby local minimum rather than exploring broadly. The minimum found may be sharper (worse generalization) but training is reliable. Practical guidance: use the LR range test (train for a few epochs scanning lr) to find the peak lr where training loss decreases fastest without instability, then use that as the OneCycleLR peak.`</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#optimization_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

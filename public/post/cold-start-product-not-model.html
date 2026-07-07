@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cold-Start Is Not a Model Problem, It&#39;s a Product Problem — ML Systems Lab</title>
+  <meta name="description" content="Every team building a recommendation or personalization system eventually hits cold-start. Every team frames it as a modeling problem. Most teams are wrong. Cold-start is a product design problem that…" />
+  <meta name="keywords" content="Cold-Start, ML System Design, Recommendations, Personalization, Onboarding, Exploration-Exploitation, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/cold-start-product-not-model.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/cold-start-product-not-model.html" />
+  <meta property="og:title" content="Cold-Start Is Not a Model Problem, It&#39;s a Product Problem" />
+  <meta property="og:description" content="Every team building a recommendation or personalization system eventually hits cold-start. Every team frames it as a modeling problem. Most teams are wrong. Cold-start is a product design problem that…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="ML System Design" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Cold-Start Is Not a Model Problem, It&#39;s a Product Problem" />
+  <meta name="twitter:description" content="Every team building a recommendation or personalization system eventually hits cold-start. Every team frames it as a modeling problem. Most teams are wrong. Cold-start is a product design problem that…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Cold-Start Is Not a Model Problem, It's a Product Problem",
+  "description": "Every team building a recommendation or personalization system eventually hits cold-start. Every team frames it as a modeling problem. Most teams are wrong. Cold-start is a product design problem that…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-07-07",
+  "dateModified": "2026-07-07",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/cold-start-product-not-model.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Cold-Start, ML System Design, Recommendations, Personalization, Onboarding, Exploration-Exploitation"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=cold-start-product-not-model#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">ML System Design &middot; ML Systems Lab</div>
+    <h1>Cold-Start Is Not a Model Problem, It&#39;s a Product Problem</h1>
+    <p class="excerpt">Every team building a recommendation or personalization system eventually hits cold-start. Every team frames it as a modeling problem. Most teams are wrong. Cold-start is a product design problem that happens to require a model solution — and fixing the model without fixing the product produces a technically correct system that still fails users.</p>
+    <h2>Why the Framing Matters</h2>
+<p>How you frame a problem determines what solution space you search. If cold-start is a model problem, you improve the model: add content-based features, experiment with transfer learning, tune similarity metrics, improve the embedding architecture. These are all valid modeling moves.</p>
+<p>If cold-start is a product problem, you redesign the product to collect signal: you build an onboarding flow that asks users what they want, surface seed content for explicit reactions, let users state goals. These are product moves that generate training signal the model can immediately use.</p>
+<p>The second framing almost always wins. A model with rich explicit signal from onboarding will outperform a model with no signal plus clever feature engineering. You cannot engineer your way out of a genuine signal absence — but you can collect the signal you are missing.</p>
+<p>Most teams spend months on model improvements and weeks on onboarding. The ratio should be inverted.</p>
+<h2>The Signal Gap</h2>
+<p>New users have no interaction history. The recommendation model has nothing to personalize on. The traditional solution is content-based features: demographic data, device type, geographic location, referral source, stated preferences at sign-up. This is correct and necessary.</p>
+<p>But it is incomplete. These are weak signals. Age and location tell you something about preference population distributions, but they do not tell you what this specific user wants. A 28-year-old in London who signed up via a cooking blog and a 28-year-old in London who signed up via a fitness app have very different preference profiles that demographics will not separate.</p>
+<p>The gap is not a modeling gap — it is a signal gap. The model cannot close it by being smarter. The product needs to generate the signal.</p>
+<h2>The Product Fix: Active Signal Elicitation</h2>
+<p>Onboarding is the only moment where users expect to be asked about their preferences. They have just made a commitment to the product — they are at peak willingness to engage. Every interaction during onboarding is worth 10 passive scrolls in terms of preference signal.</p>
+<p>The patterns that work: show 5–8 seed items and ask for explicit reactions (like, not interested, love it). Present category tiles and ask for selection. Ask a single goal-statement question ("What brings you here today?"). Let users follow or subscribe to topics.</p>
+<p>Instagram's launch onboarding — "follow 5 accounts to get started" — is this pattern. Spotify's taste profile setup is this pattern. Duolingo's language goal and daily commitment question is this pattern. These are not UX niceties. They are signal collection mechanisms that make the first-session model dramatically more accurate.</p>
+<p>The threshold to exit cold-start can be as low as 3–5 explicit signals. Three explicit reactions to seed content plus one category selection gives the model enough to begin collaborative filtering.</p>
+<h2>The Hybrid Routing Architecture</h2>
+<p>Cold-start is not a binary state — it is a spectrum. A user with 0 interactions is different from a user with 5 explicit reactions, which is different from a user with 50 passive interactions. Using one model to serve all three is wasteful and inaccurate.</p>
+<p>The right architecture is explicit routing:</p>
+<p>Cold users (fewer than 10 interactions): route to an onboarding model. This model uses content-based features plus any explicit signals from onboarding. It is optimized for rapid signal collection, not for maximizing CTR on session 1.</p>
+<p>Warm users (10–50 interactions): route to a transitional model. This model blends collaborative filtering signals with content-based features. The collaborative signal is thin but real. The model is optimized for accelerating the transition to the hot state.</p>
+<p>Hot users (50+ interactions): route to the full collaborative filtering model. This model has enough interaction history to produce accurate personalized recommendations.</p>
+<p>These are three separate models with separate training pipelines, not one model trying to handle all three cases. The routing logic is a function of interaction count, not a model parameter. Explicit routing is more maintainable, more debuggable, and more accurate than a single model with a cold-start regularization term.</p>
+<h2>The Exploration-Exploitation Frame</h2>
+<p>Cold users are not a problem to solve. They are exploration budget. The system has genuine uncertainty about what they want. The correct response to uncertainty is exploration: show diverse content, observe reactions, update beliefs, converge.</p>
+<p>UCB (upper confidence bound) or Thompson sampling on item categories is the right mechanism during cold-start. Treat each content category as an arm. Start with equal uncertainty. Update based on reactions. After 5–10 interactions, the distribution of uncertainty has converged enough to start exploitation.</p>
+<p>The common mistake is treating cold-start as "give them the popular stuff." Popular items reduce the risk of a bad first impression, but they also teach the model nothing about this specific user. They delay personalization by using safe interactions rather than informative ones. The first session should be optimized for information gain, not for CTR.</p>
+<h2>Measuring Whether Your Cold-Start Solution Works</h2>
+<p>Standard metrics (CTR, session length) on session 1 are not the right measure of cold-start solution quality. A high-CTR session 1 that serves only popular content and never personalizes is a cold-start failure that looks like a success.</p>
+<p>The right metric is time-to-personalization: how many sessions until the model's recommendations match the user's observed preferences? Define a threshold — for example, the first session where the recommendation distribution for this user is statistically distinguishable from the global popularity distribution. Measure the median number of sessions to reach that threshold.</p>
+<p>A cold-start solution that reduces median time-to-personalization from session 8 to session 3 is a good solution, even if CTR on session 1 is unchanged. That is the metric that reflects the actual goal: getting users into the personalized serving layer as fast as possible.</p>
+<h2>Practice this in System Design to work through the routing architecture, onboarding signal collection design, and time-to-personalization measurement for a real product cold-start scenario.</h2>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=cold-start-product-not-model#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

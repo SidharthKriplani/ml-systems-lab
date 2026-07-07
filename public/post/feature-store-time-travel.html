@@ -38,8 +38,8 @@
       "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
     }
   },
-  "datePublished": "2026-06-20",
-  "dateModified": "2026-06-20",
+  "datePublished": "2026-07-07",
+  "dateModified": "2026-07-07",
   "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/feature-store-time-travel.html",
   "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
   "keywords": "Feature Stores, Data Leakage, Point-in-Time, Feast, Fintech, Credit Risk"
@@ -74,20 +74,20 @@
     <p class="excerpt">Your feature store supports point-in-time retrieval. Your training pipeline does not use it. The culprit is a single function call: get_online_features instead of get_historical_features. In fintech, this mistake does not just inflate AUC — it trains credit and fraud models on future account activity, creating regulatory exposure and models that collapse at deployment.</p>
     <p>The feature store time-travel bug has two layers. The first layer — understanding that point-in-time correctness is necessary — is well documented. The second layer is what catches engineers who already know the concept: the feature store API has two different functions, and calling the wrong one is silent.</p>
 <h2>The two functions that look the same</h2>
-<p>Feast exposes two retrieval paths. \`feature_store.get_online_features\` returns the current value of a feature for a given entity. It is fast, low-latency, designed for serving. \`feature_store.get_historical_features\` takes an entity_df with an \`event_timestamp\` column and returns the feature value as it existed at each row's timestamp. It is batch, slower, designed for training.</p>
+<p>Feast exposes two retrieval paths. `feature_store.get_online_features` returns the current value of a feature for a given entity. It is fast, low-latency, designed for serving. `feature_store.get_historical_features` takes an entity_df with an `event_timestamp` column and returns the feature value as it existed at each row's timestamp. It is batch, slower, designed for training.</p>
 <p>Engineers building training pipelines often reach for the online API because it is familiar from serving code. The function signature is similar. There is no type error. The data comes back. AUC goes up.</p>
 <h2>Why fintech is particularly exposed</h2>
-<p>In fraud detection, the most predictive features are recent account activity — transaction velocity, balance changes, login frequency over the past 7 days. These features change rapidly. Calling \`get_online_features\` at training time gives you the current value: a user's balance today, not their balance at the time of the historical transaction you are labeling.</p>
+<p>In fraud detection, the most predictive features are recent account activity — transaction velocity, balance changes, login frequency over the past 7 days. These features change rapidly. Calling `get_online_features` at training time gives you the current value: a user's balance today, not their balance at the time of the historical transaction you are labeling.</p>
 <p>A user whose account was flagged for fraud 8 months ago and has since recovered shows high account activity today. The model sees "active account, high transaction volume" for a fraud case. It learns that active accounts are risky — but only because it is seeing account state after fraud recovery, not at fraud time.</p>
 <p>In credit risk, this is worse. ECOA prohibits using certain attributes that correlate with protected characteristics. If your feature computation inadvertently uses future income information (because the feature was recomputed after a pay period), you may be using a feature whose value at training time is statistically different from its value at prediction time in ways that correlate with protected class membership. You have both an accuracy problem and a regulatory exposure.</p>
 <h2>The correct Feast pattern</h2>
-<p>The entity_df passed to \`get_historical_features\` must include an \`event_timestamp\` column. This is not optional metadata — it is the mechanism by which Feast selects the correct historical snapshot. Without it, Feast falls back to the latest available value.</p>
-<p>entity_df must have: \`user_id\` (entity key), \`event_timestamp\` (the as-of time for each training row), and any label columns. Features retrieved: \`user_stats:avg_spend_7d\`, \`user_stats:login_count_30d\`, \`account:balance_change_7d\`.</p>
+<p>The entity_df passed to `get_historical_features` must include an `event_timestamp` column. This is not optional metadata — it is the mechanism by which Feast selects the correct historical snapshot. Without it, Feast falls back to the latest available value.</p>
+<p>entity_df must have: `user_id` (entity key), `event_timestamp` (the as-of time for each training row), and any label columns. Features retrieved: `user_stats:avg_spend_7d`, `user_stats:login_count_30d`, `account:balance_change_7d`.</p>
 <h2>The detection test</h2>
 <p>Run your training pipeline twice: once with event_timestamp set to actual training event time, once with event_timestamp set to 7 days earlier for every row. If AUC drops 5+ points with the lagged timestamps, your current pipeline is using future feature values. The lag test forces the feature store to retrieve values from before the event — if those look meaningfully different from what you normally retrieve, you have been using post-event data.</p>
 <h2>What the production degradation looks like</h2>
 <p>Model deploys. Fraud capture rate is 18% lower than backtest suggested. Ops retrain. Same result. The model was trained on features that reflect post-event account state; at inference time, features reflect current account state for a real-time event. The distributions never matched.</p>
-<p>The fix is not retraining. The fix is switching from \`get_online_features\` to \`get_historical_features\` with correct timestamps, then retraining. One function call, permanent fix.</p>
+<p>The fix is not retraining. The fix is switching from `get_online_features` to `get_historical_features` with correct timestamps, then retraining. One function call, permanent fix.</p>
 
     <div class="cta">
       <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>

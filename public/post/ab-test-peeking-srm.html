@@ -38,8 +38,8 @@
       "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
     }
   },
-  "datePublished": "2026-06-20",
-  "dateModified": "2026-06-20",
+  "datePublished": "2026-07-07",
+  "dateModified": "2026-07-07",
   "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/ab-test-peeking-srm.html",
   "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
   "keywords": "A/B Testing, Experimentation, SRM, Peeking, Statistical Validity, Data Science"
@@ -72,7 +72,7 @@
     <div class="meta">Data Science &middot; ML Systems Lab</div>
     <h1>The Two Silent Killers of A/B Tests: Peeking and SRM</h1>
     <p class="excerpt">Most A/B testing failures aren&#39;t statistical errors — they&#39;re procedural ones. Peeking: checking results before the planned end date and declaring a winner. SRM: the traffic split is 52/48 instead of 50/50, making all your metrics untrustworthy. Both are invisible in dashboards. Both corrupt your decision-making. Both are preventable.</p>
-    <p>A/B tests are the gold standard for validating product decisions. They\'re also fragile. Two failure modes account for the majority of false positives and invalid experiments: peeking and Sample Ratio Mismatch (SRM). Both produce convincing-looking results that are actually noise.</p>
+    <p>A/B tests are the gold standard for validating product decisions. They're also fragile. Two failure modes account for the majority of false positives and invalid experiments: peeking and Sample Ratio Mismatch (SRM). Both produce convincing-looking results that are actually noise.</p>
 <h2>Failure mode 1: Peeking</h2>
 <p>Peeking is checking your experiment results before the planned end date, and potentially stopping early if the p-value crosses 0.05.</p>
 <p>The statistical problem: p-values are not stable over time. If you run 1,000 A/A tests (identical treatment and control) and check them daily for 14 days, roughly 30% will cross p < 0.05 at some point — even with no real effect. The standard p < 0.05 threshold assumes you test once, at the planned end date.</p>
@@ -89,7 +89,7 @@
 <p>When an SRM exists, all your metric comparisons are invalid. Not noisy — invalid. You cannot trust any metric showing a difference.</p>
 <p>Production signal: you find a 3% SRM in post-analysis. You ship the experiment anyway, thinking "3% is small." Six months later, in a meta-analysis of similar experiments, you notice that every experiment with SRM showed inflated lift — false positives at roughly 50% rate.</p>
 <h2>How to detect SRM:</h2>
-<p>Chi-squared test on assignment counts: \`\`\` from scipy.stats import chisquare chisquare([n_treatment, n_control], f_exp=[expected_n/2, expected_n/2]) \`\`\`</p>
+<p>Chi-squared test on assignment counts: ``` from scipy.stats import chisquare chisquare([n_treatment, n_control], f_exp=[expected_n/2, expected_n/2]) ```</p>
 <p>If p-value < 0.01, you have an SRM. Run this check automatically the moment your experiment starts, not after it ends.</p>
 <p>Common SRM causes: bot traffic filtered differently in treatment vs control, JavaScript errors preventing logging in one variant, different caching behaviour, geographic load balancing sending disproportionate traffic, or randomisation happening after the first meaningful user action (so some users are bucketed differently than intended).</p>
 <h2>Bonus failure mode: the novelty effect</h2>
@@ -100,12 +100,12 @@
 <p>2. Next: verify your experiment ran for the full pre-registered duration. If it didn't, and someone wants to stop early, use sequential testing results — not naive p-values.</p>
 <p>3. Then: look at your primary metric. It's only trustworthy if the SRM check passed and you ran for the full duration.</p>
 <h2>Practice this in Experimentation frameworks to understand how to design bulletproof A/B tests and catch these failure modes before they corrupt your decisions.</h2>
-<p>\`\`\`python from scipy.stats import chi2_contingency, norm import numpy as np</p>
+<p>```python from scipy.stats import chi2_contingency, norm import numpy as np</p>
 <p>def pre_analysis_checklist(control_n, treatment_n, target_split=0.5, observed_metric=None, alpha=0.05): """Run this BEFORE looking at your primary metric. Always.""" results = {}</p>
 <p># 1. SRM check — chi-squared on traffic split total = control_n + treatment_n expected_c = total * target_split expected_t = total * (1 - target_split) chi2, srm_p, *_ = chi2_contingency([[control_n, treatment_n], [expected_c, expected_t]]) results['srm_p']     = round(srm_p, 4) results['srm_pass']  = srm_p >= 0.01   # fail → stop, do not analyse primary metric</p>
 <p># 2. Minimum detectable effect check if observed_metric is not None: se  = np.sqrt(observed_metric * (1 - observed_metric) * (1/control_n + 1/treatment_n)) mde = norm.ppf(1 - alpha/2) * se * 2 results['mde_pct'] = round(mde * 100, 2)</p>
 <p>return results</p>
-<p># Never peek at conversion rate before running this first \`\`\`</p>
+<p># Never peek at conversion rate before running this first ```</p>
 
     <div class="cta">
       <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>

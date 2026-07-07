@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contrastive Loss Functions | ML Systems Lab</title>
+  <meta name="description" content="NT-Xent, InfoNCE, temperature τ, negative mining, uniformity and alignment">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/contrastive_loss.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/contrastive_loss.html">
+  <meta property="og:title" content="Contrastive Loss Functions | ML Systems Lab">
+  <meta property="og:description" content="NT-Xent, InfoNCE, temperature τ, negative mining, uniformity and alignment">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Contrastive Loss Functions">
+  <meta name="twitter:description" content="NT-Xent, InfoNCE, temperature τ, negative mining, uniformity and alignment">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Contrastive Loss Functions",
+  "description": "NT-Xent, InfoNCE, temperature τ, negative mining, uniformity and alignment",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/contrastive_loss.html",
+  "keywords": "contrastive loss, NT-Xent, InfoNCE, temperature, hard negatives, uniformity"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#self_supervised_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">45 min read</span>
+      <span class="tag">contrastive loss</span><span class="tag">NT-Xent</span><span class="tag">InfoNCE</span><span class="tag">temperature</span><span class="tag">hard negatives</span>
+    </div>
+    <h1>Contrastive Loss Functions</h1>
+    <p class="subtitle">NT-Xent, InfoNCE, temperature τ, negative mining, uniformity and alignment</p>
+
+    <p>In a batch of 512 images, each image has one positive pair—a second augmented view of itself—and 1,022 negatives: every other image in the batch. The NT-Xent loss for positive pair (i,j) is: -log[exp(sim(zᵢ,zⱼ)/τ) / Σ_{k≠i} exp(sim(zᵢ,zₖ)/τ)]. That formula looks mechanical until you understand what each piece does. The cosine similarities in the denominator are all the &quot;wrong&quot; answers the model must learn to reject. The temperature τ controls how much the model focuses on the hardest wrong answers versus treating all negatives equally.</p>
+    <p>Temperature is the hyperparameter practitioners misset most. Set τ = 0.07 (SimCLR's default) and the model concentrates gradient on the negatives closest to the anchor—useful, informative signal. Set τ = 0.01 and exp(sim/0.01) overflows: exp(1/0.01) ≈ 2.7×10^43, the softmax denominator saturates, gradients explode, training collapses to NaN within 100 steps. Set τ = 1.0 and every negative gets nearly equal weight, slowing convergence to a crawl because the signal cannot distinguish hard from easy negatives. The useful operating range is 0.07–0.2, and knowing why that range exists is more useful than memorizing it.</p>
+    <p>More negatives is not just empirically better—it is formally justified. NT-Xent is an instantiation of InfoNCE, a lower bound on mutual information I(X;C). The bound tightens as the number of negatives increases. At 512 images per batch, each anchor has 1,022 negatives; at MoCo's queue of 65,536, each anchor has 65,536 negatives. The mutual information lower bound is tighter, the discrimination task is harder, and the encoder must learn finer-grained features to identify the correct positive. This is the formal reason large batches help SimCLR and the formal reason MoCo's queue was designed to decouple negative count from batch size.</p>
+    <p>Hard negatives—items close to the anchor in embedding space but not actually the same image—carry far more gradient than easy negatives already pushed far apart. A model that has learned basic discrimination finds easy negatives uninteresting: they contribute near-zero gradient. Hard negatives force the model to learn fine-grained distinctions. But hard negatives increase false negative risk: two cat images in the same batch are treated as negatives even though they should cluster together. Debiased contrastive loss estimates and subtracts this same-class contribution from the denominator.</p>
+    <p><strong>NOT this.</strong> The intuition &quot;just lower τ to make training harder&quot; is wrong and dangerous. τ &lt; 0.05 causes numerical overflow before any useful learning occurs. The useful range of harder training is 0.07–0.12, not 0.01. Stabilization techniques (log-sum-exp, gradient clipping, warmup) can extend this slightly, but the fundamental constraint is the exponential—smaller τ raises every similarity to a power that overflows floating point.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>NT-Xent is a classification problem over one positive and N−1 negatives, and the InfoNCE bound tightens as N grows—this is why more negatives is formally justified, not just empirically observed.</strong>
+
+For each positive pair (i,j), the loss is -log[exp(sim(zᵢ,zⱼ)/τ) / Σ_{k≠i} exp(sim(zᵢ,zₖ)/τ)]. At N=512, the bound is loose and discrimination is relatively easy. At N=65,536 (MoCo's queue), the model must learn genuinely fine-grained features to identify the correct positive among 65,536 wrong answers.</li><li><strong>Temperature τ controls gradient concentration: too low causes numerical overflow, too high produces indiscriminate signal—the useful range is 0.07–0.2.</strong>
+
+At τ=0.07, gradients concentrate on hard negatives closest to the anchor. At τ=0.01, exp(sim/0.01) overflows (exp(100) ≈ 2.7×10^43), producing NaN loss within 100 steps. At τ=1.0, all negatives contribute nearly equal gradient and the model cannot distinguish hard from easy. When contrastive training is unstable, check τ first.</li><li><strong>Hard negatives accelerate convergence but increase false negative risk—the two problems trade off directly, and debiased contrastive loss is the tool for managing the tradeoff.</strong>
+
+Hard negatives (items close to the anchor but not the same image) carry large gradient and force fine-grained discrimination. But two cat images in the same batch get treated as negatives, generating gradient that pushes similar semantics apart. Debiased loss estimates the same-class fraction and corrects the denominator, recovering unbiased gradient signal.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Temperature τ is the most consequential contrastive hyperparameter: it controls whether gradients concentrate on the hardest negatives (low τ, overflow risk below 0.05) or spread uniformly over all negatives (high τ, slow convergence). More negatives tightens the InfoNCE mutual information lower bound—so methods like MoCo's 65,536-entry queue exist not as engineering convenience but as a formal improvement in what is being optimized.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>NT-Xent = classify 1 positive among N−1 negatives:</strong> -log[exp(sim(zᵢ,zⱼ)/τ) / Σ_{k≠i} exp(sim(zᵢ,zₖ)/τ)].</li><li><strong>More negatives = tighter InfoNCE bound:</strong> batch 512 → 1,022 negs; MoCo queue → 65,536 negs, formally harder.</li><li><strong>Temperature τ range 0.07–0.2:</strong> τ=0.01 overflows (exp(100)≈2.7×10⁴³) → NaN in ~100 steps; τ=1.0 → indiscriminate, slow.</li><li><strong>Check τ first when contrastive training is unstable.</strong></li><li><strong>Hard negatives speed convergence but raise false-negative risk:</strong> two cats in a batch pushed apart.</li><li><strong>Debiased loss</strong> estimates the same-class fraction and corrects the denominator.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> SimCLR with a batch size of 256 gives poor results. Increasing to 4096 dramatically improves performance. Explain the mechanism.</p>
+      <ul class="check-opts"><li>A) Larger batches improve gradient stability through better estimates of the mean gradient, which is the main driver of SimCLR improvement</li><li class="correct">B) At N=256, each anchor has 510 negatives — the InfoNCE bound is loose and discrimination is easy; at N=4096, each anchor has 8190 negatives, the bound tightens, hard negatives are more likely, and the encoder must learn finer-grained features; MoCo addresses this by decoupling negative count from batch size via a queue</li><li>C) Larger batches increase the probability of true positive pairs appearing in the same batch, which is the key requirement for NT-Xent</li><li>D) Batch size affects only training speed, not representation quality — the improvement at 4096 must be due to longer training time</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> You set temperature τ = 0.01 (very low) and training collapses to NaN loss after 100 steps. What happened?</p>
+      <ul class="check-opts"><li>A) Very low temperature causes the model to ignore all negatives, making the loss degenerate to zero without learning</li><li class="correct">B) At τ=0.01, exp(sim/τ) values overflow (exp(100) ≈ 2.7×10^43), causing NaN in the softmax; gradients concentrate on the single hardest negative, creating explosive updates; fix by increasing τ to ≥ 0.05, using log-sum-exp stabilization, gradient clipping, and learning rate warmup</li><li>C) τ=0.01 is too small to distinguish between positives and negatives, causing the model to assign uniform similarity to all pairs</li><li>D) Very low temperature causes L2 normalization to fail numerically, which is the source of the NaN</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Explain why debiased contrastive loss is needed and sketch how it corrects for false negatives.</p>
+      <ul class="check-opts"><li>A) Debiased contrastive loss is needed because standard NT-Xent treats the anchor itself as a negative, which must be corrected</li><li class="correct">B) Standard NT-Xent treats all non-anchor examples as negatives, including same-class examples (false negatives); debiased loss estimates the same-class fraction and corrects the denominator by subtracting the estimated positive contribution, up-weighting true negatives</li><li>C) Debiased contrastive loss addresses the false negative problem by removing all examples from the same data domain as the anchor</li><li>D) False negatives in contrastive learning are only a problem at small batch sizes; debiased loss is unnecessary when batch size exceeds 4096</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> A colleague claims uniformity is just &quot;spreading embeddings apart&quot; and alignment is &quot;pulling similar things together,&quot; so NT-Xent is just doing both simultaneously. What is missing from this picture?</p>
+      <ul class="check-opts"><li>A) The colleague is correct — uniformity and alignment fully characterize what NT-Xent optimizes</li><li class="correct">B) The tension between the two objectives is missing: maximizing uniformity pushes all pairs apart while maximizing alignment collapses all points together; NT-Xent balances them by requiring positives to be closer than negatives, but the optimal geometry depends on class count, augmentation distribution, and similarity ratios — uniformity and alignment are diagnostic metrics, not the loss itself</li><li>C) The colleague is missing the temperature parameter — without τ, NT-Xent cannot optimize both simultaneously</li><li>D) The colleague is missing the normalization step — unnormalized embeddings cannot achieve both uniformity and alignment</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#self_supervised_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

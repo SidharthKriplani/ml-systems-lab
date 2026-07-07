@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Label Generation | ML Systems Lab</title>
+  <meta name="description" content="Programmatic labeling, label noise, weak supervision, distant supervision">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/label_generation.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/label_generation.html">
+  <meta property="og:title" content="Label Generation | ML Systems Lab">
+  <meta property="og:description" content="Programmatic labeling, label noise, weak supervision, distant supervision">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Label Generation">
+  <meta name="twitter:description" content="Programmatic labeling, label noise, weak supervision, distant supervision">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Label Generation",
+  "description": "Programmatic labeling, label noise, weak supervision, distant supervision",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/label_generation.html",
+  "keywords": "labeling, label noise, weak supervision, programmatic labeling"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#production_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">29 min read</span>
+      <span class="tag">labeling</span><span class="tag">label noise</span><span class="tag">weak supervision</span><span class="tag">programmatic labeling</span>
+    </div>
+    <h1>Label Generation</h1>
+    <p class="subtitle">Programmatic labeling, label noise, weak supervision, distant supervision</p>
+
+    <p>You want to predict which support tickets will need escalation. You have 500,000 old tickets — plenty of data. Then the label reality hits: &quot;escalation&quot; meant something different before 2022, 60% of tickets have no recorded outcome at all, and the outcomes that exist only showed up 14 days after the ticket closed. This is harder than picking a model. It is harder than building features. In most real production ML, *getting the labels right is the actual bottleneck.*</p>
+    <hr>
+    <h3>Four ways to get labels, each with its own cost, delay, and noise</h3>
+    <p>*Natural labels* come free from user behavior — clicks, purchases, chargebacks. The label already exists; the only catch is delay (clicks in seconds, chargebacks in days), so you design the pipeline around that wait.</p>
+    <p>*Human annotation* has experts or crowd workers label examples directly — Scale AI or Surge for hard tasks, MTurk for easy ones, running from roughly fifty cents to five dollars an example. You *must* measure quality: inter-annotator agreement (Cohen's κ) above 0.7 is acceptable, 0.8 is good, and below 0.6 means the task itself is ambiguous — fix the guidelines before spending on more labels.</p>
+    <p>*Weak supervision* (Snorkel) writes many noisy labeling rules — keywords, regex, heuristics, model votes — and combines them into one probabilistic label that's better than any single rule.</p>
+    <p>*Active learning* trains a model, finds the examples it's most unsure about, and sends only those to humans — often reaching the same accuracy as random labeling with 5–10× fewer labels.</p>
+    <hr>
+    <h3>The trap almost everyone hits: label delay</h3>
+    <p>If the truth for an event at time T only arrives at T+7 days, you must drop the last 7 days from training. Skip that, and your recent examples are full of positives that simply haven't been labeled yet. The model sees a near-zero positive rate in the latest window and &quot;learns&quot; that recent traffic is safe. That's not a pattern — it's an artifact of how you built the dataset.</p>
+    <hr>
+    <p><strong>And the myth to kill:</strong> &quot;we have tons of data, we don't need labels.&quot; Data is not labeled data. Ten million unlabeled rows teach a supervised model nothing. Label quality is the ceiling on model quality — a model can't learn the right thing from the wrong signal, no matter how much you feed it. Spend on annotation *quality* before annotation *quantity.*</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Invest in annotation quality infrastructure before annotation quantity — a 95%-accurate labeling interface with inter-annotator tracking produces better models than 3× more labels from a 75%-accurate interface.</strong>
+
+Label quality sets the ceiling on model quality. A model trained on systematically biased labels learns the bias as signal and reproduces it at inference. No amount of additional data fixes systematic noise. Measure Cohen's κ on a 200-example sample before scaling. If κ &lt; 0.6, the labeling task is too ambiguous — refine the guidelines before committing budget to 10,000 more noisy labels.</li><li><strong>Trap: ignoring label delay in training data construction is the most common subtle bug in production ML pipelines.</strong>
+
+If ground truth for event at time T arrives at T+7 days, exclude the last 7 days from training to avoid future leakage. Training pipelines that use &quot;the last 30 days of data&quot; without respecting label delay will have systematically under-labeled positive examples in the most recent window. The model learns that recent traffic is low-converting — a temporal artifact of the data construction, not a real pattern.</li><li><strong>Diagnostic: compute inter-annotator agreement on a 200-example sample before scaling annotation.</strong>
+
+If κ &lt; 0.6, the labeling task is too ambiguous to scale. The agreement number tells you whether the problem is the guidelines (fixable), the task definition (refine), or genuine boundary ambiguity (accept and use label smoothing). Collecting 10,000 more labels with κ = 0.5 does not improve the model — it amplifies the inconsistency.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Label quality sets the ceiling on model quality — a model cannot learn the right pattern from wrong labels, and collecting more labels from the same biased process amplifies the bias rather than fixing it.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Getting labels right is usually the real bottleneck</strong> — harder than picking a model or building features.</li><li><strong>Natural labels</strong> = free from behavior (clicks, purchases, chargebacks); the catch is delay.</li><li><strong>Human annotation</strong> = \$0.50–\$5/example; measure Cohen's κ — &gt;0.7 acceptable, &gt;0.8 good, &lt;0.6 = ambiguous task, fix guidelines first.</li><li><strong>Weak supervision (Snorkel):</strong> many noisy rules → one probabilistic label. <strong>Active learning:</strong> label only uncertain examples, 5–10× fewer labels.</li><li><strong>Label-delay trap:</strong> truth at T+7d → drop the last 7 days, or the model &quot;learns&quot; recent traffic is safe.</li><li><strong>Kill the myth &quot;we have tons of data, we don't need labels&quot;:</strong> unlabeled rows teach a supervised model nothing.</li><li><strong>Spend on label quality before quantity</strong> — quality is the ceiling; more labels from a biased process amplify the bias.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You are building a content moderation model. Human labelling is too expensive at scale. Walk through a programmatic labelling workflow.</p>
+      <ul class="check-opts"><li class="correct">A) Collect 500-1000 gold-labeled examples; write labeling functions (regex, topic classifiers, rule heuristics); analyze coverage and accuracy on gold set; train a Snorkel label model to aggregate functions; train a discriminative end model on probabilistic labels; iterate</li><li>B) Use a large language model to label all examples in a single pass — LLMs are more accurate than programmatic labeling functions and require no iteration</li><li>C) Start by training a BERT model on a small labeled set, then use it to pseudo-label the full corpus at a 0.9 confidence threshold</li><li>D) Programmatic labeling only works for binary classification; for multi-class content moderation, human annotation is required</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Your model achieves 92% test accuracy, but manual inspection reveals it is wrong on most examples involving a specific demographic group. What is happening and how do you fix it?</p>
+      <ul class="check-opts"><li>A) The model is correct — 92% overall accuracy means performance is acceptable across all groups</li><li>B) The demographic group must be outside the model's training distribution; add more data from that group and retrain</li><li class="correct">C) The group is underrepresented in the test set so its low accuracy is hidden in aggregate metrics; likely also reflects systematic labeling bias; fix by computing per-group metrics, auditing labels with confident learning, reweighting the minority class, and adding per-group gates to deployment criteria</li><li>D) High aggregate accuracy with demographic disparity is purely a sampling artifact that resolves with a larger test set</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> You have 10,000 examples labelled by humans with inter-annotator agreement of kappa=0.45. How do you handle this in model training?</p>
+      <ul class="check-opts"><li>A) kappa=0.45 is acceptable — proceed with majority-vote labels and standard cross-entropy training</li><li class="correct">B) Diagnose whether ambiguity is task-inherent or guideline-unclear; use label smoothing (epsilon ~0.15), soft labels (mean annotator agreement as probability), and consider multi-annotator training; revise guidelines and relabel boundary cases</li><li>C) Discard the dataset entirely — kappa below 0.6 means the data is unusable for any model training</li><li>D) Increase the number of annotators per example until kappa exceeds 0.6, then proceed with standard training</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> What is the failure mode of using a model trained on weak labels to generate more labels for the same dataset, and how do you avoid it?</p>
+      <ul class="check-opts"><li>A) The only failure mode is computational cost — the model takes too long to label the full dataset</li><li class="correct">B) The model trained on weak labels contains the same biases as the weak labels; using it to label the same data it trained on creates a circular feedback loop that amplifies errors and produces overconfident wrong labels; avoid by applying model-generated labels only to held-out data and retaining gold labels as the authoritative reference</li><li>C) There is no failure mode — a model trained on weak labels will always produce higher-quality labels than the original weak supervision source</li><li>D) The failure mode is that model-generated labels are too similar to human labels, reducing training diversity</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#production_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

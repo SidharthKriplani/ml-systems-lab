@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adam and AdamW | ML Systems Lab</title>
+  <meta name="description" content="Combining momentum and RMSProp, bias correction, and why weight decay is not L2 regularization.">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/adam_adamw.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/adam_adamw.html">
+  <meta property="og:title" content="Adam and AdamW | ML Systems Lab">
+  <meta property="og:description" content="Combining momentum and RMSProp, bias correction, and why weight decay is not L2 regularization.">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Adam and AdamW">
+  <meta name="twitter:description" content="Combining momentum and RMSProp, bias correction, and why weight decay is not L2 regularization.">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Adam and AdamW",
+  "description": "Combining momentum and RMSProp, bias correction, and why weight decay is not L2 regularization.",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/adam_adamw.html",
+  "keywords": "adam, adamw, bias-correction, weight-decay, transformers"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#optimization_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">50 min read</span>
+      <span class="tag">adam</span><span class="tag">adamw</span><span class="tag">bias-correction</span><span class="tag">weight-decay</span><span class="tag">transformers</span>
+    </div>
+    <h1>Adam and AdamW</h1>
+    <p class="subtitle">Combining momentum and RMSProp, bias correction, and why weight decay is not L2 regularization.</p>
+
+    <p>You are training a transformer. Loss starts at 4.2, decreases for a few thousand steps with SGD, then plateaus at 3.8 for 10,000 steps before barely moving again. The problem is not your data or architecture — it is that your transformer has attention matrices, embedding tables, and feedforward layers all updating simultaneously, each at wildly different gradient scales. A single global learning rate is completely wrong for all of them at once.</p>
+    <p>This is the problem Adam was built to solve. By 2014, practitioners had two partial solutions sitting separately on the shelf. RMSProp tracked each parameter's gradient magnitude via an exponential moving average $v_t = β_2 v_{t-1} + (1-β_2)g_t^2$, then divided by $\sqrt{v_t}$ to normalize steps — slow-updating parameters got large steps, fast-updating ones got small steps. SGD with momentum tracked gradient direction history $m_t = β_1 m_{t-1} + (1-β_1)g_t$, smoothing out oscillations and building velocity in consistent directions. Adam (Kingma &amp; Ba, 2014) ran both simultaneously. The $m_t$ term provides direction stability. The $v_t$ term provides per-parameter scale adaptation. Dividing the smoothed direction by the smoothed magnitude gives a step that is both directionally stable and scale-normalized: $θ_t = θ_{t-1} - α \cdot \hat{m}_t / (\sqrt{\hat{v}_t} + ε)$.</p>
+    <p>There is a critical initialization trap. At step 1, both $m_0 = 0$ and $v_0 = 0$. So $m_1 = (1-β_1)g_1 = 0.1 g_1$ — the first moment is 10x too small. $v_1 = (1-β_2)g_1^2 = 0.001 g_1^2$ — the second moment is 1000x too small. Without correction, the ratio $m_1 / \sqrt{v_1}$ is unpredictably scaled. Bias correction divides by the initialization factor: $\hat{m}_t = m_t / (1 - β_1^t)$, $\hat{v}_t = v_t / (1 - β_2^t)$. At $t=1$: $\hat{m}_1 = m_1 / 0.1 = g_1$, $\hat{v}_1 = v_1 / 0.001 = g_1^2$. Correct. Without this, early transformer training can corrupt embeddings in ways that are nearly impossible to recover from.</p>
+    <p><strong>NOT this.</strong> Most people think Adam + L2 regularization in the loss = weight decay. They are not equivalent, and the difference is not small. When you add $λ||θ||^2$ to the loss, the gradient becomes $g + λθ$. Adam then divides this combined gradient by $\sqrt{\hat{v}}$. For a parameter with a large gradient history, $\sqrt{\hat{v}}$ is large — the regularization term $λθ$ gets divided down to almost nothing. The parameters that receive the most gradient (probably the most important ones) get the least regularization. This is backwards.</p>
+    <p>AdamW (Loshchilov &amp; Hutter, 2019) fixes this surgically. Instead of modifying the gradient, weight decay is applied directly to the parameters before the gradient step: $θ_t ← (1-αλ)θ_{t-1} - α\hat{m}_t/(\sqrt{\hat{v}_t}+ε)$. The $(1-αλ)$ factor decays every parameter by the same fraction per step, completely independent of gradient history. This is true weight decay. Adam + L2 in the loss is not.</p>
+    <p>Every GPT, BERT, and Llama-class model is trained with AdamW, not Adam. The difference shows up as 1–2% perplexity improvement with no other changes. For your transformer that was plateauing at 3.8: switch to AdamW, set weight_decay=0.1, add warmup. The loss plateau disappears because the per-parameter adaptation of Adam finally has matching regularization.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Use AdamW for transformers and most deep learning; SGD+momentum for CNNs where you have time to tune and need best generalization.</strong>
+
+The deployment signal: heterogeneous parameter scales (transformers, multi-modal models, anything with embeddings) → AdamW. Homogeneous architectures (ResNet, VGG) where SGD has a well-documented training recipe → SGD+momentum. Default AdamW hyperparameters: $β_1=0.9$, $β_2=0.999$, $ε=1e$-$8$, $weight_decay=0.01$–$0.1$. PyTorch's AdamW is correct; Adam + manual L2 in the loss is not equivalent.</li><li><strong>The most common production trap: using Adam with L2 regularization in the loss and calling it weight decay.</strong>
+
+Symptom: model overfits despite high $λ$, or regularization seems to have no effect. Root cause: the adaptive denominator $\sqrt{\hat{v}}$ is dividing away your L2 penalty on the parameters that need it most. Fix: switch to AdamW and pass weight_decay directly to the optimizer. Never add L2 to the loss when using any adaptive optimizer — it does not do what you think.</li><li><strong>Diagnostic: if loss diverges in the first 100–500 steps with Adam, bias correction or missing warmup is the culprit.</strong>
+
+At step $t=1$ with $β_2=0.999$: $\hat{v}_1 = g_1^2$ after bias correction — fine. But if warmup is absent, the full $α$ is applied from step 1 before gradient statistics have stabilized across layers. Standard fix: linear warmup from $α_{min}=1e$-$7$ to $α=1e$-$4$ over 1%–4% of total training steps. If loss is stable but plateauing: check weight_decay is set on AdamW (not zero). If loss oscillates throughout training: $α$ is too high — reduce by 3x–10x.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Adam combines momentum (direction stability) and RMSProp (per-parameter scale adaptation) with bias correction; AdamW corrects Adam's broken regularization by applying weight decay directly to parameters instead of through the gradient, which is why AdamW is the standard for every serious language model.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>One global LR is wrong when a Transformer's attention, embeddings, and FFN all update at wildly different scales at once</strong> — no single rate suits all three, which is what motivates per-parameter adaptation.</li><li><strong>Adam = momentum + RMSProp combined:</strong> it divides a momentum term $m_t$ (direction stability) by $\sqrt{v_t}$ (per-parameter scale from squared gradients), giving updates that are both directionally stable and scale-normalized for every weight.</li><li><strong>Bias correction is essential, not optional:</strong> $m_0=v_0=0$, so for the first steps the running estimates are ~10× / 1000× too small — divide by $(1-β_1^t)$ and $(1-β_2^t)$ to inflate them back to unbiased size, or the early updates are tiny and training limps out of the gate.</li><li><strong>Adam + L2-in-the-loss is *not* proper weight decay:</strong> the $\sqrt{\hat v}$ denominator divides the $λθ$ penalty *down* on exactly the high-gradient parameters that most need shrinking — the regularization ends up uneven and backwards.</li><li><strong>AdamW fixes this by decaying the weights directly:</strong> $θ ← (1-αλ)θ - α\hat m/(\sqrt{\hat v}+ε)$ applies the decay uniformly and independently of the gradient scale — proper weight decay restored.</li><li><strong>Every serious language model (GPT, BERT, Llama) uses AdamW, not plain Adam</strong> — the correct decay is worth on the order of 1–2% perplexity, a free win.</li><li><strong>Defaults to memorize:</strong> $β_1=0.9$, $β_2=0.999$, $ε=1e$-$8$, weight_decay 0.01–0.1; drop $β_2$ (e.g. to 0.99) for non-stationary objectives like RL or fine-tuning where the gradient distribution shifts.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Without bias correction, what happens to Adam's step size in the first 10 training steps when β1=0.9, β2=0.999? Why does this matter for training stability?</p>
+      <ul class="check-opts"><li>`A) Without bias correction, Adam's early steps are 10x too small because m_1 = 0.1·g_1 and v_1 = 0.001·g_1² — both are heavily biased toward zero, making the numerator m much smaller than the denominator √v. Steps are therefore tiny and the model makes no progress in the first few hundred steps. Bias correction is needed to rescale the moments upward to their correct magnitude.`</li><li>`B) Bias correction has no effect on the step size because the bias affects both the numerator m and denominator √v proportionally — they cancel in the ratio m/√v. The step α·m/√v is the same whether or not bias correction is applied. The purpose of bias correction is to ensure the moments converge to the true gradient mean and variance as mathematical properties, not to change the actual step sizes taken.`</li><li>`C) At step t=1: m_1 = 0.1·g_1 (90% bias toward zero), v_1 = 0.001·g_1² (99.9% bias toward zero). Without bias correction, the step is α·m_1/√v_1 = α·(0.1·g)/(√(0.001·g²)) = α·(0.1·g)/(0.0316·|g|) = α·3.16·sign(g). With bias correction: α·m̂_1/√v̂_1 = α·g_1/(√g_1²) = α·sign(g_1). So without correction, early steps are 3.16x the intended scale. At t=10: m̂_10 without correction is still biased by (1−0.9^10)^{-1} ≈ 1.54. Steps are 1.54x too large. This can cause instability in early training: gradients are often largest at initialization (before the model has learned any useful representations), and amplifying these early steps by 1.5-3x risks divergence or finding a bad basin very early.`</li><li>`D) Without bias correction, Adam's steps in the first 10 steps are too large for β2=0.999 but too small for β1=0.9. Since β2 is closer to 1 than β1, the denominator √v is more severely underestimated than the numerator m, causing net step amplification at early steps. The exact cancellation only occurs when β1=β2, in which case bias correction is unnecessary. For the standard β1=0.9, β2=0.999 setting, early steps are underdetermined.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Explain why adding L2 regularization to the loss does not behave as expected in Adam, but AdamW's weight decay does.</p>
+      <ul class="check-opts"><li>`A) L2 regularization modifies the gradient: g_effective = g + λθ. In Adam, this combined gradient is passed through the adaptive scaling: step_i = m̂_i / √v̂_i. The denominator √v̂_i is the RMS of the combined gradient history. For parameters with large gradient history (large v̂_i), the L2 penalty λθ is divided by a large number — giving very little actual regularization. For parameters with small gradient history (small v̂_i), λθ is divided by a small number — very strong regularization. The effective regularization is therefore non-uniform and inversely correlated with gradient magnitude, which is backwards from the intent. AdamW applies weight decay after the adaptive step: θ ← (1−αλ)θ − α·m̂/(√v̂+ε). The weight decay factor (1−αλ) is applied uniformly to every parameter, independent of gradient history. This gives each parameter the same fractional decay per step, equivalent to true L2 regularization in the SGD case.`</li><li>`B) L2 regularization in the loss works exactly the same in Adam as in SGD — the penalty term λ||θ||² contributes a gradient λθ which pushes parameters toward zero, independent of the adaptive scaling. AdamW applies an additional layer of weight decay on top of this L2 gradient, which is why AdamW is stronger than Adam+L2. The two methods are not equivalent; AdamW applies twice the regularization.`</li><li>`C) L2 regularization fails in Adam because Adam's bias correction terms (1−β1^t) and (1−β2^t) scale the L2 gradient differently from the task gradient. At early training steps, the bias correction amplifies the L2 penalty disproportionately, causing severe over-regularization in the first few hundred steps. AdamW applies weight decay after bias correction, avoiding this early-training regularization spike.`</li><li>`D) L2 regularization added to the loss prevents Adam from using its adaptive scaling feature because the λθ term is dense — it is nonzero for all parameters at all times. Adam's adaptive scaling is designed for sparse gradients and degrades when every parameter receives a nonzero gradient at every step. AdamW bypasses this problem by applying weight decay as a multiplicative factor rather than an additive gradient term.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> A colleague proposes switching a ResNet-50 ImageNet training from SGD+momentum to Adam because &quot;Adam converges faster.&quot; What do you predict about final test accuracy, and what would you recommend instead?</p>
+      <ul class="check-opts"><li>`A) Adam and SGD+momentum converge to the same final test accuracy on ImageNet given sufficient training time. The perceived difference in convergence speed is an artifact of comparing training at different total epoch counts. If both are trained for 300 epochs with the same learning rate schedule, they reach identical top-1 accuracy. The recommendation is to use Adam for time-sensitive training since it reaches good accuracy faster.`</li><li>`B) Switching to Adam will improve both training speed and final test accuracy. Adam's adaptive learning rates provide better calibration for the heterogeneous parameter scales in ResNet-50, reducing the generalization gap that occurs with a single SGD learning rate. The reason SGD is traditionally used for ResNet is historical — Adam was not available when the standard recipes were developed.`</li><li>`C) Adam converges faster but reaches the same or worse final test accuracy due to gradient noise reduction, but only for the first few epochs. After 50+ epochs, SGD's momentum builds up sufficient velocity that it catches up to Adam's convergence speed. The 1-2% accuracy gap is visible only in short training runs; with full 90-epoch ImageNet training, the two methods are equivalent.`</li><li>`D) Adam typically converges faster (lower training loss earlier) but reaches lower final test accuracy than well-tuned SGD+momentum for ResNet-50 on ImageNet. The standard benchmark difference is 1-2% top-1 accuracy. The mechanism: Adam's adaptive scaling reduces gradient noise, converging toward sharper minima that generalize worse. SGD+momentum retains more stochasticity, finding flatter minima. Recommendation: if speed is the goal, use Adam with a cosine schedule and AdamW with weight_decay=0.05 — this closes much of the generalization gap. If best accuracy is the goal, use SGD+momentum with linear warmup, cosine decay, and well-tuned weight decay (the standard ResNet recipe). The switch is also possible with longer training and label smoothing as additional regularization to compensate for Adam's sharpness bias.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> What happens to Adam's behavior when β2 is set very close to 1 (say, 0.9999)? When would you deliberately use a lower β2 (say, 0.9)?</p>
+      <ul class="check-opts"><li>`A) With β2=0.9999, Adam becomes equivalent to AdaGrad because the exponential moving average window is so large (10,000 steps) that v_t effectively accumulates all historical gradients without forgetting. The learning rate decays to zero over training just as in AdaGrad, making β2=0.9999 inappropriate for long training runs. A lower β2 like 0.9 maintains constant learning rates by forgetting old gradients quickly.`</li><li>`B) With β2=0.9999, the second moment v_t accumulates squared gradients over an effective window of 1/(1−0.9999) = 10,000 steps. Adam's denominator √v̂_t reflects the gradient scale averaged over 10,000 past steps — very stable but very slow to adapt to gradient scale changes. If the loss landscape changes dramatically (e.g., phase transitions in training, fine-tuning on a new task), the denominator remains anchored to the old gradient scale for thousands of steps, causing inappropriate step sizes. With β2=0.9 (effective window of 10 steps), v_t tracks recent gradient scale closely — more responsive but noisier. Lower β2 is appropriate in reinforcement learning (highly non-stationary rewards), meta-learning (rapid task switching), and fine-tuning where the gradient distribution changes quickly. Higher β2 suits stable supervised learning where gradient scale is approximately constant throughout training.`</li><li>`C) Setting β2=0.9999 causes Adam to use a very small effective learning rate because the denominator √v̂_t accumulates over 10,000 steps and grows large. This is beneficial for fine-tuning where you want conservative updates, but harmful for pre-training where learning rates need to be larger. β2=0.9 should be used when training from scratch; β2=0.9999 is for fine-tuning or transfer learning scenarios.`</li><li>`D) β2 only controls the memory window for gradient magnitude estimation and has no effect on Adam's convergence properties in stable supervised learning settings. Both β2=0.9 and β2=0.9999 converge to the same final loss because the bias correction term compensates for the different window sizes, ensuring the denominator is always the correct current-epoch estimate. The choice of β2 only matters for non-stationary problems.`</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#optimization_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

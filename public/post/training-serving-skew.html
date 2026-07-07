@@ -38,8 +38,8 @@
       "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
     }
   },
-  "datePublished": "2026-06-20",
-  "dateModified": "2026-06-20",
+  "datePublished": "2026-07-07",
+  "dateModified": "2026-07-07",
   "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/training-serving-skew.html",
   "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
   "keywords": "Feature Engineering, Production ML, Debugging, Feature Store"
@@ -74,9 +74,9 @@
     <p class="excerpt">Your model has 0.92 AUC in the notebook. It degrades to baseline within two weeks in production. Nobody&#39;s alarmed because the metrics move slowly. Then one day someone checks the actual conversion rate and it&#39;s half of what it was at launch. The culprit is almost always the same thing: a gap between how you compute features at training time and how you compute them at serving time.</p>
     <p>The gap between a model that works in a notebook and one that works in production is almost always a feature engineering problem.</p>
 <h2>The four most common forms of training-serving skew:</h2>
-<p><strong>1. Timestamp boundary bugs.</strong> Your training pipeline computes a 7-day rolling window with \`WHERE ts < event_ts\`. Your serving code uses \`WHERE ts <= NOW() - INTERVAL 7 DAYS\`. On the surface these look the same. In practice, training sees a half-open interval at each event's timestamp, while serving uses wall-clock time — and at midnight, they diverge by up to 24 hours.</p>
-<p><strong>2. Different null handling.</strong> Training imputes missing \`age\` with the column mean (34.2). Serving code was written by a different team six months later, and they imputed with 0 for simplicity. A 0-age user looks like a child to your model. Every user with a missing age now gets systematically mis-scored.</p>
-<p><strong>3. Scaler fitted on wrong data.</strong> The classic. \`scaler.fit_transform(X_train)\` at training time. \`scaler.fit_transform([single_row])\` at serving time — re-fitting on every request. A single row has mean = its own value, std ≈ 0. Every scaled feature becomes 0 or undefined.</p>
+<p><strong>1. Timestamp boundary bugs.</strong> Your training pipeline computes a 7-day rolling window with `WHERE ts < event_ts`. Your serving code uses `WHERE ts <= NOW() - INTERVAL 7 DAYS`. On the surface these look the same. In practice, training sees a half-open interval at each event's timestamp, while serving uses wall-clock time — and at midnight, they diverge by up to 24 hours.</p>
+<p><strong>2. Different null handling.</strong> Training imputes missing `age` with the column mean (34.2). Serving code was written by a different team six months later, and they imputed with 0 for simplicity. A 0-age user looks like a child to your model. Every user with a missing age now gets systematically mis-scored.</p>
+<p><strong>3. Scaler fitted on wrong data.</strong> The classic. `scaler.fit_transform(X_train)` at training time. `scaler.fit_transform([single_row])` at serving time — re-fitting on every request. A single row has mean = its own value, std ≈ 0. Every scaled feature becomes 0 or undefined.</p>
 <p><strong>4. Aggregation window timezone mismatch.</strong> Training uses a calendar-day window (midnight UTC). Serving uses a rolling 24h window. At 11pm UTC, serving might include the next calendar day. Small difference, consistent bias across all temporal features.</p>
 <h2>How to detect it:</h2>
 <p>Log your serving features — not just predictions. Ship a feature logging sidecar to your serving infrastructure. Every hour, run PSI between the logged feature distribution and the training distribution baseline. PSI > 0.1: investigate. PSI > 0.2: incident.</p>

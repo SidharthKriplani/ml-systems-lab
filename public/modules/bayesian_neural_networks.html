@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bayesian Neural Networks &amp; Uncertainty Quantification | ML Systems Lab</title>
+  <meta name="description" content="Weight distributions, aleatoric vs epistemic uncertainty, dropout VI, last-layer Laplace, deep ensembles, conformal prediction">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/bayesian_neural_networks.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/bayesian_neural_networks.html">
+  <meta property="og:title" content="Bayesian Neural Networks &amp; Uncertainty Quantification | ML Systems Lab">
+  <meta property="og:description" content="Weight distributions, aleatoric vs epistemic uncertainty, dropout VI, last-layer Laplace, deep ensembles, conformal prediction">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Bayesian Neural Networks &amp; Uncertainty Quantification">
+  <meta name="twitter:description" content="Weight distributions, aleatoric vs epistemic uncertainty, dropout VI, last-layer Laplace, deep ensembles, conformal prediction">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Bayesian Neural Networks & Uncertainty Quantification",
+  "description": "Weight distributions, aleatoric vs epistemic uncertainty, dropout VI, last-layer Laplace, deep ensembles, conformal prediction",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/bayesian_neural_networks.html",
+  "keywords": "BNN, uncertainty, epistemic, aleatoric, deep ensembles, conformal prediction, dropout VI"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#probabilistic_ml_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">70 min read</span>
+      <span class="tag">BNN</span><span class="tag">uncertainty</span><span class="tag">epistemic</span><span class="tag">aleatoric</span><span class="tag">deep ensembles</span>
+    </div>
+    <h1>Bayesian Neural Networks &amp; Uncertainty Quantification</h1>
+    <p class="subtitle">Weight distributions, aleatoric vs epistemic uncertainty, dropout VI, last-layer Laplace, deep ensembles, conformal prediction</p>
+
+    <p>Standard neural networks output a prediction with no honest signal about confidence. A network that outputs 95% probability on every prediction — whether it has seen thousands of similar examples or none at all — is not expressing uncertainty, it is suppressing it. Bayesian Neural Networks address this by placing distributions over weights rather than point estimates, splitting predictive uncertainty into two types: irreducible noise in the data (aleatoric) and uncertainty from insufficient data coverage (epistemic).</p>
+    <p>In practice, full BNNs are infeasible at any useful scale. The empirical punchline is that deep ensembles — train several models from different random seeds — consistently beat most principled Bayesian approximations on calibration benchmarks. The reason is not Bayesian coverage; ensembles explore different loss basins and get function-space diversity that MC Dropout and most VI methods miss. Conformal prediction takes a completely different route: rigorous coverage guarantees with no Bayesian machinery at all.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Aleatoric uncertainty is irreducible noise in the data itself.</strong> Infinite training data will not remove it. A blurry medical image has inherent label ambiguity regardless of training set size — the image does not contain enough information to determine the label with certainty. Model it explicitly: predict σ_θ(x) alongside μ_θ(x) so p(y|x,θ) = N(μ_θ(x), σ_θ(x)²). The network outputs the prediction and the noise level. Regions with consistently high σ_θ(x) after training signal inherent data ambiguity.</li><li><strong>Epistemic uncertainty comes from not having enough data in a region — it is reducible by collecting more data of that type.</strong> A well-calibrated model should be uncertain on out-of-distribution inputs and confident on in-distribution inputs. In a BNN, epistemic uncertainty = variance of E[y|x,θ] over the posterior p(θ|data). The operational use: high epistemic uncertainty in a specific region tells you exactly what data to collect next to reduce model uncertainty there.</li><li><strong>MC Dropout leaves dropout active at test time, runs T forward passes with different random dropout masks, and uses their variance as uncertainty.</strong> Zero architecture changes are required — this is why it is the most widely deployed BNN approximation. Formally it is equivalent to approximate VI in a specific deep GP model, but the formal correspondence requires dropout rates that practitioners rarely use. It works well enough as a heuristic despite the theoretical mismatch.</li><li><strong>Last-layer Laplace approximation: train to MAP, then fit a Gaussian posterior only on the last-layer weights W_last ~ N(W̃, H_last⁻¹).</strong> The Hessian is only d_last × d_last — feasible even for large networks where the full Hessian is prohibitive. Everything else stays as a point estimate. Strong practical baseline: reuses pretrained weights, no training changes, adds only a post-hoc Hessian computation. Calibrates well for classification. Fails for models where the feature extractor (not the last layer) is the source of uncertainty.</li><li><strong>Deep ensembles: train M independent networks from different random seeds.</strong> Predictive distribution = mixture of their M softmax outputs. Uncertainty = disagreement among ensemble members. Empirically dominates MC Dropout, last-layer Laplace, and most VI methods on calibration benchmarks. The cost is honest: M × training time and M × inference cost. There is no free lunch — ensembles are better because they are more expensive.</li><li><strong>Why ensembles outperform most Bayesian approximations: deep network loss landscapes are highly multimodal.</strong> Different random seeds converge to different loss basins, each corresponding to a functionally different solution. MC Dropout and VI both approximate a distribution localised around one basin. Ensembles explicitly sample different basins and get genuine function-space diversity. Their empirical advantage is loss-basin diversity, not Bayesian posterior coverage.</li><li><strong>Temperature scaling: after training, find scalar T on a held-out validation set by minimising NLL with scaled logits σ(f(x)/T).</strong> T &gt; 1 softens predictions, T &lt; 1 sharpens them. Accuracy is unchanged — argmax is invariant to positive scaling. One parameter, zero retraining, dramatically reduces ECE for the systematic overconfidence that cross-entropy training induces. This is mandatory before deploying any neural network classifier for probabilistic use.</li><li><strong>Conformal prediction provides a formal coverage guarantee with no distributional assumptions on the model.</strong> Compute nonconformity scores on a calibration set. Prediction set for a new x*: C(x*) = {y : score(x*,y) ≤ quantile_{1-α}(calibration scores)}. Guarantee: P(y* ∈ C(x*)) ≥ 1-α under exchangeability. The prediction set widens when the model is uncertain and shrinks when confident. It is the only uncertainty method with a formal coverage guarantee — all other methods are heuristic.</li><li><strong>OOD detection separates good uncertainty methods from bad ones.</strong> Neural networks are notoriously overconfident on OOD inputs — high softmax probability for inputs that look nothing like the training distribution. Deep ensembles produce better OOD uncertainty than single-model methods because disagreement among ensemble members is high for novel inputs. Conformal prediction is the only method with a formal guarantee: if the test input comes from the same distribution as the calibration set, coverage is guaranteed.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Deep ensembles consistently outperform MC Dropout and most VI-based BNN approximations on calibration benchmarks, and their advantage is function-space diversity from different loss basins — not Bayesian posterior coverage. The aleatoric/epistemic distinction has a concrete operational meaning: aleatoric uncertainty cannot be reduced by collecting more data, while epistemic uncertainty is a direct signal of where more data will improve the model. Conformal prediction is the only method with a formal marginal coverage guarantee under exchangeability — everything else is heuristic.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>BNNs put distributions over weights</strong> to split uncertainty into aleatoric (irreducible noise) vs epistemic (data coverage).</li><li><strong>Aleatoric = irreducible</strong> (more data won't help); <strong>epistemic = reducible</strong> — high epistemic tells you exactly where to collect data.</li><li><strong>MC Dropout:</strong> dropout on at test time, T passes, variance = uncertainty — zero architecture change, most-deployed heuristic.</li><li><strong>Last-layer Laplace:</strong> Gaussian posterior on final weights only ($d_{last} × d_{last}$ Hessian) — strong post-hoc baseline.</li><li><strong>Deep ensembles beat MC Dropout / VI</strong> on calibration — advantage is function-space diversity across loss basins, not Bayesian coverage.</li><li><strong>Temperature scaling</strong> (scalar T on logits) — accuracy unchanged, cuts overconfidence; mandatory before probabilistic deployment.</li><li><strong>Conformal prediction:</strong> only method with a formal coverage guarantee $P(y^* ∈ C(x^*)) ≥ 1-α$ under exchangeability.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> A model predicts 90% probability that a tumour is benign. Is this aleatoric or epistemic uncertainty, and how would you tell the difference?</p>
+      <ul class="check-opts"><li class="correct">A) Aleatoric if the uncertainty persists with more similar training data; epistemic if more data reduces it. Use BNN/ensemble disagreement to separate the two: epistemic shows as high weight-posterior variance, aleatoric as high likelihood variance p(y|x,θ) for any given θ.</li><li>B) It is always aleatoric because medical imaging uncertainty is inherent in the imaging modality and cannot be reduced by collecting more training data.</li><li>C) It is always epistemic because neural network outputs reflect only training data coverage, not intrinsic label ambiguity.</li><li>D) The distinction is irrelevant in practice; both types are handled identically by temperature scaling before deployment.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> You need uncertainty estimates for a 100M-parameter production model. MC Dropout adds 100ms per call (20 forward passes). What alternatives exist?</p>
+      <ul class="check-opts"><li>A) Increase dropout rate to 0.9 — higher dropout reduces the number of passes needed from 20 to 2, cutting latency to 10ms with the same uncertainty quality.</li><li>B) There are no practical alternatives; MC Dropout is the only method that works for models above 10M parameters.</li><li class="correct">C) Last-layer Laplace (one forward pass + small matrix-vector product), single-pass deterministic methods (SNGP, DUQ), conformal prediction with zero inference overhead, ensemble distillation, or asynchronous uncertainty computation for monitoring use-cases.</li><li>D) Switch to a smaller 10M-parameter model — uncertainty quality is proportional to model size, so a smaller model gives better-calibrated uncertainty faster.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> What guarantee does conformal prediction provide, and what assumption can violate it?</p>
+      <ul class="check-opts"><li>A) Conformal prediction guarantees the prediction set always contains exactly one correct label, assuming the model achieves &gt; 80% accuracy on calibration data.</li><li class="correct">B) Conformal prediction guarantees P(y* ∈ C(x*)) ≥ 1-α under exchangeability. This guarantee fails under distribution shift (test distribution differs from calibration), temporal non-stationarity, or selective prediction that breaks exchangeability.</li><li>C) Conformal prediction guarantees conditional coverage P(y* ∈ C(x*)|x*) ≥ 1-α for every specific x*; the assumption violated is model calibration.</li><li>D) Conformal prediction guarantees the prediction set has minimal size; the assumption violated is that the model must be a neural network.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#probabilistic_ml_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

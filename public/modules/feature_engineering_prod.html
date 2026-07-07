@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feature Engineering in Production | ML Systems Lab</title>
+  <meta name="description" content="Online vs offline features, point-in-time joins, backfill risk">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/feature_engineering_prod.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/feature_engineering_prod.html">
+  <meta property="og:title" content="Feature Engineering in Production | ML Systems Lab">
+  <meta property="og:description" content="Online vs offline features, point-in-time joins, backfill risk">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Feature Engineering in Production">
+  <meta name="twitter:description" content="Online vs offline features, point-in-time joins, backfill risk">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Feature Engineering in Production",
+  "description": "Online vs offline features, point-in-time joins, backfill risk",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/feature_engineering_prod.html",
+  "keywords": "feature engineering, online features, point-in-time, backfill"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#production_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">30 min read</span>
+      <span class="tag">feature engineering</span><span class="tag">online features</span><span class="tag">point-in-time</span><span class="tag">backfill</span>
+    </div>
+    <h1>Feature Engineering in Production</h1>
+    <p class="subtitle">Online vs offline features, point-in-time joins, backfill risk</p>
+
+    <p>A fraud model ships with 94% offline AUC. In production it scores 82%. No code changed. No error fired. The model is even getting the exact feature it trained on — &quot;number of transactions in the last 7 days&quot; — but the *value* is wrong.</p>
+    <p>At training time that number came from a SQL query over a history table: an exact count. In production it comes from a Redis structure that counts approximately to stay fast. For most users the two agree. For high-volume accounts — the very users most likely to be fraud — the approximation drifts from the true count by up to 15%. The model was taught to trust these counts as exact, and now it is scoring live traffic on values it never learned from. Twelve points of accuracy, gone. Not a model failure — an infrastructure failure.</p>
+    <hr>
+    <h3>The same five culprits, in feature terms</h3>
+    <p>*Language:* the Python training code and the Java serving code implement one formula two ways, and the small differences add up. *Data source:* batch SQL and real-time Redis handle nulls and completeness differently. *Timestamp:* training computes the feature at label time, serving computes it at request time hours later — for a rolling 7-day window that gap matters. *Preprocessing:* a scaler saved under one library version can load differently under a newer one, shifting every value silently. *Leakage:* a training feature used data that won't exist at serving time, inflating the offline score.</p>
+    <p>One shared computation path removes all five at once: a single library or service computes &quot;transactions in last 7 days&quot; identically whether the caller is the training pipeline or the live endpoint.</p>
+    <hr>
+    <h3>Point-in-time joins: the rule that keeps training honest</h3>
+    <p>Here is the subtle one. When you build a training row for a fraud event at time T, you must join only feature values that existed *before* T. Grab a value from T + 1 hour — easy to do by accident, because the training job ran later — and you've leaked the future into the past. For a rolling 7-day window computed an hour late, the count can include transactions that happened *after* the event you're trying to predict. The model learns a pattern built partly on future data. In production it never has the future, so the offline number is a mirage and production comes in lower.</p>
+    <hr>
+    <p><strong>One warning worth internalizing.</strong> &quot;It's the same logic, just in another language&quot; is a hope, not a fact — it's only true once you've tested that both produce byte-identical output on identical input. Re-implementing SQL window logic in Java quietly changes null handling, overflow, and rounding, and on high-value accounts those small differences can outweigh the model's entire learned signal for that user.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Build one feature computation path shared by training and serving, even if it means running Python at serving time or invoking a service from the training pipeline.</strong>
+
+The cost of maintaining two codepaths is not the engineering time to write them — it is the silent accuracy degradation that accumulates once they diverge. Every language boundary, data source switch, and library version difference is a potential skew source. One path eliminates all of them structurally.</li><li><strong>Trap: point-in-time join mistakes are the most common leakage source in production ML.</strong>
+
+When constructing a training row for an event at time T, join only features that were computed and available before T. Using a feature from after T — even by one second — is leakage. The model learns a relationship that includes future information. In production it never has that information. Offline AUC looks great; production performance is worse than expected, and you spend weeks debugging the wrong things.</li><li><strong>Diagnostic: run both pipelines on the same 1,000 held-out examples and compute mean absolute difference per feature.</strong>
+
+Any feature with MAD greater than 1% of its standard deviation is a training-serving skew candidate. Sort by feature importance. A high-skew feature that ranks 47th in importance is noise; a high-skew feature that ranks 2nd is your accuracy gap. This narrows the investigation from &quot;something is wrong&quot; to &quot;it is this specific feature, and here is the computation difference that causes it.&quot;</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Training-serving skew is not discovered through monitoring — it is prevented by building a single feature computation path that makes two diverging implementations structurally impossible.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Same feature, wrong value:</strong> SQL exact count at train vs Redis approximate count at serve → 94% AUC drops to 82%.</li><li><strong>Worst on high-volume accounts</strong> — the very users most likely to be fraud.</li><li><strong>Five culprits, feature terms:</strong> language, data source, timestamp, preprocessing, leakage. One shared path kills all five.</li><li><strong>Point-in-time join = the honesty rule:</strong> for an event at T, join only values that existed *before* T.</li><li><strong>Rolling window leak:</strong> feature computed an hour late can include post-event transactions → offline AUC is a mirage.</li><li><strong>Diagnostic:</strong> run both pipelines on same 1,000 examples, MAD per feature; MAD &gt; 1% of std = skew candidate, sort by importance.</li><li><strong>&quot;Same logic, other language&quot; is a hope, not a fact</strong> — only true once byte-identical output is tested.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You are building a loan default prediction model with a &quot;total_outstanding_loan_balance&quot; feature. Describe the exact implementation for training and serving, including the point-in-time join logic.</p>
+      <ul class="check-opts"><li>A) For training, use today's balance for all historical examples because it reflects the most accurate current state; for serving, also use current balance — consistency between the two is what matters</li><li class="correct">B) For training, retrieve balance using a temporal join (SUM where loan_opened &lt;= label_date AND not yet closed), excluding future loans; for serving, run the same logic at current time using a shared function; monitor PSI weekly</li><li>C) For training, use a daily snapshot table averaged over the prior month; for serving, call the same snapshot API — the averaging reduces the impact of point-in-time errors</li><li>D) Balance features are exempt from point-in-time requirements because financial data is audited and therefore always accurate at query time</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Your team is rebuilding a feature pipeline that has a known bug affecting 5% of users. You need to retrain the model with corrected features. What are the risks?</p>
+      <ul class="check-opts"><li>A) There are no significant risks — fixing a known bug always produces a safer model regardless of the order of operations</li><li>B) The main risk is that retraining takes too long and the model goes stale while the pipeline is being fixed</li><li class="correct">C) The retrained model expects correct features but serving may still produce buggy features; the dangerous anti-pattern is retraining on corrected features while still serving buggy ones — fix serving first, then backfill, then retrain</li><li>D) The risk is that corrected features will have a different distribution than what the model expects, so the only safe option is to deploy without retraining</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Explain why a 30-day rolling average feature is particularly prone to training-serving skew.</p>
+      <ul class="check-opts"><li>A) Rolling averages are inherently unstable and should be replaced with simpler cumulative sums to avoid skew</li><li>B) The 30-day window aggregates enough data to smooth out any skew — rolling averages are actually among the most skew-resistant feature types</li><li class="correct">C) Differences in reference timestamp, timezone handling, null treatment, and deduplication logic compound across 30 days of data; using a centralized feature store with a single authoritative pipeline is the fix</li><li>D) Rolling averages are prone to skew only when the lookback window exceeds 7 days; 30-day windows are too long for reliable training-serving consistency</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> A product team wants to add a real-time &quot;user_session_length_so_far&quot; feature to a fraud detection model. Latency SLA is 20ms. How do you evaluate and implement this?</p>
+      <ul class="check-opts"><li>A) Reject the feature immediately — any real-time feature will violate a 20ms SLA due to the overhead of Redis lookups</li><li>B) Implement it as a daily batch feature and accept up to 24h staleness — real-time session features are too operationally complex for fraud systems</li><li class="correct">C) First verify offline predictive value; if significant, store session_start_time in Redis (sub-ms lookup), compute session_length = now() - start at serving; for training, replay session events from logs to reconstruct session lengths at fraud event time</li><li>D) Compute session length from the full event log at inference time — querying historical events is more accurate than maintaining session state in Redis</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#production_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

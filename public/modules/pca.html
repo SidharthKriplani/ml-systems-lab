@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PCA — Principal Component Analysis | ML Systems Lab</title>
+  <meta name="description" content="Eigenvectors, explained variance, when to use and when it fails">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/pca.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/pca.html">
+  <meta property="og:title" content="PCA — Principal Component Analysis | ML Systems Lab">
+  <meta property="og:description" content="Eigenvectors, explained variance, when to use and when it fails">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="PCA — Principal Component Analysis">
+  <meta name="twitter:description" content="Eigenvectors, explained variance, when to use and when it fails">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "PCA — Principal Component Analysis",
+  "description": "Eigenvectors, explained variance, when to use and when it fails",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/pca.html",
+  "keywords": "PCA, dimensionality reduction, eigenvectors, variance"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#unsupervised_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">38 min read</span>
+      <span class="tag">PCA</span><span class="tag">dimensionality reduction</span><span class="tag">eigenvectors</span><span class="tag">variance</span>
+    </div>
+    <h1>PCA — Principal Component Analysis</h1>
+    <p class="subtitle">Eigenvectors, explained variance, when to use and when it fails</p>
+
+    <p>Imagine photographing a chair so someone can recognise it. You would not shoot it dead-on, where it collapses into a flat rectangle — you would pick the angle that shows the most at once: legs, seat, back. You are choosing the *viewpoint that keeps the most information*. <strong>Principal Component Analysis (PCA)</strong> does exactly this for data: it finds the best angle to view your features from, so that when you flatten them down to just a few numbers you keep as much of the variation as possible.</p>
+    <p>Here is where you need it. Say you have gene-expression data: 20,000 gene readings for only 500 patients. Feeding 20,000 features into a model with 500 examples is hopeless — far too many knobs, the features overlap heavily, and it is painfully slow. PCA squeezes those 20,000 down to maybe 20–50 new features that still capture over 90% of the variation — and, crucially, the new features do not overlap with each other.</p>
+    <hr>
+    <h3>The one idea: find the directions of most spread</h3>
+    <p>Picture your data as a cloud of points. In some directions the cloud is stretched out; in others it is thin. PCA finds the direction of *maximum spread* — that is the <strong>first principal component</strong>. Then the next direction of most spread that sits at a right angle to the first — the second component. And so on. Each point can then be described mostly by where it sits along these few directions, instead of by all 20,000 original numbers.</p>
+    <p>Each component comes with a number, its <strong>explained variance</strong> — the share of the total spread it accounts for. Add them up and you can say &quot;the first 30 components capture 92% of everything,&quot; which is how you decide how many to keep. (Under the hood these directions are the eigenvectors of the data's covariance matrix, and their explained-variance numbers are the eigenvalues; libraries compute them with the SVD, which is more numerically stable. You do not need the machinery to use PCA well — but that is what is happening.)</p>
+    <p>You can also run PCA in reverse: from the few components, approximately rebuild the original features. In fact PCA is, provably, the *best possible* straight-line way to compress and rebuild — no linear method loses less information for the same number of components.</p>
+    <hr>
+    <p><strong>The trap: PCA keeps *variance*, not *signal*.</strong></p>
+    <p>Here is the mistake almost everyone makes: &quot;PCA removes noise.&quot; It does not. PCA keeps the *highest-variance* directions and throws away the low-variance ones — and it has no idea which of those is signal and which is noise. Sometimes the biggest source of variation in genomics data is a *batch effect* (which day the sample was processed), pure noise that PCA will lovingly preserve. And sometimes the thing you actually care about — a rare but important pattern — has *low* variance, so PCA quietly deletes it. So never assume PCA kept what matters: always compare a PCA-reduced model against the full-feature model on the real downstream task before you trust it.</p>
+    <p>And one setup detail you cannot skip: <strong>standardise your features first</strong>. PCA chases variance, so if income is measured in dollars (variance in the billions) and another feature is a 0/1 flag, income will dominate every component for no good reason. Put everything on the same scale before running PCA, every single time.</p>
+    <hr>
+    <h3>PCA leaks too — fit it on the training fold only</h3>
+    <p>PCA looks unsupervised and therefore safe, but it *learns from the data* (the components come from the covariance of the whole set). Fit PCA on all your data before splitting and the training rows already &quot;know&quot; the directions defined partly by the test rows — a genuine leak that inflates your score. The rule is the same as for scalers and imputers: <strong>fit PCA on the training fold, then transform validation/test with those fixed components</strong>. Wrap it in a scikit-learn Pipeline so cross-validation re-fits it inside every fold. And remember standardisation is part of this — fit the scaler on train too, not the full set.</p>
+    <hr>
+    <h3>Whitening: decorrelate and equalise</h3>
+    <p>By default PCA gives you decorrelated components with *different* variances (PC1 has the most). <strong>Whitening</strong> additionally rescales every component to unit variance, so the output is fully decorrelated *and* isotropic — sometimes what a downstream model wants. But there's a catch: whitening blows the low-variance components (which are often mostly noise) up to the same scale as the high-variance ones, so it can <strong>amplify noise</strong>. Use it when the downstream method assumes equal-variance inputs; skip it when the low-variance directions are junk you'd rather keep small.</p>
+    <hr>
+    <h3>The assumptions, stated plainly</h3>
+    <p>PCA rests on a few things worth naming: it's <strong>linear</strong> (it can only find straight-line directions — curved structure is invisible to it), it's <strong>variance-based</strong> (it equates &quot;important&quot; with &quot;high spread,&quot; which isn't always true), and it's <strong>sensitive to outliers</strong> (a few extreme points can swing a component, since variance squares distances). If your structure is nonlinear, your signal is low-variance, or your data has heavy outliers, PCA's assumptions are working against you.</p>
+    <hr>
+    <h3>Interpretability: loadings, but not business-readable</h3>
+    <p>Each component is a <strong>linear mixture of all your original features</strong> (its <strong>loadings</strong> are the weights). You *can* inspect loadings — &quot;PC1 is mostly income and home value&quot; — but a component like &quot;0.4·income − 0.2·age + 0.31·tenure − …&quot; rarely maps to something you can explain to a stakeholder. So PCA trades away the plain interpretability that feature *selection* keeps. When explanations matter (regulated lending, medicine), prefer selection over reduction.</p>
+    <hr>
+    <h3>Big or sparse data: randomized and truncated SVD</h3>
+    <p>Classic PCA forms the full covariance matrix, which is expensive or impossible for very high-dimensional data (text with tens of thousands of terms). Two variants fix this: <strong>randomized PCA</strong> approximates the top components far faster, and <strong>TruncatedSVD</strong> works *directly on sparse matrices* without centering (so it doesn't destroy sparsity) — this is the standard &quot;LSA&quot; move for TF-IDF text. For high-dimensional or sparse inputs, reach for these rather than vanilla covariance PCA.</p>
+    <hr>
+    <h3>Visualisation is not proof</h3>
+    <p>A 2D PCA scatter (PC1 vs PC2) is great for a *rough* look — spotting gross structure or obvious outliers. But it captures only the top two directions, so it is <strong>not proof of separability or cluster quality</strong>: classes that overlap in the PCA plot may separate cleanly in the full space, and apparent clusters may be artefacts. Use the plot to generate hypotheses, then validate on the real task — never conclude &quot;the classes aren't separable&quot; from a PCA picture.</p>
+    <hr>
+    <h3>The alternatives map</h3>
+    <p>Match the tool to the goal. For <strong>visualisation</strong> of nonlinear structure, <strong>t-SNE</strong> or <strong>UMAP</strong> (they preserve local neighbourhoods far better than PCA's two axes). For <strong>nonlinear preprocessing</strong>, <strong>kernel PCA</strong> or an <strong>autoencoder</strong> (nonlinear compression). For keeping <strong>explainable</strong> original variables, <strong>feature selection</strong> instead of PCA. PCA remains the fast, stable default for *linear* compression and decorrelation — just don't force it onto jobs its assumptions don't fit.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Choose the number of components from the cumulative explained-variance curve — but confirm it on the real task.</strong>
+
+A good starting rule is to keep enough components to cover 90–95% of the variance; plot the curve and look for the elbow where extra components stop adding much. Treat that as a starting point, not gospel — the signal you actually care about might live in a lower-variance component the rule would drop, so always check downstream performance at a few different component counts.</li><li><strong>The trap: forgetting to standardise before PCA.</strong>
+
+PCA maximises variance, so if your features sit on wildly different scales, the biggest one (income in dollars, say) dominates every component regardless of how useful it is, and everything else gets crushed into components you later discard. Standardise every feature first (mean 0, unit variance) — no exceptions, unless the features are already on one scale and you genuinely want the big ones to dominate.</li><li><strong>The diagnostic: if the PCA-reduced model does clearly worse than the full one, the signal was in a low-variance direction — or the structure is not linear.</strong>
+
+First try keeping more components. If that does not help, PCA's straight-line assumption may be the problem: the important structure could be curved, which PCA cannot capture. For that, reach for a nonlinear method — UMAP for visualising, or kernel PCA for preprocessing. A drop in performance after PCA is telling you something real about where your signal lives.</li><li><strong>Fit PCA inside the split, know whitening, and match the variant to the data.</strong>
+
+PCA learns from data, so fit it (and the scaler) on the training fold only — inside a Pipeline within CV — or the components leak test information. Whitening rescales all components to unit variance (decorrelated and isotropic) but amplifies the low-variance noise directions, so use it only when the downstream model wants equal-variance inputs. For high-dimensional or sparse data (TF-IDF text), use randomized PCA or TruncatedSVD (works on sparse matrices without centering) rather than covariance PCA.</li><li><strong>Respect PCA's assumptions and reach for the right alternative.</strong>
+
+PCA is linear, variance-based, and outlier-sensitive, and its components are linear mixtures whose loadings you can inspect but rarely explain to a stakeholder — so prefer feature selection when explainability matters. A 2D PC1-vs-PC2 plot is for rough structure and outlier spotting, not proof of separability or cluster quality (validate on the real task). For nonlinear structure use t-SNE/UMAP (visualisation) or kernel PCA / autoencoders (nonlinear compression).</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>PCA keeps the highest-variance directions — but the task-discriminative signal might live in a low-variance direction that PCA throws out, so explained variance ratio is not a reliable proxy for information preserved for downstream tasks.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Finds directions of maximum spread</strong> (principal components), orthogonal, ranked by explained variance.</li><li><strong>Components = eigenvectors of covariance;</strong> computed via SVD; best linear compression that exists.</li><li><strong>Keeps variance, not signal:</strong> batch effects preserved, low-variance signal deleted.</li><li><strong>Standardise first, every time</strong> — PCA chases variance, big-scale features dominate.</li><li><strong>PCA leaks:</strong> fit on the training fold only, inside a Pipeline within CV.</li><li><strong>Whitening</strong> rescales components to unit variance but amplifies low-variance noise.</li><li><strong>Linear, variance-based, outlier-sensitive;</strong> 2D plot is for hypotheses, not proof of separability.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You run PCA on a dataset with 100 features. The first component captures 85% of variance and the second captures 8%. How do you decide how many components to keep for a downstream classifier?</p>
+      <ul class="check-opts"><li>A) Always keep only the first component when it captures more than 80% of variance — additional components add noise</li><li class="correct">B) Keep components until cumulative variance reaches 95%, then cross-validate at several component counts — also test excluding component 1 in case it is a confound rather than a signal</li><li>C) The 85% variance in one component means 1 component is sufficient for any downstream task</li><li>D) Keep all 100 components — PCA is only used for visualization, not for feature selection before classifiers</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> A colleague skips standardisation before PCA on a dataset with features including income (range 20k-500k dollars), age (18-80), and binary flags (0 or 1). What goes wrong?</p>
+      <ul class="check-opts"><li>A) PCA will fail to converge because the covariance matrix becomes singular when features have different scales</li><li>B) The binary flags will dominate all principal components because their values are bounded between 0 and 1</li><li>C) PCA is scale-invariant and standardisation is only needed for distance-based algorithms like k-means</li><li class="correct">D) Income dominates all principal components because its variance (~10 billion times larger than binary flags) dwarfs the contribution of age and binary features — all information in those features is compressed into later discarded components</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> You apply PCA to reduce 1,000-dimensional text embeddings to 50 dimensions before running k-means. Cluster quality is poor. What might PCA have discarded?</p>
+      <ul class="check-opts"><li>A) PCA cannot be applied to text embeddings — use word2vec dimensionality reduction instead</li><li>B) Nothing — PCA preserves 90%+ variance so cluster quality problems must be caused by k-means hyperparameters</li><li class="correct">C) PCA discards low-variance directions, which may contain the cluster-discriminative signal for topic differences — try UMAP (which preserves local neighbourhood structure) or cluster directly with cosine distance in the full embedding space</li><li>D) PCA discarded the stop words that k-means needs to separate topics correctly</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> Two datasets have the same dimensions and PCA explained-variance ratios. Are they similar datasets? What would you additionally check?</p>
+      <ul class="check-opts"><li>A) Yes — identical eigenvalue spectra prove the datasets have the same underlying structure</li><li class="correct">B) No — check PCA loadings (which features drive each component), scatterplots of PC1 vs PC2, reconstruction error distribution, and correlations between features and components</li><li>C) Compare only the first two components — if PC1 and PC2 loadings match, the datasets are structurally equivalent</li><li>D) Identical explained-variance ratios are sufficient to confirm similarity — no additional checks are needed</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> You fit PCA on your entire dataset, then split into train/test and cross-validate a classifier on the PCA features. Your scores look great but production underperforms. What's the subtle error?</p>
+      <ul class="check-opts"><li>A) There's no error — PCA is unsupervised, so fitting it on all the data before splitting can't leak anything.</li><li class="correct">B) PCA learned its components from the covariance of the whole dataset, including the test rows, so the &quot;held-out&quot; data helped define the feature space the model trains on — a genuine leak that inflates CV scores. Fit PCA (and the scaler) on each fold's training portion only, e.g. inside a scikit-learn Pipeline, so the components never see validation/test data.</li><li>C) The problem is that PCA reduced too many dimensions; keeping more components would remove the train/production gap.</li><li>D) PCA should have been fit on the test set instead of the training set, which is what causes the underperformance.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q6.</strong> You need to reduce 40,000-dimensional sparse TF-IDF text vectors to 300 dimensions. Why is standard covariance-based PCA a poor choice, and what fits better?</p>
+      <ul class="check-opts"><li>A) Standard PCA is ideal here — sparse high-dimensional text is exactly what covariance PCA was designed for, so use it directly.</li><li class="correct">B) Standard PCA mean-centers the data, which destroys sparsity (turning a sparse 40k-dim matrix dense and blowing up memory), and forming the full covariance is expensive. TruncatedSVD works directly on the sparse matrix without centering (the classic LSA approach), and randomized SVD approximates the top components far faster — either is the right tool for high-dimensional sparse text.</li><li>C) PCA can't handle more than 1,000 dimensions at all, so the only option is to hash the features down first.</li><li>D) Neither works — text embeddings must be reduced with t-SNE, which is the only method valid for sparse data.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#unsupervised_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

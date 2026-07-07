@@ -38,8 +38,8 @@
       "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
     }
   },
-  "datePublished": "2026-06-20",
-  "dateModified": "2026-06-20",
+  "datePublished": "2026-07-07",
+  "dateModified": "2026-07-07",
   "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/time-series-model-selection.html",
   "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
   "keywords": "Time Series, ARIMA, Prophet, LSTM, Forecasting, Model Selection"
@@ -77,12 +77,12 @@
 <h2>When ARIMA fails</h2>
 <p>ARIMA (AutoRegressive Integrated Moving Average) assumes: 1. The series is stationary after d differences 2. The autocorrelation structure is well-approximated by p AR terms and q MA terms 3. The errors are normally distributed</p>
 <p>ARIMA fails when: the series has multiple seasonal periods (daily + weekly + yearly), when the relationship between lags is nonlinear, when there are structural breaks (a permanent level shift), or when you have too few data points to reliably estimate p, d, and q.</p>
-<p>The diagnostic: if your ACF/PACF plots don\'t show clear cutoffs, ARIMA is misspecified. If your Ljung-Box test rejects (residuals are not white noise), you have unexplained structure.</p>
-<p>ARIMA is still the right choice for: short univariate series (< 500 observations) with clear linear autocorrelation structure, no strong seasonality, and stable variance. It\'s interpretable, fast to train, and has well-understood uncertainty quantification.</p>
+<p>The diagnostic: if your ACF/PACF plots don't show clear cutoffs, ARIMA is misspecified. If your Ljung-Box test rejects (residuals are not white noise), you have unexplained structure.</p>
+<p>ARIMA is still the right choice for: short univariate series (< 500 observations) with clear linear autocorrelation structure, no strong seasonality, and stable variance. It's interpretable, fast to train, and has well-understood uncertainty quantification.</p>
 <h2>When Prophet fails</h2>
 <p>Prophet (Facebook/Meta) decomposes the series into trend + seasonality + holidays. It uses a piecewise linear (or logistic) trend with automatic changepoint detection, and Fourier series for seasonality.</p>
-<p>Prophet fails when: the series has complex interacting seasonality that isn\'t additive, when the trend is non-monotonic in a way that doesn\'t fit piecewise linear assumptions, when the series has long-range dependencies beyond the seasonality components, or when you need well-calibrated prediction intervals (Prophet\'s uncertainty intervals are often too wide or too narrow in practice).</p>
-<p>The common mistake: using Prophet because it\'s easy to use. The default parameters (25 changepoints, additive seasonality) are not universally appropriate. A series with strong multiplicative seasonality (where seasonal amplitude scales with the trend level) needs \`seasonality_mode='multiplicative'\`. A series with few changepoints needs \`n_changepoints=5\`.</p>
+<p>Prophet fails when: the series has complex interacting seasonality that isn't additive, when the trend is non-monotonic in a way that doesn't fit piecewise linear assumptions, when the series has long-range dependencies beyond the seasonality components, or when you need well-calibrated prediction intervals (Prophet's uncertainty intervals are often too wide or too narrow in practice).</p>
+<p>The common mistake: using Prophet because it's easy to use. The default parameters (25 changepoints, additive seasonality) are not universally appropriate. A series with strong multiplicative seasonality (where seasonal amplitude scales with the trend level) needs `seasonality_mode='multiplicative'`. A series with few changepoints needs `n_changepoints=5`.</p>
 <p>Prophet is the right choice for: business time series with strong weekly and annual seasonality, known holidays, and a monotonic trend. Retail, web traffic, and appointment volumes are good fits. Sub-daily series are not.</p>
 <h2>When LSTMs fail</h2>
 <p>LSTMs are the choice when you want the model to learn complex nonlinear temporal dependencies from the data, without specifying a functional form. They can theoretically model anything.</p>
@@ -95,7 +95,7 @@
 <h2>The framework: data-first model selection</h2>
 <p>Before touching any model:</p>
 <p>1. <strong>Plot the series.</strong> Trend? Seasonality? Structural breaks? Outliers? This takes 5 minutes and eliminates half your candidate models. 2. <strong>Test stationarity.</strong> ADF test. If non-stationary, difference until it is. The number of differences required is the d in ARIMA. 3. <strong>Count observations.</strong> < 200 → ARIMA or exponential smoothing. 200–2000 → Prophet or SARIMA. > 2000 with multiple series → consider neural methods. 4. <strong>Characterise seasonality.</strong> Single period, regular → Prophet. Multiple overlapping periods → Fourier terms. No clear pattern → ARIMA with no seasonal component, then test. 5. <strong>Check for structural breaks.</strong> Chow test or visual inspection. If breaks exist, either exclude pre-break data or add a regressor at the break point.</p>
-<p>Then — and only then — select the model. Fit it. Check residuals for white noise (Ljung-Box). If residuals have structure, your model hasn\'t captured all the signal.</p>
+<p>Then — and only then — select the model. Fit it. Check residuals for white noise (Ljung-Box). If residuals have structure, your model hasn't captured all the signal.</p>
 
     <div class="cta">
       <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>

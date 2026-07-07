@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Candidate Generation &amp; Retrieval | ML Systems Lab</title>
+  <meta name="description" content="Two-tower embeddings, ANN retrieval, dot-product scoring, in-batch negatives">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/candidate_generation.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/candidate_generation.html">
+  <meta property="og:title" content="Candidate Generation &amp; Retrieval | ML Systems Lab">
+  <meta property="og:description" content="Two-tower embeddings, ANN retrieval, dot-product scoring, in-batch negatives">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Candidate Generation &amp; Retrieval">
+  <meta name="twitter:description" content="Two-tower embeddings, ANN retrieval, dot-product scoring, in-batch negatives">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Candidate Generation & Retrieval",
+  "description": "Two-tower embeddings, ANN retrieval, dot-product scoring, in-batch negatives",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/candidate_generation.html",
+  "keywords": "RecSys, two-tower, ANN, embeddings, in-batch negatives"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#recsys_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">24 min read</span>
+      <span class="tag">RecSys</span><span class="tag">two-tower</span><span class="tag">ANN</span><span class="tag">embeddings</span><span class="tag">in-batch negatives</span>
+    </div>
+    <h1>Candidate Generation &amp; Retrieval</h1>
+    <p class="subtitle">Two-tower embeddings, ANN retrieval, dot-product scoring, in-batch negatives</p>
+
+    <p>Retrieval has to do something that sounds contradictory: score a user against *every* item in the catalog, cheaply enough to run at request time. The trick that makes it possible is decoupling — and it's the single most important architecture in modern RecSys.</p>
+    <hr>
+    <p><strong>Why joint scoring fails and the two-tower model fixes it.</strong> The most accurate way to score a (user, item) pair is to feed both into one model so it can weigh every cross-interaction. But then the item's representation *depends on which user is asking*, so you must recompute all 10M item scores fresh per request — the impossible arithmetic again. The <strong>two-tower</strong> model breaks the dependency: a <strong>user tower</strong> encodes the user into a vector, an <strong>item tower</strong> encodes each item into a vector in the *same* space, and similarity is a plain <strong>dot product</strong> u·v. Because an item's embedding no longer depends on the user, you compute *all* item embeddings <strong>offline, once</strong>, and store them.</p>
+    <hr>
+    <p><strong>ANN turns &quot;score everything&quot; into &quot;look up neighbors.&quot;</strong> With every item pre-embedded, retrieval becomes: encode the one live user (one forward pass), then find the item vectors nearest to u. Exact nearest-neighbor over 10M vectors is still too slow, so we use <strong>Approximate Nearest Neighbor</strong> (HNSW, IVF, ScaNN) — index structures that trade a little recall for a huge latency win, returning the top few hundred neighbors in ~10ms. Dot-product (or cosine) is chosen precisely because ANN indexes are built for it.</p>
+    <hr>
+    <p><strong>Training: in-batch negatives are the standard recipe, and *why* matters.</strong> You have positives (user clicked item) but no explicit negatives. The trick: within a training batch, treat every *other* user's clicked item as a negative for this user — one batch of B pairs yields B positives and B×(B−1) negatives for free, trained with a softmax/contrastive loss. But random in-batch negatives are too *easy* — separating a clicked cooking video from a random car-parts listing gives near-zero gradient and teaches nothing subtle. So you add <strong>hard negatives</strong>: high-scoring-but-not-clicked items that force the model to learn fine distinctions. Popularity also biases in-batch negatives (popular items appear as negatives more often, getting over-penalized), which is corrected with a <strong>logQ / sampled-softmax correction</strong>.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Two towers exist to make item embeddings query-independent.</strong> A joint (cross-attention) scorer ties an item's representation to the querying user, forcing 10M fresh scores per request. Two separate towers + a dot product let you precompute all item vectors offline and index them once.</li><li><strong>Dot-product / cosine is chosen because ANN indexes are built for it.</strong> Retrieval = encode one user live, then ANN-lookup nearest item vectors (~10ms over 100M). The item tower can be arbitrarily expensive (it runs offline); the user tower must be cheap (it runs per request). That asymmetry is the whole point.</li><li><strong>In-batch negatives give free negatives, but random ones are too easy.</strong> B positives per batch yield B×(B−1) negatives at no cost. Random negatives produce tiny gradients; hard-negative mining (high-scoring non-clicks) forces fine distinctions and is what actually raises recall.</li><li><strong>Popularity bias in negatives needs a correction.</strong> Popular items appear as in-batch negatives disproportionately and get over-suppressed; a logQ / sampled-softmax correction (subtract log sampling probability from the logit) restores an unbiased objective.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Two-tower retrieval decouples user and item encoding so item embeddings can be precomputed offline and ANN-indexed — turning &quot;score 10M items&quot; into &quot;encode one user + a ~10ms neighbor lookup.&quot; It's trained with in-batch negatives plus hard-negative mining (random negatives are too easy) and a logQ correction for popularity bias.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Joint scoring is most accurate but impossible at retrieval scale:</strong> it ties an item's representation to the querying user, forcing 10M fresh scores per request. Two-tower breaks the dependency — user tower + item tower into a shared space, similarity = dot product u·v.</li><li><strong>Query-independent items → precompute offline + ANN:</strong> compute all item embeddings once, index them (HNSW/IVF/ScaNN). At request time: encode one user (one forward pass) + ANN lookup for nearest item vectors ≈ 10ms over 100M. Dot-product/cosine is chosen because ANN is built for it.</li><li><strong>Cost asymmetry is the design lever:</strong> the item tower runs offline so it can be big and slow; the user tower runs live so it must be cheap. Exploit this — put expensive features on the item side.</li><li><strong>In-batch negatives = free negatives but too easy:</strong> a batch of B pairs gives B positives + B×(B−1) negatives. Random negatives yield near-zero gradient; <strong>hard-negative mining</strong> (high-scoring non-clicks) forces fine distinctions and actually lifts recall.</li><li><strong>Popularity bias in negatives needs a correction:</strong> popular items appear as negatives disproportionately and get over-suppressed → apply a logQ / sampled-softmax correction to restore an unbiased objective.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Why can't a cross-attention model that jointly encodes (user, item) be used for retrieval, even though it is more accurate than a two-tower model?</p>
+      <ul class="check-opts"><li>A) Cross-attention overfits on large catalogs, so its accuracy advantage vanishes above ~1M items.</li><li class="correct">B) Its item representation depends on the querying user, so item embeddings can't be precomputed or ANN-indexed — every one of the 10M items must be scored fresh per request, which is orders of magnitude over budget. Two-tower removes that dependency so items index offline.</li><li>C) Cross-attention can't output fixed-length vectors, so ANN libraries reject its output.</li><li>D) The dot product required by ANN is undefined for cross-attention outputs.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Your two-tower retriever gets recall@100 of only 0.55. A teammate proposes switching from random in-batch negatives to hard-negative mining. Why does this attack the recall problem specifically?</p>
+      <ul class="check-opts"><li>A) Hard negatives shrink the embedding dimension, letting the ANN index scan more items in budget.</li><li class="correct">B) Random negatives (a clicked cooking video vs a random car part) are separated with near-zero gradient, so the model never learns fine distinctions. Hard negatives (high-scoring non-clicks) produce real gradient, sharpening the boundary between relevant and near-relevant items and lifting recall of the genuinely relevant ones.</li><li>C) Hard negatives calibrate the dot-product scores so ANN distances become exact rather than approximate.</li><li>D) They don't help recall — hard negatives only improve ranking precision downstream.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> After training with in-batch negatives, your retriever systematically *under*-recommends genuinely relevant popular items. What is the most likely cause and fix?</p>
+      <ul class="check-opts"><li>A) The user tower is too small; enlarge it so popular items score higher.</li><li class="correct">B) Popular items appear as in-batch negatives far more often than rare ones, so they're over-penalized. Apply a logQ / sampled-softmax correction (subtract each item's log sampling probability from its logit) to restore an unbiased objective.</li><li>C) The ANN index is dropping popular items; rebuild it with a larger ef_search.</li><li>D) Popular items have stale embeddings; retrain the whole tower nightly.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#recsys_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

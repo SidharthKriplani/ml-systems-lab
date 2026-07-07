@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Message Passing Neural Networks (MPNN) | ML Systems Lab</title>
+  <meta name="description" content="Unified MPNN view, 1-WL test, expressiveness limits, higher-order GNNs, graph Transformers">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/message_passing_framework.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/message_passing_framework.html">
+  <meta property="og:title" content="Message Passing Neural Networks (MPNN) | ML Systems Lab">
+  <meta property="og:description" content="Unified MPNN view, 1-WL test, expressiveness limits, higher-order GNNs, graph Transformers">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Message Passing Neural Networks (MPNN)">
+  <meta name="twitter:description" content="Unified MPNN view, 1-WL test, expressiveness limits, higher-order GNNs, graph Transformers">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Message Passing Neural Networks (MPNN)",
+  "description": "Unified MPNN view, 1-WL test, expressiveness limits, higher-order GNNs, graph Transformers",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/message_passing_framework.html",
+  "keywords": "MPNN, Weisfeiler-Leman, expressiveness, higher-order, graph Transformer, isomorphism"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#graph_ml_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">60 min read</span>
+      <span class="tag">MPNN</span><span class="tag">Weisfeiler-Leman</span><span class="tag">expressiveness</span><span class="tag">higher-order</span><span class="tag">graph Transformer</span>
+    </div>
+    <h1>Message Passing Neural Networks (MPNN)</h1>
+    <p class="subtitle">Unified MPNN view, 1-WL test, expressiveness limits, higher-order GNNs, graph Transformers</p>
+
+    <p>A caffeine molecule has 24 atoms (nodes) and 25 bonds (edges). Task: predict whether it is toxic. Each atom has features — element type, charge, hybridization. Each bond has features — single, double, or aromatic. A standard MLP on a feature vector per atom would ignore the molecular structure entirely. You need a model that propagates information through the chemical graph.</p>
+    <p>Message passing is the mechanism. In each round, every atom sends its representation to its bonded neighbors. Every atom aggregates messages from its neighbors and updates its representation. After K rounds, each atom's representation encodes its K-hop chemical environment — the atoms within K bonds of it. A readout function aggregates all atom representations to a molecular property prediction. After 3 rounds, the nitrogen in caffeine's ring &quot;knows&quot; what the carbons 3 bonds away look like. This structural awareness is what makes the model useful.</p>
+    <p>GCN, GAT, and GraphSAGE look different architecturally, but they are all instances of the same three-step pattern: compute messages, aggregate at nodes, update node states. This unification — the MPNN framework (Gilmer et al., 2017) — also reveals a hard ceiling: no MPNN can be more powerful than the 1-dimensional Weisfeiler-Leman graph isomorphism test. Mean-aggregation GNNs like GCN are strictly below even that ceiling. GIN with sum aggregation reaches the 1-WL ceiling. For most node classification tasks on social networks, this ceiling rarely matters. For molecular chemistry where ring structure determines chemical properties, it matters a great deal.</p>
+    <p><strong>NOT this.</strong> &quot;Message passing requires a fixed number of rounds K.&quot; In practice K = 3–6 works for most molecular property prediction tasks, matching the chemical neighborhood relevant to properties. More rounds cause over-smoothing: all nodes converge to similar representations as information propagates through the entire graph, and individual atom identities are lost. The right K depends on the task's relevant locality — drug toxicity depends mostly on functional groups within 3–4 bonds, not the entire molecule. Long-range interactions in protein folding require a different architecture (graph Transformers) rather than more message-passing rounds.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>MPNN framework (Gilmer et al., 2017): three phases per layer. (1) Message: m_{vw}^t = M_t(h_v^t, h_w^t, e_{vw}) — compute a message for each directed edge using source features, target features, and edge features. (2) Aggregate: a_v^t = Σ_{w∈N(v)} m_{vw}^t — collect all incoming messages with a permutation-invariant function. (3) Update: h_v^{t+1} = U_t(h_v^t, a_v^t) — update node state from previous state and aggregated messages.</strong> GCN, GAT, and GraphSAGE are all instances of this framework with different M, aggregate, and U choices.</li><li><strong>1-Weisfeiler-Leman (1-WL) test: algorithm for deciding if two graphs are isomorphic.</strong> Each node starts with a color (hash of its label). At each step: new color = hash(current color, sorted multiset of neighbor colors). Repeat until stable. Two graphs are distinguished if they produce different final color histograms. 1-WL is the formal upper bound on what any MPNN can express — an MPNN that is 1-WL equivalent can distinguish any pair of graphs that 1-WL can distinguish, and fails on any pair 1-WL cannot.</li><li><strong>GIN (Graph Isomorphism Network, Xu et al. 2019): the maximally expressive MPNN.</strong> Key theorem: a GNN reaches the 1-WL upper bound if and only if its aggregation function is injective over multisets. GIN achieves this with: h_v^{l+1} = MLP((1+ε)h_v^l + Σ_{u∈N(v)} h_u^l). The (1+ε) term ensures the self-embedding and neighbor sum combine injectively. Sum aggregation is injective (different multisets map to different sums); mean is not ({1,2,3} and {1,1,4} have the same mean of 2).</li><li><strong>1-WL failure cases matter for chemistry: regular graphs — all k-regular graphs with the same node count look identical to 1-WL because every node has the same degree and identical 1-hop neighborhood structure.</strong> Cycles: 1-WL cannot distinguish a 3-cycle + 3-cycle (two disconnected triangles) from a 6-cycle. In chemistry, these correspond to molecules with the same atom types and degree sequence but different ring structures — directly limiting GNN accuracy for property prediction of cyclic compounds.</li><li><strong>Higher-order WL and GNNs: k-WL tests work on k-tuples of nodes rather than individual nodes, achieving exponentially greater expressiveness. k-GNN computes messages between k-tuples.</strong> DS-GNN and PPGN approximate higher-order expressiveness with better scalability. For most real-world node classification and link prediction tasks, 1-WL expressiveness is sufficient — the graphs that fool 1-WL rarely appear in social or transactional graphs.</li><li><strong>Structural features can be precomputed and added as node features to augment GNN expressiveness beyond 1-WL: degree, triangle count, clustering coefficient, eigenvector centrality, betweenness centrality.</strong> These encode structural information that message passing cannot extract from features alone. Random positional encodings can also break the symmetry that causes 1-WL failures — giving each node a unique identity breaks regular graph symmetry at the cost of losing permutation equivariance.</li><li><strong>Graph Transformers apply self-attention to all pairs of nodes rather than only connected pairs.</strong> Every node attends to every other node — O(|V|²) complexity. This exceeds 1-WL expressiveness because attention sees all pairwise relationships simultaneously. Graphormer achieves SOTA on molecular benchmarks. GPS combines local MPNN with global Transformer attention at tractable cost. For small molecular graphs (≤100 atoms), O(|V|²) is feasible; for social networks with millions of nodes, it is not.</li><li><strong>Over-squashing: information from distant nodes must be compressed through narrow topological bottlenecks.</strong> In a tree-like graph, the single bridge node between two subtrees must carry all cross-subtree information — gradients vanish through the bridge, making the model insensitive to distant but relevant nodes. Symptom: removing distant node features doesn't change predictions. Fixes: graph rewiring (add shortcuts), virtual nodes (one global node connected to all others), or graph Transformers that bypass topological constraints entirely.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Every MPNN is bounded by the 1-Weisfeiler-Leman test, and mean-aggregation GNNs (GCN, GraphSAGE) are strictly below that ceiling — mean cannot distinguish multisets with the same average, so nodes with neighborhoods {1,2,3} and {1,1,4} are indistinguishable. GIN with sum aggregation reaches the 1-WL ceiling. This expressiveness limit is consequential for molecular chemistry and combinatorial tasks where substructure counts matter, but for node classification and link prediction on real-world graphs, the empirical performance gap between GCN and GIN usually closes. The key is knowing which regime you're operating in.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>MPNN = 3 phases/layer:</strong> message $M_t(h_v,h_w,e_{vw})$ → aggregate (permutation-invariant) → update $U_t$. GCN/GAT/GraphSAGE are all instances.</li><li><strong>1-WL test is the hard ceiling:</strong> no MPNN can distinguish graphs 1-WL can't. Formal upper bound on expressiveness.</li><li><strong>GIN reaches 1-WL iff aggregation is injective:</strong> sum is injective, mean is not ({1,2,3} and {1,1,4} share mean 2).</li><li><strong>1-WL fails on regular graphs and cycles</strong> — two triangles vs a 6-cycle look identical; matters for molecular ring structure.</li><li><strong>Beyond 1-WL:</strong> k-WL/k-GNN, graph Transformers (all-pairs attention, O(|V|²)), or precomputed structural features (degree, triangle count).</li><li><strong>K = 3–6 rounds</strong> matches relevant locality; more rounds → over-smoothing, node identities lost.</li><li><strong>Over-squashing:</strong> distant info compressed through topological bottlenecks → vanishing gradients; fix with rewiring/virtual nodes.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Show that a mean-aggregation GNN (GCN) is strictly less expressive than 1-WL. Give a concrete example of two different neighborhood structures that GCN cannot distinguish.</p>
+      <ul class="check-opts"><li>A) GCN is as expressive as 1-WL; it can distinguish all neighborhood structures that 1-WL can distinguish</li><li class="correct">B) Mean aggregation is not injective over multisets — a node with neighbors {1,2,3} (mean=2) and a node with neighbors {1,1,4} (mean=2) produce the same aggregated value; GCN cannot distinguish them; 1-WL hashes the full multiset, which distinguishes {1,2,3} from {1,1,4}; sum-based GIN is strictly more expressive</li><li>C) GCN is strictly more expressive than 1-WL because it uses continuous features rather than discrete colors</li><li>D) GCN cannot distinguish neighborhood structures only when node features are identical; with diverse features, mean aggregation is equivalent to 1-WL</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> What is over-squashing in GNNs, and how would you diagnose and fix it in a production model?</p>
+      <ul class="check-opts"><li>A) Over-squashing is when too many features are compressed into a small embedding dimension; fix by increasing the hidden size</li><li class="correct">B) Over-squashing: information from distant nodes is compressed through narrow topological bottlenecks (bridges, articulation points), causing the Jacobian ∂h_v/∂x_u to decay exponentially for distant pairs; diagnose by computing sensitivity for relevant node pairs; fix with graph rewiring (add shortcuts), virtual nodes, or Graph Transformers that bypass topological constraints</li><li>C) Over-squashing is identical to over-smoothing — both are caused by stacking too many GNN layers</li><li>D) Over-squashing only affects graph-level tasks; for node classification, topological bottlenecks have no effect on prediction quality</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> GIN achieves maximal 1-WL expressiveness. Why does it still fail to distinguish some pairs of non-isomorphic graphs, and what class of graphs is this?</p>
+      <ul class="check-opts"><li>A) GIN fails because it uses sum aggregation, which is less stable than mean for graphs with high-degree nodes</li><li class="correct">B) GIN is 1-WL equivalent — it fails on exactly the pairs that 1-WL fails on: k-regular graphs of the same size (all nodes have identical 1-hop structure), and certain chemical graph pairs like Decalin vs bicyclo[2.2.2]octane; fixes require higher-order GNNs, structural features (triangle count), or random positional encodings</li><li>C) GIN fails on any graph where the node features are not one-hot encoded — continuous features are outside the 1-WL framework</li><li>D) GIN fails on large graphs with more than 10,000 nodes because the sum aggregation overflows numerically</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> Explain why graph Transformers are more expressive than MPNNs and what practical tradeoff this introduces at scale.</p>
+      <ul class="check-opts"><li>A) Graph Transformers are more expressive because they use multi-head attention, which MPNNs lack</li><li class="correct">B) Graph Transformers apply attention between all pairs of nodes regardless of edges, eliminating over-squashing and exceeding 1-WL expressiveness; the tradeoff is O(|V|²) attention complexity — infeasible for graphs with millions of nodes; practical solutions include top-K sparse attention, GPS (local MPNN + global sampled attention), or restricting to small molecular graphs (≤100 atoms)</li><li>C) Graph Transformers are more expressive because they process all nodes in parallel rather than message-passing sequentially</li><li>D) The expressiveness gain of Graph Transformers is purely theoretical — in practice they perform similarly to GIN on all benchmarks</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#graph_ml_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MLE vs MAP Estimation | ML Systems Lab</title>
+  <meta name="description" content="Likelihood, log-likelihood, MAP as regularised MLE">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/mle_map.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/mle_map.html">
+  <meta property="og:title" content="MLE vs MAP Estimation | ML Systems Lab">
+  <meta property="og:description" content="Likelihood, log-likelihood, MAP as regularised MLE">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="MLE vs MAP Estimation">
+  <meta name="twitter:description" content="Likelihood, log-likelihood, MAP as regularised MLE">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "MLE vs MAP Estimation",
+  "description": "Likelihood, log-likelihood, MAP as regularised MLE",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/mle_map.html",
+  "keywords": "MLE, MAP, regularisation, Bayesian"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#math_stats_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">26 min read</span>
+      <span class="tag">MLE</span><span class="tag">MAP</span><span class="tag">regularisation</span><span class="tag">Bayesian</span>
+    </div>
+    <h1>MLE vs MAP Estimation</h1>
+    <p class="subtitle">Likelihood, log-likelihood, MAP as regularised MLE</p>
+
+    <p>You flip a coin 10 times and get 7 heads. What is your best estimate for the probability of heads? The most obvious approach: count. $\hat{p} = 7/10 = 0.7$. This is maximum likelihood estimation — find the parameter $θ$ that makes the observed data most probable. Formally: $\hat{θ}_{MLE} = \argmax_θ P(data|θ) = \argmax_θ θ^7(1-θ)^3$. Take the log, differentiate, set to zero: $\hat{θ}_{MLE} = 0.7$.</p>
+    <p>Now flip the same coin only 3 times and get 3 heads. MLE gives $\hat{p} = 3/3 = 1.0$ — the coin always lands heads. Obviously wrong. MLE with tiny data is overconfident. The problem is that MLE has no memory of what coins are usually like. It treats every dataset as if the parameters could be anything.</p>
+    <p>MAP (Maximum A Posteriori) fixes this by adding a prior. Put a $\text{Beta}(2, 2)$ prior over $θ$ — this encodes &quot;probably close to 0.5, but I am not certain.&quot; The posterior is $P(θ | data) \propto P(data|θ) \cdot P(θ)$. MAP finds the mode of this posterior. With 3 heads out of 3 flips, MAP gives $\hat{θ}_{MAP} \approx 0.8$ rather than 1.0. The prior pulled the estimate toward sanity.</p>
+    <p>The prior is not just a Bayesian abstraction. Adding $\log P(θ)$ to the log-likelihood is identical to adding a regularisation term to your loss function. A Gaussian prior $θ sim N(0, τ^2 I)$ produces L2 regularisation (Ridge) with $λ = 1/(2τ^2)$. A Laplace prior produces L1 regularisation (Lasso). Every time you tuned a regularisation coefficient, you were implicitly choosing a prior distribution over weights.</p>
+    <p><strong>NOT this.</strong> Most people think &quot;MLE is just fitting the data.&quot; MLE assumes a specific probabilistic model — a particular likelihood function — and finds the parameters that make the observed data most probable under that model. If your model is wrong (fitting a Gaussian to bimodal data), MLE finds the &quot;best&quot; wrong answer with complete confidence. The model is always right in MLE`s eyes; MLE has no mechanism to doubt the model family. MAP at least has a prior that can pull estimates back from absurdity when data is scarce.</p>
+    <p>As $n → ∞$, the likelihood dominates and MAP converges to MLE — the data eventually overwhelms any reasonable prior. This means regularisation should shrink as your dataset grows.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Use MLE when you have enough data that the prior does not matter, and MAP (with regularisation) when data is scarce.</strong> The crossover point depends on the prior strength and the number of parameters. A rule of thumb: if your training set has fewer than ~10 observations per parameter, the prior matters substantially. Cross-validate $λ$ to find the data-implied prior strength.</li><li><strong>The production trap: treating regularisation strength as a pure hyperparameter with no semantic content.</strong> L2 regularisation says weights are Gaussian around zero. L1 says most weights are exactly zero. If you use L1 on a problem where you do not believe most features are irrelevant, you are encoding a false prior and likely underfitting. Match your regulariser to your belief about the solution structure.</li><li><strong>The diagnostic: watch regularisation strength versus dataset size.</strong> If cross-validation selects larger $λ$ as you add more data, something is wrong — the data should overwhelm the prior and push $λ$ toward zero as $n$ grows. A regularisation coefficient that stays large on a big dataset often indicates a model family mismatch, not a genuine sparsity signal.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Every regularised model is a MAP estimate. Choosing L2 or L1 is not a numerical trick — it is a statement about what you believe the solution looks like before seeing any data.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>MLE = params that make observed data most likely:</strong> $\hat{\theta}_{MLE}=\arg\max_\theta P(data|\theta)$; coin 7/10 → 0.7.</li><li><strong>MLE is overconfident on tiny data:</strong> 3/3 heads → $\hat{p}=1.0$, obviously wrong — it has no memory of priors.</li><li><strong>MAP adds a prior:</strong> posterior ∝ likelihood × prior; Beta(2,2) pulls 3/3 heads to ≈ 0.8, not 1.0.</li><li><strong>Adding $\log P(\theta)$ = adding regularisation:</strong> Gaussian prior → L2/Ridge (λ=1/2τ²); Laplace prior → L1/Lasso.</li><li><strong>Every regularised model is a MAP estimate</strong> — the reg coefficient is an implicit prior over weights.</li><li><strong>As n→∞ MAP → MLE:</strong> data overwhelms the prior, so regularisation should shrink as the dataset grows.</li><li><strong>Reg strength rising with more data is a red flag</strong> — usually a model-family mismatch, not real sparsity.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> For a Gaussian likelihood with unknown mean μ and fixed variance σ², derive the MLE estimate for μ given data {x₁,...,xₙ}.</p>
+      <ul class="check-opts"><li>A) MLE: maximise log-likelihood ℓ(μ) = −n/2·log(2πσ²) − (1/2σ²)Σ(xᵢ−μ)². Setting ∂ℓ/∂μ = 0 gives Σ(xᵢ−μ) = 0, so μ_MLE = x̄. This equals the sample mean. The result shows MLE for Gaussian mean equals least squares: minimising Σ(xᵢ−μ)² gives the same estimate. This is why MSE loss corresponds to Gaussian noise assumptions.</li><li>B) Maximise L(μ) = Π (1/√(2πσ²))exp(−(xᵢ−μ)²/(2σ²)). Taking log: ℓ(μ) = const − (1/2σ²)Σ(xᵢ−μ)². Setting ∂ℓ/∂μ = 0: −(1/2σ²)·(−2)Σ(xᵢ−μ) = 0, so Σxᵢ − nμ = 0, giving μ_MLE = (1/n)Σxᵢ = x̄. But this is a biased estimator: E[μ_MLE] = μ−σ²/n due to Jensen's inequality applied to the log. The unbiased estimator requires a Bessel correction: μ_unbiased = x̄·n/(n−1).</li><li class="correct">C) L(μ) = Π_{i=1}^n P(xᵢ|μ) = Π (1/√(2πσ²))exp(−(xᵢ−μ)²/(2σ²)). Log-likelihood: ℓ(μ) = −n/2·log(2πσ²) − (1/2σ²)Σ(xᵢ−μ)². Maximise ℓ: ∂ℓ/∂μ = (1/σ²)Σ(xᵢ−μ) = 0. Solving: Σxᵢ − nμ = 0 → μ_MLE = (1/n)Σxᵢ = x̄. The sample mean is the MLE for Gaussian mean. Intuition: maximising log-likelihood is equivalent to minimising the sum of squared deviations Σ(xᵢ−μ)² — so MLE for Gaussian mean = least squares estimate = sample mean. This is why MSE loss is the natural loss for regression assuming Gaussian noise: minimising MSE = maximising Gaussian log-likelihood.</li><li>D) MLE for Gaussian mean requires maximising L(μ) = Π exp(−(xᵢ−μ)²/(2σ²)). The log-likelihood is ℓ(μ) = −Σ(xᵢ−μ)²/(2σ²). This is a concave quadratic in μ. Setting ∂ℓ/∂μ = Σ(xᵢ−μ)/σ² = 0 gives μ_MLE = median({xᵢ}), since the sum of deviations from the median is minimised. The sample mean would be the MLE under a Laplace (L1) likelihood, not Gaussian.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> MLE for a Bernoulli distribution gives P̂(X=1) = (number of 1s)/(total samples). Now add a Beta(α,β) prior. What is the MAP estimate?</p>
+      <ul class="check-opts"><li class="correct">A) Likelihood: L(p) = Π pˣⁱ(1−p)^{1−xᵢ} = p^s(1−p)^{n−s} where s = Σxᵢ. Prior: Beta(α,β): π(p) ∝ p^{α−1}(1−p)^{β−1}. Posterior (unnormalised): p^{s+α−1}(1−p)^{n−s+β−1} ~ Beta(s+α, n−s+β). MAP: maximise posterior = maximise log-posterior = maximise (s+α−1)log p + (n−s+β−1)log(1−p). Setting derivative to zero: (s+α−1)/p = (n−s+β−1)/(1−p) → p_MAP = (s+α−1)/(n+α+β−2). Interpretation: the Beta prior adds α−1 pseudo-observations of class 1 and β−1 pseudo-observations of class 0. For uniform prior (α=β=1): MAP = MLE = s/n. For α=β=2: MAP = (s+1)/(n+2) — Laplace smoothing. As n→∞, MAP → MLE regardless of prior.</li><li>B) The Beta posterior has mean (s+α)/(n+α+β), so MAP = mean = (s+α)/(n+α+β). The MAP of a Beta distribution equals its mean because Beta is symmetric around its mean. For α=β=1 (uniform prior), MAP = s/n = MLE. The denominator n+α+β adds α+β pseudo-observations rather than α+β−2, because the normalising constant of the Beta prior contributes 1 pseudo-observation per parameter.</li><li>C) The Beta(α,β) posterior is Beta(s+α, n−s+β). The MAP is the mode: (s+α−1)/(n+α+β−2). This equals MLE + Bayesian correction = s/n + (α−β)/(n(n+α+β−2)). For large n, the correction term vanishes. For α=β, MAP equals MLE exactly at all n — a symmetric prior never biases the MAP estimate.</li><li>D) With Beta(α,β) prior, the posterior is Beta(s+α, n−s+β). The MAP maximises the log-posterior: (s+α)log p + (n−s+β)log(1−p). Setting derivative to zero: (s+α)/p = (n−s+β)/(1−p), giving p_MAP = (s+α)/(n+α+β). This is the posterior mean, not the mode — for Beta distributions the mean and mode always coincide.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> A linear regression model's MSE loss is equivalent to maximum likelihood under what distributional assumption? What assumption does L1 loss correspond to?</p>
+      <ul class="check-opts"><li>A) MSE corresponds to a Uniform likelihood: P(yᵢ|xᵢ,θ) = Uniform(ŷᵢ−ε, ŷᵢ+ε) for some fixed ε. Minimising MSE finds the θ that keeps all residuals within ±ε. L1 loss corresponds to a Gaussian likelihood with heavier tails — specifically, a Student-t distribution with 1 degree of freedom (Cauchy distribution).</li><li class="correct">B) MSE loss Σ(yᵢ−ŷᵢ)² = −2σ²·log L(θ) for a Gaussian likelihood P(yᵢ|xᵢ,θ) = N(ŷᵢ, σ²). Minimising MSE is equivalent to maximising Gaussian log-likelihood: L1 loss Σ|yᵢ−ŷᵢ| corresponds to a Laplace likelihood: P(yᵢ|xᵢ,θ) = (1/2b)exp(−|yᵢ−ŷᵢ|/b). Minimising L1 = maximising Laplace log-likelihood. This explains the practical difference: Laplace distribution has heavier tails than Gaussian — it assigns more probability to large residuals. Minimising Laplace log-likelihood (L1) is less penalised by large outliers than Gaussian (L2). L1 loss produces median regression (the optimal prediction minimising E[|y−ŷ|] is the median), while L2 produces mean regression (optimal prediction minimising E[(y−ŷ)²] is the mean).</li><li>C) MSE corresponds to Gaussian noise with variance proportional to ŷᵢ (heteroskedastic): P(yᵢ|xᵢ,θ) = N(ŷᵢ, |ŷᵢ|·σ²). This is why MSE is unstable for regression near zero — the likelihood is undefined when ŷᵢ=0. L1 loss corresponds to constant-variance Gaussian noise P(yᵢ|xᵢ,θ) = N(ŷᵢ, σ²), which is more robust because it does not assume variance scaling with the prediction.</li><li>D) MSE corresponds to Gaussian noise P(yᵢ|xᵢ,θ) = N(ŷᵢ, σ²) only when the noise is additive and independent. L1 loss corresponds to a Poisson likelihood: P(yᵢ|xᵢ,θ) = exp(−ŷᵢ)ŷᵢ^{yᵢ}/yᵢ!, which is appropriate for count data. L1 is more robust than MSE because Poisson has lighter tails than Gaussian, assigning less probability to large residuals.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#math_stats_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

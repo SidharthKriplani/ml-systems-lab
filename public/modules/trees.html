@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Decision Trees | ML Systems Lab</title>
+  <meta name="description" content="Information gain, Gini, pruning, depth-accuracy tradeoff">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/trees.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/trees.html">
+  <meta property="og:title" content="Decision Trees | ML Systems Lab">
+  <meta property="og:description" content="Information gain, Gini, pruning, depth-accuracy tradeoff">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Decision Trees">
+  <meta name="twitter:description" content="Information gain, Gini, pruning, depth-accuracy tradeoff">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Decision Trees",
+  "description": "Information gain, Gini, pruning, depth-accuracy tradeoff",
+  "proficiencyLevel": "Foundational",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/trees.html",
+  "keywords": "decision trees, Gini, information gain"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#classical_ml_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Foundational</span>
+      <span class="read-time">30 min read</span>
+      <span class="tag">decision trees</span><span class="tag">Gini</span><span class="tag">information gain</span>
+    </div>
+    <h1>Decision Trees</h1>
+    <p class="subtitle">Information gain, Gini, pruning, depth-accuracy tradeoff</p>
+
+    <p>Think about the game of twenty questions. Someone picks a secret — a person, a place, a thing — and you have to guess it with yes/no questions. A good player never asks at random. Each question is chosen to split what is left roughly in half, so every answer shrinks the field until only one thing remains. That is almost exactly what a <strong>decision tree</strong> does with data, and it is one of the most natural ideas in all of machine learning — it works the way people already think.</p>
+    <p>Here is a job where it shines and a straight-line model struggles. Say you want to flag loan applicants likely to default, using their income, their debt-to-income ratio, and their age. The real pattern is a set of rules: &quot;if income is low *and* debt is high, risky — but a big income excuses a fair bit of debt.&quot; That is not a smooth weighted sum. It is the space of applicants carved into regions, each with its own answer. A linear model draws one line and gives up. A tree carves.</p>
+    <hr>
+    <h3>One question at a time</h3>
+    <p>A decision tree asks a single yes/no question, splitting everyone into two groups, then asks the next question inside each group, and so on. The whole skill is choosing the *right* question at each step. And &quot;right&quot; has a clear meaning: the question that leaves the two groups as <strong>pure</strong> as possible — each side mostly one class.</p>
+    <p>So we need a way to measure how mixed a group is. The usual one is <strong>Gini impurity</strong>, and it has a plain reading: if you grabbed a random person from the group and guessed their class from the group's mix, how often would you be wrong? A group that is all defaulters is perfectly pure — you would never be wrong — so its Gini is 0. A group split 50/50 is as messy as it gets — you would be wrong half the time — so its Gini is 0.5. The formula is just $1 - \sum_k p_k^2$, where $p_k$ is the share of class k.</p>
+    <hr>
+    <h3>Watching it pick a split</h3>
+    <p>Let us do one real step. You have 100 applicants: 40 defaulted, 60 did not. The starting mix has Gini $= 1 - 0.4^2 - 0.6^2 = 0.48$ — quite messy.</p>
+    <p>Try a first candidate question, &quot;is income below 42k?&quot; It sends 60 people left (50 of them defaulters) and 40 right (mostly safe). Work out the Gini on each side, weight each by how many people landed there, and the mixedness falls from 0.48 to about 0.32. Not bad. Now try a different question, &quot;is debt-to-income above 0.35?&quot; This one sends 45 people into a group that is almost all safe (Gini ≈ 0.09) — a much cleaner cut. Its weighted mixedness drops to about 0.27. The second question purified more, so the tree keeps it. Then it runs the exact same search again inside each of the two new groups, and keeps going.</p>
+    <p>That is the whole training algorithm: at every node, try every question, keep the one that purifies the most, then recurse.</p>
+    <hr>
+    <h3>What a leaf says</h3>
+    <p>Eventually a group is pure enough, or too small to split, and becomes a <strong>leaf</strong>. For classification the leaf just votes: 7 defaulters and 3 safe people means &quot;70% chance of default.&quot; For predicting a number instead of a class — say a loan amount — the leaf hands back the <strong>average</strong> of the training values that landed in it.</p>
+    <p>That averaging hides a sharp limit worth remembering: a regression tree <strong>cannot extrapolate</strong>. If the priciest house it ever trained on was 800k, then no matter how big and fancy a new house is, the tree can only ever answer with an average of prices it has already seen — it will never say 1.2M. Its answers are trapped inside the range of its training data.</p>
+    <hr>
+    <h3>The catch: trees are twitchy</h3>
+    <p>Now the deep part. A tree is <strong>greedy</strong> — at each step it grabs the single best question available right now, with no thought for what that locks in later. It does not find the best tree *overall*; searching for that truly best tree is hopeless, because the number of possible trees is astronomical. Greedy is fast, but it comes at a price.</p>
+    <p>Because the very first split is chosen by looking at the whole dataset, it is fragile. Change just 8 of those 100 applicants and the root question might flip from &quot;debt above 0.35?&quot; to &quot;income below 42k?&quot; — and since every branch underneath is built on top of the root, the entire tree below reshuffles. Two trees trained on data that is 92% identical can hand out opposite answers for the same person. This is called <strong>high variance</strong>, and it is not a bug you can tune away — it is baked into greedy splitting.</p>
+    <p>Hold onto that fact, because in the next lessons it flips from weakness into superpower: a crowd of different, twitchy trees, averaged together, cancels out its own wobble. That is the whole idea behind <strong>random forests</strong> and boosting.</p>
+    <hr>
+    <h3>Two more things to know</h3>
+    <p>Trees cut one feature at a time, so every boundary they draw is a straight, <strong>axis-aligned</strong> line — a horizontal or vertical fence. If the real boundary runs on a diagonal (&quot;income plus debt above some total&quot;), a tree can only approximate it with a staircase of many little fences, while a linear model draws that diagonal in a single stroke. So trees are clumsy exactly where lines are graceful, and graceful (carving boxes) exactly where lines are clumsy.</p>
+    <p>And left unchecked, a tree keeps splitting until nearly every leaf holds a single training point — 100% right on the training data, and badly overfit. The cure is <strong>pruning</strong>. You either stop early (cap the depth, or refuse splits that would leave too few samples in a leaf) or grow the full tree and then cut back the branches that do not earn their keep. Either way you give up a little training accuracy for a lot of test accuracy, and you choose how hard to prune by trying a few levels and keeping the one that generalises best.</p>
+    <hr>
+    <h3>Gini's cousin: entropy and information gain</h3>
+    <p>Gini isn't the only way to measure mixedness. <strong>Entropy</strong> measures the same thing from information theory — the number of bits of surprise in the group's class mix — with formula $-\sum_k p_k \log_2 p_k$: 0 for a pure group, 1 bit for a 50/50 binary split. When a tree splits using entropy, the drop in entropy from parent to children is called <strong>information gain</strong> — literally &quot;how many bits of uncertainty did this question remove.&quot; That's the quantity the classic ID3/C4.5 trees maximise, and it's why this topic is often titled &quot;information gain.&quot; In practice Gini and entropy give very similar trees; Gini is slightly cheaper to compute (no logarithm) and is scikit-learn's default. The difference rarely matters — pick either.</p>
+    <hr>
+    <h3>How regression trees actually choose splits</h3>
+    <p>For classification the tree purifies class mix. For regression there are no classes, so it purifies *spread*: it picks the split that most reduces the <strong>variance</strong> (equivalently, mean squared error) of the target within each child. A split that cleanly separates cheap houses from expensive ones drops the within-group variance a lot, so the tree takes it. If you care about robustness to outliers you can instead split on <strong>MAE</strong> (absolute error), and count-style targets have a <strong>Poisson</strong> criterion — but variance/MSE reduction is the default and the one to name.</p>
+    <hr>
+    <h3>The knobs: a hyperparameter map and real pruning</h3>
+    <p>A single tree is controlled by a handful of parameters worth knowing by name. `max_depth` caps how deep it grows; `min_samples_split` and `min_samples_leaf` refuse splits that would leave too few examples; `max_leaf_nodes` caps total leaves; `class_weight` up-weights a rare class. Those are *pre-pruning* (stop early). The principled *post-pruning* is <strong>cost-complexity pruning</strong> (the CART method): grow the full tree, then minimise (impurity + `ccp_alpha` × number of leaves) — a penalty on tree size exactly analogous to regularisation. Bigger `ccp_alpha` means a smaller tree, and you pick it by cross-validation.</p>
+    <hr>
+    <h3>Categoricals and missing values: mind the implementation</h3>
+    <p>&quot;Trees handle mixed types&quot; is true in principle but depends on the library. scikit-learn's classic trees actually need <strong>numeric input</strong> — you must encode categories yourself (and one-hot encoding a high-cardinality category can fragment the tree). True native categorical splits and native missing-value handling live in specific implementations (LightGBM, CatBoost, and newer histogram-based trees). So don't claim &quot;trees just take categoricals&quot; in an interview without naming which implementation.</p>
+    <hr>
+    <h3>When one class is rare</h3>
+    <p>Under imbalance a tree happily chases the majority: it can make pure-looking leaves that are almost all the common class and score high accuracy while never catching the rare one. And its leaf probabilities become unreliable. Fixes are the usual family: `class_weight='balanced'` so rare examples count more at each split, threshold moving on the leaf probabilities, stratified CV so folds keep the rare class, and judging with PR-AUC rather than accuracy.</p>
+    <hr>
+    <h3>Leaf probabilities lie a little</h3>
+    <p>A classification leaf reports the *frequency* of each class among its training points — &quot;7 of 10 defaulted, so 70%.&quot; That's a raw estimate, and it's often poorly calibrated, especially for small leaves where 7/10 is really just noise. A single deep tree tends to give overconfident near-0/near-1 probabilities. If you need trustworthy probabilities from a tree, enforce a minimum leaf size and calibrate (Platt or isotonic) on a held-out set rather than trusting the raw leaf fractions.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>What a decision tree is, and when to reach for it: a flowchart of yes/no questions you can actually read.</strong>
+
+Trees are the model to use when you need to explain every prediction in plain words — &quot;income below 42k and debt above 0.35, so we flagged it.&quot; They take mixed feature types (numbers and categories) as they come, need no scaling, and pick up feature interactions on their own, since splitting on income and then on debt is exactly an income-and-debt rule. The catch: a single tree is twitchy and overfits easily. So use one tree when you need a human-readable explanation, and an ensemble (random forest or boosting) when you need the accuracy in production.</li><li><strong>The trap that fools people: trusting the tree's built-in feature-importance scores.</strong>
+
+A tree's default importance counts how much each feature cut down impurity across all its splits. But a fine-grained number like income has many possible cut points, so it gets far more chances to split than a plain yes/no flag — and it ends up looking more important than it really is, just from having more opportunities. Do not rank features by this. Use permutation importance instead: shuffle one feature's values, measure how much accuracy drops, and repeat. A feature that truly mattered will hurt when scrambled; a useless one will not.</li><li><strong>The check to run: sweep how hard you prune, and watch train versus test accuracy.</strong>
+
+With no pruning a tree scores nearly perfectly on training data and poorly on test — pure overfitting. As you prune harder, test accuracy climbs (noise removed), peaks, then falls again (now you are cutting real structure). That peak is the right amount of pruning, and you find it with cross-validation, not by eyeballing a single split. Also watch leaf sizes: a leaf built from only two or three examples gives a probability you should not trust, so require a minimum number of samples per leaf.</li><li><strong>Know the split criteria and the hyperparameter map by name.</strong>
+
+Classification splits maximise purity via Gini ($1-\sum p_k^2$) or entropy/information gain ($-\sum p_k\log_2 p_k$) — near-identical results, Gini is cheaper and the default. Regression splits minimise variance/MSE within children (MAE or Poisson as alternatives). The knobs: `max_depth`, `min_samples_split`, `min_samples_leaf`, `max_leaf_nodes`, `class_weight` for pre-pruning, and `ccp_alpha` for cost-complexity post-pruning — minimise (impurity + ccp_alpha × #leaves), pick ccp_alpha by CV.</li><li><strong>Mind implementation limits, imbalance, and leaf-probability calibration.</strong>
+
+scikit-learn's classic trees need numeric-encoded inputs — native categorical and missing-value handling lives in LightGBM/CatBoost/histogram trees, so don't claim &quot;trees just take categoricals&quot; without naming the library. Under imbalance a tree chases the majority and its leaf probabilities get unreliable — use `class_weight='balanced'`, threshold moving, stratified CV, and PR-AUC. And a leaf reports raw training frequencies (7/10 = 70%), which are poorly calibrated for small leaves and overconfident overall, so enforce a minimum leaf size and calibrate on held-out data if you need trustworthy probabilities.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>A decision tree is a flowchart of yes/no questions, each chosen to split the data into purer groups (measured by Gini). It is easy to read but twitchy — change a few rows and the whole tree can change — and it can only cut straight, axis-aligned lines, so diagonal boundaries need a clumsy staircase. That very instability is what makes trees the perfect building block for random forests and boosting.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Decision tree = flowchart of yes/no questions,</strong> each split chosen to make groups purer (Gini).</li><li><strong>Easy to read but twitchy</strong> — change a few rows and the whole tree can change.</li><li><strong>Axis-aligned cuts only</strong> — diagonal boundaries need a clumsy staircase.</li><li><strong>That instability is a feature</strong> — it makes trees the perfect base for random forests and boosting.</li><li><strong>Don't trust built-in feature importances</strong> — they're biased.</li><li><strong>Prune to control depth:</strong> sweep pruning strength and watch train vs test accuracy.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Train a decision tree, then retrain it on data that differs by just a handful of rows — and the whole tree can come out looking completely different. Why does that happen, and why does it point toward random forests?</p>
+      <ul class="check-opts"><li>`A) The very first split is chosen from the whole dataset, so changing a few rows can flip it — and every branch below is built on top of that choice, so the whole tree reshuffles. That is high variance, and averaging many different trees cancels the wobble, which is what a random forest does.`</li><li>`B) The tree keeps re-sorting the rows alphabetically as the data changes, and even a tiny reordering rebuilds the branches from scratch; a random forest fixes this by sorting the data once up front and then freezing that order.`</li><li>`C) Trees are sensitive to whether you use Gini or entropy, and swapping a few rows can tip which criterion wins the root; a random forest averages trees built with both criteria at once to cancel that sensitivity out.`</li><li>`D) The wobble comes from the tree choosing its splits at random on every run, so setting a fixed random seed removes it completely; a random forest is really just one tree with its seed pinned across runs.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> When a decision tree picks its next yes/no question, what is it actually trying to do?</p>
+      <ul class="check-opts"><li>`A) Pick the question that splits the group into two halves of equal size, so the tree stays balanced and its overall depth ends up as small as it possibly can.`</li><li>`B) Pick the question that leaves the two resulting groups as pure as possible — each side mostly one class. It measures purity with something like Gini and keeps whichever split drops impurity the most.`</li><li>`C) Pick the feature with the highest overall correlation to the target, then split it right at its average value, since that single feature carries the most information on its own.`</li><li>`D) Pick the question that creates the largest number of leaves at once, because more leaves lets the tree represent more of the patterns hiding in the data.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> A tree grown with no depth limit hits 100% training accuracy but 62% on test. Capping its depth gives 85% train and 80% test. What happened, and how do you find a good depth?</p>
+      <ul class="check-opts"><li>`A) The unlimited tree had high bias from splitting too little, and the shallow tree fixed it; find the best depth by picking whichever gives the highest training accuracy while keeping the train-test gap under 10%.`</li><li>`B) The unlimited tree memorised the training noise — great on train, poor on test, which is high variance. The shallower tree trades a little train accuracy for much better test accuracy. Find a good depth (or pruning level) by cross-validation: try several and keep the one with the best held-out score.`</li><li>`C) Both trees have the same variance and differ only in bias, which only ever shrinks as depth grows, so the deeper tree is strictly better and the 62% test number must be a fluke you should re-measure.`</li><li>`D) The deep tree overfit because deep trees are unusually sensitive to mislabelled rows, so the real fix is to smooth the labels rather than limit depth, which is always the more principled choice than pruning.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> You train a regression tree on house prices that top out at 800k. A genuinely 1.2M house comes in. What does the tree predict, and why?</p>
+      <ul class="check-opts"><li>`A) About 1.2M — the tree follows the upward trend between size and price that it learned during training and simply extends that trend outward to price the new, larger house.`</li><li>`B) Exactly 0, because the 1.2M house matches none of the leaves the tree built, so it falls through to the tree's default empty-leaf prediction of zero.`</li><li>`C) At most 800k. A regression leaf just averages the training prices that landed in it, so its output can never exceed the biggest price the tree ever saw — trees cannot extrapolate past their training range.`</li><li>`D) Roughly 1.2M, but only if you set extrapolate=True; with the default setting the tree refuses to guess and returns a missing value for the out-of-range house instead.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> The topic is titled &quot;information gain,&quot; but the module measures splits with Gini. How do entropy/information gain and Gini relate?</p>
+      <ul class="check-opts"><li>`A) They are unrelated: Gini measures class purity while information gain measures how many features a split uses, so a tree needs both to choose a question.`</li><li>`B) Both measure how mixed a group is; entropy ($-\sum p_k\log_2 p_k$) counts bits of uncertainty and the drop in entropy from a split is the information gain, while Gini ($1-\sum p_k^2$) is a cheaper proxy for the same idea. In practice they yield very similar trees; Gini is scikit-learn's default because it avoids the logarithm.`</li><li>`C) Information gain is used only for regression trees and Gini only for classification trees, so the title implies this module should really be about predicting numbers.`</li><li>`D) Gini is an approximation that only matches information gain when every class is equally frequent; with any imbalance the two pick opposite splits, so you must always use entropy under imbalance.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q6.</strong> You grow a full decision tree and want to prune it back in a principled way rather than just capping depth. What is cost-complexity pruning doing?</p>
+      <ul class="check-opts"><li>`A) It removes whichever leaves have the fewest training samples until the tree reaches a preset number of nodes, ignoring impurity entirely.`</li><li>`B) It re-grows the tree from scratch with a smaller max_depth each time and keeps the first one whose training accuracy drops below a threshold.`</li><li>`C) It minimises (impurity + ccp_alpha × number of leaves) — a penalty on tree size directly analogous to regularisation, so a larger ccp_alpha yields a smaller tree, and you select ccp_alpha by cross-validation.`</li><li>`D) It converts the tree into a linear model and applies an L1 penalty to the leaf values, zeroing out the least useful leaves the way Lasso zeroes weights.`</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#classical_ml_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

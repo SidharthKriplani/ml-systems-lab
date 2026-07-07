@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Observational Causal Inference | ML Systems Lab</title>
+  <meta name="description" content="Propensity score matching, IPW, doubly robust estimators, covariate balance">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/observational_ci.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/observational_ci.html">
+  <meta property="og:title" content="Observational Causal Inference | ML Systems Lab">
+  <meta property="og:description" content="Propensity score matching, IPW, doubly robust estimators, covariate balance">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Observational Causal Inference">
+  <meta name="twitter:description" content="Propensity score matching, IPW, doubly robust estimators, covariate balance">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Observational Causal Inference",
+  "description": "Propensity score matching, IPW, doubly robust estimators, covariate balance",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/observational_ci.html",
+  "keywords": "matching, propensity score, IPW, doubly robust, observational studies"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#causal_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">32 min read</span>
+      <span class="tag">matching</span><span class="tag">propensity score</span><span class="tag">IPW</span><span class="tag">doubly robust</span><span class="tag">observational studies</span>
+    </div>
+    <h1>Observational Causal Inference</h1>
+    <p class="subtitle">Propensity score matching, IPW, doubly robust estimators, covariate balance</p>
+
+    <p>You want to know if a job training program increases earnings. You cannot randomize — people self-select into the program. People who join are more motivated, have higher baseline earnings, and are younger. A simple comparison of treated versus untreated overstates the program's effect because the treated group would have earned more anyway. Observational causal inference tries to recover the treatment effect without randomization, by making treated and control groups comparable using measured covariates.</p>
+    <p>Matching finds treated units and control units with identical or similar covariate profiles. Match on observed confounders — age, education, income, location — and the matched comparison removes their confounding. Propensity score matching compresses this into one dimension: the propensity score e(X) = P(T=1 | X=x) is a balancing score. Matching on e(X) balances all observed covariates simultaneously (Rosenbaum-Rubin theorem). Estimate e(X) with logistic regression, then match on the estimated scores and verify balance.</p>
+    <p>Weighting is the continuous analog. Inverse Probability Weighting (IPW) weights each treated unit by 1/e(X) and each control unit by 1/(1−e(X)), creating a pseudo-population where treatment is uncorrelated with covariates. Doubly robust estimators (AIPW) combine regression adjustment with IPW and are consistent if either the outcome model or propensity model is correctly specified — not necessarily both. One wrong model is survivable; both wrong is not.</p>
+    <p>Common support is the region where both treated and control units exist with nonzero probability. Outside common support, inference requires extrapolation. Trim the sample to the region of common support before analysis and report what was trimmed.</p>
+    <p>What observational methods cannot do: remove confounding from unmeasured covariates. PSM, IPW, and AIPW are unbiased only if ignorability holds — only if all common causes of treatment and outcome are in X. An unmeasured confounder like motivation biases the estimate regardless of how sophisticated the estimator. No amount of covariate adjustment compensates for a variable you did not measure. The best observational studies acknowledge this explicitly and conduct sensitivity analysis for the residual unmeasured confounding.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>After propensity score matching, check covariate balance with standardized mean differences (SMD) — SMD &lt; 0.1 for each covariate indicates good balance.</strong> Never report matching results without a balance table. If balance is poor for any covariate, re-specify the propensity score model — add polynomial terms, interactions, or switch to entropy balancing which directly optimizes balance rather than going through a propensity score. Skipping the balance check and assuming matching worked produces a biased estimate with no error message.</li><li><strong>Trap: matching on post-treatment variables.</strong> If the variable you are matching on was determined after treatment assignment, it can introduce collider bias or block the causal path you want to measure. Match only on pre-treatment covariates. Always verify whether each covariate was determined before or after treatment began before including it in the propensity model.</li><li><strong>Diagnostic: if common support is very limited — less than 30% overlap between treated and control propensity score distributions — you can only estimate the treatment effect for a narrow subpopulation.</strong> Report this limitation explicitly. The estimate is not ATE for the full population; it is ATE for the overlap population, which may be quite different from the policy target. Extrapolating beyond common support is pure model assumption, not empirical comparison.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Observational methods buy you exactly one thing: removal of bias from confounders you measured — no estimator, however sophisticated, removes bias from a variable you did not measure.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Goal without randomisation:</strong> make treated and control groups comparable using *measured* covariates, so the remaining outcome difference reflects treatment rather than baseline differences (a naive treated-vs-untrained comparison overstates the effect because the treated would have done better anyway).</li><li><strong>The propensity score e(X) = P(T=1|X) is a balancing score:</strong> matching or weighting on this single number balances *all* observed covariates simultaneously (Rosenbaum-Rubin) — estimate it (e.g. logistic regression), match on it, then verify balance.</li><li><strong>IPW is the continuous analog:</strong> weight each treated unit by 1/e(X) and each control by 1/(1−e(X)) to build a pseudo-population where treatment is uncorrelated with the covariates.</li><li><strong>Doubly robust (AIPW) combines regression adjustment with IPW:</strong> it stays consistent if *either* the outcome model *or* the propensity model is correct — one wrong model is survivable, both wrong is not.</li><li><strong>Always check balance after matching:</strong> standardized mean difference (SMD) &lt; 0.1 per covariate; never report a matching result without a balance table, or you're presenting a biased estimate with no error message.</li><li><strong>Common support / overlap:</strong> trim to the region where both treated and control units exist — outside it, any estimate is pure extrapolation, not empirical comparison, and the estimand becomes the overlap population.</li><li><strong>The hard ceiling:</strong> none of this removes bias from an *unmeasured* confounder (e.g. motivation) — no estimator, however sophisticated, fixes a variable you didn't measure. Report it and do a sensitivity analysis (E-value).</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> After PSM, you check covariate balance and find SMD=0.35 for age. What does this mean and what do you do?</p>
+      <ul class="check-opts"><li>A) SMD=0.35 is within acceptable range for continuous variables like age — the 0.1 threshold applies only to binary covariates; no action needed</li><li class="correct">B) SMD=0.35 &gt;&gt; 0.1 threshold — matching failed to create comparable groups on age. Age is likely a confounder, so remaining imbalance introduces residual confounding bias. Remedies: (1) re-specify propensity model with age², age³ or interactions, (2) use caliper matching with tight caliper (0.01 on propensity scale), (3) add exact matching on age quintiles as hard constraint, (4) switch to entropy balancing or CBPS which directly optimize balance rather than going through propensity score.</li><li>C) SMD=0.35 indicates the propensity model is overfit — reduce the number of covariates in the logistic regression to improve matching quality</li><li>D) SMD=0.35 is a concern but can be addressed by controlling for age in the outcome regression after matching, which will remove residual age imbalance</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> You estimate ATE using IPW. 5 control observations have weights above 500 while all others are below 20. What is the problem and fix?</p>
+      <ul class="check-opts"><li>A) The extreme weights indicate data entry errors in the propensity model covariates; the 5 observations should be excluded as outliers before re-estimating the propensity score</li><li>B) Extreme weights arise from propensity model overfitting — retrain the propensity model with fewer features or stronger regularization to bring all weights below 100</li><li>C) The extreme weights suggest the 5 control observations are perfect matches for treated units and should be upweighted; no fix needed as this improves balance</li><li class="correct">D) Extreme weights arise when some control units have very small 1-e(X), meaning e(X)≈1 — propensity model predicts these near-certain to be treated. Near-violation of overlap. These few observations dominate the weighted estimate causing high variance. Fixes: (1) stabilized weights (multiply by P(T=0)/(1-e(X))), (2) weight trimming at 99th percentile (small bias, much lower variance), (3) common support trimming (exclude e(X)&gt;0.97 entirely, changes estimand to overlap population), (4) use AIPW where outcome model absorbs burden from extreme propensity scores.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> What does 'doubly robust' mean in the AIPW estimator? If both models are misspecified, is the estimate still valid?</p>
+      <ul class="check-opts"><li class="correct">A) AIPW is consistent if EITHER the propensity model OR the outcome model is correctly specified — need only one to be right. The outcome model predictions are the first terms; IPW correction terms subtract out outcome model errors. If outcome model correct → correction terms ≈ zero. If propensity model correct → outcome model errors cancel in expectation. If BOTH wrong → neither protection activates and estimate is biased. Double robustness is safety net for ONE misspecification, not both.</li><li>B) Doubly robust means AIPW requires both models to be correctly specified simultaneously — if either is misspecified, the estimate is biased; the name refers to having two chances to specify models correctly</li><li>C) AIPW is valid even when both models are misspecified because the augmentation term uses non-parametric estimates that do not rely on correct model specification</li><li>D) Doubly robust means AIPW is consistent under any model misspecification as long as the sample size is large enough for the cross-fitting procedure to average out specification errors</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> You are studying the effect of a job training program on earnings. Treated individuals self-selected. You find positive earnings effect. A critic says 'there is likely an unmeasured motivation confounder.' How do you respond?</p>
+      <ul class="check-opts"><li>A) The critic's concern is unfounded because PSM controls for all observed confounders including prior earnings, which serves as a proxy for motivation — no sensitivity analysis needed</li><li>B) The critic's concern can be addressed by adding more covariates to the propensity model; motivation is always partially captured by observable characteristics like education and work history</li><li class="correct">C) Critic is right to raise this — self-selected participants likely more motivated, and motivation affects earnings independently. Two-part response: (1) argue strength of measured confounders (prior earnings partly reflects motivation, education controls for observable proxies — if well-balanced, residual motivation confounder may be small); (2) conduct sensitivity analysis: compute E-value — minimum association motivation would need with treatment selection AND earnings to fully explain observed effect. If E-value is 3.0 but domain knowledge suggests motivation-earnings ≈ 1.5, estimate is robust. Report E-value alongside main result.</li><li>D) The critic is wrong — self-selection bias only affects estimates when the selection mechanism is unknown; since we know participants self-selected on motivation, we can model this directly in the propensity score</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#causal_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

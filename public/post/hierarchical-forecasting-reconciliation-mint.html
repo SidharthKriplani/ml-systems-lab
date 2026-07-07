@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hierarchical Forecasting: Bottom-Up, Top-Down, and Optimal Reconciliation — ML Systems Lab</title>
+  <meta name="description" content="If your national model predicts 10,000 units and your regional models collectively predict 12,000, you have a coherence problem with real inventory consequences. Hierarchical reconciliation is how you…" />
+  <meta name="keywords" content="Forecasting, Hierarchical, Time Series, MinT, Reconciliation, Demand Forecasting, ML Systems Lab, senior MLE, machine learning interview" />
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/post/hierarchical-forecasting-reconciliation-mint.html" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/post/hierarchical-forecasting-reconciliation-mint.html" />
+  <meta property="og:title" content="Hierarchical Forecasting: Bottom-Up, Top-Down, and Optimal Reconciliation" />
+  <meta property="og:description" content="If your national model predicts 10,000 units and your regional models collectively predict 12,000, you have a coherence problem with real inventory consequences. Hierarchical reconciliation is how you…" />
+  <meta property="og:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+  <meta property="article:section" content="Data Science" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Hierarchical Forecasting: Bottom-Up, Top-Down, and Optimal Reconciliation" />
+  <meta name="twitter:description" content="If your national model predicts 10,000 units and your regional models collectively predict 12,000, you have a coherence problem with real inventory consequences. Hierarchical reconciliation is how you…" />
+  <meta name="twitter:image" content="https://ml-systems-lab-v9xe.vercel.app/og-image.png" />
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Hierarchical Forecasting: Bottom-Up, Top-Down, and Optimal Reconciliation",
+  "description": "If your national model predicts 10,000 units and your regional models collectively predict 12,000, you have a coherence problem with real inventory consequences. Hierarchical reconciliation is how you…",
+  "author": {
+    "@type": "Person",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ml-systems-lab-v9xe.vercel.app/og-image.png"
+    }
+  },
+  "datePublished": "2026-07-07",
+  "dateModified": "2026-07-07",
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/post/hierarchical-forecasting-reconciliation-mint.html",
+  "image": "https://ml-systems-lab-v9xe.vercel.app/og-image.png",
+  "keywords": "Forecasting, Hierarchical, Time Series, MinT, Reconciliation, Demand Forecasting"
+}
+  </script>
+
+  <style>
+    body { max-width: 720px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; color: #1a1a1c; background: #fafaf7; }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.04em; margin: 0 0 12px; color: #d28a00; }
+    h2 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1a1a1c; }
+    .meta { font-size: 12px; color: #6a6a6e; font-family: monospace; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .excerpt { font-style: italic; border-left: 3px solid #d28a00; padding-left: 14px; color: #4a4a4e; margin: 0 0 28px; font-size: 15px; }
+    p { margin: 0 0 16px; }
+    blockquote { border-left: 3px solid #d28a00; padding: 8px 14px; background: rgba(240,165,0,0.06); margin: 16px 0; font-style: italic; }
+    li { margin: 0 0 6px; }
+    .cta { margin-top: 40px; padding: 16px 18px; background: rgba(240,165,0,0.10); border: 1px solid rgba(240,165,0,0.30); border-radius: 10px; }
+    .cta a { display: inline-block; padding: 10px 20px; background: #d28a00; color: white; text-decoration: none; border-radius: 7px; font-weight: 700; font-family: monospace; font-size: 13px; margin-top: 8px; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #888; }
+    .footer a { color: #d28a00; }
+  </style>
+
+  <script>
+    if (!/bot|crawl|spider|googlebot|bingbot/i.test(navigator.userAgent)) {
+      setTimeout(function() { window.location.replace('https://ml-systems-lab-v9xe.vercel.app/?post=hierarchical-forecasting-reconciliation-mint#gradient') }, 200)
+    }
+  </script>
+</head>
+<body>
+  <article>
+    <div class="meta">Data Science &middot; ML Systems Lab</div>
+    <h1>Hierarchical Forecasting: Bottom-Up, Top-Down, and Optimal Reconciliation</h1>
+    <p class="excerpt">If your national model predicts 10,000 units and your regional models collectively predict 12,000, you have a coherence problem with real inventory consequences. Hierarchical reconciliation is how you fix it. MinT, bottom-up, top-down — and when each one actually wins.</p>
+    <p>Almost every business forecasting problem is hierarchical. Sales → by region → by store → by SKU. Traffic → by country → by device → by page. Any model that forecasts at only one level is leaving information on the table and creating planning inconsistencies.</p>
+<h2>The hierarchy structure</h2>
+<p>A hierarchy has levels connected by a summing constraint: each level aggregates exactly from the level below. Total sales = sum of regional sales. Regional sales = sum of store sales. Store sales = sum of SKU sales.</p>
+<p>The summing matrix S encodes this. For a two-level hierarchy (total T, two regions R1, R2): S = [[1,1], [1,0], [0,1]]. The base forecasts ŷ = [ŷ_R1, ŷ_R2] (forecast at the bottom level). The hierarchy-consistent forecasts at all levels: Sŷ = [ŷ_R1 + ŷ_R2, ŷ_R1, ŷ_R2]. Coherence means forecasts satisfy Sŷ_bottom = ŷ_all_levels. This is trivially true for bottom-up, but not for independently-generated forecasts at each level.</p>
+<h2>Why naive multi-level forecasting fails operationally</h2>
+<p>At a major retailer, three teams independently forecast: the national demand planning team (top-level), the regional replenishment team (mid-level), the store operations team (bottom-level). The national team forecasts 10,000 units for a product. The regional teams collectively forecast 12,000. The store teams collectively forecast 9,500. Procurement orders 10,000. Replenishment sends 12,000 to stores. Stores have plans for 9,500. The result: stores are overstocked by 25%, discount, write down inventory. This is the coherence problem with real financial consequences.</p>
+<h2>Bottom-up: aggregate from the finest level</h2>
+<p>Forecast at the SKU × store level (the leaf nodes of the hierarchy). Sum up to get category, regional, and total forecasts.</p>
+<p>Advantages: captures local patterns that aggregate models miss (a store near a stadium has demand spikes on game days invisible in the regional average). Changes at the bottom automatically propagate up.</p>
+<p>Disadvantages: SKU-level series are sparse. A slow-moving SKU might sell 3 units/week on average — forecasting that series reliably requires years of data, and even then a model produces wide confidence intervals. Errors at the bottom are not averaged out — they're summed. If every SKU forecast is off by 5%, the category-level forecast is off by 5%, not by 0.5%.</p>
+<h2>Top-down: disaggregate from the aggregate</h2>
+<p>Forecast at the total level (the root). Disaggregate using proportions derived from historical data.</p>
+<p>Disaggregation: SKU_forecast = total_forecast × (historical_SKU_share_of_total).</p>
+<p>Advantages: aggregate series are less noisy, seasonality is cleaner, long-range trends are easier to detect. One accurate model produces consistent forecasts across all levels.</p>
+<p>Disadvantages: proportions are fixed (or slowly-moving). A new store opening in a fast-growing region starts with the same proportion as an established store. Promotional events that affect one SKU don't change the proportion used to disaggregate it. The disaggregation discards all local signal.</p>
+<h2>Optimal reconciliation: MinT</h2>
+<p>MinT (Hyndman et al., 2011) doesn't discard any model. Base forecasts are generated at every level independently. Then they're reconciled jointly:</p>
+<p>ỹ = S (SᵀΣ⁻¹S)⁻¹ Sᵀ Σ⁻¹ ŷ</p>
+<p>where S is the summing matrix, ŷ is the vector of all base forecasts, and Σ is the forecast error covariance matrix.</p>
+<p>Σ captures: which levels forecast most accurately (diagonal) and how forecast errors covary across levels (off-diagonal). A level with high forecast accuracy gets high weight; a noisy level gets low weight.</p>
+<p>In practice, Σ is estimated from historical forecast residuals. Three approximations: (1) OLS: Σ = I (treat all forecasts equally). (2) WLS: Σ = diag(w1, w2, ...) where weights are forecast error variances. (3) MinT shrinkage: estimate the full covariance matrix with a shrinkage estimator (requires 24+ months of data).</p>
+<p>MinT with WLS is the standard starting point: it's simple, outperforms both top-down and bottom-up in most benchmarks, and doesn't require estimating off-diagonal covariance terms.</p>
+<h2>Temporal hierarchies</h2>
+<p>The same framework applies across time scales. A daily demand series can be aggregated to weekly, monthly, quarterly. Base models are trained at each frequency: a SARIMA for daily (captures day-of-week patterns), an ETS for weekly (captures weekly seasonality), an ARIMA for monthly (captures long-range trends).</p>
+<p>MinT reconciliation across time levels produces a daily forecast that is consistent with weekly and monthly forecasts — the sum of Monday–Sunday forecasts equals the weekly forecast. This prevents the common failure: a daily model that predicts high demand on day 7 of a 7-day window, creating a spike that looks real at the daily level but contradicts the smoother weekly forecast.</p>
+<h2>Intermittent demand</h2>
+<p>Hierarchical forecasting is particularly valuable for intermittent demand (many zero observations). A SKU that sells 0–2 units/day is nearly unforecastable at the daily level. At the weekly level (0–14 units/week), the series has better signal. At the monthly level (0–60 units/month), even better.</p>
+<p>Croston's method or TSB (Teunter-Syntetos-Babai) forecasts intermittent demand at the item level. Temporal hierarchical forecasting reconciles these item-level forecasts with the more reliable category-level weekly/monthly forecasts, pulling the item-level forecast toward the category trend.</p>
+<h2>Implementation</h2>
+<p>Python: nixtla/hierarchicalforecast implements all reconciliation methods (OLS, WLS, MinT, ERM). The hts package for R (the original MinT implementation). The API: fit base models → generate base forecasts → apply reconciler → get reconciled forecasts at all levels.</p>
+<p>Practical steps: (1) Choose your hierarchy depth — more levels adds reconciliation power but requires more data. (2) Choose base models per level — simpler models (ETS, ARIMA) for sparse lower levels, more complex models (LightGBM, Prophet) for data-rich upper levels. (3) Estimate Σ with WLS using cross-validation residuals. (4) Apply MinT reconciliation. (5) Evaluate RMSSE (Root Mean Squared Scaled Error) and MASE at each level separately — a reconciliation that improves aggregate RMSSE at the cost of bottom-level RMSSE is not always a win.</p>
+<p><strong>Try on Colab:</strong> create a 3-level hierarchy (1 total, 3 regions, 9 SKUs) with synthetic weekly sales data. Generate base forecasts for each series independently using ETS. Apply bottom-up, top-down, and MinT-OLS reconciliation. Evaluate RMSSE at each level for all three methods. Confirm that MinT outperforms both on the aggregate metric while bottom-up wins at the SKU level when data is rich.</p>
+
+    <div class="cta">
+      <div style="font-size: 12px; color: #5a5a5e; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Continue interactively</div>
+      <div style="font-size: 14px; color: #1a1a1c; margin-bottom: 4px;">Read this post inside ML Systems Lab &mdash; with Simplify toggle, interview Q&amp;As, inline glossary, and the MLE Path forward pointer.</div>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/?post=hierarchical-forecasting-reconciliation-mint#gradient">Open in MSL &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Part of <a href="https://ml-systems-lab-v9xe.vercel.app">The MLE Path</a> &mdash; 57-post senior MLE interview prep curriculum, free, no signup.
+    </div>
+  </article>
+</body>
+</html>

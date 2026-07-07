@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Features &amp; Freshness | ML Systems Lab</title>
+  <meta name="description" content="Real-time vs batch features, train/serve skew, the feature-freshness trap">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/features_and_freshness.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/features_and_freshness.html">
+  <meta property="og:title" content="Features &amp; Freshness | ML Systems Lab">
+  <meta property="og:description" content="Real-time vs batch features, train/serve skew, the feature-freshness trap">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Features &amp; Freshness">
+  <meta name="twitter:description" content="Real-time vs batch features, train/serve skew, the feature-freshness trap">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Features & Freshness",
+  "description": "Real-time vs batch features, train/serve skew, the feature-freshness trap",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/features_and_freshness.html",
+  "keywords": "RecSys, feature store, train-serve skew, freshness, point-in-time"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#recsys_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">22 min read</span>
+      <span class="tag">RecSys</span><span class="tag">feature store</span><span class="tag">train-serve skew</span><span class="tag">freshness</span><span class="tag">point-in-time</span>
+    </div>
+    <h1>Features &amp; Freshness</h1>
+    <p class="subtitle">Real-time vs batch features, train/serve skew, the feature-freshness trap</p>
+
+    <p>A recommender's features come in two speeds, and the boundary between them is where most silent production bugs live. Get the freshness model wrong and your offline metrics look great while the live system quietly recommends yesterday's world.</p>
+    <hr>
+    <p><strong>Batch features are computed on a schedule; real-time features are computed per event.</strong> &quot;User's 90-day purchase count&quot; is a batch feature — recomputed nightly, cheap, stable. &quot;Items viewed in the last 5 minutes&quot; is a real-time feature — it must reflect *this* session, so it's computed online from a streaming store. The two live in different systems (a warehouse vs a low-latency feature store), and the recommender reads both at serving time. The design question is which signals *need* to be fresh: session intent decays in minutes, so a stale &quot;recent views&quot; feature is nearly useless; long-term taste is stable, so a day-old &quot;favorite genre&quot; is fine.</p>
+    <hr>
+    <p><strong>Train/serve skew is the trap: the same feature computed two different ways.</strong> Training features are usually computed in a batch pipeline (Spark/SQL over historical logs); serving features are computed in a live path (streaming/online store). If the two implementations differ — a different null default, a timezone, a window boundary, a slightly different aggregation — the model trains on one distribution and serves on another. The model's live behavior degrades in a way *no offline metric can catch*, because offline evaluation uses the training-side computation. The fix is a <strong>feature store</strong> that guarantees one definition consumed identically at train and serve time.</p>
+    <hr>
+    <p><strong>The feature-freshness trap is skew's time-shifted cousin: point-in-time correctness.</strong> When you build training data, each label (did the user click at time t?) must be joined to feature values *as they were at time t* — not their current values. Join &quot;user's total purchases&quot; as of *today* onto a click from three months ago and you've leaked the future: the model learns from information it won't have at serving time, inflating offline metrics and collapsing in production. Point-in-time-correct joins (as-of joins on event timestamps) are the non-negotiable discipline that makes offline training data match serving reality.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Match freshness to signal decay.</strong> Session-intent features (recent views, current query) decay in minutes and must be real-time; long-term taste features (favorite genre, lifetime spend) are stable and can be batch. Making everything real-time wastes infra; making everything batch kills session responsiveness.</li><li><strong>Train/serve skew = one feature, two implementations, two distributions.</strong> A different null-handling, timezone, or window between the training (batch) and serving (online) computation silently shifts the model's input distribution. No offline metric catches it because offline eval uses the training-side values. A feature store enforces one definition consumed identically at both times.</li><li><strong>Point-in-time correctness prevents label leakage in training data.</strong> Each label must be joined to feature values *as of the event's timestamp*, not their current values. As-of joins on event time are mandatory; a naive join of current features onto historical labels leaks the future and inflates offline metrics.</li><li><strong>The two failure modes look identical offline and different in prod.</strong> Both skew and non-point-in-time joins produce great offline numbers and a live regression — so a large offline/online gap is the diagnostic signature to check features first.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>RecSys features split into batch (stable, scheduled) and real-time (session, streamed), and the two hardest bugs both hide behind good offline metrics: train/serve skew (one feature computed two ways → distribution shift no offline metric catches) and non-point-in-time joins (current features glued onto historical labels → future leakage). A feature store with as-of joins is the discipline that closes both.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Two feature speeds, matched to signal decay:</strong> batch (scheduled, stable — 90-day purchase count) vs real-time (per-event, streamed — last-5-minutes views). Session intent decays in minutes → must be fresh; long-term taste is stable → batch is fine. Everything-real-time is expensive over-engineering; everything-batch kills responsiveness.</li><li><strong>Train/serve skew = one feature, two implementations:</strong> a different null default, timezone, or window between the training (batch) and serving (online) path shifts the input distribution. No offline metric catches it (offline eval uses training-side values). A feature store enforcing one definition consumed identically is the fix.</li><li><strong>Point-in-time correctness stops label leakage:</strong> each label must join to feature values *as of the event timestamp*, not current values. Naive joins of current features onto historical labels leak the future, inflating offline metrics and collapsing in prod. As-of joins on event time are non-negotiable.</li><li><strong>Both bugs share one signature:</strong> great offline numbers + a live regression. A large offline/online gap → check feature parity and join correctness first.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> Your recommender scores well offline but underperforms live. You discover the &quot;items viewed in last hour&quot; feature is computed with Spark (rounding timestamps to the hour) in training and with a streaming store (exact rolling window) at serving. What is this, and why did offline metrics miss it?</p>
+      <ul class="check-opts"><li>A) Concept drift — user behavior changed between training and serving; retrain on fresher data.</li><li class="correct">B) Train/serve skew — the same feature is computed two different ways, so the model trains on one distribution and serves on another. Offline evaluation used the training-side (Spark) values, so the skew is invisible until live traffic hits the streaming path. Fix by sharing one feature definition across train and serve.</li><li>C) Label leakage — the hourly window leaks the click into the feature; shrink the window.</li><li>D) Overfitting — the model memorized the Spark rounding artifact; add regularization.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> When constructing training data, you join each historical click to the user's *current* lifetime-purchase count. Offline AUC jumps to 0.98; production is far worse. What went wrong?</p>
+      <ul class="check-opts"><li>A) Nothing — 0.98 AUC is the model's true skill; production is worse only because of latency, not data.</li><li class="correct">B) Non-point-in-time join: the current purchase count reflects purchases made *after* the historical click, leaking future information the model won't have at serving time. This inflates offline metrics and collapses live. Use an as-of join that reconstructs each feature's value at the click's timestamp.</li><li>C) The join duplicated rows, inflating the positive class; deduplicate and re-evaluate.</li><li>D) AUC is the wrong metric for this join; switch to NDCG and the gap closes.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> A teammate proposes making *every* feature real-time &quot;to be safe.&quot; Why is that the wrong default?</p>
+      <ul class="check-opts"><li>A) Real-time features are always less accurate than batch ones, so accuracy would drop.</li><li class="correct">B) Freshness should match how fast a signal decays. Long-term taste features (favorite genre, lifetime spend) are stable, so real-time computation adds streaming infra cost and complexity for no quality gain; reserve real-time for session-intent signals that decay in minutes. Blanket real-time is expensive over-engineering.</li><li>C) Real-time features can't be stored in a feature store, so they'd break point-in-time joins.</li><li>D) Streaming systems can't compute aggregations, so long-term features would be impossible.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#recsys_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

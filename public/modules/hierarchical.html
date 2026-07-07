@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hierarchical Clustering | ML Systems Lab</title>
+  <meta name="description" content="Linkage criteria, dendrograms, when hierarchy beats flat clustering">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/hierarchical.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/hierarchical.html">
+  <meta property="og:title" content="Hierarchical Clustering | ML Systems Lab">
+  <meta property="og:description" content="Linkage criteria, dendrograms, when hierarchy beats flat clustering">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Hierarchical Clustering">
+  <meta name="twitter:description" content="Linkage criteria, dendrograms, when hierarchy beats flat clustering">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Hierarchical Clustering",
+  "description": "Linkage criteria, dendrograms, when hierarchy beats flat clustering",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/hierarchical.html",
+  "keywords": "hierarchical clustering, dendrogram, linkage"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#unsupervised_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">34 min read</span>
+      <span class="tag">hierarchical clustering</span><span class="tag">dendrogram</span><span class="tag">linkage</span>
+    </div>
+    <h1>Hierarchical Clustering</h1>
+    <p class="subtitle">Linkage criteria, dendrograms, when hierarchy beats flat clustering</p>
+
+    <p>You have 500 customer support tickets. You need to organize them into a hierarchy — broad themes (Product Bug, Billing, UX) and sub-themes (Product Bug: Login, Checkout, API). K-means gives you flat clusters and requires you to commit to K before seeing results. Hierarchical clustering builds a tree — the dendrogram — that you cut at any level to get the granularity you want. One run gives you every possible K simultaneously.</p>
+    <p>Agglomerative clustering (bottom-up): start with each point as its own cluster. Merge the two closest clusters. Repeat until all points are in one cluster. The merge history forms the dendrogram, where the y-axis records the distance at each merge.</p>
+    <p>The linkage criterion determines what &quot;distance between clusters&quot; means. Single linkage: distance between the closest pair of points across clusters — produces elongated &quot;chaining&quot; clusters. Complete linkage: distance between the farthest pair — produces compact clusters. Average linkage: average distance between all pairs. Ward's linkage: merges the pair that minimizes total within-cluster variance after merging. Ward produces compact, equal-variance clusters and is almost always the best default.</p>
+    <p>Reading the dendrogram: long vertical segments mark natural cluster boundaries — a large jump in merge distance means the two groups being merged were genuinely far apart. Draw a horizontal cut line; each branch it crosses is one cluster. If there are no long segments, the data probably does not have discrete structure.</p>
+    <p>Complexity: O(n²) space for the distance matrix, O(n³) time for the naive merge sequence. Infeasible for n &gt; 10,000. For large datasets use HDBSCAN or approximate methods.</p>
+    <p>NOT-this: &quot;You need to specify K before running hierarchical clustering.&quot; The whole point is you do not. You run once, get the full dendrogram, inspect it, and decide where to cut based on the structure. You can cut at different heights for different analysis needs without rerunning — that is the main advantage over K-means.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Use hierarchical clustering with Ward linkage when you need interpretable nested structure and n &lt; 10,000.</strong>
+
+The dendrogram gives you all granularity levels in one run — you can read off 3 clusters, 7 clusters, or 20 clusters without refitting. Product taxonomies, gene pathway hierarchies, and support ticket category trees are the right domain for this method.</li><li><strong>Trap: running hierarchical clustering on raw high-dimensional features.</strong>
+
+Pairwise distance computation in 1000 dimensions is dominated by noise — every pair looks roughly equidistant. Reduce to 20–50 PCA components first. Without this step, the distances driving the dendrogram are measuring noise, not structure.</li><li><strong>Diagnostic: if the dendrogram shows one large cluster absorbing all others at the last step, your data has one dominant cluster with outliers.</strong>
+
+Use DBSCAN to explicitly model noise points rather than forcing them into clusters. A dendrogram with no long vertical segments carries the same signal — discrete cluster structure is absent from this data under this algorithm.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>The dendrogram encodes cluster structure at every granularity in one run — natural boundaries appear as long vertical segments, and the absence of those segments means discrete cluster structure is probably not there.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Dendrogram = every K in one run:</strong> cut at any height, no need to commit K.</li><li><strong>Agglomerative (bottom-up):</strong> each point its own cluster → merge closest → repeat.</li><li><strong>Linkage = definition of cluster distance:</strong> single (chaining), complete (compact), average, Ward (min variance).</li><li><strong>Ward is the near-universal default</strong> — compact, equal-variance clusters.</li><li><strong>Read the tree:</strong> long vertical segments = natural boundaries; none = no discrete structure.</li><li><strong>Cost:</strong> $O(n^2)$ space, $O(n^3)$ time — infeasible past ~10,000 points; use HDBSCAN.</li><li><strong>Reduce to 20–50 PCA dims first</strong> — raw high-D distances measure noise.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You are clustering genes based on expression profiles. Why might hierarchical clustering with Ward linkage be more appropriate than k-means?</p>
+      <ul class="check-opts"><li>A) Hierarchical clustering is always preferred for biological data because gene expression features are non-Gaussian</li><li>B) Ward linkage specifically handles the high dimensionality of gene expression data better than k-means centroids</li><li>C) K-means is faster but hierarchical clustering is needed when the dataset has more than 500 genes</li><li class="correct">D) Gene expression clusters have a natural biological hierarchy across pathway, module, and process levels — one hierarchical run gives every granularity simultaneously, and Ward linkage produces the compact co-expression groups biologists compare to known pathway databases</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Two researchers use the same dataset but different linkage criteria. Researcher A uses single linkage and gets one large cluster containing 95% of the data. Researcher B uses Ward linkage and gets 5 balanced clusters. Who is right?</p>
+      <ul class="check-opts"><li>A) Researcher B is right — single linkage always produces degenerate results due to chaining and should never be used</li><li>B) Researcher A is right — one large cluster means the data has no true subgroup structure</li><li class="correct">C) Both results are valid given their linkage criterion — the correct interpretation depends on whether the data has filamentary chain structure (A is right) or five distinct blobs connected by bridges (B is right); validate with PCA/UMAP visualization and cophenetic correlation</li><li>D) Neither is right — the correct approach is to average the two results</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> How do you determine the optimal cut height on a dendrogram when there is no obvious long gap?</p>
+      <ul class="check-opts"><li>A) Always cut at the median linkage height, which maximises cluster balance</li><li>B) The absence of a long gap proves the data has no cluster structure — stop and use a different algorithm</li><li class="correct">C) Use the accelerations plot (second derivative of linkage distances), silhouette analysis across different cuts, domain knowledge, or compare a GMM BIC curve — no single method is authoritative when gaps are absent</li><li>D) Use complete linkage instead — it always produces clearer gaps than Ward linkage</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> A colleague wants to run hierarchical clustering on 100,000 points. What do you tell them?</p>
+      <ul class="check-opts"><li>A) Use single linkage — its SLINK implementation runs in O(n log n) and handles 100,000 points easily</li><li>B) Hierarchical clustering is feasible up to 500,000 points with modern hardware; the O(n²) limit only applies to Ward linkage</li><li>C) Subsample to 10,000 points, run hierarchical clustering, then assign remaining points by nearest-centroid</li><li class="correct">D) Naive agglomerative clustering on 100,000 points requires ~40 GB for the distance matrix and months of O(n³) compute — use HDBSCAN (O(n log n) with hierarchical structure), BIRCH + agglomerative, or subsample to 5,000-10,000 points</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#unsupervised_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

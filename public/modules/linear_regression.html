@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Linear Regression from First Principles | ML Systems Lab</title>
+  <meta name="description" content="OLS, normal equation, geometric interpretation, assumptions">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/linear_regression.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/linear_regression.html">
+  <meta property="og:title" content="Linear Regression from First Principles | ML Systems Lab">
+  <meta property="og:description" content="OLS, normal equation, geometric interpretation, assumptions">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Linear Regression from First Principles">
+  <meta name="twitter:description" content="OLS, normal equation, geometric interpretation, assumptions">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Linear Regression from First Principles",
+  "description": "OLS, normal equation, geometric interpretation, assumptions",
+  "proficiencyLevel": "Foundational",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/linear_regression.html",
+  "keywords": "regression, OLS, linear models"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#classical_ml_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Foundational</span>
+      <span class="read-time">28 min read</span>
+      <span class="tag">regression</span><span class="tag">OLS</span><span class="tag">linear models</span>
+    </div>
+    <h1>Linear Regression from First Principles</h1>
+    <p class="subtitle">OLS, normal equation, geometric interpretation, assumptions</p>
+
+    <p>Here is a true story from over two hundred years ago. On the very first night of 1801, an astronomer spotted a faint new dot in the sky — a small world we now call Ceres. He watched it for about forty nights, and then it drifted behind the glare of the Sun and vanished. Everyone wanted it back, but to know where to point a telescope, you had to predict its whole orbit from just a handful of shaky, imperfect measurements. Nobody could do it.</p>
+    <p>Then a 24-year-old named Carl Friedrich Gauss tried something new. He took all those messy measurements and found the single orbit that fit them best — not perfectly, because the measurements had errors in them, but best in a way he could actually prove. He told the astronomers where to look. Ceres was right there.</p>
+    <p>The idea Gauss leaned on is called <strong>least squares</strong>, and it is the beating heart of what we now call <strong>linear regression</strong>. Before it, drawing the best line through noisy data was guesswork — everyone eyeballed it and got a different answer. Least squares turned &quot;fit a line to the dots&quot; from an art into a solved problem with one right answer. Two hundred years later it is still one of the first tools any data scientist reaches for. Let me show you how it works, brick by brick.</p>
+    <hr>
+    <h3>The setup</h3>
+    <p>Forget planets for a moment and take something homelier. You sell houses. For every house that sold last month you wrote down a few facts — how big it is, how many bedrooms, how nice the area is — and the price it sold for. Now a new house comes up, and you need to guess its price.</p>
+    <p>Your instinct is the right one. A bigger house costs more. More bedrooms cost more. A nicer area costs more. So take each fact, give it a weight for how much it matters, and add them up:</p>
+    <p>price ≈ w₁ × size + w₂ × bedrooms + w₃ × area score</p>
+    <p>That is the whole model. Pick the three weights and you can price any house. So the entire game comes down to one question: how do we pick good weights?</p>
+    <hr>
+    <h3>How wrong are we?</h3>
+    <p>To find good weights, we first have to measure bad ones. You already know what last month's houses actually sold for, so use your weights to predict those same houses and compare each guess to the truth. How far off you were on one house is called the <strong>residual</strong> — a fancier word for the miss.</p>
+    <p>One miss is easy. But we want a single score for how wrong the weights are across *all* the houses. The most natural idea is to average the misses. Careful though — some guesses are too high and some too low, so the misses have opposite signs and cancel out. A terrible model could average to nearly zero just by luck.</p>
+    <p>The fix is to throw away the signs. Take the size of each miss, ignore whether it was over or under, and average those. That gives you the <strong>mean absolute error</strong>, or <strong>MAE</strong> — plainly, &quot;on average, how many dollars off are we?&quot; It is honest, easy to read, and a couple of wild houses barely move it.</p>
+    <p>But when it comes to actually *finding* the best weights, we usually reach for MAE's cousin. Instead of taking the size of each miss, we <strong>square</strong> it, then average. That is the <strong>mean squared error</strong>, or <strong>MSE</strong>, and it does two things MAE does not. First, squaring makes one big miss count for far more than several small ones, so the model works hardest to avoid the embarrassing, way-off guesses. Second — and this is the part that matters most — squaring makes the whole thing smooth, which, as you are about to see, is exactly what lets us solve for the best weights in one clean shot.</p>
+    <p>Either way, this single number — how wrong the weights are, all together — is called the <strong>loss</strong>. And now the whole job fits in one sentence: find the weights that make the loss as small as possible.</p>
+    <hr>
+    <h3>The beautiful part: solving it in one step</h3>
+    <p>Here is where least squares earns its fame. Picture the loss as a landscape: the weights are your position, and the loss is the height of the ground under you. Because we squared the misses, that landscape is a smooth bowl — one single lowest point, no other dips to fall into. And the bottom of a bowl is exactly the spot where the ground goes flat.</p>
+    <p>So we do not have to wander around trying weights and checking the loss. We just ask math for the point where the slope is flat, and it hands back one formula that gives the best weights directly:</p>
+    <p>$θ̂ = (XᵀX)⁻¹Xᵀy$</p>
+    <p>Do not worry about the symbols yet. The thing to feel is the magic: for a straight-line model, we never search — we solve, in a single step, and get the provably best weights every time. That is the same trick that let Gauss find a lost planet. The one-step solution is called <strong>ordinary least squares</strong>, or <strong>OLS</strong>, and that is the entire engine.</p>
+    <hr>
+    <h3>A warning about trusting the weights</h3>
+    <p>Now a catch that trips up almost everyone. Suppose two of your facts move together — bigger houses usually have more bedrooms, so size and bedroom count rise and fall as a pair. The model wants to hand out credit for the price, some to size and some to bedrooms. But because the two always move together, it cannot tell which one is really doing the work. It might load most of the weight onto size, or most onto bedrooms, and both choices predict prices about equally well.</p>
+    <p>So the weights turn shaky. Train on a slightly different batch of houses and those two weights can jump around — one run gives size a positive weight, the next run gives it a negative weight, as if a bigger house should cost *less*. Meanwhile the actual price predictions barely change. This is called <strong>collinearity</strong>. And notice carefully what is and is not moving: the two facts are still exactly as correlated as before — that is a fixed fact about your data and it does not budge. It is the *weights* that have gone unreliable, not the correlation.</p>
+    <p>Why care? Because people read the weights to decide which fact matters. See a weight near zero and think &quot;this one does nothing, drop it,&quot; and you can be badly wrong — the weight may be tiny only because its twin grabbed the credit. The usual fix is a method called <strong>Ridge</strong>, which keeps the weights from growing wild and shaky. How it does that is its own lesson.</p>
+    <hr>
+    <h3>How good is the fit, really?</h3>
+    <p>Say you have trained the model and its total squared error comes out to some big number. Is that good? On its own it means nothing. Fifty million squared-dollars — compared to what?</p>
+    <p>You need a yardstick, and the fairest one is the dumbest possible model: the one that ignores every fact about the house and just guesses the same number every time — the average price. Call it the lazy model. How wrong is the lazy model? Take each house's price, subtract the average, square it, and add it all up. That total is simply the spread of prices around their average, and that spread has a famous name: the <strong>variance</strong>. (Take its square root and you are back in real dollars — that is the <strong>standard deviation</strong>. And the average you started from is the <strong>mean</strong>. Mean, then variance, then standard deviation, each one built on the one before.)</p>
+    <p>Now comes the clever comparison. <strong>R²</strong> just asks: of all the error the lazy mean-model was stuck with, how much did your model clear away?</p>
+    <p>R² = 1 − (your model's squared error ÷ the lazy model's squared error)</p>
+    <p>Read it straight off. R² = 0 means you are no better than guessing the average — useless. R² = 1 means you nailed every house. R² = 0.8 means you wiped out 80% of the error the lazy model had. Now the number finally means something, because it is measured against a floor.</p>
+    <p>R² is the first thing to look at when you judge a linear regression — but it hides one trap. Add a new fact to the model, even one that is pure random noise, and R² never goes down. The model can always use junk to shave a sliver off the training error. So plain R² quietly rewards piling on useless features. The fix is <strong>adjusted R²</strong>, which charges a small fee for every fact you add: if a new fact does not earn its keep, adjusted R² falls. So when you are deciding whether a feature belongs, trust adjusted R², not plain R².</p>
+    <hr>
+    <h3>One last habit — the most useful one</h3>
+    <p>Even a high R² can fool you, and this final trick catches it. Suppose the real relationship actually curves, but you fit a straight line anyway. You can still score an impressive R² of 0.95 and still be wrong about the shape.</p>
+    <p>To catch it, take your misses and plot them against your predictions. If the straight line is right, the misses should scatter randomly around zero — no pattern at all. But if the truth was a curve, the misses fall into a clear shape — often a U, too low in the middle and too high at the ends. That U is the model quietly telling you the straight line is the wrong shape. R² will never warn you. The plot of the misses always will.</p>
+    <p>So before you trust any straight-line model: plot the misses and look. Gauss would have.</p>
+    <hr>
+    <h3>The fine print: what OLS quietly assumes</h3>
+    <p>That residual plot isn't just a nicety — it's how you check the promises OLS silently makes. There are five, and it helps to split them into two piles.</p>
+    <p>The first pile is what you need just to *predict* well. One: the relationship really is a straight line (linearity). Two: no feature is a near-copy of another (no perfect multicollinearity) — the collinearity trap from earlier. If these hold, your predictions are trustworthy even if nothing else does.</p>
+    <p>The second pile is what you additionally need to *trust the weights and their uncertainty* — the inference layer we're about to meet. Three: the errors have zero mean *given the features* (exogeneity) — the model isn't systematically wrong in any region. Four: the errors all have the same spread (homoscedasticity). Five: the errors are independent of each other (no autocorrelation). Break these and your *predictions* can still be fine, but every confidence interval and p-value you quote is off. That split — prediction assumptions versus inference assumptions — is the thing most people fumble in an interview.</p>
+    <hr>
+    <h3>When the spread isn't even: heteroscedasticity</h3>
+    <p>Look again at a residual plot that fans out — tight on the left, wide on the right. That's <strong>heteroscedasticity</strong>: the errors are bigger for pricier houses. Here's the subtle part interviewers love. Your weights are *still unbiased* — on average they're centered on the truth. What breaks is the *uncertainty* around them: the standard errors, confidence intervals, and hypothesis tests all become unreliable, usually too optimistic. So you keep predicting fine but start *believing* things about your weights that aren't warranted. The fixes: robust (&quot;sandwich&quot;) standard errors, or a transform like modeling log(price) instead of price.</p>
+    <hr>
+    <h3>One weird house can move the whole line: leverage and influence</h3>
+    <p>&quot;What if a single data point changes your slope?&quot; is a classic. Two different things are going on. <strong>Leverage</strong> is a point with an extreme *feature* value — a 20-bedroom mansion sitting far out on the size axis. It has the *potential* to swing the line hard, just by being far out. <strong>Influence</strong> is when a point *actually* does swing it — high leverage *and* a price that fights the trend. <strong>Cook's distance</strong> measures exactly this: how much every weight would move if you deleted that one house. A point with big Cook's distance is one row quietly steering your whole model. You find these by looking, not by trusting the summary metrics — R² won't flinch.</p>
+    <hr>
+    <h3>Reading the weights like a statistician: the inference layer</h3>
+    <p>So far we've used the weights to *predict*. But often the real question is &quot;does size actually matter, or did we imagine it?&quot; That needs the inference layer. Around each weight you compute a <strong>standard error</strong> — how much that weight would jitter across different samples. Divide the weight by its standard error and you get a <strong>t-statistic</strong>; feed that through and you get a <strong>p-value</strong> — the odds of seeing a weight this big if the true effect were zero. Wrap the weight in ±2 standard errors and you get a <strong>confidence interval</strong>. This is what lets you say &quot;one more bedroom adds \$12k, and we're 95% sure it's between \$8k and \$16k&quot; instead of just &quot;\$12k.&quot;</p>
+    <p>And why is OLS the natural tool for this? The <strong>Gauss-Markov theorem</strong>: when those assumptions hold, OLS is <strong>BLUE</strong> — the Best Linear Unbiased Estimator, meaning among all unbiased straight-line methods, none has smaller variance. That's the deep reason least squares earns its place, not just tradition. (Note: scikit-learn gives you the weights but not p-values or intervals — for those you reach for statsmodels.)</p>
+    <hr>
+    <h3>How the computer actually solves it</h3>
+    <p>We wrote the one-step answer as $θ̂ = (XᵀX)⁻¹Xᵀy$, but no careful library computes it that literally. Forming XᵀX and inverting it *squares* how sensitive the math is to nearly-collinear features, so it can blow up numerically. Real solvers (scikit-learn included) instead use <strong>QR</strong> or <strong>SVD</strong> decompositions — same answer in exact arithmetic, far more stable when features are correlated or poorly scaled. Worth knowing that the textbook formula and the production code disagree on purpose.</p>
+    <hr>
+    <h3>Picking the right yardstick</h3>
+    <p>R² tells you how much you beat the lazy mean-model, but for reporting error you'll usually quote one of a few. <strong>MAE</strong> is the plain average dollar miss — easy to read, shrugs off a few wild houses. <strong>RMSE</strong> squares before averaging, so it punishes big misses harder and stays in dollars — use it when large errors are especially costly. <strong>MAPE</strong> reports the miss as a *percentage* of each price, which travels across scales but explodes when true values are near zero and punishes over-prediction unevenly. And <strong>R²</strong> is the unitless &quot;fraction of variance explained&quot; for a quick sense of fit. Match the metric to the question: absolute dollars (MAE/RMSE), relative error (MAPE), or overall fit (R²).</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>In one line: OLS finds the weights that make the total squared miss as small as possible.</strong>
+
+Use linear regression first whenever you are predicting a number and &quot;add up the facts, each with its own weight&quot; is a sensible guess. Its big advantage is that you can read the weights straight off — one more bedroom adds about so many dollars. It is fast, it is simple, and it is the baseline every fancier model has to beat. Move to something else when the residual plot curves (the real shape is not a straight line), when facts clearly work together, or when the answer has to stay inside fixed limits — like a probability between 0 and 1, which a straight line cannot respect.</li><li><strong>The trap that catches people: when two facts move together, their weights stop being trustworthy — but the predictions still look fine, so nothing warns you.</strong>
+
+If size and total rooms almost always rise together, OLS splits the credit between them however it likes, and a different batch of houses splits it differently. The two weights wobble, but their combined effect stays steady — so the predictions look healthy. That is why &quot;this weight is near zero, let us drop the fact&quot; is dangerous: the weight may be small only because its twin took the credit. Add Ridge (a small penalty) before you trust any list of which facts matter.</li><li><strong>The one check to run every time: plot the misses against the predictions.</strong>
+
+If the misses scatter evenly around zero, the straight line fits. If they form a U or any clear pattern, the shape is wrong — and a curved plot with R² = 0.95 is worse than a messy one with R² = 0.60, because now you are confidently wrong. If the misses fan out wider as predictions grow, the errors get bigger for pricier houses; the predictions can still be fine, but any confidence range you quote is off. R² hides all of this. The plot of the misses shows it.</li><li><strong>Split the assumptions into two piles — predicting well needs less than trusting the weights.</strong>
+
+To *predict* you mainly need a genuinely linear relationship and no near-duplicate features. To also *trust the standard errors, p-values, and intervals*, you additionally need errors with zero mean given the features (exogeneity), equal spread (homoscedasticity), and independence (no autocorrelation). Heteroscedasticity is the classic gotcha: it leaves your weights unbiased but makes their uncertainty wrong, so predictions stay fine while every confidence interval quietly lies. Fix with robust standard errors or a log transform.</li><li><strong>Know the difference between leverage and influence — and that one row can steer the whole model.</strong>
+
+Leverage is a point with an extreme *feature* value (it has the potential to swing the line); influence is when it actually does (extreme feature value *and* a target that fights the trend). Cook's distance measures how much the weights move if you delete that one point — a big value means one row is running your model. And this is what the inference layer buys you: standard errors, t-stats, p-values, and confidence intervals turn &quot;one bedroom adds \$12k&quot; into &quot;\$12k, 95% sure it's \$8k–\$16k.&quot; OLS is the natural tool because Gauss-Markov says it is BLUE — the minimum-variance unbiased linear estimator — when the assumptions hold. (scikit-learn gives weights only; use statsmodels for p-values and intervals.)</li><li><strong>Match the error metric to the question, and don't compute the normal equation literally.</strong>
+
+MAE = average dollar miss (robust, readable); RMSE = squares first, so it punishes big misses and is the one to quote when large errors are costly; MAPE = percentage error that travels across scales but explodes near zero; R² = unitless fraction of variance explained. On implementation: nobody careful inverts XᵀX directly — squaring the condition number is numerically dangerous — so real solvers (scikit-learn included) use QR or SVD for the same answer with far more stability on correlated or badly scaled features.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Least squares picks the weights that make the total squared miss smallest, and for a straight line one formula solves for them in a single step — the same trick Gauss used to find a lost planet. Judge the fit with R² (how much you beat the lazy &quot;always guess the average&quot; model), and switch to adjusted R² once you start adding features. Never trust a single weight when two facts move together, and always plot the misses — because R² cannot see a wrong shape, but the misses can.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>OLS = weights that minimise total squared miss.</strong> Squaring: signs don't cancel, big misses dominate, loss is a smooth bowl.</li><li><strong>One-step solve:</strong> θ̂ = (XᵀX)⁻¹Xᵀy — no search, provably best weights (Gauss's planet trick).</li><li><strong>Collinearity:</strong> correlated facts → weights wobble and can flip sign, predictions stay fine. Fix: Ridge.</li><li><strong>R²</strong> = fraction of the lazy mean-model's error you cleared; switch to <strong>adjusted R²</strong> once you add features (junk features never lower plain R²).</li><li><strong>Always plot the misses vs predictions.</strong> R² can't see a wrong shape; a U-pattern can.</li><li><strong>Two assumption piles:</strong> predict well (linearity, no near-duplicate features) vs trust the weights (exogeneity, homoscedasticity, independence). Heteroscedasticity → weights unbiased but standard errors lie.</li><li><strong>Real solvers use QR/SVD, not literal (XᵀX)⁻¹</strong> — inverting squares the numerical sensitivity.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> In OLS, why do we square each miss before adding them up, instead of just adding the raw misses?</p>
+      <ul class="check-opts"><li>`A) Because raw misses cancel — a too-high guess and a too-low one add to near zero and hide bad weights. Squaring drops the signs so nothing cancels, and it makes big misses count for much more.`</li><li>`B) Because squaring turns the model non-linear, and that is what lets a straight-line model bend to fit curved data instead of only straight relationships.`</li><li>`C) Because it is only tradition — adding the absolute values of the misses gives the exact same weights, just with a little more arithmetic to do.`</li><li>`D) Because squaring puts the error back into the target's real units (dollars, not dollars squared), so the final loss reads as an average price error.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Two of your features have correlation 0.99. What happens to the OLS weights, and how do Ridge and Lasso differ here?</p>
+      <ul class="check-opts"><li>`A) The weights are only slightly inflated but still reliable — correlation causes real trouble only once it hits exactly 1.0. Ridge and Lasso both shrink them, Lasso just harder.`</li><li>`B) OLS cannot run at all because the math is singular; Ridge and Lasso both repair it and, for correlated features, hand back identical weights.`</li><li>`C) OLS still runs, but the two weights turn shaky — a small change in the data swings them and can flip their signs, while the predictions barely move. Ridge shrinks them to similar steady values; Lasso keeps one and zeros the other, and which it keeps can change each run.`</li><li>`D) Both OLS and Ridge quietly drop one of the two features to kill the redundancy; the only difference is the rule each uses to decide which feature to drop.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Your model shows R² = 0.95, but the misses make a clear U-shape when plotted against the predictions. What does that tell you?</p>
+      <ul class="check-opts"><li>`A) It is just random noise — with R² this high the misses are bound to wander a little, and there is nothing you need to do about it.`</li><li>`B) The straight line is the wrong shape — it comes in too low at the ends and too high in the middle. A high R² does not save you; it only measures variance explained, not shape. Fix by adding curve terms or a model that can bend, then re-check.`</li><li>`C) It points to a few outliers at the extremes stretching the error; clip the target at the top and bottom and both R² and the miss pattern will settle down.`</li><li>`D) It means the errors run in time order (autocorrelation), so switch to a time-series model even though the data is not ordered by time.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> You add a brand-new feature to your model — one that is really just random noise. Your R² ticks up a little. Should you keep the feature, and what number should you have looked at instead?</p>
+      <ul class="check-opts"><li>`A) Yes — any rise in R², however small, means the feature is adding real predictive value, so it has earned its place in the model.`</li><li>`B) No — R² almost always creeps up when you add a feature, even a useless one, because the model can fit a little more training noise. Look at adjusted R² instead: it charges a fee per feature, so a noise feature makes it fall. If adjusted R² drops, leave the feature out.`</li><li>`C) Yes — extra random features act like a mild regulariser, smoothing the model and helping it generalise to houses it has not seen.`</li><li>`D) No — but the real fix is to standardise the noise feature so its scale matches the others, after which R² will correctly drop and tell you to remove it.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> Your residual plot fans out — tight errors for cheap houses, wide errors for expensive ones (heteroscedasticity). What is the real consequence?</p>
+      <ul class="check-opts"><li>`A) The weights themselves become biased and point in the wrong direction, so the predictions are systematically too high or too low and cannot be trusted.`</li><li>`B) The weights stay unbiased and the predictions are still fine — but the standard errors, confidence intervals, and p-values become unreliable, so any statement about how sure you are of a weight is off. Fix with robust standard errors or a log transform.`</li><li>`C) Nothing meaningful — fanning residuals are a display artifact of plotting against predictions, and switching the x-axis to a single feature makes them disappear.`</li><li>`D) It proves the relationship is non-linear, so the only remedy is to add polynomial terms until the fan closes up.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q6.</strong> An interviewer asks: &quot;One data point has an extreme size value AND a price that fights the overall trend. What is it, and how would you catch it?&quot;</p>
+      <ul class="check-opts"><li>`A) It is a leverage point but not an influential one, because leverage depends only on the target value, not the feature value.`</li><li>`B) It is simple label noise; the fix is to average it with its nearest neighbours before fitting so its effect is diluted.`</li><li>`C) It is an influential point — high leverage (extreme feature value) combined with a target that opposes the trend, so it actually swings the fitted line. Cook's distance flags it by measuring how much the weights move if you delete that single row.`</li><li>`D) It is a multicollinearity symptom, detected with the variance inflation factor, and removed by dropping one of the correlated features.`</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q7.</strong> Why is OLS considered special under its assumptions, and what does the textbook formula θ̂ = (XᵀX)⁻¹Xᵀy hide about real solvers?</p>
+      <ul class="check-opts"><li>`A) It is special because it minimises absolute error, which is why it resists outliers; real solvers compute the inverse of XᵀX directly because that is the fastest route.`</li><li>`B) The Gauss-Markov theorem says OLS is BLUE — the Best Linear Unbiased Estimator, minimum variance among unbiased linear methods — when the assumptions hold. Real solvers avoid forming and inverting XᵀX (which squares the numerical sensitivity) and use QR or SVD instead for the same answer with far better stability.`</li><li>`C) It is special only because it is fast to compute; there is no theoretical optimality result, and the formula is exactly what production code runs.`</li><li>`D) The theorem guaranteeing OLS optimality is the central limit theorem, and the formula is unstable only when the number of rows exceeds the number of columns.`</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#classical_ml_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

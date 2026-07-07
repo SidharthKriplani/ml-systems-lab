@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Representation Learning for RecSys | ML Systems Lab</title>
+  <meta name="description" content="Two-tower objectives, negative sampling (in-batch, hard, popularity-corrected) — why sampling dominates retrieval quality">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/recsys_representation_learning.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/recsys_representation_learning.html">
+  <meta property="og:title" content="Representation Learning for RecSys | ML Systems Lab">
+  <meta property="og:description" content="Two-tower objectives, negative sampling (in-batch, hard, popularity-corrected) — why sampling dominates retrieval quality">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Representation Learning for RecSys">
+  <meta name="twitter:description" content="Two-tower objectives, negative sampling (in-batch, hard, popularity-corrected) — why sampling dominates retrieval quality">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Representation Learning for RecSys",
+  "description": "Two-tower objectives, negative sampling (in-batch, hard, popularity-corrected) — why sampling dominates retrieval quality",
+  "proficiencyLevel": "Advanced",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/recsys_representation_learning.html",
+  "keywords": "RecSys, embeddings, negative sampling, contrastive, logQ correction"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#recsys_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Advanced</span>
+      <span class="read-time">24 min read</span>
+      <span class="tag">RecSys</span><span class="tag">embeddings</span><span class="tag">negative sampling</span><span class="tag">contrastive</span><span class="tag">logQ correction</span>
+    </div>
+    <h1>Representation Learning for RecSys</h1>
+    <p class="subtitle">Two-tower objectives, negative sampling (in-batch, hard, popularity-corrected) — why sampling dominates retrieval quality</p>
+
+    <p>The counter-intuitive lesson of retrieval training is that the *encoder architecture* is rarely what limits recall — the <strong>negative-sampling scheme</strong> is. You can swap a deeper tower in for a shallower one and move recall a point or two; change how you pick negatives and recall can move ten points. This module is about why that is, and about the single most famous failure mode in the field: naive in-batch negatives collapsing under popularity skew.</p>
+    <hr>
+    <p><strong>The two-tower objective is contrastive: pull the positive together, push negatives apart.</strong> You have positives (user *u* clicked item *i⁺*) but no labelled negatives. Training frames it as a <strong>softmax over items</strong>: maximise the probability of *i⁺* against a set of sampled negatives, i.e. <strong>sampled softmax</strong> — equivalently the <strong>InfoNCE / contrastive</strong> loss L = −log( exp(u·v⁺) / (exp(u·v⁺) + Σⱼ exp(u·vⱼ⁻)) ). The gradient literally *pulls* u toward v⁺ and *pushes* it away from each negative vⱼ⁻. So the whole learning signal is shaped by <strong>which negatives you put in that denominator</strong> — the positives are fixed by the data; the negatives are your design choice, and they are where retrieval quality is won or lost.</p>
+    <hr>
+    <p><strong>The three negative-sampling schemes, and their tradeoffs.</strong> (1) <strong>In-batch negatives</strong> — the cheap default: within a batch of B (user, item) pairs, use every *other* user's positive as a negative, giving B×(B−1) negatives for free with no extra lookups. The problem: batches are sampled from the *interaction* distribution, so <strong>popular items appear as negatives far more often</strong> than rare ones. (2) <strong>Hard negatives</strong> — mined items that score *high but weren't clicked* (near-misses). Random in-batch negatives are usually trivially easy (a cooking video vs a random car part → near-zero gradient, nothing learned); hard negatives sit right on the decision boundary and produce the gradient that actually sharpens fine distinctions, which is what lifts recall. (3) <strong>Popularity / logQ correction</strong> — because in-batch sampling over-represents popular items as negatives, they get systematically *over-penalised*; the fix is to subtract each item's <strong>log sampling probability</strong> from its logit (u·vⱼ − log Q(j)), the sampled-softmax correction, restoring an unbiased objective.</p>
+    <hr>
+    <p><strong>The classic failure: in-batch popularity collapse.</strong> Follow the mechanism. Popular items are positives for *many* users, so in any batch they show up as *negatives* for everyone whose positive they aren't. The contrastive gradient therefore pushes almost every user's embedding *away* from popular items — even users who would love them. The model learns &quot;popular = negative,&quot; over-suppresses head items, and in the pathological case the popular-item embeddings get pushed into a degenerate region and retrieval <strong>collapses</strong>: recall on exactly the items most users want craters. This is why <strong>the logQ correction isn't a nicety — it's what keeps in-batch training from eating itself</strong>, and why an interviewer probing retrieval will ask about it. The takeaway that separates levels: *before you deepen the encoder, fix the negatives* — sampling scheme dominates recall.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>The two-tower objective is contrastive (sampled softmax / InfoNCE):</strong> maximise exp(u·v⁺) against a denominator of sampled negatives. The positives are fixed by the data; the *negatives in the denominator* are the design choice, so retrieval quality is decided by the sampling scheme, not mainly by encoder depth.</li><li><strong>In-batch negatives are free but popularity-biased.</strong> A batch of B pairs yields B×(B−1) negatives with no extra lookups — but batches follow the interaction distribution, so popular items appear as negatives disproportionately and get over-penalised.</li><li><strong>Hard negatives supply the gradient that lifts recall.</strong> Random negatives (a cooking video vs a random car part) are trivially separable → near-zero gradient → nothing learned. Hard negatives (high-scoring non-clicks near the boundary) produce real gradient that sharpens fine distinctions — the actual recall driver.</li><li><strong>The logQ / popularity correction de-biases the objective.</strong> Subtract each item's log sampling probability from its logit (u·vⱼ − log Q(j)); this sampled-softmax correction removes the systematic over-suppression of popular items that in-batch sampling introduces.</li><li><strong>In-batch popularity collapse is the classic failure.</strong> Popular items appear as negatives for nearly everyone, so the gradient pushes almost all users away from them; the model learns &quot;popular = negative,&quot; over-suppresses head items, and recall on the most-wanted items collapses. The logQ correction is what prevents this — sampling scheme, not encoder, dominates recall.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Retrieval embeddings are trained with a contrastive (sampled-softmax / InfoNCE) objective, and the negative-sampling scheme — not the encoder architecture — dominates recall. In-batch negatives are free but follow the interaction distribution, so popular items appear as negatives for nearly everyone; naive in-batch training therefore pushes almost every user away from popular items (&quot;popular = negative&quot;), over-suppressing the head until retrieval collapses. Hard negatives supply the boundary gradient that lifts recall, and a logQ / popularity correction (subtract log sampling probability) de-biases the objective and is what keeps in-batch training from eating itself.</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Two-tower objective is contrastive (sampled softmax / InfoNCE):</strong> maximise exp(u·v⁺) against a denominator of sampled negatives; the gradient pulls u toward v⁺ and pushes it from each negative. Positives are fixed by data — the *negatives in the denominator* are the design choice that decides recall.</li><li><strong>In-batch negatives:</strong> free (B×(B−1) per batch, no extra lookups) but sampled from the interaction distribution, so popular items appear as negatives disproportionately and get over-penalised.</li><li><strong>Hard negatives:</strong> random negatives are trivially easy (near-zero gradient, nothing learned); mined high-scoring non-clicks sit on the boundary and supply the gradient that sharpens fine distinctions — the real recall driver.</li><li><strong>logQ / popularity correction:</strong> subtract each item's log sampling probability from its logit (u·vⱼ − log Q(j)) to undo in-batch over-representation of popular items — restoring an unbiased objective.</li><li><strong>In-batch popularity collapse (the classic failure):</strong> popular items appear as negatives for nearly everyone → gradient pushes almost all users away from them → model learns &quot;popular = negative,&quot; over-suppresses the head, and recall on the most-wanted items collapses. The logQ correction is what prevents it. Bottom line: fix the negatives before deepening the encoder — sampling dominates recall.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> In a two-tower retriever trained with sampled softmax / InfoNCE, why is the choice of negatives often more decisive for recall than making the encoder deeper?</p>
+      <ul class="check-opts"><li>A) Deeper encoders overfit, so shallow encoders always win; negatives are irrelevant.</li><li class="correct">B) The positives are fixed by the data, so the entire learning signal is shaped by which negatives sit in the softmax denominator — they determine what the model is pushed away from. A better encoder refines a signal that the negatives define; wrong negatives (too easy, or popularity-biased) cap recall no matter how deep the tower is.</li><li>C) Encoder depth only affects latency, never accuracy, in two-tower models.</li><li>D) Negatives change the ANN index geometry, which is the only thing that affects recall.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> Why do purely random in-batch negatives often produce near-zero gradient and fail to lift recall, and what fixes it?</p>
+      <ul class="check-opts"><li>A) Random negatives cause exploding gradients; gradient clipping fixes recall.</li><li class="correct">B) A random negative (e.g., a cooking video as a negative for a car-parts query) is trivially far from the positive, so the contrastive loss is already near zero and its gradient is tiny — the model learns nothing subtle. Hard negatives (high-scoring non-clicks near the decision boundary) produce meaningful gradient that sharpens fine distinctions, which is what actually raises recall.</li><li>C) Random negatives are too few; increasing batch size alone always solves it.</li><li>D) They don't — random negatives are optimal, and hard negatives only help ranking, not retrieval.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> Trace the in-batch popularity-collapse failure mode. Why does naive in-batch training over-suppress popular items?</p>
+      <ul class="check-opts"><li>A) Popular items have larger embeddings, so their dot products saturate the softmax.</li><li class="correct">B) Popular items are positives for many users, so in any batch they appear as *negatives* for every other user in that batch. The contrastive gradient pushes nearly all users' embeddings away from popular items — including users who would love them — so the model learns &quot;popular = negative,&quot; over-suppresses the head, and in the pathological case retrieval collapses on the very items most users want.</li><li>C) Popular items are sampled less often, so they are under-trained and their embeddings stay random.</li><li>D) The ANN index deprioritises high-degree nodes, dropping popular items at query time.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> What does the logQ (sampled-softmax) correction do, and why is it more than a nicety for in-batch training?</p>
+      <ul class="check-opts"><li>A) It normalises embedding magnitudes so dot products lie in [-1, 1].</li><li class="correct">B) It subtracts each item's log sampling probability from its logit (u·vⱼ − log Q(j)), undoing the fact that in-batch sampling over-represents popular items as negatives. Without it, popular items are systematically over-penalised, which drives the popularity-collapse failure — so the correction is what keeps in-batch training from eating itself, not a marginal tweak.</li><li>C) It adds L2 regularisation to the embedding tables to prevent overfitting.</li><li>D) It replaces the softmax with a sigmoid, which is required for implicit feedback.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> A retriever trained with in-batch negatives under-recommends genuinely relevant popular items, while a colleague's model with the same encoder does not. What is the most likely difference, and the cross-cutting lesson?</p>
+      <ul class="check-opts"><li>A) The colleague used a deeper encoder; deepen yours to match.</li><li class="correct">B) The colleague applied a logQ / popularity correction (or a mixed sampling scheme), de-biasing the over-representation of popular items as in-batch negatives. Same encoder, different sampling — which illustrates the general rule that the negative-sampling scheme dominates retrieval recall more than the encoder architecture.</li><li>C) The colleague used a larger embedding dimension, which always fixes popularity bias.</li><li>D) The colleague trained longer; more epochs alone removes popularity bias.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q6.</strong> Where does embedding regularisation fit relative to the negative-sampling story?</p>
+      <ul class="check-opts"><li>A) Regularisation replaces negative sampling — with enough L2 you don't need negatives.</li><li class="correct">B) It is complementary and secondary: L2 / normalisation (e.g., unit-norm embeddings) and temperature control the embedding geometry and stabilise training, but they don't fix a biased or too-easy negative distribution. The negatives determine *what* the model learns to separate; regularisation only shapes *how tightly* — so sampling is the first-order lever and regularisation the second-order one.</li><li>C) Regularisation is what causes popularity collapse, so it should be removed from retrieval training.</li><li>D) Embedding regularisation is only relevant to the ranking stage, never retrieval.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#recsys_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>

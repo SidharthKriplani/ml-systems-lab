@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Augmentation | ML Systems Lab</title>
+  <meta name="description" content="Artificially expand your training distribution by adding realistic variations — but only ones that preserve the label.">
+  <link rel="canonical" href="https://ml-systems-lab-v9xe.vercel.app/modules/data_augmentation.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://ml-systems-lab-v9xe.vercel.app/modules/data_augmentation.html">
+  <meta property="og:title" content="Data Augmentation | ML Systems Lab">
+  <meta property="og:description" content="Artificially expand your training distribution by adding realistic variations — but only ones that preserve the label.">
+  <meta property="og:site_name" content="ML Systems Lab">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Data Augmentation">
+  <meta name="twitter:description" content="Artificially expand your training distribution by adding realistic variations — but only ones that preserve the label.">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Data Augmentation",
+  "description": "Artificially expand your training distribution by adding realistic variations — but only ones that preserve the label.",
+  "proficiencyLevel": "Intermediate",
+  "author": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ML Systems Lab"
+  },
+  "mainEntityOfPage": "https://ml-systems-lab-v9xe.vercel.app/modules/data_augmentation.html",
+  "keywords": "augmentation, SMOTE, image augmentation, mixup, text augmentation, back-translation"
+}
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0c0a08;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: #e8a030; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      background: #0f0d0b;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8a03018;
+      border: 1px solid #e8a03040;
+      color: #e8a030;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .open-btn:hover { background: #e8a03028; text-decoration: none; }
+
+    .accent-bar { height: 3px; background: linear-gradient(90deg, transparent, #e8a030cc 30%, #e8a030cc 70%, transparent); }
+
+    article { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .badge {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e8a03018;
+      border: 1px solid #e8a03030;
+      color: #e8a030;
+    }
+    .tag {
+      font-size: 10px;
+      font-family: "Courier New", monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+    }
+    .read-time { font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.3); }
+    h1 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 12px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.55); margin-bottom: 40px; line-height: 1.6; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    h2 { font-size: 20px; font-weight: 700; color: #fff; margin: 36px 0 12px; }
+    h3 { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin: 28px 0 10px; }
+    p { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 16px; }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    li { font-size: 15px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+    strong { color: rgba(255,255,255,0.92); }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0; }
+
+    .callout {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid #e8a030;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+    }
+    .callout .callout-label { font-size: 10px; color: #e8a030; font-family: "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 700; }
+    .callout p { margin-bottom: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+
+    .check-q { margin-bottom: 20px; }
+    .check-q-text { color: rgba(255,255,255,0.85); }
+    .check-opts { list-style: none; padding-left: 0; }
+    .check-opts li { padding: 6px 10px; border-radius: 6px; font-size: 13.5px; }
+    .check-opts li.correct { background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.25); color: rgba(255,255,255,0.9); }
+
+    .cta-card {
+      margin-top: 56px;
+      padding: 28px;
+      border-radius: 16px;
+      background: #e8a0300c;
+      border: 1px solid #e8a03030;
+      text-align: center;
+    }
+    .cta-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .cta-card p { margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .cta-card a { display: inline-block; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; background: #e8a030; color: #000; }
+    .cta-card a:hover { opacity: 0.9; text-decoration: none; }
+
+    footer { text-align: center; padding: 24px; font-size: 11px; font-family: "Courier New", monospace; color: rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.04); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://ml-systems-lab-v9xe.vercel.app" class="brand">ML Systems Lab</a>
+    <a href="https://ml-systems-lab-v9xe.vercel.app/#data_foundation" class="open-btn">Open interactive version →</a>
+  </div>
+  <div class="accent-bar"></div>
+
+  <article>
+    <div class="meta">
+      <span class="badge">Intermediate</span>
+      <span class="read-time">40 min read</span>
+      <span class="tag">augmentation</span><span class="tag">SMOTE</span><span class="tag">image augmentation</span><span class="tag">mixup</span><span class="tag">text augmentation</span>
+    </div>
+    <h1>Data Augmentation</h1>
+    <p class="subtitle">Artificially expand your training distribution by adding realistic variations — but only ones that preserve the label.</p>
+
+    <p>Your dog-versus-cat classifier has 500 images per class and is stuck: <strong>95% on training, 72% on validation.</strong> It has *memorised* the exact pixels of your 500 dogs — but it has never seen a cat from the right, a dog in dim light, or a photo with a greenish tint. <strong>Data augmentation</strong> fixes this by showing the model cheap, realistic *variations* of the images it already has: randomly flip them left-right, crop and zoom a little, nudge the brightness and colour. Now, across 20 training passes, the model effectively sees tens of thousands of slightly-different images instead of the same 500, and it learns the thing that actually matters — that a flipped dog is still a dog. Validation jumps to <strong>84%</strong>.</p>
+    <hr>
+    <h3>The one rule: the transformation must not change the label</h3>
+    <p>This is the whole game, and it is easy to get wrong. An augmentation is valid *only* if it leaves the correct answer unchanged. Flipping a photo left-right is fine for animals (a mirrored dog is a dog) — but fatal for letters (a flipped &quot;b&quot; becomes &quot;d&quot;). Jittering colours is fine for holiday snaps — but ruinous for retinal medical scans, where colour *is* the diagnosis. Warping the timing is fine for some audio — but it destroys the shape of a heartbeat in an ECG. Every augmentation is really a claim: &quot;the model should treat *this* kind of change as meaningless.&quot; Only someone who knows the domain can say whether that claim is true; the algorithm cannot. Push it too far and you are simply training on mislabelled data.</p>
+    <hr>
+    <h3>Different data, different tricks</h3>
+    <p>Each data type has its own safe transformations. <strong>Images</strong>: flip, crop, colour jitter. <strong>Text</strong>: back-translation (translate to another language and back to get a natural paraphrase), or swapping in synonyms. <strong>Tabular</strong>: a little random noise on numeric columns, or SMOTE for a rare class. <strong>Time series and audio</strong>: shift the pitch, stretch the time, add background noise. In every case, the same rule applies — does the change keep the label true?</p>
+    <hr>
+    <h3>Two habits that matter</h3>
+    <p>First, <strong>augment on the fly, not once up front.</strong> If you pre-compute a fixed set of rotated images and save them, the model just memorises *those* specific rotations after a few epochs — no gain. Applying a fresh random transformation every pass means it never sees the exact same image twice, so it is forced to learn the invariance instead.</p>
+    <p>Second, <strong>only augment the training set — never validation or test.</strong> Augmentation is a training-time regulariser; your validation numbers must come from clean, untouched images, or your score becomes a lottery that depends on which random transforms happened to fire.</p>
+    <p>And read the loss curves the right way round, because this trips people up: healthy, effective augmentation usually makes the training task *harder*, so <strong>training accuracy goes down (or loss up) while validation improves</strong> — that gap closing is the point, not a problem. The signature of augmentation that's *too aggressive* (transforms so severe they change the label) is that *both* training and validation get worse, or validation drops. So don't panic when strong augmentation dents your training number; only worry when validation stops improving.</p>
+    <hr>
+    <h3>The modern augmentation menu</h3>
+    <p>Flip and crop are the baseline; the field has moved well past them. For <strong>images</strong>: <strong>RandAugment</strong> and <strong>AutoAugment</strong> (search or randomly sample a policy of transforms so you don't hand-tune each), <strong>AugMix</strong> (blend several augmented versions for robustness), <strong>CutMix</strong> (paste a patch of one image onto another and mix the labels proportionally), <strong>MixUp</strong> (linear blend of two images and labels), and <strong>random erasing</strong> (mask out a random rectangle so the model can't rely on one region). For <strong>audio</strong>: <strong>SpecAugment</strong> (mask bands of time and frequency in the spectrogram). For <strong>NLP</strong>: <strong>token masking / random deletion / word dropout</strong>, alongside back-translation and synonym swaps. Knowing this menu — and that policy-search methods (RandAugment) largely replaced hand-tuning — is standard interview fare.</p>
+    <hr>
+    <h3>Tabular and text augmentation need extra caution</h3>
+    <p>Augmentation is *not* equally safe across data types. <strong>Tabular</strong>: adding random noise or SMOTE-interpolating can produce <strong>unrealistic or constraint-violating</strong> records — a synthetic row with age 45 and &quot;years_employed&quot; 60, or a negative count — which teaches the model nonsense. Respect feature constraints and correlations, and prefer domain-aware perturbations. <strong>Text</strong>: synonym swaps and back-translation can quietly <strong>flip the label</strong> — a synonym can change <strong>sentiment</strong> (&quot;cheap&quot; → &quot;affordable&quot; vs &quot;shoddy&quot;), swap an <strong>entity's meaning</strong>, or alter <strong>intent</strong>; back-translation can drop a negation. Text and tabular augmentation demand label-checking far more than image flips do.</p>
+    <hr>
+    <h3>Match augmentation to real production variation</h3>
+    <p>The right transforms *mimic the variation you'll actually see at serving time*, not arbitrary distortions. If production images come from phone cameras in varied lighting, brightness/colour jitter and mild blur are on-distribution and helpful; if they're always scanned documents at fixed orientation, rotation augmentation invents variation that never occurs and just adds noise. Ask &quot;does this transform represent something a real input could look like?&quot; — augmentation that pulls training *away* from the deployment distribution hurts.</p>
+    <hr>
+    <h3>Augmented copies leak across the split</h3>
+    <p>A subtle leakage trap: if you augment *before* splitting, an original image and its augmented versions can land on <strong>opposite sides</strong>, so validation contains near-duplicates of training data and your score is inflated. Always <strong>split first (by original example), then augment only the training portion</strong> — the augmented copies of a training image must never appear in validation or test. This is the augmentation-specific case of the duplicate-leakage rule.</p>
+    <hr>
+    <h3>Tune the augmentation policy like a hyperparameter</h3>
+    <p>Augmentation strength and probability aren't set-and-forget. <strong>Strength</strong> (how much rotation/jitter) and <strong>application probability</strong> (how often each transform fires) are hyperparameters to tune, ideally by <strong>ablation</strong> — add one augmentation family at a time and measure the lift on *clean* validation data. And the ultimate test is <strong>robustness on the clean validation/test set</strong>: augmentation earns its place only if it improves performance on untouched data, so monitor that, not the training curve.</p>
+
+    <h2>Key points</h2>
+    <ul><li><strong>Start with horizontal flip plus random crop for any image task — these two augmentations alone capture most of the regularization gain and are valid for nearly all image classification tasks.</strong>
+
+For the dog/cat classifier: horizontal flip is valid (a flipped dog is still a dog), random crop forces the model to recognize the animal from partial views. Together they drive validation accuracy from 72% to ~83%. More exotic augmentations — CutMix, MixUp, RandAugment — give diminishing returns beyond this baseline. Start with the cheap wins before adding complexity.</li><li><strong>Trap: applying augmentation to both training and validation sets. Augmentation is a training regularizer — validation must see clean, unaugmented examples to give a reliable performance estimate.</strong>
+
+If you augment validation, your performance metric becomes a function of which random transformations happened to be applied during that evaluation run. The estimate is noisy and not comparable across runs. Augmentation lives exclusively in the training data loader. Validation and test loaders apply no random transforms. Related leakage trap: augment *after* the split, by original example — if augmented copies of a training image reach validation, the score is inflated.</li><li><strong>Diagnostic: read the curves correctly — effective augmentation usually lowers training accuracy while raising validation accuracy.</strong>
+
+Because augmentation makes each training example harder and more varied, a healthy run often shows training accuracy *drop* (or loss rise) while the train-val gap closes and validation *improves* — that's the regulariser working, not a failure. The signature of augmentation that is genuinely too aggressive (label-violating transforms) is different: *validation* stops improving or gets worse, often alongside worse training too. So don't dial augmentation back just because training accuracy fell; only intervene when validation itself degrades.</li><li><strong>Know the modern menu, and that tabular/text augmentation is riskier than image flips.</strong>
+
+Beyond flip/crop: RandAugment/AutoAugment (policy search), AugMix, CutMix, MixUp, random erasing for images; SpecAugment for audio; token masking/back-translation for text. Tabular augmentation (noise, SMOTE) can create unrealistic or constraint-violating rows, and text augmentation (synonyms, back-translation) can flip sentiment/intent/entity meaning or drop a negation — both need label-checking that image flips rarely do. Match transforms to real production variation (rotation on always-upright scans just adds noise), not arbitrary distortion.</li><li><strong>Augment after the split, and tune the policy by clean-set ablation.</strong>
+
+Split by original example first, then augment only the training portion — augmented copies of a training image leaking into validation inflates the score (the augmentation case of duplicate leakage). Treat augmentation strength and application probability as hyperparameters tuned by ablation (add one family at a time, measure lift on untouched validation). And read the curves correctly: effective augmentation typically lowers training accuracy while raising validation — the gap closing is the win, and only degrading validation signals label-violating transforms.</li></ul>
+
+    
+    <div class="callout">
+      <div class="callout-label">Takeaway</div>
+      <p>Augmentation encodes invariances the model should have — and only a domain expert can verify which transformations preserve the label for each class, because the model cannot distinguish a &quot;different view of a dog&quot; from a &quot;mislabeled digit.&quot;</p>
+    </div>
+
+    <h2>Recap</h2>
+    <ul><li><strong>Augmentation encodes invariances the model should have</strong> — only a domain expert knows which transforms preserve the label per class.</li><li><strong>Rotating a digit breaks the label</strong> (6↔9): the model can't tell &quot;different view of a dog&quot; from &quot;mislabeled digit.&quot;</li><li><strong>Start with horizontal flip + random crop for images</strong> — ~72%→83% val accuracy; CutMix/MixUp/RandAugment give diminishing returns.</li><li><strong>Augment training only, after the split;</strong> clean validation gives a reliable estimate, and augmented copies leaking into val inflate the score.</li><li><strong>Read the curves right:</strong> effective augmentation *lowers* training accuracy while *raising* validation — the gap closing is the win.</li><li><strong>Only intervene when validation itself degrades</strong> — that's the signature of label-violating (too-aggressive) transforms.</li><li><strong>Tabular/text augmentation is riskier:</strong> SMOTE can make impossible rows, back-translation can flip sentiment or drop a negation — both need label-checking.</li></ul>
+
+    
+    <h2>Check your understanding</h2>
+    
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q1.</strong> You are training a digit recognition model and augment by rotating all training images up to 45 degrees. Performance degrades. What went wrong?</p>
+      <ul class="check-opts"><li>A) Rotating training images up to 45 degrees increases the effective dataset size but reduces the signal-to-noise ratio because rotated digits are less frequent in the real-world distribution of handwritten digits.</li><li class="correct">B) Many handwritten digits are NOT rotationally invariant to large angles. A &quot;6&quot; rotated 180° looks like a &quot;9.&quot; A &quot;9&quot; rotated 90° looks ambiguous. By augmenting with 45° rotations, you introduced label-violating samples: images labeled &quot;6&quot; that visually look like &quot;9.&quot; The model trains with conflicting supervision — same visual pattern receives different labels depending on whether it is original or augmented. Augmentations must be label-safe for EVERY class; modest rotations (10-15°) are typically safe for digit recognition, 45° rotations are not.</li><li>C) Rotating by up to 45 degrees is label-safe for all digits except &quot;6&quot; and &quot;9&quot;; the fix is to apply the same 45-degree rotation augmentation to all digit classes except those two.</li><li>D) The 45-degree rotation augmentation is correct but was applied too early in training — augmentation should only be applied after the model has converged on the original (non-augmented) training data.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q2.</strong> What is Mixup augmentation and why does it act as a regularizer?</p>
+      <ul class="check-opts"><li>A) Mixup randomly selects a subset of training examples and replaces their labels with the mode label of their k-nearest neighbors — it acts as a regularizer by smoothing label noise in the training set.</li><li>B) Mixup applies multiple random augmentations (rotation, flip, crop) to each training image and averages the predictions — it acts as a regularizer by reducing model variance through ensemble averaging during training.</li><li>C) Mixup trains the model on pairs of training examples simultaneously by concatenating them along the feature axis — it acts as a regularizer by exposing the model to longer input sequences than it will encounter at inference time.</li><li class="correct">D) Mixup constructs new training examples by linearly interpolating between two randomly selected training examples: new_x = λ·x1 + (1-λ)·x2 and new_y = λ·y1 + (1-λ)·y2, where λ drawn from Beta distribution. The training example is literally a weighted average of two images with blended labels. Acts as regularizer because it forces the model to predict smooth interpolation of labels in regions BETWEEN training examples — constrains model to be approximately linear between pairs. Reduces overfitting and improves calibration.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q3.</strong> When does augmentation help and when does it not? Give a scenario for each.</p>
+      <ul class="check-opts"><li class="correct">A) Augmentation helps when the model OVERFITS: small dataset where model achieves near-perfect training accuracy but poor validation accuracy — augmentation creates more diverse training examples, reduces variance. Example: medical imaging classifier with 500 training images per class. Does NOT help when model UNDERFITS: if training accuracy is 60%, adding more variations of already-unlearnable data makes problem harder without fixing capacity/representation issue. Example: using linear model on image pixel features — augmentation won't fix the fundamental insufficiency of the representation.</li><li>B) Augmentation always helps regardless of whether the model is overfitting or underfitting — the only difference is the magnitude of improvement, which is larger for overfitting models.</li><li>C) Augmentation helps for image and text data but never helps for tabular data — the lack of spatial or semantic structure in tabular features means augmented examples do not represent realistic variations of the original data.</li><li>D) Augmentation helps when the validation accuracy is below 80% — below this threshold, the model needs more diverse training examples to generalize. Above 80%, the model is already generalizing well and augmentation provides no further benefit.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q4.</strong> Why should augmentation transformations be applied on-the-fly during training rather than pre-computed and saved to disk?</p>
+      <ul class="check-opts"><li>A) Pre-computing augmentations creates files that are too large to fit in memory, while on-the-fly augmentation generates only the current batch's augmented versions, reducing peak memory usage.</li><li>B) Pre-computed augmentations cannot be used with data loaders that shuffle training examples at each epoch, while on-the-fly augmentation works correctly regardless of the shuffling order.</li><li class="correct">C) If pre-computed (applied once before training), model sees SAME augmented versions at every epoch — in epoch 1 and epoch 5 the model sees exactly the same &quot;cat_image_1_rotated_23deg.&quot; After enough epochs, model memorizes these specific augmented versions just as easily as originals — no regularization benefit. On-the-fly augmentation applies RANDOM transformation at each training step: epoch 1 might use rotation=23°, epoch 5 might use rotation=7° for same image. Over thousands of epochs, model effectively trained on near-infinite variety, forced to learn underlying invariances rather than memorizing specific pixel arrangements.</li><li>D) Pre-computed augmentations bias the model toward the specific transformations chosen before training, while on-the-fly augmentation allows the augmentation strategy to be updated between training runs without regenerating the dataset.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q5.</strong> You add strong image augmentation and notice training accuracy dropped from 98% to 88%, while validation accuracy rose from 80% to 86%. A colleague says &quot;training accuracy fell, so the augmentation is too aggressive — turn it down.&quot; Are they right?</p>
+      <ul class="check-opts"><li>A) Yes — any drop in training accuracy means the augmentation is corrupting the labels and must be reduced.</li><li class="correct">B) No. Effective augmentation makes each training example harder and more varied, so training accuracy *falling* while the train-val gap closes and validation *improves* is exactly the regulariser working as intended — that's the win, not a warning. The signature of genuinely too-aggressive (label-violating) augmentation is different: validation stops improving or gets worse. Since validation went up, keep the augmentation; only intervene if validation itself degrades.</li><li>C) Yes — the training and validation accuracies should both increase with good augmentation, so a divergence means something is broken.</li><li>D) No, but only because 88% training accuracy is still above the 85% minimum required for deployment; if it fell below 85% the colleague would be right.</li></ul>
+    </div>
+
+    <div class="check-q">
+      <p class="check-q-text"><strong>Q6.</strong> You're augmenting a customer-churn tabular dataset by adding Gaussian noise to numeric columns and using SMOTE for the rare churn class. Why is this riskier than flipping images, and what should you watch for?</p>
+      <ul class="check-opts"><li>A) It isn't riskier — tabular augmentation is identical to image augmentation, so noise and SMOTE are always safe.</li><li class="correct">B) Tabular augmentation can create unrealistic or constraint-violating records that image flips never do: Gaussian noise can push &quot;age&quot; negative or make &quot;years_employed&quot; exceed &quot;age,&quot; and SMOTE interpolating between rows can produce combinations that violate real feature correlations or business rules — teaching the model nonsense. Watch that augmented rows respect feature constraints and joint distributions, prefer domain-aware perturbations, and (for SMOTE) apply it only inside the training folds after the split. Tabular data lacks the built-in label-preserving invariances that make image flips safe.</li><li>C) The only risk is that SMOTE is slow on large tabular datasets; the generated records are always realistic.</li><li>D) Tabular augmentation is risky only because it changes the number of columns, which breaks the model's input shape.</li></ul>
+    </div>
+
+    <div class="cta-card">
+      <h2>Try it interactively</h2>
+      <p>ML Systems Lab is a free interview-prep platform for ML engineers — work through the full interactive module, quizzes, and drills.</p>
+      <a href="https://ml-systems-lab-v9xe.vercel.app/#data_foundation">Open ML Systems Lab →</a>
+    </div>
+  </article>
+
+  <footer>
+    ml-systems-lab-v9xe.vercel.app · Free ML interview prep
+  </footer>
+</body>
+</html>
