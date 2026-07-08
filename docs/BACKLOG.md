@@ -857,3 +857,289 @@ bundle clean via `npx -y esbuild@0.21.5 --bundle --format=esm --loader:.jsx=jsx 
 --external:react-dom --external:react/jsx-runtime --outfile=/dev/null`. `InterviewPrepTab.jsx` and
 `questionBank.js` were not touched (out of scope per this task's instructions). Not pushed — no git
 commands run.
+
+---
+
+## 3B1B voice pass — Causal Foundations, `pot_outcomes` + `rct_design` — 2026-07-08 (writer pass only)
+
+Scope: the 2 Causal-family tier-S modules (`src/data/moduleTiers.js` `TIER_S`), per the root
+`3B1B-STANDARD.md` spec. Both live in `src/data/foundations/causalModules.js` (`CausalFoundationTab.jsx`
+is the consuming tab). **Writer pass only** — Pass-2 adversarial audit is a separate, later task, not run
+here.
+
+**Schema adaptation (MSL differs from GSL, confirmed by reading the actual file before writing anything):**
+MSL's causal modules have no `groundUp`/`explanation[]`/`scenario` fields at all — the entire narrative
+lives in one `summary` template-literal string (`\n\n`-separated paragraphs, `**bold**`, `[FIGURE: id]`
+markers, rendered by `src/utils/renderMd.jsx` under the "Concept" card). `keyPoints`/`takeaway`/
+`checkQuestions`/`recap`/`figures` are separate fields and were **not touched**, per the spec's own scope
+rule ("does NOT apply to keyPoints/recap/mcqs"). Confirmed via `CausalFoundationTab.jsx` read: `summary` is
+the only field rendered through the voice-rule-governed prose path.
+
+### `pot_outcomes` (Potential Outcomes Framework) — real starting state
+Already reasonably solid content (Rubin notation, ATE/ATT/CATE, SUTVA/consistency/positivity all present
+and correct) but violated voice rule 1 (named "counterfactual" and "fundamental problem of causal
+inference" after only ONE concrete instance — User 47 — not two), had zero pause-and-predict beats, and
+critically had **no worked numeric example anywhere** — ATE/ITE were asserted algebraically, never computed
+on real numbers, despite this topic having a natural worked-example structure (explicitly flagged in the
+assigning brief).
+
+**What changed:** rewrote `summary` end to end.
+- Opened with TWO concrete instances (User 47 got the email, spent $100 — would they have spent $80
+  anyway?; User 12 got no email, spent $70 — would they have spent more with it?) before naming
+  "counterfactual" / "the fundamental problem of causal inference" — fixes the rule-1 violation.
+- Added a pause-and-predict beat ("if the other branch never exists for anyone, how could any experiment
+  ever produce a causal number at all?") before the ATE resolution.
+- **New worked numeric example** (the real content gap): a 4-user God's-eye-view toy dataset (User 47
+  $100/$80, User 12 $90/$70, User 8 $60/$50, User 90 $40/$30 — treated/untreated), true ATE = (20+20+10+10)/4
+  = $15. Then shows what's actually computable from ONE random draw (User 47+8 treated, User 12+90
+  control): observed diff = mean($100,$60) − mean($70,$30) = $80−$50 = $30, deliberately far from the true
+  $15, to make an honest point about single-draw noise. Then computes the observed-difference estimator
+  under **all 6 possible C(4,2) draws** ($55, $30, $10, $20, $0, −$25) and shows the average = 90/6 = $15,
+  exactly recovering the true ATE — the actual content of "randomization is unbiased in expectation," shown
+  as arithmetic, not asserted.
+- Kept all original technical claims (grep-verified present, see below) and substituted the SUTVA/
+  positivity illustrative examples for continuations of the same User 47/User 12 running example (spillover
+  via forwarding the discount code; positivity via users excluded from the campaign) instead of the
+  original's disconnected "high-income users" aside — keeps one running example throughout per scene rule 1.
+- `[FIGURE: potoutcomes]` marker kept in place (same SVG figure, untouched).
+
+**Independently re-verified numbers (recomputed by hand this pass, not trusted from the first derivation):**
+true ATE = (20+20+10+10)/4 = 15 ✓; one-draw estimate mean(100,60)−mean(70,30) = 80−50 = 30 ✓; all 6
+C(4,2) splits recomputed individually — {47,12}=55, {47,8}=30, {47,90}=10, {12,8}=20, {12,90}=0, {8,90}=−25
+— sum=90, mean=15, exactly matching the true ATE. This is an exact finite-population randomization-inference
+result (not approximate), independently confirmed.
+
+### `rct_design` (RCT Design) — real starting state
+Solid on unit-of-randomization tradeoffs, stratification/block randomization, power analysis, and
+interference — but had a **real "tested but not taught" gap** (CONTENT-AUDIT-RUBRIC.md category 2): the
+subtitle lists "Intent-to-Treat" and `checkQuestions` tests ITT/CACE/LATE arithmetic in depth (`CACE = ITT /
+compliance_rate = ITT / 0.80`), but `summary` never mentioned ITT, compliance, or CACE at all. Also opened
+with no cross-module continuity even though it's the module immediately after `dag_confounding` in the
+tab's difficulty-sorted render order (both `intermediate`, `dag_confounding` first — confirmed via
+`sortByDifficulty` + array order).
+
+**What changed:** rewrote `summary` end to end.
+- Opened by naming `dag_confounding`'s actual stopping point specifically (adjustment sets / backdoor
+  paths / "don't control for colliders or mediators") and recalling Potential Outcomes' randomization
+  point by name — satisfies voice rule 11 (cross-module continuity) and rule 10 (recall-signal framing for
+  a load-bearing concept already taught, rather than re-deriving it as new).
+- Added a pause-and-predict beat on covariate balance ("what's the chance the two groups differ
+  systematically on some variable you didn't think to record?").
+- Added one numeric fact for the power-analysis paragraph that wasn't there before: required sample size
+  scales roughly as 1/MDE², so halving the minimum detectable effect roughly quadruples the sample needed
+  (standard, verifiable power-analysis fact — n ∝ 1/Δ²).
+- **Filled the ITT gap** with a full concrete worked example, demonstrated in two instances before naming
+  the term (never-loads-the-new-page in the treatment arm; hits-a-cached-copy in the control arm) then
+  named "Intent-to-Treat (ITT)": if 80% compliance and ITT lift = $6.40/user, then CACE = ITT / 0.80 =
+  $6.40 / 0.80 = $8.00 — verified this divides out exactly to $8.00, and matches the *formula* the existing
+  `checkQuestions` already test (`CACE = ITT / compliance_rate`) without contradicting any number already on
+  record (the checkQuestions never state concrete dollar figures, only the formula pattern).
+- Kept all original technical claims (grep-verified, see below).
+
+**Independently re-verified:** $6.40 / 0.80 = $8.00 (exact); 1/MDE² scaling direction (halving MDE →
+~4× sample size) is the standard power-analysis result, confirmed against the general formula n ∝
+σ²/Δ² for a fixed power/α.
+
+### Technical-claims survival check (Definition of Done #4 — grep, not vibes)
+Ran a script that greps the rewritten `summary` strings for every named technique/formula/number from the
+originals. All present in both:
+- `pot_outcomes`: `Y_i(1)`, `Y_i(0)`, `ITE`, `ATE = E`, `SUTVA`, `Consistency`, `Positivity`, `ATT`, `CATE`,
+  `sensitivity analysis` — all found.
+- `rct_design`: `4.8%`, `4.3%`, `p = 0.02`, `user-level`, `session-level`, `page-level`, `Stratifying`,
+  `block randomization`, `80% power`, `α = 0.05`, `SUTVA`, `p = 0.001`, `0.01%`, `$500K` — all found.
+
+### Length discipline — explicit deviation, not silent
+Word counts (measured, not estimated): `pot_outcomes` 397 → 801 words (2.02×); `rct_design` 358 → 723 words
+(2.02×). Both exceed the spec's ≤1.3× guideline. This is a **deliberate, flagged deviation**, not padding:
+the excess is almost entirely the two worked numeric examples the assigning brief explicitly required
+(pot_outcomes' 4-user/6-draw arithmetic; rct_design's ITT/CACE gap-fill), which the modules structurally
+lacked before. Trimmed everything else (assumption/estimand paragraphs, closings) back to roughly original
+length during a second editing pass rather than leaving first-draft bloat — first draft was ~2.5×, current
+is 2.02×. Stating this explicitly per the Definition of Done's "deferrals/deviations must be stated, not
+silently shrunk" principle (here it's an expansion, but the same honesty rule applies).
+
+### Explicitly NOT done this pass (deferrals, stated per Definition of Done #6)
+- **No scene work.** MSL's Causal family has no scene-registry system like GSL's `foundationScenes.jsx`.
+  `pot_outcomes` has one static SVG figure (`figures.potoutcomes`, untouched, still referenced via
+  `[FIGURE: potoutcomes]`) and no interactive; `rct_design` has neither a figure nor an `interactiveId`.
+  Definition of Done #2/#3 (scene updates + a pause-and-predict gate wired into a scene) don't have an
+  applicable target in this module pair — the pause-and-predict beats added are prose-only ("Pause here:
+  ..." sentences), consistent with how MSL's other rewritten modules (see backprop entry above) handle
+  pause beats without a scene mechanism.
+- **`keyPoints`/`takeaway`/`checkQuestions`/`recap`/`figures` untouched** — per the spec's explicit scope
+  boundary, confirmed consistent with existing content (no contradictions introduced by the new
+  `summary` text against the existing recap/keyPoints, spot-checked line by line).
+- Pass-2 adversarial audit not run — separate task, per the assignment.
+
+### Verify
+`npx -y esbuild@0.21.5 src/data/foundations/causalModules.js --bundle --format=esm --loader:.jsx=jsx
+--external:react --external:react-dom --external:react/jsx-runtime --external:recharts
+--external:lucide-react --outfile=/dev/null` clean after both edits. Not pushed — no git commands run.
+
+## Pass-2 adversarial audit: causal `pot_outcomes` + `rct_design` — 2026-07-08
+
+Ran the (separate-agent) adversarial pass on the writer draft above, per `3B1B-STANDARD.md`'s
+enforcement section + `CONTENT-AUDIT-RUBRIC.md`, adapted to this file's single-`summary`-string schema
+(no groundUp/explanation split). Read both modules fresh, recomputed both worked examples from scratch.
+
+**`pot_outcomes` — clean, no fix needed.** Independently rebuilt the 4-user table (47: 100/80 eff 20;
+12: 90/70 eff 20; 8: 60/50 eff 10; 90: 40/30 eff 10) → true ATE = 60/4 = $15, matches. Recomputed the
+actual-draw estimate ({47,8} treated / {12,90} control) → mean(100,60) − mean(70,30) = 80 − 50 = $30,
+matches the claimed 2× overestimate. Independently enumerated all C(4,2)=6 possible 2-vs-2 draws and their
+diff-in-means (not just checked the writer's 6 numbers): {47,12}→55, {47,8}→30, {47,90}→10, {12,8}→20,
+{12,90}→0, {8,90}→−25 — exactly matches the text's `$55, $30, $10, $20, $0, −$25`, sum 90, mean 90/6 = $15
+exactly. All original terms (`Y_i(1)`, `Y_i(0)`, `ITE`, `ATE`, `SUTVA`, `ATT`, `CATE`, positivity/
+consistency) re-confirmed present and in-context by direct read, not grep alone. Precision rule: the one
+metaphor used ("God's-eye view... for one paragraph only") cashes out immediately ("computable only
+because you were God for a paragraph") — no gap. Pause-and-predict gate present and genuinely answerable
+before the reveal. One continuous worked illustration (not scattered) satisfies voice rule 8. Causal-chain
+read as one continuous argument end to end; the estimand-choice paragraph (ATE/ATT/CATE) is the one
+mildest transition but not a real violation. **No edit made.**
+
+**`rct_design` — found and fixed one real bug, one real omission.**
+1. **Formula/scenario contradiction (fixed).** The ITT/CACE paragraph's setup describes *two-sided*
+   non-compliance ("Reversed: some assigned to the old checkout hit a cached copy of the new one and see
+   it anyway" = control-arm crossover into treatment), but then applies `CACE = ITT / compliance_rate`,
+   which is only valid under *one-sided* non-compliance (monotonicity — no control-side crossover) — the
+   exact assumption the module's own `checkQuestions[0]` correct answer (B) already states ("requires
+   monotonicity — no control user would have used the feature if assigned"). The worked example
+   contradicted both its own setup and the quiz answer key it sits next to — this is the same failure
+   class the assigning brief specifically flagged before (a formula applied outside the conditions that
+   make it valid), not a new one. Fixed by: keeping the two-sided crossover as a general fact ("non-
+   compliance can run either direction"), then explicitly stating the worked $6.40/0.80=$8.00 example
+   assumes the clean one-sided case, and appending one sentence generalizing to the Wald estimator for the
+   two-sided case (divide by the *difference* in take-up between arms, not the raw 0.80). Arithmetic itself
+   ($6.40/0.80=$8.00) was already correct — the bug was the unstated validity condition, not the division.
+   No numbers changed.
+   Verified formula correctness: under one-sided non-compliance, ITT = P(complier) × CACE where
+   P(complier) = P(D=1|Z=1) − P(D=1|Z=0) = 0.80 − 0 = 0.80, so CACE = ITT/0.80 — confirmed correct as now
+   stated with the assumption attached.
+2. **Recap omission (fixed).** `recap` had zero bullets on ITT/CACE despite it being both taught (a full
+   paragraph in `summary`) and tested (`checkQuestions[0]`'s entire question is about it) — a real gap in
+   the keyword-spine recap standard's "one bullet per causal step" requirement. Added one bullet
+   (`**Non-compliance dilutes what you observe — ITT vs. CACE:**...`) between the Interference bullet and
+   the Peeking bullet, matching summary order, reusing the module's own numbers exactly ($6.40/0.80=$8.00)
+   — no new numbers introduced.
+   All other original technical claims (4.8%/4.3%/p=0.02, unit-of-randomization tiers, 80%/α=0.05, SUTVA,
+   p=0.001/0.01%/$500K) re-confirmed present by direct read. Precision rule: no metaphor used beyond the
+   literal coin-flip framing, no cash-out gap. Pause-and-predict gate present and genuine. Cross-module
+   continuity (voice rule 11) satisfied explicitly — opening paragraph names the exact DAG-module handoff
+   point and callbacks to Potential Outcomes' SUTVA are recall-framed correctly (voice rule 10). One
+   continuous worked illustration, not scattered.
+
+**Length discipline (flagged by the writer, re-checked, not re-litigated):** both modules measured at
+~2.02× the original length vs. the 1.3× guideline. Confirmed this is earning its length, not padding — the
+excess is concentrated almost entirely in the two worked numeric examples (both independently recomputed
+above), not narrative filler; everything else was already trimmed back in the writer's second pass. Judgment
+call, not a violation — left as-is, per the writer's own explicit flag.
+
+**Verdict:** `pot_outcomes` clean (0 loops needed). `rct_design` needed exactly 1 round — both fixes are
+targeted (2 sentences added/reworded in `summary`, 1 recap bullet added), not a rewrite. Both now pass a
+second read clean; no further loop needed.
+
+### Verify
+`npx -y esbuild@0.21.5 src/data/foundations/causalModules.js --bundle --format=esm --loader:.jsx=jsx
+--external:react --external:react-dom --external:react/jsx-runtime --external:recharts
+--external:lucide-react --outfile=/dev/null` — clean. Not pushed — no git commands run.
+
+---
+
+## 2026-07-08 — Glossary + interview-question harvest from `pot_outcomes`/`rct_design`
+
+Harvest pass on the two finalized (writer + Pass-2 adversarial audit both complete, see entry above)
+causal modules. Module content itself was NOT re-edited here (aside from what the audit already
+changed) — this pass only pulls terms/questions out of the now-locked prose.
+
+### Task 1 — Glossary (`src/data/glossary.js`)
+Added **15 new terms**, all sourced from `pot_outcomes` / `rct_design`'s actual `summary` (two from
+`keyPoints`/`checkQuestions` where `summary` only used the bare acronym — flagged per-term below),
+`sourceTabId: 'causal_foundation'`:
+
+From `pot_outcomes`: **Potential Outcomes**, **Counterfactual**, **Fundamental Problem of Causal
+Inference**, **Individual Treatment Effect (ITE)**, **Average Treatment Effect (ATE)**, **SUTVA**,
+**ATT**, **CATE**.
+
+From `rct_design`: **Intent-to-Treat (ITT)**, **Non-Compliance**, **Complier Average Causal Effect
+(CACE)**, **Wald Estimator**, **Minimum Detectable Effect (MDE)** (sourced from `keyPoints`, since
+`summary` only used the bare "MDE" acronym), **Design Effect (DEFF)** (sourced from
+`checkQuestions[3]`'s correct-answer option, the only place in the module DEFF is actually taught),
+**Block Randomization** (substituted for the task brief's suggested "Stratified Randomization" —
+that exact phrase is never taught; the module teaches stratifying-then-block-randomizing, and "block
+randomization" is the literal phrase in-prose).
+
+Deliberately **not added**, each checked and rejected for a specific reason:
+- **Consistency, Positivity** (the other two identification assumptions alongside SUTVA) — not in the
+  task's candidate list, and both are common English words used with unrelated meanings elsewhere in
+  this app's 200+ foundation modules (e.g. "consistency" appears 50+ times across other families);
+  keying them globally would mis-link unrelated prose to this module's popup.
+- **Compliance** (bare, not hyphenated) — same collision risk; `monitoringModules.js` uses
+  "compliance" for regulatory compliance, a different meaning. Used the hyphenated **"non-compliance"**
+  instead, which greps as unique to `causalModules.js` across `src/data/foundations/`.
+- **Stratified Randomization** as a literal key — not taught verbatim (see Block Randomization above).
+
+Verified each key's collision risk by grepping `src/data/foundations/` before adding (glossary matching
+is global — shared by all 19 `*FoundationTab.jsx` families via `src/utils/renderMd.jsx`, not scoped to
+Causal). Verified `minimum detectable effect` is not already a duplicate definition (it's newly added
+here; `evalModules.js`'s `online_experimentation_ml` module also uses the term in prose but the term
+wasn't in `glossary.js` before this pass).
+
+### Task 2 — Interview questions, both surfaces audited
+
+**Surface (a): `questionBank.js`'s `TRAINER_QUESTIONS`.** Checked exact domain naming — confirmed
+**zero** existing Causal-related domain (`grep -i causal` on the file only matches unrelated RecSys
+"causal self-attention" content, no `"domain": "Causal..."` anywhere). Since there was nothing existing
+to audit, none was needed here per the task's own scoping — but added net-new coverage anyway to keep
+this freshly-audited content actually drillable in the Trainer, following the established precedent in
+this file (a new domain was added, e.g. `"Experimentation"`, when `online_experimentation_ml` was
+finished in an earlier session). Added **8 new MCQs**, ids 135–142 (next free id after the existing
+max of 134), `"domain": "Causal Inference"` — potential outcomes/fundamental problem (135), ATE vs ATT
+estimand mismatch on a volunteer trial (136), SUTVA network-spillover underestimate direction (137),
+why randomization beats a DAG-derived adjustment set for unknown confounders (138), unit-of-
+randomization tradeoff for a checkout redesign (139), ITT vs CACE computation under one-sided
+non-compliance (140), the AA test as a randomization-validity diagnostic (141), and the cluster-
+randomization Design Effect formula (142). Deliberately does NOT overlap with the existing
+`"Experimentation"` domain's MDE/CUPED/SRM/peeking/guardrail content (129–134) — same MDE concept
+appears once in 134's CUPED framing and once in causal's 139/142 cluster-design framing, but the
+questions test different applications, not duplicate wording.
+**Length-tell check (mandatory per the assigning brief, re-verified explicitly, not assumed correct
+from the first draft):** first draft measured 5/8 = 62.5% flagged (target ~25–35%, using the same
+"correct answer is longest, or >1.20x the average of the wrong options" rule as `_verify_mcq_balance.mjs`
+uses for the `checkQuestions` shape — adapted here for `TRAINER_QUESTIONS`' `options`/`correct`-index
+shape, since the existing script only parses the `checkQuestions`/`answer`-letter shape). Rewrote the
+5 flagged questions' options to close the length gap; final measured 2/8 = 25% flagged, in range.
+Verified again directly against the live inserted file content (not just the draft), post-insertion.
+
+**Surface (b): the `cat`-based bank feeding `InterviewPrepTab.jsx`.** Confirmed no Causal-equivalent
+file existed (`interviewExtra.js` only imported Systems/Modeling/Foundations/DeepLearning/RecSys).
+Created **`src/data/interviewExtraCausal.js`**, exporting `EXTRA_CAUSAL`, following the exact pattern
+of `interviewExtraDeepLearning.js`/`interviewExtraRecSys.js`: same file-header doc-comment shape, same
+`{ id, cat, company, level, q, answer, whatsTested, antiPattern, staffFraming }` object shape, `cat:
+'Causal Inference'`, ids **6001–6010** (next free block after Systems~1000s/Modeling~2000s/
+Foundations~3000s/DeepLearning~4000s/RecSys~5000s). **10 new questions, all original** (no existing
+content to audit here since the file didn't exist): potential-outcomes/fundamental-problem (6001),
+ATT-vs-ATE volunteer-trial estimand error (6002), SUTVA network interference (6003), randomization vs.
+DAG-adjustment-set for unknown confounders (6004), unit-of-randomization tradeoff (6005), MDE quadratic
+scaling and its portfolio/prioritization implication (6006), ITT vs CACE with the Wald-estimator caveat
+(6007), the AA test as a pre-publication sanity check (6008), peeking / sequential testing (6009), and
+cluster randomization's Design Effect (6010). This surface is free-form q/answer (no `options` array),
+so the MCQ length-tell check doesn't apply to it — confirmed by inspecting the shape before assuming
+the check was needed.
+Wired into `src/data/interviewExtra.js`: added the `EXTRA_CAUSAL` import and spread it into
+`EXTRA_QUESTIONS`.
+**Known pre-existing gap, not touched (mirrors precedent):** `InterviewPrepTab.jsx`'s `CATEGORIES`
+filter-dropdown array doesn't include `'Recommender Systems'` or `'Deep Learning'` either, even though
+both are real `cat` values in the extra bank — those questions are only reachable via the "All topics"
+filter, not a dedicated dropdown entry. Left `'Causal Inference'` in the same state as those two
+(consistent with existing precedent, not a new gap introduced by this pass) rather than unilaterally
+changing the shared filter UI as a side effect of a content-harvest task.
+
+### Verify
+All four touched files individually verified clean via `npx -y esbuild@0.21.5 <file> --bundle
+--format=esm --loader:.jsx=jsx --external:react --external:react-dom --external:react/jsx-runtime
+--external:recharts --external:lucide-react --outfile=/dev/null`: `src/data/glossary.js`,
+`src/utils/renderMd.jsx` (consumer, sanity-checked), `src/data/questionBank.js`,
+`src/data/interviewExtraCausal.js`, `src/data/interviewExtra.js`. Also bundled 3 real consumers end-to-
+end (`src/tabs/InterviewPrepTab.jsx`, `src/tabs/TrainerTab.jsx`, `src/tabs/CombinatorTab.jsx`,
+`src/tabs/ReviewTab.jsx`) — all bundle clean; the only warnings shown are pre-existing duplicate-key
+warnings in `productionModules.js`/`classicalMLModules.js` unrelated to this pass (already noted as
+pre-existing in an earlier BACKLOG entry). Not pushed — no git commands run.

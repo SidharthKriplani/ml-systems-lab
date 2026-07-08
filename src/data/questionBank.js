@@ -2147,7 +2147,135 @@ export const TRAINER_QUESTIONS = [
     "whatsTested": "The n ∝ 1/MDE² relationship and the variance lever.",
     "antiPattern": "Assuming sample size scales linearly (not quadratically) with the effect you want to detect.",
     "staffFraming": "Power math has a quadratic wall in MDE; the practical escape is variance reduction, not just more users."
-  }
+  },
+  {
+    "id": 135,
+    "domain": "Causal Inference",
+    "q": "Users who received a discount email spent more, on average, than users who didn't. To make this a causal claim rather than just a correlation, what is the single fact about potential outcomes that stands in the way, no matter how much data you collect?",
+    "options": [
+      "Nothing stands in the way: with enough users the difference in means converges to the causal effect by the law of large numbers, no matter how the email list was built or who chose to open it.",
+      "The real obstacle is that the email platform's send logs are usually incomplete, so this is a data-engineering gap, not a fact about potential outcomes or missing counterfactuals at all.",
+      "For every user you observe exactly one of Y_i(1) (spent, if emailed) and Y_i(0) (spent, if not) — the other is the counterfactual, missing for every user, always, by construction.",
+      "The obstacle is collinearity between a user's income and their email open rate, which a simple difference in means cannot separate without adding a regression adjustment for income."
+    ],
+    "correct": 2,
+    "explanation": "This is the Fundamental Problem of Causal Inference: you observe exactly one of the two potential outcomes per unit, never both, so no volume of data recovers any individual's treatment effect — you can at best estimate the average (ATE) under design assumptions like randomization.",
+    "whatsTested": "Whether you can name the Fundamental Problem of Causal Inference precisely, rather than reaching for a data-quality or modeling explanation.",
+    "antiPattern": "Treating this as a sample-size or feature-engineering problem. More data narrows a confidence interval; it never fills in a counterfactual that was never observed for anyone.",
+    "staffFraming": "A staff-level answer immediately separates 'we need a better estimator' from 'this quantity is structurally unobservable for any one person' — the first is solvable with more data, the second never is."
+  },
+  {
+    "id": 136,
+    "domain": "Causal Inference",
+    "q": "A drug trial enrolling only motivated volunteers reports ATE = +5 points on a health scale. A policymaker wants to mandate the drug nationwide on the strength of that number. What's the estimand problem?",
+    "options": [
+      "There is no problem — randomization inside the trial guarantees the +5 estimate generalizes uniformly to every citizen, including people who would never have volunteered to enroll in the first place.",
+      "The trial's sample really gives you ATT (effect on self-selected volunteers), not the ATE the mandate needs — check covariate overlap with the target population before extrapolating.",
+      "The number is invalid outright, since volunteer-only trials can never support any causal claim regardless of internal randomization, sample size, blinding, or how carefully the outcome was measured.",
+      "The fix is simply to rename the estimate CATE instead of ATE, since conditioning implicitly on 'having volunteered' is mathematically identical to conditioning on any observed covariate X."
+    ],
+    "correct": 1,
+    "explanation": "Randomization inside the trial only guarantees internal validity for the enrolled sample; it says nothing about whether that sample represents the mandate's target population. Volunteers plausibly differ systematically (health-consciousness, baseline severity) from people who'd be compelled to take the drug, so the ATT-labeled-as-ATE substitution is the estimand error, not a validity error.",
+    "whatsTested": "Whether you distinguish estimands (ATE vs ATT) from internal validity, and recognize that a well-randomized trial can still answer the wrong population-level question.",
+    "antiPattern": "Assuming randomization alone certifies generalizability. Randomization balances confounders within the enrolled sample; it does not make that sample representative of anyone who wasn't in it.",
+    "staffFraming": "Before recommending a policy off a trial number, a staff engineer asks 'who was actually eligible to be in this experiment' before asking 'was the experiment well run.'"
+  },
+  {
+    "id": 137,
+    "domain": "Causal Inference",
+    "q": "A social platform treats 10% of users with a new feature and compares their engagement to the untreated 90%. Why does this likely underestimate, not overestimate, the true treatment effect?",
+    "options": [
+      "It doesn't — comparing treated to untreated users is exactly the correct estimator whenever the treated share is a random 10% of the full user base, by definition of randomization.",
+      "Overestimation is actually the risk here, since treated users' novelty-driven engagement spike inflates the apparent effect relative to the untreated group's steady baseline behavior.",
+      "The 90% 'untreated' group is really just a smaller, underpowered comparison sample here, so the resulting gap is noisier but not systematically biased toward under- or over-estimating the truth.",
+      "Untreated users are indirectly exposed through treated connections (a SUTVA violation), so their baseline is already spillover-contaminated, shrinking the measured gap below the real effect."
+    ],
+    "correct": 3,
+    "explanation": "This is the classic SUTVA failure from network interference: treating some users changes what untreated-but-connected users experience, inflating the 'control' baseline above what it would be with zero treatment anywhere in the network — which shrinks (not grows) the observed treated-vs-untreated gap relative to the true effect.",
+    "whatsTested": "Whether you can identify SUTVA violations from network interference specifically, and reason about the direction of the resulting bias, not just its existence.",
+    "antiPattern": "Assuming any bias from interference must inflate the effect. Spillover into the control arm typically drags the comparison toward zero, understating rather than overstating the true effect.",
+    "staffFraming": "Test for this by comparing outcomes in clusters with high vs. low treated-neighbor density — if the gap shrinks with density, you have interference, and the fix is cluster-level randomization, not more users."
+  },
+  {
+    "id": 138,
+    "domain": "Causal Inference",
+    "q": "Why does a properly executed coin-flip randomization protect against confounders even ones you never thought to draw in a DAG, while an observational adjustment set never can?",
+    "options": [
+      "It doesn't fully protect against unmeasured confounders either — randomization only balances the covariates the experimenter explicitly measures and checks for balance after the fact.",
+      "A DAG-based adjustment set is supposedly safer, since it forces explicit reasoning about every backdoor path, whereas randomization is often dismissed as a blunt tool offering no comparable guarantee.",
+      "A fair coin flip makes assignment independent of every unit trait, measured or not, so the arms are balanced in expectation on confounders nobody thought to record, not just DAG ones.",
+      "Randomization works only because sample sizes in RCTs are typically much larger than in observational studies, and larger samples are what actually balances unmeasured confounders."
+    ],
+    "correct": 2,
+    "explanation": "A DAG-derived adjustment set only protects against confounders the analyst thought to draw and could measure. Randomization instead makes assignment statistically independent of every unit characteristic — known or not — so, in expectation, the arms are balanced on everything, which is precisely the guarantee no observational adjustment set can offer.",
+    "whatsTested": "Whether you understand randomization's guarantee as unconditional on which confounders you happened to think of, versus adjustment-set methods which are conditional on correct specification.",
+    "antiPattern": "Treating 'we adjusted for enough covariates' as equivalent to 'we randomized.' The former is only as good as the analyst's foresight; the latter needs no foresight at all.",
+    "staffFraming": "When asked to defend a causal claim, a staff engineer's first question is 'was this randomized,' because it's the only design that doesn't rest on the analyst having thought of everything."
+  },
+  {
+    "id": 139,
+    "domain": "Causal Inference",
+    "q": "For a checkout-flow A/B test, what is the real tradeoff between randomizing at the user level versus the page level, and which would you pick for a redesign that changes the whole flow?",
+    "options": [
+      "User-level gives one consistent experience with no within-user contamination; page-level gains more power at the highest contamination risk. Pick user-level, since a mixed redesign would muddy the effect.",
+      "Page-level is strictly better in every single case, since more randomization events always produce a larger effective sample size and therefore always yield a more trustworthy result here.",
+      "There is no real tradeoff at all — any unit of randomization produces the same expected estimate, so the choice should be made purely on whatever is most convenient to engineer for this test.",
+      "User-level should never be used for checkout tests specifically, because logged-out users cannot be tracked consistently, making page-level randomization the only technically feasible option."
+    ],
+    "correct": 0,
+    "explanation": "The unit of randomization is a real design decision: finer units (page, session) buy more power per user but risk a user experiencing both arms within one journey, contaminating exactly the kind of before/after comparison a checkout redesign relies on. For a whole-flow redesign, user-level consistency matters more than the extra power.",
+    "whatsTested": "Whether you can name the actual power-vs-contamination tradeoff across units of randomization and apply it to a concrete scenario, rather than treating unit choice as interchangeable.",
+    "antiPattern": "Picking the unit that maximizes sample size without considering whether within-unit contamination invalidates the very comparison the test is trying to make.",
+    "staffFraming": "Choose the unit of randomization before anything else is designed — it constrains what a clean comparison can even mean for this particular change."
+  },
+  {
+    "id": 140,
+    "domain": "Causal Inference",
+    "q": "In an A/B test, 80% of users assigned to a new feature actually load it; nobody in control crosses over. ITT comes out to $6.40 per user. What is the effect on users who actually used the feature, and what assumption does that estimate require?",
+    "options": [
+      "CACE = ITT / compliance rate = $6.40 / 0.80 = $8.00; it requires monotonicity — no control user would have used the feature even if somehow assigned to it.",
+      "CACE = ITT × compliance rate = $6.40 × 0.80 = $5.12; it requires that every non-complier would have had exactly zero effect had they actually used the feature.",
+      "The $6.40 figure already is the effect on compliers, since ITT by definition only ever averages over users who received and used their assigned condition.",
+      "There is no way to recover the complier-only effect from ITT alone; you would need a fully separate observational study with propensity-matched compliers to estimate it."
+    ],
+    "correct": 0,
+    "explanation": "Under one-sided non-compliance (monotonicity: no control-side crossover), ITT = P(complier) × CACE, so CACE = ITT / compliance rate = $6.40 / 0.80 = $8.00. The $8.00 tells you what the feature itself is worth to people who use it; the $6.40 tells you what shipping to everyone, non-compliers included, will actually move.",
+    "whatsTested": "Whether you can correctly apply the CACE formula under one-sided non-compliance and state the monotonicity assumption it depends on, not just recite the division.",
+    "antiPattern": "Confusing ITT with CACE, or applying the CACE division without the one-sided (no control crossover) assumption it actually requires — under two-sided crossover you need the Wald estimator instead.",
+    "staffFraming": "Report both numbers with their different jobs: ITT for 'what happens if we ship to everyone,' CACE for 'is the feature itself worth building.'"
+  },
+  {
+    "id": 141,
+    "domain": "Causal Inference",
+    "q": "After an A/B test concludes, you split the control group in half and compare the two halves on the primary metric — an AA test. What does a significant difference between the two control halves tell you?",
+    "options": [
+      "Nothing concerning at all — some variation between any two random halves of a group is fully expected by chance and can simply be ignored when interpreting the original AB test result.",
+      "It means the primary metric itself is fundamentally too noisy ever to be used for decision-making, regardless of how the original experiment's randomization was implemented.",
+      "It signals the randomization or assignment infrastructure has a systematic bias — some feature of it created groups that weren't exchangeable — so the AB result from that pipeline can't be trusted yet.",
+      "It confirms the treatment effect measured in the AB test was real, since a difference between two supposedly identical groups validates that the test had enough statistical power."
+    ],
+    "correct": 2,
+    "explanation": "An AA test is a direct diagnostic on the assignment mechanism itself: since both halves are 'control,' any true effect is zero, so a significant difference implicates the randomization or logging pipeline, not sampling luck alone. Any AB result produced by that same infrastructure is suspect until the AA test comes back clean.",
+    "whatsTested": "Whether you know the AA test's actual purpose — validating the randomization infrastructure — rather than treating it as a routine sanity check with no diagnostic weight.",
+    "antiPattern": "Shrugging off a failed AA test as ordinary noise. A significant AA result is specifically evidence the two 'identical' groups weren't exchangeable pre-treatment, which undermines every AB result the same pipeline has produced.",
+    "staffFraming": "Run the AA test before trusting a surprising AB win, especially on infrastructure that's new or recently changed — it's the cheapest check against a broken experiment platform."
+  },
+  {
+    "id": 142,
+    "domain": "Causal Inference",
+    "q": "A marketplace feature can only be tested by randomizing whole cities (SUTVA forces this — treated cities' effects leak within-city). With ICC = 0.1 and 100 users per city cluster, roughly how much does the design effect inflate the required sample size versus individual-level randomization?",
+    "options": [
+      "It doesn't inflate anything meaningful — DEFF only matters when cluster sizes vary a lot, and with equal-sized clusters individual-level and cluster-level randomization need the same sample size.",
+      "DEFF is approximately 1 + (m−1) × ICC, approximately 1 + 99 × 0.1, approximately 10.9 — you need roughly 11 times the sample size individual-level randomization would otherwise require.",
+      "The inflation is exactly equal to the number of clusters used in the test, regardless of how many users sit inside each individual cluster.",
+      "DEFF applies only to binary outcome metrics; for continuous metrics like GMV per user, cluster-level randomization needs no sample size adjustment at all."
+    ],
+    "correct": 1,
+    "explanation": "DEFF is approximately 1 + (m−1) × ICC with m = cluster size and ICC = intraclass correlation. Here 1 + (100−1) × 0.1 is approximately 10.9 — nearly an 11x sample-size penalty versus individual-level randomization, unavoidable whenever SUTVA forces cluster-level assignment (social, marketplace, or city-level features with few large clusters).",
+    "whatsTested": "Whether you can apply the DEFF formula correctly and recognize cluster randomization's real statistical cost, not just its qualitative existence.",
+    "antiPattern": "Treating cluster randomization as a free substitute for individual-level randomization with no power cost, when in practice it can require an order of magnitude more users to reach the same power.",
+    "staffFraming": "When SUTVA forces cluster-level randomization, budget for the DEFF penalty up front in the power analysis — discovering it after the test is already running is a duration surprise nobody wants."
+  },
 ];
 
 export const EXAM_ONLY_MCQ = [

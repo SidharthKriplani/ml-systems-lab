@@ -23,6 +23,22 @@
 // is fine, but symbol-only forms like "R²" are deliberately NOT keyed here
 // (word-boundary regex can't reliably bound a match ending in a non-word
 // unicode symbol) — see renderMd.jsx for the matching mechanism.
+//
+// 2026-07-08 addition: 15 terms harvested from the finalized (writer + Pass-2
+// adversarial audit both complete) `pot_outcomes` and `rct_design` modules in
+// causalModules.js (sourceTabId 'causal_foundation'). Each def is trimmed from
+// the real sentence that introduces the term in that module's `summary` (or,
+// for `minimum detectable effect` and `design effect`, the sentence in
+// `keyPoints`/`checkQuestions` where `summary` only used the bare acronym).
+// Deliberately excluded from the candidate list: "Consistency" and
+// "Positivity" (the other two identification assumptions taught alongside
+// SUTVA) and bare "Compliance" — all are common-enough words used with
+// unrelated meanings elsewhere in this app's foundation prose (e.g.
+// "consistency" appears 50+ times across other families, "compliance" means
+// regulatory compliance in monitoringModules.js) and would mis-link if keyed
+// globally. "Stratified Randomization" was not literally taught — the module
+// teaches "block randomization" (the exact phrase in-prose) after stratifying
+// on covariates, so that's the key used instead.
 
 export const GLOSSARY = {
   'least squares': {
@@ -178,6 +194,111 @@ export const GLOSSARY = {
     sourceModuleId: 'cross_validation',
     sourceModuleTitle: 'Cross-Validation Strategies',
     sourceTabId: 'eval_foundation',
+  },
+  'potential outcomes': {
+    term: 'Potential Outcomes',
+    def: "Rubin's framework that gives the causal-inference gap symbols: Y_i(1) is a unit's outcome if treated, Y_i(0) if untreated — whichever branch was actually assigned is the one you observe, the other is the missing counterfactual.",
+    sourceModuleId: 'pot_outcomes',
+    sourceModuleTitle: 'Potential Outcomes Framework',
+    sourceTabId: 'causal_foundation',
+  },
+  'counterfactual': {
+    term: 'Counterfactual',
+    def: "The outcome a unit would have had under the treatment it didn't receive — missing for every unit, always, because you only ever observe the branch that actually happened.",
+    sourceModuleId: 'pot_outcomes',
+    sourceModuleTitle: 'Potential Outcomes Framework',
+    sourceTabId: 'causal_foundation',
+  },
+  'fundamental problem of causal inference': {
+    term: 'Fundamental Problem of Causal Inference',
+    def: 'You observe exactly one of two potential outcomes per unit, never both — the counterfactual is missing for every unit, always, which is why causal inference is at heart a missing-data problem.',
+    sourceModuleId: 'pot_outcomes',
+    sourceModuleTitle: 'Potential Outcomes Framework',
+    sourceTabId: 'causal_foundation',
+  },
+  'individual treatment effect': {
+    term: 'Individual Treatment Effect (ITE)',
+    def: "ITE_i = Y_i(1) − Y_i(0) — needs both potential outcomes for one person, exactly what the Fundamental Problem rules out. No dataset, however large, ever gives you one person's ITE.",
+    sourceModuleId: 'pot_outcomes',
+    sourceModuleTitle: 'Potential Outcomes Framework',
+    sourceTabId: 'causal_foundation',
+  },
+  'average treatment effect': {
+    term: 'Average Treatment Effect (ATE)',
+    def: "ATE = E[Y_i(1) − Y_i(0)] — the average of the individual treatment effects across units. Unlike the ITE, it's estimable: a design that makes the missing outcome recoverable in expectation (randomization) lets you estimate the average across units even though no single unit's effect is ever observed.",
+    sourceModuleId: 'pot_outcomes',
+    sourceModuleTitle: 'Potential Outcomes Framework',
+    sourceTabId: 'causal_foundation',
+  },
+  'sutva': {
+    term: 'SUTVA',
+    def: "Stable Unit Treatment Value Assumption — treating one unit doesn't change another unit's outcome. Break it (e.g. one user's treatment spills over to another) and the 'untreated' outcome is no longer a clean baseline, it's contaminated.",
+    sourceModuleId: 'pot_outcomes',
+    sourceModuleTitle: 'Potential Outcomes Framework',
+    sourceTabId: 'causal_foundation',
+  },
+  'att': {
+    term: 'ATT',
+    def: 'The Average Treatment Effect on the Treated — averages only over units that actually got the treatment, not the full population ATE averages over.',
+    sourceModuleId: 'pot_outcomes',
+    sourceModuleTitle: 'Potential Outcomes Framework',
+    sourceTabId: 'causal_foundation',
+  },
+  'cate': {
+    term: 'CATE',
+    def: 'The Conditional Average Treatment Effect — the effect for the slice of units sharing feature X = x, rather than the whole population.',
+    sourceModuleId: 'pot_outcomes',
+    sourceModuleTitle: 'Potential Outcomes Framework',
+    sourceTabId: 'causal_foundation',
+  },
+  'intent-to-treat': {
+    term: 'Intent-to-Treat (ITT)',
+    def: "Comparing units by the group they were assigned to, not what they actually experienced — it's what you actually observe, since compliance can't be forced, and it understates the effect on people who actually used the treatment.",
+    sourceModuleId: 'rct_design',
+    sourceModuleTitle: 'RCT Design',
+    sourceTabId: 'causal_foundation',
+  },
+  'non-compliance': {
+    term: 'Non-Compliance',
+    def: "Users assigned to one arm not receiving the treatment they were assigned (or crossing into the other arm's) — can run in either direction, and it's what dilutes the Intent-to-Treat estimate away from the effect on people who actually used the treatment.",
+    sourceModuleId: 'rct_design',
+    sourceModuleTitle: 'RCT Design',
+    sourceTabId: 'causal_foundation',
+  },
+  'complier average causal effect': {
+    term: 'Complier Average Causal Effect (CACE)',
+    def: 'The effect among compliers only — under one-sided non-compliance, CACE = ITT divided by the compliance rate. The CACE figure is what the treatment itself is worth; the ITT figure is what shipping it to everyone, non-compliers included, will actually move.',
+    sourceModuleId: 'rct_design',
+    sourceModuleTitle: 'RCT Design',
+    sourceTabId: 'causal_foundation',
+  },
+  'wald estimator': {
+    term: 'Wald Estimator',
+    def: 'Generalizes CACE to two-sided non-compliance (crossover in both arms): divide ITT by the difference in take-up between arms, instead of by one arm’s raw compliance rate.',
+    sourceModuleId: 'rct_design',
+    sourceModuleTitle: 'RCT Design',
+    sourceTabId: 'causal_foundation',
+  },
+  'minimum detectable effect': {
+    term: 'Minimum Detectable Effect (MDE)',
+    def: 'The smallest true lift a test is powered to reliably detect at a given power and significance level. Required sample size scales roughly as 1/MDE² — halving the detectable effect roughly quadruples the users needed.',
+    sourceModuleId: 'rct_design',
+    sourceModuleTitle: 'RCT Design',
+    sourceTabId: 'causal_foundation',
+  },
+  'design effect': {
+    term: 'Design Effect (DEFF)',
+    def: 'DEFF ≈ 1 + (m−1) × ICC — how much cluster-level randomization inflates the required sample size versus individual-level randomization (e.g. ICC=0.1, cluster size m=100 → DEFF≈10.9); unavoidable whenever SUTVA forces clustering (social, marketplace, or city-level features with few large clusters).',
+    sourceModuleId: 'rct_design',
+    sourceModuleTitle: 'RCT Design',
+    sourceTabId: 'causal_foundation',
+  },
+  'block randomization': {
+    term: 'Block Randomization',
+    def: "Randomizing within each stratum (e.g. device, geography) so arm counts stay even inside every stratum — fixes the imbalance chance alone might leave in a small sample when you're stratifying on known covariates.",
+    sourceModuleId: 'rct_design',
+    sourceModuleTitle: 'RCT Design',
+    sourceTabId: 'causal_foundation',
   },
 }
 
