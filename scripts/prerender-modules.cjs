@@ -148,8 +148,11 @@ function renderList(items) {
 function renderCheckQuestions(qs) {
   if (!qs || !qs.length) return '';
   const blocks = qs.map((q, idx) => {
+    // q.answer is either a single letter ('A') or, for multi-select "select all
+    // that apply" questions (added 2026-07-08), an array of letters (['A','C']).
+    const answerLetters = Array.isArray(q.answer) ? q.answer : (q.answer ? [q.answer] : []);
     const opts = (q.options || []).map(o => {
-      const isAnswer = q.answer && o.trim().startsWith(q.answer.trim());
+      const isAnswer = answerLetters.some(a => o.trim().startsWith(String(a).trim()));
       return `<li${isAnswer ? ' class="correct"' : ''}>${inline(o)}</li>`;
     }).join('');
     return `
