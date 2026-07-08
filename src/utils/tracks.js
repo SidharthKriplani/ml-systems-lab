@@ -203,6 +203,22 @@ export function getTracksForItem(type, itemId) {
     .map(t => t.id)
 }
 
+// Patch the `meta` object of a generic item in place (e.g. editing a saved
+// highlight's note). Mirrors removeGenericFromTrack's (type, itemId) lookup.
+export function updateItemMeta(trackId, type, itemId, metaPatch) {
+  save(getTracks().map(t => {
+    if (t.id !== trackId) return t
+    return {
+      ...t,
+      items: t.items.map(i =>
+        i.type === type && i.itemId === String(itemId)
+          ? { ...i, meta: { ...i.meta, ...metaPatch } }
+          : i
+      ),
+    }
+  }))
+}
+
 // ── Quick-add: skip the picker, drop into the most-recently-used track ────────
 
 function setLastTrackId(id) { try { if (id) localStorage.setItem(LAST_KEY, id) } catch { /* ignore */ } }

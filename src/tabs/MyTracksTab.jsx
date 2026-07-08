@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import {
   getTracks, createTrack, renameTrack, deleteTrack,
   createNote, deleteNote, removeItem, reorderItems, moveItem, seedTierTracks,
+  updateItemMeta,
 } from '../utils/tracks.js'
 import { NoteEditor } from '../components/tracks/NoteEditor.jsx'
 
@@ -206,7 +207,11 @@ const ITEM_TYPE_LABEL = {
   drill: 'Judgment Drill',
   ml_code: 'ML Coding',
   sd_drill: 'Design Drill',
+  highlight: 'Highlight',
 }
+
+// Highlight swatch ids -> theme var/color (kept in sync with HighlightPopover.jsx).
+const HIGHLIGHT_COLOR = { gold: 'var(--prime)', teal: 'var(--teal)', green: 'var(--green)', red: '#e05050' }
 
 // Where each generic item type opens (current rooms after the restructure).
 const TYPE_TAB = {
@@ -232,9 +237,80 @@ function itemGroup(item) {
   return { key: item.type, label: ITEM_TYPE_LABEL[item.type] || item.type }
 }
 
+// ── Highlight item: excerpt + inline-editable note ──────────────────────────
+// Mirrors the TrackDetail title-rename UX exactly: a ✎ toggle, an
+// input/textarea while editing, Enter/blur to save, Escape to cancel.
+
+function HighlightItemRow({ item, onNoteChange }) {
+  const [editingNote, setEditingNote] = useState(false)
+  const [draftNote, setDraftNote] = useState(item.meta?.note || '')
+  const noteInputRef = useRef(null)
+
+  useEffect(() => { setDraftNote(item.meta?.note || '') }, [item.meta?.note])
+  useEffect(() => { if (editingNote && noteInputRef.current) noteInputRef.current.focus() }, [editingNote])
+
+  function submitNote(e) {
+    if (e) e.preventDefault()
+    onNoteChange(draftNote)
+    setEditingNote(false)
+  }
+
+  const colorValue = HIGHLIGHT_COLOR[item.meta?.color] || 'var(--prime)'
+
+  return (
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.35rem', flexWrap: 'wrap' }}>
+        <span style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--prime)', background: 'var(--prime-faint)', border: '1px solid var(--prime)', borderRadius: '4px', padding: '0.05rem 0.35rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          Highlight
+        </span>
+        {item.meta?.sourceLabel && <span style={{ fontSize: '0.65rem', color: 'var(--ink-ghost)' }}>{item.meta.sourceLabel}</span>}
+      </div>
+
+      <div style={{ borderLeft: `3px solid ${colorValue}`, paddingLeft: '0.7rem', marginBottom: '0.5rem' }}>
+        <div style={{ fontSize: '0.87rem', color: 'var(--ink-hi)', lineHeight: 1.5 }}>
+          {item.meta?.text || item.label}
+        </div>
+      </div>
+
+      {editingNote ? (
+        <form onSubmit={submitNote} style={{ display: 'flex', gap: '0.4rem', alignItems: 'flex-start' }} onClick={e => e.stopPropagation()}>
+          <textarea
+            ref={noteInputRef}
+            value={draftNote}
+            onChange={e => setDraftNote(e.target.value)}
+            onBlur={() => submitNote()}
+            onKeyDown={e => { if (e.key === 'Escape') { setDraftNote(item.meta?.note || ''); setEditingNote(false) } }}
+            rows={2}
+            placeholder="Add a note…"
+            style={{
+              flex: 1, fontSize: '0.8rem', padding: '0.35rem 0.5rem', resize: 'vertical',
+              background: 'var(--depth)', border: '1px solid var(--prime)', borderRadius: '6px',
+              color: 'var(--ink-hi)', outline: 'none', fontFamily: 'var(--font-sans)',
+            }}
+          />
+          <button type="submit" style={{ background: 'var(--prime)', color: '#000', border: 'none', borderRadius: '5px', padding: '0.3rem 0.6rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700, flexShrink: 0 }}>Save</button>
+        </form>
+      ) : item.meta?.note ? (
+        <div
+          onClick={e => { e.stopPropagation(); setEditingNote(true) }}
+          style={{ display: 'flex', alignItems: 'flex-start', gap: '0.35rem', cursor: 'pointer' }}
+        >
+          <span style={{ fontSize: '0.78rem', color: 'var(--ink-low)', lineHeight: 1.4 }}>{item.meta.note}</span>
+          <span style={{ color: 'var(--ink-ghost)', fontSize: '0.72rem', flexShrink: 0 }}>✎</span>
+        </div>
+      ) : (
+        <button
+          onClick={e => { e.stopPropagation(); setEditingNote(true) }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-ghost)', fontSize: '0.75rem', padding: 0, fontFamily: 'var(--font-sans)' }}
+        >+ Add note</button>
+      )}
+    </div>
+  )
+}
+
 // ── TrackItemRow ──────────────────────────────────────────────────────────────
 
-function TrackItemRow({ item, idx, trackId, onNavigate, onRemoveItem, onOpenNote, onDeleteNote, dragFrom, setDragFrom, onReorderItems }) {
+function TrackItemRow({ item, idx, trackId, onNavigate, onRemoveItem, onOpenNote, onDeleteNote, onUpdateHighlightNote, dragFrom, setDragFrom, onReorderItems }) {
   return (
     <div
       key={idx}
@@ -320,7 +396,30 @@ function TrackItemRow({ item, idx, trackId, onNavigate, onRemoveItem, onOpenNote
         </>
       )}
 
-      {!['module', 'note'].includes(item.type) && (
+      {item.type === 'highlight' && (
+        <>
+          <HighlightItemRow item={item} onNoteChange={note => onUpdateHighlightNote(trackId, item.type, item.itemId, note)} />
+          {item.meta?.sourceTabId && item.meta?.sourceModuleId && (
+            <button
+              onClick={() => onNavigate(item.meta.sourceTabId, item.meta.sourceModuleId)}
+              style={{
+                background: 'none', border: '1px solid var(--rim)', borderRadius: '5px',
+                cursor: 'pointer', color: 'var(--ink-mid)', fontSize: '0.75rem',
+                padding: '0.2rem 0.5rem', flexShrink: 0, whiteSpace: 'nowrap', transition: 'all 0.12s', alignSelf: 'flex-start',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--prime)'; e.currentTarget.style.color = 'var(--prime)' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--rim)'; e.currentTarget.style.color = 'var(--ink-mid)' }}
+            >Open source →</button>
+          )}
+          <button onClick={() => onRemoveItem(idx)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-ghost)', fontSize: '0.72rem', padding: '0.1rem 0.2rem', flexShrink: 0, alignSelf: 'flex-start' }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#e05050' }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--ink-ghost)' }}
+          >✕</button>
+        </>
+      )}
+
+      {!['module', 'note', 'highlight'].includes(item.type) && (
         <>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap', marginBottom: '0.2rem' }}>
@@ -365,7 +464,7 @@ function TrackItemRow({ item, idx, trackId, onNavigate, onRemoveItem, onOpenNote
 
 // ── TrackDetail ───────────────────────────────────────────────────────────────
 
-function TrackDetail({ track, onNavigate, onRename, onNewNote, onOpenNote, onDeleteNote, onRemoveItem, onReorderItems, onBack }) {
+function TrackDetail({ track, onNavigate, onRename, onNewNote, onOpenNote, onDeleteNote, onRemoveItem, onReorderItems, onUpdateHighlightNote, onBack }) {
   const [editingName, setEditingName] = useState(false)
   const [draftName, setDraftName] = useState(track.name)
   const [dragFrom, setDragFrom] = useState(null)
@@ -475,6 +574,7 @@ function TrackDetail({ track, onNavigate, onRename, onNewNote, onOpenNote, onDel
                       onRemoveItem={onRemoveItem}
                       onOpenNote={onOpenNote}
                       onDeleteNote={onDeleteNote}
+                      onUpdateHighlightNote={onUpdateHighlightNote}
                       dragFrom={dragFrom}
                       setDragFrom={setDragFrom}
                       onReorderItems={onReorderItems}
@@ -621,6 +721,7 @@ export function MyTracksTab({ onNavigate, openTrackId }) {
             onDeleteNote={noteId => { if (!window.confirm('Delete this note? This cannot be undone.')) return; deleteNote(selectedTrack.id, noteId); refresh() }}
             onRemoveItem={idx => { removeItem(selectedTrack.id, idx); refresh() }}
             onReorderItems={(from, to) => { reorderItems(selectedTrack.id, from, to); refresh() }}
+            onUpdateHighlightNote={(trackId, type, itemId, note) => { updateItemMeta(trackId, type, itemId, { note }); refresh() }}
             onBack={() => { setOpenNote(null); setSelectedId(null); syncTrackUrl(null) }}
           />
         ) : (
