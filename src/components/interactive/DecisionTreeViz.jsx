@@ -294,7 +294,7 @@ export const DecisionTreeViz = forwardRef(function DecisionTreeViz(props, ref) {
         <button
           onClick={() => setSeedIdx(i => (i + 1) % SEEDS.length)}
           style={{
-            padding: '4px 12px', borderRadius: 6, fontSize: 12,
+            padding: '8px 14px', minHeight: 36, borderRadius: 6, fontSize: 12,
             border: '1px solid var(--rim,#333)', background: 'var(--depth,#111)',
             color: seedIdx > 0 ? '#22d3ee' : 'var(--prime,#F0A500)',
             cursor: 'pointer', fontWeight: 700, fontFamily: 'var(--font-mono,monospace)',

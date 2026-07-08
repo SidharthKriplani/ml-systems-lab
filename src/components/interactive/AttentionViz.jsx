@@ -58,7 +58,7 @@ export const AttentionViz = forwardRef(function AttentionViz(props, ref) {
   const output = Array.from({ length: D }, (_, d) => weights.reduce((s, w, j) => s + w * V[j][d], 0))
 
   const btn = (active) => ({
-    padding: '3px 9px', borderRadius: 6, cursor: 'pointer', fontSize: '0.72rem', fontFamily: 'var(--font-sans)',
+    padding: '8px 12px', minHeight: 36, borderRadius: 6, cursor: 'pointer', fontSize: '0.72rem', fontFamily: 'var(--font-sans)',
     fontWeight: active ? 700 : 500, background: active ? 'var(--prime)' : 'var(--depth)',
     color: active ? '#000' : 'var(--ink-mid)', border: `1px solid ${active ? 'var(--prime)' : 'var(--rim)'}`,
   })

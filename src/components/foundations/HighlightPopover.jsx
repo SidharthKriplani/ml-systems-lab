@@ -61,14 +61,21 @@ export function HighlightPopover({ containerRef, sourceTabId, sourceModuleId, so
 
   useEffect(() => {
     function onMouseUp() { setTimeout(updateFromSelection, 0) }
+    // Mobile: native touch text-selection doesn't reliably fire `mouseup`.
+    // `touchend` fires when the user lifts their finger after dragging the
+    // selection handles; a slightly longer delay lets the OS selection UI
+    // (handles) settle before we read getSelection()/getBoundingClientRect().
+    function onTouchEnd() { setTimeout(updateFromSelection, 150) }
     function onSelectionChange() {
       const sel = window.getSelection()
       if (!sel || sel.isCollapsed) setToolbar(null)
     }
     document.addEventListener('mouseup', onMouseUp)
+    document.addEventListener('touchend', onTouchEnd)
     document.addEventListener('selectionchange', onSelectionChange)
     return () => {
       document.removeEventListener('mouseup', onMouseUp)
+      document.removeEventListener('touchend', onTouchEnd)
       document.removeEventListener('selectionchange', onSelectionChange)
     }
   }, [updateFromSelection])
@@ -115,12 +122,14 @@ export function HighlightPopover({ containerRef, sourceTabId, sourceModuleId, so
       {toolbar && createPortal(
         <div
           onMouseDown={e => e.preventDefault()} // keep the selection alive through the click
+          onTouchStart={e => e.preventDefault()} // same, for touch text-selection
           style={{
-            position: 'fixed', top: Math.max(8, toolbar.top - 46), left: toolbar.left,
+            position: 'fixed', top: Math.max(8, toolbar.top - 50), left: toolbar.left,
             transform: 'translateX(-50%)', zIndex: 9999,
-            background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '9px',
-            boxShadow: '0 8px 20px rgba(0,0,0,0.35)', padding: '0.4rem 0.5rem',
-            display: 'flex', alignItems: 'center', gap: '0.4rem',
+            background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '10px',
+            boxShadow: '0 8px 20px rgba(0,0,0,0.35)', padding: '0.35rem',
+            display: 'flex', alignItems: 'center', gap: '0.15rem',
+            maxWidth: 'calc(100vw - 16px)',
           }}
         >
           {COLORS.map(c => (
@@ -129,20 +138,26 @@ export function HighlightPopover({ containerRef, sourceTabId, sourceModuleId, so
               onClick={() => setColor(c.id)}
               title={c.id}
               style={{
-                width: 18, height: 18, borderRadius: '50%', cursor: 'pointer', padding: 0,
+                width: 36, height: 36, borderRadius: '50%', cursor: 'pointer', padding: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: 'transparent', border: 'none', flexShrink: 0,
+              }}
+            >
+              <span style={{
+                width: 18, height: 18, borderRadius: '50%', display: 'block',
                 background: c.value,
                 border: color === c.id ? '2px solid var(--ink-hi)' : '2px solid transparent',
                 boxShadow: color === c.id ? `0 0 0 2px ${c.value}` : 'none',
-              }}
-            />
+              }} />
+            </button>
           ))}
           <button
             onClick={handleSave}
             disabled={!color}
             title={getQuickAdd() ? 'Save · Alt/Cmd-click to choose a track' : 'Save'}
             style={{
-              marginLeft: '0.2rem', fontSize: '0.72rem', fontWeight: 700, fontFamily: 'var(--font-sans)',
-              padding: '0.25rem 0.6rem', borderRadius: '6px', border: 'none',
+              marginLeft: '0.15rem', fontSize: '0.75rem', fontWeight: 700, fontFamily: 'var(--font-sans)',
+              padding: '0.5rem 0.75rem', minHeight: 36, borderRadius: '7px', border: 'none',
               cursor: color ? 'pointer' : 'default', opacity: color ? 1 : 0.55,
               background: color ? 'var(--prime)' : 'var(--rim)', color: color ? '#000' : 'var(--ink-ghost)',
             }}

@@ -356,7 +356,7 @@ export const ROCCurveViz = forwardRef(function ROCCurveViz(props, ref) {
       <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
         {[false, true].map(pr => (
           <button key={String(pr)} onClick={() => setShowPR(pr)} style={{
-            padding: '4px 14px', borderRadius: 6, fontSize: 12,
+            padding: '8px 14px', minHeight: 36, borderRadius: 6, fontSize: 12,
             border: '1px solid var(--rim)', cursor: 'pointer', fontFamily: 'var(--font-mono)',
             background: showPR === pr ? 'var(--prime,#F0A500)' : 'var(--depth,#111)',
             color: showPR === pr ? '#000' : 'var(--ink-mid)',

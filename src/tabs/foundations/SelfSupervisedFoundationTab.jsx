@@ -4,6 +4,7 @@ import { AddToTrackPopover } from '../../components/tracks/AddToTrackPopover.jsx
 import { getTracksForModule } from '../../utils/tracks.js'
 import { renderMd } from '../../utils/renderMd'
 import { CheckQuestion } from '../../components/foundations/CheckQuestion'
+import { HighlightPopover } from '../../components/foundations/HighlightPopover.jsx'
 import { SELF_SUPERVISED_MODULES } from '../../data/foundations/selfSupervisedModules.js'
 import { InteractivePanel } from '../../components/interactive/InteractivePanel'
 import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '../../utils/foundations/selfSupervisedFoundationProgress.js'
@@ -41,6 +42,7 @@ export function SelfSupervisedFoundationTab({ onNavigate, openModuleId, navOrigi
   const [trackPopoverOpen, setTrackPopoverOpen] = useState(false)
   const [recapMode, setRecapMode] = useState(false)
   const trackBtnRef = useRef(null)
+  const contentRef = useRef(null)
 
   useEffect(() => {
     const h = () => setTick(t => t + 1)
@@ -111,7 +113,8 @@ export function SelfSupervisedFoundationTab({ onNavigate, openModuleId, navOrigi
       </div>
 
       {selected && (
-        <div style={{ flex: 1, overflowY: 'auto', padding: '1.75rem 2rem', background: 'var(--depth)', minWidth: 0 }}>
+        <div ref={contentRef} style={{ flex: 1, overflowY: 'auto', padding: '1.75rem 2rem', background: 'var(--depth)', minWidth: 0 }}>
+          <HighlightPopover containerRef={contentRef} sourceTabId={TAB_ID} sourceModuleId={selected.id} sourceLabel={selected.title} />
           <button onClick={() => (navOrigin?.tab === 'my_tracks' && openModuleId && selectedId === openModuleId) ? onNavigate('my_tracks', navOrigin.trackId || null) : setSelectedId(null)}
             style={{ fontSize: '0.78rem', color: 'var(--ink-low)', background: 'none', border: 'none', cursor: 'pointer',
               fontFamily: 'var(--font-sans)', padding: '0 0 1rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>

@@ -165,7 +165,7 @@ export const CrossValidationViz = forwardRef(function CrossValidationViz(props, 
             key={ct}
             onClick={() => { setCvType(ct); setFoldIdx(0); }}
             style={{
-              padding: '4px 11px', borderRadius: '6px',
+              padding: '8px 13px', minHeight: '36px', borderRadius: '6px',
               border: '1px solid var(--rim, #2a2a2a)',
               background: cvType === ct ? 'var(--prime, #F0A500)' : 'var(--depth, #111)',
               color: cvType === ct ? '#000' : 'var(--ink-mid, #888)',
@@ -197,7 +197,8 @@ export const CrossValidationViz = forwardRef(function CrossValidationViz(props, 
             key={kv}
             onClick={() => changeK(kv)}
             style={{
-              padding: '4px 14px',
+              padding: '8px 14px',
+              minHeight: '36px',
               borderRadius: '6px',
               border: '1px solid var(--rim, #2a2a2a)',
               background: k === kv ? 'var(--prime, #F0A500)' : 'var(--depth, #111)',
@@ -281,7 +282,8 @@ export const CrossValidationViz = forwardRef(function CrossValidationViz(props, 
         <button
           onClick={prev}
           style={{
-            padding: '4px 12px',
+            padding: '8px 14px',
+            minHeight: '36px', minWidth: '36px',
             borderRadius: '6px',
             border: '1px solid var(--rim, #2a2a2a)',
             background: 'var(--depth, #111)',
@@ -304,7 +306,8 @@ export const CrossValidationViz = forwardRef(function CrossValidationViz(props, 
         <button
           onClick={next}
           style={{
-            padding: '4px 12px',
+            padding: '8px 14px',
+            minHeight: '36px', minWidth: '36px',
             borderRadius: '6px',
             border: '1px solid var(--rim, #2a2a2a)',
             background: 'var(--depth, #111)',

@@ -606,8 +606,8 @@ export const RandomForestViz = forwardRef(function RandomForestViz(props, ref) {
                 Bootstrap Sample — T{bsTreeIdx + 1}
               </span>
               <div style={{ display: 'flex', gap: 4 }}>
-                <button onClick={() => setBsTreeIdx(i => (i + 7) % 8)} style={{ ...S.btn, padding: '2px 7px', fontSize: 11 }}>←</button>
-                <button onClick={() => setBsTreeIdx(i => (i + 1) % 8)} style={{ ...S.btn, padding: '2px 7px', fontSize: 11 }}>→</button>
+                <button onClick={() => setBsTreeIdx(i => (i + 7) % 8)} style={{ ...S.btn, padding: '6px 12px', minWidth: 36, minHeight: 32, fontSize: 13 }}>←</button>
+                <button onClick={() => setBsTreeIdx(i => (i + 1) % 8)} style={{ ...S.btn, padding: '6px 12px', minWidth: 36, minHeight: 32, fontSize: 13 }}>→</button>
               </div>
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>

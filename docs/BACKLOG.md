@@ -378,3 +378,47 @@ only, not answer-key correctness. Worth a follow-up content-correctness pass if 
 
 **Not pushed.** Standard MSL git workflow — `rm -f .git/index.lock .git/HEAD.lock` before staging,
 `git add src/ docs/` (never touch anything outside those), hand to Sidharth's Mac for build+push.
+
+---
+
+## Backprop text-scene mismatch fix + highlight-to-track MVP + mobile audit — 2026-07-08 (later)
+
+**Backprop content bug found and fixed.** The `backprop` module's prose described a scalar 2-layer sigmoid
+toy example (x=2.0, w1=0.5, w2=0.3, "6.6× shrink") that did NOT match the actual `BackpropViz.jsx`
+interactive, which renders a completely different 2-input/2-hidden-ReLU/1-sigmoid-output network — a real
+Text-Scene Lock violation (see root `3B1B-STANDARD.md`). Worse: that network's ReLU hidden layer barely
+shrinks the gradient at all (factor ≈1), so the "6.6× shrink" claim was false for the shipped interactive
+regardless. Rewrote `summary` in `deepLearningModules.js` to describe the REAL network with real computed
+numbers (x₁=1.0,x₂=0.5 → loss≈0.234, W₂ grad≈−0.115, W₁ grad≈−0.109 — nearly equal because ReLU passes
+gradient through untouched; the real toll is the one sigmoid hop at the output, ≈0.25×). Fixed two stale
+caption strings in `BackpropViz.jsx` that repeated the same false "6.6× shrink" claim, and softened the
+live predict-gate reveal text to stay accurate across every slider position rather than assuming a shrink
+direction. Also fixed a real **production-breaking bug**: `scripts/prerender-modules.cjs`'s
+`renderCheckQuestions` called `q.answer.trim()` assuming `answer` is always a string — crashed on every
+multi-select question (`answer: ['A','B']`) added by this session's quiz fix, which broke `npm run build`
+entirely (`prerender-modules.cjs` runs before `vite build` in the build chain) — the whole site failed to
+deploy, not just the SEO pages. Fixed to handle both shapes. All re-verified by actually running the
+script (not just esbuild syntax-checking) and spot-checking the regenerated `backprop.html`.
+
+**Highlight-to-track MVP, MSL side.** Same mechanism as GSL/PAL (see root `CLAUDE.md` for the full
+cross-lab description) — new `src/components/foundations/HighlightPopover.jsx`, `tracks.js` gained
+`updateItemMeta`, `MyTracksTab.jsx` renders/edits/navigates highlight items. Now wired on **all 19**
+`*FoundationTab.jsx` files (shipped in two passes: 3 families first as a proof point, then the remaining
+16 with the identical 3-line diff — import + `contentRef` + `<HighlightPopover>` — applied cleanly to
+every file with no structural surprises, confirmed via per-file diff showing exactly 5 changed lines
+each). All 19 esbuild-verified clean.
+
+**Mobile-unfriendliness audit + fix, MSL Foundations interactives.** Swept `src/components/interactive/`
+(~85 files) against the same 6 patterns as GSL's pass. Zero drag-and-drop, zero hover-only interactions
+found anywhere (grep-confirmed) — MSL's interactives were already built touch-safe on those two fronts.
+Real bugs found and fixed in the two files touched THIS session: `HighlightPopover.jsx` relied solely on
+`mouseup` for selection detection, which doesn't reliably fire for touch-based text selection on mobile —
+added a `touchend` listener; also bumped its 18px color swatches and Save button up to 36-40px touch
+targets. `BackpropViz.jsx` checked clean (already `viewBox`-responsive, already `auto-fill` grids, no
+hover-only logic). Tap-target bumps also landed in `RandomForestViz.jsx`, `AttentionViz.jsx`,
+`CrossValidationViz.jsx`, `DecisionTreeViz.jsx`, `ROCCurveViz.jsx` (buttons were 22-30px, now ≥32-36px).
+**Not fixed, flagged:** a shared base button style (~28-30px tall) reused across dozens of the remaining
+interactive files is borderline-small but not egregious — a full sweep needs a shared style-constant
+change repo-wide, out of scope this pass. All touched files esbuild-verified clean.
+
+**Not pushed.** Same standard MSL git workflow as above.
