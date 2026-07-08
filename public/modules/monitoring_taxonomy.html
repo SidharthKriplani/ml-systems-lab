@@ -195,17 +195,17 @@
     
     <div class="check-q">
       <p class="check-q-text"><strong>Q1.</strong> Your fraud model is flagging more transactions as fraudulent over time, but actual fraud labels (available after investigation) show no increase in fraud rate. What type of drift is this?</p>
-      <ul class="check-opts"><li>A) Concept drift — P(Y|X) has changed, so the model now incorrectly maps the same features to higher fraud probability</li><li class="correct">B) Prior probability drift or data drift causing prediction distribution shift — P(Y) is stable but input feature changes are pushing scores higher</li><li>C) Infrastructure drift — a library update changed how scores are computed, inflating raw model outputs</li><li>D) Model decay from overfitting — the model has memorized training noise and now generalizes poorly to new transactions</li></ul>
+      <ul class="check-opts"><li>A) Concept drift — P(Y|X) shifted, so the same features now map to a higher fraud probability</li><li class="correct">B) Prior or data drift — P(Y) is stable, feature shifts are mechanically pushing scores up</li><li>C) Infrastructure drift — a library update altered score computation, inflating raw outputs</li><li>D) Overfitting decay — the model memorized noise and now generalizes badly to new traffic</li></ul>
     </div>
 
     <div class="check-q">
       <p class="check-q-text"><strong>Q2.</strong> Recall dropped 30% overnight. Feature PSI is clean, prediction score distribution is unchanged, but the endpoint error rate jumped to 6%. Which layer is the cause?</p>
-      <ul class="check-opts"><li>A) Concept drift — the input-output relationship P(Y|X) shifted and only labels will confirm the true magnitude of the change</li><li>B) Data drift — P(X) moved enough that the model is now scoring an unfamiliar population it never trained on</li><li class="correct">C) Infrastructure drift — clean features plus a 6% error rate points to a broken pipeline, an engineering fix not a model fix</li><li>D) Prior shift — the base rate P(Y) rose, so the fixed threshold now sits in the wrong place for the new class balance</li></ul>
+      <ul class="check-opts"><li>A) Concept drift — P(Y|X) shifted, and only labels can confirm the true magnitude of change</li><li>B) Data drift — P(X) moved enough that the model now scores an unfamiliar population</li><li class="correct">C) Infrastructure drift — clean features plus a 6% error rate means a broken pipeline</li><li>D) Prior shift — the base rate P(Y) rose, leaving the fixed threshold in the wrong place</li></ul>
     </div>
 
     <div class="check-q">
-      <p class="check-q-text"><strong>Q3.</strong> Why is reflexively retraining on every drift alert the &quot;single most expensive habit&quot; the taxonomy warns against?</p>
-      <ul class="check-opts"><li>A) Retraining is computationally cheap, so the real cost is the delay before the new model reaches production and starts serving traffic</li><li class="correct">B) A feature can drift with no performance impact, so retraining burns compute and risks regressions on stable segments for a problem that may not exist</li><li>C) Drift alerts are almost always caused by infrastructure, so retraining is the correct fix but should wait for the on-call engineer</li><li>D) Retraining always improves accuracy, so the only downside is the pipeline cost, which is negligible relative to a missed fraud</li></ul>
+      <p class="check-q-text"><strong>Q3.</strong> Which two statements correctly describe why reflexively retraining on every drift alert is the &quot;single most expensive habit&quot; the taxonomy warns against?</p>
+      <ul class="check-opts"><li class="correct">A) A feature can drift with zero performance impact, so retraining wastes compute chasing a problem that may not exist</li><li class="correct">B) Retraining on a drift alert can introduce regressions on population segments that were never actually affected</li><li>C) Retraining is computationally free, so the only real cost of reflexive retraining is a short delay before deploy</li><li>D) Drift alerts are almost always caused by infrastructure, so the correct fix is always to wait on the on-call queue</li></ul>
     </div>
 
     <div class="cta-card">

@@ -190,18 +190,18 @@
     <h2>Check your understanding</h2>
     
     <div class="check-q">
-      <p class="check-q-text"><strong>Q1.</strong> A product has estimated |ε| = 1.6. You are asked whether cutting price by 5% will raise or lower total revenue. What is the correct answer and reason?</p>
-      <ul class="check-opts"><li>A) Revenue falls: a lower price always reduces revenue because you earn less per unit.</li><li class="correct">B) Revenue rises: with |ε| = 1.6 &gt; 1 the good is elastic, so a 5% price cut raises quantity by ~8% — the volume gain outweighs the per-unit loss, so revenue increases.</li><li>C) Revenue is unchanged: elasticity only affects units sold, not total revenue.</li><li>D) Cannot tell without the marginal cost: revenue direction depends on cost, not elasticity.</li></ul>
+      <p class="check-q-text"><strong>Q1.</strong> A product has estimated |ε| = 1.6. Select the two correct statements about what happens if you cut price by 5%.</p>
+      <ul class="check-opts"><li class="correct">A) With |ε| = 1.6 &gt; 1 the good is elastic, so a 5% cut raises quantity by roughly 8%, more than offsetting the per-unit price loss.</li><li class="correct">B) Because quantity gains outweigh the per-unit loss when demand is elastic, total revenue increases from this cut.</li><li>C) Revenue falls regardless, since cutting price always reduces revenue whenever marginal cost exceeds zero.</li><li>D) Revenue is unchanged, because elasticity of 1.6 sits below the unit-elastic threshold of 2.0 where price and quantity offset.</li></ul>
     </div>
 
     <div class="check-q">
       <p class="check-q-text"><strong>Q2.</strong> You regress log(units) on log(price) across a year of store data and get a slope of +0.3. What is the most likely explanation?</p>
-      <ul class="check-opts"><li>A) The good is a Giffen good, so demand genuinely rises with price.</li><li class="correct">B) Endogeneity: the store raised prices during high-demand periods and cut them during slow ones, so price is correlated with unobserved demand shocks. The +0.3 reflects that co-movement, not a causal elasticity — you need an experiment or instrument.</li><li>C) The log-log specification is wrong; refit as linear and the sign will correct itself.</li><li>D) Measurement error in price has attenuated the estimate toward zero and flipped its sign.</li></ul>
+      <ul class="check-opts"><li>A) The good is a Giffen good: for strongly inferior staples, the income effect overwhelms the substitution effect, so demand genuinely rises with price.</li><li class="correct">B) Endogeneity: the store raised prices in high-demand periods, so price correlates with the unobserved demand shock — the slope isn't a causal elasticity.</li><li>C) The log-log specification is wrong here; switching to a quadratic price term would flip the sign back to the expected negative value.</li><li>D) Measurement error in the price variable systematically attenuated the true negative slope toward zero and pushed it past zero into strongly positive territory over the full year of data.</li></ul>
     </div>
 
     <div class="check-q">
       <p class="check-q-text"><strong>Q3.</strong> Why is a log-log demand model usually preferred over a linear one when the goal is to report a single elasticity number?</p>
-      <ul class="check-opts"><li>A) Log-log always fits sales data with higher R² than a linear model.</li><li class="correct">B) In log-log, the slope coefficient is itself the elasticity and is constant across the price range, so one number summarizes demand; a linear demand curve has an elasticity that changes at every price point (ε = −b·P/Q).</li><li>C) Linear models cannot represent downward-sloping demand.</li><li>D) Log-log removes endogeneity, so the estimate is automatically causal.</li></ul>
+      <ul class="check-opts"><li>A) Log-log always achieves a higher R² than a linear fit because the log transform removes heteroskedasticity from the residuals entirely.</li><li class="correct">B) The slope in log-log form is itself the elasticity and stays constant across prices; a linear model's elasticity changes at every point.</li><li>C) Linear models cannot represent downward-sloping demand curves, since a negative slope violates the non-negativity constraint on quantity.</li><li>D) Log-log transformation removes endogeneity bias automatically, since taking logarithms breaks the correlation between price and demand shocks.</li></ul>
     </div>
 
     <div class="cta-card">

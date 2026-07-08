@@ -190,18 +190,18 @@
     <h2>Check your understanding</h2>
     
     <div class="check-q">
-      <p class="check-q-text"><strong>Q1.</strong> You must index 200M 256-dim vectors but have only 8GB of RAM per serving node. Exact search and plain HNSW both overflow memory. Which approach fits, and what's the cost?</p>
-      <ul class="check-opts"><li>A) Reduce embedding dimension to 4 so full vectors fit; recall stays high because low dimensions are easier to search.</li><li>B) Store all vectors on disk and do exact search per query; SSD latency is negligible at this scale.</li><li class="correct">C) IVF-PQ: cluster into cells and product-quantize each vector (e.g., 256 dims → 32 sub-vectors × 1 byte = 32B/vector ≈ 6.4GB for 200M), accepting a small recall loss from lossy quantization that the downstream ranker re-scores away.</li><li>D) Switch to a cross-encoder so no index is needed at all.</li></ul>
+      <p class="check-q-text"><strong>Q1.</strong> Select the two correct statements about indexing 200M 256-dim vectors with only 8GB RAM per serving node.</p>
+      <ul class="check-opts"><li class="correct">A) IVF-PQ clusters vectors into cells and product-quantizes each one, shrinking memory footprint drastically (~6.4GB for 200M).</li><li class="correct">B) The recall loss from PQ's lossy quantization is generally acceptable at retrieval since the downstream ranker re-scores anyway.</li><li>C) Reducing the embedding dimension all the way down to 4 keeps recall high because low-dimensional spaces are easier to search.</li><li>D) Storing all vectors on disk and doing exact brute-force search per query is viable, since SSD read latency is negligible here.</li></ul>
     </div>
 
     <div class="check-q">
       <p class="check-q-text"><strong>Q2.</strong> Retrieval recall@1000 is 0.90 at nprobe=8 and 3ms. The latency budget allows 12ms and the ranker keeps missing relevant items. What's the correct single-knob change?</p>
-      <ul class="check-opts"><li>A) Rebuild the index nightly instead of weekly — staleness, not recall, is the issue.</li><li class="correct">B) Raise nprobe (e.g., 8 → 64) so more IVF cells are scanned, lifting recall toward ~0.99 while staying within the 12ms budget — you're moving along the recall–latency curve, not changing index type.</li><li>C) Lower nprobe to 2 to speed up search, freeing time for the ranker to compensate.</li><li>D) Switch dot-product to cosine similarity; recall improves for free.</li></ul>
+      <ul class="check-opts"><li>A) Rebuild the index nightly instead of weekly — the real issue here is staleness, not the recall number itself.</li><li class="correct">B) Raise nprobe from 8 to 64 so more IVF cells are scanned, lifting recall toward ~0.99 within the 12ms budget.</li><li>C) Lower nprobe down to 2 to speed up the search further, freeing extra time for the ranker to compensate.</li><li>D) Switch from dot-product similarity to cosine similarity instead; recall improves automatically at no cost.</li></ul>
     </div>
 
     <div class="check-q">
       <p class="check-q-text"><strong>Q3.</strong> A catalog adds and removes thousands of items per minute. Retrieval keeps returning deleted items and missing brand-new ones, even though HNSW recall benchmarks are excellent. What's the underlying issue?</p>
-      <ul class="check-opts"><li>A) HNSW recall degrades above 10M vectors; shard the index into smaller pieces.</li><li>B) efSearch is set too high, causing the walk to revisit deleted nodes; lower it.</li><li>C) Product quantization is corrupting the new vectors; disable PQ and the freshness problem resolves.</li><li class="correct">D) HNSW graphs are costly to mutate, so a periodically-rebuilt index goes stale between builds — new items aren't in it and deleted ones linger. Fix with a small frequently-refreshed &quot;fresh&quot; index searched alongside the main one (or incremental upserts), not a bigger main index.</li></ul>
+      <ul class="check-opts"><li>A) HNSW recall degrades sharply above roughly 10M vectors; sharding the index into smaller pieces resolves it.</li><li>B) efSearch is set too high, causing the graph walk to keep revisiting deleted nodes; simply lowering it fixes this.</li><li>C) Product quantization is silently corrupting only the newly-added vectors each cycle; disabling PQ entirely resolves the freshness problem.</li><li class="correct">D) HNSW graphs are costly to mutate, so a periodic rebuild goes stale between builds; fix with a small refreshed side index.</li></ul>
     </div>
 
     <div class="cta-card">

@@ -200,17 +200,17 @@
     
     <div class="check-q">
       <p class="check-q-text"><strong>Q1.</strong> You have 1M daily serving requests and are monitoring feature drift. The KS test shows p&lt;0.001 for &quot;age&quot; feature with KS statistic D=0.015. Should you alert?</p>
-      <ul class="check-opts"><li>A) Yes — p&lt;0.001 is highly significant, meaning the age distribution has definitively shifted and the model is likely degraded</li><li>B) Yes — any statistically significant drift in a top feature warrants an immediate page to the on-call engineer</li><li>C) No — the KS test is the wrong tool for continuous features; rerun with PSI before making any decision</li><li class="correct">D) No — with 1M samples, D=0.015 is statistically significant but not practically significant; use a practical threshold like D &gt; 0.05 or PSI &gt; 0.1 instead</li></ul>
+      <ul class="check-opts"><li>A) Yes — p&lt;0.001 means the age distribution has definitively shifted and the model is likely degraded now</li><li>B) Yes — any statistically significant drift in a top feature warrants an immediate on-call page</li><li>C) No — KS is the wrong tool for continuous features; rerun with PSI before deciding anything</li><li class="correct">D) No — at 1M samples D=0.015 is significant but not practical; use D &gt; 0.05 or PSI &gt; 0.1 instead</li></ul>
     </div>
 
     <div class="check-q">
-      <p class="check-q-text"><strong>Q2.</strong> Why does PSI use 10 equal-frequency bins from the training distribution rather than equal-width bins?</p>
-      <ul class="check-opts"><li>A) Equal-width bins are slower to compute, so equal-frequency binning is chosen purely to reduce monitoring latency at scale</li><li>B) Equal-frequency bins guarantee the PSI score falls in [0, 1], which equal-width bins cannot promise for skewed features</li><li class="correct">C) On a skewed feature, equal-width bins pile most of the mass into a few dense center buckets, hiding the shift; equal-frequency spreads resolution where the data actually is</li><li>D) Regulators mandate equal-frequency binning for lending models, so it is a compliance requirement rather than a statistical one</li></ul>
+      <p class="check-q-text"><strong>Q2.</strong> Which two statements correctly explain why PSI uses 10 equal-frequency bins from the training distribution rather than equal-width bins?</p>
+      <ul class="check-opts"><li class="correct">A) On a skewed feature, equal-width bins pile most mass into a few dense center buckets, hiding the shift</li><li class="correct">B) Equal-frequency binning spreads resolution to where the data actually sits, exposing shifts equal-width would mask</li><li>C) Equal-frequency bins mathematically guarantee the PSI score falls within the bounded range of [0, 1]</li><li>D) Financial regulators mandate equal-frequency binning for lending models as a formal compliance requirement</li></ul>
     </div>
 
     <div class="check-q">
       <p class="check-q-text"><strong>Q3.</strong> A loan model's prediction score distribution shifts from mean 0.35 to mean 0.28 over two months. What is the fastest path to the root-cause feature?</p>
-      <ul class="check-opts"><li>A) Run PSI on all 50 features and page whichever one has the single highest raw PSI value regardless of that feature's importance</li><li class="correct">B) Run PSI on each feature ordered by training-time importance; the first high-PSI, high-importance feature is the likely root cause</li><li>C) Wait for delayed labels to arrive, then retrain on the most recent window since score drift alone cannot localize a cause</li><li>D) Increase the number of PSI bins to 50 for finer resolution, then re-scan every feature to find the smallest detectable shift</li></ul>
+      <ul class="check-opts"><li>A) Run PSI on all 50 features and page whichever has the single highest raw PSI, ignoring importance</li><li class="correct">B) Run PSI ordered by training-time importance; the first high-PSI, high-importance feature is the cause</li><li>C) Wait for the delayed labels, then retrain on the recent window since score drift alone can't localize a cause</li><li>D) Widen every feature to 50 PSI bins for finer resolution, then re-scan for the smallest shift found</li></ul>
     </div>
 
     <div class="cta-card">

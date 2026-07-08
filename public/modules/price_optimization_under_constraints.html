@@ -191,17 +191,17 @@
     
     <div class="check-q">
       <p class="check-q-text"><strong>Q1.</strong> Your unconstrained profit-maximizing price is $14, but a regulatory ceiling caps price at $11. Where is the best feasible price?</p>
-      <ul class="check-opts"><li class="correct">A) At $11 — profit is concave in price, so on the feasible interval [P_min, $11] profit is still rising as you approach $14; the closest allowed price to the unconstrained optimum, $11, is best.</li><li>B) At the midpoint $12.50, splitting the difference between the optimum and the cap.</li><li>C) At $14 — you should ignore the cap since it reduces profit.</li><li>D) At P_min, because a binding ceiling forces you to the opposite bound.</li></ul>
+      <ul class="check-opts"><li class="correct">A) At $11 — profit is concave, so on [P_min, $11] profit keeps rising toward $14, making the nearest allowed price to the optimum best.</li><li>B) At the midpoint $12.50, since regulatory caps are conventionally split evenly between the unconstrained optimum and the legal ceiling.</li><li>C) At $14 — a regulatory ceiling only restricts the price for tax-reporting purposes, not the price actually charged to customers.</li><li>D) At P_min — a binding ceiling on one side of the price range always forces the optimum to jump to the opposite boundary instead.</li></ul>
     </div>
 
     <div class="check-q">
-      <p class="check-q-text"><strong>Q2.</strong> In a Lagrangian formulation π(P) + λ·(K − Q(P)) for an inventory limit K, what does the multiplier λ represent at the optimum?</p>
-      <ul class="check-opts"><li>A) The elasticity of demand at the chosen price.</li><li class="correct">B) The shadow price of capacity: the marginal profit gained from one additional unit of inventory (relaxing K by one). λ = 0 when the capacity constraint is slack, positive when it binds.</li><li>C) The regularization strength that prevents the price from overfitting demand noise.</li><li>D) The probability that the constraint is violated in production.</li></ul>
+      <p class="check-q-text"><strong>Q2.</strong> In a Lagrangian formulation π(P) + λ·(K − Q(P)) for an inventory limit K, select the two correct statements about the multiplier λ at the optimum.</p>
+      <ul class="check-opts"><li class="correct">A) λ is the shadow price of capacity: the marginal profit gained from one additional unit of available inventory.</li><li class="correct">B) λ equals zero whenever the capacity constraint is slack rather than actively binding at the chosen price.</li><li>C) λ is always numerically equal to the price elasticity of demand evaluated at the optimal price.</li><li>D) λ represents the statistical probability that the constraint gets violated once the pricing model is deployed.</li></ul>
     </div>
 
     <div class="check-q">
       <p class="check-q-text"><strong>Q3.</strong> Why is a catalog-consistency constraint (a 1L pack must not cost more per-ml than a 500ml pack) harder to handle than a simple price ceiling?</p>
-      <ul class="check-opts"><li>A) It isn't — it's just another box constraint on each price independently.</li><li class="correct">B) It couples multiple prices together, so you can't optimize each SKU independently; the feasible region is a joint constraint across variants, which requires a Lagrangian or joint constrained solve rather than per-item clipping.</li><li>C) Consistency constraints make the profit function non-concave, so no optimum exists.</li><li>D) It requires a separate demand curve per milliliter, which is infeasible to estimate.</li></ul>
+      <ul class="check-opts"><li>A) It isn't harder — catalog consistency is just another independent box constraint applied separately to each SKU's own price, with no coupling at all.</li><li class="correct">B) It couples multiple prices together into one joint constraint across variants, requiring a Lagrangian instead of per-item clipping.</li><li>C) Consistency constraints make the profit function non-concave everywhere, so no feasible pricing optimum can ever be found.</li><li>D) It requires estimating a completely separate demand curve for every milliliter of product, which is statistically infeasible.</li></ul>
     </div>
 
     <div class="cta-card">

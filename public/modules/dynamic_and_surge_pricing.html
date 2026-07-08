@@ -190,18 +190,18 @@
     <h2>Check your understanding</h2>
     
     <div class="check-q">
-      <p class="check-q-text"><strong>Q1.</strong> Which framing best captures why a rideshare app raises fares when many riders and few drivers are online?</p>
-      <ul class="check-opts"><li>A) It is pure profit extraction — the app charges more simply because riders are desperate.</li><li class="correct">B) It is market clearing: the higher price rations scarce cars to the riders who value them most and simultaneously pulls more drivers online, closing the supply/demand gap. Extraction is a side effect; matching is the function.</li><li>C) It is a bug in the pricing model that should be smoothed away entirely.</li><li>D) It is price discrimination against individual riders based on their history.</li></ul>
+      <p class="check-q-text"><strong>Q1.</strong> Select the two correct statements about why a rideshare app raises fares when many riders and few drivers are online.</p>
+      <ul class="check-opts"><li class="correct">A) Raising price during high demand rations scarce supply toward the riders who value it most.</li><li class="correct">B) The higher fare also pulls more drivers online, increasing supply until the gap closes.</li><li>C) Surge pricing is purely a profit-extraction tactic with no effect on driver supply.</li><li>D) Surge multipliers are calculated per individual rider based on that rider's payment history.</li></ul>
     </div>
 
     <div class="check-q">
       <p class="check-q-text"><strong>Q2.</strong> You wire the surge multiplier directly to the instantaneous demand/supply ratio with no damping. What is the most likely failure?</p>
-      <ul class="check-opts"><li>A) The price converges instantly to the market-clearing level with no issues.</li><li class="correct">B) Oscillation: the multiplier spikes, demand drops, the multiplier collapses, demand returns, and it spikes again — a closed-loop instability. Damp it with rate-limiting/smoothing and hysteresis (deadbands) so it doesn't re-price on noise.</li><li>C) The multiplier will monotonically increase forever regardless of demand.</li><li>D) Nothing — surge systems are open-loop and cannot oscillate.</li></ul>
+      <ul class="check-opts"><li>A) The price converges instantly and smoothly to the exact market-clearing level with no transient behavior of any kind whatsoever.</li><li class="correct">B) Oscillation: the multiplier spikes, demand drops, it collapses, then demand returns and it spikes again — a closed-loop instability.</li><li>C) The multiplier increases monotonically forever, since the ratio has no natural ceiling once demand starts exceeding supply.</li><li>D) Nothing happens — surge systems are inherently open-loop control systems that structurally cannot ever oscillate under any configuration.</li></ul>
     </div>
 
     <div class="check-q">
       <p class="check-q-text"><strong>Q3.</strong> Why do most marketplaces surge at the geo/segment level rather than personalizing price to each user's estimated willingness-to-pay?</p>
-      <ul class="check-opts"><li>A) Segment-level pricing is more profitable than personalized pricing in every case.</li><li class="correct">B) Personalized pricing to individual WTP edges toward price discrimination with serious legal, ethical, and reputational risk, so pricing by area and time is a deliberate guardrail — it clears the market without charging two people different prices for the same trip based on who they are.</li><li>C) Marketplaces cannot technically estimate individual WTP.</li><li>D) Personalized pricing violates SUTVA and biases the elasticity estimate.</li></ul>
+      <ul class="check-opts"><li>A) Segment-level pricing is strictly more profitable than personalized pricing in every possible market condition and scenario imaginable.</li><li class="correct">B) Personalized pricing risks price discrimination with legal and reputational exposure, so segment/geo pricing is a deliberate guardrail.</li><li>C) Marketplaces are technically incapable of ever estimating an individual user's willingness-to-pay from behavioral data.</li><li>D) Personalized pricing violates the SUTVA assumption, which mechanically biases the elasticity estimate downward toward zero.</li></ul>
     </div>
 
     <div class="cta-card">

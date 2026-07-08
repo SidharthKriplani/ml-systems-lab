@@ -190,18 +190,18 @@
     <h2>Check your understanding</h2>
     
     <div class="check-q">
-      <p class="check-q-text"><strong>Q1.</strong> A feed's top-10 by ranker score is 9 clips about the same football match. Each individually scores highest for this user. Why can't tuning the ranker fix this, and where does the fix belong?</p>
-      <ul class="check-opts"><li>A) The ranker is overfit to football; add regularization and the duplicates disappear.</li><li>B) The candidates are stale; refresh retrieval and diversity resolves itself.</li><li>C) Football features are over-weighted; drop them from the feature set.</li><li class="correct">D) The ranker scores each item independently, so it can't represent that item #2 adds little given item #1 — redundancy is a set property. The fix is a re-ranking step (MMR/DPP) that penalizes similarity to already-chosen items.</li></ul>
+      <p class="check-q-text"><strong>Q1.</strong> Select the two correct statements about why a feed's top-10 by ranker score can be 9 near-duplicate clips about the same match.</p>
+      <ul class="check-opts"><li class="correct">A) The ranker scores each item independently, so it structurally can't represent that item #2 adds little given item #1.</li><li class="correct">B) Redundancy is a set-level property; the fix is a re-ranking step like MMR or DPP that penalizes similarity to chosen items.</li><li>C) The ranker is overfit specifically to football content, and adding L2 regularization alone makes the duplicates disappear.</li><li>D) The candidates being shown are simply stale, so refreshing the retrieval stage alone resolves the diversity problem.</li></ul>
     </div>
 
     <div class="check-q">
       <p class="check-q-text"><strong>Q2.</strong> Using MMR with λ=0.7: item A has relevance 0.9; item B has relevance 0.88 but similarity 0.95 to the already-picked A; item C has relevance 0.80 and similarity 0.2 to A. Which is picked next and why?</p>
-      <ul class="check-opts"><li>A) B — it has the higher raw relevance (0.88 &gt; 0.80), and MMR always prefers higher relevance.</li><li class="correct">B) C — its MMR score 0.7·0.80 − 0.3·0.2 = 0.50 beats B's 0.7·0.88 − 0.3·0.95 ≈ 0.33, because B's near-duplication of A collapses its marginal value.</li><li>C) A — it is re-picked since it has the highest relevance overall.</li><li>D) B and C tie, so the ranker's original order breaks the tie in B's favor.</li></ul>
+      <ul class="check-opts"><li>A) B — it has the higher raw relevance score (0.88 &gt; 0.80), and MMR is defined to always prefer higher relevance.</li><li class="correct">B) C — its MMR score of 0.50 beats B's ≈0.33, because B's near-duplication of the already-picked A collapses its value.</li><li>C) A — it gets re-picked a second time here, since it still holds the single highest relevance score of the three items overall.</li><li>D) B and C tie exactly under MMR, so the ranker's original score order breaks the tie in B's favor instead.</li></ul>
     </div>
 
     <div class="check-q">
       <p class="check-q-text"><strong>Q3.</strong> A platform wants to guarantee &quot;no more than 2 posts from the same creator in the top 10&quot; and give brand-new posts a visibility boost. Where do these belong and why?</p>
-      <ul class="check-opts"><li class="correct">A) In re-ranking: the per-creator cap is a set-level constraint the independently-scoring ranker can't enforce, and the freshness boost counters the ranker's systematic under-scoring of low-history items — both operate on the assembled set after scoring.</li><li>B) In the ranker's loss function as extra terms, since it already scores every item.</li><li>C) In retrieval, by fetching at most 2 items per creator and only fresh items.</li><li>D) In the ANN index, by weighting creators and recency into the embeddings.</li></ul>
+      <ul class="check-opts"><li class="correct">A) In re-ranking: the per-creator cap is a set-level constraint the ranker can't enforce, and the freshness boost counters under-scoring.</li><li>B) In the ranker's loss function as two extra penalty terms added directly, since it already scores every item.</li><li>C) In retrieval, by fetching at most 2 items per creator and restricting candidates to only recently-published items.</li><li>D) In the ANN index itself, by weighting creator identity and recency directly into every single item's embedding vector representation instead.</li></ul>
     </div>
 
     <div class="cta-card">

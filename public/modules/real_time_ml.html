@@ -190,18 +190,18 @@
     <h2>Check your understanding</h2>
     
     <div class="check-q">
-      <p class="check-q-text"><strong>Q1.</strong> Your fraud model has 150ms P99 but the SLA is 50ms. What's the right first move and overall approach?</p>
-      <ul class="check-opts"><li>A) Move fraud scoring to a nightly batch and use yesterday's risk score at transaction time, eliminating real-time inference.</li><li>B) Raise the decision threshold to cut alert volume and reduce downstream lookups, lowering average latency.</li><li class="correct">C) Profile to attribute the 150ms (features vs inference vs network); co-locate features in Redis with async parallel fetch (&lt;2ms), serve a distilled/quantized model or GBM (~5ms), precompute streaming user-risk into the cache (serving = lookup + light adjustment); if still &gt;50ms, decide async — let the transaction proceed and reverse within 30s if scored fraudulent.</li><li>D) Add a request queue and process fraud checks sequentially to stabilize P99 by removing concurrency spikes.</li></ul>
+      <p class="check-q-text"><strong>Q1.</strong> Select the two correct parts of the fix when a fraud model has 150ms P99 against a 50ms SLA.</p>
+      <ul class="check-opts"><li class="correct">A) Profile to attribute the 150ms across features, inference, and network before changing anything else.</li><li class="correct">B) Co-locate features in Redis with async parallel fetch, and serve a distilled or quantized GBM instead of the full model.</li><li>C) Move fraud scoring entirely to a nightly batch job and use yesterday's risk score at transaction time.</li><li>D) Add a request queue and process fraud checks strictly sequentially to remove concurrency spikes.</li></ul>
     </div>
 
     <div class="check-q">
       <p class="check-q-text"><strong>Q2.</strong> Four feature sources each take 8ms. Your service fetches them one after another and blames the model for a 40ms+ latency. What's the actual problem?</p>
-      <ul class="check-opts"><li>A) The model is genuinely too slow; quantize it to INT8.</li><li class="correct">B) Serial feature fetch pays the sum (4×8 = 32ms) instead of the max (8ms). Issue the four requests concurrently (async fan-out) with a per-request timeout, and feature latency drops to ~8ms, freeing the budget the model actually needs.</li><li>C) 8ms per feature is impossible; the feature store must be misconfigured.</li><li>D) Reduce to one feature source to cut latency, accepting the accuracy loss.</li></ul>
+      <ul class="check-opts"><li>A) The model itself is genuinely too slow; the correct fix is quantizing its weights down to INT8 precision.</li><li class="correct">B) Serial fetch pays the sum (4×8=32ms) instead of the max; async fan-out with per-request timeouts drops it to ~8ms.</li><li>C) 8ms per feature lookup is simply impossible at this scale; the feature store must be badly misconfigured somewhere.</li><li>D) Reduce down to a single feature source entirely to cut latency, accepting whatever accuracy loss results.</li></ul>
     </div>
 
     <div class="check-q">
       <p class="check-q-text"><strong>Q3.</strong> Why is a documented fallback + circuit breaker considered part of the *design*, not an ops afterthought?</p>
-      <ul class="check-opts"><li>A) It's genuinely an ops concern; the design is done once the model meets the SLA in load tests.</li><li class="correct">B) Because the system's availability contract depends on it: when the model endpoint degrades (it will), the choice of degraded response — popularity, rule-based, or last cached prediction — determines whether users see something reasonable or an error, and a circuit breaker makes that switch automatic instead of a human improvising mid-incident.</li><li>C) Because fallbacks improve the model's offline accuracy metrics.</li><li>D) Because regulators require a fallback flowchart in the design document.</li></ul>
+      <ul class="check-opts"><li>A) It's genuinely an ops-only concern; the design is considered done once the model meets the SLA in load tests.</li><li class="correct">B) The availability contract depends on it: the degraded-response choice determines what users see, and a circuit breaker automates the switch.</li><li>C) Because a documented fallback improves the model's offline accuracy metrics reported during the full evaluation and benchmarking phase cycle.</li><li>D) Because regulators require a fallback flowchart to be included in the written design document before launch.</li></ul>
     </div>
 
     <div class="cta-card">

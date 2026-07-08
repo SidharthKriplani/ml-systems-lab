@@ -190,18 +190,18 @@
     <h2>Check your understanding</h2>
     
     <div class="check-q">
-      <p class="check-q-text"><strong>Q1.</strong> Why is randomizing price at the individual-user level usually a poor experimental design for measuring elasticity?</p>
-      <ul class="check-opts"><li>A) It has too few units to reach statistical significance.</li><li class="correct">B) It violates SUTVA because users compare prices — one person's price affects another's behavior (interference/leakage) — and it is a fairness/legal problem to charge different people different prices for the same item. Both issues undermine the test before the statistics matter.</li><li>C) Individual randomization biases the estimate toward zero via measurement error.</li><li>D) It works fine; per-user price A/B tests are the industry standard.</li></ul>
+      <p class="check-q-text"><strong>Q1.</strong> Select the two correct reasons per-user price randomization is usually a poor design for measuring elasticity.</p>
+      <ul class="check-opts"><li class="correct">A) It violates SUTVA, since users can compare prices, leaking one person's treatment into another's behavior.</li><li class="correct">B) Charging different people different prices for the identical good raises serious fairness and legal concerns.</li><li>C) It structurally has too few randomization units to ever reach statistical significance in practice.</li><li>D) It is the accepted industry-standard design already used successfully by every major rideshare marketplace.</li></ul>
     </div>
 
     <div class="check-q">
       <p class="check-q-text"><strong>Q2.</strong> A rideshare company wants to test a fare change but worries that a change in one zone spills into neighboring zones. Which design best isolates the effect?</p>
-      <ul class="check-opts"><li>A) A per-user A/B test, since randomizing individuals removes all spillover.</li><li class="correct">B) A switchback design: turn the whole market's price high/low in short randomized time windows and compare across windows, so system-wide supply/demand spillover is absorbed within each window rather than contaminating a separate control group. Account for temporal autocorrelation and carryover.</li><li>C) A simple pre/post comparison in one city, which needs no control at all.</li><li>D) A geo experiment is the only valid design; switchbacks cannot measure fare effects.</li></ul>
+      <ul class="check-opts"><li>A) A per-user A/B test, since randomizing at the individual level structurally removes all cross-zone spillover effects entirely and completely.</li><li class="correct">B) A switchback design: flip the whole market's price high/low in short randomized windows, absorbing spillover within each window.</li><li>C) A simple pre/post comparison in one city, which needs no control group since seasonal effects are assumed to be negligible.</li><li>D) A geo experiment is the only statistically valid design here; switchbacks structurally cannot measure any fare effects at all.</li></ul>
     </div>
 
     <div class="check-q">
       <p class="check-q-text"><strong>Q3.</strong> In a geo price experiment, why is synthetic control often used to read out the effect rather than a raw treated-minus-control difference?</p>
-      <ul class="check-opts"><li>A) Synthetic control eliminates the need for randomization entirely.</li><li class="correct">B) With few markets, no single control city matches the treated city well; synthetic control builds a weighted combination of control cities that tracks the treated city's pre-period trend, giving a credible counterfactual to measure post-period divergence against.</li><li>C) Synthetic control converts the geo experiment into a per-user test, raising power.</li><li>D) It removes temporal autocorrelation, which is the main threat in geo designs.</li></ul>
+      <ul class="check-opts"><li>A) Synthetic control eliminates the need for any randomization step entirely, since it constructs its own counterfactual city from scratch.</li><li class="correct">B) With few markets, no single control city matches well; synthetic control weights control cities to track the pre-period trend.</li><li>C) Synthetic control converts the geo experiment into a per-user test structure, which mechanically raises statistical power.</li><li>D) It removes temporal autocorrelation entirely, which is treated as the single dominant threat to validity in geo designs.</li></ul>
     </div>
 
     <div class="cta-card">

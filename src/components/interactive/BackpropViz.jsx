@@ -322,7 +322,7 @@ export const BackpropViz = forwardRef(function BackpropViz(props, ref) {
                 color: prediction === correctPick ? 'var(--prime)' : '#ef4444',
               }}>
                 {prediction === correctPick ? '✓ Correct' : '✗ Not quite'} — right now |∂L/∂z₂| (at W₂, one hop back) ≈ {fmtShort(Math.abs(bwd.dLoss_dz2))}, while the average |∂L/∂z₁| feeding W₁ (two hops back) ≈ {fmtShort((Math.abs(bwd.dLoss_dz1[0]) + Math.abs(bwd.dLoss_dz1[1])) / 2)}.
-                {' '}The extra hop already shrank the signal — that's the vanishing-gradient shrink, in miniature.
+                {' '}Notice how close these usually stay — that's ReLU's signature. Its slope is a clean 1 for every active neuron, so the extra hop through the hidden layer costs almost nothing. A sigmoid hop wouldn't have been this forgiving — its slope tops out at 0.25, so that hop alone would cut the signal to a quarter.
               </div>
             )}
         <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} style={{ width: '100%', display: 'block' }}>
@@ -573,7 +573,7 @@ export const BackpropViz = forwardRef(function BackpropViz(props, ref) {
               </div>
             ))}
             <div style={{ marginTop: 6, fontSize: 10, color: 'var(--ink-low)', lineHeight: 1.5 }}>
-              Same multiplication as the toy network above — a sigmoid slope ≤0.25 compounding at every hop — just carried out for 9 hops instead of 1. This toy example already showed a 6.6× shrink after a single hop; stack eight more and the signal that reaches layer 1 is gone.
+              The toy network above has only one hop that pays a toll — the sigmoid output, at a slope of about 0.25 — because its hidden layer is ReLU, which charges nothing. Swap that ReLU floor for sigmoid too, and every hop pays that same ~0.25 toll. Chain nine of them and the signal reaching layer 1 is gone.
             </div>
           </div>
         </div>
