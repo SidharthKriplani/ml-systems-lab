@@ -520,10 +520,22 @@ function readTabProgress() {
 
 // ── Routing helpers ───────────────────────────────────────────────────────────
 function getTabFromHash() {
-  const hash = window.location.hash.replace('#', '')
+  const hash = window.location.hash.replace('#', '').split('/')[0]
   return ALL_TABS.find(t => t.id === hash)?.id ?? null
 }
-function setHash(tabId) {
+// 2026-07-08 deep-linking pass: a module/case id can now ride alongside the tab id in the
+// hash as a second path segment (#<tabId>/<moduleId>), mirroring PAL's proven
+// stateToHash/parseHash pattern (src/utils/hashRouting.js) so individual foundation modules
+// get a real, refresh-safe, shareable URL — not just the tab-level one `getTabFromHash` gives.
+// Pilot: DeepLearningFoundationTab.jsx wires its `selectedId` to this; the same pattern applies
+// to the other 18 `tabs/foundations/*FoundationTab.jsx` files as a follow-up (not attempted here).
+function parseTabHash() {
+  const raw = window.location.hash.replace('#', '')
+  const [tabPart, modulePart] = raw.split('/')
+  const tabId = ALL_TABS.find(t => t.id === tabPart)?.id ?? null
+  return { tabId, moduleId: modulePart || null }
+}
+function setHash(tabId, moduleId = null) {
   // C4 fix (2026-07-08 LAB-STANDARDS audit, "verify" flag re-confirmed real):
   // this used to pass a bare `#${tabId}` — a hash-ONLY relative URL, which
   // browsers resolve against the CURRENT address including its query string.
@@ -534,7 +546,9 @@ function setHash(tabId) {
   // — which then wrongly re-triggers that tab's own read-once URL-param
   // auto-open logic on a later refresh. Always writing the explicit pathname
   // mirrors goTo's targetUrl construction and guarantees the query is gone.
-  window.history.replaceState(null, '', tabId === 'home' ? window.location.pathname : `${window.location.pathname}#${tabId}`)
+  // 2026-07-08 deep-linking pass: optional moduleId appends as a second hash segment.
+  const suffix = tabId === 'home' ? '' : `#${tabId}${moduleId ? '/' + moduleId : ''}`
+  window.history.replaceState(null, '', tabId === 'home' ? window.location.pathname : `${window.location.pathname}${suffix}`)
 }
 
 // ── ProgressRing ──────────────────────────────────────────────────────────────
@@ -1051,7 +1065,10 @@ export default function App() {
   // original spot below, 2026-07-08 C5 fix) because the auth-transition
   // effects right below now call goTo directly — they need it defined first,
   // not referenced through a TDZ.
-  const [pendingOpen, setPendingOpen] = useState(null)
+  // 2026-07-08 deep-linking pass: resolve a module/case id straight off the URL on first
+  // load too (previously `null` always — a module opened via My Tracks/search was lost on
+  // refresh even though `setHash` below could write it, because nothing ever READ it back).
+  const [pendingOpen, setPendingOpen] = useState(() => parseTabHash().moduleId)
   // Where the navigation came from (e.g. { tab: 'my_tracks', trackId }) so the
   // destination tab can offer a "back to where you came from" affordance.
   const [navOrigin, setNavOrigin] = useState(null)
@@ -1061,10 +1078,13 @@ export default function App() {
     // (hashchange/popstate) passes { push: false } — pushing there would
     // corrupt the history stack. The push strips any stale query string
     // (?module=… / ?track=…) left over from the previous tab.
+    // 2026-07-08: openTarget (the module/case id) now rides along as a second hash
+    // segment, so a My Tracks/search-driven open is refresh-safe and shareable, not
+    // just a one-shot in-memory prop.
     if (opts.push !== false) {
       const targetUrl = tabId === 'home'
         ? window.location.pathname
-        : window.location.pathname + '#' + tabId
+        : window.location.pathname + '#' + tabId + (openTarget ? '/' + openTarget : '')
       const currentUrl = window.location.pathname + window.location.search + window.location.hash
       if (currentUrl !== targetUrl) window.history.pushState(null, '', targetUrl)
     }
@@ -1139,19 +1159,25 @@ export default function App() {
   }, [])
 
   // Hash + localStorage sync
+  // 2026-07-08: also carries pendingOpen (the module/case id) into the hash's second
+  // segment, so any goTo(tabId, moduleId) call — not just the pilot tab's own direct
+  // pushState — leaves a refresh-safe URL.
   useEffect(() => {
     if (activeTab) {
       localStorage.setItem('msl_tab', activeTab)
-      setHash(activeTab)
+      setHash(activeTab, pendingOpen)
     }
-  }, [activeTab])
+  }, [activeTab, pendingOpen])
 
   // Hash change from browser
   useEffect(() => {
     function onHashChange() {
-      const t = getTabFromHash()
+      // 2026-07-08: parse both segments — #<tabId>/<moduleId> — so browser Back/Forward
+      // across a module-level hash change (e.g. the DeepLearningFoundationTab pilot's own
+      // history.pushState calls) resolves back to the right module, not just the right tab.
+      const { tabId: t, moduleId } = parseTabHash()
       // push:false — this IS a browser history move; pushing would corrupt the stack.
-      if (t) goTo(t, null, { push: false })
+      if (t) goTo(t, moduleId, { push: false })
       // Bare URL (no hash) = home. Leave unknown hashes (e.g. '#/u/…') alone.
       else if (!window.location.hash) goTo('home', null, { push: false })
     }

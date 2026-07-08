@@ -55,17 +55,41 @@ function MarkDoneButton({ moduleId, onDone }) {
   )
 }
 
+// 2026-07-08 deep-linking pass — pilot for the item-level hash-encoding pattern (see
+// App.jsx's parseTabHash/setHash/goTo, which now carry a module id as a second hash
+// segment, #dl_foundation/<moduleId>). Pushes a REAL history entry (not replaceState) so
+// browser Back walks module → module list one step at a time, and so a refresh/pasted URL
+// restores the exact module. history.pushState deliberately does NOT fire hashchange/popstate,
+// so calling this from a plain click never loops back through App.jsx's own hash-sync effects
+// — only a genuine browser Back/Forward does, via App's onHashChange → goTo(tabId, moduleId,
+// {push:false}) → this tab's `openModuleId` prop → the effect below. Same pattern as GSL's
+// Concepts.jsx `syncConceptsHash`. The other 18 `tabs/foundations/*FoundationTab.jsx` files
+// need the identical two changes (this helper + the two call sites below) as a follow-up.
+function syncModuleHash(moduleId) {
+  try {
+    const newHash = '#' + TAB_ID + (moduleId ? '/' + moduleId : '')
+    if (window.location.hash !== newHash) window.history.pushState(null, '', newHash)
+  } catch {}
+}
+
 export function DeepLearningFoundationTab({ onNavigate, openModuleId, navOrigin }) {
   const [selectedId, setSelectedId] = useState(null)
 
   useEffect(() => {
     if (openModuleId && MODULES.some(m => m.id === openModuleId)) {
       setSelectedId(openModuleId)
+    } else if (openModuleId === null) {
+      // Hash-driven clear — e.g. browser Back from #dl_foundation/<id> to the bare
+      // #dl_foundation segment. Only fires when App.jsx's pendingOpen prop actually
+      // transitions to null (a real nav event), not on every render, so this never
+      // fights with in-tab browsing (which doesn't touch openModuleId at all).
+      setSelectedId(null)
     }
   }, [openModuleId])
   const [tick, setTick] = useState(0)
   const [trackPopoverOpen, setTrackPopoverOpen] = useState(false)
   const [recapMode, setRecapMode] = useState(false)
+  const [deeperOpen, setDeeperOpen] = useState(false)
   const trackBtnRef = useRef(null)
   const contentRef = useRef(null)
 
@@ -76,7 +100,7 @@ export function DeepLearningFoundationTab({ onNavigate, openModuleId, navOrigin 
   }, [])
 
   // Close track popover when module selection changes
-  useEffect(() => { setTrackPopoverOpen(false); setRecapMode(false) }, [selectedId])
+  useEffect(() => { setTrackPopoverOpen(false); setRecapMode(false); setDeeperOpen(false) }, [selectedId])
 
   const doneCount = getDoneCount(MODULES)
   const selected = MODULES.find(m => m.id === selectedId)
@@ -117,7 +141,11 @@ export function DeepLearningFoundationTab({ onNavigate, openModuleId, navOrigin 
           return (
             <div
               key={m.id}
-              onClick={() => setSelectedId(isActive ? null : m.id)}
+              onClick={() => {
+                const next = isActive ? null : m.id
+                setSelectedId(next)
+                syncModuleHash(next)
+              }}
               style={{
                 padding: '0.6rem 0.75rem', marginBottom: '0.3rem', borderRadius: '8px', cursor: 'pointer',
                 background: isActive ? 'var(--prime-faint)' : 'transparent',
@@ -145,7 +173,7 @@ export function DeepLearningFoundationTab({ onNavigate, openModuleId, navOrigin 
       {selected && (
         <div ref={contentRef} style={{ flex: 1, overflowY: 'auto', padding: '1.75rem 2rem', background: 'var(--depth)', minWidth: 0 }}>
           <HighlightPopover containerRef={contentRef} sourceTabId={TAB_ID} sourceModuleId={selected.id} sourceLabel={selected.title} />
-          <button onClick={() => (navOrigin?.tab === 'my_tracks' && openModuleId && selectedId === openModuleId) ? onNavigate('my_tracks', navOrigin.trackId || null) : setSelectedId(null)}
+          <button onClick={() => (navOrigin?.tab === 'my_tracks' && openModuleId && selectedId === openModuleId) ? onNavigate('my_tracks', navOrigin.trackId || null) : (setSelectedId(null), syncModuleHash(null))}
             style={{ fontSize: '0.78rem', color: 'var(--ink-low)', background: 'none', border: 'none', cursor: 'pointer',
               fontFamily: 'var(--font-sans)', padding: '0 0 1rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
             {(navOrigin?.tab === 'my_tracks' && openModuleId && selectedId === openModuleId) ? '← Back to My Tracks' : '← All modules'}
@@ -265,6 +293,29 @@ export function DeepLearningFoundationTab({ onNavigate, openModuleId, navOrigin 
           )}
 
           {selected.interactiveId && <InteractivePanel interactiveId={selected.interactiveId} />}
+
+          {selected.deeperMath && (
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '10px',
+              padding: '1.1rem 1.25rem', marginBottom: '1.25rem' }}>
+              <button onClick={() => setDeeperOpen(o => !o)}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%',
+                  background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-sans)' }}>
+                <span style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  Go Deeper — Academic
+                </span>
+                <span style={{ fontSize: '0.8rem', color: 'var(--ink-low)' }}>{deeperOpen ? '▾ collapse' : '▸ expand'}</span>
+              </button>
+              {deeperOpen && (
+                <div style={{ marginTop: '0.9rem' }}>
+                  {selected.deeperMath.map((block, i) => (
+                    <div key={i} style={{ marginBottom: '0.9rem' }}>
+                      {renderMd(typeof block === 'string' ? block : block.content, { fontSize: '0.88rem', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }, selected.figures || {})}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           <div style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '10px',
             padding: '1.1rem 1.25rem', marginBottom: '1.25rem' }}>

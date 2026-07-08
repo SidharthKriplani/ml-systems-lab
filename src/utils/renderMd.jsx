@@ -1,4 +1,13 @@
 import React from 'react'
+import { GLOSSARY, GLOSSARY_PATTERN } from '../data/glossary'
+import { GlossaryTerm } from '../components/foundations/GlossaryTerm'
+
+// One shared alternation regex for the whole app lifetime — `.split()` on a
+// global RegExp doesn't carry mutable state (unlike `.exec()`/`.test()`), so
+// reuse across renderMd calls is safe. `\b` boundaries only work reliably
+// because every glossary key starts/ends on a plain word character — see
+// src/data/glossary.js header for why symbol-only terms are excluded.
+const GLOSSARY_RE = GLOSSARY_PATTERN ? new RegExp(`\\b(${GLOSSARY_PATTERN})\\b`, 'gi') : null
 
 // Convert LaTeX macros → Unicode symbols + HTML sup/sub tags
 // Returns an HTML string safe to use with dangerouslySetInnerHTML
@@ -109,6 +118,11 @@ function texToHtml(str) {
 
 export function renderMd(text, containerStyle = {}, figures = {}) {
   if (!text) return null
+  // Module-scoped "wrap only the first occurrence" tracking — one Set per
+  // renderMd() call. Each module body is a single renderMd invocation, so
+  // this naturally resets per module render and is shared across every
+  // renderInline() call within it (lede, regular paragraphs, callouts).
+  const usedGlossaryTerms = new Set()
   const blocks = text.split(/\n\n+/)
   return (
     <div style={containerStyle}>
@@ -184,7 +198,7 @@ export function renderMd(text, containerStyle = {}, figures = {}) {
                 textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: '0.4rem',
               }}>Common Misconception</div>
               <div style={{ fontSize: 'inherit', lineHeight: 1.65, color: 'var(--ink-mid)' }}>
-                {renderInline(trimmed)}
+                {renderInline(trimmed, usedGlossaryTerms)}
               </div>
             </div>
           )
@@ -205,7 +219,7 @@ export function renderMd(text, containerStyle = {}, figures = {}) {
               margin: '1.1rem 0',
             }}>
               <p style={{ margin: 0, fontSize: 'inherit', color: 'var(--ink-mid)', lineHeight: 1.65 }}>
-                {renderInline(trimmed)}
+                {renderInline(trimmed, usedGlossaryTerms)}
               </p>
             </div>
           )
@@ -215,7 +229,7 @@ export function renderMd(text, containerStyle = {}, figures = {}) {
         if (i === 0) {
           return (
             <p key={i} style={{ marginBottom: '1rem', lineHeight: 1.75, color: 'var(--ink-hi)' }}>
-              {renderInline(trimmed)}
+              {renderInline(trimmed, usedGlossaryTerms)}
             </p>
           )
         }
@@ -223,7 +237,7 @@ export function renderMd(text, containerStyle = {}, figures = {}) {
         // ── Regular paragraph
         return (
           <p key={i} style={{ marginBottom: '1rem', lineHeight: 1.7 }}>
-            {renderInline(trimmed)}
+            {renderInline(trimmed, usedGlossaryTerms)}
           </p>
         )
       })}
@@ -243,7 +257,7 @@ const mathStyle = {
   display: 'inline',
 }
 
-function renderInline(text) {
+function renderInline(text, usedGlossaryTerms) {
   // Split on **bold**, `code`, and $equation$
   const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`|\$[^\$\n]+\$)/g)
   return parts.map((part, i) => {
@@ -274,6 +288,28 @@ function renderInline(text) {
         />
       )
     }
-    return part
+    // Plain-text piece (not bold/code/math) — second pass: glossary terms.
+    return applyGlossary(part, i, usedGlossaryTerms)
+  })
+}
+
+// Second regex pass over a plain-text piece of renderInline's split, run
+// ONLY on pieces that are not already **bold**/`code`/$math$ JSX. Wraps the
+// FIRST occurrence of each glossary term (tracked via the `usedGlossaryTerms`
+// Set that renderMd() creates once per module render) in <GlossaryTerm>;
+// every later occurrence — of that same term, in that same module — passes
+// through as plain text so the prose doesn't get cluttered with repeats.
+function applyGlossary(text, keyPrefix, usedGlossaryTerms) {
+  if (!GLOSSARY_RE || !text || !usedGlossaryTerms) return text
+  const pieces = text.split(GLOSSARY_RE)
+  if (pieces.length === 1) return text
+  return pieces.map((piece, j) => {
+    const lower = piece.toLowerCase()
+    const entry = GLOSSARY[lower]
+    if (entry && !usedGlossaryTerms.has(lower)) {
+      usedGlossaryTerms.add(lower)
+      return <GlossaryTerm key={`${keyPrefix}-gt-${j}`} display={piece} entry={entry} />
+    }
+    return piece
   })
 }

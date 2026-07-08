@@ -422,3 +422,438 @@ interactive files is borderline-small but not egregious — a full sweep needs a
 change repo-wide, out of scope this pass. All touched files esbuild-verified clean.
 
 **Not pushed.** Same standard MSL git workflow as above.
+
+## 2026-07-08 (session cont.) — Deep Learning foundation triage vs 3B1B (all 14 modules)
+
+Ran the same 3B1B-STANDARD.md condensed triage used on GSL this session against MSL's
+`src/data/foundations/deepLearningModules.js` (14 modules), per user decision that MSL should also be
+measured against 3B1B rather than CONTENT-AUDIT-RUBRIC alone. MSL has no `groundUp`/`explanation`/
+`scenario` field names — mapped `summary` (intro) → groundUp's role, the main prose → explanation's role,
+closing "NOT this" paragraphs → scenario's role, for the purpose of applying the same 4 checks.
+
+**Architecture check (relevant to trusting this triage):** confirmed MSL's Deep Learning file is a single
+flat exported array (`DEEP_LEARNING_MODULES`), imported directly by `DeepLearningFoundationTab.jsx` — NO
+multi-file spread/merge system the way GSL's `foundationsRunnerData.js` has. So the GSL-class bug (a good
+newer definition silently overridden by an older duplicate spread in later) **cannot occur in this file**.
+Found 3 same-title hits in other files (`foundationsSimplify.js`, `quizData.js`, `evalRubrics.js`,
+`drills/deepLearning.js`) but confirmed these are separate systems (simplified summaries, quiz bank, eval
+rubrics, drill exercises) referencing the same topic name, not competing module definitions — no override
+risk. **Not yet done:** this single-file check does not cover MSL's other ~18 foundation-family files
+(stats/exp/metrics/rca don't apply, but the other ML-systems families do) for an analogous pattern — open,
+unscheduled.
+
+### Needs a fix pass, priority order (by how sharp/high-value the gap is):
+1. **Attention Mechanism** — reproduces GSL's `attention` module's exact pre-fix bugs: Q/K/V origin never
+   explained (no mention of W_Q/W_K/W_V learned-projection origin), zero worked numeric example anywhere
+   (no toy Q·K dot product, no real softmax output — unlike its own CNN/RNN siblings in this same file),
+   term named the instant the problem is posed with no prior concrete instance, no metaphor at all. Given
+   GSL's fix for the identical problem already exists as a template, this is the fastest high-value port.
+2. **Fine-Tuning Strategies** — sharpest single violation in the whole set: `**LoRA: train a tiny add-on,
+   freeze the rest.**` and the QLoRA heading both name the technique in the section HEADING itself before
+   any concrete instance is shown. No metaphor anywhere. The 4096×4096/rank-8/65K-param worked example
+   itself is good — keep it, fix only the naming order + add a metaphor.
+3. **DL Model Serving** — same heading-names-first bug on speculative decoding (`**Speculative decoding:
+   guess ahead, verify in bulk.**`). Batching section is actually excellent (real "delivery truck" metaphor,
+   correctly demonstrated then named) — don't touch that part. Three techniques (batching/KV-cache/spec-
+   decoding) read as separate fragments rather than one carried example — consider whether that's
+   acceptable (distinct claims, same judgment call made for GSL's `tokenizer`) or needs consolidation.
+4. **Deep Learning Optimisers** — no formulas anywhere: Adam/RMSProp/AdaGrad described purely in prose,
+   no `v_t`/`m_t`/update-rule ever written out despite this being formula-native, senior-interview content.
+   No worked numeric example. No metaphor.
+5. **Convolutional Neural Networks** — jargon-first (`"Convolution is the solution... A 3×3 filter slides
+   across the image"` — term and mechanism in the same breath), no metaphor at all (contrast with this
+   same file's later "gradient highway" language, used elsewhere but not here), hierarchy claim
+   (edges→corners→shapes→objects) and receptive-field growth asserted, never traced through one example.
+6. **Pre-training & Transfer Learning** — no metaphor (closest is one abstract line, "region of parameter
+   space," never developed into a scene); opens as a fresh scenario with no bridge to what the prior
+   module in this file's sequence established. The radiology worked example (0.61→0.87 AUC) is good, keep.
+7. **DL Training Failure Modes** — crisis-first opening is genuinely well-built and correctly withholds
+   jargon, vanishing/exploding gradients correctly demonstrated (10×/10,000× ratio) before naming — but
+   the "quick lookup" failure-mode section is four separate one-sentence vignettes, never one worked trace
+   through a concrete toy model the way modules 1 and 3 (Neural Net Fundamentals, Backprop) do. No metaphor.
+8. **Activation Functions** — real rule-10 violation: re-derives vanishing gradients almost verbatim from
+   Backpropagation's own numbers (`~0.25¹⁰ ≈ one-in-a-million`, same as Backprop's identical phrase) with
+   zero recall-signal framing ("as you saw," "recall") — restates as new instead of activating recall.
+   Also: Backprop's own closing explicitly promises this module picks up on "dead neurons," but it instead
+   re-opens with a fresh vanishing-gradient crisis — the specific handoff isn't honored.
+
+### Reasonably clean, no action needed (verified, not just triaged):
+- **Neural Network Fundamentals** — XOR is a genuine running example threaded through summary/keyPoints/
+  recap. One real gap: universal approximation theorem is asserted ("can approximate any continuous
+  function... astronomically many neurons") with no concrete number or worked contrast — minor.
+- **Backpropagation** — **numbers independently re-verified by hand this session**: z1=[0.45,0.5],
+  a2≈0.516, loss≈0.234, sigmoid'(z2)≈0.25 all confirmed correct; the "W2≈−0.115, W1≈−0.109 — almost the
+  same size" claim checks out as mean-|gradient| (W2 mean 0.115 from −0.109/−0.121; W1 mean-abs 0.109 from
+  −0.169/−0.085/0.121/0.060). **The previously-logged "6.6× gradient shrink" bug is confirmed fixed — no
+  numerical error remains.** Only a minor jargon-order nit (term named before the numeric walkthrough runs).
+- **Batch Normalisation & Regularisation** — good crisis-first structure (moving-target scenario before
+  naming), reasonably developed metaphor. Gap: no worked numeric computation anywhere (no actual mean/
+  variance/γ/β example) — the one thing worth adding, not a full rewrite.
+- **RNNs & LSTMs** — strongest of the CNN/RNN pair: vanishing gradient demonstrated with real numbers
+  (0.5⁴=0.0625, 0.5²⁰≈10⁻⁶) *before* LSTM is named — correct crisis→inevitability. Gap: the "gradient
+  highway" metaphor GSL's register would want only shows up in takeaway/recap, never in the summary itself
+  where the teaching actually happens — arrives too late to do its job.
+- **Transformer Architecture** — best continuity in the whole set: explicitly recalls the RNN/CNN module's
+  residual discussion ("exactly the vanishing-gradient fix from earlier"), correct crisis→term sequencing
+  for positional encoding. Gap: no worked numeric trace anywhere (FFN's "4×" width and RoPE are asserted,
+  never computed) — same gap as Attention, lower severity since the rest of the module is solid.
+- **Quantisation & Model Efficiency** — best of all 14. Real sustained metaphor ("256 evenly spaced
+  buckets") that survives into the outlier-handling section and cashes out precisely every time. Behavior
+  shown before "quantization" is used as a load-bearing term. One clean worked example throughout.
+
+### Method note (mirrors the GSL entry — do not re-litigate)
+Structural check (single-file, no multi-source override risk) is done and closed for this file specifically.
+Editorial/qualitative verdicts above rest on a single triage agent's read each — not independently
+re-verified line-by-line except where explicitly marked "verified" (Backprop's numbers). Treat the 8
+"needs work" items as the actionable list; the 6 "reasonably clean" items need at most the one gap noted
+per module, not a rewrite.
+
+---
+
+## Hover/tap glossary for foundation modules — 2026-07-08 (Task 1 of a 3-lab glossary rollout)
+
+Built a hover (desktop) / tap (mobile) glossary for the 19 foundation families (~206 modules): a defined
+technical term anywhere in a rendered module's prose gets a dotted underline; hovering or tapping pops a
+short definition plus a "→ Full lesson: <module title>" pointer to where it's fully taught.
+
+**Mechanism — single injection point, zero changes to the 19 `*FoundationTab.jsx` files or any
+`*Modules.js` data file.** All 19 tabs already route prose through one shared renderer,
+`src/utils/renderMd.jsx`. Its `renderInline()` splits paragraph text on `**bold**`/`` `code` ``/`$math$`
+and maps each piece; the plain-text pieces (the `else` branch, previously `return part`) now get a
+second regex pass via a new `applyGlossary()` helper, which runs `text.split(GLOSSARY_RE)` (one
+alternation regex built from every glossary key, longest-first so phrases like "pr-auc" are tried before
+"auc") and wraps any matched, not-yet-seen term in `<GlossaryTerm>`. "First occurrence only" is tracked
+with a `Set` (`usedGlossaryTerms`) declared once at the top of `renderMd()`'s body and threaded through
+all 4 of its `renderInline()` call sites (lede paragraph, regular paragraphs, the two callout blocks) —
+since each module body is one `renderMd()` call, the Set naturally resets per module render and is shared
+across the whole body, giving "wrap first mention per module" for free.
+
+**Files:**
+- `src/data/glossary.js` (new) — `GLOSSARY` dict (key = lowercase match string → `{term, def,
+  sourceModuleId, sourceModuleTitle, sourceTabId}`), `GLOSSARY_KEYS_SORTED` (longest-first), and
+  `GLOSSARY_PATTERN` (the escaped alternation string, consumed by renderMd.jsx to build the actual
+  RegExp). Matching only works reliably for terms whose first/last char is a plain word character —
+  documented in the file header why symbol-only terms (e.g. "R²") were deliberately excluded rather than
+  key'd, since `\b` can't bound a match ending in a non-word unicode symbol.
+- `src/components/foundations/GlossaryTerm.jsx` (new) — dotted-underline `<span>`, hover
+  (mouseenter/mouseleave) or tap-toggle (onClick, works for touch since touch fires a click event too;
+  outside-click/outside-touch listener closes it), popover positioned `absolute` above the term (no
+  portal needed — didn't observe clipping in the foundation-tab layout). Theme-matched to
+  `renderMd.jsx`'s existing palette (`--prime`, `--depth`, `--rim`, `--ink-hi`, `--ink-mid`, `--ink-low`,
+  `--font-mono`). Co-located with `CheckQuestion.jsx` per the existing shared-component convention.
+- `src/utils/renderMd.jsx` (edited) — imports `GLOSSARY`/`GLOSSARY_PATTERN`/`GlossaryTerm`; builds
+  `GLOSSARY_RE` once at module scope; `renderMd()` declares `usedGlossaryTerms`; `renderInline()` now
+  takes a second param and its final plain-text branch calls the new `applyGlossary()` instead of
+  returning the raw string.
+
+**Seed data — 22 terms from 3 already-S-tier modules** (per this file's own S-tier callouts):
+- `linear_regression` (`classicalMLModules.js`, family `classical_ml_foundation`) — 9 terms: least
+  squares, residual, mean squared error, collinearity, heteroscedasticity, leverage, Cook's distance,
+  Gauss-Markov theorem, ordinary least squares.
+- `auc_roc` (`evalModules.js`, family `eval_foundation`) — 6 terms: true positive rate, false positive
+  rate, AUC, PR-AUC, calibration, Mann-Whitney U statistic.
+- `cross_validation` (`evalModules.js`, family `eval_foundation`) — 7 terms: k-fold cross-validation,
+  stratified k-fold, group k-fold, walk-forward validation, purge gap, nested cross-validation, data
+  leakage.
+
+Each definition is a trimmed version of the sentence that first introduces the term in that module's
+actual prose (not invented).
+
+**Pointer status: LABEL-ONLY, not clickable, this pass — flagged as the natural follow-up.** Real
+in-app navigation to a specific module already exists and works (`onNavigate(tabId, moduleId)` →
+`goTo()` in `App.jsx` → `pendingOpen` → `openModuleId` prop, already consumed by e.g.
+`ClassicalMLFoundationTab.jsx`). But wiring it into `GlossaryTerm` would require threading an
+`onNavigate` prop from each `*FoundationTab.jsx` through `renderMd()`/`renderInline()` down to
+`GlossaryTerm` — i.e. editing all 19 tab files, exactly the surface this task was scoped to leave
+untouched (the whole point of the single-injection-point design). Left as plain text: "→ Full lesson:
+<module title>".
+
+**Verify (esbuild@0.21.5, sandbox):** `src/utils/renderMd.jsx`, `src/data/glossary.js`, and
+`src/components/foundations/GlossaryTerm.jsx` all bundle clean in isolation (the 3 files this task's
+verify step named). Also spot-checked two full consuming tab files
+(`ClassicalMLFoundationTab.jsx`, `EvalFoundationTab.jsx`) — both surfaced a **pre-existing, unrelated**
+esbuild parse error in `deepLearningModules.js` (a backtick-inside-template-literal at
+`clip_grad_norm_`, transitively pulled in via `foundationsModuleIndex.js`'s all-modules search index)
+plus pre-existing duplicate-`interactiveId`-key warnings in several `*Modules.js` files — neither is
+caused by or related to this glossary change; both exist independent of it and are out of this task's
+scope to fix.
+
+Not pushed — no git commands run, per instructions for this task.
+
+---
+
+## Deep Learning 3B1B writer pass + Go-Deeper skeleton pilot + recap coverage check — 2026-07-08 (later still)
+
+Executed the writer pass (Pass 1 only, per `3B1B-STANDARD.md` — no adversarial Pass 2 run, that needs a
+genuinely separate reviewer) against the 8 modules this file's own earlier triage (`2026-07-08 (session
+cont.) — Deep Learning foundation triage vs 3B1B`, above) flagged as needing work, in the priority order
+that entry gave. All edits confined to `src/data/foundations/deepLearningModules.js` (content) and
+`src/tabs/foundations/DeepLearningFoundationTab.jsx` (Go-Deeper skeleton only).
+
+**8 modules fixed, in priority order:**
+1. **Attention** — added the Q/K/V origin (W_Q/W_K/W_V are learned matrices, trained by the same
+   backprop as every other weight — stated at first appearance per voice rule 12), a library-catalog
+   metaphor for Q/K/V plus a paint-blending metaphor for the attention operation itself, and a full
+   worked numeric example: 2-dim toy embeddings, real W_Q/W_K/W_V, computed q_bank=[1,3],
+   k_The/k_bank/k_river=[1,1]/[2,0]/[4,2], raw scores 4/2/10, scaled scores 2.83/1.41/7.07, softmax
+   weights 1.4%/0.3%/98.2%, blended output ≈[1.98,1.97] (≈v_river=[2,2]) — every number independently
+   recomputed in Node, not eyeballed. Also fixed the term-named-before-demonstration issue (two concrete
+   disambiguation instances — riverbank vs. financial bank — before naming "attention") and gave the
+   module a specific continuity opening naming the LSTM module's ~200-step ceiling. Populated
+   `deeperMath` (see below) with the Var(q·k)=d_k derivation, the exact softmax Jacobian
+   p_i(δ_ij−p_j), and the 4·d_model² multi-head parameter identity — all re-verified by hand/Node.
+2. **Fine-Tuning Strategies** — removed the heading-names-the-technique-first violation on both LoRA and
+   QLoRA; added a "sticky note on a textbook page" metaphor; LoRA's 4096×4096/rank-8/65,536-param/99.6%
+   numbers preserved exactly, now introduced before the term "LoRA" instead of after; QLoRA reframed as a
+   second crisis (frozen base still ~140GB) → fix → name, instead of a pre-named heading.
+3. **DL Model Serving** — fixed the same heading-first violation on speculative decoding only (the
+   batching section was already flagged as excellent and left untouched); now poses "every token, even
+   easy ones, pays for a full pass" as the crisis before naming the technique. Left the
+   batching/KV-cache/speculative-decoding three-part structure as distinct fragments — a deliberate,
+   noted judgment call (same class of call already made and logged for GSL's `tokenizer` module).
+4. **Deep Learning Optimisers** — the biggest gap (zero formulas, zero worked numbers, no metaphor).
+   Added: a "hiker with a terrain-sensing cane" metaphor; the actual AdaGrad/RMSProp/Adam update rules
+   (v_t, m_t, bias correction, the real w_t update); a worked AdaGrad trace (busy weight v_3=3 vs. a rare
+   weight still at v=1 after 99 silent steps — both recomputed); and an Adam bias-correction trace for
+   step 1 (g_1=1.0 → m_1=0.1, v_1=0.001 → m̂_1=v̂_1=1.0 → update ≈ −η already, explaining *why* Transformer
+   warmup exists, not just asserting that it does) — every number re-verified in Node.
+5. **Convolutional Neural Networks** — added a stencil metaphor (a reusable cut-out pattern held over any
+   patch of a surface) developed *before* naming "convolution," fixing the jargon-first opening; all
+   original numbers (100,352 params, 9-weight filter, 11×11 receptive field at layer 5) preserved exactly.
+6. **Pre-training & Transfer Learning** — added a specific continuity opening naming the Transformer
+   module's architecture focus as what this module does NOT cover; developed the previously-undeveloped
+   "region of parameter space" line into a full mountain-range/base-camp/short-hike metaphor tied
+   concretely back to the 0.61→0.87 AUC numbers (the from-scratch stall = a random fog-drop with only
+   500 tries; pre-training = a helicopter ride to base camp).
+7. **DL Training Failure Modes** — added an ER-doctor "check pulse and breathing before the specific
+   complaint" metaphor, plus a continuity line from Model Serving; replaced the four disconnected
+   one-sentence vignettes with one continuous worked debugging trace on a single toy classifier (loss
+   frozen at log(2)=0.693 → traced to a stray `.detach()` → fixed, single-batch loss to 0.02 → rerun full
+   training → NaN at step 47, gradient norm 8.2→41.6→NaN → traced to missing clipping → fixed, loss to
+   0.19 by epoch 10), with the remaining two failure modes kept as a short compact pair rather than forced
+   into the same narrative (both real numbers, not scattered abstractions).
+8. **Activation Functions** — fixed the real rule-10 violation: the module now opens by explicitly
+   honoring Backprop's own promised handoff ("ReLU trades vanishing gradients for the dead neuron — that's
+   where this module starts") instead of re-deriving the 0.25¹⁰ vanishing-gradient fact as if new; the
+   sigmoid-saturation recap of that fact is now framed with explicit recall language ("As you saw in
+   Backprop…") per voice rule 10, and the dead-neuron section explicitly contrasts itself against the
+   vanishing-gradient failure it was just recalled from ("a different failure... not the signal shrinking
+   everywhere, but going *exactly, permanently* zero for one neuron").
+
+**Not touched:** `keyPoints` and `checkQuestions` on all 8 modules (out of scope per 3B1B — narrative-only
+rewrite); the 6 modules this file's own triage called "reasonably clean."
+
+**A bug I introduced and then fixed, flagging for the record:** one of my edits to the `dl_debugging`
+narrative used un-escaped literal backticks around `.detach()`, `clip_grad_norm_`, and `log(0)` inside the
+`summary` template literal (itself backtick-delimited) — the exact "GradientTab-class hazard" this file's
+`recsysModules.js` entry already warned about. Caught it myself via the mandated esbuild verification
+step and fixed it (removed the inner backticks, kept the code terms as plain text) before moving on. Note
+for whoever reads the concurrent **Hover/tap glossary** entry directly above this one: its "pre-existing,
+unrelated esbuild parse error... at `clip_grad_norm_`" callout was very likely this exact bug, caught
+mid-flight while both sessions were editing the repo at the same time — it is fixed now; re-run esbuild on
+`deepLearningModules.js` if in doubt (confirmed clean as of this entry).
+
+**Recap tightening (task 2a):** MSL already has a per-module recap mechanism — `recapMode` toggle +
+"Quick recap" button, duplicated across each `*FoundationTab.jsx` (same duplication pattern the shared
+`CheckQuestion` component replaced elsewhere) — this was NOT built new, it already existed. Tightened/
+extended the `recap` array for all 8 rewritten Deep Learning modules to reflect the new worked examples,
+metaphors, and formulas (arrow notation, bold load-bearing term, half the length of the matching
+`keyPoints` bullet, per `3B1B-STANDARD.md`'s keyword-spine standard). Spot-checked recap quality across
+3 of the other 18 families (`dataModules.js`, `monitoringModules.js`, `classicalMLModules.js` — sampled
+multiple modules per file) to decide whether a wider sweep was warranted: all sampled recaps were already
+tight, bold-term-led, arrow/formula-dense, and NOT restated-as-paragraph — already at the keyword-spine
+bar. Did not do a wholesale rewrite across the other 18 families since the sample didn't surface a real
+gap; if a genuine terse/verbose recap turns up in a family not sampled here, treat this as an open item,
+not a closed one.
+
+**Go-Deeper / academic-tier skeleton (task 2b):** Confirmed there is NO shared module-detail wrapper
+component across MSL's 19 `src/tabs/foundations/*FoundationTab.jsx` files — each duplicates its own render
+tree (Concept/Key Insight/interactivePrompt/InteractivePanel/Key Points/CheckQuestions blocks); only
+`CheckQuestion`, `HighlightPopover`, `InteractivePanel`, and `AddToTrackPopover` are shared sub-components,
+not the module-detail view itself (this matches what the highlight-to-track MVP entry already found and
+logged in root `CLAUDE.md`). Per the task's own instruction for this case, **piloted the skeleton on ONE
+family only: Deep Learning.** `DeepLearningFoundationTab.jsx` gained a `deeperOpen` state (reset alongside
+`recapMode`/`trackPopoverOpen` on module change) and a collapsed "Go Deeper — Academic" section, rendered
+only when `selected.deeperMath` exists, placed between the interactive panel and Key Points — closed by
+default. Populated `deeperMath` for the `attention` module only (3 items: the Var(q·k)=d_k derivation, the
+exact softmax Jacobian, the 4·d_model² multi-head parameter identity) as end-to-end proof the mechanism
+renders; the other 13 Deep Learning modules and all other 18 families have NO `deeperMath` field yet — this
+is a real skeleton, not a full rollout, exactly like GSL's own `deeperMath`/`rope` pilot. **A full 19-file
+rollout (each tab needs its own copy of the toggle + render block, same as the highlight-to-track MVP's
+file-by-file port) is a separate, unscoped follow-up.**
+
+**Verify:** `deepLearningModules.js` and `DeepLearningFoundationTab.jsx` both esbuild@0.21.5-clean
+individually (only pre-existing duplicate-`interactiveId`/`interactivePrompt`-key warnings, unrelated to
+this session). Also loaded the compiled `deepLearningModules.js` bundle in a real Node `import()` — all 14
+modules present, all required fields present, `attention.deeperMath.length === 3`,
+`attention.recap.length === 9` — a runtime check, not just a syntax check. Every numeric claim introduced
+this session (attention's Q/K/V trace, the softmax scaling comparison, Adam's bias-correction step,
+AdaGrad's busy-vs-rare trace, the 4·d_model² identity) was independently recomputed in Node, not accepted
+on read-through.
+
+Not pushed — no git commands run, per instructions for this task.
+
+## Item-level module hash-encoding — pilot on Deep Learning Foundations — 2026-07-08 (later still)
+
+Task: give individual foundation modules a real, shareable, refresh-safe URL (companion to GSL's own
+same-day pass — see its `docs/GSL_PLAN.md` entry). Read PAL's `src/utils/hashRouting.js`
+(`stateToHash`/`parseHash`/`RUNNER_ACTIVE_ID_KEY` pattern) as the reference, then re-read this file's own
+"2026-07-07 — browser-back fix" entry above before touching anything — that fix already gave MSL real
+`goTo(tabId, openTarget, opts)` history-pushing + a `pendingOpen`/`openModuleId` one-shot deep-link channel,
+but the module id it carries was NEVER part of the hash itself (confirmed via that entry's own note: "Module
+selection *within* a foundation tab is still not hash-encoded... full module-level routing is the
+SEO/prerender workstream"). This session is that workstream's first concrete step. Edited `src/App.jsx` +
+one pilot tab (`src/tabs/foundations/DeepLearningFoundationTab.jsx`), per scope — did not touch
+`src/data/foundations/deepLearningModules.js` (a concurrent session's content file) or
+`InterviewPrepTab.jsx`. Note: `DeepLearningFoundationTab.jsx` had already been edited concurrently by that
+same content session (added a `deeperOpen`/"Go Deeper" skeleton, logged in the entry directly above this
+one) — re-read the file fresh immediately before editing (it had drifted since an earlier read mid-task)
+and merged around the new state rather than clobbering it.
+
+**Format:** `#<tabId>/<moduleId>` — a second hash path segment, not a query param (this project already hit
+a real stale-query-param bug once, C4 above — a path segment doesn't have that failure mode).
+
+**App.jsx:**
+- `getTabFromHash()` now splits off any second segment before matching `ALL_TABS` (`hash.split('/')[0]`),
+  so a `#tabId/moduleId` hash still resolves the right tab on mount.
+- New `parseTabHash()` → `{ tabId, moduleId }`, the two-segment-aware sibling used everywhere else.
+- `setHash(tabId, moduleId = null)` — now takes an optional module id and appends it as `/moduleId` when
+  present; unchanged for callers that only pass `tabId`.
+- `pendingOpen`'s initial `useState` now calls `parseTabHash().moduleId` instead of a bare `null` — this is
+  the actual fix for "refresh loses your place": before this, `pendingOpen` (which every tab reads as its
+  `openModuleId` prop) was ALWAYS `null` at mount regardless of the URL, so even the existing My
+  Tracks/search-driven deep link couldn't survive a refresh.
+- `goTo(tabId, openTarget, opts)`'s `push !== false` branch now builds `targetUrl` including
+  `openTarget` (`'#' + tabId + (openTarget ? '/' + openTarget : '')`) — so calling `goTo` with a module id
+  from ANY caller (My Tracks, search, the pilot tab) writes a real, refresh-safe URL, not just the pilot.
+- The "Hash + localStorage sync" effect now depends on `[activeTab, pendingOpen]` (was `[activeTab]` only)
+  and calls `setHash(activeTab, pendingOpen)` — keeps the hash's module segment in sync with `pendingOpen`
+  generally, for free, across all 19 tabs (though only the pilot tab pushes real history entries on its own
+  internal selection changes — see below).
+- `onHashChange` now uses `parseTabHash()` and calls `goTo(t, moduleId, { push: false })` — browser
+  Back/Forward across a `#tabId/moduleId` transition resolves both segments, not just the tab.
+
+**DeepLearningFoundationTab.jsx (pilot):**
+- New `syncModuleHash(moduleId)` — pushes `#dl_foundation[/<moduleId>]` via `history.pushState` (a REAL
+  history entry, not `setHash`'s `replaceState`) on user-driven selection, mirroring GSL's
+  `Concepts.jsx` `syncConceptsHash`. Deliberately `pushState`, not a `location.hash=` assignment — it does
+  NOT fire `hashchange`/`popstate` itself, so it never loops back through App.jsx's own hash-sync effects;
+  only a genuine browser Back/Forward does, which is exactly what should reconcile state here.
+- Wired into the module-row click handler (`setSelectedId(next); syncModuleHash(next)`) and the "← All
+  modules" back button (adds `syncModuleHash(null)` to the non-tracks branch, left the tracks branch
+  — `onNavigate('my_tracks', ...)` — untouched, matching MSL's existing C6-equivalent behavior).
+- The existing `openModuleId` effect (which sets `selectedId` when a module is deep-linked in) now has an
+  `else if (openModuleId === null)` branch that clears `selectedId` back to `null` — needed so browser Back
+  from `#dl_foundation/<id>` to the bare `#dl_foundation` segment actually closes the module view instead of
+  leaving stale content on screen. Only fires when the `openModuleId` PROP itself transitions to `null` (a
+  real nav event via `goTo`), never during ordinary in-tab browsing (which doesn't touch `pendingOpen`/
+  `openModuleId` at all), so it can't fight with the click handler above.
+
+**Verify:** `npx -y esbuild@0.21.5` on `src/App.jsx` (full bundle) and
+`src/tabs/foundations/DeepLearningFoundationTab.jsx` (full bundle) — both clean, only pre-existing unrelated
+`duplicate-object-key` warnings from concurrent content-data files (`deepLearningModules.js`,
+`evalModules.js`, `productionModules.js`).
+
+**Working:** refresh/paste of `#dl_foundation/<moduleId>` restores the exact module; refresh of bare
+`#dl_foundation` shows the module list; browser Back/Forward walks module → module-list correctly; any
+`goTo(tabId, moduleId)` caller elsewhere in the app (My Tracks, search) now also gets a refresh-safe URL for
+free, even without its own tab doing the pilot's local pushState wiring.
+
+**Still open — the other 18 `tabs/foundations/*FoundationTab.jsx` files need the identical two changes**
+(the pilot's `syncModuleHash` helper + the two call-site edits) to get real push-on-selection and
+Back-clears-to-list behavior; without that, their module opens still work for refresh/paste (via the
+App.jsx-level `pendingOpen`/`setHash` fix, which is generic) but browser Back *within* those tabs won't
+walk module-by-module the way `dl_foundation` now does — it'll just fall back to whatever `push:false`
+`goTo` resolves to (matches the pre-existing "acceptable for now" caveat in the 2026-07-07 entry above, now
+narrowed to 18 of 19 tabs instead of all 19). Not pushed — no git commands run, per instructions for this
+task.
+
+---
+
+## Deep Learning + Recommender Systems added to the cat/q-based interview bank — 2026-07-08
+
+**Two-surface clarification (source of the original "gap" report):** MSL has two separate interview-question
+surfaces. `src/data/questionBank.js` (`TRAINER_QUESTIONS`, MCQ format, keyed by `domain`, feeds the Trainer
+tab) already had "Deep Learning" (22 Qs) and "Recommender Systems" (8 Qs) — left untouched, no duplication
+attempted there. `src/data/interviewExtra.js` (`EXTRA_QUESTIONS`, aggregates `interviewExtraFoundations.js` +
+`interviewExtraSystems.js` + `interviewExtraModeling.js`, feeds `InterviewPrepTab.jsx`'s inline `QUESTIONS`
+array) uses a `cat` field, a 3-tier depth shape (`answer`/`whatsTested`/`antiPattern`/`staffFraming`), and had
+ZERO Deep Learning and ZERO Recommender Systems cats before this session — that was the actual gap.
+
+**New files** (both exported and spread into `EXTRA_QUESTIONS` via `interviewExtra.js`):
+- `src/data/interviewExtraDeepLearning.js` — exports `EXTRA_DEEP_LEARNING`, ids 4001–4018, **18 questions**
+  (10 ported + 8 new).
+- `src/data/interviewExtraRecSys.js` — exports `EXTRA_RECSYS`, ids 5001–5020, **20 questions**
+  (16 ported + 4 new).
+- Grounded in `src/data/foundations/deepLearningModules.js` (14 modules: neural nets → backprop →
+  activations → batch norm → optimisers → CNNs → RNNs/LSTMs → attention → transformers → pretraining →
+  fine-tuning → quantisation → serving → debugging) and `src/data/foundations/recsysModules.js` (9 modules:
+  two-stage architecture → candidate generation/two-tower → learning-to-rank → features & freshness → cold
+  start → feedback loops & bias → offline/online eval → multi-objective tradeoffs → DL recsys architectures
+  → representation learning/negative sampling).
+
+**Source of the ported content:** GSL (sibling repo) extracted 73 orphaned MCQ-format interview questions
+with no home in its own product, scratch-dumped at
+`labs/genai-systems-lab/_orphaned_qbank_for_msl.json` (read-only reference, not managed by MSL, not
+deleted). A prior GSL-side pass had already determined a 42-question subset was genuine, portable
+general ML/DL/RecSys theory (the other 31 — Research Engineer rounds, Staff-judgment calls, "FDE build
+round survival," Indic-NLP-for-Sarvam/Krutrim — are GSL-career-specific and were correctly excluded from
+both products; see full id list below). Each ported question was reformatted from GSL's MCQ shape
+(`question`/`options`/`correct`/`explanation`/`trap`) into this bank's shape: `question`→`q`, `options`+
+`correct`+`explanation` folded into a mechanism-level `answer`, `trap` used as raw material for
+`antiPattern`, and a **freshly written** `staffFraming` in this bank's own voice (not GSL's `explanation`
+copy-pasted) — calibrated against this file's existing Deep-Learning-adjacent and Evaluation-cat sibling
+questions for depth.
+
+**Routing of the 42 ported ids (final cat assignment):**
+| Destination | ids | count |
+|---|---|---|
+| Deep Learning | ml-theory-2,3,4,10,12 · firstp-2,3,4,6 · bayesext-4 | 10 |
+| Recommender Systems | mlsysdesign-2,3 · firstp-5 · restaste-4 · reco-1..12 | 16 |
+| Evaluation (existing cat) | ml-theory-1,5,9,11 · restaste-2,3 · bayesext-1,2,5 | 9 |
+| Statistics (existing cat) | ml-theory-6,7 · restaste-1 · bayesext-3 | 4 |
+| Regression (existing cat) | ml-theory-8 · firstp-1 | 2 |
+| System Design (existing cat) | mlsysdesign-1 | 1 |
+| **Total ported** | | **42** |
+
+Reasoning for the non-Deep-Learning routing: these 12 ids tested content with no deep-learning mechanism in
+them at all (MSE/MAE outlier diagnosis, val-vs-prod accuracy debugging, multiple-comparison/McNemar
+statistics, ablation-study rigor, precision/recall business-cost framing, L1/L2 sparsity, benchmark
+contamination, Goodhart's Law, collider bias, conformal prediction/calibration, EM/GMM was the one
+default-to-DL exception — no old cat fit it either) — forcing them into Deep Learning would have been a
+content-quality error, so they went to whichever old cat (Evaluation/Statistics/Regression/System Design)
+or new cat (Recommender Systems, for anything that was clearly ranking/RecSys-specific: position bias in
+LTR, sponsored-slot insertion, BPR, CTR-gaming-in-recs) actually matched the content. This reading extends
+the letter of "route to an already-existing cat if clearly better" to include Recommender Systems, since
+that cat was being built out in this exact same batch (per the task's own Step 3) and forcing recsys-only
+content like BPR into "Deep Learning" would have been strictly worse than the alternative.
+
+**31 GSL ids deliberately NOT ported** (already correctly excluded on the GSL side, not re-added here):
+`hightc-1..3`, `re-1..10`, `staff-1..8`, `fde-1..5`, `indic-1..5` — Research-Engineer-round, Staff-judgment,
+FDE-build-round, and Indic-NLP-for-Sarvam/Krutrim content that is GSL-career-specific and doesn't fit a
+Deep Learning or Recommender Systems cat in any product.
+
+**New-written questions** (not ported, grounded directly in the foundation module content, distinct
+scenarios from both the ported set and from `TRAINER_QUESTIONS`' existing DL/RecSys MCQs — skimmed
+`questionBank.js` ids 13–15, 43–45, 85–90 first to avoid restating the same scenarios, e.g. gradient
+checkpointing and BatchNorm-vs-LayerNorm already appear there twice, so the new DL entries on those topics
+are framed as distinct decision/debugging scenarios rather than repeat MCQs):
+- Deep Learning (8): dying ReLU diagnosis, vanishing-gradient debugging methodology, weight initialisation
+  schemes (Xavier/He), mixed-precision training tradeoffs, BatchNorm-vs-LayerNorm as an architecture
+  decision, gradient-checkpointing placement strategy, backprop-through-time/exploding gradients in RNNs,
+  loss-spike/NaN debugging.
+- Recommender Systems (4): multi-objective value-model blending (engagement/diversity/revenue), sequential
+  vs. matrix-factorization architecture choice per product surface, embedding-table serving at scale
+  (sharding/quantization/hot-cold tiering), offline-online evaluation-gap diagnosis for a staged pipeline
+  (distinct cause from the ported reco-3 diversity-tradeoff question — this one is a funnel-consistency
+  failure between retrieval and ranking).
+
+**Final counts:** Deep Learning = 18 (10 ported + 8 new). Recommender Systems = 20 (16 ported + 4 new).
+
+**Verify:** id range 4001–4018 / 5001–5020 checked for collisions against all of
+`src/data/interviewExtra*.js` (1001–1030, 2001–2026, 3001–3030 already in use) — none found. All three
+touched/created files (`interviewExtra.js`, `interviewExtraDeepLearning.js`, `interviewExtraRecSys.js`)
+bundle clean via `npx -y esbuild@0.21.5 --bundle --format=esm --loader:.jsx=jsx --external:react
+--external:react-dom --external:react/jsx-runtime --outfile=/dev/null`. `InterviewPrepTab.jsx` and
+`questionBank.js` were not touched (out of scope per this task's instructions). Not pushed — no git
+commands run.
