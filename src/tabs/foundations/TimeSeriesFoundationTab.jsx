@@ -3,6 +3,7 @@ import { tierOf, TIER_STYLE } from '../../data/moduleTiers.js'
 import { AddToTrackPopover } from '../../components/tracks/AddToTrackPopover.jsx'
 import { getTracksForModule } from '../../utils/tracks.js'
 import { renderMd } from '../../utils/renderMd'
+import { CheckQuestion } from '../../components/foundations/CheckQuestion'
 import { TIME_SERIES_MODULES } from '../../data/foundations/timeSeriesModules.js'
 import { InteractivePanel } from '../../components/interactive/InteractivePanel'
 import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '../../utils/foundations/timeSeriesFoundationProgress.js'
@@ -244,56 +245,6 @@ export function TimeSeriesFoundationTab({ onNavigate, openModuleId, navOrigin })
 
           <MarkDoneButton moduleId={selected.id} onDone={() => setTick(t => t + 1)} />
         </div>
-      )}
-    </div>
-  )
-}
-
-function CheckQuestion({ q, options, answer }) {
-  const [selected, setSelected] = useState(null)
-  const letters = ['A', 'B', 'C', 'D']
-  return (
-    <div style={{ marginBottom: '1.25rem', paddingBottom: '1.25rem', borderBottom: '1px solid var(--rim)' }}>
-      {renderMd(q, { fontSize: '0.875rem', fontWeight: 600, color: 'var(--ink-hi)', marginBottom: '0.65rem', lineHeight: 1.5 })}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-        {options?.map((opt, i) => {
-          const letter = letters[i]
-          const isCorrect = letter === answer
-          const isChosen = selected === letter
-          let bg = 'transparent'
-          let border = '1px solid var(--rim)'
-          let color = 'var(--ink-mid)'
-          if (selected) {
-            if (isChosen && isCorrect)  { bg = 'rgba(34,197,94,0.12)'; border = '1px solid rgba(34,197,94,0.5)'; color = 'var(--ink-hi)' }
-            if (isChosen && !isCorrect) { bg = 'rgba(239,68,68,0.1)';  border = '1px solid rgba(239,68,68,0.4)';  color = 'var(--ink-hi)' }
-            if (!isChosen && isCorrect) { bg = 'rgba(34,197,94,0.08)'; border = '1px solid rgba(34,197,94,0.35)'; color = 'var(--ink-mid)' }
-          }
-          return (
-            <div
-              key={letter}
-              onClick={() => { if (!selected) setSelected(letter) }}
-              style={{
-                padding: '0.5rem 0.75rem', borderRadius: '7px', cursor: selected ? 'default' : 'pointer',
-                background: bg, border, color, fontSize: '0.85rem', lineHeight: 1.5, transition: 'all 0.15s',
-                display: 'flex', gap: '0.5rem', alignItems: 'flex-start',
-              }}
-              onMouseEnter={e => { if (!selected) e.currentTarget.style.background = 'var(--surface)' }}
-              onMouseLeave={e => { if (!selected) e.currentTarget.style.background = 'transparent' }}
-            >
-              <span style={{ fontWeight: 700, flexShrink: 0, opacity: 0.7 }}>{letter}</span>
-              {renderMd(opt.replace(/^`?[ABCD]\)\s*/, '').replace(/`$/, ''), {})}
-            </div>
-          )
-        })}
-      </div>
-      {selected && (
-        <button
-          onClick={() => setSelected(null)}
-          style={{ marginTop: '0.6rem', fontSize: '0.72rem', color: 'var(--ink-low)', background: 'none',
-            border: '1px solid var(--rim)', borderRadius: '5px', padding: '0.25rem 0.6rem',
-            cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
-          Try again
-        </button>
       )}
     </div>
   )

@@ -311,3 +311,70 @@ generically from `App.jsx`. Fixed:
 
 **Verify:** all 8 touched files (App.jsx + 6 tabs + this entry's prerender scripts) esbuild@0.21.5-clean;
 only pre-existing unrelated duplicate-key warnings in App.jsx. NOT pushed.
+
+---
+
+## MCQ length-tell fix + CheckQuestion consolidation — 2026-07-08
+
+Companion to the same-day GSL quiz-rebalance fix and root `CONTENT-AUDIT-RUBRIC.md`. Two changes:
+
+**1. Shared `CheckQuestion` component.** New file `src/components/foundations/CheckQuestion.jsx` replaces
+the `CheckQuestion` function that was duplicated verbatim across all 19 `src/tabs/foundations/*FoundationTab.jsx`
+files. All 19 now `import { CheckQuestion } from '../../components/foundations/CheckQuestion'` instead of
+defining it locally — JSX call sites (`<CheckQuestion q={...} options={...} answer={...} />`) unchanged, so
+existing single-letter `answer: 'A'` questions render identically. New capability: `answer` can also be an
+array of letters (`['A','C']`) for a "Select all that apply" multi-select question — checkbox UI, a "Check
+answer" button (since multiple picks are needed before grading), exact-set correctness. esbuild-verified
+clean on all 19 tab files + the shared component itself.
+
+**2. MCQ length-tell fix, all 19 `src/data/foundations/*Modules.js` files.** Same bug pattern as GSL: each
+module's `checkQuestions` quiz had its correct option almost always the longest/most-detailed of the 4 —
+guessable without reading. Built `_verify_mcq_balance.mjs` (repo root, untracked) — bundles a data file via
+`npx -y esbuild@0.21.5` (this repo's own `node_modules/esbuild` is a macOS binary synced from the user's
+Mac and crashes in the Linux sandbox — always route through npx), measures option character lengths
+(stripping the literal backtick-wrapped `A)`/`B)` prefix), flags a question if the correct option is the
+single longest OR its length exceeds the wrong-options' average by >20%. Baseline full-repo sweep: 795
+questions, 781 flagged (98.2%). Fixed all 19 files by hand (trim over-long correct answers, expand
+under-detailed distractors with plausible-but-wrong technical claims, correct answer letter never changed)
+in 4 parallel batches, iterating per-file against the script until at/under the ~30% target, PLUS exactly
+one `checkQuestions` entry per module converted to multi-select (`answer: ['X','Y']`) per the user's
+"at least one multi-option question per module" rule.
+
+Final full-repo verification (re-run independently after all batches, not trusted from agent self-report —
+this is the exact lesson learned from GSL's failed first pass):
+
+| File | Flagged after |
+|---|---|
+| banditsModules.js | 0/22 (0.0%) |
+| causalModules.js | 7/28 (25.0%) |
+| classicalMLModules.js | 14/59 (23.7%) |
+| dataModules.js | 13/57 (22.8%) |
+| deepLearningModules.js | 0/28 (0.0%) |
+| evalModules.js | 0/50 (0.0%) |
+| graphMLModules.js | 0/20 (0.0%) |
+| mathStatsModules.js | 0/36 (0.0%) |
+| monitoringModules.js | 0/16 (0.0%) |
+| optimizationModules.js | 7/42 (16.7%) |
+| pricingModules.js | 1/14 (7.1%) |
+| probabilisticMLModules.js | 1/19 (5.3%) |
+| productionModules.js | 0/33 (0.0%) |
+| recsysModules.js | 7/26 (26.9%) |
+| rlModules.js | 0/22 (0.0%) |
+| selfSupervisedModules.js | 3/23 (13.0%) |
+| systemDesignModules.js | 0/30 (0.0%) |
+| timeSeriesModules.js | 5/25 (20.0%) |
+| unsupervisedModules.js | 0/39 (0.0%) |
+
+All 19 files at or well under the ~25-35% chance-level target (several at 0%, meaning the strict
+longest-option rule never trips — expected given the rule's strictness, not itself a red flag). Every
+module across all 19 files got exactly one multi-select conversion (matches module-count per file).
+esbuild plain syntax-check clean on all 19 data files.
+
+A couple of subagents flagged pre-existing (not introduced by this pass), separate answer-key correctness
+concerns spotted while rebalancing — `hypothesis_testing` and `sampling_distributions` in
+mathStatsModules.js, `ablation` in evalModules.js — left untouched since the task scope was length-balance
+only, not answer-key correctness. Worth a follow-up content-correctness pass if wanted (see root
+`CONTENT-AUDIT-RUBRIC.md` category 4, unverified/incorrect factual claim).
+
+**Not pushed.** Standard MSL git workflow — `rm -f .git/index.lock .git/HEAD.lock` before staging,
+`git add src/ docs/` (never touch anything outside those), hand to Sidharth's Mac for build+push.

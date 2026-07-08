@@ -28,42 +28,42 @@ NOT this: RL is only for games and robotics. Any sequential decision problem wit
       {
         q: `Why does the optimal policy for a finite-horizon MDP depend on the time remaining t, while the optimal policy for an infinite-horizon discounted MDP does not?`,
         options: [
-          `A) Finite-horizon MDPs use a different reward function at each step, while infinite-horizon MDPs use a constant reward function throughout`,
-          `B) Finite-horizon MDPs require stochastic policies near the end because the agent becomes risk-averse, while infinite-horizon MDPs always prefer deterministic policies`,
-          `C) In finite-horizon MDPs the value function V_t(s) changes with remaining time t via backward induction, so the greedy policy at each t differs; in infinite-horizon discounted MDPs the Bellman equation has a unique fixed point and the same greedy policy is optimal at every step`,
-          `D) Infinite-horizon MDPs have a higher discount factor γ which makes the agent indifferent to time, while finite-horizon MDPs have γ=1 which causes time-dependent decisions`,
+          `A) Finite-horizon MDPs redefine the reward function R_t(s,a) at every remaining timestep via an explicit decay schedule, while infinite-horizon MDPs hold a single constant reward function fixed for the entire trajectory, so only the finite case ever needs re-optimizing`,
+          `B) Finite-horizon MDPs are forced into stochastic softmax policies near the terminal step because bounded time makes the agent provably risk-averse, whereas infinite-horizon MDPs are guaranteed a deterministic policy by the policy improvement theorem regardless of γ`,
+          `C) V_t(s) changes with remaining time t via backward induction, so the greedy policy differs at each t; the infinite-horizon Bellman equation has a unique fixed point, so the same greedy policy is optimal at every step`,
+          `D) Infinite-horizon MDPs are defined to always use γ close to 1 so the agent becomes indifferent to timing, while finite-horizon MDPs are mathematically restricted to exactly γ=1, and this restriction is what forces their policy to depend on time`,
         ],
         answer: `C`
       },
       {
         q: `Your robot RL agent receives only a camera image as observation. It keeps walking into the same wall repeatedly. What Markov property violation is happening and how do you fix it?`,
         options: [
-          `A) The observation is not Markov because a single camera frame doesn't capture motion, history, or what has already been explored; fixes include frame stacking (concatenate last k frames), recurrent architectures (LSTM over observation history), or state estimation with a belief filter`,
-          `B) The Markov property is satisfied because the camera fully captures the current physical state; the issue is instead a poorly designed reward function that doesn't penalise wall collisions`,
-          `C) The violation occurs because the transition function P(s'|s,a) is stochastic; the fix is to use a deterministic simulator to train the agent before deploying to the real robot`,
-          `D) The observation space is too high-dimensional, which causes numerical instability in the policy network; the fix is to reduce image resolution until the Markov property holds`,
+          `A) The observation is not Markov because one frame lacks motion and exploration history; fix with frame stacking, an LSTM over past observations, or a belief-filter state estimator`,
+          `B) The Markov property is fully satisfied because a single high-resolution camera frame captures the complete physical state, including velocity and any previously collected keys; the real issue is a reward function that under-penalises wall collisions`,
+          `C) The violation occurs because the transition function P(s'|s,a) is inherently stochastic from sensor noise; the fix is to train entirely in a deterministic, noise-free simulator before ever deploying to the real robot's camera`,
+          `D) The observation space is simply too high-dimensional, causing numerical instability and exploding gradients inside the policy network's convolutional layers; the fix is to progressively reduce image resolution until the property empirically holds`,
         ],
         answer: `A`
       },
       {
         q: `Why is γ = 0.99 harder to train with than γ = 0.95, even if both converge to a valid solution?`,
         options: [
-          `A) γ=0.99 causes the reward to be discounted more aggressively, meaning the agent ignores long-term consequences and learns a myopic policy that is harder to improve`,
-          `B) γ=0.99 requires more environment interactions because the agent needs to explore more steps before any reward is discounted to near zero`,
-          `C) γ=0.99 is harder because it requires a denser reward function, which is more difficult to engineer than the sparse rewards used with γ=0.95`,
-          `D) γ=0.99 extends the effective credit-assignment horizon to ~100 steps (vs ~20 for γ=0.95), causing higher Monte Carlo variance and slower TD propagation; rewards 100 steps away still contribute meaningfully, making value estimates noisy and requiring more samples to stabilise`,
+          `A) γ=0.99 discounts step-to-step reward far more aggressively than γ=0.95 does, which paradoxically makes the agent ignore long-term consequences entirely and collapse to a myopic greedy policy that is strictly harder to improve via gradient methods`,
+          `B) γ=0.99 forces the agent to take more environment interactions before training can begin at all, because every reward signal must first be discounted to exactly zero across the entire buffer before a single gradient update is computed`,
+          `C) γ=0.99 is harder to train specifically because it mathematically requires a denser, hand-engineered reward function at every timestep, which is fundamentally more costly to design than the naturally sparse rewards paired with γ=0.95`,
+          `D) γ=0.99 extends the effective horizon to ~100 steps vs ~20 for γ=0.95, raising Monte Carlo variance and slowing TD propagation — more samples are needed to stabilise value estimates`,
         ],
         answer: `D`
       },
       {
-        q: `A product team asks you to deploy an RL agent for content recommendation. What MDP design decisions do you make, and what can go wrong?`,
+        q: `A product team asks you to deploy an RL agent for content recommendation. Which two of the following are essential MDP design considerations for this system?`,
         options: [
-          `A) The only design decision that matters is the action space (item selection); state and reward can be left at their defaults because the recommendation problem is essentially a supervised classification task`,
-          `B) Key design decisions include state (user context + history length to preserve Markov property), action (item selection from potentially millions of candidates), reward (engagement proxy that risks Goodhart violations), and discount γ (affects learning speed vs long-term optimisation); failure modes include reward hacking, partial observability, non-stationarity, and off-policy distribution shift from historical data`,
-          `C) The main design decision is choosing between on-policy and off-policy learning; using on-policy RL avoids all reward hacking and Goodhart problems by construction`,
-          `D) MDP design is unnecessary because recommendation systems are contextual bandit problems; sequential state dependencies don't exist in practice so standard supervised learning on click logs suffices`,
+          `A) State must preserve the Markov property — include enough user history (not just the current click) so the next recommendation doesn't require information already lost from the state`,
+          `B) Reward should avoid Goodhart-prone proxies — an engagement metric like raw clicks is easy to instrument but risks reward hacking toward clickbait rather than true user value`,
+          `C) The action space can be left unconstrained since gradient descent automatically adapts to any number of candidate items without any retrieval or ranking pre-filtering step`,
+          `D) Off-policy distribution shift from historical logged data is not a real concern here, because pretraining the policy with supervised learning on click logs eliminates it by construction`,
         ],
-        answer: `B`
+        answer: ['A', 'B']
       },
     ],
     takeaway: `The MDP is just a formal way of saying: at every step the agent sees a state, picks an action, gets a reward, and ends up somewhere new — and the goal is to find the policy that makes those rewards add up to as much as possible.`,
@@ -124,40 +124,40 @@ NOT this: you need to know the transition model T(s, a, s') to use Bellman equat
       {
         q: `Write the Bellman optimality equation for Q*(s,a) and explain what makes it "nonlinear," unlike the Bellman expectation equation.`,
         options: [
-          `A) Q*(s,a) = R(s,a) + γ Σ_{s'} P(s'|s,a) max_{a'} Q*(s',a') is nonlinear because P(s'|s,a) is a nonlinear stochastic function of the state and action`,
-          `B) The Bellman optimality equation is nonlinear because Q*(s,a) appears on both sides of the equation, creating a circular dependency that cannot be resolved by matrix algebra`,
-          `C) Q*(s,a) = R(s,a) + γ Σ_{s'} P(s'|s,a) max_{a'} Q*(s',a') is nonlinear due to the max_{a'} operator, unlike the Bellman expectation equation which uses Σ_{a'} π(a'|s') Q^π(s',a') — a linear weighted sum solvable as V^π = (I-γP^π)^{-1}R^π`,
-          `D) The Bellman optimality equation is nonlinear because the discount factor γ multiplies Q* by itself recursively, producing a geometric series that requires nonlinear solvers`,
+          `A) Q*(s,a) = R(s,a) + γ Σ_{s'} P(s'|s,a) max_{a'} Q*(s',a') is nonlinear purely because P(s'|s,a) is itself a nonlinear stochastic function of the underlying state and action, independent of any max or expectation operator appearing anywhere in the equation`,
+          `B) The Bellman optimality equation is nonlinear because Q*(s,a) appears on both the left and right sides simultaneously, creating a circular self-referential dependency that ordinary matrix algebra and Gaussian elimination cannot resolve without iterative approximation`,
+          `C) The max_{a'} operator makes it nonlinear; the Bellman expectation equation instead uses Σ_{a'} π(a'|s') Q^π(s',a') — a linear weighted sum solvable directly as V^π = (I-γP^π)^{-1}R^π`,
+          `D) The Bellman optimality equation is nonlinear because the discount factor γ multiplies Q* by itself recursively across every future timestep, producing an infinite geometric series whose closed form requires specialised nonlinear numerical solvers`,
         ],
         answer: `C`
       },
       {
         q: `In policy iteration, why is policy improvement guaranteed to produce a policy at least as good as the current one? What is the formal argument?`,
         options: [
-          `A) Policy improvement is guaranteed because at each step the algorithm tries all possible policies and selects the best one, so it can never select a worse policy than the current one`,
-          `B) The policy improvement theorem holds because π'(s) = argmax_a Q^π(s,a) means V^π(s) ≤ Q^π(s,π'(s)); expanding this inequality inductively through all future steps shows V^{π'}(s) ≥ V^π(s) everywhere, with strict improvement unless π was already optimal`,
-          `C) Policy improvement is guaranteed to be non-decreasing because the greedy policy minimises the Bellman error, which by the contraction mapping theorem implies the policy value is at least as high`,
-          `D) The guarantee follows from the fact that Q^π(s,a) ≥ V^π(s) for all actions a, so any policy derived from the Q-function will have a value at least as high as the current policy`,
+          `A) Policy improvement is guaranteed because at each iteration the algorithm exhaustively enumerates every possible deterministic policy over the full state space and selects whichever attains the highest expected return, so a worse policy can mathematically never be selected`,
+          `B) Because π'(s) = argmax_a Q^π(s,a) gives V^π(s) ≤ Q^π(s,π'(s)), inducting this bound through all future steps shows V^{π'}(s) ≥ V^π(s) everywhere`,
+          `C) Policy improvement is guaranteed to be non-decreasing because the greedy policy directly minimises the mean-squared Bellman error across all states, and the contraction mapping theorem guarantees that minimising this error implies the resulting policy's true value is at least as high`,
+          `D) The guarantee follows purely from the fact that Q^π(s,a) is always greater than or equal to V^π(s) for every action a in every state, so any policy derived by taking the argmax of the Q-function is mathematically guaranteed to have a value at least as high as the current policy`,
         ],
         answer: `B`
       },
       {
-        q: `You are implementing Q-learning with a neural network and notice Q-values growing unboundedly during training. What is happening and how do you fix it?`,
+        q: `You are implementing Q-learning with a neural network and notice Q-values growing unboundedly during training. Which two fixes directly address the bootstrapping instability that causes this?`,
         options: [
-          `A) Q-value divergence is caused by bootstrapping instability: the target y = R + γ max_{a'} Q_θ(s',a') depends on the same θ being updated, creating a positive feedback loop; fixes include a target network (freeze θ^- for K steps), gradient/reward clipping, and a lower learning rate`,
-          `B) Unbounded Q-values are caused by a reward function that is not bounded; the fix is to clip rewards to [-1, 1] and the problem will resolve itself without any architectural changes`,
-          `C) The issue is that the neural network has too many parameters, causing it to memorise the training data and extrapolate Q-values to infinity for unseen states; the fix is to reduce network size`,
-          `D) Q-value divergence is caused by using a replay buffer with too many transitions; old transitions from earlier in training have incorrect Q-value targets that destabilise current training`,
+          `A) Freeze a target network θ^- for K steps so the TD target y = R + γ max_{a'} Q_{θ^-}(s',a') stays stationary while θ is updated, breaking the positive feedback loop`,
+          `B) Clip gradients and rewards and lower the learning rate, so each individual update shifts θ (and therefore the target) by a much smaller amount`,
+          `C) Increase the network's parameter count so the function approximator can represent Q* exactly, which removes all bootstrapping error by construction`,
+          `D) Widen the reward scale to be unbounded so the max_{a'} operator saturates numerically and stops the values from growing further`,
         ],
-        answer: `A`
+        answer: ['A', 'B']
       },
       {
         q: `How many states does a simplified Atari game environment like Pong have, and why does this make tabular DP completely impractical?`,
         options: [
-          `A) Pong has approximately 10^6 states (discretised pixel values), which is borderline tractable but too slow for real-time training without specialised hardware`,
-          `B) Pong has roughly 10^20 states after preprocessing, which is large but could in theory be handled by distributed computing across a data centre`,
-          `C) Pong has exactly 84×84×3 = 21,168 states after DQN preprocessing, which makes tabular DP tractable in theory but too slow in practice due to the large action space`,
-          `D) Pong preprocessed to 84×84 grayscale pixels has 2^{7056} states — vastly larger than the atoms in the observable universe (~2^{266}); tabular DP requires storing V*(s) for every s and running Bellman updates over all states, which is physically impossible; DQN parameterises the value function in a compressed ~10M-parameter space instead`,
+          `A) Pong has approximately 10^6 states after discretising pixel values into coarse bins, which is borderline tractable computationally but far too slow for real-time online training without dedicated specialised tensor-processing hardware clusters`,
+          `B) Pong has roughly 10^20 states once the full preprocessing pipeline is applied, which is an enormous number but could in principle still be handled by a sufficiently large distributed computing cluster spanning an entire data centre`,
+          `C) Pong has exactly 84×84×3 = 21,168 states after standard DQN preprocessing, which makes tabular dynamic programming tractable in theory but impractically slow in practice purely because of the size of the discrete action space`,
+          `D) Pong at 84×84 grayscale has 2^{7056} states — vastly more than atoms in the observable universe (~2^{266}); storing V*(s) for every one is impossible, so DQN compresses the value function into ~10M parameters instead`,
         ],
         answer: `D`
       },
@@ -215,32 +215,32 @@ NOT this: TD is just a faster version of Monte Carlo. The bias-variance distinct
     interactivePrompt: `Before you touch the controls: the trading agent receives a +10 reward when it closes a profitable position and 0 otherwise. If V(s_t) = 5 and V(s_{t+1}) = 8 with R_{t+1} = 0 and γ = 0.9, what is the TD error — and does V(s_t) increase or decrease?`,
     checkQuestions: [
       {
-        q: `SARSA and Q-learning have identical updates except for one term. What is that term, and what are the theoretical and practical implications of the difference?`,
+        q: `SARSA and Q-learning have identical updates except for one term. Which two of the following statements about that difference are correct?`,
         options: [
-          `A) SARSA uses the current state value V(s_t) while Q-learning uses the next state value V(s_{t+1}); this makes SARSA on-policy and Q-learning off-policy, but both converge to the same optimal Q-function given sufficient exploration`,
-          `B) SARSA uses the learning rate α for every update while Q-learning adapts the learning rate based on visit counts; this makes Q-learning more stable but slower to converge in practice`,
-          `C) The difference is the next-state action term: SARSA uses Q(s_{t+1}, A_{t+1}) where A_{t+1} ~ π (on-policy, converges to Q^π); Q-learning uses max_{a'} Q(s_{t+1}, a') (off-policy, converges to Q*); Q-learning is more sample-efficient via replay buffers but introduces the deadly triad, making it susceptible to divergence with neural networks`,
-          `D) SARSA uses the immediate reward R_{t+1} while Q-learning uses the cumulative discounted return G_t; this makes Q-learning unbiased but higher variance, while SARSA is biased but lower variance`,
+          `A) SARSA is on-policy: it bootstraps off Q(s_{t+1}, A_{t+1}) with A_{t+1} ~ π, so it converges to Q^π, the value of the policy actually being followed (including its exploration)`,
+          `B) Q-learning is off-policy: it bootstraps off max_{a'} Q(s_{t+1}, a'), converging to Q*, but this max-based target is more prone to the deadly triad when paired with function approximation`,
+          `C) SARSA converges to the globally optimal Q* under any behavior policy, including a purely random one, identically to how Q-learning converges regardless of exploration strategy`,
+          `D) Q-learning requires explicit importance-sampling correction on every single-step TD update in order to remain unbiased, exactly as SARSA does`,
         ],
-        answer: `C`
+        answer: ['A', 'B']
       },
       {
         q: `Explain Baird's counterexample intuitively. Why does Q-learning with linear function approximation diverge even in a simple MDP?`,
         options: [
-          `A) In Baird's counterexample, the projected Bellman operator TΠ is a γ-contraction under on-policy state weighting but under off-policy data the projection Π uses incorrect weighting, making TΠ a non-contraction; repeated application of a non-contraction diverges; fixes include importance sampling (reweight updates by π/μ) or gradient TD methods (GTD, GTD2) that minimise the projected Bellman error with a true gradient`,
-          `B) Baird's counterexample shows divergence because Q-learning with linear FA uses a learning rate that is too high for the specific MDP structure, and the fix is to use smaller step sizes`,
-          `C) Divergence in Baird's counterexample occurs because the reward signal is zero everywhere, causing the Q-function to receive no gradient and drift randomly under numerical noise`,
-          `D) The counterexample demonstrates that linear function approximation cannot represent the optimal Q-function accurately, so approximation error accumulates over iterations until values diverge`,
+          `A) The projected Bellman operator TΠ is a γ-contraction only under on-policy state weighting; off-policy weighting makes TΠ a non-contraction, so repeated application diverges; fix with importance sampling or gradient-TD methods (GTD, GTD2)`,
+          `B) Baird's counterexample shows divergence purely because Q-learning with linear function approximation always uses a learning rate that is too high for that specific seven-state MDP structure, and the only documented fix is a much smaller, hand-tuned constant step size`,
+          `C) Divergence in Baird's counterexample occurs because the reward signal is exactly zero everywhere in the seven-state chain, causing the Q-function to receive no gradient signal at all and drift randomly under floating-point numerical noise accumulated over iterations`,
+          `D) The counterexample demonstrates that linear function approximation cannot represent the optimal Q-function accurately in this MDP, so approximation error compounds multiplicatively over successive Bellman backups until the values diverge to infinity`,
         ],
         answer: `A`
       },
       {
         q: `You are training a Q-learning agent on a game environment and observe that the Q-values grow from ~10 to ~10^6 over 500k steps, with training reward staying flat. Diagnose and fix.`,
         options: [
-          `A) Q-values growing while reward stays flat means the agent is successfully learning but the reward function has a scaling bug; multiply all rewards by a constant factor to bring Q-values back to a reasonable range`,
-          `B) Runaway Q-values with flat reward is a deadly triad symptom: off-policy replay + bootstrapping + FA creates a positive feedback loop where max Q overestimates → inflates target → inflates Q further; fixes in order: target network (freeze Q_{θ^-} for 10k steps), Huber loss/clipping, reward clipping, lower learning rate, and Double DQN to reduce max-operator overestimation bias`,
-          `C) The divergence is caused by having too large a replay buffer; old transitions from a weaker policy corrupt the current training signal, causing overestimation; reduce the buffer size to only keep the most recent 10k transitions`,
-          `D) Flat reward with growing Q-values indicates the exploration rate ε is too high, causing the agent to take random actions that generate high Q-estimates for unexplored states; reduce ε to near zero immediately`,
+          `A) Q-values growing while reward stays flat means the agent is actually learning successfully but the reward function simply has a numerical scaling bug; multiply every observed reward by a fixed constant factor to bring the Q-values back into a visually reasonable range`,
+          `B) This is a deadly-triad symptom: off-policy replay + bootstrapping + FA creates a feedback loop where max Q overestimates → inflates the target → inflates Q further; fix in order: target network, Huber/gradient clipping, lower learning rate, then Double DQN`,
+          `C) The divergence is caused entirely by having too large a replay buffer; old transitions collected under a much weaker earlier policy corrupt the current training signal by overestimation, so reduce the buffer size to keep only the most recent 10k transitions`,
+          `D) Flat reward with growing Q-values indicates the exploration rate ε is set too high, causing the agent to take mostly random actions that generate artificially high Q-estimates for states it has barely visited; reduce ε toward zero immediately to fix this`,
         ],
         answer: `B`
       },
@@ -297,32 +297,32 @@ NOT this: DQN is the standard deep RL algorithm. DQN only works for discrete act
     interactivePrompt: `Before you touch the controls: the replay buffer has 1M transitions and the target network updates every 10K steps. The agent has just broken its first brick and received +1. How many gradient updates will include that transition before it cycles out of the buffer — roughly?`,
     checkQuestions: [
       {
-        q: `Why exactly does experience replay require IID samples? What happens if you train on correlated sequential transitions from the current trajectory?`,
+        q: `Vanilla DQN adds two specific mechanisms on top of neural-network Q-learning to make training stable. Which two are they?`,
         options: [
-          `A) Experience replay doesn't strictly require IID samples; it just improves sample efficiency by reusing transitions; training on sequential transitions works fine but is slower`,
-          `B) IID samples are required because the neural network architecture assumes independent inputs; sequential transitions violate this assumption and cause gradient explosions in the backpropagation step`,
-          `C) IID samples are needed because the Bellman backup requires that consecutive states be statistically independent; if they are correlated, the target network update rule produces inconsistent Q-value targets`,
-          `D) Training on correlated sequential transitions violates SGD's IID requirement: gradient estimates reflect only the recent trajectory's local statistics, causing the network to overfit that region while catastrophically forgetting others; the policy then changes to visit a new region, causing oscillations; replay over a large buffer of past transitions provides temporally decorrelated samples matching the full training distribution`,
+          `A) Experience replay — sample random mini-batches from a large buffer of past transitions so gradient estimates are decorrelated and match the full training distribution instead of the recent trajectory's local statistics`,
+          `B) A frozen target network θ^-, copied from θ only every K steps, so the TD bootstrap target stays stationary between updates and the moving-target feedback loop is broken`,
+          `C) A recurrent policy architecture that conditions on the full episode history, which is what actually removes the correlation between consecutive gradient updates`,
+          `D) Second-order natural-gradient updates computed via Fisher information matrix-vector products, which is what stops the network from catastrophically forgetting older regions of state space`,
         ],
-        answer: `D`
+        answer: ['A', 'B']
       },
       {
         q: `What is the difference between Dueling DQN and standard DQN architecturally, and in what types of states does Dueling provide the largest benefit?`,
         options: [
-          `A) Dueling DQN uses two completely separate networks — one for even timesteps and one for odd timesteps — to reduce correlation between consecutive updates; it benefits most in environments with sparse rewards`,
-          `B) Dueling DQN adds a secondary loss on state visitation counts to encourage exploration; it benefits most in environments where many states have equal Q-values, making exploration uniformly random`,
-          `C) Dueling DQN uses separate streams for V(s) and A(s,a) merged as Q(s,a) = V(s) + A(s,a) - mean_a A(s,a); the largest benefit is in states where action choice barely matters — V can be updated from any transition in that state, learning faster than a single-head network where all Q values must be updated jointly`,
-          `D) Dueling DQN replaces the Q-function output layer with a distributional layer that outputs quantiles of the return distribution; it benefits most in states with high reward variance`,
+          `A) Dueling DQN uses two entirely separate Q-networks — one trained only on even-numbered timesteps and one only on odd-numbered timesteps — specifically to reduce gradient correlation between consecutive updates; it benefits most in environments with sparse terminal rewards`,
+          `B) Dueling DQN adds an auxiliary loss term on state-visitation counts to explicitly encourage exploration into rarely-seen states; it benefits most in environments where many distinct states happen to share identical Q-values, forcing exploration to become effectively uniform`,
+          `C) Dueling DQN splits V(s) and A(s,a), merged as Q = V(s) + A(s,a) - mean_a A(s,a); it helps most in states where action choice barely matters — V updates from any transition there, faster than a single-head network`,
+          `D) Dueling DQN replaces the standard scalar Q-function output layer with a full distributional layer that instead outputs quantiles of the entire return distribution rather than a point estimate; it benefits most in states exhibiting unusually high reward variance`,
         ],
         answer: `C`
       },
       {
         q: `You are applying DQN to a robotic manipulation task where the reward is 1 only when the robot successfully places an object and 0 otherwise, with episodes of 200 steps. After 10M steps, the policy never achieves reward > 0. What is happening and what are your next steps?`,
         options: [
-          `A) The issue is that DQN cannot learn manipulation tasks; switching to a policy gradient algorithm like PPO will resolve the sparse reward problem because PPO uses on-policy data that is always relevant to the current policy`,
-          `B) The network has overfit to the 0-reward signal; the fix is to regularise the Q-network with dropout and weight decay so it generalises better to the success state it has never seen`,
-          `C) 10M steps is insufficient for robotic manipulation; continuing training for 100M steps will allow random exploration to accidentally discover the success state often enough for Q-learning to propagate the reward signal back`,
-          `D) The replay buffer contains only 0-reward transitions, providing no gradient signal about what to do; next steps in order: curriculum learning (start with object near target), Hindsight Experience Replay (relabel failed trajectories as reaching the actual achieved state), dense reward shaping, demo-augmented RL with expert demonstrations, and increased exploration via curiosity modules`,
+          `A) The issue is that DQN is architecturally incapable of learning any manipulation task at all; switching to a policy-gradient algorithm like PPO will automatically resolve the sparse-reward problem because PPO's on-policy data is always perfectly relevant to the current policy`,
+          `B) The network has overfit to the constant 0-reward signal seen in every episode; the fix is to regularise the Q-network more heavily with dropout and weight decay so it generalises correctly to the rare success state it has essentially never observed during training`,
+          `C) 10M steps is simply insufficient for a robotic manipulation task of this difficulty; continuing training for 100M steps will let random exploration accidentally stumble onto the success state often enough for ordinary Q-learning to slowly propagate the reward signal backward`,
+          `D) The buffer holds only 0-reward transitions, giving no gradient signal; next steps in order: curriculum learning (start near the target), Hindsight Experience Replay (relabel failures as their achieved goal), dense reward shaping, and demo-augmented RL`,
         ],
         answer: `D`
       },
@@ -363,32 +363,32 @@ NOT this: policy gradients are unbiased because they use sampled returns. Unbias
     interactivePrompt: `Before you touch the controls: the robotic arm gets +10 for reaching the target in under 20 steps and -0.1 per step. Over 10 episodes, returns range from -2 to +8. Without a baseline, every action in every episode gets weighted by a different G_t. What would happen to the gradient if you used V(s) = 3 as a constant baseline?`,
     checkQuestions: [
       {
-        q: `Derive why E_{a~π}[b(s) · ∇_θ log π_θ(a|s)] = 0 for any baseline b that depends only on the state, not the action.`,
+        q: `Which two statements correctly explain why subtracting a state-only baseline b(s) from returns in a policy gradient update is both safe and useful?`,
         options: [
-          `A) E_{a~π}[b(s) · ∇_θ log π_θ(a|s)] = 0 because b(s) factors out of the expectation over a, and Σ_a ∇_θ π_θ(a|s) = ∇_θ Σ_a π_θ(a|s) = ∇_θ 1 = 0; the policy always sums to 1 over actions, so its gradient with respect to θ sums to zero; only action-dependent baselines would bias the estimate`,
-          `B) The expectation equals zero because the log-derivative trick produces a cancellation with the policy denominator, and any baseline multiplied by a cancelled term must be zero regardless of what the baseline depends on`,
-          `C) The result holds because b(s) is subtracted symmetrically from all actions, so the positive contributions from good actions exactly cancel the negative contributions from bad actions in expectation`,
-          `D) E_{a~π}[b(s) · ∇_θ log π_θ(a|s)] = 0 only approximately, not exactly; the approximation error is bounded by the variance of the baseline and vanishes as the number of samples grows to infinity`,
+          `A) b(s) factors out of the expectation over a, and Σ_a ∇_θ π_θ(a|s) = ∇_θ Σ_a π_θ(a|s) = ∇_θ 1 = 0, so E_{a~π}[b(s)·∇_θ log π_θ(a|s)] = 0 — the estimator's expectation is unchanged`,
+          `B) Centering returns around a state-dependent baseline reduces the variance of the sampled gradient estimate without shifting its expected direction`,
+          `C) The baseline must itself depend on the action taken in order to cancel the portion of variance contributed specifically by that action`,
+          `D) Subtracting any baseline changes the expected gradient direction, and this shift is corrected afterward by a separate importance-sampling correction term`,
         ],
-        answer: `A`
+        answer: ['A', 'B']
       },
       {
         q: `You are training a continuous-control robot with REINFORCE and the policy fails to improve despite 50,000 episodes. What is likely happening and what changes do you make?`,
         options: [
-          `A) The problem is insufficient data; 50,000 episodes is simply not enough for REINFORCE to converge on continuous control; switch to a model-based approach that can learn from far fewer interactions`,
-          `B) REINFORCE gradients are likely dominated by variance from the full episode return G_t; fixes include: add a value baseline V_φ(s) to get advantage A_t = G_t - V_φ(s_t), use n-step returns, switch to actor-critic (A2C/PPO) for lower-variance gradient estimates, check policy entropy to ensure exploration, and normalise rewards to a stable scale`,
-          `C) The policy network architecture is too small to represent the continuous control policy; increase network capacity with more layers and wider hidden dimensions until the policy can represent the optimal action for every state`,
-          `D) The issue is that REINFORCE uses the full episode return which creates a non-stationary learning signal; the fix is to use a fixed discount factor γ=1.0 so all timesteps receive equal weight and the gradient is stationary`,
+          `A) The problem is purely insufficient data; 50,000 episodes is simply never enough for REINFORCE to converge on any continuous-control task regardless of variance, so switch entirely to a model-based approach that learns from far fewer real interactions`,
+          `B) REINFORCE gradients are likely dominated by variance from the full-episode return G_t; fixes: add a value baseline V_φ(s) for advantage A_t = G_t - V_φ(s_t), switch to actor-critic (A2C/PPO), check policy entropy, and normalise rewards`,
+          `C) The policy network's architecture is too small to represent the continuous-control policy at all; increase network capacity with substantially more layers and much wider hidden dimensions until it can represent the optimal action for every state exactly`,
+          `D) The issue is that REINFORCE's use of the full episode return creates a fundamentally non-stationary learning signal over time; the fix is to fix the discount factor at exactly γ=1.0 so every timestep receives equal weight and the gradient becomes stationary`,
         ],
         answer: `B`
       },
       {
         q: `In a two-player zero-sum game like poker, why is a stochastic optimal policy strictly necessary, and what does this mean for the choice of algorithm?`,
         options: [
-          `A) Stochastic policies are not strictly necessary in poker; deterministic policies can be optimal if the opponent does not observe the agent's action distribution`,
-          `B) A stochastic optimal policy is needed because the game tree has too many states for a deterministic policy to memorise all optimal actions; the mixed strategy compresses this into a simple probability distribution`,
-          `C) Any deterministic policy in a zero-sum adversarial game is exploitable — the opponent can learn and play the best response, winning with certainty; the Nash equilibrium requires a mixed strategy (e.g., 1/3 each in rock-paper-scissors); value-based methods cannot represent this because argmax Q*(s,a) always produces a deterministic policy; policy gradient methods parameterising π_θ(a|s) as a distribution CAN converge to the mixed strategy via self-play or CFR`,
-          `D) Stochastic policies are needed in poker specifically because partial observability (hidden cards) makes any deterministic policy exploitable; in fully observable zero-sum games, deterministic optimal policies always exist`,
+          `A) Stochastic policies are not strictly necessary in poker at all; a purely deterministic policy can be fully optimal so long as the opponent never directly observes the agent's action-probability distribution across repeated hands`,
+          `B) A stochastic optimal policy is needed only because the poker game tree contains far too many states for any deterministic policy to memorise every optimal action; the resulting mixed strategy simply compresses this memorisation problem`,
+          `C) Any deterministic policy in a zero-sum game is exploitable — the opponent learns the best response and wins; the Nash equilibrium needs a mixed strategy, which argmax Q*(s,a) cannot represent but policy gradients can via self-play or CFR`,
+          `D) Stochastic policies are needed in poker specifically because partial observability of hidden cards makes any deterministic policy exploitable; in fully observable zero-sum games, by contrast, a deterministic optimal policy is always guaranteed to exist`,
         ],
         answer: `C`
       },
@@ -430,14 +430,14 @@ NOT this: the actor and critic have separate learning problems that can interfer
     interactivePrompt: `Before you touch the controls: the actor selects torques, the critic estimates V(s). After a step that gets reward +5 when V(s_t) = 3 and V(s_{t+1}) = 4 with γ = 0.9, what is the advantage — and does the actor increase or decrease the probability of this action?`,
     checkQuestions: [
       {
-        q: `Prove that E_{a~π}[A^π(s,a)] = 0. Why does this property make the advantage a better policy gradient weight than Q(s,a)?`,
+        q: `Which two statements about the advantage function A^π(s,a) = Q^π(s,a) - V^π(s) are correct, and explain why it beats raw Q(s,a) as a policy-gradient weight?`,
         options: [
-          `A) E_{a~π}[A^π(s,a)] = E_{a~π}[Q^π(s,a)] - V^π(s) = V^π(s) - V^π(s) = 0, since V^π(s) = E_{a~π}[Q^π(s,a)] by definition; this zero-mean property centres the gradient signal so positive advantage reinforces above-average actions and negative advantage discourages below-average ones, removing the large constant mean of V^π(s) that would dominate raw Q(s,a) and add variance without directional signal`,
-          `B) The advantage has zero mean because it is normalised during training by dividing by its standard deviation, which centres the gradient signal; Q(s,a) has non-zero mean because it is not normalised`,
-          `C) E_{a~π}[A^π(s,a)] = 0 only holds when the policy is at a Nash equilibrium; during training the advantage has non-zero mean, which is why it still provides useful gradient signal for improvement`,
-          `D) The advantage has zero mean by construction since it subtracts the average reward; Q(s,a) is a better gradient weight in states with sparse rewards because it retains the magnitude of the return signal`,
+          `A) E_{a~π}[A^π(s,a)] = E_{a~π}[Q^π(s,a)] - V^π(s) = 0, since V^π(s) = E_{a~π}[Q^π(s,a)] by definition — the advantage is exactly zero-mean over actions`,
+          `B) The zero-mean property removes the large state-dependent constant that raw Q(s,a) carries, leaving only a lower-variance directional signal about whether each action was above or below average`,
+          `C) E_{a~π}[A^π(s,a)] = 0 only holds once the policy has reached a Nash equilibrium; during ordinary training the advantage has non-zero mean, which is exactly why it still provides useful gradient signal`,
+          `D) The advantage has zero mean specifically because it subtracts the average environment reward per episode; Q(s,a) is the better gradient weight in sparse-reward states because it retains the return's raw magnitude`,
         ],
-        answer: `A`
+        answer: ['A', 'B']
       },
       {
         q: `In GAE, what does setting
@@ -446,20 +446,20 @@ $λ=0 vs λ=0.95 vs λ=1 do to the advantage estimate? When wo$
 
 uld you choose each?`,
         options: [
-          `A) λ=0 uses only immediate rewards (no bootstrapping), giving unbiased but high-variance estimates; λ=1 uses the full critic value (pure bootstrapping), giving low-variance but high-bias estimates; λ=0.95 is a middle ground; choose λ=0 when episodes are short and choose λ=1 when the critic is well-trained`,
-          `B) λ controls the learning rate for the critic, not the advantage estimate; λ=0 means the critic updates once per episode and λ=1 means it updates every step; λ=0.95 is the standard that balances critic update frequency with policy stability`,
-          `C) λ=0 produces advantage estimates identical to Monte Carlo returns; λ=1 uses only the one-step TD error; λ=0.95 is an exponential moving average of the reward signal; choose λ=0 for sparse reward environments`,
-          `D) λ=0 uses the one-step TD error δ_t only (high bias from V, low variance); λ=0.95 considers ~20 future steps (moderate bias/variance, empirically best for most tasks like PPO); λ=1 uses full MC advantage G_t - V(s_t) (zero bias, high variance); choose λ=0 when the critic is accurate, λ=0.95 as the standard default, λ=1 for short episodes or when the critic is very inaccurate`,
+          `A) λ=0 uses only the immediate reward with no bootstrapping at all, giving unbiased but extremely high-variance estimates; λ=1 instead uses the full critic value with pure bootstrapping, giving low-variance but high-bias estimates; λ=0.95 sits at a middle ground; choose λ=0 when episodes are very short and λ=1 only once the critic is well-trained`,
+          `B) λ in GAE actually controls the learning-rate schedule for the critic network rather than the advantage estimate itself; λ=0 means the critic updates once per full episode and λ=1 means it updates every step; λ=0.95 is the standard value balancing update frequency against stability`,
+          `C) λ=0 produces advantage estimates numerically identical to Monte Carlo returns; λ=1 instead uses only the one-step TD error; λ=0.95 behaves as an exponential moving average applied directly to the raw reward signal; practitioners generally choose λ=0 for sparse-reward environments`,
+          `D) λ=0 is the one-step TD error δ_t (high bias, low variance); λ=0.95 blends ~20 future steps (the empirical default, e.g. PPO); λ=1 is the full MC advantage (zero bias, high variance) — pick λ=0 when the critic is accurate, λ=1 for short episodes`,
         ],
         answer: `D`
       },
       {
         q: `You are training an actor-critic agent and notice that the actor loss keeps decreasing but the critic loss oscillates and never converges. The agent's reward also oscillates. What is happening?`,
         options: [
-          `A) Decreasing actor loss with oscillating critic loss is normal early in training; the actor converges faster than the critic by design; continue training until the critic stabilises after approximately 10× more steps`,
-          `B) The actor and critic are destabilising each other: the actor updates rapidly while the critic cannot track the changing policy's value function, making advantage estimates noisy and injecting bad gradient into the actor, which changes the policy further in a feedback loop; fixes include lowering the actor learning rate, adding PPO-style clipping to constrain policy change, running multiple critic updates per actor update, or reducing the shared backbone learning rate`,
-          `C) The oscillating critic is caused by the replay buffer containing too many transitions from the old policy; empty the buffer and restart training with only on-policy data from the current policy`,
-          `D) The oscillating critic loss means the reward model is non-stationary; this is an environment problem caused by distribution shift in the data, not an algorithmic issue; the only fix is to collect more diverse training data`,
+          `A) Decreasing actor loss alongside an oscillating critic loss is entirely normal during the early phase of training; the actor is designed to converge faster than the critic by construction, so simply continue training unmodified until the critic naturally stabilises after roughly ten times as many gradient steps`,
+          `B) The actor and critic destabilise each other: the actor updates faster than the critic can track, so noisy advantage estimates inject bad gradient into the actor, shifting the policy further in a feedback loop; fix by lowering the actor LR or adding PPO-style clipping`,
+          `C) The oscillating critic is caused specifically by the replay buffer containing far too many transitions collected under an old, stale policy; empty the entire buffer and restart training using only fresh on-policy data generated by the current policy`,
+          `D) The oscillating critic loss indicates that the reward model itself is non-stationary; this is purely an environment-side data distribution shift problem rather than an algorithmic one, and the only available fix is collecting a larger and more diverse set of training trajectories`,
         ],
         answer: `B`
       },
@@ -518,32 +518,32 @@ NOT this: PPO is conservative and learns slowly. PPO with ε = 0.2 is not slow �
     interactivePrompt: `Before you touch the controls: with ε = 0.2, the clip range is [0.8, 1.2]. If A_t = +2 and the new policy is 1.5× more likely than the old policy to take this action (r_t = 1.5), does the gradient update fire — or does PPO kill it?`,
     checkQuestions: [
       {
-        q: `Explain what the PPO clip objective does in the case where A_t > 0 (good action) and the new policy probability is much higher than the old one (r_t >> 1+ε).`,
+        q: `Which two of the following statements correctly describe when the PPO clip objective kills the gradient?`,
         options: [
-          `A) When A_t > 0 and r_t >> 1+ε, the clip selects min(r_t · A_t, (1+ε) · A_t) = (1+ε) · A_t, and since (1+ε) · A_t is a constant with respect to θ at the clip boundary, the gradient with respect to the policy ratio is killed; this prevents further reinforcing an action once the policy has already moved far beyond the trust region boundary`,
-          `B) When A_t > 0 and r_t >> 1+ε, the PPO objective applies a penalty proportional to how far r_t exceeds 1+ε, discouraging very large policy updates while still providing a positive gradient signal toward the good action`,
-          `C) When A_t > 0 and r_t >> 1+ε, the clip objective is identical to the unclipped importance-sampling objective; clipping only activates when r_t < 1-ε (bad actions), not when r_t > 1+ε (good actions)`,
-          `D) When A_t > 0 and r_t >> 1+ε, the clip replaces the gradient entirely with the TRPO natural gradient step to ensure the KL constraint is not violated, which is why PPO approximates TRPO's monotonic improvement guarantee`,
+          `A) When A_t > 0 (good action) and r_t has already risen past 1+ε, min(r_t·A_t, (1+ε)·A_t) = (1+ε)·A_t, a constant w.r.t. θ at the clip boundary — the gradient is killed so the policy stops reinforcing an already-overshot good action`,
+          `B) When A_t < 0 (bad action) and r_t has already fallen past 1-ε, the clipped term likewise becomes constant w.r.t. θ, killing the gradient so the policy stops further penalising an action it has already moved away from`,
+          `C) When A_t > 0 and r_t is still below 1-ε — meaning the policy hasn't yet reinforced the good action at all — the clip objective also flattens and kills the gradient at that point`,
+          `D) The clip only ever activates once the KL divergence between old and new policy is already exactly zero, since PPO is defined to update solely after a trust-region violation has occurred`,
         ],
-        answer: `A`
+        answer: ['A', 'B']
       },
       {
         q: `You are training PPO on a continuous control task and observe that training is stable for 100 updates, then the policy collapses — mean episode reward drops from +500 to near 0 and never recovers. What happened and how do you diagnose and fix it?`,
         options: [
-          `A) Policy collapse after stable training is caused by the value function diverging, which is a known PPO failure mode when the critic learning rate is too high; reduce the critic learning rate by 10× and the policy will recover`,
-          `B) The collapse indicates the environment has a non-stationary distribution shift at update 100; the agent's policy became optimal for the old distribution but the environment changed; monitor environment statistics and retrain when distribution shift is detected`,
-          `C) Policy collapse after stable training is typically caused by too many mini-batch epochs K (policy drifts far from π_old, making all advantage estimates invalid and gradient signal pure noise) or a too-high learning rate; diagnose by logging r_t distribution, fraction of clipped updates (should be 10-30%, not 90%+), and KL(π_old ‖ π_new) per batch; fix by reducing K, adding early stopping when mean KL exceeds ~0.015, lowering learning rate, or regularising the critic`,
-          `D) The collapse is caused by entropy collapsing to zero; once the policy becomes deterministic it cannot recover because the policy gradient is zero for deterministic policies; add a large entropy bonus β=1.0 to force the policy back to a stochastic regime`,
+          `A) Policy collapse after a long stretch of stable training is caused by the value function diverging, a well-known PPO failure mode that occurs specifically when the critic's learning rate is set too high relative to the actor's; simply reduce the critic learning rate by a full order of magnitude and the policy will recover on its own`,
+          `B) The collapse indicates the environment underwent a sudden non-stationary distribution shift right around update 100; the agent's policy had become optimal for the earlier distribution but the environment changed, so monitor environment statistics continuously and retrain when distribution shift is detected`,
+          `C) Policy collapse is typically caused by too many mini-batch epochs K (policy drifts far from π_old, invalidating advantages) or too-high a learning rate; diagnose via r_t distribution and clip fraction (should be 10-30%, not 90%+); fix by reducing K, early-stopping on KL, or lowering the learning rate`,
+          `D) The collapse is caused by policy entropy collapsing all the way to zero; once the policy becomes fully deterministic it can never recover because the policy gradient is mathematically zero for a deterministic policy, so the fix is an unusually large entropy bonus β=1.0 to force the policy back into a stochastic regime`,
         ],
         answer: `C`
       },
       {
         q: `In RLHF with PPO for an LLM, why is the KL penalty to the SFT model necessary? What happens if you remove it?`,
         options: [
-          `A) The KL penalty is only necessary during the early stages of RLHF training to stabilise the reward model scores; once training has run for 1000 steps, the KL penalty can be removed without any degradation in output quality`,
-          `B) Without the KL penalty, the LLM exploits the reward model via Goodhart's Law — generating repetitive, verbose, or incoherent text that achieves high reward model scores but low human preference, because the policy drifts into regions where the reward model is uncalibrated (trained only on SFT-like outputs); β controls the tradeoff: too low allows hacking, too high means no improvement from SFT`,
-          `C) The KL penalty prevents the LLM from generating toxic or harmful content by keeping responses close to the safe SFT baseline; removing it would cause the model to generate harmful outputs even when the reward model explicitly penalises them`,
-          `D) The KL penalty is a computational efficiency trick that reduces the size of the policy gradient update; removing it would cause training to be unstable due to the large gradient magnitudes from the reward model`,
+          `A) The KL penalty is only ever necessary during the very earliest stages of RLHF training to stabilise the raw reward model scores as they are first produced; once training has run for approximately 1000 steps, it can be safely removed entirely without any measurable degradation in output quality`,
+          `B) Without the KL penalty the LLM exploits the reward model via Goodhart's Law — generating repetitive or incoherent text that scores high but is low quality, because the policy drifts where the reward model (trained on SFT-like outputs) is uncalibrated; β trades hacking risk against improvement`,
+          `C) The KL penalty exists purely to prevent the LLM from generating toxic content by forcibly keeping every response close to the safe SFT baseline distribution; removing it would specifically cause harmful outputs even in cases where the reward model explicitly and heavily penalises them`,
+          `D) The KL penalty functions as nothing more than a computational-efficiency trick that reduces the numerical size of each policy gradient update; removing it would cause instability purely because of the resulting large gradient magnitudes coming directly from the reward model's raw output scale`,
         ],
         answer: `B`
       },
@@ -602,32 +602,32 @@ NOT this: RLHF is the final step in making a language model safe and aligned. RL
     interactivePrompt: `Before you touch the controls: the reward model was trained on 20K human preference comparisons from SFT-style outputs. After 1000 PPO steps, the model generates responses 3× longer than at the start. The reward score is up 40%. What do you check first to decide whether this is genuine improvement or reward hacking?`,
     checkQuestions: [
       {
-        q: `Derive the DPO loss from the RLHF objective. What key mathematical insight allows you to eliminate the reward model?`,
+        q: `Which two facts about the DPO derivation correctly explain how it eliminates the need for a separately trained reward model?`,
         options: [
-          `A) DPO eliminates the reward model by jointly training the policy and reward model in a single optimisation loop, which allows the reward model parameters to be analytically marginalised out of the final loss function`,
-          `B) DPO eliminates the reward model by replacing the PPO update with a supervised contrastive loss that directly maximises the log-likelihood of preferred responses over rejected ones, without any derivation from the RLHF objective`,
-          `C) The reward model is eliminated because DPO uses a fixed temperature β=1 that makes the Bradley-Terry model equivalent to a simple softmax classifier, which can be absorbed directly into the language model's output layer`,
-          `D) The key insight is that the optimal policy under the RLHF objective satisfies r*(x,y) = β log(π*(y|x)/π_ref(y|x)) + β log Z(x); when substituted into the Bradley-Terry preference loss, the partition function Z(x) cancels identically in the winner minus loser difference, leaving a loss directly on π_θ/π_ref that requires no separate reward model`,
+          `A) The optimal policy under the RLHF objective satisfies r*(x,y) = β log(π*(y|x)/π_ref(y|x)) + β log Z(x) — the reward is re-expressed purely in terms of the policy and a reference model`,
+          `B) Substituting that expression into the Bradley-Terry preference loss makes the partition function Z(x) cancel identically in the winner-minus-loser difference, leaving a loss directly on π_θ/π_ref`,
+          `C) DPO trains the policy and reward model jointly in a single optimisation loop, which allows the reward parameters to be analytically marginalised out of the final loss afterward`,
+          `D) DPO fixes the Bradley-Terry temperature at a constant β=1, collapsing the reward model directly into the language model's own softmax output layer`,
         ],
-        answer: `D`
+        answer: ['A', 'B']
       },
       {
         q: `A model trained with RLHF consistently gives verbose answers (3x longer than the SFT baseline) with high reward model scores but lower human preference in blind evaluation. What is happening and how do you fix it?`,
         options: [
-          `A) The reward model learned a spurious length-quality correlation from the preference data (annotators preferred longer answers), so PPO exploited verbosity as a shortcut; fixes include a length penalty in the reward, length-stratified preference data collection with shorter answers explicitly preferred, win-rate calibration to detect the spurious feature, or DPO with preference pairs where short precise answers beat verbose ones`,
-          `B) The verbosity is caused by using too high a KL penalty β, which forces the model to stay close to the SFT distribution; since the SFT model was trained on long human demonstrations, the policy mimics that verbosity; lower β to allow more divergence from SFT`,
-          `C) The verbosity is a natural consequence of RLHF training and indicates the model is working correctly; longer answers contain more information and are genuinely better; human evaluators in the blind study may be biased against verbose responses`,
-          `D) The issue is the SFT baseline was trained on data that was already verbose; RLHF cannot reduce verbosity below the SFT baseline because the KL penalty prevents the policy from diverging enough from SFT to learn conciseness`,
+          `A) The reward model learned a spurious length-quality correlation from the preference data (annotators preferred longer answers), so PPO exploited verbosity as a shortcut; fix with a length penalty in the reward, length-stratified data collection, or DPO pairs where short answers beat verbose ones`,
+          `B) The verbosity is caused entirely by using too high a KL penalty coefficient β, which forces the model unusually close to the SFT distribution; since SFT itself was trained on long human demonstrations, the policy simply mimics that verbosity, so lowering β would fix it by allowing more divergence`,
+          `C) The verbosity is a completely natural and expected consequence of RLHF training and indicates the model is working exactly as intended; longer answers inherently contain more information and are genuinely better, and the blind-study evaluators are likely simply biased against verbose responses`,
+          `D) The issue is that the SFT baseline itself was trained on already-verbose demonstration data; RLHF is mathematically incapable of reducing verbosity below whatever the SFT baseline established, because the KL penalty structurally prevents the policy from ever diverging enough to learn genuine conciseness`,
         ],
         answer: `A`
       },
       {
         q: `Why is "LLM-as-judge" evaluation problematic for assessing RLHF model quality, even when the judge is a much stronger model than the one being evaluated?`,
         options: [
-          `A) LLM-as-judge evaluation is only problematic when the judge and the evaluated model share the same base architecture; a judge from a different model family (e.g., GPT-4 judging a Claude model) eliminates self-preference bias and produces reliable evaluations`,
-          `B) LLM-as-judge is problematic because stronger models have higher latency and cost, making evaluation impractical at scale; the compute budget should be spent on human evaluation instead`,
-          `C) LLM judges are unreliable because they cannot read and understand long responses accurately; they tend to evaluate only the first paragraph of each response, creating a positional bias that favours responses that front-load their conclusions`,
-          `D) LLM-as-judge has compounding biases: self-preference (same family models rated higher), verbosity bias (longer = better), positional bias in A/B comparisons, length bias, distribution shift (judge may be poorly calibrated on RLHF-shifted outputs), and prompt sensitivity; reliable alternatives include human evaluation on held-out prompts with inter-annotator agreement, and rule-based automated metrics for specific capabilities like factuality or instruction following`,
+          `A) LLM-as-judge evaluation is only actually problematic when the judge model and the evaluated model happen to share the exact same base architecture; a judge from a different family, such as GPT-4 judging a Claude model, entirely eliminates self-preference bias and produces fully reliable evaluations`,
+          `B) LLM-as-judge is problematic primarily because stronger judge models have meaningfully higher inference latency and API cost, which makes large-scale automated evaluation impractical; the saved compute budget should instead be redirected entirely toward human evaluation`,
+          `C) LLM judges are fundamentally unreliable because they are architecturally unable to read and comprehend long responses accurately; in practice they evaluate only the first paragraph of each response, creating a strong positional bias favouring answers that front-load their conclusions`,
+          `D) LLM-as-judge has compounding biases: self-preference, verbosity bias, positional bias in A/B comparisons, and distribution shift (poor RLHF calibration); reliable alternatives include human evaluation with inter-annotator agreement and rule-based capability metrics`,
         ],
         answer: `D`
       },
@@ -683,30 +683,30 @@ NOT this: exploration is just about trying random actions. Structured exploratio
       {
         q: `Why does ε-greedy exploration fail on Montezuma's Revenge (an Atari game with hard exploration), and what specific property of the environment causes the failure?`,
         options: [
-          `A) ε-greedy fails because Montezuma's Revenge has a very large action space (18 discrete actions) making random exploration too slow; using a smaller ε value would solve the problem by concentrating exploration on fewer actions`,
-          `B) The failure is caused by the game's high-resolution graphics, which make the state space too large for Q-learning to generalise across; the fix is to use a CNN with better feature extraction rather than a different exploration strategy`,
-          `C) ε-greedy fails because the first reward in Montezuma's Revenge requires executing a specific sequence of ~100+ actions; the probability of discovering this by random exploration is (ε/|A|)^100 ≈ 10^{-218}, effectively impossible; fixes include ICM/RND (novelty rewards drive the agent into new rooms), hierarchical RL (subgoals decompose the task), and human demonstration seeding`,
-          `D) ε-greedy is insufficient because Montezuma's Revenge has a non-Markovian reward structure where the same action produces different rewards depending on the full episode history; the fix is to use a recurrent policy that conditions on the entire trajectory`,
+          `A) ε-greedy fails because Montezuma's Revenge has a very large discrete action space of 18 possible actions, which makes purely random exploration far too slow to be practical; using a substantially smaller ε value would solve this by concentrating exploration onto fewer candidate actions`,
+          `B) The failure is caused entirely by the game's high-resolution graphics, which make the raw pixel state space too large for Q-learning to generalise across effectively; the correct fix is a CNN with better convolutional feature extraction rather than any change to the exploration strategy itself`,
+          `C) The first reward requires a specific sequence of ~100+ actions; probability of discovering this by random exploration is (ε/|A|)^100 ≈ 10^{-218}, effectively impossible; fixes include ICM/RND novelty rewards, hierarchical RL subgoals, and human demonstration seeding`,
+          `D) ε-greedy is insufficient because Montezuma's Revenge has a fundamentally non-Markovian reward structure where the identical action produces different rewards depending on the full episode history; the fix is a recurrent policy that conditions on the entire trajectory rather than the current frame`,
         ],
         answer: `C`
       },
       {
-        q: `Explain the noisy TV problem in curiosity-driven exploration. How does ICM's feature encoder solve it, and how does RND avoid it entirely?`,
+        q: `Which two statements correctly explain the noisy-TV problem in curiosity-driven exploration and how ICM/RND address it?`,
         options: [
-          `A) The noisy TV problem occurs when the environment has a high frame rate that overwhelms the replay buffer with uninformative transitions; ICM solves this by subsampling frames, and RND avoids it by using a fixed random projection that is invariant to frame rate`,
-          `B) The noisy TV problem is that a pure prediction-error curiosity module rewards the agent for standing in front of random static TV (maximum prediction error forever, no exploration); ICM solves it via inverse dynamics training that makes the feature encoder ignore uncontrollable features (TV static is invisible because the agent's actions don't cause it); RND solves it because the fixed random target network gives each TV frame a deterministic representation, so intrinsic reward decays after a few visits`,
-          `C) The noisy TV problem is only relevant for environments with actual television screens; in abstract environments like Atari games without random static, both ICM and RND perform identically and the distinction between their approaches does not matter`,
-          `D) The noisy TV problem occurs when the reward model overfits to visual patterns in the training data; ICM solves it with data augmentation during feature encoder training, and RND avoids it by using a reward model that is trained on text descriptions of states rather than raw pixels`,
+          `A) A pure prediction-error curiosity module rewards the agent for standing in front of random static (maximum prediction error forever, no real exploration); ICM fixes this via inverse-dynamics training so the feature encoder ignores uncontrollable features the agent's actions can't cause`,
+          `B) RND avoids the problem because its fixed random target network gives each TV frame a deterministic representation, so intrinsic reward for a static-but-unlearnable state decays to near zero after a few visits`,
+          `C) The noisy-TV problem occurs when the environment has a high frame rate that overwhelms the replay buffer; ICM solves this by subsampling frames, and RND avoids it via a projection invariant to frame rate`,
+          `D) The noisy-TV problem only applies to environments containing literal television screens; in Atari games without visible static, ICM and RND behave identically and the distinction is irrelevant`,
         ],
-        answer: `B`
+        answer: ['A', 'B']
       },
       {
         q: `You are applying RL to a drug discovery task — the agent proposes molecular structures and receives a reward based on the drug's predicted binding affinity. The action space is discrete (atom type × position) but the molecule space has ~10^{60} valid molecules. How do you handle exploration?`,
         options: [
-          `A) Use Bayesian optimisation with a surrogate model for Thompson sampling over molecular embeddings, or generative RL (REINVENT/GCPN) with diversity bonuses and fragment-based search to reduce the effective space; be aware that the binding affinity predictor is itself a proxy reward — RL against it requires diversity regularisation and periodic wet-lab validation to guard against Goodhart violations`,
-          `B) Standard ε-greedy with ε=0.5 is sufficient because the dense structure of chemical space means that random perturbations of a good molecule will often produce another good molecule; the 10^{60} size is misleading since most molecules are structurally similar`,
-          `C) Use count-based exploration with SimHash to approximate visit counts in the molecular fingerprint space; this provides UCB-style bonuses for novel molecules without requiring exact state counts`,
-          `D) The only valid approach for 10^{60}-molecule spaces is evolutionary search (genetic algorithms), not RL; RL cannot scale to spaces larger than approximately 10^{20} states and will fail regardless of the exploration strategy used`,
+          `A) Use Bayesian optimisation with a surrogate model for Thompson sampling over molecular embeddings, or generative RL (REINVENT/GCPN) with diversity bonuses; the binding-affinity predictor is itself a proxy reward, so guard against Goodhart violations with diversity regularisation and periodic wet-lab validation`,
+          `B) Standard ε-greedy with ε=0.5 is entirely sufficient here because the dense local structure of chemical space means that random perturbations applied to an already-good molecule will frequently produce yet another good molecule; the raw figure of 10^{60} is misleading since most molecules turn out to be structurally near-identical`,
+          `C) Use count-based exploration with a SimHash-based locality-sensitive hash to approximate visit counts directly in the molecular fingerprint space; this provides UCB-style exploration bonuses for novel molecules without ever requiring exact discrete state counts to be maintained`,
+          `D) The only mathematically valid approach for a 10^{60}-molecule space is classical evolutionary search using genetic algorithms rather than any form of RL; RL is fundamentally incapable of scaling to state spaces larger than roughly 10^{20} states regardless of which exploration strategy is chosen`,
         ],
         answer: `A`
       },
@@ -756,14 +756,14 @@ NOT this: if the agent performs well in simulation, it will perform well in prod
         answer: `B`
       },
       {
-        q: `Your RL agent for robot manipulation works perfectly in simulation (95% success rate) but achieves only 20% in the real lab. What are the sources of the sim-to-real gap and how do you diagnose and close each?`,
+        q: `Your RL agent for robot manipulation works perfectly in simulation (95% success rate) but achieves only 20% in the real lab. Which two of the following are independent sources of the sim-to-real gap, each needing a distinct fix?`,
         options: [
-          `A) The sim-to-real gap is caused entirely by observation discrepancy (sim renders perfect images while real cameras have noise); the fix is to use depth cameras instead of RGB cameras, which have a much smaller sim-to-real gap`,
-          `B) The primary source is always actuation delay; simulators run synchronously while real robots have 20-50ms latency; adding simulated delay to the training environment will fully close the gap`,
-          `C) The sim-to-real gap has multiple independent sources: physics mismatch (friction, mass, contact — fix via system identification and domain randomisation), observation discrepancy (image quality — fix via domain randomisation of lighting/texture or sim-to-real image transfer), actuation delay (fix via randomised delay in simulation), and distributional shift in initial conditions (fix via varied object placement during training); diagnose by isolating each factor in simulation and measuring the performance drop`,
-          `D) The gap is caused by distribution shift in the policy: the agent was trained only on successful trajectories in simulation, so it doesn't know how to recover from failures; the fix is to augment the simulation training data with intentional failure scenarios and recovery demonstrations`,
+          `A) Physics mismatch — friction, mass, and contact dynamics don't match reality; fix via system identification and domain randomisation of physical parameters during training`,
+          `B) Observation discrepancy — rendered images differ from real camera output in lighting and texture; fix via domain randomisation of visual appearance or a sim-to-real image transfer model`,
+          `C) The choice of optimizer (Adam vs SGD) used during simulated training, which is what actually determines whether the learned policy generalizes to real actuators`,
+          `D) The reward function's numerical scale, which must always be normalized to [-1,1] regardless of the task or it will fail to transfer to any real robot`,
         ],
-        answer: `C`
+        answer: ['A', 'B']
       },
       {
         q: `A team proposes using RL for a clinical trial treatment assignment (which treatment to give each patient each day). What are the specific risks, and what alternative framework would you recommend?`,

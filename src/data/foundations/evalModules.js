@@ -89,60 +89,60 @@ One discipline ties it together. The decision threshold is a *parameter you tune
       {
         q: `A cancer screening model has precision=0.95 and recall=0.40. Is this a good model?`,
         options: [
-          `A) Yes — precision=0.95 means nearly all positive predictions are correct, which minimizes unnecessary follow-up tests`,
-          `B) It depends — F1=0.57 is moderate and acceptable for screening if the patient population is low-risk`,
-          `C) Yes — high precision is always more important than recall in medical settings to avoid false alarms`,
-          `D) No — recall=0.40 means 60% of actual cancer cases are missed; for screening you need recall > 0.90 and should lower the threshold accepting more FPs`,
+          `A) Yes — precision=0.95 means nearly all positive predictions are correct, cutting unnecessary follow-up biopsies, lab costs, and patient anxiety`,
+          `B) It depends — F1=0.57 is a moderate blended score, acceptable for screening only if the population is genuinely low-risk overall`,
+          `C) Yes — high precision always outweighs recall in medicine, since false alarms erode patient trust in the screening program`,
+          `D) No — recall=0.40 means 60% of cancers are missed; screening needs recall above 0.90, even lowering the threshold to accept more false alarms`,
         ],
         answer: `D`
       },
       {
         q: `Two models: Model A has precision=0.80, recall=0.80 (F1=0.80). Model B has precision=0.99, recall=0.67 (F1=0.80). Same F1. How do you choose?`,
         options: [
-          `A) Always choose Model B — higher precision means fewer false positives which is universally better`,
-          `B) The choice depends on cost(FP) vs cost(FN): Model B is better when FPs are costly, Model A is safer when FNs are costly — identical F1 can correspond to very different operating points on the precision-recall curve`,
-          `C) Always choose Model A — balanced precision and recall is always preferable to an extreme operating point`,
-          `D) The models are equivalent — identical F1 means identical performance and either can be deployed`,
+          `A) Always choose Model B — higher precision means fewer false positives, and fewer false positives is universally the safer default`,
+          `B) It depends on cost(FP) vs cost(FN): Model B suits costly FPs, Model A suits costly FNs — identical F1 hides very different operating points`,
+          `C) Always choose Model A — a balanced precision/recall split beats an extreme operating point regardless of what the errors actually cost`,
+          `D) The models are equivalent — identical F1 means identical real-world performance in every deployment context, so either model is safe to ship`,
         ],
         answer: `B`
       },
       {
-        q: `You compute macro-F1=0.91 and micro-F1=0.78 on a 5-class classifier. What does this tell you?`,
+        q: `You compute macro-F1=0.91 and micro-F1=0.78 on a 5-class classifier. Which two statements about this gap are correct? Select two.`,
         options: [
-          `A) The gap means small classes perform well (pulling macro up) while the majority class has significant errors (pulling micro down) — for production where majority-class errors are most frequent, micro-F1=0.78 is the number that matters`,
-          `B) Macro-F1 is always higher than micro-F1 on imbalanced data, so the gap is expected and uninformative`,
-          `C) The model is overfitting — high macro-F1 with low micro-F1 is a sign of variance, not bias`,
-          `D) Micro-F1=0.78 means the model is poor and macro-F1=0.91 is misleading due to class weighting errors`,
+          `A) Small classes are scoring well, pulling macro-F1 up, while the majority class carries most of the errors, dragging micro-F1 down`,
+          `B) Since production traffic is dominated by the majority class, micro-F1=0.78 is the more representative number for real-world error rate`,
+          `C) Macro-F1 is mathematically guaranteed to exceed micro-F1 whenever class counts differ, no matter where the errors are concentrated`,
+          `D) A 13-point macro/micro gap always signals high-variance overfitting rather than any real difference in per-class error concentration`,
         ],
-        answer: `A`
+        answer: ['A', 'B']
       },
       {
         q: `A model predicts fraud with AUC=0.97 but the operations team says too many legitimate transactions are being blocked. What metric should you change and why?`,
         options: [
-          `A) Switch from AUC to F1 — F1 balances precision and recall and will directly capture the blocking problem`,
-          `B) Switch to accuracy — AUC ignores the absolute number of errors which is what the operations team cares about`,
-          `C) Switch to monitoring precision at a fixed recall target — AUC measures ranking quality across all thresholds and says nothing about where you operate; the operations team is experiencing a precision problem at the deployed threshold`,
-          `D) Keep AUC but raise the threshold until FPs drop — the metric is fine, only the operating point needs adjustment`,
+          `A) Switch from AUC to F1 — F1 balances precision and recall directly, so it will automatically capture the blocking complaint`,
+          `B) Switch to accuracy — AUC ignores the absolute error count, which is the number the operations team actually cares about here`,
+          `C) Monitor precision at a fixed recall target — AUC measures ranking across all thresholds, not the precision at the deployed one`,
+          `D) Keep AUC but raise the threshold until false positives drop, since the metric itself is fine and only the cutoff needs adjusting`,
         ],
         answer: `C`
       },
       {
         q: `On a 2%-positive dataset, two summary metrics disagree: ROC-AUC is 0.94 (looks great) but PR-AUC is 0.31 (looks poor). Which do you trust and why?`,
         options: [
-          `A) Trust ROC-AUC — it is the standard metric and 0.94 means the model ranks positives above negatives well, so PR-AUC must be miscomputed.`,
-          `B) Trust PR-AUC here. With only 2% positives, the enormous true-negative count keeps FPR tiny, so ROC-AUC stays high even while the model produces many false positives per true positive. PR-AUC ignores true negatives and exposes that, making it the more honest summary for rare positives.`,
-          `C) Average the two into a single 0.63 score, since neither is reliable alone on imbalanced data and the mean cancels their biases.`,
-          `D) Neither — on imbalanced data only raw accuracy is trustworthy, so discard both AUC metrics and report accuracy instead.`,
+          `A) Trust ROC-AUC — it is the field-standard metric, and 0.94 must mean PR-AUC was simply miscomputed on this rare-positive dataset`,
+          `B) Trust PR-AUC — the huge true-negative count keeps FPR tiny, so ROC-AUC stays flattering even as false positives swamp true positives caught`,
+          `C) Average the two into a single 0.63 score, since neither metric alone is reliable on imbalanced data and averaging cancels the bias`,
+          `D) Trust neither — on imbalanced data only raw accuracy is dependable and interpretable, so discard both AUC variants and report accuracy alone instead`,
         ],
         answer: `B`
       },
       {
         q: `You sweep the decision threshold, find the value that maximises F1 on your test set, and report that F1 as the model's performance. What is wrong?`,
         options: [
-          `A) Nothing — the threshold is a hyperparameter, and choosing it to maximise F1 on the test set is exactly how you should report best-case performance.`,
-          `B) You should have maximised accuracy instead of F1; the threshold choice is fine but the metric is wrong.`,
-          `C) The threshold is a tuned parameter, so choosing it on the test set makes the reported F1 optimistic — it won't hold in production. Tune the threshold on a validation set, freeze it, then report on the untouched test set once. It's the same leakage as tuning weights on test.`,
-          `D) F1 can't be used with a swept threshold at all; only fixed-threshold metrics like accuracy are valid after threshold selection.`,
+          `A) Nothing — the threshold is just another hyperparameter, and maximising F1 on the test set is the standard way to report best-case results`,
+          `B) You should have maximised accuracy instead of F1 here; the threshold-selection step itself was fine, only the chosen metric was wrong`,
+          `C) The threshold is tuned on test, so the reported F1 is optimistic; tune on validation, freeze it, then score the untouched test set once`,
+          `D) F1 simply cannot be paired with a swept threshold at all; only accuracy remains a valid metric once threshold selection has occurred`,
         ],
         answer: `C`
       },
@@ -267,62 +267,62 @@ AUC is binary by construction, so for K classes you extend it. **One-vs-rest (Ov
     interactivePrompt: `Before you touch the controls: if a fraud model has AUC = 0.91 but generates 500 false alarms for every 100 real frauds it catches, is the model production-ready — and what does AUC not tell you about this?`,
     checkQuestions: [
       {
-        q: `Two models have the same AUC-ROC (0.85) on a 1% positive rate dataset. How would you further differentiate them?`,
+        q: `Two models have the same AUC-ROC (0.85) on a 1% positive rate dataset. Which two of the following would actually help you further differentiate them? Select two.`,
         options: [
-          `A) Run longer training with more epochs — same AUC means one model hasn't converged yet`,
-          `B) Compare their decision boundaries visually — AUC is a rough metric and visual inspection is more reliable`,
-          `C) Check F1 score at threshold=0.5 — this is the standard operating threshold that reveals differences`,
-          `D) Compare PR-AUC, precision at specific recall targets, calibration via Brier score, and lift curves — same AUC-ROC can mask very different PR curves especially in the high-recall regime where one model may be much more precise`,
+          `A) Compare PR-AUC directly, since it exposes false-positive floods that ROC-AUC hides behind a huge true-negative denominator on rare-positive data`,
+          `B) Check calibration with a reliability diagram or Brier score, since equal ranking quality says nothing about whether the probabilities are honest`,
+          `C) Run longer training with more epochs, since identical AUC at convergence always means one of the two models simply has not finished learning`,
+          `D) Check F1 score at the default threshold of 0.5, since that is the universal operating point every classifier should be judged against always`,
         ],
-        answer: `D`
+        answer: ['A', 'B']
       },
       {
         q: `Your fraud model has AUC=0.96. The business team says the alert queue has too many false alarms. What happened and how do you fix it?`,
         options: [
-          `A) AUC=0.96 measures ranking quality, not operational precision at the deployed threshold — raise the score threshold to reduce FPs, or recalibrate with Platt scaling if precision is poor even at high thresholds`,
-          `B) AUC=0.96 is too high and indicates overfitting — retrain with more regularization to reduce false alarms`,
-          `C) The model needs more training data — high AUC with high false alarms means insufficient examples of legitimate transactions`,
-          `D) Switch to a different model architecture — AUC=0.96 means the current model type is not suited to fraud detection`,
+          `A) AUC measures ranking quality, not precision at the deployed threshold — raise the threshold, or recalibrate with Platt scaling if precision stays poor`,
+          `B) AUC=0.96 is suspiciously too high and indicates severe overfitting to the training distribution — retrain with much heavier L2 regularization now`,
+          `C) The model needs far more training data to fix this — high AUC with high false alarms always means too few examples of legitimate transactions exist`,
+          `D) Switch to a completely different model architecture entirely and from scratch — AUC=0.96 proves the current model family is fundamentally unsuited here`,
         ],
         answer: `A`
       },
       {
         q: `AUC-ROC for a model is 0.72. A colleague argues that "since 0.72 > 0.5, the model is useful." Is that a sufficient argument?`,
         options: [
-          `A) Yes — any AUC above 0.5 means the model ranks positives above negatives better than chance, which is sufficient for production use`,
-          `B) No — AUC > 0.5 only means better-than-chance ranking; it says nothing about whether the degree of improvement is meaningful at the specific operating threshold needed, or whether performance is uniform across subgroups`,
-          `C) Yes — 0.72 is above the industry standard threshold of 0.70, making the model production-ready`,
-          `D) No — 0.72 is too low to be useful; only models with AUC > 0.85 should be considered for production`,
+          `A) Yes — any AUC above 0.5 means the model reliably ranks positives above negatives better than pure chance, which by itself is a sufficient bar for shipping`,
+          `B) No — AUC>0.5 only means better-than-chance ranking; it says nothing about whether the improvement is meaningful at the operating threshold you deploy`,
+          `C) Yes — 0.72 clears the informal industry rule-of-thumb threshold of 0.70, which by convention makes a ranking model production-ready`,
+          `D) No — 0.72 is simply too low to be useful in practice; only models clearing an AUC of 0.85 or higher should ever be considered for production`,
         ],
         answer: `B`
       },
       {
         q: `What is the relationship between AUC-ROC and the Mann-Whitney U statistic?`,
         options: [
-          `A) They are inversely related — high AUC corresponds to a low Mann-Whitney U, making them complementary tests`,
-          `B) Mann-Whitney U tests for statistical significance while AUC measures effect size — they are related but measure different things`,
-          `C) AUC-ROC equals the normalized Mann-Whitney U statistic: both compute P(score(positive) > score(negative)) over all (positive, negative) pairs — so AUC can be computed by counting concordant pairs without drawing the ROC curve`,
-          `D) They are unrelated — AUC is a geometric property of the ROC curve while Mann-Whitney U is a rank-based statistical test`,
+          `A) They are inversely related — a high AUC always corresponds to a low Mann-Whitney U statistic, making the two complementary statistical significance tests used in practice`,
+          `B) Mann-Whitney U formally tests for statistical significance while AUC measures effect size on a 0-1 scale — related in spirit but not the same quantity`,
+          `C) AUC-ROC equals the normalized Mann-Whitney U statistic: both compute P(score(positive) > score(negative)), so AUC can be found by counting concordant pairs`,
+          `D) They are entirely unrelated — AUC is a purely geometric property of the ROC curve, while Mann-Whitney U is an unrelated rank-based statistical test`,
         ],
         answer: `C`
       },
       {
         q: `Your model validated at 5% fraud prevalence with ROC-AUC 0.95 and precision 0.60 at the deployed threshold. In production, live fraud has fallen to 1%. What happens to ROC-AUC and precision, and why?`,
         options: [
-          `A) Both drop proportionally, because every metric scales with the base rate of the positive class.`,
-          `B) ROC-AUC stays about the same (TPR and FPR don't depend on prevalence), but precision falls — from precision = π·TPR/(π·TPR + (1−π)·FPR), a smaller π shrinks the numerator while the false positives from the large negative pool grow, so the same model produces a worse precision at 1% than at 5%. Recompute expected precision at the production base rate.`,
-          `C) ROC-AUC rises because rarer positives are easier to rank, and precision rises too since there are fewer positives to get wrong.`,
-          `D) Neither changes — ROC-AUC and precision are both threshold- and prevalence-independent summaries of the model.`,
+          `A) Both drop by roughly the same proportion, because every classification metric scales linearly and directly with the underlying base rate of positives`,
+          `B) ROC-AUC stays about the same since TPR/FPR do not depend on prevalence, but precision falls — the formula shrinks as the positive rate drops, so recompute`,
+          `C) ROC-AUC actually rises because rarer positive examples become much easier to rank correctly, and precision rises too since fewer positives can be misclassified now`,
+          `D) Neither changes at all — ROC-AUC and precision are both fully threshold-independent and prevalence-independent summaries of any classifiers quality`,
         ],
         answer: `B`
       },
       {
         q: `You're building a fraud screen that can only ever operate at FPR below 5% (you can't block more legit traffic than that). Two models tie on full ROC-AUC. What's the sharper way to compare them?`,
         options: [
-          `A) Compare full ROC-AUC again with more decimal places — the tie will resolve at higher precision.`,
-          `B) Compare partial AUC restricted to the FPR < 0.05 region (or precision at your target low-FPR operating point). Full AUC averages over high-FPR thresholds you'll never use, so it can hide that one model is clearly better in the band you actually run — inspect the curves there, since equal-AUC models can cross.`,
-          `C) Pick whichever model has the higher accuracy at threshold 0.5, since that's the standard operating point.`,
-          `D) They're genuinely equivalent — identical full AUC means identical ranking everywhere, so choose either.`,
+          `A) Compare the same full ROC-AUC number again but computed to more decimal places of precision, since the apparent tie will eventually resolve itself`,
+          `B) Compare partial AUC restricted to FPR<0.05, since full AUC averages over high-FPR thresholds you will never run and can hide a clear winner nearby`,
+          `C) Pick whichever model shows the higher raw accuracy at the default threshold of 0.5, since that is always the standard operating point to compare on`,
+          `D) They are genuinely equivalent for this purpose — identical full AUC guarantees identical ranking behavior everywhere, so either model is a fine choice`,
         ],
         answer: `B`
       },
@@ -454,60 +454,60 @@ A final subtlety interviewers probe: NDCG, MAP, and MRR are based on *sorting*, 
       {
         q: `A search engine retrieves 3 relevant documents at ranks 1, 3, 5, out of 5 total relevant documents. Compute Average Precision (AP).`,
         options: [
-          `A) AP = 0.60 — the average of P@1, P@3, and P@5 weighted by the 3 relevant documents that were actually retrieved`,
-          `B) AP = 0.453 — add the precision at each rank where a relevant doc appears (1.0, 2/3, 3/5) and divide by the total relevant count, 5: (1/5)(1.0 + 0.667 + 0.6) = 0.453`,
-          `C) AP = 0.333 — the plain mean of P@1, P@3, and P@5 with no division by the total number of relevant documents`,
-          `D) AP = 0.50 — since 3 of the 5 relevant docs were found, AP is just the recall of 0.60 blended together with precision`,
+          `A) AP = 0.60 — simply the average of P@1, P@3, and P@5, weighted by the 3 relevant documents that were actually retrieved here in total`,
+          `B) AP = 0.453 — sum the precision at each rank with a relevant hit (1.0, 0.667, 0.6), divide by 5 relevant total`,
+          `C) AP = 0.333 — the plain arithmetic mean of P@1, P@3, and P@5, with no division by the total number of relevant documents at all here`,
+          `D) AP = 0.50 — since 3 of the 5 relevant docs were found, AP is simply the recall of 0.60 blended together with precision somehow`,
         ],
         answer: `B`
       },
       {
-        q: `Your recommendation system shows NDCG@10 = 0.85 offline, but users complain the results feel irrelevant. What could explain the gap?`,
+        q: `Your recommendation system shows NDCG@10 = 0.85 offline, but users complain the results feel irrelevant. Which two of the following could plausibly explain the gap? Select two.`,
         options: [
-          `A) The NDCG was likely computed on click-based labels that bake in position bias, or the offline test set is stale, or the average hides poor performance on tail queries, or relevance was scored per item while the real experience is per session — offline NDCG and felt relevance can diverge for any of these reasons.`,
-          `B) NDCG@10 = 0.85 is simply too low — results only start to feel relevant once NDCG climbs above 0.95, so the fix is just to push the model harder.`,
-          `C) The model is overfitting the test set; 0.85 on held-out data alongside complaints means the test set is unrepresentative, and nothing else could be going on.`,
-          `D) Users are scrolling past position 10, so the entire problem lives below the top ten, somewhere NDCG@10 cannot see it at all.`,
+          `A) Click-based relevance labels bake in position bias, so offline NDCG partly measures the old rankings habits rather than true relevance`,
+          `B) The offline test set may simply be stale, or relevance was scored per item while the real user experience actually unfolds per session`,
+          `C) NDCG@10 = 0.85 is simply too low a bar to clear — results only start to feel relevant once NDCG climbs well above 0.95 or so`,
+          `D) Users are scrolling well past position 10 on every single query, so the entire problem lives below the top ten, invisible to this metric`,
         ],
-        answer: `A`
+        answer: ['A', 'B']
       },
       {
         q: `A search system has MRR = 0.60. A manager wants 0.75. What does that mean concretely, and what would you change?`,
         options: [
-          `A) Going from 0.60 to 0.75 is a 25% relative lift, so the move is to improve overall ranking quality evenly, nudging every position up by the same amount.`,
-          `B) MRR only ever looks at the first relevant result, so raising it means fully re-ranking the entire result set for every single query from scratch.`,
-          `C) MRR = 0.60 means the first relevant result sits at rank ≈ 1.67 on average; 0.75 means ≈ 1.33. So focus on the queries where the first relevant result is at rank 3 or worse — improve query understanding, and improve retrieval recall so the re-ranker actually has the right document to put first.`,
-          `D) It means increasing the share of queries that return any relevant result at all, so the effort should go entirely into recall-oriented retrieval improvements.`,
+          `A) Going from 0.60 to 0.75 is just a 25% relative lift, so the move is to improve overall ranking quality evenly, nudging every position up by the same fixed amount`,
+          `B) MRR only ever looks at the first relevant result, so raising it means fully re-ranking the entire result set for every single query from scratch each time`,
+          `C) MRR=0.60 means the first relevant result sits at rank about 1.67; 0.75 means about 1.33 — fix queries where it lands at rank 3+`,
+          `D) It means increasing the share of queries that return any relevant result at all, so the effort should go entirely into recall-oriented retrieval improvements instead`,
         ],
         answer: `C`
       },
       {
         q: `You have graded relevance labels (0-3) and want to compare two rankers. Should you use MAP or NDCG?`,
         options: [
-          `A) Use NDCG — MAP requires binary relevance and cannot use graded scores; NDCG with 2^rel amplifies differences between highly relevant (rel=3, contribution 7) and somewhat relevant (rel=1, contribution 1) items, making it strictly more informative for graded labels`,
-          `B) Use MAP — it is more interpretable than NDCG and can handle graded labels by treating each grade as a separate binary threshold`,
-          `C) Use MRR — graded relevance labels are best handled by finding the first highly-relevant (rel=3) result, which MRR measures directly`,
-          `D) Either is fine — MAP and NDCG are mathematically equivalent when applied to graded relevance labels`,
+          `A) Use NDCG — MAP needs binary relevance; NDCGs 2^rel term amplifies highly relevant items over so-so ones, more informative here`,
+          `B) Use MAP — it is more interpretable than NDCG and can handle graded labels just fine by treating each grade as its own separate binary relevance threshold`,
+          `C) Use MRR — graded relevance labels are best handled by finding the first highly-relevant (rel=3) result in the list, which MRR measures directly and simply`,
+          `D) Either is fine to use here — MAP and NDCG are mathematically equivalent formulas once applied to graded relevance labels instead of binary ones`,
         ],
         answer: `A`
       },
       {
         q: `A new retrieval model surfaces documents the old system never showed, and offline NDCG comes out lower than the old model. What is the likely explanation before you conclude the new model is worse?`,
         options: [
-          `A) The new model is simply worse — a lower NDCG on the same labeled test set is definitive, so revert to the old model.`,
-          `B) Pooling bias: the relevance labels were pooled from the old system's results, so the new model's genuinely relevant but never-judged documents default to "not relevant" and are scored 0. That drags NDCG down unfairly. Judge the new system's novel results before comparing — unjudged is not the same as irrelevant.`,
-          `C) The new model has a bug in its tie-breaking, which is the only thing that can lower NDCG when better documents are retrieved.`,
-          `D) NDCG can't be compared across models at all, so the lower number is meaningless and you should use accuracy instead.`,
+          `A) The new model is simply worse — a lower NDCG on the same labeled test set is definitive proof, so you should just revert straight back to the old model`,
+          `B) Pooling bias: labels pooled from the old systems results, so the new models unjudged relevant docs default to 0 — judge novel results first`,
+          `C) The new model has a subtle bug in its tie-breaking logic, which is the only conceivable thing that can lower NDCG when strictly better documents are retrieved`,
+          `D) NDCG simply cannot be compared across two different models at all, so the lower number is meaningless and you should switch to using accuracy instead`,
         ],
         answer: `B`
       },
       {
         q: `An interviewer asks: "Why can't you train a ranking model by directly minimising 1 − NDCG with gradient descent?"`,
         options: [
-          `A) You can — NDCG is smooth and differentiable, so 1 − NDCG is a perfectly standard loss and most rankers use it directly.`,
-          `B) Because NDCG is bounded in [0, 1], and gradient descent only works on unbounded losses; you'd have to rescale it first.`,
-          `C) NDCG depends on the sorted order of items, and sorting is a step function — a tiny change in scores either doesn't change the ranking (zero gradient) or flips two items (a discontinuous jump), so NDCG has no useful gradient. Rankers optimise a differentiable surrogate instead: pairwise losses (RankNet/LambdaRank) or listwise losses (ListNet), with LambdaMART weighting pairwise gradients by NDCG impact.`,
-          `D) NDCG can only be computed with human graded labels, which aren't available during training, so there's simply nothing to differentiate.`,
+          `A) You can — NDCG is smooth and fully differentiable everywhere, so 1 − NDCG is a perfectly standard loss function and most rankers optimise it directly`,
+          `B) Because NDCG is bounded within [0, 1], and gradient descent only ever works on unbounded loss functions — you would first have to rescale it before training`,
+          `C) Sorting is a step function: a tiny score change leaves ranking unchanged or flips two items — rankers use differentiable surrogate losses instead`,
+          `D) NDCG can only ever be computed using human graded labels, which are not available during live training, so there is simply nothing to differentiate against`,
         ],
         answer: `C`
       },
@@ -616,60 +616,60 @@ You can partly de-bias offline log evaluation with **inverse propensity scoring*
       {
         q: `Your RecSys shows +3% NDCG@10 offline. You run an A/B test and see -1% on session length. What do you do?`,
         options: [
-          `A) Ship the model — NDCG@10 is the primary metric and a -1% session length change is within normal variance`,
-          `B) Run the A/B test for longer — 3 days is insufficient and the session length dip is likely a novelty effect`,
-          `C) Investigate whether NDCG improved on click-based labels with position bias, or the model optimised for initial clicks but not session engagement — do NOT ship if session length is a confirmed guardrail metric`,
-          `D) Split the difference: ship a 50% rollout and monitor session length with automated rollback if it drops further`,
+          `A) Ship the model right away — NDCG@10 is the primary metric here, and a -1% session length change is within normal variance`,
+          `B) Run the A/B test for longer — 3 days is simply insufficient time, and the session length dip is most likely just a novelty effect`,
+          `C) Investigate whether NDCG improved on position-biased click labels or clicks-not-engagement — do not ship if session length is a guardrail`,
+          `D) Split the difference: ship a cautious 50% rollout and monitor session length very closely with automated rollback if it drops any further at all`,
         ],
         answer: `C`
       },
       {
-        q: `What is the difference between running an A/B test and running an interleaving experiment? When would you choose each?`,
+        q: `What is the difference between running an A/B test and running an interleaving experiment? Which two of the following statements about them are correct? Select two.`,
         options: [
-          `A) A/B tests route each user to one version and measure absolute business metrics; interleaving merges both rankers' results per user and measures relative preference — eliminating between-user variance to require 100x fewer users for the same statistical power; choose A/B for absolute business impact, interleaving for cheap ranking comparison`,
-          `B) Interleaving is only valid for ranking systems while A/B tests work for any model type — choose based on whether you are testing a ranker or a classifier`,
-          `C) A/B tests are more statistically powerful because they eliminate within-user variance; interleaving is used only when sample sizes are very small`,
-          `D) They are equivalent in statistical power but A/B tests are easier to implement, so interleaving is only used at very large companies with dedicated experimentation infrastructure`,
+          `A) A/B routes each user to one arm and measures absolute business impact; interleaving merges both rankers per user, needing far fewer users`,
+          `B) Interleaving is only ever valid for ranking systems while A/B tests work for any model type — choose based on whether you test a ranker or classifier`,
+          `C) Interleaving measures relative ranking preference, not absolute business impact, so it complements rather than replaces a full A/B test`,
+          `D) A/B tests are more statistically powerful because they eliminate within-user variance entirely; interleaving is used only when sample sizes are tiny`,
         ],
-        answer: `A`
+        answer: ['A', 'C']
       },
       {
         q: `Your team calibrated that +1% NDCG gain historically predicts +0.4% CTR online. You see a model with +5% NDCG. Should you trust the calibration and skip the A/B test?`,
         options: [
-          `A) Yes — a +5% NDCG gain is so large that the expected CTR gain of +2% is well above any noise threshold and the A/B test is unnecessary`,
-          `B) Yes — proxy metric calibration exists precisely to avoid expensive A/B tests for large, clearly significant offline gains`,
-          `C) No — calibration is based on historical changes that may not represent this specific change; large offline gains often signal distribution mismatch or data leakage; use calibration to triage but never to skip the A/B test entirely`,
-          `D) No — a +5% NDCG gain invalidates the calibration because it is outside the historical range the calibration was built on`,
+          `A) Yes — a +5% NDCG gain is so large that the expected CTR gain of about +2% sits well above any plausible noise threshold, so testing is unnecessary`,
+          `B) Yes — proxy metric calibration exists precisely to avoid running expensive A/B tests whenever the offline gain is this large and clearly significant`,
+          `C) No — the calibration reflects past changes that may not represent this one; a gain this large often signals leakage, so triage with it but still test`,
+          `D) No — a +5% NDCG gain invalidates the calibration outright, because it falls outside the historical range the calibration curve was originally built on`,
         ],
         answer: `C`
       },
       {
         q: `A competitor product uses pure online bandit for model selection instead of A/B tests. What are the trade-offs?`,
         options: [
-          `A) Bandits are strictly better — they minimize regret by routing traffic to better arms and can be used as a direct replacement for A/B tests in all scenarios`,
-          `B) Bandits minimize regret and adapt quickly; but they cannot isolate clean causal estimates (allocation is endogenous), struggle with delayed feedback signals, and can produce biased estimates — A/B tests with fixed duration are preferable for rigorous causal evaluation of model quality`,
-          `C) Bandits are only appropriate for ad creative selection; for ML model evaluation A/B tests are always required by regulatory standards`,
-          `D) The trade-off is purely computational — bandits require more infrastructure investment but produce identical statistical results to A/B tests once converged`,
+          `A) Bandits are strictly better in every case — they minimize regret by routing traffic to the better arm and can fully replace A/B tests everywhere`,
+          `B) Bandits adapt fast but their allocation is endogenous, so they cannot give a clean causal estimate and struggle badly with delayed feedback signals`,
+          `C) Bandits are only appropriate for ad creative selection; for ML model evaluation, A/B tests are always mandated by internal regulatory standards`,
+          `D) The trade-off is purely computational — bandits need more infrastructure investment but yield identical statistical results to A/B tests once converged`,
         ],
         answer: `B`
       },
       {
         q: `You want to evaluate a new ranking policy offline using logged data from the current production model, applying inverse propensity scoring (IPS). What is the main risk and a partial fix?`,
         options: [
-          `A) There is no real risk — IPS gives an unbiased estimate of the new policy from logged data, so it fully replaces the need for an A/B test.`,
-          `B) IPS has high variance: when the logging policy showed some item with very low probability, the 1/p weight explodes and a single record dominates the estimate. It also needs accurate propensities and overlap (the new policy can only be evaluated where the old one had some chance of showing the same items). Self-normalised IPS or doubly-robust estimators reduce the variance, but extreme propensities still force a real A/B test.`,
-          `C) The main risk is that IPS is too slow to compute on large logs; the fix is to subsample the data before applying it.`,
-          `D) IPS only works for classification, not ranking, so the fix is to convert the ranking problem into a binary click-prediction task first.`,
+          `A) There is no real risk here — IPS gives a fully unbiased estimate of the new policy from logged data, so it completely replaces any A/B test`,
+          `B) IPS has high variance: a tiny logging probability makes 1/p explode; needs accurate propensities and overlap — SNIPS/doubly-robust help some`,
+          `C) The main risk is that IPS is simply too slow to compute on large production logs; the fix is to subsample the data heavily before applying it`,
+          `D) IPS only ever works cleanly for classification tasks, not general ranking policies, so the fix is to convert it into a binary click-prediction task`,
         ],
         answer: `B`
       },
       {
         q: `A PM checks the A/B dashboard every morning and wants to call the test the moment CTR crosses p < 0.05. Why is this a problem, and what else should be in place?`,
         options: [
-          `A) It's fine — stopping as soon as p < 0.05 is the fastest way to ship wins and wastes no traffic.`,
-          `B) Repeatedly checking and stopping at the first p < 0.05 is peeking: each look is another chance for noise to cross the line, so the false-positive rate is far above 5%. Fix the sample size in advance from a power/MDE calculation (or use a sequential-testing method), run across full weekly cycles to survive novelty and seasonality, and check guardrail metrics — not just the primary — before declaring a win.`,
-          `C) The only problem is the time of day; checking in the afternoon instead of the morning removes the bias.`,
-          `D) Peeking is harmless for CTR because click metrics have low variance; it only matters for revenue metrics.`,
+          `A) It is fine — stopping the very moment p < 0.05 is the fastest way to ship real wins, and it wastes no traffic sitting in a pointless test`,
+          `B) Peeking daily inflates the false-positive rate well above 5%; fix the sample size upfront (power/MDE), run full weekly cycles, and check guardrails`,
+          `C) The only real problem here is supposedly the time of day the dashboard gets checked; checking in the afternoon instead of morning removes the bias entirely`,
+          `D) Peeking is basically harmless for CTR specifically because click metrics carry low variance; it really only matters for noisier revenue metrics`,
         ],
         answer: `B`
       },
@@ -789,60 +789,60 @@ Leakage often isn't caught offline at all — it surfaces after deploy. The sign
       {
         q: `You build a churn prediction model with AUC=0.97. In production, AUC drops to 0.64. What went wrong and how do you debug?`,
         options: [
-          `A) The model overfit — AUC=0.97 on validation with 0.64 in production means training data was insufficient; collect more data and retrain`,
-          `B) Production data has shifted — the drop indicates concept drift and the model needs continuous retraining`,
-          `C) The model is correct — 0.97 offline and 0.64 online is a normal offline-online gap for churn models; no action needed`,
-          `D) This is a strong signal of data leakage — check if the train/test split was random on time-series data, audit top-5 features for post-churn values (e.g., "account closed=1"), check preprocessing fit on full dataset, and check for group leakage; the 0.97 was an illusion and 0.64 is the true performance`,
+          `A) The model simply overfit — AUC=0.97 on validation dropping sharply to 0.64 in production means training data was insufficient; collect more and retrain`,
+          `B) Production data has clearly shifted — the drop indicates plain concept drift, and the model just needs continuous scheduled retraining going forward`,
+          `C) The model is correct as-is — 0.97 offline and 0.64 online is a totally normal offline-online gap for churn models specifically; no action needed`,
+          `D) Strong signal of leakage: check if the split was random on time-series data, audit top features for post-churn values, check preprocessing fit scope`,
         ],
         answer: `D`
       },
       {
         q: `A colleague uses a random 80/20 split on a dataset of 500,000 website visits by 50,000 unique users. What is the problem and how do you fix it?`,
         options: [
-          `A) Random row-level split puts the same user in both train and test — the model memorises user-level patterns that will not generalise to new users; fix by splitting at the user level, so all visits from a user go to exactly one side.`,
-          `B) The 80/20 ratio is too aggressive — switch to 70/30 to give the test set more samples for a more reliable evaluation.`,
-          `C) 500,000 rows is simply too large for random splitting — use stratified sampling instead to make sure the class balance is preserved.`,
-          `D) The real problem is insufficient feature engineering — the split method does not matter much as long as the features themselves are well-constructed.`,
+          `A) Random row-level split puts the same user in both sides, so the model memorises user patterns that will not generalise; split at the user level instead`,
+          `B) The 80/20 ratio itself is too aggressive here — switch to a 70/30 split to give the test set more samples for a supposedly more reliable evaluation`,
+          `C) 500,000 rows is simply too large a dataset for random splitting to work well — use stratified sampling instead to preserve the overall class balance`,
+          `D) The real underlying problem is insufficient feature engineering work — the split method barely matters as long as the features themselves are well built`,
         ],
         answer: `A`
       },
       {
         q: `What is target encoding leakage, and how does k-fold target encoding fix it?`,
         options: [
-          `A) It happens when the category names are semantically related to the label; k-fold fixes it by swapping the names for anonymised category IDs before encoding.`,
-          `B) It is really just group leakage under another name; k-fold fixes it by making sure each category appears in only one fold of the data.`,
-          `C) It happens because computing category means on the full dataset folds each test row's own label into its feature; k-fold target encoding fixes this by encoding each row using only out-of-fold data, so no row's label ever contributes to its own encoding.`,
-          `D) It happens when rare categories get noisy mean estimates; k-fold fixes it by averaging those estimates across several folds for extra stability.`,
+          `A) It happens when category names are semantically related to the label itself somehow; k-fold fixes it by swapping names for anonymised category IDs first`,
+          `B) It is really just group leakage wearing another name; k-fold fixes it by making sure each category appears in only a single fold of the data set`,
+          `C) Computing category means on the full dataset folds each rows own label into its feature; k-fold target encoding fixes this using out-of-fold data only`,
+          `D) It happens when rare categories get noisy mean estimates from too few samples; k-fold fixes it by averaging those estimates across several folds`,
         ],
         answer: `C`
       },
       {
         q: `You join a company and are handed a model achieving AUC=0.94 on historical data. How do you quickly audit for leakage before trusting this number?`,
         options: [
-          `A) Re-train the model from scratch on a clean dataset — inherited models always have unknown leakage that cannot be audited without retraining`,
-          `B) Check the train/test split method (random rows on time-series data is wrong), inspect top feature importances for any single dominating feature that may not be available at prediction time, and compare train vs test AUC for absence of generalization gap`,
-          `C) Run a shadow deployment and compare production AUC — the only reliable leakage audit is live traffic comparison`,
-          `D) Check if AUC=0.94 is above published benchmarks for similar problems — if so, leakage is confirmed`,
+          `A) Re-train the model completely from scratch on a clean dataset — inherited models always carry unknown leakage that cannot be audited without this`,
+          `B) Check the split method (random rows on time-series is wrong), inspect top feature importances for anything unavailable at prediction time, compare gaps`,
+          `C) Run a full shadow deployment and compare it directly against production AUC over time — the only truly reliable leakage audit is a live traffic comparison`,
+          `D) Check whether AUC=0.94 sits above published benchmarks for similar problems in the literature — if it does, leakage is essentially confirmed here`,
         ],
         answer: `B`
       },
       {
-        q: `You fit StandardScaler and SelectKBest on the full dataset, then run 5-fold cross-validation on the transformed data and get a great score. Why is the score optimistic, and what's the fix?`,
+        q: `You fit StandardScaler and SelectKBest on the full dataset, then run 5-fold cross-validation on the transformed data and get a great score. Which two of the following are true? Select two.`,
         options: [
-          `A) It's not optimistic — scaling and feature selection are deterministic transforms, so fitting them before CV has no effect on the score.`,
-          `B) Both the scaler (mean/variance) and SelectKBest (which features to keep) learned from the entire dataset, including the rows that later act as validation folds — so every fold's "held-out" data already influenced the preprocessing. Wrap the scaler, selector, and model in a scikit-learn Pipeline and pass that to cross_val_score, so all transforms are re-fit on each fold's training portion only.`,
-          `C) The problem is only SelectKBest; scaling is safe to fit on the full dataset because it doesn't use the labels.`,
-          `D) The fix is to use 10 folds instead of 5, which dilutes the leakage enough to make the score trustworthy.`,
+          `A) The scaler and SelectKBest both learned from the full dataset, including rows that later act as validation folds, so the score is optimistic`,
+          `B) Wrapping the scaler, selector, and model in a Pipeline fixes this, since each fold then refits every transform on only its own training portion`,
+          `C) Scaling is perfectly safe to fit on the full dataset before splitting, since StandardScaler never actually looks at the label column at all`,
+          `D) The simplest fix is to just use 10 folds instead of 5, since more folds dilute any leakage enough to make the resulting score trustworthy`,
         ],
-        answer: `B`
+        answer: ['A', 'B']
       },
       {
         q: `You suspect a churn model with AUC 0.96 has a leak but can't spot the feature. Which negative control most directly confirms leakage?`,
         options: [
-          `A) Retrain with a larger max_depth — if AUC rises further, there's no leak.`,
-          `B) Shuffle the labels randomly and retrain: a correctly-built model should collapse to ~0.5 AUC because there's no real signal left. If it still scores well above chance, a feature is carrying label information — a leak. Pair this with a random-vs-temporal split comparison and dropping the top feature to localise it.`,
-          `C) Add more training data — if AUC stays at 0.96, the model is fine and there's no leak.`,
-          `D) Switch from AUC to accuracy — if accuracy is also high, the 0.96 is validated and no leak exists.`,
+          `A) Retrain with a noticeably larger max_depth value and compare results — if AUC rises even further from 0.96, that confirms there genuinely is no leak here`,
+          `B) Shuffle the labels and retrain: a clean model collapses to about 0.5 AUC; if it still scores well above chance, a feature carries label information`,
+          `C) Add substantially more training data and rerun — if AUC simply stays flat at 0.96 with the larger dataset, the model is fine and there is no leak`,
+          `D) Switch the reported metric from AUC to plain accuracy — if accuracy also comes out high, the 0.96 AUC is fully validated and no leak exists here`,
         ],
         answer: `B`
       },
@@ -967,52 +967,52 @@ Stratification isn't only for single-label classification. For **regression**, s
     interactivePrompt: `Before you touch the controls: if you use standard 5-fold CV on 3 years of daily transaction data, what specific problem does this introduce — and would your reported AUC be too high or too low as a result?`,
     checkQuestions: [
       {
-        q: `You have 5 years of daily transaction data and want to build a fraud model. How do you set up CV?`,
+        q: `You have 5 years of daily transaction data and want to build a fraud model. Which two of the following are correct parts of the right CV setup? Select two.`,
         options: [
-          `A) Use standard 5-fold CV with stratification on the fraud label — stratification ensures each fold has balanced fraud cases and prevents misleading evaluation`,
-          `B) Use a single 80/20 random split — with 5 years of data the sample size is large enough that variance is low and k-fold adds unnecessary computation`,
-          `C) Use group k-fold by user_id — the main concern is that the same user appears in both train and test, which group k-fold prevents`,
-          `D) Use time-series walk-forward CV: train on year 1 validate on Q1 of year 2, then expand forward — add a 7-day purge gap for rolling features, use expanding window unless strong concept drift is present; never use standard k-fold which would train on 2024 data to predict 2022 events`,
+          `A) Use time-series walk-forward CV, training on year 1 and validating on Q1 of year 2, then expanding forward through the remaining years`,
+          `B) Add a 7-day purge gap around each split boundary so rolling-window features never share raw underlying data across the train/validation line`,
+          `C) Use standard 5-fold CV with stratification on the fraud label, since stratification alone is enough to prevent any misleading evaluation`,
+          `D) Use a single random 80/20 split — five years of data is large enough that variance is low and walk-forward CV adds needless computation`,
         ],
-        answer: `D`
+        answer: ['A', 'B']
       },
       {
         q: `You run 5-fold CV and get AUC scores [0.83, 0.84, 0.92, 0.85, 0.83]. The mean is 0.854. Should you report this as your model's performance?`,
         options: [
-          `A) No — report mean ± std = 0.854 ± 0.035 and investigate why fold 3 is an outlier (AUC=0.92 vs others at 0.83-0.85); high variance itself is information about instability`,
-          `B) Yes — the mean is the correct summary statistic and a sample size of 5 folds is sufficient to report reliably`,
-          `C) No — discard the outlier fold (AUC=0.92) and report the mean of the remaining four folds as it is more representative`,
-          `D) Yes — 0.854 is a conservative estimate because some folds may have been unlucky; the true performance is closer to 0.92`,
+          `A) No — report mean ± std of 0.854 ± 0.035 and investigate why fold 3 is an outlier; the spread itself is real information about instability`,
+          `B) Yes — the mean alone is the correct summary statistic here, and five folds is already a large enough sample to report reliably as-is`,
+          `C) No — quietly discard the outlier fold at 0.92 and report the plain mean of the remaining four folds, since that is more representative`,
+          `D) Yes — 0.854 is actually a conservative estimate, since some folds may simply have been unlucky and the true performance likely sits closer to 0.92`,
         ],
         answer: `A`
       },
       {
         q: `A colleague argues that since you are doing hyperparameter search with Optuna and reporting the best trial's validation score, you have a proper unbiased evaluation. Explain why this is wrong.`,
         options: [
-          `A) Optuna's best trial is unbiased because Bayesian optimization does not overfit to the validation set — only grid search causes selection bias`,
-          `B) This is the nested CV problem — running 200 Optuna trials and reporting the best trial's validation AUC is upward-biased by selection; unbiased evaluation requires either nested CV (hyperparameter search in inner fold only) or a completely separate test set never touched during optimization`,
-          `C) The evaluation is correct if the validation set is large enough — selection bias from Optuna only matters with small datasets below 10,000 samples`,
-          `D) Optuna handles this automatically through its pruning mechanism — trials that overfit to the validation set are pruned before they can inflate the reported score`,
+          `A) Optuna's best trial is inherently unbiased because Bayesian optimization does not overfit the validation set — only grid search causes this bias`,
+          `B) Running 200 trials and reporting the best validation AUC is upward-biased by selection; use nested CV or a fully separate untouched test set`,
+          `C) The evaluation is entirely correct as long as the validation set is large enough — selection bias only matters below 10,000 samples or so`,
+          `D) Optuna handles this automatically through its built-in pruning mechanism, which discards any trial before it can inflate the reported score`,
         ],
         answer: `B`
       },
       {
         q: `You have 3 years of daily sales data and strong seasonality/drift, and must forecast the next quarter. Between an expanding window and a rolling window for walk-forward CV, how do you choose?`,
         options: [
-          `A) Always use an expanding window — more training data is strictly better, so rolling windows are never the right choice.`,
-          `B) It depends on drift: an expanding window trains on all history (best when the underlying relationship is stable and more data helps), while a rolling window keeps only the recent span and deliberately forgets old data (best under strong concept drift, where stale patterns actively mislead). With strong drift here, a rolling window is often the better fit — and validate both.`,
-          `C) Use whichever gives the higher validation score, since the window type is purely a performance knob with no assumptions attached.`,
-          `D) Neither — with seasonality you must use standard k-fold so every season appears in training, and window type is irrelevant.`,
+          `A) Always use an expanding window instead — more training data is strictly better in every case, so rolling windows are never the right choice`,
+          `B) It depends on the drift: expanding trains on all stable history, rolling forgets old data deliberately — strong drift here favors rolling`,
+          `C) Use whichever window gives the higher validation score on this run, since the window choice is purely a performance knob with no assumptions`,
+          `D) Neither applies here — with seasonality you must switch to standard k-fold so every season appears in training, making window type irrelevant`,
         ],
         answer: `B`
       },
       {
         q: `You run nested CV and get an outer-loop estimate of 0.86 AUC. What model do you actually deploy, and what does the 0.86 represent?`,
         options: [
-          `A) Deploy the single best inner-fold model from the outer fold that scored highest, and 0.86 is that model's exact production performance.`,
-          `B) The 0.86 is an unbiased estimate of your whole model-selection procedure's quality, not of one specific model. For deployment you retrain on all available training data using the hyperparameters the procedure selects, and report 0.86 as the honest expected performance — the process is what was evaluated, the retrained-on-everything model is what ships.`,
-          `C) Deploy nothing — nested CV is only a diagnostic and cannot produce a deployable model.`,
-          `D) Average the weights of all outer-fold models into one ensemble and deploy that; 0.86 is that ensemble's guaranteed score.`,
+          `A) Deploy the single best inner-fold model from whichever outer fold scored highest, and treat 0.86 as that exact model's production performance`,
+          `B) 0.86 estimates the whole model-selection procedure's quality, not one model; deploy a model retrained on all data with the chosen hyperparameters`,
+          `C) Deploy nothing at all from this process — nested CV is purely a diagnostic tool and can never itself produce a genuinely deployable model`,
+          `D) Average together the weights of every single outer-fold model into one combined ensemble and deploy that; 0.86 becomes that ensembles guaranteed score`,
         ],
         answer: `B`
       },
@@ -1165,60 +1165,60 @@ Before claiming a fix works, run an **ablation**: remove the suspicious feature,
       {
         q: `Your NLP classifier has 88% overall accuracy but stakeholders are unhappy. How do you diagnose what is wrong?`,
         options: [
-          `A) Retrain with a larger model — 88% accuracy on NLP tasks indicates the model is underfitting and needs more capacity`,
-          `B) Collect more labelled data — accuracy below 95% on NLP tasks is always a data insufficiency problem`,
-          `C) Compute per-class precision and recall, slice accuracy by text length/domain/source/date, sample 100 errors and categorize them, check the confusion matrix for concentrated error pairs, and check confidence distribution on errors to distinguish systematic from irreducible failures`,
-          `D) Report F1 instead of accuracy — stakeholder dissatisfaction with 88% accuracy always stems from the wrong metric being reported`,
+          `A) Retrain with a much larger model — 88% accuracy on NLP tasks generally indicates the model is underfitting and simply needs more capacity`,
+          `B) Collect more labelled data right away — accuracy below 95% on NLP classification tasks always signals a straightforward data insufficiency problem`,
+          `C) Compute per-class precision/recall, slice by length/domain/source, sample 100 errors, check the confusion matrix, and check confidence on errors`,
+          `D) Report F1 instead of accuracy — stakeholder dissatisfaction with an 88% accuracy number always stems purely from reporting the wrong metric choice`,
         ],
         answer: `C`
       },
       {
-        q: `You sample 100 FPs from a fraud detection model and find that 60% involve transactions from a new merchant category launched 2 months ago. What do you do?`,
+        q: `You sample 100 FPs from a fraud detection model and find that 60% involve transactions from a new merchant category launched 2 months ago. Which two actions are appropriate? Select two.`,
         options: [
-          `A) Remove the merchant category feature — if a new category causes 60% of FPs, the feature is introducing noise and should be dropped`,
-          `B) Flag this as random variance — 60% of FPs from one category is within normal statistical fluctuation for fraud models`,
-          `C) Retrain with higher regularization — FP clustering by merchant category indicates the model is overfitting to merchant-specific patterns`,
-          `D) This is systematic failure from distribution shift — collect labelled examples from this new category, add a "merchant category is new" uncertainty feature, consider a temporary rule for this category, check other new categories for elevated FP rates, and add it as a monitored production slice`,
+          `A) Collect labelled examples from this new merchant category and add an uncertainty feature flagging that the category is new to the model`,
+          `B) Add this merchant category as a monitored production slice, and check whether other newly launched categories show similarly elevated FP rates`,
+          `C) Remove the merchant category feature entirely, since a feature correlated with 60% of FPs is clearly just injecting noise into the model`,
+          `D) Retrain with much higher regularization across the board, since FP clustering by merchant category is really just a sign of overfitting here`,
         ],
-        answer: `D`
+        answer: ['A', 'B']
       },
       {
         q: `You have two models both with F1=0.82. How do you choose which to deploy using error analysis?`,
         options: [
-          `A) Choose the simpler model — identical F1 means equivalent performance and simpler models are always preferable`,
-          `B) Compare confusion matrices to see which class each model fails on, compare error slices for the most critical business segment, compare error confidence and calibration, and compare error correlation to assess ensembling potential — identical F1 with different error structures means the models are solving the problem differently`,
-          `C) Run both in shadow mode and choose whichever has higher precision on the first day of live traffic`,
-          `D) Flip a coin — identical F1 means the models are statistically indistinguishable and any choice is equally valid`,
+          `A) Choose the simpler model outright — identical F1 means equivalent performance in practice, and simpler models are always preferable when scores tie`,
+          `B) Compare confusion matrices for which class fails, compare critical-segment slices, error confidence, and correlation for ensembling potential`,
+          `C) Run both in shadow mode and choose whichever model shows the higher precision on just the very first day of live production traffic exposure`,
+          `D) Flip a coin between the two models outright — identical F1 means they are statistically indistinguishable in every possible way, so any pick works fine`,
         ],
         answer: `B`
       },
       {
         q: `What is the difference between error slicing and subgroup fairness analysis? When does one become the other?`,
         options: [
-          `A) They are the same analysis — error slicing always constitutes fairness analysis whenever slices are defined by user characteristics`,
-          `B) Error slicing is only valid on numerical features while fairness analysis applies to categorical protected attributes — the distinction is purely technical`,
-          `C) Error slicing uses statistical tests while fairness analysis uses business rules — error slicing becomes fairness analysis when the statistical test reveals significant disparities`,
-          `D) Error slicing is a debugging technique asking "where is the model wrong so I can fix it?"; fairness analysis is a normative assessment asking "is the model wrong more for certain protected groups in a way that causes harm?" — they become the same when your error slices are by protected attributes and significantly different error rates raise legal and ethical implications beyond just "collect more data"`,
+          `A) They are the same analysis performed twice — error slicing always constitutes a full fairness analysis whenever slices happen to use user traits`,
+          `B) Error slicing only applies to numerical features while fairness analysis only applies to categorical protected attributes — a purely technical split`,
+          `C) Error slicing uses statistical significance tests while fairness analysis uses business rules — slicing becomes fairness once a test finds a disparity`,
+          `D) Error slicing debugs where the model is wrong to fix it; fairness analysis asks if it is wrong more for protected groups in a way that causes harm`,
         ],
         answer: `D`
       },
       {
         q: `In your error slicing, one segment shows a 45% error rate versus 8% overall — but that segment has only 6 examples. What's the right move?`,
         options: [
-          `A) Treat it as the top-priority failure immediately — a 45% error rate is nearly 6x the baseline, so it's clearly the biggest problem.`,
-          `B) With n=6, a 45% error rate is 2-3 errors and the confidence interval is enormous (roughly 12%–80%) — it may be pure noise. Report the slice size, put a CI on the rate, and apply a minimum-support threshold before acting; gather more examples from that segment before concluding anything. Prioritise larger slices with reliable elevated rates first.`,
-          `C) Delete those 6 examples from the dataset, since a segment that small can't be modeled reliably anyway.`,
-          `D) Immediately collect 200 examples for that segment and retrain — small-but-high-error slices always indicate a data gap.`,
+          `A) Treat it as the single top-priority failure immediately and without question — a 45% error rate is nearly six times the 8% overall baseline rate`,
+          `B) With n=6 the CI is enormous (roughly 12%-80%) and it may be pure noise — report slice size and a CI, apply a minimum-support threshold before acting`,
+          `C) Delete those 6 examples from the evaluation set entirely, since a segment that tiny cannot be modeled or trusted reliably in any analysis anyway`,
+          `D) Immediately collect 200 brand new examples for that exact segment and retrain the model — small-but-high-error slices always signal a genuine data gap`,
         ],
         answer: `B`
       },
       {
         q: `You've decided which error slice to fix first. Which prioritisation best reflects real-world impact?`,
         options: [
-          `A) Rank slices purely by the raw count of errors in each — the slice with the most total errors is always the one to fix first.`,
-          `B) Rank by error rate alone — the slice where the model is most often wrong is the highest priority regardless of anything else.`,
-          `C) Prioritise by impact = slice volume × error rate × cost per error × fix feasibility. This weighs how many users hit the slice, how often it fails, how costly each failure is, and how tractable the fix is — so a large, expensive, easily-fixed slice outranks a small, cheap, mysterious one, which raw error count would get wrong.`,
-          `D) Always fix whichever slice the loudest stakeholder complains about, since business alignment matters more than any metric.`,
+          `A) Rank slices purely by the raw total count of errors in each one — the slice with the single largest error count is always the one to fix first`,
+          `B) Rank by error rate alone — whichever slice the model is most frequently wrong on is the highest priority here, regardless of anything else at all`,
+          `C) Prioritise by impact = slice volume times error rate times cost per error times fix feasibility, weighing users hit, frequency, cost, tractability`,
+          `D) Always fix whichever slice the loudest stakeholder happens to complain about in any given week, since business alignment outranks any metric here always`,
         ],
         answer: `C`
       },
@@ -1328,50 +1328,50 @@ Keep the two steps separate. **Calibration** makes the probability *truthful* (0
       {
         q: `A model has AUC = 0.91 and ECE = 0.15. What does this mean and what do you do?`,
         options: [
-          `A) AUC=0.91 means excellent discrimination; ECE=0.15 means probabilities are off by 15 percentage points on average — for any use case where probability drives a decision, apply Platt scaling or isotonic regression on a held-out calibration set; the high AUC tells you the ranking is strong and recalibration preserves it`,
-          `B) The model is well-calibrated — ECE=0.15 is below the standard threshold of 0.20 and no action is needed`,
-          `C) AUC=0.91 and ECE=0.15 cannot coexist — high AUC always implies low ECE because good discrimination requires good calibration`,
-          `D) ECE=0.15 means the model is underconfident; apply temperature scaling with T < 1 to sharpen the probabilities`,
+          `A) AUC=0.91 means strong discrimination but ECE=0.15 means probabilities are off by 15 points on average — apply Platt or isotonic scaling on held-out data`,
+          `B) The model is already well-calibrated as-is — an ECE of 0.15 sits below the standard acceptable threshold of 0.20, so genuinely no action is ever needed`,
+          `C) AUC=0.91 and ECE=0.15 simply cannot coexist together at all — a high AUC always implies a low ECE, since good discrimination necessarily requires calibration too`,
+          `D) ECE=0.15 here means the model is actually underconfident; the fix is to apply temperature scaling with T below 1 to sharpen its output probabilities`,
         ],
         answer: `A`
       },
       {
-        q: `Your reliability diagram shows the model is overconfident at high probabilities (0.8-1.0 bucket shows actual positive rate of 0.55). What could cause this and how do you fix it?`,
+        q: `Your reliability diagram shows the model is overconfident at high probabilities (0.8-1.0 bucket shows actual positive rate of 0.55). Which two of the following are valid explanations and fixes? Select two.`,
         options: [
-          `A) The model has insufficient training data at high-probability predictions; the fix is to oversample examples where the model assigns high confidence`,
-          `B) Overconfidence in the 0.8-1.0 bucket is expected for all classifiers — probabilities above 0.8 are always miscalibrated without explicit isotonic regression`,
-          `C) The reliability diagram is measuring the wrong thing — overconfidence at high probabilities is a sign that the binarization threshold of 0.5 should be raised`,
-          `D) Log loss training rewards confident predictions even on noisy labels, and neural networks are systematically overconfident without calibration; fix with temperature scaling (T > 1) to compress high probabilities, or label smoothing during training`,
+          `A) Log loss rewards confident predictions even on noisy labels, which is part of why neural networks tend to be systematically overconfident`,
+          `B) Temperature scaling with T>1 compresses high probabilities back down, and label smoothing during training reduces overconfidence directly`,
+          `C) The model likely has insufficient training data at high-probability predictions; oversampling high-confidence examples would fix this issue`,
+          `D) The reliability diagram is measuring the wrong thing here; overconfidence really just means the 0.5 decision threshold should be raised up`,
         ],
-        answer: `D`
+        answer: ['A', 'B']
       },
       {
         q: `Two models: Brier score for Model A = 0.08, for Model B = 0.12 on the same dataset. Model B has higher AUC. How do you interpret this?`,
         options: [
-          `A) Model B is strictly better — AUC is the primary evaluation metric and Brier score differences are secondary`,
-          `B) Model A is strictly better — lower Brier score always dominates higher AUC because Brier score measures both calibration and discrimination jointly`,
-          `C) Model A has better overall probability quality (lower Brier score) despite lower AUC — it is significantly better calibrated, which matters for decisions based on the probability output; decompose both Brier scores into resolution and reliability to see if recalibrating Model B would close the gap`,
-          `D) The models are equivalent — AUC and Brier score measure the same underlying property from different angles`,
+          `A) Model B is strictly the better one here — AUC is the primary evaluation metric, and Brier score differences are only ever a secondary consideration`,
+          `B) Model A is strictly better in every sense — a lower Brier score always dominates a higher AUC, since Brier jointly captures both calibration and ranking`,
+          `C) Model A has the better overall probability quality despite lower AUC; decompose both Brier scores into resolution and reliability to see the real gap`,
+          `D) The two models are essentially equivalent here — AUC and Brier score really just measure the same underlying property from two different angles`,
         ],
         answer: `C`
       },
       {
         q: `A colleague says "our Brier score dropped from 0.12 to 0.09 after the last change, so the model is better calibrated now." Why is that conclusion not guaranteed?`,
         options: [
-          `A) It's fully guaranteed — Brier score is a pure calibration metric, so any drop means better calibration by definition.`,
-          `B) Brier decomposes as reliability − resolution + uncertainty: reliability is the calibration error (want low) and resolution is discrimination (want high, and it's subtracted). A lower Brier can come entirely from improved resolution (better discrimination) while calibration stayed the same or even worsened. To claim better calibration you must look at the reliability term (or the reliability diagram) directly, not the Brier total.`,
-          `C) The drop is meaningless because Brier score is not comparable across model versions on the same data.`,
-          `D) It's wrong because a lower Brier score always means worse calibration and better discrimination — the two always move in opposite directions.`,
+          `A) It is fully guaranteed to be true — Brier score is a purely calibration-only metric, so any drop in it by definition always means better calibration`,
+          `B) Brier = reliability − resolution + uncertainty; a lower Brier can come entirely from better resolution while reliability (true calibration) stays flat`,
+          `C) The drop is essentially meaningless, because Brier score is never actually comparable across two different model versions on the very same dataset`,
+          `D) It is wrong because a lower Brier score always means worse calibration paired with better discrimination — the two invariably move in opposite directions`,
         ],
         answer: `B`
       },
       {
         q: `A binary model was well-calibrated at launch (ECE 0.02). Three months later the base rate of positives has shifted and users complain the probabilities feel off, though ranking is unchanged. What's happening and what should have been in place?`,
         options: [
-          `A) Ranking unchanged means nothing is wrong — calibration can't drift if AUC is stable, so the complaints must be a UI issue.`,
-          `B) Calibration decays under covariate and base-rate shift even when ranking (AUC) is unchanged, because the mapping from score to true rate depends on the distribution. Calibration should be monitored in production over time and by cohort (geography, device, segment) — not treated as a one-time launch fix — and re-fit on recent data when ECE crosses a threshold.`,
-          `C) The model simply needs more training epochs; overconfidence always returns after a few months and retraining longer fixes it permanently.`,
-          `D) Nothing can be done — once a model is deployed its calibration is frozen, so the only option is a full model rebuild from scratch.`,
+          `A) Ranking staying unchanged means nothing here is actually wrong — calibration cannot possibly drift while AUC is stable, so this must just be a UI issue`,
+          `B) Calibration decays under covariate and base-rate shift even with unchanged ranking; monitor it in production by cohort and re-fit when ECE crosses a threshold`,
+          `C) The model simply needs more training epochs at this point in time; overconfidence always creeps back after a few months, and training longer fixes it for good permanently`,
+          `D) Nothing at all can be done about this — once a model is deployed its calibration is permanently frozen, leaving a full rebuild as the only real option`,
         ],
         answer: `B`
       },
@@ -1433,32 +1433,32 @@ The formal statement: ablation is leave-one-out estimation of component importan
     interactivePrompt: `Before you touch the controls: if removing component A from the full system drops AUC from 0.91 to 0.83, and removing component B drops it from 0.91 to 0.90, can you conclude that component A is always more important than B, or can you think of a scenario where that ranking would reverse?`,
     checkQuestions: [
       {
-        q: `Your paper claims that adding a cross-attention layer improves NDCG by 2%. A reviewer asks for an ablation. What do you run?`,
+        q: `Your paper claims that adding a cross-attention layer improves NDCG by 2%. A reviewer asks for an ablation. Which two of the following belong in a properly designed ablation? Select two.`,
         options: [
-          `A) Full model with cross-attention vs full model without cross-attention — two conditions are sufficient to demonstrate contribution`,
-          `B) Full model with cross-attention vs full model without cross-attention vs self-attention of equal parameter count vs feedforward layer of equal parameters — all with same hyperparameters, same splits, mean ± std over 3 seeds; if condition 1 beats 3 and 4 significantly, cross-attention specifically contributes; otherwise the gain is capacity not architecture`,
-          `C) Full model vs stripped-down model with cross-attention removed and learning rate retuned — retuning is essential to measure each variant at its optimal configuration`,
-          `D) Run the ablation with and without the cross-attention layer across 10 different datasets — single-dataset ablations are not generalizable enough for publication`,
+          `A) Compare against a self-attention layer and a feedforward layer of equal parameter count, to isolate architecture from raw parameter capacity`,
+          `B) Run every variant with the same hyperparameters and data splits, and report mean plus std over multiple seeds so noise does not decide it`,
+          `C) Retune the learning rate separately for each variant to find its own optimal configuration before comparing the final NDCG scores directly`,
+          `D) Run the ablation across 10 different datasets, since a single-dataset ablation is never considered sufficient evidence for a publication venue`,
         ],
-        answer: `C`
+        answer: ['A', 'B']
       },
       {
         q: `You run a feature ablation and find removing "user age" drops F1 from 0.85 to 0.78 (a large drop). But age is a protected attribute. How do you reason about this?`,
         options: [
-          `A) Remove the age feature — any protected attribute that is predictive must be excluded regardless of its contribution`,
-          `B) Keep the age feature — F1 drop of 0.07 is a significant accuracy cost and business need overrides fairness concerns`,
-          `C) Ask three separate questions: is using age legally permitted; is age the true causal driver or a proxy for non-protected features like credit history; and what are the fairness implications — explore whether adding those correlated non-protected features reduces age's marginal contribution; if the contribution persists after controlling for proxies, you face a genuine fairness-accuracy trade-off requiring policy input`,
-          `D) The feature ablation result is not relevant to fairness analysis — those are separate considerations that should never be combined`,
+          `A) Remove the age feature outright — any protected attribute that is even somewhat predictive must be excluded here regardless of its contribution`,
+          `B) Keep the age feature as-is — an F1 drop of 0.07 is a significant accuracy cost, and here business need simply overrides the fairness concerns`,
+          `C) Ask whether using age is legally permitted, whether it is a true causal driver or just a proxy for something else, and what fairness implications follow`,
+          `D) The feature ablation result carries no relevance to fairness analysis at all — those are separate considerations that should never be combined`,
         ],
         answer: `B`
       },
       {
         q: `You remove component X from your system and AUC goes up from 0.82 to 0.84. What do you conclude and what do you do next?`,
         options: [
-          `A) Component X is essential and the ablation result is invalid — AUC improving after removal means the ablation introduced a bug that should be fixed`,
-          `B) Component X was definitely contributing noise — immediately remove it from production without further investigation`,
-          `C) Component X is redundant or harmful in terms of AUC — but verify the improvement is consistent across 5 seeds, check if X was designed for a non-AUC objective (e.g., diversity), and confirm no other metrics are harmed; if consistent, remove X and report it as a negative ablation`,
-          `D) Run more ablations removing other components simultaneously with X to confirm the interaction effect causing the AUC improvement`,
+          `A) Component X is essential and the ablation result is simply invalid — AUC improving after removal means the ablation process itself has a bug`,
+          `B) Component X was definitely just contributing noise all along — immediately remove it from production entirely without any further investigation`,
+          `C) Component X may be redundant or harmful for AUC — verify the improvement holds across 5 seeds and check if X targets a non-AUC objective instead`,
+          `D) Run more ablations removing other components simultaneously alongside X, to confirm the interaction effect that is causing this AUC improvement`,
         ],
         answer: `D`
       },
@@ -1589,60 +1589,60 @@ At scale dozens of tests run at once, and they can **interact** — test A chang
       {
         q: `Your A/B test on a recommendation system shows +2% CTR (p=0.001) after 3 days. Should you ship?`,
         options: [
-          `A) Yes — p=0.001 means the result is highly significant and the test has converged; ship immediately`,
-          `B) Not yet — check guardrail metrics (session length, revenue per session), run for at least 14 days to eliminate novelty effects, verify SRM, confirm practical significance (+2% CTR translates to X revenue), and check that lift is uniform across segments before shipping`,
-          `C) Ship to 10% of users — a 3-day test is sufficient for a partial rollout and monitoring will catch any issues`,
-          `D) No — p=0.001 after only 3 days indicates the test was contaminated by novelty effect and the result will revert; wait 30 days`,
+          `A) Yes — p=0.001 means the result is highly significant already and the test has clearly converged in just three days`,
+          `B) Not yet — check guardrails, run 14 days to clear novelty, verify SRM, confirm practical significance, and check that the lift is uniform across segments`,
+          `C) Ship to just 10% of users for now — a 3-day test is sufficient for a partial rollout, and ongoing monitoring will catch any issues that come up`,
+          `D) No — p=0.001 after only three short days strongly suggests the test was contaminated by a novelty effect and the result will fully revert; wait 30 days instead`,
         ],
         answer: `B`
       },
       {
         q: `A/B test results show +1% revenue lift (p=0.0001) after 30 days. A colleague says "p < 0.05 means we should ship." What is missing from this reasoning?`,
         options: [
-          `A) p < 0.0001 confirms the effect is real but does not confirm it is large enough to matter — missing: practical significance (is +1% revenue worth the deployment cost), guardrail metric checks, the confidence interval, multiple-testing correction, and whether the +1% is uniform across segments or driven by one small subgroup.`,
-          `B) p < 0.05 is the correct standard — at 30 days with p = 0.0001 there really are no additional checks needed before shipping the model.`,
-          `C) The confidence interval is the only thing missing — a p-value on its own does not even specify the direction of the effect.`,
-          `D) The test simply should have run for 60 days — 30 days is not enough to eliminate primacy effects, regardless of how small the p-value is.`,
+          `A) p < 0.0001 confirms the effect is real but not that it matters enough — missing practical significance, guardrail checks, the CI, and segment uniformity`,
+          `B) p < 0.05 really is the correct standard here — at 30 days with p=0.0001 there are genuinely no additional checks needed before shipping this model`,
+          `C) The confidence interval is genuinely the only thing actually missing from the whole picture here — a bare p-value alone does not even specify direction`,
+          `D) The test really should have simply run for a much longer stretch of at least 60 full days — 30 is not enough to eliminate primacy effects no matter the p-value`,
         ],
         answer: `A`
       },
       {
-        q: `You are running 5 simultaneous A/B tests on your platform. A product manager notices that tests 2 and 4 seem to interact. How do you handle this?`,
+        q: `You are running 5 simultaneous A/B tests on your platform. A product manager notices that tests 2 and 4 seem to interact. Which two of the following are the right response? Select two.`,
         options: [
-          `A) Stop all 5 tests and restart with mutual exclusion — any simultaneous tests that could touch the same user must be restarted`,
-          `B) Ignore the interaction — A/B test randomization ensures independence between simultaneous tests`,
-          `C) Diagnose interaction by comparing users in both tests vs users in only one test; if interaction is genuine those cells are contaminated; going forward enforce mutual exclusion for tests affecting similar product areas, use factorial design only when statistical independence is confirmed, and document which tests ran simultaneously`,
-          `D) Run a meta-analysis combining results from all 5 tests — simultaneous test interactions are best resolved by statistical aggregation`,
+          `A) Diagnose by comparing users exposed to both tests versus only one, to check whether the interaction is genuine or just coincidental noise`,
+          `B) Going forward enforce mutual exclusion for tests touching similar product surfaces, and document which tests ran simultaneously together`,
+          `C) Ignore the interaction entirely, since A/B randomization already guarantees full independence between any simultaneous tests running here`,
+          `D) Run a meta-analysis that simply combines results from all 5 tests together, since interactions like this are best resolved by aggregation`,
         ],
-        answer: `C`
+        answer: ['A', 'B']
       },
       {
         q: `What is a holdout group and why is it more valuable than a series of A/B tests for measuring long-term model value?`,
         options: [
-          `A) A holdout group is a control group within an A/B test — it is equivalent to the control arm and provides the same information`,
-          `B) A holdout group is used for hyperparameter tuning — it is more valuable than A/B tests because it prevents overfitting to the test set`,
-          `C) A holdout group measures the same incremental gains as A/B tests but with lower variance — it is more valuable because the statistical power is higher`,
-          `D) A holdout group is a permanently withheld user fraction that receives no model updates — it measures cumulative causal impact of all ML improvements over months vs A/B tests that only measure marginal gains; this catches cases where 12 individual +1% A/B wins sum to much less than +12% due to cannibalisation or seasonal confounding`,
+          `A) A holdout group is just a control group within an A/B test — it is equivalent to the control arm and provides essentially the same information here`,
+          `B) A holdout group is used mainly for hyperparameter tuning — it beats A/B tests chiefly because it prevents overfitting to a single held-out test set`,
+          `C) A holdout group measures the exact same incremental gains as A/B tests but with lower variance — it wins mainly because its statistical power is higher here`,
+          `D) A permanently withheld user fraction with no updates; it measures cumulative ML impact over months, catching cannibalisation A/B wins miss individually`,
         ],
         answer: `D`
       },
       {
         q: `You designed a 50/50 experiment, but the logged data shows 52.5% in control and 47.5% in treatment across 2 million users. What should you do before analysing the CTR lift?`,
         options: [
-          `A) Nothing — a 52.5/47.5 split is close enough to 50/50 that it won't affect the CTR comparison, so proceed to read the result.`,
-          `B) This is a sample ratio mismatch, and at 2M users a 5-point deviation is far beyond chance (a chi-squared test would reject decisively). It signals a broken assignment or logging pipeline — perhaps one arm crashes and drops users, or a redirect fails — which makes the two arms non-comparable populations. Stop, find and fix the root cause, and rerun; do not interpret the CTR lift until the split is clean.`,
-          `C) Reweight the treatment arm by 52.5/47.5 to correct the imbalance, then read the CTR lift normally.`,
-          `D) Add more users until the split naturally converges to 50/50, then analyse — SRM always resolves itself with more data.`,
+          `A) Nothing at all — a 52.5/47.5 split is plenty close enough to 50/50 that it will not meaningfully affect the CTR comparison, so just proceed to read it`,
+          `B) This is a sample ratio mismatch: at 2M users a 5-point deviation is far beyond chance, signaling a broken pipeline; stop, fix the root cause, and rerun`,
+          `C) Reweight the treatment arm by the observed 52.5/47.5 ratio to correct for the imbalance directly, then read the CTR lift normally as if nothing had happened`,
+          `D) Add more users until the split naturally converges back to 50/50 on its own, then analyse — SRM always resolves itself given enough additional data`,
         ],
         answer: `B`
       },
       {
         q: `Your company runs a two-sided marketplace and wants to A/B test giving some sellers a ranking boost. Why is a standard user/seller-level A/B test misleading here, and what's the fix?`,
         options: [
-          `A) It isn't misleading — as long as sellers are randomised 50/50, the measured lift for boosted sellers is an unbiased estimate of the boost's effect.`,
-          `B) It violates SUTVA (interference): boosting treatment sellers takes impressions away from control sellers competing for the same limited buyer attention, so the control group is harmed and the measured treatment-vs-control lift is inflated — you'd overstate the boost. Fix with cluster-level randomisation (randomise by market/region so treatment and control don't compete) or a switchback design; plain per-seller A/B gives a biased answer.`,
-          `C) The only issue is sample size — marketplaces need more sellers per arm, but the per-seller randomisation itself is fine.`,
-          `D) The fix is to run the test longer, since interference effects average out to zero over enough time.`,
+          `A) It genuinely is not misleading at all — as long as sellers are randomised 50/50, the measured lift for boosted sellers is an unbiased estimate of the effect`,
+          `B) It violates SUTVA: boosting sellers takes impressions from control sellers, inflating the lift; fix with cluster randomisation or a switchback design`,
+          `C) The only real issue here is sample size — marketplaces just need more sellers per arm, while the actual per-seller randomisation itself remains fine`,
+          `D) The fix is simply to run the test for much longer, since interference effects of this kind naturally average out to zero given enough elapsed time`,
         ],
         answer: `B`
       },
@@ -1718,62 +1718,62 @@ At scale dozens of tests run at once, and they can **interact** — test A chang
     takeaway: `Shipping a model safely is an A/B discipline, not a modeling one: pre-compute the sample size from your MDE, α, power, and metric variance so the test isn't a coin flip; check SRM (chi-square on the split) before trusting any result; gate the launch on guardrails (latency/error/revenue), because a target-metric win that trips one is not a ship; use CUPED to cut variance with pre-period data and buy back power for free; and if you must watch the dashboard, use sequential / always-valid methods so peeking doesn't inflate your false-positive rate.`,
     checkQuestions: [
       {
-        q: `Your challenger model shows +3% AUC offline. Your manager wants to ship it based on that number. What is the correct response?`,
+        q: `Your challenger model shows +3% AUC offline. Your manager wants to ship it based on that number. Which two of the following are correct? Select two.`,
         options: [
-          `A) Ship it — a 3% AUC lift is a large, reliable signal and offline evaluation is exactly what AUC is for.`,
-          `B) Offline AUC is measured on data the old model shaped and doesn't measure product impact; run a live champion/challenger A/B test, sized for the MDE that matters, and judge on the real product metric plus guardrails before launching.`,
-          `C) Ship to 100% but keep a rollback ready — offline AUC plus a fast rollback is equivalent to an A/B test.`,
-          `D) Retrain with more data until offline AUC exceeds +5%, then ship, since a bigger offline gap removes the need for a live test.`,
+          `A) Offline AUC reflects data the old model shaped, so it does not measure real product impact on its own, no matter how large the lift looks`,
+          `B) The right next step is a live champion/challenger A/B test, sized for the MDE that matters, and judged on the real metric plus guardrails`,
+          `C) Ship to 100% but keep a rollback plan ready to go — offline AUC combined with a fast rollback is functionally equivalent to a real A/B test`,
+          `D) Retrain with more data until offline AUC clears +5%, then ship directly, since a bigger offline gap removes any real need for a live test`,
         ],
-        answer: `B`,
+        answer: ['A', 'B'],
       },
       {
         q: `You planned a 50/50 experiment. After a day, exposure logs show 50.1% control and 47.9% treatment across 2 million users. What should you conclude and do?`,
         options: [
-          `A) A 2-point gap is within normal randomization noise at this scale; proceed and interpret the metrics as usual.`,
-          `B) This is a sample-ratio mismatch — at 2M users that split is astronomically unlikely by chance, so randomization or logging is broken. Every downstream metric is untrustworthy; stop, run a chi-square to confirm, and fix the plumbing before interpreting results.`,
-          `C) Treatment is simply less popular with users, which is itself the result — log it as a negative engagement finding.`,
-          `D) Re-randomize only the treatment arm to rebalance to 50/50, then continue the same experiment.`,
+          `A) A 2-point gap like this is well within normal randomization noise at this scale of traffic; proceed and interpret the metrics completely as usual`,
+          `B) At 2M users that split is astronomically unlikely by chance, so randomization or logging is broken; stop, run a chi-square, fix the plumbing first`,
+          `C) Treatment is simply less popular with users here in this particular case, which is itself taken as a valid result — log it as a negative finding overall`,
+          `D) Re-randomize only the treatment arm going forward to rebalance it back to 50/50, then simply continue running the very same experiment as before`,
         ],
         answer: `B`,
       },
       {
         q: `Your new ranking model lifts the target metric (session clicks) by +2.1% with p < 0.01. During the test, p99 serving latency rose from 80ms to 130ms and revenue-per-session dropped 0.8%. Do you launch?`,
         options: [
-          `A) Yes — the target metric won decisively at p < 0.01, and latency/revenue are secondary to the primary success metric.`,
-          `B) No — latency and revenue are guardrail metrics the launch must not harm. A +2.1% click win that adds 50ms of p99 latency and drops revenue is a guardrail breach, not a ship; investigate the tradeoff before any rollout.`,
-          `C) Yes, but only to mobile users, since the latency regression only matters on slow connections.`,
-          `D) Re-run the test without logging latency, so the guardrail can't block a statistically significant win.`,
+          `A) Yes — the target metric already won decisively at p < 0.01, and latency plus revenue are only ever secondary to the primary success metric here`,
+          `B) No — latency and revenue are guardrails the launch must not harm; extra p99 latency plus dropped revenue is a breach here, not a ship decision`,
+          `C) Yes, but only roll it out to mobile users specifically, since this particular latency regression only really matters on slower connections overall`,
+          `D) Re-run the whole test again without logging latency at all this time, so that the guardrail cannot possibly block a statistically significant win`,
         ],
         answer: `B`,
       },
       {
         q: `Your metric is noisy and the required sample size for a 1% MDE is six weeks of traffic you don't have. A colleague suggests CUPED. What does CUPED do and why does it help here?`,
         options: [
-          `A) CUPED increases the treatment effect by adjusting outcomes upward, so the same effect becomes easier to detect.`,
-          `B) CUPED uses each user's pre-experiment behavior as a covariate to subtract off predictable baseline variance (Y_adj = Y − θ(X − E[X])). The effect estimate stays unbiased because X is pre-treatment, but variance drops by ~ the squared pre/post correlation — shrinking the MDE or runtime at the same n.`,
-          `C) CUPED raises the α threshold from 0.05 to 0.10, making significance easier to reach without more data.`,
-          `D) CUPED replaces the noisy metric with a proxy metric that has lower variance by definition.`,
+          `A) CUPED increases the measured treatment effect itself by adjusting outcomes upward across the board, so the same effect becomes easier to detect`,
+          `B) CUPED subtracts predictable pre-experiment variance via a covariate; effect stays unbiased since X is pre-treatment, but variance drops a lot`,
+          `C) CUPED simply raises the significance threshold alpha from 0.05 up to 0.10, which makes reaching significance easier without needing any more data`,
+          `D) CUPED just replaces the noisy metric outright with a different proxy metric that happens to have lower variance by definition from the start`,
         ],
         answer: `B`,
       },
       {
         q: `A PM keeps refreshing the experiment dashboard and wants to stop the test "the moment it hits p < 0.05." Why is this dangerous on a standard fixed-horizon test, and what is the fix?`,
         options: [
-          `A) It's fine — p < 0.05 means 95% confidence whenever you observe it, so stopping early at that threshold is always valid.`,
-          `B) Each extra look is another chance for noise to cross α, so repeated peeking inflates the true false-positive rate well above 5% (toward 100% with continuous peeking). Use sequential testing / always-valid p-values / group-sequential boundaries that spend the error budget across looks, so you can stop early without breaking the guarantee.`,
-          `C) The danger is only that stopping early reduces sample size; peeking itself doesn't affect the false-positive rate, so a larger planned n solves it.`,
-          `D) Switch to a one-sided test, which halves the p-value and makes early stopping safe.`,
+          `A) It is fine to do this — p < 0.05 means 95% confidence whenever it is observed, so stopping early right at that threshold is always statistically valid`,
+          `B) Each extra look inflates the false-positive rate well above 5%; use sequential testing or always-valid p-values that spend the error budget across looks`,
+          `C) The only real danger is that stopping early reduces the sample size; peeking itself does not affect the false-positive rate, so a bigger planned n fixes it`,
+          `D) Simply switch to a one-sided test instead of a two-sided one, which halves the reported p-value and makes this kind of early stopping perfectly safe`,
         ],
         answer: `B`,
       },
       {
         q: `You need to detect a 0.5% lift instead of a 1% lift, keeping α and power fixed. Roughly how does the required sample size change, and what's the cheapest way to offset it?`,
         options: [
-          `A) It roughly doubles (n ∝ 1/MDE), and the only fix is to wait twice as long for traffic.`,
-          `B) It roughly quadruples (n ∝ 1/MDE², since halving the MDE squares the factor), and the cheapest offset is CUPED — cutting metric variance 30–50% with pre-period data reduces the required n proportionally without extra traffic or a longer runtime.`,
-          `C) It stays the same — MDE only affects power, not sample size — so no offset is needed.`,
-          `D) It roughly halves, because a smaller effect is easier to detect, so you can shorten the test.`,
+          `A) It roughly doubles in size, since n scales as 1 divided by the MDE, and the only real fix available is to simply wait twice as long for more traffic`,
+          `B) It roughly quadruples since n scales as 1 over MDE-squared; the cheapest offset is CUPED, cutting variance 30-50 percent with pre-period data`,
+          `C) It stays exactly the same size regardless — the MDE only ever affects statistical power, not the required sample size, so no offset is needed at all`,
+          `D) It roughly halves in size instead, because a smaller effect is somehow easier to detect reliably, so you could actually shorten the test duration`,
         ],
         answer: `B`,
       },
