@@ -68,6 +68,9 @@ export const BackpropViz = forwardRef(function BackpropViz(props, ref) {
   const [mode, setMode] = useState('forward'); // 'forward' | 'backward'
   const [anim, setAnim] = useState(0);       // pulse progress 0..1 while playing
   const [playing, setPlaying] = useState(false);
+  // Pause-and-predict gate: before the backward pass first reveals itself, ask the
+  // user to guess which weight ends up with the bigger gradient. null = unanswered.
+  const [prediction, setPrediction] = useState(null); // null | 'w1' | 'w2'
   const [rounds, setRounds] = useState(0);   // gradient-descent steps taken while playing
   const rafRef = useRef(null);
   const lastTsRef = useRef(0);
@@ -97,6 +100,15 @@ export const BackpropViz = forwardRef(function BackpropViz(props, ref) {
   const fwd = useMemo(() => forwardPass(x1, x2, W), [x1, x2, W]);
   const bwd = useMemo(() => backwardPass(x1, x2, fwd, target, W), [x1, x2, fwd, target, W]);
   const loss = (fwd.output - target) ** 2;
+
+  // Live gradient magnitudes for the predict gate — computed from the REAL current
+  // weights/inputs (never faked), so the question stays honest even after the user
+  // drags a slider. W2 sits one hop closer to the loss; W1 sits two hops back.
+  const w1GradMag = (Math.abs(bwd.dLoss_dW1[0][0]) + Math.abs(bwd.dLoss_dW1[0][1]) +
+    Math.abs(bwd.dLoss_dW1[1][0]) + Math.abs(bwd.dLoss_dW1[1][1])) / 4;
+  const w2GradMag = (Math.abs(bwd.dLoss_dW2[0]) + Math.abs(bwd.dLoss_dW2[1])) / 2;
+  const correctPick = w2GradMag >= w1GradMag ? 'w2' : 'w1';
+  const gateOpen = mode === 'backward' && prediction === null;
 
   // SVG layout
   const SVG_W = 420, SVG_H = 220;
@@ -225,6 +237,7 @@ export const BackpropViz = forwardRef(function BackpropViz(props, ref) {
       accRef.current = 0;
       setRounds(0);
       setMode('forward');
+      setPrediction(null);
       setX1(1.0); setX2(0.5); setTarget(1.0);
       setW({
         W1: DEFAULT_W.W1.map(r => [...r]), b1: [...DEFAULT_W.b1],
@@ -277,8 +290,41 @@ export const BackpropViz = forwardRef(function BackpropViz(props, ref) {
         </button>
       </div>
 
-      {/* SVG Network */}
+      {/* SVG Network — gated in backward mode by a pause-and-predict question the
+          first time, so the reveal (which weight's gradient is bigger) lands after
+          a genuine guess rather than as passive animation. */}
       <div style={{ border: '1px solid var(--rim)', borderRadius: 8, background: 'var(--depth)', padding: 8, marginBottom: 16 }}>
+        {gateOpen ? (
+          <div style={{ minHeight: SVG_H, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: '20px 12px', textAlign: 'center' }}>
+            <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--prime)', fontWeight: 700 }}>
+              Pause and predict
+            </div>
+            <div style={{ fontSize: 13, color: 'var(--ink-hi)', maxWidth: 320, lineHeight: 1.6 }}>
+              The signal is about to travel backward from the loss, one hop at a time. Which weight ends up with the <strong>bigger</strong> gradient — <strong>W₁</strong> (input → hidden, two hops from the loss) or <strong>W₂</strong> (hidden → output, one hop from the loss)?
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setPrediction('w1')}
+                style={{ ...btnBase, background: 'var(--surface)', color: 'var(--ink-hi)' }}>
+                W₁ — two hops back
+              </button>
+              <button onClick={() => setPrediction('w2')}
+                style={{ ...btnBase, background: 'var(--surface)', color: 'var(--ink-hi)' }}>
+                W₂ — one hop back
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {mode === 'backward' && prediction && (
+              <div style={{
+                fontSize: 12, lineHeight: 1.6, padding: '8px 10px', marginBottom: 8,
+                borderRadius: 6, background: 'var(--surface)', border: '1px solid var(--rim)',
+                color: prediction === correctPick ? 'var(--prime)' : '#ef4444',
+              }}>
+                {prediction === correctPick ? '✓ Correct' : '✗ Not quite'} — right now |∂L/∂z₂| (at W₂, one hop back) ≈ {fmtShort(Math.abs(bwd.dLoss_dz2))}, while the average |∂L/∂z₁| feeding W₁ (two hops back) ≈ {fmtShort((Math.abs(bwd.dLoss_dz1[0]) + Math.abs(bwd.dLoss_dz1[1])) / 2)}.
+                {' '}The extra hop already shrank the signal — that's the vanishing-gradient shrink, in miniature.
+              </div>
+            )}
         <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} style={{ width: '100%', display: 'block' }}>
           {/* Layer labels */}
           {['Input', 'Hidden (ReLU)', 'Output'].map((label, li) => (
@@ -301,6 +347,16 @@ export const BackpropViz = forwardRef(function BackpropViz(props, ref) {
             // Pulse: signal flows source→target in forward mode, target→source in backward.
             const p = mode === 'forward' ? anim : 1 - anim;
             const px = sx + p * (ex - sx), py = sy + p * (ey - sy);
+            // The pulse is the persistent "message" — its size/intensity is bound to
+            // the REAL local value on this edge (weight in forward mode, gradient in
+            // backward mode), so it visibly shrinks hop by hop exactly as the numbers
+            // shrink, never a faked animation.
+            const [, , , , wFwd, gBwd] = edge;
+            const pulseVal = mode === 'forward' ? Math.abs(wFwd) : Math.abs(gBwd);
+            const pulseMax = mode === 'forward' ? maxFwdW : maxBwdG;
+            const pulseNorm = pulseMax > 0 ? pulseVal / pulseMax : 0;
+            const pulseR = 2 + pulseNorm * 4.5;
+            const pulseOpacity = 0.3 + pulseNorm * 0.7;
             return (
               <g key={ei}>
                 <line x1={sx} y1={sy} x2={ex} y2={ey}
@@ -310,9 +366,10 @@ export const BackpropViz = forwardRef(function BackpropViz(props, ref) {
                   stroke="var(--depth)" strokeWidth="2.5" paintOrder="stroke">
                   {edgeLabel(edge)}
                 </text>
-                {playing && (
-                  <circle cx={px} cy={py} r={4}
+                {playing && !gateOpen && (
+                  <circle cx={px} cy={py} r={pulseR}
                     fill={mode === 'forward' ? '#F0A500' : '#6495ff'}
+                    fillOpacity={pulseOpacity}
                     stroke="#000" strokeWidth="0.5" />
                 )}
               </g>
@@ -355,6 +412,8 @@ export const BackpropViz = forwardRef(function BackpropViz(props, ref) {
             {`Loss ${fmtShort(loss)}`}
           </text>
         </svg>
+          </>
+        )}
       </div>
 
       {/* Sliders */}
@@ -486,6 +545,36 @@ export const BackpropViz = forwardRef(function BackpropViz(props, ref) {
           })()}
           <div style={{ marginTop: 8, fontSize: 11, color: 'var(--ink-low)', lineHeight: 1.6, borderTop: '1px solid var(--rim)', paddingTop: 8 }}>
             Sigmoid derivative σ'(z) ≤ 0.25 always. With 10 sigmoid layers: (0.25)¹⁰ ≈ 10⁻⁶ — vanished. ReLU derivative is either 0 (dead) or 1 (full pass-through), so gradients don't shrink per layer. This is why deep nets use ReLU.
+          </div>
+
+          {/* Macro finale — zoom out from this 2-layer toy to a 10-layer sigmoid
+              stack, same shrink repeated hop after hop. */}
+          <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--rim)' }}>
+            <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--prime)', fontWeight: 700, marginBottom: 8 }}>
+              Zoom out — the same shrink, run for 10 hops instead of 1
+            </div>
+            {[
+              { label: 'Layer 10 (output, 0 hops back)', val: 1, display: '1.0' },
+              { label: 'Layer 5 (5 hops back)', val: 0.0009765625, display: '9.8×10⁻⁴' },
+              { label: 'Layer 1 (input, 9 hops back)', val: 0.0000038147, display: '3.8×10⁻⁶' },
+            ].map((row, i) => (
+              <div key={i} style={{ marginBottom: 6 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--ink-mid)', fontFamily: 'var(--font-mono)', marginBottom: 2 }}>
+                  <span>{row.label}</span>
+                  <span style={{ color: row.val < 0.001 ? '#ef4444' : 'var(--prime)' }}>{row.display}</span>
+                </div>
+                <div style={{ height: 8, borderRadius: 4, background: 'var(--rim)', overflow: 'hidden' }}>
+                  <div style={{
+                    height: '100%', borderRadius: 4,
+                    width: `${Math.max(2, Math.sqrt(row.val) * 100)}%`,
+                    background: row.val < 0.001 ? '#ef4444' : 'var(--prime)',
+                  }} />
+                </div>
+              </div>
+            ))}
+            <div style={{ marginTop: 6, fontSize: 10, color: 'var(--ink-low)', lineHeight: 1.5 }}>
+              Same multiplication as the toy network above — a sigmoid slope ≤0.25 compounding at every hop — just carried out for 9 hops instead of 1. This toy example already showed a 6.6× shrink after a single hop; stack eight more and the signal that reaches layer 1 is gone.
+            </div>
           </div>
         </div>
       )}
