@@ -123,9 +123,18 @@ function stripFigureRefs(text) {
 
 // Render a summary string (prose, "---" section dividers, occasional
 // whole-line **Bold headers**) into semantic HTML.
+//
+// 2026-07 scene-support pass (src/utils/renderMd.jsx): `summary` can now be an
+// array of blocks — string | {type:'scene', sceneId} — instead of a plain
+// string (first user: gradient_boosting). Scenes are interactive React
+// components with no static-HTML equivalent, so for prerendered SEO pages we
+// just drop them and join the remaining prose blocks back into one string.
 function renderSummary(summary) {
   if (!summary) return '';
-  const cleaned = stripFigureRefs(summary);
+  const text = Array.isArray(summary)
+    ? summary.filter(b => typeof b === 'string').join('\n\n')
+    : summary;
+  const cleaned = stripFigureRefs(text);
   const paras = cleaned.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
   const out = [];
   for (const p of paras) {
