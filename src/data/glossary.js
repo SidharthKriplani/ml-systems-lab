@@ -39,6 +39,25 @@
 // globally. "Stratified Randomization" was not literally taught — the module
 // teaches "block randomization" (the exact phrase in-prose) after stratifying
 // on covariates, so that's the key used instead.
+//
+// 2026-07-09 addition: 12 terms from the finalized (writer + Pass-2
+// adversarial audit both complete) `linear_regression`, `logistic_regression`,
+// and `regularization` modules in classicalMLModules.js (sourceTabId
+// 'classical_ml_foundation'). 11 are net-new (logit, odds, sigmoid, log loss,
+// odds ratio, perfect separation, L1, L2, shrinkage, closed form, minimum-norm
+// solution); 1 ("influence") backfills a gap from the earlier linear_regression
+// harvest — the module demonstrates-then-names it right next to "leverage"
+// (which was captured then) but it was missed. Deliberately excluded:
+// "overfitting" (used 50+ times across other families with the same meaning,
+// same over-generic risk as "consistency"/"compliance" above) and
+// "bias-variance tradeoff" (the concept is taught in `regularization`, but the
+// exact phrase never appears contiguously in its prose — "trades a little
+// bias... for... variance" — so a key for it would never actually highlight
+// anything, per this file's matching mechanism). "sparsity" was considered
+// (it's in the module's own `subtitle`) but the word itself never appears in
+// the `summary`/`keyPoints` body text, only the zeroing-out behavior it names —
+// same reasoning, skipped to keep every def a trim of real body prose rather
+// than metadata.
 
 export const GLOSSARY = {
   'least squares': {
@@ -299,6 +318,90 @@ export const GLOSSARY = {
     sourceModuleId: 'rct_design',
     sourceModuleTitle: 'RCT Design',
     sourceTabId: 'causal_foundation',
+  },
+  'influence': {
+    term: 'Influence',
+    def: 'When a data point actually does swing the fitted line — high leverage combined with a target value that fights the trend, unlike leverage alone, which is only the potential to swing it.',
+    sourceModuleId: 'linear_regression',
+    sourceModuleTitle: 'Linear Regression from First Principles',
+    sourceTabId: 'classical_ml_foundation',
+  },
+  'logit': {
+    term: 'Logit (Log-Odds)',
+    def: 'The log of the odds — exactly the quantity a linear equation predicts before the sigmoid turns it into a probability; wrapping odds in a log fixes their lopsidedness, turning mirror-image probabilities into clean mirror images around zero.',
+    sourceModuleId: 'logistic_regression',
+    sourceModuleTitle: 'Logistic Regression',
+    sourceTabId: 'classical_ml_foundation',
+  },
+  'odds ratio': {
+    term: 'Odds Ratio',
+    def: "e^w — how much a one-unit rise in a feature multiplies the odds of the outcome; how logistic regression coefficients get reported in medicine and credit, e.g. 'smokers have 2.3× the odds.'",
+    sourceModuleId: 'logistic_regression',
+    sourceModuleTitle: 'Logistic Regression',
+    sourceTabId: 'classical_ml_foundation',
+  },
+  'odds': {
+    term: 'Odds',
+    def: 'A way of comparing two outcomes: the chance of the event divided by the chance of no event. Lopsided by nature — a probability of 0.99 gives odds of 99, while its mirror image, 0.01, gives odds of just 0.01.',
+    sourceModuleId: 'logistic_regression',
+    sourceModuleTitle: 'Logistic Regression',
+    sourceTabId: 'classical_ml_foundation',
+  },
+  'sigmoid': {
+    term: 'Sigmoid',
+    def: 'The function σ(z) = 1/(1+e⁻ᶻ) that takes any real number and squashes it into (0, 1) — the S-shaped curve that bends a linear equation\'s wide-open output down into a valid probability.',
+    sourceModuleId: 'logistic_regression',
+    sourceModuleTitle: 'Logistic Regression',
+    sourceTabId: 'classical_ml_foundation',
+  },
+  'log loss': {
+    term: 'Log Loss (Cross-Entropy)',
+    def: 'L = −[y·log(ŷ) + (1−y)·log(1−ŷ)] — the classification loss that makes the cost blow up as a confident prediction turns out wrong, with no ceiling, unlike MSE, which caps out near 1 no matter how wrong the prediction gets.',
+    sourceModuleId: 'logistic_regression',
+    sourceModuleTitle: 'Logistic Regression',
+    sourceTabId: 'classical_ml_foundation',
+  },
+  'perfect separation': {
+    term: 'Perfect Separation',
+    def: 'When some feature splits the two classes cleanly in the training data, so the model keeps growing its weights to push every prediction toward a hard 0 or 1 and training never settles — watch for exploding weights or a loss that turns to NaN; a small L2 penalty is the fix.',
+    sourceModuleId: 'logistic_regression',
+    sourceModuleTitle: 'Logistic Regression',
+    sourceTabId: 'classical_ml_foundation',
+  },
+  'l1': {
+    term: 'L1 (Lasso)',
+    def: 'The penalty that adds up the plain sizes of the weights (ignoring sign), also called Lasso. Its pull on a weight is a constant force regardless of size, so it can walk a weight all the way to exactly zero and stop — driving feature selection.',
+    sourceModuleId: 'regularization',
+    sourceModuleTitle: 'Regularisation Geometry',
+    sourceTabId: 'classical_ml_foundation',
+  },
+  'l2': {
+    term: 'L2 (Ridge)',
+    def: 'The penalty that squares each weight and adds them up, also called Ridge. Its pull weakens as the weight shrinks, so it stalls just short of zero — shrinking weights smoothly but never landing on exactly zero for any finite penalty.',
+    sourceModuleId: 'regularization',
+    sourceModuleTitle: 'Regularisation Geometry',
+    sourceTabId: 'classical_ml_foundation',
+  },
+  'shrinkage': {
+    term: 'Shrinkage',
+    def: 'The pull a weight-size penalty exerts on trained weights, pulling them toward zero — on noisy, high-dimensional data, shrinkage is what keeps a fitted weight from swinging wildly between training runs.',
+    sourceModuleId: 'regularization',
+    sourceModuleTitle: 'Regularisation Geometry',
+    sourceTabId: 'classical_ml_foundation',
+  },
+  'closed form': {
+    term: 'Closed-Form Solution',
+    def: 'A formula that computes the exact best answer directly in one step, without any iterative search — OLS\'s normal equation and Ridge\'s (XᵀX + λI)⁻¹Xᵀy are both closed forms.',
+    sourceModuleId: 'regularization',
+    sourceModuleTitle: 'Regularisation Geometry',
+    sourceTabId: 'classical_ml_foundation',
+  },
+  'minimum-norm solution': {
+    term: 'Minimum-Norm Solution',
+    def: 'Among many equally-good tied solutions to an underdetermined fit (like two identical feature columns), the one that additionally minimises the sum of squared weights — Ridge deterministically lands here as its penalty shrinks toward zero.',
+    sourceModuleId: 'regularization',
+    sourceModuleTitle: 'Regularisation Geometry',
+    sourceTabId: 'classical_ml_foundation',
   },
 }
 

@@ -2276,6 +2276,102 @@ export const TRAINER_QUESTIONS = [
     "antiPattern": "Treating cluster randomization as a free substitute for individual-level randomization with no power cost, when in practice it can require an order of magnitude more users to reach the same power.",
     "staffFraming": "When SUTVA forces cluster-level randomization, budget for the DEFF penalty up front in the power analysis — discovering it after the test is already running is a duration surprise nobody wants."
   },
+  {
+    "id": 143,
+    "domain": "Classical ML",
+    "q": "A credit model reports odds ratio = 1.8 for 'missed a payment in the last 6 months.' A junior analyst tells the credit committee: 'applicants with that history are 1.8x more likely to default.' What's wrong with that claim?",
+    "options": [
+      "Nothing is wrong — an odds ratio of 1.8 is by definition the same number as a relative risk of 1.8, so the analyst's plain-English translation is exactly correct here.",
+      "The odds ratio multiplies the odds of default by 1.8, not the probability; when default is common, that 1.8x on the odds scale translates to a smaller multiplier on the probability scale.",
+      "The real error is a sign flip — an odds ratio of 1.8 actually means the missed-payment group is less likely to default, since odds ratios above 1 point in the opposite direction from what's claimed.",
+      "The odds ratio can't be interpreted at all without first standardizing every other feature in the model, so no claim about this coefficient is valid until that's done."
+    ],
+    "correct": 1,
+    "explanation": "An odds ratio (e^w) multiplies the odds P/(1−P), not the probability P. Odds and probability only track each other closely when the event is rare; away from that, an odds ratio of 1.8 moves the actual default probability by less than 1.8x. Report the model's predicted probabilities, not just the odds ratio, when the audience is going to hear it as a risk multiplier.",
+    "whatsTested": "Whether you know an odds ratio scales odds, not probability, and that conflating the two overstates the true risk multiplier once the base rate isn't tiny.",
+    "antiPattern": "Treating 'odds ratio' and 'relative risk' as interchangeable — they only converge when the outcome is rare; for common outcomes they diverge substantially.",
+    "staffFraming": "When a business audience hears 'X times more likely,' that's a probability-ratio claim. An odds ratio needs translating into predicted probabilities before it's stated that way."
+  },
+  {
+    "id": 144,
+    "domain": "Classical ML",
+    "q": "You're training an L1-penalized (Lasso) logistic regression for fraud detection with 8,000 one-hot merchant-category and merchant-ID features over 3,000 labeled fraud cases (p ≫ n), hoping for a short, stable list of risk drivers. Two teammates flag different concerns — which one is the real structural limit of Lasso here, not just an implementation detail?",
+    "options": [
+      "None — Lasso has no structural feature-count limit; the only real risk with p ≫ n is slower convergence, fixable by raising max_iter or switching solvers.",
+      "Lasso saturates at roughly n (~3,000) selected features, and its picks among correlated merchant features are unstable run to run — elastic net fixes both via an added L2 component.",
+      "The real limit is that L1 cannot be combined with logistic regression at all — L1 penalties are only defined for the squared-error loss that OLS uses, not for cross-entropy.",
+      "Lasso will simply keep every one of the 8,000 features with a nonzero weight in this regime, since the L1 penalty only activates once the sample size exceeds the number of features."
+    ],
+    "correct": 1,
+    "explanation": "With more features than samples, Lasso saturates at roughly n selected features, and among correlated features (multiple merchants in the same category, near-duplicate merchant IDs) its flat penalty along tied directions makes the specific selection unstable run to run. Elastic net keeps L1's sparsity while its L2 component both allows exceeding the n-feature cap and holds correlated groups together instead of arbitrarily picking one.",
+    "whatsTested": "Whether you know Lasso's p > n selection cap and correlated-feature instability, and that elastic net specifically addresses both, not just one.",
+    "antiPattern": "Treating a p ≫ n regularization choice as purely a compute/convergence question rather than a structural limit on how many features L1 can even select.",
+    "staffFraming": "In a p ≫ n regime with correlated features, default to elastic net over pure Lasso — pure L1's selection is both capped and unstable exactly when you need it to be a reliable feature list."
+  },
+  {
+    "id": 145,
+    "domain": "Classical ML",
+    "q": "Two engineers each independently add a near-duplicate feature to a deployed OLS pricing model — session_length_sec and session_length_min, which differ only by a fixed /60 scale factor. Retraining on the same data with a different solver produces very different coefficients for these two features, but the model's actual predictions barely change. A teammate is alarmed the model is broken. What's really going on, and what would switching to Ridge change?",
+    "options": [
+      "The model genuinely is broken — any coefficient instability between retraining runs means the fitted line itself is different and the predictions are unreliable regardless of what the numbers show.",
+      "This is ordinary sampling noise from a small training set; the fix is simply gathering more rows, since coefficient instability is always a symptom of insufficient data volume.",
+      "This is the duplicate-column/near-collinearity trap: many weight splits fit equally well, so OLS returns an arbitrary one; Ridge instead settles deterministically on the minimum-norm, roughly even split.",
+      "The instability means the two features have opposite signs of true effect on price, and Ridge's job is to figure out which one is the real driver and zero out the other."
+    ],
+    "correct": 2,
+    "explanation": "Two columns that are exact rescalings of each other make only their (rescaled) sum affect any prediction, so OLS has a whole tied line of equally-good solutions and an arbitrary solver detail decides which point on that line it returns — predictions stay stable because only the sum matters, but the individual weights wobble. Ridge breaks that tie deterministically by landing on the minimum-norm point on the tied line (roughly the even split), because its penalty specifically minimizes the sum of squared weights among the tied solutions.",
+    "whatsTested": "Whether you can diagnose the duplicate/near-collinear-feature coefficient-instability pattern and explain concretely what Ridge's closed form does to fix it, rather than just calling it 'regularization helps.'",
+    "antiPattern": "Assuming any coefficient instability across runs means the model's predictions are wrong — collinearity can make weights unstable while leaving predictions essentially untouched.",
+    "staffFraming": "Before debugging 'unstable coefficients' as a data or bug problem, check whether two features are near-duplicates — that alone explains wobbling weights with stable predictions, and Ridge (not more data) is the fix."
+  },
+  {
+    "id": 146,
+    "domain": "Classical ML",
+    "q": "A team L2-regularizes a logistic regression fraud model without standardizing first. transaction_amount ranges $1–$50,000; is_new_account is a 0/1 flag. Both are about equally predictive on their own, but after training, is_new_account's weight is shrunk close to zero while transaction_amount's survives largely intact. What's the most likely cause, and the fix?",
+    "options": [
+      "is_new_account is genuinely the weaker predictor here — the shrinkage is doing its job correctly, and no data preprocessing change is needed before trusting this result.",
+      "The penalty judges weights by size, not usefulness — a dollar-scale feature needs a tiny weight, a 0/1 flag needs a large one, so the same lambda hits them unequally. Standardize both features first.",
+      "L2 regularization structurally cannot be applied to binary 0/1 features at all; the fix is to drop is_new_account from the penalty entirely while still regularizing transaction_amount.",
+      "The issue is that transaction_amount needs a log transform before fitting, and once that's applied the weight imbalance will resolve on its own without touching the regularization setup."
+    ],
+    "correct": 1,
+    "explanation": "L2 (and L1) penalize weights by their raw magnitude, not by how much they matter. A dollar-scale feature needs a tiny per-unit weight to have a meaningful effect on the logit, so the penalty barely touches it; a 0/1 flag needs a comparatively large weight for the same effect, so the same lambda hammers it. Standardizing every feature onto a common scale before fitting makes the penalty judge features by usefulness rather than units.",
+    "whatsTested": "Whether you can trace an asymmetric-shrinkage bug back to missing standardization, rather than to genuine feature importance.",
+    "antiPattern": "Reading post-regularization weight size as a proxy for feature importance without first checking whether every feature was standardized onto the same scale.",
+    "staffFraming": "Any time regularized coefficients look surprising, check standardization before concluding anything about which features matter."
+  },
+  {
+    "id": 147,
+    "domain": "Classical ML",
+    "q": "A team sweeps λ for a Ridge model and picks the value that minimizes error measured on the same training set it was fit on. What will they observe, and why is this the wrong way to choose λ?",
+    "options": [
+      "They'll observe validation error climbing steadily as λ increases from that chosen point, since a Ridge penalty large enough to matter on training data always overcorrects on held-out data too.",
+      "They'll observe the sweep always preferring λ = 0, since training error is smallest with no penalty at all — the whole point of the penalty is a cost that training error alone never rewards paying.",
+      "They'll observe no consistent pattern, since training error is not a monotonic function of λ and can decrease, increase, or plateau unpredictably as the penalty grows.",
+      "They'll observe the sweep landing on a very large λ, since heavy shrinkage minimizes training error by forcing predictions toward the target's mean, which is the smallest error attainable."
+    ],
+    "correct": 1,
+    "explanation": "Training error is smallest exactly where the penalty is weakest, since the penalty exists to trade a little training fit for lower variance on unseen data — a training-error sweep will therefore always prefer λ = 0, defeating the purpose of regularizing at all. Lambda has to be chosen by measuring error on held-out data (cross-validation / a validation curve), not training error, which is why RidgeCV and LassoCV both search over held-out folds.",
+    "whatsTested": "Whether you know training error is monotonically minimized at zero penalty, making it structurally the wrong signal for choosing lambda.",
+    "antiPattern": "Tuning any regularization hyperparameter against the same metric the loss is already directly minimizing — training error will always vote for the least regularization.",
+    "staffFraming": "Any hyperparameter that trades training fit for something else (variance, generalization) needs a held-out signal to tune — training error can't see the thing you're trying to buy."
+  },
+  {
+    "id": 148,
+    "domain": "Classical ML",
+    "q": "You're predicting delivery time in minutes. Being 30 minutes late on a rare order triggers a costly support escalation; being 2 minutes off on a typical order is essentially free. Should model selection be driven by MAE or RMSE, and why?",
+    "options": [
+      "MAE, because it is more interpretable in raw minutes and business stakeholders generally find averages easier to communicate than any other error metric in a status update.",
+      "RMSE, because squaring the errors before averaging makes a few large, costly misses count for much more than many small, cheap ones — matching how the errors actually cost the business.",
+      "Neither — R² is the right choice here since it is unitless and therefore comparable across different delivery routes and time-of-day windows without any further adjustment.",
+      "MAE, because RMSE is undefined whenever a small number of predictions are exact hits (residual of zero), which delivery-time data will frequently include."
+    ],
+    "correct": 1,
+    "explanation": "RMSE squares each error before averaging, so a few large, expensive misses (the 30-minute-late orders) pull the metric up far more than many small, cheap misses (2 minutes off) — matching a cost structure where big errors are disproportionately costly. MAE weighs every minute of error equally regardless of size, which is the right choice when errors really do cost proportionally to their magnitude, but not here. R² measures fraction of variance explained, not the cost-weighted usefulness of the model, and doesn't address the actual question. RMSE is well-defined with exact-hit residuals of zero; that's not a real constraint.",
+    "whatsTested": "Whether you can match an error metric to a real cost asymmetry, not just recite MAE/RMSE definitions.",
+    "antiPattern": "Treating interpretability (MAE reads like plain minutes) as the deciding factor when the actual business cost is disproportionately sensitive to large misses.",
+    "staffFraming": "Before picking an error metric, ask how the business actually loses money on a miss — proportional to the miss size (MAE) or disproportionately punished by big misses (RMSE)."
+  },
 ];
 
 export const EXAM_ONLY_MCQ = [

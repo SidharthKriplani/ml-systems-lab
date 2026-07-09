@@ -1666,3 +1666,277 @@ was built for (two bare same-string dollar amounts), both now render as plain cu
 garbled fake-LaTeX span.
 
 Not pushed — no git commands run, per standard MSL workflow (hand to Sidharth's Mac for build + push).
+
+---
+
+## Classical ML batch 1 writer pass — linear_regression, logistic_regression, regularization — 2026-07-09
+
+3B1B-standard writer pass (per `3B1B-STANDARD.md`, no scenes — plain prose only) on the first 3 modules
+of `src/data/foundations/classicalMLModules.js`, using `gradient_boosting` in the same file as the quality
+bar (one continuous, hand-checkable running numerical example; ~9 `checkQuestions`; recap matching content
+exactly). This entry consolidates a prior run that was interrupted mid-edit (no earlier BACKLOG entry had
+been written for it, so nothing to merge).
+
+**`linear_regression`** — found already complete from the interrupted run: a five-house running example
+(sizes 10/15/20/25/30 hundred-sqft, prices 200/250/280/310/360k) computed end-to-end — Sxy=1900, Sxx=250,
+OLS slope=7.6, intercept=128, residuals, R²=0.989, adjusted R²=0.985, a sixth leverage/influence house
+collapsing the slope to ≈0.89, and a full inference-layer (SE, t-stat, 95% CI) worked on the same numbers.
+`checkQuestions` at 9 (matches `gradient_boosting`), recap matches the rewritten content. No changes made.
+
+**`logistic_regression`** — found genuinely incomplete: the narrative (four-patient running example: w=1.4,
+b=−0.2, logits/sigmoid/log-odds/log-loss/gradient-comparison all computed on real numbers) and recap had
+already been rewritten and were coherent, but `checkQuestions` was still at 7, not the 9 the interrupted
+agent's own last status line said it intended. Added 2 questions reusing the existing patient numbers: one
+multi-select contrasting Patient 3 (σ≈0.931, log loss≈0.07) vs Patient 4 (σ≈0.047, log loss≈3.05, MSE
+ceiling≈0.908) on log-loss-vs-MSE, one single-answer on the log-odds/odds-ratio arithmetic (e^1.4≈4.05).
+`checkQuestions` now 9/9.
+
+**`regularization`** — found entirely untouched (generic L1/L2 explanation, no computed numbers anywhere).
+Full writer pass: built the running example by reusing `linear_regression`'s own Sxy=1900, Sxx=250 (OLS
+slope 7.6) rather than inventing new houses, per cross-module continuity. New closed-form arithmetic added:
+Ridge's single-feature formula slope=Sxy/(Sxx+λ) → 3.8 at λ=250 (exactly half), ≈0.884 at λ=1900 (never
+exactly zero); Lasso's soft-threshold slope=sign(Sxy)×max(|Sxy|−λ/2,0)/Sxx → 6.6 at λ=500, exactly 0 at
+λ=3800 (the sparsity claim made numeric, not just geometric). Added a new "duplicate-column trap" section:
+adding size to the model twice makes OLS underdetermined (infinitely many weight₁+weight₂=7.6 ties); derived
+that Ridge's minimum-norm tie-break gives the exact even split (3.8, 3.8) and Lasso's flat-along-the-tie
+penalty has no unique minimum, so a coordinate-descent solver arbitrarily lands on a corner (7.6, 0) — the
+mechanism behind "which correlated feature Lasso keeps can flip between runs," previously asserted without
+proof. Tied the λI-restores-invertibility explanation to the same duplicate-column case (XᵀX becomes exactly
+singular, not just near-singular). `keyPoints` and `recap` rewritten to match; `checkQuestions` taken from
+6 → 9 (3 new, testing the closed-form arithmetic, the duplicate-column tie-break, and why Lasso's formula
+needs a `max(...,0)` clamp and Ridge's doesn't).
+
+**Verification:**
+- `node _verify_mcq_balance.mjs src/data/foundations/classicalMLModules.js` — 65 total matched+flagged
+  question count (up from the file's pre-existing 62), all 5 newly-added questions across the two modules
+  are clean (none appear in the flagged/length-tell list); file-wide flagged rate 21.5% (14/65, unchanged
+  from baseline's 14 pre-existing flags — this pass introduced zero new length-tells). Two of the 5 new
+  questions are multi-select (`answer: ['X','Y']`) and are correctly outside this script's single-letter
+  length check.
+- `npx -y esbuild@0.21.5 src/data/foundations/classicalMLModules.js --bundle --format=esm --loader:.jsx=jsx
+  --external:react --external:react-dom --external:react/jsx-runtime --external:recharts
+  --external:lucide-react --outfile=/dev/null` — compiles clean; only pre-existing, unrelated
+  duplicate-`interactiveId`-key warnings (`decision_tree_viz`, `random_forest_viz`) surfaced, not introduced
+  by this change.
+- Final `checkQuestions` counts: `linear_regression` 9, `logistic_regression` 9, `regularization` 9 — all
+  matching the `gradient_boosting` reference bar.
+
+**Explicitly NOT done this pass (writer pass only, per scope):** no Pass-2 adversarial audit, no glossary
+or interview-question harvest — both tracked as separate follow-up work.
+
+Not pushed — no git commands run, per standard MSL workflow (hand to Sidharth's Mac for build + push).
+
+---
+
+## Classical ML batch 1 Pass-2 adversarial audit — linear_regression, logistic_regression, regularization — 2026-07-09
+
+Independent Pass-2 auditor (cold read, no visibility into the writer's reasoning) on the 3 modules from
+the writer pass immediately above, checked against the full `3B1B-STANDARD.md` "Enforcement" checklist
+and the full `CONTENT-AUDIT-RUBRIC.md` 10-smell pass.
+
+**Numeric self-check — every number in all 3 running examples independently recomputed from scratch, not
+read-and-nodded:**
+- `linear_regression` five-house example: recomputed x̄=20, ȳ=280, Sxy=1900 (800+150+0+150+800), Sxx=250
+  (100+25+0+25+100), slope=7.6, intercept=128, all 5 residuals (−4,+8,0,−8,+4, summing to 0), SSE=160,
+  SST=14,600, R²=0.9890 (rounds to 0.989), adjusted R²=0.9854 (rounds to 0.985), MAE=$4,800,
+  RMSE=√32≈$5,657, MAPE≈1.778%. **All confirmed correct.** Also independently recomputed the 6-house
+  leverage/influence example: new x̄=30, ȳ=283.33, Sxy=2,900 (1666.67+500+33.33−133.33+0+833.33),
+  Sxx=3,250 (400+225+100+25+0+2500), slope=2900/3250=0.8923 (rounds to 0.89), an 88.3% drop from 7.6 —
+  matches the module's own "88%" and "$76/sqft → $9/sqft" claims. Inference layer: MSE_resid=160/3=53.33,
+  SE(slope)=√(53.33/250)=0.4619 (rounds to 0.462), t=7.6/0.462=16.45 (rounds to 16.4), 95% CI with
+  t(3)=3.18: 7.6±1.469=[6.13,9.07]. **All confirmed correct, no fix needed.**
+- `logistic_regression` four-patient example: recomputed Patient 1 (x=0.5): z=0.5, σ(0.5)=0.6225 (rounds
+  to 0.622), odds=1.6455 (rounds to 1.65), ln(1.65)=0.5008 (matches z=0.5). Patient 2 (x=−1.0): z=−1.6,
+  σ(−1.6)=0.1680 (rounds to 0.168). x=1.5 case: z=1.9, σ(1.9)=0.8699 (rounds to 0.870), new odds=6.69,
+  ratio 6.69/1.65=4.05 (matches e^1.4=4.0552). Patient 3 (x=2.0): z=2.6, σ(2.6)=0.9309 (rounds to 0.931),
+  squared error=0.00476 (rounds to 0.005), log loss=−ln(0.931)=0.0715 (rounds to 0.07). Patient 4
+  (x=−2.0): z=−3.0, σ(−3.0)=0.04743 (rounds to 0.047), squared error=0.9082 (rounds to 0.908), log
+  loss=−ln(0.047)=3.058 (rounds to 3.05); at ŷ=0.0001, squared error=0.9998 and log loss=9.21 — both
+  confirmed. Gradient check: ŷ−y=−0.953 (log loss) vs σ(z)(1−σ(z))=0.047×0.953=0.0452≈0.045 (MSE's shrink
+  factor, which is also the exact ratio of the two gradients' magnitudes: 0.045/0.953≈4.5%) — confirmed
+  correct as written. **One real error found and fixed:** the text claimed Patient 4's log loss was
+  "over 40× larger, for a prediction that was only about 20× further from the truth in raw probability
+  terms." The 40× is fine (3.05/0.07≈43.6). But the "20×" is wrong — independently computed the actual
+  raw-probability distances from truth: Patient 3 missed by 1−0.931=0.069, Patient 4 by 1−0.047=0.953,
+  ratio 0.953/0.069≈13.8×, not ≈20×. **Fixed** to "about 14×" with the arithmetic shown inline
+  parenthetically so the claim is self-verifying on the page, not just asserted.
+- `regularization` Ridge/Lasso closed-form example: recomputed Ridge slope=Sxy/(Sxx+λ): λ=250 →
+  1900/500=3.8 (exactly half of 7.6, confirmed exact); λ=1900 → 1900/2150=0.8837 (rounds to 0.884, never
+  exactly 0, confirmed). Lasso soft-threshold slope=sign(Sxy)×max(|Sxy|−λ/2,0)/Sxx: λ=500 →
+  max(1900−250,0)/250=1650/250=6.6 (confirmed exact); λ=3800 → max(1900−1900,0)/250=0 (confirmed exactly
+  zero, not rounded). Duplicate-column tie-break: confirmed Ridge's minimum-norm argument algebraically
+  (weight₁=3.8+d, weight₂=3.8−d → sum-of-squares=2(3.8²+d²), minimized only at d=0, i.e. the even split)
+  and confirmed Lasso's flat-tie claim (|weight₁|+|weight₂|=7.6 identically along the whole tied line
+  since both weights are non-negative here, so the L1 penalty can't distinguish any split — arbitrary
+  corner is a genuine consequence of a solver breaking a flat tie, not hand-waved). **All confirmed
+  correct, no fix needed.**
+
+**Cross-module continuity claim (writer says `regularization` deliberately reuses `linear_regression`'s
+Sxy=1900/Sxx=250 five-house data):** verified by direct comparison — same house data (sizes 10/15/20/25/30
+hundred-sqft, prices 200/250/280/310/360k), same Sxy=1900, same Sxx=250, same unpenalized slope=7.6
+quoted identically in both modules, no contradiction. **Confirmed genuinely consistent, not just
+asserted.**
+
+**Voice rule 11 (cross-module continuity, module openings):** `regularization`'s opening explicitly names
+where `linear_regression` left off ("go back to the five houses from the linear regression module") —
+compliant. `linear_regression` is the first module in the family, no predecessor to reference — N/A.
+**`logistic_regression`'s opening was a generic restart** (straight into the heart-attack/doctor framing)
+with no reference to `linear_regression`'s own ending point at all — a real rule-11 violation, not
+implied by omission. **Fixed** with a one-sentence transition prepended to the `summary` string: "The
+linear regression module ended by picking the right yardstick for predicting a *number* — MAE, RMSE, R².
+But not every prediction is a number." — names the specific point (the error-metric section) and pivots
+into why classification needs a different approach, before the original doctor-question opening.
+
+**Other checklist items — all clean, zero violations found:**
+- Precision rule: every metaphor (loss-as-bowl, lazy-model baseline, S-curve/sigmoid squash, log fixing
+  odds' lopsidedness, cramming-students overfitting, L1/L2 diamond-vs-circle geometry) cashes out to an
+  exact formula or computed number within a sentence or two of being introduced. No gaps found.
+- Scene rule 1 (persistent object): each module runs exactly one running example end to end — five houses
+  (`linear_regression`, reused verbatim in `regularization`), four patients (`logistic_regression`). No
+  mid-stream metaphor switches.
+- Voice rule 7 (mechanical labeling): spot-checked every computed intermediate (Sxy/"co-movement sum",
+  Sxx/"size-spread sum", z/"logit", σ(z)/"probability", MSE_resid, SE, t-stat) — each is named the moment
+  it's produced.
+- Voice rule 8 (one worked illustration): confirmed no scattered partial examples in any of the 3 modules.
+- Voice rule 12 (unexplained origins): w=1.4/b=−0.2 in `logistic_regression` are explicitly stated as
+  "trained by minimizing the loss we're about to define, via gradient descent" before being used; λ values
+  in `regularization` are explicitly addressed in the "How you actually pick lambda" section (tuned via
+  CV, not guessed, and the illustrative λ=250/500/1900/3800 values are explicitly distinguished from a
+  real CV-tuned choice). No unexplained-origin violations.
+- `CONTENT-AUDIT-RUBRIC.md` 10-smell pass: no undefined-term-before-use, no tested-but-not-taught (every
+  `checkQuestions` item spot-checked below), no asserted-not-shown claims, no missing "so what," no
+  structural/proximity mismatches, no confusable-relationship gaps, no dangling threads at either module's
+  end (each closes on a complete thought, not an unstated continuation).
+
+**checkQuestions spot-check (all 27 questions across the 3 modules read against their own module's
+narrative content, not just the flagged subset):** every marked-correct answer matches content actually
+present in that module's `summary` — none require outside knowledge. Full detail not reproduced here since
+zero mismatches were found; sample checks included the multi-select questions (`linear_regression` Q4 and
+Q9, `logistic_regression` Q5 and Q8, `regularization` Q1 and Q8), all of which have both marked-correct
+options independently verifiable against the prose.
+
+**MCQ length-tell check** — ran `_verify_mcq_balance.mjs` against the whole file (all 14 modules, not just
+these 3, since the script bundles the full file): 65 total matched questions, 14 flagged (21.5%),
+**identical to the writer's own reported baseline** ("14/65, unchanged... this pass introduced zero new
+length-tells"). Independently confirms that claim rather than taking it on faith. Of the 14 flagged
+file-wide, 4 fall inside these 3 modules (`linear_regression` Q6 and Q8, `logistic_regression` Q3,
+`regularization` Q5) — all 4 are pre-existing from before this rewrite pass (not among the newly-added
+questions), so left as-is per the standing convention (see earlier `gradient_boosting` audit entries) of
+not fixing pre-existing length-tells inside a targeted content-accuracy pass; a length-rebalancing pass
+across the file is separate, already-flagged housekeeping.
+
+**LaTeX/rendering check:** read `texToHtml()` in `src/utils/renderMd.jsx` (the actual substitution list,
+not assumed) and grepped these 3 modules' line range (1–765) for `\`-prefixed macros — only hits are
+`\hat{y}` and `\log` inside the log-loss formula (line 331), both supported (`\hat{}`→combining circumflex,
+`\log`→"log"). No unsupported macros. Also checked every `$...$` pair against `renderInline()`'s actual
+split regex (`(?<!\\)\$[^\$\n]+(?<!\\)\$`) — all currency figures in both modules use the escaped `\$`
+form already (e.g. `\\$7,600`), and the 4 remaining bare-`$` pairs (`$e^{w}$`, `$-\log(\hat{y})$`,
+`$θ̂ = (XᵀX)⁻¹Xᵀy$`, `$θ̂ = (XᵀX + λI)⁻¹Xᵀy$`) are all genuine self-contained equation delimiters with no
+stray `$` inside them. No rendering risk found.
+
+**Fixes applied (2 total, both targeted, no full rewrite):**
+1. `logistic_regression` summary — corrected "about 20× further from the truth" to "about 14×" (with the
+   arithmetic shown inline) — the one real numeric error found on independent recomputation.
+2. `logistic_regression` summary — prepended a one-sentence cross-module transition naming
+   `linear_regression`'s ending point, fixing the voice-rule-11 gap.
+
+**Verify:** `npx -y esbuild@0.21.5 src/data/foundations/classicalMLModules.js --bundle --format=esm
+--loader:.jsx=jsx --external:react --external:react-dom --external:react/jsx-runtime --external:recharts
+--external:lucide-react --outfile=/dev/null` — clean (exit 0; only the pre-existing, unrelated
+duplicate-`interactiveId` warnings already logged in earlier entries). Re-ran
+`_verify_mcq_balance.mjs` post-fix — still 65/14/21.5%, confirming the two text-only fixes didn't touch
+any `checkQuestions` option lengths.
+
+**Net result: 1 loop, 2 targeted fixes, both confirmed clean on re-check — no further iterations needed.**
+Not pushed — no git commands run, per standard MSL workflow.
+
+---
+
+## Classical ML batch 1 (`linear_regression`, `logistic_regression`, `regularization`) — glossary + interview-question harvest, closing out the writer → Pass-2 audit → harvest pipeline — 2026-07-09
+
+Final step for this batch: mined glossary terms and audited/backfilled interview questions, grounded only
+in the finalized, Pass-2-audited module text (not draft text, not outside knowledge).
+
+### Part 1 — Glossary (`src/data/glossary.js`)
+Read the existing 37-entry file in full first to match its established schema (`term`/`def`/
+`sourceModuleId`/`sourceModuleTitle`/`sourceTabId`, longest-key-first sort, def = lightly trimmed
+module-native sentence). Added **12 new entries** (37 → 49 total):
+- **11 net-new**, sourced from the actual demonstrate-then-name moments in the finalized text: `logit`
+  (log-odds), `odds`, `odds ratio`, `sigmoid`, `log loss` (cross-entropy) — all from `logistic_regression`
+  — and `l1` (Lasso), `l2` (Ridge), `shrinkage`, `closed form`, `minimum-norm solution` — all from
+  `regularization`. Also `perfect separation` (`logistic_regression`).
+- **1 gap-fill**: `influence` — demonstrated right next to `leverage` in `linear_regression` (which the
+  earlier session did capture) but was missed at the time; added now since this pass covers that module
+  too.
+- **Deliberately excluded** (documented in the file's own header comment): `overfitting` (used 50+ times
+  across other foundation families with the same meaning — same over-generic risk already established for
+  "consistency"/"compliance" in the causal harvest); `bias-variance tradeoff` (the concept is taught in
+  `regularization`, but the exact phrase never appears contiguously in the prose, so a glossary key for it
+  would never actually highlight anything — the matching mechanism requires the literal string to appear);
+  `sparsity` (appears only in the module's `subtitle` metadata, never in the `summary`/`keyPoints` body
+  text itself — same "def must trim real body prose" discipline).
+- Verified no key collisions against the existing 37 (checked substring/short-key risk for `l1`/`l2`
+  specifically — the app's `\b`-bounded regex doesn't false-match inside `l1_ratio` since `_` is a word
+  character, so no boundary exists there).
+
+### Part 2 — Interview questions (`src/data/questionBank.js`, `TRAINER_QUESTIONS`)
+Checked for an existing domain covering linear/logistic regression and regularization: **zero** existing
+match (`grep -i` across all "domain" values — the 13 existing domains are Feature Engineering, Model
+Evaluation, ML Systems, Statistics & Probability, Deep Learning, MLOps, Ranking & Retrieval, Experiment
+Design, SQL & Data, Optimization, Recommender Systems, Experimentation, Causal Inference; only tangential
+one-off mentions of "logistic regression"/"L1"/"L2" appear scattered under Deep Learning/Optimization
+content on unrelated topics like weight decay and solver choice). Real gap, not an audit situation —
+followed the established precedent (same pattern used for `Experimentation` and `Causal Inference` in
+earlier sessions): added a new domain, **`"Classical ML"`**, rather than forcing the content into a
+loosely-fitting existing bucket.
+
+Added **6 new MCQs**, ids **143–148** (next free numeric id after the existing max of 142; the `"C1"`–
+`"C100"` ids belong to the separate `EXAM_ONLY_MCQ` array, confirmed by reading the file structure, not
+assumed). Deliberately did not restate the same ground already covered exhaustively by the 3 modules' own
+24 `checkQuestions` (OLS mechanics, MSE vs MAE, R²/adjusted R², collinearity, heteroscedasticity, leverage
+vs influence, Cook's distance, the inference layer, Gauss-Markov, log-odds/sigmoid/log-loss mechanics,
+perfect separation, L1 vs L2 zeroing, standardization, the duplicate-column tie-break) — instead wrote
+applied/staff-interview-style scenarios matching this surface's existing voice (production-tell framing,
+`whatsTested`/`antiPattern`/`staffFraming` fields), several deliberately cross-linking two of the three
+modules:
+143. Odds ratio ≠ risk ratio misinterpretation in a credit-committee scenario (`logistic_regression`).
+144. Lasso's p≫n selection cap + correlated-feature instability on a sparse fraud feature set, fixed by
+     elastic net (`regularization`).
+145. Duplicate/near-collinear feature coefficient instability across retraining runs, and what Ridge's
+     minimum-norm tie-break changes (`linear_regression` collinearity × `regularization` Ridge geometry).
+146. Missing standardization causing asymmetric L2 shrinkage between a dollar-scale and a 0/1 feature
+     (`regularization`).
+147. Why tuning λ against training error always selects λ=0 (`regularization` bias-variance/CV section).
+148. MAE vs RMSE metric choice under an asymmetric real-world cost structure (`linear_regression`
+     "picking the right yardstick" section).
+
+**MCQ length-tell check** (mandatory per this file's established convention): wrote a one-off Node script
+measuring each option's string length against the "correct answer >1.20× the average of the wrong
+options" rule (same rule `_verify_mcq_balance.mjs` uses for the `checkQuestions` shape, adapted here for
+`TRAINER_QUESTIONS`' `options`/`correct`-index shape). First correctly-parsed measurement (after fixing an
+off-by-one in the string-splitting regex on the first pass) came back **0/6 flagged** — all 6 ratios
+between 1.05 and 1.12, comfortably under 1.20 and inside the file's established "not visibly the longest"
+discipline.
+
+**Known pre-existing gap, not touched (mirrors precedent):** `TrainerTab.jsx`'s `ALL_DOMAINS` array (used
+for the Trainer setup screen's domain checkboxes, default-select-all) does not include `Recommender
+Systems`, `Experimentation`, or `Causal Inference` either, even though all three are real `domain` values
+already in `TRAINER_QUESTIONS` from earlier sessions — those questions are only reachable if a user's
+`selectedDomains` state is built some other way, not via the default checkbox list. Left `Classical ML` in
+the same state as those three (consistent with existing precedent, not a new gap introduced by this pass)
+rather than unilaterally changing shared UI as a side effect of a content-harvest task.
+
+### Verify
+- `npx -y esbuild@0.21.5 src/data/glossary.js --bundle --format=esm --loader:.jsx=jsx --external:react
+  --external:react-dom --external:react/jsx-runtime --external:recharts --external:lucide-react
+  --outfile=/dev/null` — clean.
+- `npx -y esbuild@0.21.5 src/data/questionBank.js --bundle --format=esm --loader:.jsx=jsx
+  --external:react --external:react-dom --external:react/jsx-runtime --external:recharts
+  --external:lucide-react --outfile=/dev/null` — clean.
+- Loaded both modules directly (`node --input-type=module`) to confirm: `TRAINER_QUESTIONS.length === 148`
+  with no duplicate ids (verified programmatically, not by eye) and the new ids 143–148 all present under
+  `"Classical ML"`; `GLOSSARY` has 49 keys with all 12 new keys resolving.
+
+**This closes out Classical ML batch 1** — `linear_regression`, `logistic_regression`, and
+`regularization` have now completed the full writer → Pass-2 adversarial audit → glossary/interview-
+question harvest pipeline. Not pushed — no git commands run, per standard MSL workflow.
