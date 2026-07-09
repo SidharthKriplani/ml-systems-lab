@@ -58,6 +58,18 @@
 // the `summary`/`keyPoints` body text, only the zeroing-out behavior it names —
 // same reasoning, skipped to keep every def a trim of real body prose rather
 // than metadata.
+//
+// 2026-07-09 addition (batch 2): 8 terms from the finalized (writer + Pass-2
+// adversarial audit both complete, fixes applied) `trees`, `random_forest`,
+// and `class_imbalance` modules in classicalMLModules.js (sourceTabId
+// 'classical_ml_foundation'). All 8 are net-new. Deliberately excluded:
+// "precision"/"recall"/"F1"/"threshold"/"class weight" (generic terms reused
+// with the same meaning across many other module families in this app —
+// same over-generic risk as "overfitting" above); "PR-AUC" (already keyed
+// from the eval_foundation `auc_roc` module with an equivalent definition —
+// dedup, not a fresh term); "entropy" (bare word risks mis-linking into
+// unrelated cross-entropy-loss prose elsewhere in the app; "information
+// gain," the compound term this module actually needs, is keyed instead).
 
 export const GLOSSARY = {
   'least squares': {
@@ -401,6 +413,62 @@ export const GLOSSARY = {
     def: 'Among many equally-good tied solutions to an underdetermined fit (like two identical feature columns), the one that additionally minimises the sum of squared weights — Ridge deterministically lands here as its penalty shrinks toward zero.',
     sourceModuleId: 'regularization',
     sourceModuleTitle: 'Regularisation Geometry',
+    sourceTabId: 'classical_ml_foundation',
+  },
+  'gini impurity': {
+    term: 'Gini Impurity',
+    def: '1 − Σpₖ², where pₖ is each class\'s share of a group — a plain reading of "if you guessed a group member\'s class from the group\'s own mix, how often would you be wrong": 0 for a perfectly pure group, 0.5 for a 50/50 split.',
+    sourceModuleId: 'trees',
+    sourceModuleTitle: 'Decision Trees',
+    sourceTabId: 'classical_ml_foundation',
+  },
+  'information gain': {
+    term: 'Information Gain',
+    def: 'The drop in entropy from a parent node to its children after a split — literally how many bits of uncertainty a question removed; a perfectly pure split removes every bit at once.',
+    sourceModuleId: 'trees',
+    sourceModuleTitle: 'Decision Trees',
+    sourceTabId: 'classical_ml_foundation',
+  },
+  'cost-complexity pruning': {
+    term: 'Cost-Complexity Pruning',
+    def: 'The CART post-pruning method: grow the full tree, then minimise (impurity + ccp_alpha × number of leaves), a penalty on tree size exactly analogous to regularisation — a bigger ccp_alpha means a smaller tree, chosen by cross-validation.',
+    sourceModuleId: 'trees',
+    sourceModuleTitle: 'Decision Trees',
+    sourceTabId: 'classical_ml_foundation',
+  },
+  'bagging': {
+    term: 'Bagging',
+    def: 'Short for bootstrap aggregating — give each tree a random resample of the training rows, drawn with replacement, so some rows repeat and others are left out, instead of handing every tree the same full dataset.',
+    sourceModuleId: 'random_forest',
+    sourceModuleTitle: 'Random Forests',
+    sourceTabId: 'classical_ml_foundation',
+  },
+  'out-of-bag': {
+    term: 'Out-of-Bag (OOB) Error',
+    def: 'A free estimate of test performance: for each row, ask only the trees whose bootstrap resample happened to leave that row out (about 36.8% of rows per tree) to predict it, then check against the truth — no separate validation set required.',
+    sourceModuleId: 'random_forest',
+    sourceModuleTitle: 'Random Forests',
+    sourceTabId: 'classical_ml_foundation',
+  },
+  'cost matrix': {
+    term: 'Cost Matrix',
+    def: 'A dollar (or other real) cost assigned to each cell of the confusion matrix, drawn from the actual business consequence of each mistake — turns "missing a positive is worse than a false alarm" into a number you can optimise a threshold against.',
+    sourceModuleId: 'class_imbalance',
+    sourceModuleTitle: 'Class Imbalance',
+    sourceTabId: 'classical_ml_foundation',
+  },
+  'precision@k': {
+    term: 'Precision@K',
+    def: 'Precision measured only on the top K cases by predicted score — the right metric when action is capacity-limited (a team can only review K alerts) rather than governed by a global threshold.',
+    sourceModuleId: 'class_imbalance',
+    sourceModuleTitle: 'Class Imbalance',
+    sourceTabId: 'classical_ml_foundation',
+  },
+  'smote': {
+    term: 'SMOTE',
+    def: 'A minority-class oversampling technique that creates synthetic examples in between real minority points, rather than duplicating them outright — must be applied only inside cross-validation folds, after the split, or it leaks.',
+    sourceModuleId: 'class_imbalance',
+    sourceModuleTitle: 'Class Imbalance',
     sourceTabId: 'classical_ml_foundation',
   },
 }

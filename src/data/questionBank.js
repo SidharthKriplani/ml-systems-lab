@@ -2372,6 +2372,102 @@ export const TRAINER_QUESTIONS = [
     "antiPattern": "Treating interpretability (MAE reads like plain minutes) as the deciding factor when the actual business cost is disproportionately sensitive to large misses.",
     "staffFraming": "Before picking an error metric, ask how the business actually loses money on a miss — proportional to the miss size (MAE) or disproportionately punished by big misses (RMSE)."
   },
+  {
+    "id": 149,
+    "domain": "Classical ML",
+    "q": "You're explaining decision-tree splitting to a colleague who assumes a good split just means 'roughly balanced group sizes.' On the eight-applicant loan dataset, the debt-to-income split sends 4 defaulters to one side and 4 safe applicants to the other (Gini 0.5 → 0), while the income split also sends 4 and 4 but only reaches Gini 0.375. What does this actually show?",
+    "options": [
+      "The two splits are equally good since both send exactly 4 rows each way — the tree should prefer whichever comes first alphabetically among the candidate features.",
+      "A tree's splitting criterion is class purity, not group size — two equally-sized splits can differ completely in how pure each resulting group is, and purity is what the tree actually optimizes.",
+      "The size tie means Gini can't distinguish them, so the tree instead falls back to entropy, which happens to prefer the debt split for unrelated reasons.",
+      "This is a bug — a correctly implemented tree should always find a split that is simultaneously balanced in size and maximally pure, and here it failed to."
+    ],
+    "correct": 1,
+    "explanation": "A decision tree doesn't optimize for equal group sizes — it optimizes for purity (Gini or entropy). Two splits can send the exact same 4/4 row count each way and still differ completely in how pure the resulting groups are: the debt split achieves 4/4 defaulters on one side and 4/4 safe on the other (perfectly pure, Gini 0), while the income split only reaches 3/1 and 1/3 (Gini 0.375). Size and purity are independent quantities.",
+    "whatsTested": "Whether you understand that a tree's split criterion is purity, not balance — a common conflation that leads to misreading what 'the best split' actually means.",
+    "antiPattern": "Assuming a 'good' split means an even row count on each side, rather than checking what fraction of each side is actually the same class.",
+    "staffFraming": "When asked to explain why a tree chose a particular root split, cite the purity numbers (Gini/entropy), not group sizes — size is incidental."
+  },
+  {
+    "id": 150,
+    "domain": "Classical ML",
+    "q": "A regression tree trained on house prices up to $800k is asked to price a genuinely $1.2M house. It was never given any explicit rule against extrapolating. What does it actually predict, and why?",
+    "options": [
+      "Roughly $1.2M — the tree follows the upward size-to-price trend in its splits and extends that trend to the new house.",
+      "At most $800k — a regression leaf just outputs the average of the training prices that landed in it, and no training price exceeded $800k, so no leaf's average can either.",
+      "Exactly $0 — the house falls into no existing leaf, so the tree returns an undefined/missing prediction by default.",
+      "Somewhere around $1M — the tree averages its two nearest leaves' predictions and produces a value between them."
+    ],
+    "correct": 1,
+    "explanation": "A regression tree's leaves are just averages of the training values that land in each leaf. Since no training example exceeded $800k, no leaf average can exceed $800k either — the model is structurally incapable of extrapolating past its training range, regardless of how strong the underlying feature trend looks.",
+    "whatsTested": "Whether you know regression trees (and by extension random forests) cannot extrapolate outside their training range, a common silent-failure mode when a target trends upward in production.",
+    "antiPattern": "Assuming a tree-based model will 'follow the trend' the way a linear model would — tree-based regressors are bounded by their leaf averages, full stop.",
+    "staffFraming": "Before deploying a tree/forest regressor on a target that drifts over time, check whether production inputs will exceed the training range — if so, expect systematic under- (or over-)prediction, not extrapolation."
+  },
+  {
+    "id": 151,
+    "domain": "Classical ML",
+    "q": "Your random forest baseline plateaus around 87% accuracy from 100 trees onward — going to 1000 trees buys almost nothing. A teammate suggests bumping n_estimators to 5000. Based on Var(average) = σ²/n + ((n−1)/n)ρσ², is that the right lever, and what is?",
+    "options": [
+      "Yes — variance of an average keeps falling linearly with n forever, so 5000 trees should meaningfully beat 1000.",
+      "No — as n grows, the variance converges to a floor of ρσ² set by the correlation between trees, not by tree count; the lever that actually lowers that floor is max_features, which reduces ρ.",
+      "No — more trees can only help up to exactly n_estimators=100; past that the model architecture caps out and no hyperparameter can improve it further.",
+      "Yes, but only if max_depth is also increased at the same time — tree count and tree depth must scale together for the variance formula to keep improving."
+    ],
+    "correct": 1,
+    "explanation": "Var(average) = σ²/n + ((n−1)/n)ρσ² converges to ρσ² as n→∞ — a floor set by how correlated the trees are, not by how many there are. Going from 100 to 1000 trees moves the variance almost nowhere once you're near that floor. The lever that actually moves the floor itself is max_features — restricting how many features each split can consider, which lowers ρ and can cut the floor by 5x or more.",
+    "whatsTested": "Whether you know n_estimators plateaus once trees are correlated, and that max_features (not more trees) is the real diversity/variance lever.",
+    "antiPattern": "Throwing more trees at a plateaued forest instead of checking max_features — a classic wasted-compute move that looks like tuning but isn't.",
+    "staffFraming": "When a forest plateaus, don't reach for n_estimators first — check max_features and the trees' pairwise correlation instead."
+  },
+  {
+    "id": 152,
+    "domain": "Classical ML",
+    "q": "Your random forest's out-of-bag error is 8%, but its error on a genuinely held-out test set is 22%. Is this expected forest behavior, and what should you check first?",
+    "options": [
+      "Yes, expected — OOB always underestimates true error by roughly the out-of-bag fraction (about a third), so a 14-point gap is normal and needs no investigation.",
+      "No — OOB estimates performance on data distributed like the training set; a large gap like this usually points to a distribution shift between train and test, or a leak that made training look artificially easy. Check train/test feature distributions before trusting the model.",
+      "No — the gap means the forest doesn't have enough trees yet; OOB estimates are only reliable past a few thousand trees, so add more and the gap will close on its own.",
+      "Yes, expected — OOB error is computed only on the minority class by construction, so it will always look better than a test error computed across all classes."
+    ],
+    "correct": 1,
+    "explanation": "OOB error assumes the rows it's evaluated on are drawn from the same distribution as training — it's a free proxy for test-like performance, not a guaranteed match. An 8% vs 22% gap this large is a red flag for distribution shift (train and test come from different populations) or a leak. The fix is to compare train/test feature distributions and validation scheme, not to add more trees or assume the gap is normal.",
+    "whatsTested": "Whether you understand OOB error's actual assumptions (i.i.d. rows) and know to diagnose a large OOB/test gap as a distribution-shift or leakage signal rather than dismissing it as expected noise.",
+    "antiPattern": "Treating OOB error as an infallible substitute for real test evaluation, or assuming a large gap will simply resolve with more trees.",
+    "staffFraming": "A large OOB-vs-test gap is a debugging signal, not noise — chase it down (distribution shift, leakage, grouped/time-series data) before shipping."
+  },
+  {
+    "id": 153,
+    "domain": "Classical ML",
+    "q": "On a 950-legit/50-fraud dataset, retraining with class weights raises recall from 70% to 90% but F1 actually drops from 58.3% to 48.6% (precision falls from 50% to 33.3%). A colleague says this proves the reweighting made the model worse. Is that the right conclusion?",
+    "options": [
+      "Yes — F1 is specifically designed to already balance any cost asymmetry between false positives and false negatives, so a lower F1 always means a strictly worse model.",
+      "Not necessarily — F1 treats a false positive and a false negative as equally costly, which is rarely true; whether the reweighted model is actually better depends on the real dollar cost of each error type, checked via a cost matrix.",
+      "Yes — any metric dropping after a deliberate model change is proof the change was a mistake, regardless of which metric it is.",
+      "Not necessarily — the F1 drop is just measurement noise from the small dataset size, and would disappear on a larger sample without changing the underlying conclusion."
+    ],
+    "correct": 1,
+    "explanation": "F1 is the harmonic mean of precision and recall, which implicitly treats a false positive and a false negative as equally bad — an assumption that's rarely true in practice. On this dataset, at $2,000 per missed fraud and $5 per false alarm, the reweighted model (5 misses, 90 false alarms) actually costs $10,450 versus the original's $30,175 — nearly 3x cheaper — despite its lower F1. The only way to settle whether a reweighting trade is 'worth it' is to price the two error types and compare total expected cost, not to read F1 alone.",
+    "whatsTested": "Whether you know F1 assumes equal-cost errors and can't by itself settle a precision/recall tradeoff — you need a cost matrix for that.",
+    "antiPattern": "Treating F1 (or any single aggregate metric) as the final word on whether an imbalance fix helped, without pricing what the actual mistakes cost.",
+    "staffFraming": "Before rejecting a reweighting/threshold change because F1 dropped, price both error types and compare total expected cost — F1 alone can point you the wrong way."
+  },
+  {
+    "id": 154,
+    "domain": "Classical ML",
+    "q": "A team applies SMOTE to their full training set, then runs 5-fold cross-validation on the SMOTE-augmented data. Validation scores look excellent, but production performance is far worse. What went wrong, and what's the fix?",
+    "options": [
+      "SMOTE simply doesn't work for this kind of data; the fix is to abandon SMOTE and switch to plain accuracy as the evaluation metric instead.",
+      "Oversampling before the train/validation split lets synthetic points derived from the same original minority rows land in both the training fold and the validation fold, leaking signal and inflating validation scores. Apply SMOTE inside each CV fold, after the split, never before.",
+      "The validation folds were too small to be reliable; the fix is simply to increase K in K-fold cross-validation without changing where SMOTE is applied.",
+      "SMOTE needs more synthetic examples to work properly; generating 10x as many minority points before cross-validation will close the gap."
+    ],
+    "correct": 1,
+    "explanation": "SMOTE's cardinal rule is to apply it only inside each cross-validation fold, after the train/validation split — never on the whole dataset beforehand. Oversampling first means synthetic points derived from the same original minority-class rows can end up split across both the training and validation portions of a fold, so validation is partly evaluating the model on near-duplicates of its own training data. That leak inflates validation scores in a way that doesn't hold up in production.",
+    "whatsTested": "Whether you know the specific leakage mechanism SMOTE-before-split creates, and the concrete fix (SMOTE inside each fold).",
+    "antiPattern": "Applying any resampling technique to the full dataset before splitting into train/validation/test.",
+    "staffFraming": "Any preprocessing step that creates new rows derived from existing ones (SMOTE, certain augmentations) must happen after the split, inside each fold — otherwise validation numbers are not trustworthy."
+  },
 ];
 
 export const EXAM_ONLY_MCQ = [

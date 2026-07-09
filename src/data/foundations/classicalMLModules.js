@@ -983,9 +983,11 @@ Every guarantee here — bias-variance, VC bounds, PAC, even the honest test set
     difficulty: 'foundational',
     estimatedMin: 30,
     tags: ['decision trees', 'Gini', 'information gain'],
-    summary: `Think about the game of twenty questions. Someone picks a secret — a person, a place, a thing — and you have to guess it with yes/no questions. A good player never asks at random. Each question is chosen to split what is left roughly in half, so every answer shrinks the field until only one thing remains. That is almost exactly what a **decision tree** does with data, and it is one of the most natural ideas in all of machine learning — it works the way people already think.
+    summary: `The last module put a precise name on a kind of failure: **variance** — a model so twitchy that swapping a handful of training rows produces a completely different fit, even though nothing about the underlying problem changed. Decision trees are about to make that failure vivid and countable, on numbers small enough to check by hand — and, one module from now, they're also the fix.
 
-Here is a job where it shines and a straight-line model struggles. Say you want to flag loan applicants likely to default, using their income, their debt-to-income ratio, and their age. The real pattern is a set of rules: "if income is low *and* debt is high, risky — but a big income excuses a fair bit of debt." That is not a smooth weighted sum. It is the space of applicants carved into regions, each with its own answer. A linear model draws one line and gives up. A tree carves.
+Start with the game of twenty questions. Someone picks a secret — a person, a place, a thing — and you guess it with yes/no questions. A good player never asks at random, and a good question isn't just one that splits the field in half — it's one that leaves each half as *unambiguous* as possible, ideally sorting candidates cleanly into "clearly this" and "clearly not this" rather than an even split that's still a jumble of both. That is almost exactly what a **decision tree** does with data — and a moment from now, on real numbers, half-splitting and clean-splitting will turn out to give different answers.
+
+Here is a job where it shines and a straight-line model struggles. Say you want to flag loan applicants likely to default, using their income and their debt-to-income ratio. The real pattern is a set of rules: "if income is low *and* debt is high, risky — but a big income excuses a fair bit of debt." That is not a smooth weighted sum. It is the space of applicants carved into regions, each with its own answer. A linear model draws one line and gives up. A tree carves.
 
 [FIGURE: tree_partition]
 
@@ -995,35 +997,41 @@ Here is a job where it shines and a straight-line model struggles. Say you want 
 
 A decision tree asks a single yes/no question, splitting everyone into two groups, then asks the next question inside each group, and so on. The whole skill is choosing the *right* question at each step. And "right" has a clear meaning: the question that leaves the two groups as **pure** as possible — each side mostly one class.
 
-So we need a way to measure how mixed a group is. The usual one is **Gini impurity**, and it has a plain reading: if you grabbed a random person from the group and guessed their class from the group's mix, how often would you be wrong? A group that is all defaulters is perfectly pure — you would never be wrong — so its Gini is 0. A group split 50/50 is as messy as it gets — you would be wrong half the time — so its Gini is 0.5. The formula is just $1 - \\sum_k p_k^2$, where $p_k$ is the share of class k.
+So we need a way to measure how mixed a group is. Here's a natural way to do it: grab a random person from the group and guess their class from the group's own mix — how often would that guess be wrong? Take a group that's all defaulters: you would never be wrong, so call it perfectly pure. Take a group split 50/50: you would be wrong half the time, as messy as a two-class group can get. That guessing-error idea has a name and a formula: **Gini impurity**, $1 - Σpₖ²$, where pₖ is the share of class k — it comes out to 0 for the all-defaulters group and 0.5 for the 50/50 group, matching the guessing game exactly.
 
 ---
 
-**Watching it pick a split.**
+**Watching it pick a split, on numbers you can check by hand.**
 
-Let us do one real step. You have 100 applicants: 40 defaulted, 60 did not. The starting mix has Gini $= 1 - 0.4^2 - 0.6^2 = 0.48$ — quite messy.
+Eight loan applicants, income in thousands and debt-to-income ratio, four defaulted and four didn't: Ann (28, 0.50, default), Bob (33, 0.45, default), Cid (40, 0.55, default), Dee (44, 0.20, safe), Eve (52, 0.60, default), Fay (58, 0.15, safe), Gus (63, 0.10, safe), Hal (70, 0.05, safe). Notice Dee (low income, low debt) and Eve (high income, high debt) don't fit a clean story — that's deliberate, so no single question gets this for free. Four of eight defaulted, so the starting mix has Gini = 1 − 0.5² − 0.5² = **0.5** — as messy as a group can be.
 
-Try a first candidate question, "is income below 42k?" It sends 60 people left (50 of them defaulters) and 40 right (mostly safe). Work out the Gini on each side, weight each by how many people landed there, and the mixedness falls from 0.48 to about 0.32. Not bad. Now try a different question, "is debt-to-income above 0.35?" This one sends 45 people into a group that is almost all safe (Gini ≈ 0.09) — a much cleaner cut. Its weighted mixedness drops to about 0.27. The second question purified more, so the tree keeps it. Then it runs the exact same search again inside each of the two new groups, and keeps going.
+Pause and predict: two candidate questions are on the table, "is income below 48k?" and "is debt-to-income at or above 0.35?" — both come from the standard way a tree generates candidates: sort each feature's values and try the midpoint between every adjacent pair, so 48k sits between two neighbouring incomes and 0.35 between two neighbouring debt ratios, not picked by hand. Which one do you expect splits these eight people more purely?
 
-That is the whole training algorithm: at every node, try every question, keep the one that purifies the most, then recurse.
+Try income first. Below 48k: Ann, Bob, Cid, Dee — three defaulters, one safe (Dee), so p=0.75 and Gini = 1 − 0.75² − 0.25² = **0.375**. At or above 48k: Eve, Fay, Gus, Hal — one defaulter (Eve), three safe, same arithmetic by symmetry: Gini = **0.375**. Both groups land at 0.375, so the weighted Gini after this split is 0.375 — down from 0.5, but Dee and Eve are still sitting on the wrong side, muddying both halves.
+
+Now try debt. At or above 0.35: Ann, Bob, Cid, Eve — every one of them defaulted, Gini = **0** (perfectly pure). Below 0.35: Dee, Fay, Gus, Hal — every one of them stayed safe, Gini = **0** (perfectly pure too). Weighted Gini after this split: 0. The debt question separates all four defaulters from all four safe applicants in one move — Dee's low income didn't matter, Eve's high income didn't matter, only the debt ratio decided their fate correctly. It wins by the full margin available (0.5 → 0), against income's partial win (0.5 → 0.375), so the tree keeps it as the root.
+
+Both children are already pure, so the tree stops after one split. The resulting tree has exactly two leaves: **debt ≥ 0.35 → predict default (4 of 4 training rows, 100%)**; **debt < 0.35 → predict safe (0 of 4, 0%)**. That's the whole training algorithm on this data: at every node, try every candidate question, keep the one that purifies the most, recurse until a group is pure or too small to split.
 
 ---
 
 **What a leaf says.**
 
-Eventually a group is pure enough, or too small to split, and becomes a **leaf**. For classification the leaf just votes: 7 defaulters and 3 safe people means "70% chance of default." For predicting a number instead of a class — say a loan amount — the leaf hands back the **average** of the training values that landed in it.
+A leaf just reports the mix of training points that landed in it — the debt≥0.35 leaf above says "100% chance of default" because all four training rows there defaulted. For predicting a number instead of a class — a loan amount, say — a regression leaf hands back the **average** of the training values that landed in it instead of a class vote.
 
-That averaging hides a sharp limit worth remembering: a regression tree **cannot extrapolate**. If the priciest house it ever trained on was 800k, then no matter how big and fancy a new house is, the tree can only ever answer with an average of prices it has already seen — it will never say 1.2M. Its answers are trapped inside the range of its training data.
+That averaging hides a sharp limit worth remembering: a regression tree **cannot extrapolate**. If the priciest house it ever trained on was 800k, the tree can only ever answer with an average of prices it has already seen — it will never say 1.2M, no matter how big and fancy the new house is. Its answers are trapped inside the range of its training data.
 
 ---
 
 **The catch: trees are twitchy.**
 
-Now the deep part. A tree is **greedy** — at each step it grabs the single best question available right now, with no thought for what that locks in later. It does not find the best tree *overall*; searching for that truly best tree is hopeless, because the number of possible trees is astronomical. Greedy is fast, but it comes at a price.
+Now the deep part. A tree is **greedy** — at each step it grabs the single best question available right now, with no thought for what that locks in later. It does not find the best tree *overall*; searching for that truly best tree is hopeless, because the number of possible trees is astronomical. Greedy is fast, but it comes at a price, and the eight applicants above are about to show exactly what price.
 
-Because the very first split is chosen by looking at the whole dataset, it is fragile. Change just 8 of those 100 applicants and the root question might flip from "debt above 0.35?" to "income below 42k?" — and since every branch underneath is built on top of the root, the entire tree below reshuffles. Two trees trained on data that is 92% identical can hand out opposite answers for the same person. This is called **high variance**, and it is not a bug you can tune away — it is baked into greedy splitting.
+Change the labels on just two of the eight rows — nothing else — and flip Dee from safe to defaulted and Eve from defaulted to safe. Six of eight rows, 75% of the data, are untouched. Rerun both candidate splits. Debt at or above 0.35 now catches Ann, Bob, Cid (still defaulters) and Eve (now safe) — three of four defaulted, Gini = 1 − 0.75² − 0.25² = **0.375**. Below 0.35 catches Dee (now defaulted), Fay, Gus, Hal — one of four defaulted, Gini = **0.375** too. Weighted Gini after the debt split: 0.375 — no longer the clean win it was. Income below 48k now catches Ann, Bob, Cid, Dee — and all four defaulted (Dee flipped to match them), Gini = **0** — pure. At or above 48k catches Eve, Fay, Gus, Hal, and all four are now safe, Gini = **0** — pure too. Weighted Gini after the income split: 0. The winner just reversed. Income is now the pure split; debt is the muddy one.
 
-Hold onto that fact, because in the next lessons it flips from weakness into superpower: a crowd of different, twitchy trees, averaged together, cancels out its own wobble. That is the whole idea behind **random forests** and boosting.
+Here's the part that matters more than the flip itself: imagine a new applicant, Ivy, who was in neither training run — income 46k, debt-to-income 0.30. Feed her into the first tree (root: debt ≥ 0.35?): 0.30 is below the line, so the "safe" leaf fires — **predicted safe**. Feed the identical Ivy into the second tree (root: income < 48k?): 46 is below the line, so the "default" leaf fires — **predicted default**. Two trees, each 100% accurate on the data it was trained on, each built from data that agrees on 75% of its rows, hand Ivy opposite verdicts. Neither tree is *wrong* about its own training data — the disagreement is the variance the last module named, made concrete: which feature becomes the root is fragile, and everything downstream of the root inherits that fragility. This is **high variance**, and it is not a bug you can tune away — it is baked into greedy splitting.
+
+Hold onto that fact, because next lesson it flips from weakness into superpower: a crowd of different, twitchy trees, averaged together, cancels out its own wobble. That is the whole idea behind **random forests**, built directly on top of the instability just measured here.
 
 ---
 
@@ -1037,13 +1045,15 @@ And left unchecked, a tree keeps splitting until nearly every leaf holds a singl
 
 **Gini's cousin: entropy and information gain.**
 
-Gini isn't the only way to measure mixedness. **Entropy** measures the same thing from information theory — the number of bits of surprise in the group's class mix — with formula $-\\sum_k p_k \\log_2 p_k$: 0 for a pure group, 1 bit for a 50/50 binary split. When a tree splits using entropy, the drop in entropy from parent to children is called **information gain** — literally "how many bits of uncertainty did this question remove." That's the quantity the classic ID3/C4.5 trees maximise, and it's why this topic is often titled "information gain." In practice Gini and entropy give very similar trees; Gini is slightly cheaper to compute (no logarithm) and is scikit-learn's default. The difference rarely matters — pick either.
+Gini isn't the only way to measure mixedness, and the same eight applicants show why the alternative has a different name. Ask a different question about a group's mix: how many yes/no questions would it take, on average, to nail down one person's class? A perfectly pure group needs zero — you already know the answer before asking. A 50/50 group needs exactly one — a single fair coin-flip-style question settles it, and no cleverer strategy does better. That "average number of yes/no questions" is exactly what information theory calls **entropy** — the number of bits of surprise in the group's class mix — with formula −Σpₖ log₂pₖ. Score it on the eight applicants: the starting 4-defaulted/4-safe mix gives entropy = −(0.5 log₂0.5 + 0.5 log₂0.5) = **1 bit**, the maximum possible for a two-way split, matching the "exactly one question" intuition exactly.
+
+Score the original (unflipped) debt split the same way. Both children are pure, so both have entropy 0, and the weighted entropy after the split is 0. The drop from parent to children, 1 − 0 = **1 full bit**, is called **information gain** — literally "how many bits of uncertainty did this question remove," and here the answer is all of it, in one question. Score the income split instead: each child is a 3-of-4 group, entropy = −(0.75 log₂0.75 + 0.25 log₂0.25) ≈ **0.811 bits** per side, so the weighted entropy after the split is also ≈0.811, and the information gain is only 1 − 0.811 ≈ **0.189 bits** — a small fraction of a bit, next to debt's full bit. Same ranking as Gini (debt still wins, income still second), because for a binary split the two measures nearly always agree on which question is best; entropy is the quantity ID3/C4.5-style trees maximise directly. Because of that near-agreement, the whole topic is often loosely titled "information gain" even when the tree underneath is actually scoring with Gini — there, "information gain" is shorthand for the *Gini-impurity drop*, not the literal bits-of-entropy quantity defined above; the two agree on which split wins far more often than they agree in value. Gini is slightly cheaper to compute (no logarithm) and is scikit-learn's default — pick either in practice.
 
 ---
 
 **How regression trees actually choose splits.**
 
-For classification the tree purifies class mix. For regression there are no classes, so it purifies *spread*: it picks the split that most reduces the **variance** (equivalently, mean squared error) of the target within each child. A split that cleanly separates cheap houses from expensive ones drops the within-group variance a lot, so the tree takes it. If you care about robustness to outliers you can instead split on **MAE** (absolute error), and count-style targets have a **Poisson** criterion — but variance/MSE reduction is the default and the one to name.
+For classification the tree purifies class mix. For regression there are no classes, so it purifies *spread*: it picks the split that most reduces the **variance** (equivalently, mean squared error) of the target within each child. A split that cleanly separates cheap houses from expensive ones drops the within-group variance a lot, so the tree takes it. If you care about robustness to outliers you can instead split on **MAE** (mean absolute error in place of squared error, so one huge-priced outlier house can no longer dominate which split looks best the way it would under squaring), and count-style targets (claim counts, visit counts) use a **Poisson** criterion, which scores a split by how well each child's mean predicts its own spread — the assumption built into count data, where variance and mean move together — instead of squared distance from the mean. But variance/MSE reduction is the default and the one to name.
 
 ---
 
@@ -1061,19 +1071,20 @@ A single tree is controlled by a handful of parameters worth knowing by name. \`
 
 **When one class is rare.**
 
-Under imbalance a tree happily chases the majority: it can make pure-looking leaves that are almost all the common class and score high accuracy while never catching the rare one. And its leaf probabilities become unreliable. Fixes are the usual family: \`class_weight='balanced'\` so rare examples count more at each split, threshold moving on the leaf probabilities, stratified CV so folds keep the rare class, and judging with PR-AUC rather than accuracy.
+Under imbalance a tree happily chases the majority: it can make pure-looking leaves that are almost all the common class and score high accuracy while never catching the rare one. And its leaf probabilities become unreliable. Fixes are the usual family: \`class_weight='balanced'\` so rare examples count more at each split, threshold moving on the leaf probabilities, stratified CV so folds keep the rare class, and judging with PR-AUC rather than accuracy — the \`class_imbalance\` module ahead works this out with its own worked numbers.
 
 ---
 
 **Leaf probabilities lie a little.**
 
-A classification leaf reports the *frequency* of each class among its training points — "7 of 10 defaulted, so 70%." That's a raw estimate, and it's often poorly calibrated, especially for small leaves where 7/10 is really just noise. A single deep tree tends to give overconfident near-0/near-1 probabilities. If you need trustworthy probabilities from a tree, enforce a minimum leaf size and calibrate (Platt or isotonic) on a held-out set rather than trusting the raw leaf fractions.`,
+A classification leaf reports the *frequency* of each class among its training points. The debt-split tree above said "100% chance of default" and "0% chance of default" from its two leaves — and that's exactly the failure mode to distrust: each leaf held only four training rows, so "100%" really means "4 out of 4 seen so far," not "certainty." A single deep tree tends to give overconfident near-0/near-1 probabilities precisely because small, pure-looking leaves are easy to produce and easy to over-trust. If you need trustworthy probabilities from a tree, enforce a minimum leaf size and calibrate (Platt or isotonic) on a held-out set rather than trusting the raw leaf fractions.`,
     keyPoints: [
-      `**What a decision tree is, and when to reach for it: a flowchart of yes/no questions you can actually read.**\n\nTrees are the model to use when you need to explain every prediction in plain words — "income below 42k and debt above 0.35, so we flagged it." They take mixed feature types (numbers and categories) as they come, need no scaling, and pick up feature interactions on their own, since splitting on income and then on debt is exactly an income-and-debt rule. The catch: a single tree is twitchy and overfits easily. So use one tree when you need a human-readable explanation, and an ensemble (random forest or boosting) when you need the accuracy in production.`,
+      `**What a decision tree is, and when to reach for it: a flowchart of yes/no questions you can actually read.**\n\nTrees are the model to use when you need to explain every prediction in plain words — "debt-to-income at or above 0.35, so we flagged it." They take mixed feature types (numbers and categories) as they come, need no scaling, and pick up feature interactions on their own, since splitting on income and then on debt is exactly an income-and-debt rule. The catch: a single tree is twitchy and overfits easily. So use one tree when you need a human-readable explanation, and an ensemble (random forest or boosting) when you need the accuracy in production.`,
+      `**The instability isn't hypothetical: flip two rows out of eight and the root question can reverse.**\n\nOn the worked applicant data, the root split is debt-to-income (Gini 0.5 → 0, a full 1 bit of information gain) with income a clear runner-up (Gini 0.5 → 0.375, ≈0.189 bits). Change just two of the eight labels and income becomes the pure split while debt becomes the muddy one — six of eight rows never moved. A brand-new applicant who wasn't in either training set can get opposite predictions from the two trees, even though each tree is 100% accurate on its own data. That's variance from the last module, made concrete: which feature lands at the root is fragile, and everything beneath the root inherits that fragility.`,
       `**The trap that fools people: trusting the tree's built-in feature-importance scores.**\n\nA tree's default importance counts how much each feature cut down impurity across all its splits. But a fine-grained number like income has many possible cut points, so it gets far more chances to split than a plain yes/no flag — and it ends up looking more important than it really is, just from having more opportunities. Do not rank features by this. Use permutation importance instead: shuffle one feature's values, measure how much accuracy drops, and repeat. A feature that truly mattered will hurt when scrambled; a useless one will not.`,
       `**The check to run: sweep how hard you prune, and watch train versus test accuracy.**\n\nWith no pruning a tree scores nearly perfectly on training data and poorly on test — pure overfitting. As you prune harder, test accuracy climbs (noise removed), peaks, then falls again (now you are cutting real structure). That peak is the right amount of pruning, and you find it with cross-validation, not by eyeballing a single split. Also watch leaf sizes: a leaf built from only two or three examples gives a probability you should not trust, so require a minimum number of samples per leaf.`,
-      `**Know the split criteria and the hyperparameter map by name.**\n\nClassification splits maximise purity via Gini ($1-\\sum p_k^2$) or entropy/information gain ($-\\sum p_k\\log_2 p_k$) — near-identical results, Gini is cheaper and the default. Regression splits minimise variance/MSE within children (MAE or Poisson as alternatives). The knobs: \`max_depth\`, \`min_samples_split\`, \`min_samples_leaf\`, \`max_leaf_nodes\`, \`class_weight\` for pre-pruning, and \`ccp_alpha\` for cost-complexity post-pruning — minimise (impurity + ccp_alpha × #leaves), pick ccp_alpha by CV.`,
-      `**Mind implementation limits, imbalance, and leaf-probability calibration.**\n\nscikit-learn's classic trees need numeric-encoded inputs — native categorical and missing-value handling lives in LightGBM/CatBoost/histogram trees, so don't claim "trees just take categoricals" without naming the library. Under imbalance a tree chases the majority and its leaf probabilities get unreliable — use \`class_weight='balanced'\`, threshold moving, stratified CV, and PR-AUC. And a leaf reports raw training frequencies (7/10 = 70%), which are poorly calibrated for small leaves and overconfident overall, so enforce a minimum leaf size and calibrate on held-out data if you need trustworthy probabilities.`,
+      `**Know the split criteria and the hyperparameter map by name.**\n\nClassification splits maximise purity via Gini (1 − Σpₖ²) or entropy/information gain (−Σpₖ log₂pₖ) — on the eight-applicant example, the winning debt split took Gini from 0.5 to 0 and entropy's information gain was a full 1 bit, while the losing income split only reached Gini 0.375 and ≈0.189 bits of gain. The two measures nearly always rank splits the same way; Gini is cheaper (no logarithm) and is scikit-learn's default. Regression splits minimise variance/MSE within children (MAE or Poisson as alternatives). The knobs: \`max_depth\`, \`min_samples_split\`, \`min_samples_leaf\`, \`max_leaf_nodes\`, \`class_weight\` for pre-pruning, and \`ccp_alpha\` for cost-complexity post-pruning — minimise (impurity + ccp_alpha × #leaves), pick ccp_alpha by CV.`,
+      `**Mind implementation limits, imbalance, and leaf-probability calibration.**\n\nscikit-learn's classic trees need numeric-encoded inputs — native categorical and missing-value handling lives in LightGBM/CatBoost/histogram trees, so don't claim "trees just take categoricals" without naming the library. Under imbalance a tree chases the majority and its leaf probabilities get unreliable — use \`class_weight='balanced'\`, threshold moving, stratified CV, and PR-AUC. And a leaf reports raw training frequencies (the debt-split leaves above reported 4/4 = 100% and 0/4 = 0%, from just four rows each), which are poorly calibrated for small leaves and overconfident overall, so enforce a minimum leaf size and calibrate on held-out data if you need trustworthy probabilities.`,
     ],
     interactivePrompt: `Before you touch the controls: if a decision tree perfectly memorises every training example (100% training accuracy), what do you expect its test accuracy to be relative to a shallower tree?`,
     checkQuestions: [
@@ -1137,15 +1148,49 @@ A classification leaf reports the *frequency* of each class among its training p
         ],
         answer: `C`,
       },
+      {
+        q: `Eight applicants split 4-defaulted/4-safe (Gini 0.5). The debt-to-income question sends every defaulter to one side and every safe applicant to the other; the income question leaves two applicants on the "wrong" side of each group. What is the weighted Gini after each split, and which does the tree pick?`,
+        options: [
+          `\`A) Debt reaches Gini 0 (both children pure); income only reaches Gini 0.375. The tree picks debt, since it purifies by the larger amount.\``,
+          `\`B) Both splits reach exactly Gini 0.25, a tie, so the tree picks whichever candidate question was generated first during the search.\``,
+          `\`C) Debt reaches Gini 0.5, unchanged, since separating by sign alone never lowers Gini; income reaches 0 and is the one the tree keeps.\``,
+          `\`D) Income reaches Gini 0 because it is evaluated first alphabetically; debt is never actually scored once a pure split has been found.\``,
+        ],
+        answer: `A`,
+      },
+      {
+        q: `On that same eight-applicant split, root entropy is 1 bit. The debt question yields two pure children; the income question yields two children at 3-of-4. Select the two true statements about the resulting information gain.`,
+        options: [
+          `\`A) Debt's information gain is a full 1 bit, since entropy drops from 1 to 0 — the question removed all the uncertainty about default in one step.\``,
+          `\`B) Income's information gain is only about 0.189 bits, since each 3-of-4 child still carries roughly 0.811 bits of remaining uncertainty.\``,
+          `\`C) Income's information gain is larger than debt's, because a 3-of-4 split is inherently more informative than a perfectly pure 4-of-4 split.\``,
+          `\`D) Neither split has a defined information gain, since information gain only applies once a tree has grown past its first level.\``,
+        ],
+        answer: ['A', 'B'],
+      },
+      {
+        q: `You flip the labels on just 2 of the 8 applicants above (6 of 8 rows, 75%, are untouched), and the root question reverses — the split that used to be muddy is now pure, and vice versa. A brand-new applicant, unseen by either training run, now gets opposite predictions from the two trees. What does this demonstrate, and is either tree "wrong"?`,
+        options: [
+          `\`A) Neither tree is wrong about its own training data — each is 100% accurate there. The disagreement is variance: which feature lands at the root is fragile.\``,
+          `\`B) One of the two trees must have a bug, since a correctly implemented Gini search always converges to the same root question regardless of the data.\``,
+          `\`C) This shows Gini itself is an unreliable impurity measure, and switching to entropy for both training runs would have prevented the root from flipping.\``,
+          `\`D) This only happens because the tree wasn't pruned; capping max_depth at 1 for both training runs would force the root question to agree.\``,
+        ],
+        answer: `A`,
+      },
     ],
-    takeaway: `A decision tree is a flowchart of yes/no questions, each chosen to split the data into purer groups (measured by Gini). It is easy to read but twitchy — change a few rows and the whole tree can change — and it can only cut straight, axis-aligned lines, so diagonal boundaries need a clumsy staircase. That very instability is what makes trees the perfect building block for random forests and boosting.`,
+    takeaway: `A decision tree is a flowchart of yes/no questions, each chosen to split the data into purer groups (measured by Gini or, equivalently, entropy's information gain). It is easy to read but twitchy — on eight applicants, flipping just two labels reversed which question sat at the root, and a new, unseen applicant got opposite predictions from the two trees even though each was 100% accurate on its own data. It can only cut straight, axis-aligned lines, so diagonal boundaries need a clumsy staircase. That very instability is what makes trees the perfect building block for random forests, built directly on top of it.`,
     recap: [
-      "**Decision tree = flowchart of yes/no questions,** each split chosen to make groups purer (Gini).",
-      "**Easy to read but twitchy** — change a few rows and the whole tree can change.",
+      "**Decision tree = flowchart of yes/no questions,** each split chosen to make groups purer.",
+      "**Gini = 1 − Σpₖ²; entropy = −Σpₖ log₂pₖ, its drop = information gain (bits).** Nearly always rank splits the same way.",
+      "**Worked split:** 8 applicants, Gini 0.5 → debt split: Gini 0 (1 bit gained) vs income split: Gini 0.375 (≈0.189 bits) → debt wins, becomes root.",
+      "**Twitchy, concretely:** flip 2 of 8 labels → root flips debt↔income → a new applicant gets opposite predictions from each tree, both 100% accurate on their own data.",
+      "**That instability is a feature** — it makes trees the perfect base for random forests, built on canceling exactly this wobble.",
       "**Axis-aligned cuts only** — diagonal boundaries need a clumsy staircase.",
-      "**That instability is a feature** — it makes trees the perfect base for random forests and boosting.",
-      "**Don't trust built-in feature importances** — they're biased.",
-      "**Prune to control depth:** sweep pruning strength and watch train vs test accuracy.",
+      "**Regression leaves = average of training values landing there → cannot extrapolate** past the training range.",
+      "**Don't trust built-in feature importances** — biased toward high-cardinality features; use permutation importance.",
+      "**Prune to control depth:** cost-complexity pruning minimises (impurity + ccp_alpha × leaves), tuned by CV.",
+      "**Small pure leaves overstate confidence** — the debt-split leaves above hit 100%/0% from just 4 rows each; calibrate before trusting raw leaf fractions.",
     ],
     interactiveId: 'decision_tree_viz',
     figures: {
@@ -1177,43 +1222,51 @@ A classification leaf reports the *frequency* of each class among its training p
     difficulty: 'intermediate',
     estimatedMin: 28,
     tags: ['random forest', 'bagging', 'ensemble'],
-    summary: `In 1906 the scientist Francis Galton was at a country fair where a crowd was trying to guess the weight of an ox. Nearly eight hundred people wrote down a number. No single guess was right — some were wildly high, some wildly low. But when Galton averaged them all, the crowd's answer came out at 1197 pounds. The ox weighed 1198. The crowd as a whole beat almost every individual in it, cattle experts included. That is the **wisdom of the crowd**, and a **random forest** is exactly this trick applied to decision trees.
+    summary: `The last module ended on eight loan applicants and a hard number: flip 2 of 8 labels and the root question reverses, and a brand-new applicant gets opposite predictions from the two trees even though each is 100% accurate on its own data. That instability was called variance, and it was named as a bug, not fixed. Time to fix it.
 
-Remember the problem with a single decision tree: it is **twitchy**. Change a few rows of training data and its whole structure can flip, so it overfits and its predictions swing around. But look closer at that flaw. If different slices of data grow different trees that make *different* mistakes, then averaging a whole crowd of them should cancel those mistakes out — the errors point in random directions and wash away, while the real signal they mostly agree on survives. So: grow many trees, let them vote, and the group is far steadier than any single tree.
+In 1906 the scientist Francis Galton was at a country fair where a crowd was trying to guess the weight of an ox. Nearly eight hundred people wrote down a number. No single guess was right — some were wildly high, some wildly low. But when Galton averaged them all, the crowd's answer came out at 1197 pounds. The ox weighed 1198. The crowd as a whole beat almost every individual in it, cattle experts included. That is the **wisdom of the crowd**, and a **random forest** is exactly this trick applied to decision trees.
+
+Recall the debt/income tree from last module: it is twitchy precisely because its very first split is chosen from the whole dataset at once, so a couple of changed rows can flip it. But look closer at that flaw. If different slices of data grow different trees that make *different* mistakes, then averaging a whole crowd of them should cancel those mistakes out — the errors point in random directions and wash away, while the real signal they mostly agree on survives. So: grow many trees, let them vote, and the group is far steadier than any single tree. The question is exactly how much steadier, and that turns out to be a number you can compute.
 
 ---
 
-**But a crowd only helps if it disagrees.**
+**A crowd only helps if it disagrees — put a number on "helps."**
 
-Here is the crucial catch. The ox crowd worked because people guessed *independently* — their errors were unrelated. If everyone had copied their neighbour, the "crowd" would be one guess repeated eight hundred times, and averaging would do nothing. The same holds for trees. If income is the strongest predictor of loan default, then every tree handed the full dataset will split on income first and come out nearly identical — all making the same mistakes. Averaging near-identical trees barely helps. To get the wisdom of the crowd, we have to force the trees to be *different*.
+Here is the crucial catch. The ox crowd worked because people guessed *independently* — their errors were unrelated. If everyone had copied their neighbour, the "crowd" would be one guess repeated eight hundred times, and averaging would do nothing. The same holds for trees: if income is the strongest predictor of default, every tree handed the full dataset will split on income first and come out nearly identical — all making the same mistakes.
 
-A random forest does this with two tricks.
+Make that precise. Suppose each tree's prediction carries some error with variance σ² = 100 (in squared-price units — think an individual tree's typical miss is about √100 = 10k on a house-price task), and any two trees' errors share correlation ρ, because they overlap: bootstrap resampling and shared features mean two trees trained on the same dataset agree more than two trees trained on unrelated problems would. For n trees averaged together, each with variance σ² and pairwise correlation ρ, the variance of their average is:
 
-First, **bagging** (short for bootstrap aggregating): instead of handing every tree the whole dataset, give each one a random resample — draw rows with replacement until you have a fresh training set of the same size, where some rows repeat and others are left out. Every tree now sees a slightly different world and grows differently.
+Var(average) = σ²/n + ((n−1)/n)·ρσ²
+
+Plug in n=100 trees at ρ=0.5 (typical for trees given the full feature set every time, so they keep finding the same top splits): Var = 100/100 + (99/100)·0.5·100 = 1 + 49.5 = **50.5**. Compare that to a single tree's variance of 100 — averaging did cut it roughly in half, but nowhere near the 100× a naive "more trees = less noise" intuition might expect. Push n to 1000: Var = 100/1000 + (999/1000)·50 = 0.1 + 49.95 = **50.05**. A tenfold increase in tree count bought a movement from 50.5 to 50.05 — essentially nothing. As n→∞, Var(average) → ρσ² = 0.5×100 = **50**, a floor set entirely by ρ that no amount of extra trees can push below.
+
+Now change the *other* dial. Keep n=100 but cut ρ to 0.1 (decorrelated trees): Var = 100/100 + (99/100)·0.1·100 = 1 + 9.9 = **10.9** — down from 50.5, and the *asymptotic* floors themselves (ρσ²=50 vs ρσ²=10) are exactly 5× apart, a bigger swing than ten times the tree count bought. That's the whole justification for forcing trees to disagree: the lever that matters is ρ, not n.
+
+A random forest drives ρ down with two tricks.
+
+First: instead of handing every tree the whole dataset, give each one a random resample — draw rows with replacement until you have a fresh training set of the same size, where some rows repeat and others are left out. That resampling trick has a name, **bagging** (short for bootstrap aggregating).
 
 [FIGURE: bagging_forest]
 
-Second, **random feature choices**: at each split, do not let the tree look at all the features — show it only a random handful (a common choice is the square root of the total). Now even the trees that *would* have latched onto income are sometimes forced to find other patterns. This is the key move — it stops every tree from making the same split and pushes them to disagree in useful ways.
-
-Together these two make the trees diverse. Their errors become unrelated, the crowd's vote cancels them, and the forest's predictions come out both accurate and steady — without any single tree having to be good on its own.
+Second: at each split, do not let the tree look at all the features — show it only a random handful (a common choice is the square root of the total). Now even the trees that *would* have latched onto income are sometimes forced to find other patterns; this is **random feature selection**, the second decorrelation lever. It's the sharper move of the two — bagging alone only decorrelates trees mildly (bootstrap resamples still overlap heavily), while restricting features at every split is what actually pushes ρ from something like 0.5 down toward 0.1, because it stops every tree from making the same first cut. That difference — 50 versus 10 as the variance floor — is the entire reason "more trees" plateaus around a few hundred while "fewer features per split" keeps moving the needle.
 
 ---
 
 **A free validation set, for nothing.**
 
-Bagging hands you a bonus. Because each tree trains on a resample, about a third of the rows get left out of any given tree — the "out-of-bag" rows that tree never saw. So for each row you can ask only the trees that did *not* train on it to predict it, and check them against the truth. That gives an honest estimate of test performance — the **out-of-bag (OOB) error** — for free, with no separate validation set set aside. If the OOB error and your real test error disagree badly, that is a red flag for a distribution shift or a data leak.
+That same row-resampling step that decorrelates the trees also hands you a bonus, and it has an exact source. A bootstrap resample of n rows drawn with replacement from n rows leaves some rows out entirely — the probability any single row is *never* drawn across n draws is (1−1/n)ⁿ, which converges to 1/e ≈ **0.368** as n grows. So roughly 36.8% of rows — "about a third" — never appear in a given tree's training set, and are that tree's **out-of-bag** rows. For each row you can ask only the trees that did *not* train on it to predict it, and check them against the truth. That gives an honest estimate of test performance — the **out-of-bag (OOB) error** — for free, with no separate validation set set aside. If the OOB error and your real test error disagree badly, that is a red flag for a distribution shift or a data leak.
 
 ---
 
 **The one trap to remember.**
 
-A random forest built for regression **cannot predict outside the range it has seen**. Every tree's answer is an average of training values in a leaf, and an average of a forest of averages is still boxed in by the training data. Train on house prices up to 800k and the forest will never output more than 800k, no matter how enormous the house. If your target drifts upward over time — prices rising year over year — the forest will quietly under-predict the future while looking perfectly healthy on past data. When the target trends, reach for a model that can extrapolate.
+A random forest built for regression **cannot predict outside the range it has seen**. Every tree's answer is an average of training values in a leaf, and an average of a forest of averages is still boxed in by the training data. Return to that same house-price task from above: train on prices up to 800k and the forest will never output more than 800k, no matter how enormous the house. If your target drifts upward over time — prices rising year over year — the forest will quietly under-predict the future while looking perfectly healthy on past data. When the target trends, reach for a model that can extrapolate.
 
 ---
 
 **The hyperparameters worth knowing.**
 
-A forest has more knobs than "how many trees." \`n_estimators\` is the tree count (more never hurts accuracy, just compute — diminishing past a few hundred). \`max_features\` is the diversity dial — how many features each split may consider (√p is a common default; fewer means more diverse trees). \`max_depth\` and \`min_samples_leaf\` control how deep each tree grows. \`bootstrap\` and \`max_samples\` control the resampling (turn bootstrap off and you lose OOB). \`class_weight\` up-weights a rare class, and \`criterion\` picks Gini/entropy or the regression split rule. In an interview, name \`n_estimators\`, \`max_features\`, \`max_depth\`, \`min_samples_leaf\`, and \`class_weight\` as the ones you'd actually tune.
+A forest has more knobs than "how many trees" — and now you can say precisely why \`n_estimators\` isn't the one to lean on. \`n_estimators\` is the tree count (more never hurts accuracy, just compute — recall it moved the variance floor from 50.5 to only 50.05 going from 100 to 1000 trees). \`max_features\` is the real diversity dial — how many features each split may consider (√p is a common default; fewer means lower ρ, and the arithmetic above showed dropping ρ from 0.5 to 0.1 cut the variance floor 5×). \`max_depth\` and \`min_samples_leaf\` control how deep each tree grows. \`bootstrap\` and \`max_samples\` control the resampling (turn bootstrap off and you lose OOB). \`class_weight\` up-weights a rare class, and \`criterion\` picks Gini/entropy or the regression split rule. In an interview, name \`n_estimators\`, \`max_features\`, \`max_depth\`, \`min_samples_leaf\`, and \`class_weight\` as the ones you'd actually tune — and lead with \`max_features\` as the one that moves the needle.
 
 ---
 
@@ -1231,7 +1284,7 @@ Out-of-bag error is a free estimate, but it assumes rows are independent and ide
 
 **Reading importances, carefully.**
 
-Two importance traps. The built-in (impurity/Gini) importance is biased toward high-cardinality features — same issue as a single tree. Permutation importance is better but has its *own* correlated-feature trap: if two features carry the same information, shuffling one barely hurts accuracy because its twin still supplies the signal, so *both* look unimportant even though the information is vital. Don't read low permutation importance as "useless" when features are correlated. And a forest is far less interpretable than a single tree — for real explanation reach for permutation importance, partial-dependence/ICE plots, and SHAP, all read with the correlation caveat in mind.
+Two importance traps. The built-in **impurity importance** — a different use of "Gini" than the split criterion above; this one ranks features by how much they cut impurity across all their splits, after training, rather than choosing questions during it — is biased toward high-cardinality features, same issue as a single tree. Permutation importance is better but has its *own* correlated-feature trap: if two features carry the same information, shuffling one barely hurts accuracy because its twin still supplies the signal, so *both* look unimportant even though the information is vital. Don't read low permutation importance as "useless" when features are correlated. And a forest is far less interpretable than a single tree — for real explanation reach for permutation importance, partial-dependence/ICE plots, and SHAP, all read with the correlation caveat in mind.
 
 ---
 
@@ -1244,7 +1297,7 @@ A random forest is a fantastic *baseline*, but on tabular-accuracy leaderboards 
 **Under imbalance.** A forest inherits the single tree's problem — it chases the majority class and its vote proportions get unreliable. Use \`class_weight='balanced'\` (or \`balanced_subsample\`), stratified CV so folds keep the rare class, threshold moving on the predicted probabilities, and judge with PR-AUC, balanced accuracy, or recall@K rather than raw accuracy.`,
     keyPoints: [
       `**Use a random forest when you want a strong, low-effort baseline on tabular data.**\n\nIt takes mixed feature types as they come, needs no scaling, shrugs off irrelevant features, and hands you free out-of-bag validation. Its defaults work well with almost no tuning, which makes it the reliable first thing to try on classification or regression. Reach for gradient boosting instead when you need to squeeze out the last couple of accuracy points and are willing to tune carefully — but for a fast, trustworthy baseline, the forest is hard to beat.`,
-      `**The trap: thinking more trees is the lever. Past a couple hundred, adding trees barely moves anything.**\n\nThe crowd stops getting wiser once the individual errors have already averaged out — a five-hundredth near-identical tree changes almost nothing. What actually lowers a forest's error is making the trees *more different* from each other, and the dial for that is how many features each split may look at (max_features): show each split fewer features and the trees disagree more, their errors cancel better, and the error floor drops. Tune diversity, not quantity.`,
+      `**The trap: thinking more trees is the lever. Past a couple hundred, adding trees barely moves anything.**\n\nFor n trees with per-tree error variance σ² and pairwise correlation ρ, Var(average) = σ²/n + ((n−1)/n)ρσ² — and as n→∞ that converges to a floor of ρσ², not zero. With σ²=100 and ρ=0.5, going from 100 to 1000 trees only moves the variance from 50.5 to 50.05, because the floor itself is 50. Cutting ρ to 0.1 instead — by restricting features per split — drops the floor to 10, a 5× win that ten times the tree count couldn't buy. Tune diversity (max_features), not quantity (n_estimators).`,
       `**The check: compare the out-of-bag error to your held-out test error.**\n\nOut-of-bag error is a free, honest estimate of how the forest does on data like its training set. If OOB says 10% but your real test error is 25%, something is off — usually the test data comes from a different distribution than training, or a leak made training look too easy. When the two disagree, compare the feature distributions of train and test before trusting the model in production.`,
       `**Be precise: the forest reduces variance, not bias — and OOB isn't bulletproof.**\n\nAveraging de-correlated trees kills variance (the wisdom-of-the-crowd effect) but barely touches bias, so a forest of weak or wrong trees is just a stable version of the same wrong answer — fix bias with signal, not more trees. And OOB assumes i.i.d. rows: it's optimistic on time-series (a tree sees the future), leaks across grouped data (many rows per customer), and reflects the training distribution under shift. Use OOB as a cheap check, not a substitute for a time- or group-aware validation split. Tune \`max_features\`, \`max_depth\`, \`min_samples_leaf\`, \`class_weight\` — not just \`n_estimators\`.`,
       `**Read importances with the correlation caveat, and know when boosting wins.**\n\nBuilt-in impurity importance is biased toward high-cardinality features; permutation importance is better but has its own trap — with two correlated features, shuffling one barely hurts (the twin still carries the signal), so both look unimportant even when vital. For real interpretation use permutation importance, PDP/ICE, and SHAP, all read cautiously. And a forest is a strong baseline but gradient boosting usually wins on tabular accuracy: boosting attacks the bias a forest leaves behind, at the cost of more tuning and more sensitivity to noise, outliers, and leakage. Under imbalance, use \`class_weight='balanced'\`, stratified CV, threshold moving, and PR-AUC.`,
@@ -1301,15 +1354,58 @@ A random forest is a fantastic *baseline*, but on tabular-accuracy leaderboards 
         ],
         answer: `C`,
       },
+      {
+        q: `With per-tree error variance σ²=100 and pairwise correlation ρ=0.5, you go from 100 trees to 1000 trees. Using Var(average) = σ²/n + ((n−1)/n)ρσ², what happens to the ensemble's variance, and why?`,
+        options: [
+          `\`A) It drops from about 50.5 to about 50.05 — a tiny move, because the formula converges to a floor of ρσ²=50 as n grows, which more trees cannot cross.\``,
+          `\`B) It drops from 100 to 10, a full 10× reduction, since variance of an average of n things always falls in exact proportion to n regardless of correlation.\``,
+          `\`C) It drops to exactly 0, since averaging enough independent-looking trees always drives correlated error all the way out given enough of them.\``,
+          `\`D) It stays at 100 exactly, since correlation between trees completely cancels any benefit from averaging no matter how many trees are added.\``,
+        ],
+        answer: `A`,
+      },
+      {
+        q: `Same setup (σ²=100), but now instead of adding trees you keep n=100 and cut the pairwise correlation from ρ=0.5 to ρ=0.1 by restricting features per split. What happens, and what does that imply about which knob to tune?`,
+        options: [
+          `\`A) The variance floor drops from 50 to 10, a 5× win — bigger than the 100→1000 tree-count change bought, so max_features matters more than n_estimators.\``,
+          `\`B) Nothing changes, since the variance formula only depends on n and σ², and ρ was already folded into σ² by the time trees are being averaged.\``,
+          `\`C) The variance floor rises to 90, since decorrelating trees makes each one individually noisier and that noise dominates the ensemble average.\``,
+          `\`D) The floor drops to exactly 0, since ρ=0.1 is treated as "independent enough" for the formula to behave as if the trees were fully uncorrelated.\``,
+        ],
+        answer: `A`,
+      },
+      {
+        q: `A bootstrap resample draws n rows with replacement from n original rows. Select the two true statements about why roughly a third of the rows end up out-of-bag.`,
+        options: [
+          `\`A) The chance a specific row is never drawn across n draws is (1−1/n)ⁿ, which converges to 1/e ≈ 0.368 as n grows — about 36.8% of rows, not exactly a third.\``,
+          `\`B) Because bagging samples with replacement, some rows are drawn multiple times while others are drawn zero times — that's exactly what leaves rows out-of-bag.\``,
+          `\`C) Exactly 33.3% of rows are excluded by design, because scikit-learn's bootstrap explicitly reserves a fixed one-third holdout before resampling begins.\``,
+          `\`D) The out-of-bag fraction only holds for classification forests; regression forests bootstrap without replacement, so no rows are ever left out.\``,
+        ],
+        answer: ['A', 'B'],
+      },
+      {
+        q: `A colleague argues bagging alone (random row resamples, all features visible at every split) should decorrelate trees just as well as also restricting features per split. Why is that usually wrong?`,
+        options: [
+          `\`A) Bootstrap resamples still overlap heavily with each other, so trees built on them tend to find the same strongest first split; restricting features forces real disagreement.\``,
+          `\`B) Bagging and feature restriction are mathematically identical operations, so a colleague claiming otherwise has simply mislabelled which hyperparameter does what.\``,
+          `\`C) Bagging alone actually increases correlation between trees, since resampling with replacement duplicates the majority pattern in every single tree it touches.\``,
+          `\`D) Feature restriction only helps classification forests; for regression forests bagging alone already reaches the same ρ that feature restriction would reach.\``,
+        ],
+        answer: `A`,
+      },
     ],
-    takeaway: `A random forest is the wisdom of the crowd applied to decision trees: grow many trees, let them vote, and their errors cancel — but only if the trees are diverse, which bagging (random resamples) and random feature choices at each split make sure of. It throws in free out-of-bag validation, and its one silent trap is that a regression forest can never predict outside the range of values it trained on.`,
+    takeaway: `A random forest is the wisdom of the crowd applied to decision trees: grow many trees, let them vote, and their errors cancel — but only if the trees are diverse. Made precise, Var(average) = σ²/n + ((n−1)/n)ρσ² converges to a floor of ρσ² as n grows, which is why n_estimators plateaus (50.5→50.05 going from 100 to 1000 trees at ρ=0.5) while max_features — the dial that actually lowers ρ — is what moves the floor itself (50→10 at ρ=0.1). It throws in free out-of-bag validation (≈36.8% of rows per tree, from (1−1/n)ⁿ→1/e), and its one silent trap is that a regression forest can never predict outside the range of values it trained on.`,
     recap: [
       "**Random forest = wisdom of the crowd on trees** — grow many, let them vote, errors cancel.",
-      "**Only works if trees are diverse:** bagging (random resamples) + random feature subset at each split.",
-      "**Reduces variance, not bias.**",
-      "**Free OOB validation** — the ~37% left out of each bootstrap validate that tree.",
-      "**More trees isn't the lever** — past a couple hundred, extra trees barely move anything.",
+      "**Only works if trees are diverse:** bagging (random resamples) + random feature subset at each split, to drive down ρ.",
+      "**Var(average) = σ²/n + ((n−1)/n)ρσ² → ρσ² as n→∞** — a correlation floor, not zero.",
+      "**Worked: σ²=100, ρ=0.5** — n=100→1000 moves variance 50.5→50.05 (n_estimators plateaus); ρ=0.5→0.1 at n=100 moves it 50.5→10.9 (max_features is the real lever).",
+      "**Reduces variance, not bias** — a forest of biased trees is a stable version of the same wrong answer.",
+      "**Free OOB validation** — (1−1/n)ⁿ→1/e≈36.8% of rows left out of each bootstrap, validate that tree for free.",
+      "**OOB assumes i.i.d. rows** — optimistic on time-series/grouped data; use a time- or group-aware split instead.",
       "**Silent trap:** a regression forest can never predict outside its training range (no extrapolation).",
+      "**Importances:** impurity importance biased toward high-cardinality features; permutation importance's own trap is correlated features looking falsely unimportant.",
     ],
     interactiveId: 'random_forest_viz',
     figures: {
@@ -2170,39 +2266,41 @@ Finally, calibration is not permanent. A model calibrated on last year's data ca
     difficulty: 'intermediate',
     estimatedMin: 28,
     tags: ['imbalance', 'SMOTE', 'precision@K', 'threshold'],
-    summary: `Imagine you are building a fraud detector for a bank. Out of every thousand transactions, only one is fraud. Here is a "model" that scores 99.9% accuracy: label *every* transaction as legitimate. It is right 999 times out of 1000 — and it is utterly worthless, because it never catches a single fraud, which was the whole point. This is the **accuracy trap**, and it makes **class imbalance** one of the sneakiest problems in machine learning: your headline number looks fantastic while the model does nothing useful.
-
-The deeper issue is not really the imbalance itself — it is that **not all mistakes cost the same**. Missing a fraud (a false negative) might cost thousands of dollars; flagging a legit purchase (a false positive) costs a moment of annoyance. Accuracy quietly assumes those two mistakes are equally bad, and they never are. The imbalance just makes that mismatch impossible to ignore.
+    summary: `The last module was about trusting a model's predicted probabilities — checking whether its batch of 0.7-confidence calls really come true about 70% of the time, and fixing it with Platt or isotonic scaling when they don't. Put that same trained model on an imbalanced problem and a second, nastier failure shows up before calibration even becomes the issue — one that hides in the headline number itself. Imagine you are building a fraud detector for a bank, and a thousand transactions come in: 950 legitimate, 50 fraud — a 5% positive rate, imbalanced but not exotically so. Here is a "model" that never looks at a single feature: label *every* transaction legitimate. Score it. True positives: 0. False positives: 0. False negatives: 50 (every real fraud, missed). True negatives: 950. Accuracy = (0+950)/1000 = **95.0%** — and it is utterly worthless, because it never catches a single fraud, which was the whole point. This is the **accuracy trap**, and it makes **class imbalance** one of the sneakiest problems in machine learning: your headline number looks fantastic while the model does nothing useful.
 
 [FIGURE: imbalance_skew]
+
+Now score a real classifier trained on the same 1000 transactions, at the default 0.5 threshold (the cutoff score above which the model calls something fraud): it flags 70 transactions, and 35 of those are genuine fraud. True positives = 35, false positives = 35, false negatives = 15 (fraud it missed), true negatives = 915. Accuracy = (35+915)/1000 = **95.0%** — *identical* to the do-nothing model, to the decimal point. Two models, same accuracy, and one of them is actually finding fraud. Accuracy cannot tell them apart, because it was never built to see the rare class at all.
 
 ---
 
 **Step one: stop measuring with accuracy.**
 
-If accuracy lies, what do you look at instead? Two numbers that actually care about the rare class:
+If accuracy lies, what do you look at instead? Two numbers that actually care about the rare class, scored on the same real classifier above:
 
-**Recall** (also called sensitivity): of all the real frauds, what fraction did the model catch? A recall of 0 exposes the "always legit" model instantly.
+**Recall** (also called sensitivity): of all the real frauds, what fraction did the model catch? Here, 35 of the 50 real frauds = 35/50 = **70%**. The do-nothing model's recall is 0/50 = **0%** — instantly exposed, where accuracy hid it completely.
 
-**Precision**: of all the transactions the model flagged as fraud, what fraction really were? This tells you how much of your fraud team's time is wasted chasing false alarms.
+**Precision**: of all the transactions the model flagged as fraud, what fraction really were? Here, 35 of the 70 flags = 35/70 = **50%** — half the fraud team's alerts are false alarms. (The do-nothing model never flags anything, so its precision is undefined — 0 by convention — a second signal accuracy missed.)
 
-There is usually a tug-of-war between them — flag more aggressively and you catch more fraud (higher recall) but with more false alarms (lower precision). The **PR-AUC** (the precision-recall area) captures that whole tradeoff in one number, and it is far more honest than the more common ROC-AUC when the positive class is rare, because ROC-AUC hands the model easy credit for correctly ignoring the huge majority.
+**F1**, the harmonic mean of the two, folds them into one number: 2×(0.5×0.7)/(0.5+0.7) = 0.7/1.2 = **58.3%** for the real classifier, versus **0%** for the do-nothing one. F1 finally shows the gap that a 95.0%-vs-95.0% accuracy tie completely erased.
+
+There is usually a tug-of-war between precision and recall — flag more aggressively and you catch more fraud (higher recall) but with more false alarms (lower precision). The **PR-AUC** (the precision-recall area) captures that whole tradeoff in one number, and it is far more honest than the more common ROC-AUC when the positive class is rare, because ROC-AUC hands the model easy credit for correctly ignoring the huge majority.
 
 ---
 
-**Step two: make the model care about the rare class.**
+**Step two: make the model care about the rare class — and watch what the fix actually costs.**
 
-By default, training treats every example as equally important, so the rare class gets drowned out — a thousand "legit" examples shout down the one "fraud." Two ways to fix that.
+By default, training treats every example as equally important, so the rare class gets drowned out — nineteen "legit" examples for every "fraud" shout it down. Two ways to fix that.
 
-The simplest, and usually the first to try, is **class weights**: tell the loss function that getting a fraud example wrong costs (say) a thousand times more than getting a legit one wrong. Now the same gradient descent that was ignoring the rare class is forced to pay attention to it — no new data, just a reweighted loss.
+The simplest, and usually the first to try, is **class weights**: tell the loss function that getting a fraud example wrong costs roughly 19 times more than getting a legit one wrong (950:50, the actual ratio in this data) — no new data, just a reweighted loss. Pause and predict before the retrain: with fraud weighted 19× more heavily against a false alarm, do you expect precision to rise, fall, or stay about the same once the model is retrained under that weighting? Retrain the same classifier with that weighting, same threshold, and here's the real effect on this dataset: true positives rise to 45 (of 50), false negatives fall to 5, but false positives rise to 90 and true negatives fall to 860. Recall = 45/50 = **90%**, up sharply from 70%. Precision = 45/(45+90) = 45/135 = **33.3%**, down from 50%. F1 = 2×(0.333×0.9)/(0.333+0.9) = 0.6/1.233 ≈ **48.6%** — actually *lower* than the unweighted classifier's 58.3%, even though recall improved. And accuracy? (45+860)/1000 = **90.5%** — it went *down*. Every one of these numbers moved in a real direction: class weights bought +20 points of recall for −16.7 points of precision, at the cost of accuracy and even F1. Whether that trade is worth it depends entirely on whether a missed fraud actually costs more than 19× a false alarm — which is exactly the question the cost matrix below makes precise, because F1 alone can't answer it.
 
-Alternatively you can **rebalance the data itself**: **oversample** the rare class (duplicate it, or with **SMOTE**, create synthetic in-between examples) or **undersample** the majority (throw some of it away). These help distance-based models and neural nets, but for tree-based models class weights are usually cleaner and work just as well.
+Alternatively you can **rebalance the data itself**: **oversample** the rare class (duplicate it, or with **SMOTE**, create synthetic in-between examples) or **undersample** the majority (throw some of it away). These help distance-based models and neural nets, but for tree-based models class weights are usually cleaner and reach a similar recall/precision trade.
 
 ---
 
 **Step three: choose the threshold on purpose.**
 
-Here is the step almost everyone forgets. A classifier gives a *score*; turning it into a yes/no needs a **threshold**, and the default of 0.5 is almost never right for an imbalanced, unequal-cost problem. If missing a fraud is a thousand times worse than a false alarm, you want to flag on much weaker suspicion — a far lower threshold. So after training, pick the threshold *deliberately*: look at the precision and recall you get at each possible cutoff, and choose the one that matches what the problem actually costs. Train the model to rank well; then set the threshold to act well.
+Here is the step almost everyone forgets — recall that both models scored above used 0.5 as that cutoff without anyone actually deciding it was right. A classifier gives a *score*; turning it into a yes/no needs a **threshold**, and the default of 0.5 is almost never right for an imbalanced, unequal-cost problem. Recall that the class-weighted retrain above reached 90% recall at 0.5 — but the same recall gain is often reachable a cheaper way: keep the *original* unweighted classifier's scores, and simply lower the cutoff instead of retraining. If missing a fraud is far worse than a false alarm, you want to flag on much weaker suspicion — a far lower threshold. So after training, pick the threshold *deliberately*: look at the precision and recall you get at each possible cutoff, and choose the one that matches what the problem actually costs. Train the model to rank well; then set the threshold to act well.
 
 ---
 
@@ -2214,13 +2312,13 @@ Often the real constraint isn't a threshold at all — it's *capacity*. A fraud 
 
 **The cost matrix, made explicit.**
 
-"Missing a fraud is worse than a false alarm" can be written down precisely as a **cost matrix**: a dollar cost for each cell of the confusion matrix (a false negative costs \\$2,000, a false positive costs \\$5, true predictions cost 0). Once you have that, the optimal decision isn't a guessed threshold — it's the one that **minimises expected cost**: flag whenever the expected cost of flagging is below the expected cost of not flagging, which for a calibrated probability gives an exact optimal threshold. This is the rigorous version of "pick the threshold from the costs," and it's why calibrated probabilities matter here.
+"Missing a fraud is worse than a false alarm" can be written down precisely as a **cost matrix**: a dollar cost for each cell of the confusion matrix, drawn from the business itself rather than guessed — suppose the bank's own loss data says a false negative costs \\$2,000 (the average unrecovered fraud amount) and a false positive costs \\$5 (an analyst's few minutes clearing the alert), with true predictions costing 0. That's the number that actually settles the class-weight trade above: at \\$2,000 per miss and \\$5 per false alarm, the unweighted classifier's 15 misses and 35 false alarms cost 15×\\$2,000 + 35×\\$5 = \\$30,175, while the class-weighted classifier's 5 misses and 90 false alarms cost 5×\\$2,000 + 90×\\$5 = \\$10,450 — the weighted model is cheaper by a wide margin, even though its F1 was lower. Once you have a cost matrix, the optimal decision isn't a guessed threshold — it's the one that **minimises expected cost**: flag whenever the expected cost of flagging is below the expected cost of not flagging, which for a calibrated probability gives an exact optimal threshold. This is the rigorous version of "pick the threshold from the costs," and it's why calibrated probabilities matter here.
 
 ---
 
 **SMOTE has sharp edges.**
 
-SMOTE (synthesising in-between minority examples) is popular but easy to misuse. The cardinal rule: **apply it only inside cross-validation folds, after the split — never before.** Oversample first and copies of the same synthetic points land in both train and validation, leaking and inflating your score. Beyond that, SMOTE struggles in high-dimensional sparse data (its "in-between" points are meaningless), with noisy labels (it amplifies the noise), with overlapping classes (it synthesises into the other class's territory), and with time-series (it invents points that violate temporal order). It's a tool, not a default.
+The cost-matrix math above assumed the rebalancing choice behind it — class weights or resampling — was already sound. One of those options, SMOTE, deserves its own warning: it's popular but easy to misuse. The cardinal rule: **apply it only inside cross-validation folds, after the split — never before.** Oversample first and copies of the same synthetic points land in both train and validation, leaking and inflating your score. Beyond that, SMOTE struggles in high-dimensional sparse data (its "in-between" points are meaningless), with noisy labels (it amplifies the noise), with overlapping classes (it synthesises into the other class's territory), and with time-series (it invents points that violate temporal order). It's a tool, not a default.
 
 ---
 
@@ -2232,13 +2330,13 @@ A subtle consequence interviewers love: oversampling or undersampling **changes 
 
 **Match the fix to the model.**
 
-The right lever depends on the algorithm. **Tree ensembles and boosting** usually do best with class weights / \`scale_pos_weight\` plus threshold tuning — resampling buys them little. **Linear and distance-based models** (logistic regression, k-NN, SVM) are more sensitive to the geometry, so sampling and careful feature scaling can help them more. Don't apply one imbalance recipe blindly across model families.
+The right lever depends on the algorithm. **Tree ensembles and boosting** usually do best with class weights / \`scale_pos_weight\` (the same reweighting knob named in the gradient boosting module, roughly negatives/positives) plus threshold tuning — resampling buys them little. **Linear and distance-based models** (logistic regression, k-NN, SVM) are more sensitive to the geometry, so sampling and careful feature scaling can help them more. Don't apply one imbalance recipe blindly across model families.
 
 ---
 
-**The fuller metric menu.**
+**The fuller metric menu — for when precision/recall/F1 alone don't settle an argument in a room.**
 
-Beyond precision/recall/PR-AUC, know the wider toolkit: **balanced accuracy** (average recall across classes), **F1** and its **macro/micro/weighted** variants (macro treats classes equally, weighted accounts for size), **MCC** (Matthews correlation, robust on imbalance and often the best single summary), **specificity** and the **false-positive/false-negative rates**, and — always — the **confusion matrix read at your chosen threshold** so you see the actual counts, not just a summary.
+Beyond precision/recall/PR-AUC, know the wider toolkit: **balanced accuracy** (average recall across classes — useful when you need one number a non-technical audience can read as "how good," without precision and recall's two-number nuance), **F1** and its **macro/micro/weighted** variants (macro treats classes equally, weighted accounts for size), **MCC** (Matthews correlation — one number computed from all four confusion-matrix cells at once, from −1 to +1, so a model can't game it by ignoring the rare class the way accuracy can; robust on imbalance and often the best single summary when you want just one trustworthy figure), **specificity** (recall's mirror image: of the real negatives, what fraction did the model correctly call negative?) and the **false-positive/false-negative rates** (those same misses, read as fractions of the actual-negative and actual-positive totals instead), and — always — the **confusion matrix read at your chosen threshold** so you see the actual counts, not just a summary.
 
 ---
 
@@ -2246,8 +2344,8 @@ Beyond precision/recall/PR-AUC, know the wider toolkit: **balanced accuracy** (a
 
 At 1-in-100,000 (rare diseases, novel fraud), the classification framing itself starts to break, and you switch strategies. Frame it as **anomaly detection** (model "normal," flag deviations) rather than two-class classification. Use a **two-stage retrieval-then-rank** pipeline. Design explicitly around **human review capacity** (precision@K), **delayed labels** (the truth arrives weeks later), and **alert fatigue** (too many false positives and reviewers stop trusting the system). Extreme imbalance is a systems problem, not just a loss-function tweak.`,
     keyPoints: [
-      `**On an imbalanced problem, accuracy is a trap — use precision, recall, and PR-AUC instead.**\n\nWhen 999 of 1000 cases are one class, a model that always guesses that class scores 99.9% and catches nothing. Recall (of the real positives, how many did you catch?) and precision (of your positive flags, how many were real?) actually track the rare class, and PR-AUC sums up their tradeoff in a single number. Prefer PR-AUC over the more common ROC-AUC when positives are rare, because ROC-AUC hands out easy credit for correctly ignoring the huge majority.`,
-      `**The real problem is not the imbalance — it is that the two kinds of mistake cost different amounts.**\n\nMissing a fraud can cost thousands; a false alarm costs a moment. Accuracy pretends they are equal. The cheapest fix is class weights: tell the loss that a mistake on the rare class costs far more, and the same gradient descent that was ignoring it now focuses on it — no new data needed. Resampling the data (oversampling the rare class, SMOTE, or undersampling the majority) is an alternative, but for tree models class weights are usually cleaner and just as effective.`,
+      `**On an imbalanced problem, accuracy is a trap — use precision, recall, and PR-AUC instead.**\n\nOn 950 legitimate / 50 fraud, a model that always guesses "legitimate" scores 95.0% accuracy and catches nothing — and a real classifier catching 35 of the 50 frauds also scores exactly 95.0%, an identical tie that hides a real gap. Recall (35/50 = 70% vs 0%) and precision (35/70 = 50% vs undefined) actually track the rare class, and F1 (58.3% vs 0%) finally shows the difference accuracy erased. PR-AUC sums up the recall/precision tradeoff across every threshold in one number, and it's far more honest than the more common ROC-AUC when positives are rare, because ROC-AUC hands out easy credit for correctly ignoring the huge majority.`,
+      `**The real problem is not the imbalance — it is that the two kinds of mistake cost different amounts, and fixing recall has a real, computable price.**\n\nMissing a fraud can cost thousands; a false alarm costs a moment. Accuracy pretends they are equal. Class weights (roughly 19:1, matching 950:50) push recall from 70% to 90% by retraining — but precision falls from 50% to 33.3%, F1 actually drops (58.3%→48.6%), and accuracy falls too (95.0%→90.5%). None of that means the fix failed: on a cost matrix of \\$2,000 per missed fraud and \\$5 per false alarm, the reweighted model costs \\$10,450 against the original's \\$30,175 — cheaper, despite the lower F1. The lesson: don't judge an imbalance fix by accuracy or even F1 alone — judge it against what the mistakes actually cost.`,
       `**The step everyone forgets: choose the decision threshold on purpose, not at the default 0.5.**\n\nA classifier gives a score; turning it into a yes/no needs a cutoff, and 0.5 almost never matches an imbalanced, unequal-cost problem. If missing a positive is far worse than a false alarm, flag on weaker suspicion — a lower threshold. After training, look at the precision and recall you get at each cutoff and pick the one that matches what the problem actually costs. Train the model to rank; then set the threshold to act.`,
       `**When action is capacity-limited, optimise precision@K and derive the threshold from an explicit cost matrix.**\n\nIf a team can only review the top 500 alerts, the metric is precision@K (of the top K by score, how many are real) with recall@K and lift@K — the model just needs the worst cases at the top of the list. And "pick the threshold from costs" has a rigorous form: write a cost matrix (dollar cost per confusion-matrix cell) and choose the threshold that minimises expected cost, which for a calibrated probability is exact — another reason calibrated probabilities matter. Round out judging with balanced accuracy, macro/weighted F1, MCC, and the confusion matrix at your chosen threshold.`,
       `**SMOTE has sharp edges, resampling distorts probabilities, and the right fix depends on the model.**\n\nApply SMOTE only inside CV folds after the split (before it leaks), and avoid it with high-dimensional sparse data, noisy or overlapping labels, and time-series. Resampling changes the training class balance, so predicted probabilities come out too high for the minority class — recalibrate afterward if you need real probabilities (class weights sidestep this). Match the lever to the family: tree/boosting → class weights + \`scale_pos_weight\` + threshold tuning; linear/distance models → sampling and scaling. And at extreme imbalance (1-in-100k), switch framing to anomaly detection, two-stage retrieval/ranking, and design around review capacity, delayed labels, and alert fatigue.`,
@@ -2304,13 +2402,44 @@ At 1-in-100,000 (rare diseases, novel fraud), the classification framing itself 
         ],
         answer: `B`,
       },
+      {
+        q: `On 950 legit / 50 fraud, a do-nothing "always legitimate" model and a real classifier catching 35 of the 50 frauds (with 35 false alarms) both score exactly 95.0% accuracy. What does that tie actually show?`,
+        options: [
+          `\`A) Accuracy is blind to the rare class here: it weighs all 1000 rows equally, so 15 fewer errors among 950 easy negatives can exactly offset 35 real frauds caught.\``,
+          `\`B) The tie is a coincidence specific to these two exact numbers; on almost any other imbalanced dataset accuracy would correctly separate the two models.\``,
+          `\`C) It proves the real classifier is actually useless too, since matching a do-nothing baseline's accuracy means it isn't adding real predictive signal.\``,
+          `\`D) It shows accuracy is the right metric here, since two models this different in behavior converging on one number reveals a deeper shared property.\``,
+        ],
+        answer: `A`,
+      },
+      {
+        q: `The real classifier above (35 TP, 35 FP, 15 FN) has precision 50%, recall 70%, F1 58.3%. After retraining with class weights (45 TP, 90 FP, 5 FN), precision drops to 33.3% and F1 drops to about 48.6% — a lower F1 than before. Select the two true statements about what to conclude.`,
+        options: [
+          `\`A) A lower F1 does not automatically mean the reweighted model is worse — F1 doesn't know that a missed fraud may cost far more than a false alarm.\``,
+          `\`B) Whether the reweighted model is actually better is a question a cost matrix answers, not F1 alone: compare total expected cost under each model's confusion matrix.\``,
+          `\`C) F1 dropping proves class weighting is broken and should never be used, since a valid imbalance fix must always raise every aggregate metric at once.\``,
+          `\`D) The two models are equivalent, since F1's harmonic mean is specifically designed to already account for any possible cost asymmetry between error types.\``,
+        ],
+        answer: ['A', 'B'],
+      },
+      {
+        q: `With a cost matrix of \\$2,000 per missed fraud and \\$5 per false alarm, the unweighted classifier's 15 misses and 35 false alarms cost 15×\\$2,000 + 35×\\$5. The class-weighted classifier's 5 misses and 90 false alarms cost 5×\\$2,000 + 90×\\$5. Which model is cheaper, and by how much?`,
+        options: [
+          `\`A) The class-weighted model, \\$10,450 versus \\$30,175 — despite its lower F1, its far fewer misses dominate the cost even with three times as many false alarms.\``,
+          `\`B) The unweighted model, \\$30,175 versus \\$10,450 — its higher F1 and higher precision translate directly into the lower total cost under this matrix.\``,
+          `\`C) They cost the same, \\$20,000 each, since the two models' total error counts (50 combined mistakes each) happen to be identical under this data.\``,
+          `\`D) The comparison can't be done from confusion-matrix counts alone; it requires the models' calibrated probabilities, not just true/false positive/negative counts.\``,
+        ],
+        answer: `A`,
+      },
     ],
-    takeaway: `On an imbalanced problem, accuracy is a trap — a model that always guesses the majority class scores high and does nothing. The real issue is that the two kinds of mistake cost different amounts. Measure with precision, recall, and PR-AUC instead; make the model care about the rare class with class weights (or resampling); and set the decision threshold deliberately to match what the problem actually costs, rather than leaving it at 0.5.`,
+    takeaway: `On an imbalanced problem, accuracy is a trap — on 950 legit / 50 fraud, a do-nothing model and a real classifier catching 70% of fraud scored an identical 95.0% accuracy, a tie that precision, recall, and F1 immediately broke. The real issue is that the two kinds of mistake cost different amounts: class weights traded 20 points of recall for 16.7 points of precision and even a lower F1, yet came out \\$19,725 cheaper on a concrete cost matrix — proof that neither accuracy nor F1 alone settles whether an imbalance fix is worth it. Measure with precision, recall, and PR-AUC; make the model care about the rare class with class weights (or resampling); and set the decision threshold, or the cost matrix, deliberately rather than leaving it at 0.5.`,
     recap: [
-      "**Accuracy is a trap** — always guessing the majority class scores high and does nothing.",
-      "**Real issue: the two kinds of mistake cost different amounts.**",
-      "**Measure with precision, recall, PR-AUC** — not accuracy.",
-      "**Make the model care about the rare class** with class weights (or resampling).",
+      "**Accuracy is a trap** — 950/50 dataset: do-nothing model and a 70%-recall classifier both score 95.0% accuracy, identically.",
+      "**Precision/recall/F1 break the tie:** do-nothing = 0%/0%/0%; real classifier = 50%/70%/58.3%.",
+      "**Real issue: the two kinds of mistake cost different amounts** — not the imbalance itself.",
+      "**Class weights (≈19:1) traded recall for precision:** 70%→90% recall, 50%→33.3% precision, F1 58.3%→48.6% (lower!), accuracy 95.0%→90.5%.",
+      "**Cost matrix settles it:** at \\$2,000/miss, \\$5/false-alarm, the weighted model costs \\$10,450 vs \\$30,175 — cheaper despite the lower F1.",
       "**Set the decision threshold deliberately** to match the cost — don't leave it at 0.5.",
       "**When action is capacity-limited, optimise precision@K** and derive the threshold from a cost matrix.",
       "**SMOTE has sharp edges;** resampling distorts probabilities — the right fix depends on the model.",
@@ -2318,14 +2447,14 @@ At 1-in-100,000 (rare diseases, novel fraud), the classification framing itself 
     interactiveId: 'class_imbalance_viz',
     figures: {
       imbalance_skew: `<svg viewBox="0 0 360 175" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
-  <text x="180" y="18" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">1 in 1000 is fraud</text>
+  <text x="180" y="18" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">950 legit / 50 fraud (5%)</text>
   <g fill="var(--ink-low)" opacity="0.65">
     <circle cx="55" cy="48" r="5"/><circle cx="80" cy="42" r="5"/><circle cx="104" cy="52" r="5"/><circle cx="128" cy="44" r="5"/><circle cx="70" cy="66" r="5"/><circle cx="96" cy="70" r="5"/><circle cx="120" cy="64" r="5"/><circle cx="52" cy="82" r="5"/><circle cx="82" cy="90" r="5"/><circle cx="110" cy="86" r="5"/><circle cx="136" cy="78" r="5"/><circle cx="64" cy="104" r="5"/><circle cx="94" cy="108" r="5"/><circle cx="122" cy="104" r="5"/><circle cx="146" cy="96" r="5"/><circle cx="76" cy="122" r="5"/><circle cx="106" cy="124" r="5"/><circle cx="134" cy="120" r="5"/>
   </g>
   <text x="98" y="150" text-anchor="middle" fill="var(--ink-low)" font-size="9">majority: legit</text>
   <circle cx="268" cy="85" r="8" fill="var(--prime)"/>
   <text x="268" y="112" text-anchor="middle" fill="var(--prime)" font-size="9" font-weight="700">fraud</text>
-  <text x="180" y="170" text-anchor="middle" fill="var(--ink-hi)" font-size="9">"always legit" = 99.9% accurate, catches 0 fraud</text>
+  <text x="180" y="170" text-anchor="middle" fill="var(--ink-hi)" font-size="9">"always legit" = 95.0% accurate, catches 0 fraud</text>
 </svg>`,
     },
   },

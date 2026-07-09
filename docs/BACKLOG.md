@@ -1940,3 +1940,93 @@ rather than unilaterally changing shared UI as a side effect of a content-harves
 **This closes out Classical ML batch 1** — `linear_regression`, `logistic_regression`, and
 `regularization` have now completed the full writer → Pass-2 adversarial audit → glossary/interview-
 question harvest pipeline. Not pushed — no git commands run, per standard MSL workflow.
+
+
+---
+
+## Classical ML batch 2 — trees, random_forest, class_imbalance — full 3B1B pipeline — 2026-07-09
+
+Picked up an uncommitted, interrupted writer-pass diff on `trees`/`random_forest`/`class_imbalance` in
+`classicalMLModules.js` (190 insertions/61 deletions, no prior BACKLOG entry). First step was verifying
+whether the writer pass actually finished cleanly before doing anything else.
+
+**Verification of the writer pass (device-direct read, all worked numbers independently recomputed):**
+All 3 modules were found content-complete and matching the `gradient_boosting` reference bar — full
+worked running examples (`trees`: 8 loan applicants, Gini/entropy computed by hand, a 2-label-flip
+variance demonstration; `random_forest`: Galton ox-crowd analogy → Var(average)=σ²/n+((n−1)/n)ρσ² worked
+at n=100/1000 and ρ=0.5/0.1, OOB (1−1/n)ⁿ→1/e; `class_imbalance`: 950/50 fraud dataset scored through
+accuracy/precision/recall/F1/cost-matrix for both an unweighted and a class-weighted classifier), 7-9
+`checkQuestions` each, full `keyPoints`/`recap`/`takeaway`/`figures`. Every threshold, Gini/entropy value,
+variance-formula output, and confusion-matrix/cost number was hand-recomputed and confirmed correct. The
+gap was purely a documentation one — the writer pass finished but `docs/BACKLOG.md` was never updated —
+not a content gap.
+
+**Pass-2 adversarial audit (3 separate cold-read agents, zero writer visibility, one per module):**
+All 3 came back NOT CLEAN against the `3B1B-STANDARD.md` Pass-2 checklist + `CONTENT-AUDIT-RUBRIC.md` 10
+smells — no factual/numeric errors in any module (all arithmetic independently reconfirmed by the
+auditors), but real voice/structure violations:
+- `trees`: twenty-questions opening metaphor cashed out to "split in half" (size-balance) when the tree's
+  actual criterion is purity, not size — a real Precision Rule (voice rule 4) violation; "Gini impurity"
+  and "Entropy" both named before two demonstrations of their mechanism (voice rule 1); the 48k/0.35 split
+  thresholds' origin never stated; MAE/Poisson regression criteria under-explained relative to sibling
+  MSE/variance; a keyPoint's disconnected "7/10=70%" aside broke the module's persistent 8-applicant
+  illustration; loose "information gain" terminology risked conflating the Gini- and entropy-scored senses.
+- `random_forest`: threaded through 4 disconnected concrete examples (loan applicants → ox crowd →
+  abstract house-price σ² → a separate house-price extrapolation vignette) instead of one persistent
+  object (scene rule 1); "bagging" and "random feature choices" named before their mechanism; a "5×
+  improvement" claim rounded 50.5→10.9 (actually ≈4.63×) without a floor/asymptotic qualifier; "Gini" used
+  for both the split criterion and the (unrelated) impurity-importance metric with no disambiguation.
+- `class_imbalance`: pervasive term-first glossary pattern (Recall/Precision/F1/PR-AUC/threshold all named
+  before their mechanism); cold open with no link to `calibration`, the immediately preceding module,
+  despite repeatedly leaning on "calibrated probabilities"; the $2,000/$5 cost-matrix figures had no
+  stated origin (unlike the 19:1 class-weight ratio, which did); `[FIGURE: imbalance_skew]` was placed
+  after, not adjacent to, the paragraph it illustrates; no pause-and-predict beat in the narrative prose
+  itself (only in `interactivePrompt`); the closing metric-menu paragraph dumped MCC/balanced
+  accuracy/specificity/FPR/FNR with near-zero mechanism versus precision/recall/F1's full worked treatment.
+
+**Fixes applied (targeted, single fix-loop round — not full rewrites):** twenty-questions metaphor
+rewritten to cash out to purity/unambiguity, not size; Gini impurity and entropy each restructured to
+demonstrate the mechanism on two concrete cases (pure group, 50/50 group) before naming the term; the
+48k/0.35 thresholds' origin (midpoints between sorted adjacent feature values) stated explicitly;
+MAE/Poisson given one clause of real mechanism each; the disconnected keyPoint aside replaced with the
+module's own 4/4 leaf example; "information gain" terminology tightened to flag the Gini-vs-entropy sense
+ambiguity; `random_forest`'s bagging/feature-selection paragraphs reordered mechanism-before-name; the
+house-price variance example and the house-price extrapolation-trap example explicitly tied together as
+one running illustration; the "5×" claim corrected to compare the asymptotic floors (50 vs 10) rather than
+the raw before/after numbers; impurity importance disambiguated from the split criterion; `class_imbalance`
+opened with an explicit bridge to the calibration module; `imbalance_skew` figure moved adjacent to the
+paragraph it illustrates; the $2,000/$5 cost figures given a stated (illustrative business-data) origin;
+`threshold`'s undefined first use in paragraph 2 given a parenthetical gloss, and its Step 3 "reintroduction"
+given a recall signal instead; `scale_pos_weight` given a recall pointer back to the gradient_boosting
+module where it was first taught; a pause-and-predict beat added before the class-weight retrain reveal;
+the metric-menu paragraph given one clause of mechanism per term (MCC, specificity, balanced accuracy) plus
+a "when to reach for which" framing. Lower-severity, systemic findings (full voice-rule-1 compliance across
+every remaining term; every section-transition rewritten to a strict crisis→inevitability arc) were left
+as-is per the pipeline's own allowance for judgment after the clear-cut fixes are made — the same tension
+is present, unresolved, in the `gradient_boosting` reference template itself.
+
+**Verification:**
+- `npx -y esbuild@0.21.5 src/data/foundations/classicalMLModules.js --bundle --format=esm --outfile=/dev/null`
+  (run against the fix-applied file before it was written back to disk) — compiles clean; only the same
+  pre-existing, unrelated duplicate-`interactiveId`-key warnings as batch 1 (harmless, predates this pass).
+- `git diff --stat` on the live file after write-back: 199 insertions / 70 deletions (up from the
+  interrupted pass's 190/61 — the fix-loop added net new content, no deletions of prior work).
+
+**Glossary + interview-question harvest (from the finalized/audited text only):** 8 new glossary terms
+(`gini impurity`, `information gain`, `cost-complexity pruning` from `trees`; `bagging`, `out-of-bag` from
+`random_forest`; `cost matrix`, `precision@k`, `smote` from `class_imbalance`) — all net-new, none collide
+with the existing 49 keys. Deliberately excluded as over-generic (same reasoning as prior batches):
+precision/recall/F1/threshold/class weight (reused with the same meaning across many other module
+families); PR-AUC (already keyed from `auc_roc`, equivalent definition, a dedup not a fresh term); bare
+"entropy" (mis-linking risk into unrelated cross-entropy-loss prose elsewhere in the app — "information
+gain," the compound term this module actually needs, is keyed instead). 6 new `questionBank.js` entries
+(ids 149-154, domain "Classical ML", 2 per module) — Gini-purity-vs-size-balance, regression-tree
+extrapolation, the n_estimators-plateau/max_features-lever distinction, an OOB-vs-test-error-gap diagnosis,
+F1-drop-but-cost-matrix-cheaper reasoning, and SMOTE-before-split leakage — all grounded strictly in the
+finalized module prose, none testing anything not taught.
+
+**This closes out Classical ML batch 2** — `trees`, `random_forest`, and `class_imbalance` have now
+completed the full writer → Pass-2 adversarial audit → fix-loop → glossary/interview-question harvest
+pipeline. Classical ML foundations (`linear_regression` through `class_imbalance`, all modules up to and
+including `gradient_boosting`'s neighbors covered by batches 1-2) are now S-tier-complete by this pipeline's
+bar. Not pushed — no git commands run, per standard MSL workflow (hand to Sidharth's Mac for build + push).
