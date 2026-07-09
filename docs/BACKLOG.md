@@ -1143,3 +1143,397 @@ end (`src/tabs/InterviewPrepTab.jsx`, `src/tabs/TrainerTab.jsx`, `src/tabs/Combi
 `src/tabs/ReviewTab.jsx`) — all bundle clean; the only warnings shown are pre-existing duplicate-key
 warnings in `productionModules.js`/`classicalMLModules.js` unrelated to this pass (already noted as
 pre-existing in an earlier BACKLOG entry). Not pushed — no git commands run.
+
+---
+
+## Inline-scene mechanism ported from GSL + `$...$` escape-collision fix — 2026-07-09
+
+Infrastructure-only pass (no module content authored). Two independent fixes to `src/utils/renderMd.jsx`,
+the single shared renderer behind all 19 `*FoundationTab.jsx` families + `CheckQuestion.jsx`.
+
+### 1. Inline scenes — new API shape for future content tasks
+
+Ported GSL's `explanation[]` inline-scene mechanism (`FoundationsRunner.jsx` +
+`nicheViz/foundationScenes.jsx`) into MSL. **`renderMd()`'s signature is now**
+`renderMd(text, containerStyle = {}, figures = {}, moduleId = null)` — the 4th arg is new, optional,
+defaults to `null`, and every one of the ~203 existing call sites (which pass 1–3 args) is untouched
+and behaves exactly as before.
+
+`text` now accepts EITHER:
+- a plain string (unchanged behavior — split on `\n\n+`, each block run through the existing
+  figure/equation/misconception-callout/formal-statement/lede/paragraph rules), or
+- an **array of blocks**, where each item is either a string (rendered via the same per-block rules,
+  as a single block — it is NOT re-split on `\n\n`, matching GSL's `explanation[]` convention exactly)
+  or `{ type: 'scene', sceneId: '<id>' }`, which looks up
+  `FOUNDATION_SCENES[`${moduleId}/${sceneId}`]` (new file `src/data/foundationScenes.js`, same
+  `"moduleId/sceneId"` keying convention as GSL) and renders that component inline, at that exact
+  position in the sequence, between the surrounding prose blocks.
+
+**For a future content task to add a scene to a module:** (1) build the interactive React component
+(anywhere, e.g. `src/components/interactive/`), (2) register it in `src/data/foundationScenes.js` as
+`"moduleId/sceneId": Component`, (3) change that module's `summary` (or `keyPoints` item, etc. — any
+field a `*FoundationTab.jsx` passes through `renderMd`) from a plain string to an array of
+strings/scene-markers, and (4) make sure the call site passes the module's `id` as the 4th arg to
+`renderMd` (e.g. `renderMd(selected.summary, {...}, selected.figures || {}, selected.id)` — most
+existing call sites will need this 4th arg added when they start passing arrays; until then it's a
+no-op default). `foundationScenes.js` ships with an empty registry — no real scenes exist yet.
+
+Refactor note: the per-block rendering logic (figure/equation/callout/lede/paragraph rules) was
+extracted into a new `renderTextBlock(block, i, usedGlossaryTerms, figures)` helper so both the
+plain-string path and the array path share it — no duplicated logic.
+
+**Verification (not assumed from reading the code):** temporarily wrapped `classicalMLModules.js`'s
+`gradient_boosting.summary` into `[para1, {type:'scene', sceneId:'__test__'}, para2+rest]` and
+registered a throwaway `"gradient_boosting/__test__"` scene (a plain div rendering "SCENE TEST") in
+`foundationScenes.js`. Bundled a small Node harness with `npx esbuild@0.21.5` (`--jsx=automatic`,
+`platform=node`, `format=cjs`) importing the real `renderMd` + the real `CLASSICAL_ML_MODULES`, ran it
+under Node, and rendered via `react-dom/server`'s `renderToStaticMarkup`. Confirmed via actual string
+inspection of the rendered HTML: paragraph 1 text present, `SCENE TEST` present, paragraph 2 text
+present, and — critically — the byte offsets in the HTML show paragraph-1 < scene < paragraph-2 (a
+real ordering check, not just presence). Also confirmed the plain-string call path (no array, no
+moduleId) still renders unchanged, and that omitting `moduleId` on an array call silently no-ops the
+scene (renders nothing, no crash) — both required for backward compatibility with the ~203 existing
+modules. After confirming, reverted `classicalMLModules.js` to byte-identical original (`git diff`
+empty) and stripped the test entry from `foundationScenes.js`, leaving only the real, now-proven,
+empty-registry skeleton. Deleted the throwaway test harness file.
+
+### 2. `$...$` math-delimiter escape fix
+
+Bug (user-reported, real, seen on the `pot_outcomes` module): `renderInline()`'s split regex treated
+any `$...$` as inline math, so a sentence with two unrelated currency figures ("$100 ... $70") got
+greedily matched start-to-end as one "equation" and rendered as garbled LaTeX via `texToHtml()`.
+
+Fix: both the inline split regex and the standalone-equation-block regex now use a negative lookbehind
+so a backslash-escaped `\$` can never open or close a math span:
+- `renderInline()`: `/(\*\*[^*]+\*\*|`[^`]+`|(?<!\\)\$[^\$\n]+(?<!\\)\$)/g`
+- standalone equation block (in `renderTextBlock()`): `/^(?<!\\)\$(.+)(?<!\\)\$$/s`
+
+The plain-text branch of `renderInline()` now strips the backslash before display
+(`part.replace(/\\\$/g, '$')`) so `\$100` renders as the literal `$100`, not `\$100`.
+
+**This pass only fixes the renderer.** No sweep of existing module content to escape existing bare `$`
+signs was done — that's a separate, later content task (flagged, not attempted here).
+
+**Verification:** same esbuild+Node+`renderToStaticMarkup` harness as above, three cases: (a)
+`"...cost \\$100 per seat...\\$70 per seat..."` → renders literal `$100` and `$70` as plain text, no
+math span, no stray backslash; (b) `"...$x^2 + b$ at this point..."` → still renders as real math (a
+`<sup>2</sup>` from `texToHtml`); (c) mixed sentence with both an escaped currency pair AND a real
+`$x^2$` in the same string → currency renders literal, math still renders as math. All checks passed.
+
+### Files touched
+`src/utils/renderMd.jsx` (signature + array/scene support + escape fix + `renderTextBlock` extraction),
+`src/data/foundationScenes.js` (new, empty registry).
+
+### Verify
+`npx -y esbuild@0.21.5 <file> --bundle --format=esm --loader:.jsx=jsx --external:react
+--external:react-dom --external:react/jsx-runtime --outfile=/dev/null` clean on `renderMd.jsx`,
+`foundationScenes.js`, `classicalMLModules.js` (confirmed byte-identical to its pre-change state via
+`git diff` — empty), and one real consumer (`ClassicalMLFoundationTab.jsx`, full bundle). Only warnings
+anywhere are the pre-existing `classicalMLModules.js` duplicate-`interactiveId` ones already logged in
+earlier BACKLOG entries — unrelated to this pass. Not pushed — no git commands run.
+
+---
+
+## `gradient_boosting` — first real content on the inline-scene mechanism, reference-template rewrite — 2026-07-09
+
+Content pass (writer-pass only, per `3B1B-STANDARD.md`'s two-pass process — a separate agent runs the
+Pass-2 adversarial audit next, not attempted here). First module to actually populate
+`src/data/foundationScenes.js` (previously an empty, proven skeleton — see the entry directly above) and
+the first MSL module using the array/scene `summary` shape end to end. Explicit goal per the task brief:
+this becomes the module every future MSL rewrite is measured against, so treated as the highest-bar single
+piece of content in the lab, not a routine pass.
+
+### Starting state
+`src/data/foundationModules.js` → `classicalMLModules.js`'s `gradient_boosting` module (`src/data/foundations/classicalMLModules.js`,
+`CLASSICAL_ML_MODULES`) had a real, already-good 4-house numerical walkthrough (prices 150k/200k/400k/600k,
+F0=337.5k, residuals ∓187.5/∓137.5/±62.5/±262.5) but: (1) `summary` was a single plain string (no scenes
+possible), (2) the walkthrough never assigned the houses a feature to split on, so there was no actual split
+threshold, no leaf values, no learning-rate arithmetic, no round 2 — the prose asserted "misses roughly
+halved" without a number; (3) zero XGBoost-specific internals beyond one paragraph naming the objective
+formula (which itself had a latent rendering bug — `\tfrac12` and `\lVert...\rVert` are not macros
+`texToHtml` (in `renderMd.jsx`) recognizes, so that equation was silently garbling on render — present in
+both `summary` and one `keyPoints` bullet); no second-order/Newton derivation, no gain-formula derivation, no
+sparsity-aware missing-value handling, no weighted quantile sketch, no row/column subsampling detail. 6
+`checkQuestions`, 5 `keyPoints`, 6 `recap` bullets.
+
+### What was added, and how every new number was independently verified
+Extended the house data with a `size` feature (800/1200/2000/3000 sqft, paired with the existing
+150k/200k/400k/600k prices) so a real depth-1 split becomes computable, then re-derived every downstream
+number by hand (shown below with the exact arithmetic, not just the final value — this is what "verify, don't
+assert" means in practice):
+
+- **F0 = mean price = (150+200+400+600)/4 = 337.5k.** Unchanged from the original, re-derived from first
+  principles (the value minimizing total squared error against 4 unequal targets is the mean).
+- **Round-1 split search** (3 candidate thresholds — midpoints of sorted sizes: 1000, 1600, 2500), each
+  scored by within-group SSE against the group's own residual mean: split@1000 → 0 + 80,000 = 80,000;
+  split@1600 → 1,250 + 20,000 = **21,250** (winner); split@2500 → 35,000 + 0 = 35,000. Independently
+  recomputed twice (once via plain SSE, once via the XGBoost gain formula below) — both give the same winner
+  and the same ranking.
+- **η (learning rate) = 0.5** (matches the paired interactive's default slider value, `GradientBoostingViz.jsx`).
+  Tree 1 leaves ∓162.5k → scaled contributions ∓81.25k → F1 = {256.25, 256.25, 418.75, 418.75}k → residuals1 =
+  {−106.25, −56.25, −18.75, +181.25}k. MAE: 162.5k→90.625k (a **44.2%** drop, computed as
+  1−90.625/162.5). MSE: 31,718.75→11,914.0625 (a **62.4%** drop, computed as 1−11914.0625/31718.75).
+- **Round-2 split search on the NEW residuals** — the key non-obvious result the module leans on: the
+  winning threshold *moves*, from size<1600 to **size<2500** (SSE ≈ 3,854 vs 21,250 vs ≈32,603), because
+  tree 1 already closed the small/big gap and the largest miss left is House D alone (+181.25k). Verified by
+  recomputing all three group means and their squared deviations by hand twice, cross-checked against the
+  scene component's independently-implemented live calculation (see below) — both agree.
+- **XGBoost gradient/Hessian**, using the ℓ=½(y−ŷ)² convention (chosen explicitly in-text so g=−residual,
+  h=1 exactly, with the choice of convention stated, not left implicit): g = {187.5, 137.5, −62.5, −262.5},
+  h = {1,1,1,1}.
+- **Gain formula cross-check**: re-scored all 3 round-1 splits via
+  Gain=½[G²_L/(H_L+λ)+G²_R/(H_R+λ)−G²_root/(H_root+λ)] at λ=0: 23,437.5 / **52,812.5** (winner) / 45,937.5 —
+  same winner, same order as the plain-SSE search, and the module states and verifies the general identity
+  Gain(λ=0,h=1) = ½ × SSE-reduction explicitly (52,812.5 = ½ × (126,875−21,250) = ½×105,625).
+- **λ's effect on the optimal leaf weight** w*=−G/(H+λ): at λ=0, w*_L=−162.5 (recovers the plain mean); at
+  λ=2, w*_L=−81.25 (exactly half); at λ=6, w*_L=−40.625 — each recomputed by hand, used to make the
+  λ-vs-η distinction concrete (both shrink, but at different points in the pipeline — λ during fitting,
+  per-leaf, sample-count-sensitive; η after fitting, uniformly across the whole tree).
+- **γ minimum-gain bar**: at λ=2 the size<1600 split's gain is 26,406.25; a γ=30,000 example is used to show
+  the split gets refused outright even though a real pattern exists.
+- **Sparsity-aware missing-value routing**: added a hypothetical second feature (`renovation_year`, present
+  for houses B/D, missing for A/C, threshold 2012) and computed both candidate default directions:
+  missing→left scores 45,937.5 (coincidentally identical to the round-1 split@2500 gain — a real,
+  independently-confirmed coincidence, not a copy-paste error, since it's the same {A,B,C}|{D} grouping under
+  the hood); missing→right scores 12,604.17. Left wins by ≈3.65× (computed live in the scene component, not
+  hardcoded as a rounded literal in the prose).
+- **Weighted quantile sketch** motivated with a real contrasting number pair from log-loss's Hessian
+  h=p(1−p): p=0.5 → h=0.25 vs p=0.95 → h=0.0475, a >5× difference, used to explain why the sketch spends its
+  bucket budget on uncertain rows rather than confident ones.
+
+All of the above were computed independently at least twice (once for the prose, once again either via the
+gain-formula cross-check or the scene component's separate implementation) rather than derived once and
+trusted — per the numeric self-check discipline in `3B1B-STANDARD.md`'s enforcement section, even though the
+full adversarial Pass-2 is explicitly out of scope for this pass.
+
+### Scenes built (3, all real, registered, none placeholders)
+New file `src/components/interactive/GradientBoostingScenes.jsx`, all three registered in
+`src/data/foundationScenes.js` (previously empty):
+1. **`gradient_boosting/residual_relay`** (`GBResidualRelayScene`) — the persistent object (the same 4
+   houses, positioned by size on the x-axis) stepped through rounds 0→1→2; draws the prediction step-function,
+   true-price points, and residual stems (red=under-predicted/positive residual, blue=over-predicted/negative
+   — reused from `GradientBoostingViz.jsx`'s existing legend convention for text–scene/interactive
+   consistency); live-computes MAE/MSE/% drop from the same `preds` arrays rather than hardcoding aggregate
+   stats separately (single source of truth). Carries the module's one pause-and-predict gate: before
+   advancing to round 2, the user must guess which house grouping the next split will produce (3 options),
+   then gets a reveal explaining why the split moved. Closes with a macro-finale caption zooming out to "this
+   is the entire boosting loop, run twice."
+2. **`gradient_boosting/gain_bars`** (`GBGainBarsScene`) — bar chart of the 3 candidate splits' gains,
+   computed live from hardcoded (verified) G/H constants, with live λ and γ sliders that recompute gain and
+   leaf-weight readouts in real time, visually refusing (greying out) any split that fails to clear γ. Carries
+   a lighter secondary predict-then-reveal (which split wins, size<1000 or size<1600).
+3. **`gradient_boosting/missing_route`** (`GBMissingRouteScene`) — the sparsity-aware routing example,
+   showing both candidate default directions side by side with live-computed gains, highlighting the winning
+   (learned) direction after a reveal click.
+All three reuse the *same* per-house g/h constants (documented in a header comment cross-referencing the
+prose so the two can't silently drift), satisfying scene rule 1 (one persistent object) at the whole-module
+level, not just within a single scene.
+
+### Rewiring
+`summary` converted from a single template-string to an array of ~36 blocks (33 prose strings + 3
+`{type:'scene', sceneId}` markers), inserted mid-argument (after the round-1/round-2 walkthrough; after the
+gain-formula derivation; after the missing-value derivation) rather than clustered at the end.
+`ClassicalMLFoundationTab.jsx`'s `renderMd()` call site for `selected.summary` updated to pass `selected.id`
+as the 4th argument (the only call site using array-shaped content so far).
+
+### Other fields updated to match the new depth
+- **`keyPoints`**: 5→7 bullets. Fixed the `\tfrac`/`\lVert`/`\rVert` rendering bug in the (retained,
+  rewritten) family/objective bullet — replaced with plain Unicode (½, ‖·‖) that `texToHtml` doesn't need to
+  touch at all, removing the risk entirely rather than adding another special-case macro. Added 2 new
+  bullets: one on why the Hessian matters even though it's constant for squared error, one on λ-vs-η and
+  sparsity-aware routing/weighted quantile sketch.
+- **`checkQuestions`**: 6→9. Added 3 new questions (Hessian rationale, λ/γ regularization mechanics,
+  sparsity-aware routing + quantile-sketch weighting — one is multi-select). Ran a length-tell check (own
+  small Python script, char-length of each option, flagging any question where the correct answer is the
+  unique longest/shortest option by >10 chars over the next-closest) — found 2 **pre-existing** questions
+  (not touched by this task's content additions) tripped a shortest-answer tell and one new question tripped
+  a longest-answer tell; fixed all of them by trimming/padding option text without changing their meaning.
+  Final check: 9/9 clean, no length tell on any question.
+- **`takeaway`**: rewritten to name the Taylor-expanded regularized objective and gradient+Hessian gain
+  formula, not just "regularisation and curvature."
+- **`recap`**: 6→11 bullets, keyword-spine style (arrow notation, bold load-bearing term), extended to cover
+  the new causal steps (second-order/Newton, gain formula + its λ=0/h=1 SSE-reduction identity, λ-vs-η
+  distinction, sparsity-aware routing, weighted quantile sketch) in the same order the module builds them.
+- **`deeperMath`**: checked for — this field/rendering tier does not exist anywhere in MSL's schema or in
+  `ClassicalMLFoundationTab.jsx` (unlike PAL, which has a real but-empty `deeperMath` skeleton in
+  `FoundationRunnerShell.jsx`). Not added here — folding the deepest math into a field nothing renders would
+  silently drop content, so the Newton-approximation/gain-formula/quantile-sketch depth was folded directly
+  into `summary` instead. Flagged as a possible future MSL-wide mechanism if a "Go Deeper" tier is ever built,
+  mirroring PAL's.
+- `interactivePrompt` left unchanged (still refers to the paired interactive's η slider specifically, not the
+  new scenes — no conflict).
+
+### Final `summary` array structure (36 items)
+33 prose strings (opening crisis/continuity → Kearns/Valiant/Schapire/AdaBoost history → house walkthrough
+round 1 → pause-and-predict → round 1 reveal → η/shrinkage → round 2 → gradient-descent-in-function-space
+generalization → classification/logit/sigmoid → shallow-trees/η/early-stopping → Taylor expansion/g,h setup
+→ Hessian-matters justification → gain-formula derivation/cross-check → λ/leaf-weight → γ → sparsity-aware
+routing → quantile sketch → subsampling → hyperparameter roll-up → leakage → importances → library comparison
+→ imbalance → closing synthesis), interleaved with 3 `{type:'scene', sceneId:'residual_relay'|'gain_bars'|
+'missing_route'}` markers at the 3 positions named above.
+
+### Verification (all run for real, not assumed)
+1. **esbuild@0.21.5**, `--bundle --format=esm --loader:.jsx=jsx --loader:.js=jsx --external:react
+   --external:react-dom --external:react/jsx-runtime --outfile=/dev/null`, clean (exit 0, only the
+   pre-existing unrelated duplicate-`interactiveId` warnings already logged in earlier entries) on all 4
+   touched files: `classicalMLModules.js`, `foundationScenes.js`, `ClassicalMLFoundationTab.jsx`,
+   `GradientBoostingScenes.jsx`.
+2. **Real render check**, not just a bundle check: a Node harness (`--jsx=automatic`, `platform=node`,
+   `format=cjs`, `--external:react --external:react-dom`) importing the real `CLASSICAL_ML_MODULES` +
+   `renderMd`, rendered via `react-dom/server`'s `renderToStaticMarkup`. Confirmed: (a) `summary` is an array
+   of 36 blocks with exactly 3 scene markers; (b) rendering WITHOUT a `moduleId` (simulating every other
+   existing call site) succeeds with no crash and renders 0 scenes (27,703 chars); (c) rendering WITH
+   `moduleId='gradient_boosting'` succeeds and is longer (35,681 chars), i.e. the scenes actually mount; (d)
+   the 3 scenes' distinguishing text appears in the HTML in the same order as their markers in the `summary`
+   array (byte-offset check: residual_relay at 9,080 < gain_bars at 21,289 < missing_route at 25,645); (e) the
+   phrase "as you can see above/below" does not appear anywhere (Definition-of-Done #6 — prose must stand
+   alone on the prerendered static page, which doesn't render scenes).
+3. **Technical-claims survival check** (grep, not vibes): every named technique/hyperparameter/number from
+   the original text (`AdaBoost`, `LightGBM`, `CatBoost`, `learning_rate`, `n_estimators`, `max_depth`,
+   `min_child_weight`, `gamma`, `subsample`, `colsample_bytree`, `reg_lambda`, `reg_alpha`,
+   `scale_pos_weight`, `eval_metric`, `Kearns`, `Valiant`, `Schapire`, `1988`, weight/cover/gain importance
+   trio, `logit`, `sigmoid`, early stopping, PR-AUC, time-based/group-based splits) confirmed present in the
+   rewritten module.
+4. **MCQ length-tell check** — see checkQuestions section above; final state 9/9 clean.
+
+### Deferrals (explicit, per Definition of Done's "deferrals must be stated, not silently shrunk")
+- Pass-2 adversarial audit against `3B1B-STANDARD.md`'s full checklist — explicitly out of scope for this
+  pass per the task brief; a separate agent/context runs it next (task queued).
+- `deeperMath` tier — not built (doesn't exist in MSL yet; see above).
+- Scrollytelling / scroll-triggered scene reveals — not attempted (matches the standard's stated allowance
+  for this specific deferral).
+- No sweep of the OTHER ~202 MSL foundation modules' pre-existing MCQ length-tell status was done here
+  (2 pre-existing questions in THIS module were fixed opportunistically since this module was being fully
+  reworked anyway) — a lab-wide sweep, if wanted, is separate work.
+
+### Files touched
+`src/data/foundations/classicalMLModules.js` (`gradient_boosting` module: summary, keyPoints,
+checkQuestions, takeaway, recap), `src/data/foundationScenes.js` (populated the previously-empty registry
+with 3 real entries), `src/components/interactive/GradientBoostingScenes.jsx` (new, 3 scene components),
+`src/tabs/foundations/ClassicalMLFoundationTab.jsx` (one-line `renderMd` call-site update to pass
+`selected.id`). Not pushed — no git commands run.
+
+## `gradient_boosting` Pass-2 adversarial audit, chunk 2 (voice/lock, not numerics) — 2026-07-09
+
+Second of the queued Pass-2 audit chunks (3B1B-STANDARD.md's writer+adversarial two-pass process). Chunk 1
+already independently reverified the 6 core numeric claims (split gain, w* at three λ values, missing-value
+routing gains, Hessian ratio) — not repeated here. This chunk covered 6 different checks, all against the
+`gradient_boosting` module (`src/data/foundations/classicalMLModules.js` lines 1256–1452):
+
+1. **Precision rule** — walked every metaphor in `summary` (weak/strong learner "chain", η "keeping a step
+   cautious", γ "clearing a bar", quantile-sketch "budget spent where curvature is highest", closing "zoom
+   out to the crisis"). Each cashes out to its exact technical claim within a sentence or two. **Clean, no
+   fix needed.**
+2. **Jargon-second** — read the full 36-item array in order. Terms introduced fresh in this module (weak
+   learner, strong learner, boosting, residual-as-gradient, Taylor expansion, gradient g, Hessian h,
+   regularized objective, sparsity-aware routing, weighted quantile sketch) all get an immediate concrete
+   explanation in the same sentence/paragraph they're named in, and load-bearing ones get a numeric
+   demonstration right after (F₀, the 4-house residuals, the split-gain arithmetic). Terms reused from
+   *earlier* modules in this same file (**residual** — defined at line 32 in `linear_regression`; **sigmoid**
+   / **logit** — defined in `logistic_regression` around line 270) are correctly recalled with a bracket
+   reminder on sigmoid's first reappearance here (rule 9), not re-taught from scratch. One borderline case
+   checked and judged NOT a violation: "AdaBoost" is named at the start of its own sentence with the
+   mechanism explanation immediately following in the same sentence — this is a proper-noun label for a
+   historical algorithm, not conceptual jargon requiring a metaphor-first buildup, and it doesn't leave the
+   term undefined for multiple sentences (the actual failure mode rule 1 targets, per the `attention` module
+   precedent cited in the standard). **Clean, no fix needed.**
+3. **Text–Scene Lock (bidirectional)** — read `src/components/interactive/GradientBoostingScenes.jsx` in
+   full against the surrounding prose, the same bug class as the `BackpropViz.jsx` mismatch found earlier
+   this session. Confirmed line-by-line: scene 1 (`residual_relay`)'s round-0/1/2 predictions
+   (337.5/337.5/337.5/337.5 → 256.25/256.25/418.75/418.75 → 226.04167/226.04167/388.54167/509.375), its
+   pause-and-predict gate options (`A,B,C | D` as the correct grouping, index 2), and its live MSE-drop
+   readout all match the prose's by-hand numbers exactly. Scene 2 (`gain_bars`)'s three `SPLITS` (G_L/H_L/
+   G_R/H_R for size<1000, size<1600, size<2500) and its λ/γ sliders reproduce the prose's Gain values
+   (23,437.5 / 52,812.5 / 45,937.5 at λ=0) and w* values (−162.5 at λ=0, −81.25 at λ=2) exactly. Scene 3
+   (`missing_route`)'s two routing gains (45,937.5 vs 12,604.17, ratio 3.6×) match the prose's
+   `renovation_year` walkthrough exactly. Also confirmed the closing prose paragraph ("Zoom out to the
+   crisis this module opened with") echoes scene 1's own end-state copy ("Zoom out: this two-tree relay is
+   the entire boosting loop, run twice") — genuine shared vocabulary, not a mismatch. Registration double-
+   checked in `src/data/foundationScenes.js`: all 3 `sceneId`s (`residual_relay`, `gain_bars`,
+   `missing_route`) resolve under the `gradient_boosting/` key to the right exports. **Clean, no fix
+   needed** — this is the one check with a known recent failure precedent in this codebase and it came back
+   fully clean on independent re-verification.
+4. **Remaining unrendered LaTeX** — grepped the whole file for `\frac`, `\sum`, `\geq`, `\leq`, `\cdot`,
+   `\partial`, `\sqrt`, `\hat`, `\text`, `\tfrac`, `\lVert`/`\rVert` etc. Matches exist elsewhere in the file
+   (linear_regression, bias_variance, SVM modules — pre-existing, out of scope) but **zero matches fall
+   inside the `gradient_boosting` module's line range (1256–1452)**. The one formula in this module (line
+   1300, XGBoost's objective) already uses plain Unicode (Σ, ᵢ, ½, ‖ ‖). **Clean, no fix needed.**
+5. **Causal chain integrity** — re-read the 36-item array end to end as a single argument: forest's bias
+   ceiling → weak/strong learner theory → AdaBoost's row-reweighting → generalization to residual-fitting →
+   the 4-house worked example (F₀ → residuals → split search → η-scaled tree 1 → tree 2 on the new
+   residuals) → boosting as gradient descent in function space → the classification (logit/sigmoid) variant
+   → the two stability dials → what XGBoost adds (regularized objective → Taylor expansion → g/h → gain
+   formula sanity-checked against the by-hand SSE result) → λ vs η → γ → missing-value routing → the
+   quantile sketch → subsample/colsample → a named-hyperparameter consolidation → leakage/validation
+   discipline → importance-type caveats → library comparison → imbalance handling → zoom-out close. Each
+   paragraph answers a question the previous one leaves open; no fragment reads as a disconnected fact.
+   **Clean, no fix needed.**
+6. **Dangling cross-references** — every reference to something outside the paragraph itself checked against
+   the real codebase, not assumed: "the random forest module" (× 2 references) → confirmed `random_forest`
+   module exists at line 1078, immediately before this one. "This module's separate boosting-rounds
+   interactive" (claims 8 rounds, train/test MSE divergence at high η) → confirmed against
+   `GradientBoostingViz.jsx` directly: `for (let round = 0; round < 8; round++)` and an
+   `isOverfitting = eta >= 0.8 && ...` branch with matching copy ("test MSE rises past round X... memorizes
+   noise rather than the signal"). Both references are accurate, not dangling. **Clean, no fix needed.**
+
+**Net result: zero fixes required.** No edits were made to `classicalMLModules.js`, `foundationScenes.js`,
+or `GradientBoostingScenes.jsx` this pass. Re-ran esbuild@0.21.5 on all three anyway as a confirmatory
+check (not because anything changed) — all three bundle clean (exit 0; the only warning is the
+pre-existing, unrelated duplicate-`interactiveId` warning at lines 885/1219 vs 1079, already logged in an
+earlier entry above and outside this module's range).
+
+Not pushed — no git commands run. Chunk 3 (checkQuestions/MCQ re-verification) is queued separately per the
+task brief and was explicitly not attempted here.
+
+---
+
+## `gradient_boosting` Pass-2 adversarial audit, chunk 3 (MCQ length-tell + content re-verification) — 2026-07-09
+
+Third and final queued Pass-2 chunk, covering the module's 9 `checkQuestions` (`src/data/foundations/classicalMLModules.js`
+lines 1346–1437). Chunks 1–2 already covered numerics and voice/lock — not repeated here.
+
+**Length-tell check.** MSL already has its own `_verify_mcq_balance.mjs` at repo root (untracked, same class of
+tool as GSL's sibling script — read for reference, not copied blind since MSL's already exists and matches the
+codebase's actual `checkQuestions`/`options`/`answer` schema, including the newer array-`answer` multi-select
+shape from the CheckQuestion consolidation). Adapted a one-off variant (`/tmp/verify_gb.mjs`, not committed) that
+bundles just `classicalMLModules.js`, isolates the `gradient_boosting` module by `id`, and applies the same
+metric per question: strip the `A)`/`B)` prefix, compare the correct option's length (or, for the two multi-select
+questions, the mean length of the correct set) against the mean of the wrong options, flag if the correct option
+is literally the longest OR runs >20% over the wrong-option average.
+
+**Result: 0 / 9 flagged, both before and after — no length-tell present.** Every question's length ratio (correct
+vs. wrong-average) fell between 0.94× and 1.04×, i.e. already tightly balanced (all 4 options in each question sit
+within a ~140–154 character band). This module was evidently already covered by the lab-wide MCQ-rebalance pass
+logged under "MCQ length-tell fix + CheckQuestion consolidation — 2026-07-08" — no fresh instance of the bug
+class here, unlike GSL's `agents` bucket (89/90 flagged) found dangling the same session. **No option text was
+edited.**
+
+**Content re-verification.** Independently answered all 9 questions from the module's own prose (not from the
+marked `answer` field) before checking: Q1→B (forest trees vote independently, sharing blind spots; boosting
+fixes what's left over), Q2→C (tree fits the current residual, shrunk), Q3→A,B (200-tree overfit + early
+stopping), Q4→A (nudges the prediction function via a tree fit to the negative gradient), Q5→B (AdaBoost
+reweights rows; GB fits the loss gradient), Q6→C (random split on time-ordered data leaks the future), Q7→A (h
+is flat for squared error but the gain formula must also hold for losses like log loss where h=p(1−p) varies),
+Q8→A (w*=−G/(H+λ) shrinks with λ, distinct from η's post-fit rescale), Q9→A,B (learned default route from
+trying both directions at train time; sketch weighted by Hessian = curvature). **All 9 matched the module's
+marked `answer` exactly** — no content bugs found.
+
+**Distractor quality note (not a length-tell finding, logged for awareness only):** most wrong options use
+absolutist language ("always", "exactly", "purely", "completely", "entirely") while correct options are more
+hedged — a common, legitimate MCQ-writing pattern, not the bug class this audit targets, and out of this
+chunk's scope per the task brief (length/specificity only). Left as-is.
+
+**Cross-reference sweep.** Checked all 9 questions for dangling references to other modules/concepts: `n_estimators`,
+`learning_rate`, `early stopping`, `AUC`, `time-based split`, `Hessian`, `λ`/`γ`, `weighted quantile sketch` — all
+match the terminology and values used in the module's own `summary`/`keyPoints` (no renamed or invented terms).
+No dangling cross-references found.
+
+**Verify:** `npx -y esbuild@0.21.5 src/data/foundations/classicalMLModules.js --bundle --format=esm
+--loader:.jsx=jsx --external:react --external:react-dom --external:react/jsx-runtime --external:recharts
+--external:lucide-react --outfile=/dev/null` — clean (exit 0; only the pre-existing, unrelated duplicate-
+`interactiveId` warnings at lines 885/1219 vs 1079/250 etc., already logged, outside this module's range).
+
+**Net result: zero edits to `classicalMLModules.js`.** No length-tell, no content errors, no dangling references
+in the 9 `checkQuestions`. Combined with chunks 1–2 (numerics clean, voice/lock clean), the `gradient_boosting`
+module's full Pass-2 adversarial audit is now **complete — 3/3 chunks clean, module confirmed as the reference-
+template quality bar it was written to be.** Not pushed — no git commands run.
