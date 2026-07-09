@@ -1,6 +1,7 @@
 import React from 'react'
 import { GLOSSARY, GLOSSARY_PATTERN } from '../data/glossary'
 import { GlossaryTerm } from '../components/foundations/GlossaryTerm'
+import { FOUNDATION_SCENES } from '../data/foundationScenes'
 
 // One shared alternation regex for the whole app lifetime — `.split()` on a
 // global RegExp doesn't carry mutable state (unlike `.exec()`/`.test()`), so
@@ -116,130 +117,162 @@ function texToHtml(str) {
     .replace(/\{/g, '').replace(/\}/g, '')
 }
 
-export function renderMd(text, containerStyle = {}, figures = {}) {
+// Renders one string block using the existing figure/equation/callout/lede/paragraph
+// rules. Shared by both the plain-string path (blocks split on `\n\n+`) and the
+// array-of-blocks path (each string item rendered as-is, one item = one block) —
+// see renderMd() below. `i` is the block's position in the full sequence (used both
+// as the React key and to decide the lede treatment), not an index within any
+// sub-array.
+function renderTextBlock(block, i, usedGlossaryTerms, figures) {
+  const trimmed = block.trim()
+
+  // ── [FIGURE: figureId] inline figure
+  const figMatch = trimmed.match(/^\[FIGURE:\s*(\S+)\]/)
+  if (figMatch) {
+    const figId = figMatch[1]
+    const svgStr = figures[figId]
+    if (svgStr) {
+      // Scale figures up (authored max-width is ~360px, too small in a wide reader pane)
+      const scaled = svgStr.replace(/max-width:\s*\d+px/, 'max-width:560px')
+      return (
+        <div key={i} style={{
+          margin: '1.5rem 0',
+          display: 'flex',
+          justifyContent: 'center',
+          overflow: 'hidden',
+          borderRadius: '10px',
+          background: 'var(--depth)',
+          border: '1px solid var(--rim)',
+          padding: '1.1rem 1.25rem',
+        }} dangerouslySetInnerHTML={{ __html: scaled }} />
+      )
+    }
+    return (
+      <div key={i} style={{
+        margin: '1.5rem 0', padding: '1rem',
+        background: 'var(--depth)', borderRadius: '8px',
+        border: '1px dashed var(--rim)', textAlign: 'center',
+        color: 'var(--ink-low)', fontSize: '0.8rem',
+      }}>
+        [figure: {figId}]
+      </div>
+    )
+  }
+
+  // ── Standalone equation block: entire paragraph is $...$ (escaped \$ never matches)
+  const eqMatch = trimmed.match(/^(?<!\\)\$(.+)(?<!\\)\$$/s)
+  if (eqMatch) {
+    return (
+      <div key={i} style={{
+        display: 'block',
+        fontFamily: 'var(--font-mono)',
+        color: 'var(--prime)',
+        background: 'var(--depth)',
+        borderLeft: '3px solid var(--prime)',
+        padding: '0.5rem 0.75rem',
+        margin: '1rem 0',
+        borderRadius: '0 4px 4px 0',
+        overflowX: 'auto',
+        fontSize: '0.9rem',
+      }}
+        dangerouslySetInnerHTML={{ __html: texToHtml(eqMatch[1].trim()) }}
+      />
+    )
+  }
+
+  // ── NOT-this paragraph → amber misconception callout
+  if (trimmed.startsWith('**NOT this.') || trimmed.startsWith('**NOT this:')) {
+    return (
+      <div key={i} style={{
+        background: 'rgba(245,158,11,0.07)',
+        border: '1px solid rgba(245,158,11,0.35)',
+        borderRadius: '8px',
+        padding: '0.75rem 1rem',
+        margin: '1.1rem 0',
+      }}>
+        <div style={{
+          fontSize: '0.62rem', fontWeight: 800, color: '#b45309',
+          textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: '0.4rem',
+        }}>Common Misconception</div>
+        <div style={{ fontSize: 'inherit', lineHeight: 1.65, color: 'var(--ink-mid)' }}>
+          {renderInline(trimmed, usedGlossaryTerms)}
+        </div>
+      </div>
+    )
+  }
+
+  // ── Formal statement paragraph → definition callout
+  if (
+    trimmed.startsWith('The formal statement:') ||
+    trimmed.startsWith('**Formally') ||
+    trimmed.startsWith('**The formal')
+  ) {
+    return (
+      <div key={i} style={{
+        background: 'var(--prime-faint)',
+        borderLeft: '3px solid var(--prime)',
+        borderRadius: '0 6px 6px 0',
+        padding: '0.65rem 1rem',
+        margin: '1.1rem 0',
+      }}>
+        <p style={{ margin: 0, fontSize: 'inherit', color: 'var(--ink-mid)', lineHeight: 1.65 }}>
+          {renderInline(trimmed, usedGlossaryTerms)}
+        </p>
+      </div>
+    )
+  }
+
+  // ── First paragraph: lede treatment
+  if (i === 0) {
+    return (
+      <p key={i} style={{ marginBottom: '1rem', lineHeight: 1.75, color: 'var(--ink-hi)' }}>
+        {renderInline(trimmed, usedGlossaryTerms)}
+      </p>
+    )
+  }
+
+  // ── Regular paragraph
+  return (
+    <p key={i} style={{ marginBottom: '1rem', lineHeight: 1.7 }}>
+      {renderInline(trimmed, usedGlossaryTerms)}
+    </p>
+  )
+}
+
+// renderMd(text, containerStyle, figures, moduleId)
+//
+// `text` accepts EITHER:
+//  (a) a plain string — existing/original behavior, unchanged: split on `\n\n+`
+//      into blocks, each rendered via renderTextBlock().
+//  (b) an array of blocks, where each item is either a string (rendered via the
+//      SAME renderTextBlock() as one block — not split further on `\n\n`, matching
+//      GSL's explanation[]-array convention) or `{ type: 'scene', sceneId }`, which
+//      looks up FOUNDATION_SCENES[`${moduleId}/${sceneId}`] (src/data/foundationScenes.js)
+//      and renders that component inline at that position. Unknown ids, or no
+//      moduleId passed, render nothing (no-op) — safe for every existing call site.
+//
+// `moduleId` is optional (default null) so none of the ~203 existing call sites
+// (which pass a plain string and 0-3 args) need to change; scene lookup simply
+// no-ops without it.
+export function renderMd(text, containerStyle = {}, figures = {}, moduleId = null) {
   if (!text) return null
   // Module-scoped "wrap only the first occurrence" tracking — one Set per
   // renderMd() call. Each module body is a single renderMd invocation, so
   // this naturally resets per module render and is shared across every
   // renderInline() call within it (lede, regular paragraphs, callouts).
   const usedGlossaryTerms = new Set()
-  const blocks = text.split(/\n\n+/)
+  const blocks = Array.isArray(text) ? text : text.split(/\n\n+/)
   return (
     <div style={containerStyle}>
       {blocks.map((block, i) => {
-        const trimmed = block.trim()
-
-        // ── [FIGURE: figureId] inline figure
-        const figMatch = trimmed.match(/^\[FIGURE:\s*(\S+)\]/)
-        if (figMatch) {
-          const figId = figMatch[1]
-          const svgStr = figures[figId]
-          if (svgStr) {
-            // Scale figures up (authored max-width is ~360px, too small in a wide reader pane)
-            const scaled = svgStr.replace(/max-width:\s*\d+px/, 'max-width:560px')
-            return (
-              <div key={i} style={{
-                margin: '1.5rem 0',
-                display: 'flex',
-                justifyContent: 'center',
-                overflow: 'hidden',
-                borderRadius: '10px',
-                background: 'var(--depth)',
-                border: '1px solid var(--rim)',
-                padding: '1.1rem 1.25rem',
-              }} dangerouslySetInnerHTML={{ __html: scaled }} />
-            )
-          }
-          return (
-            <div key={i} style={{
-              margin: '1.5rem 0', padding: '1rem',
-              background: 'var(--depth)', borderRadius: '8px',
-              border: '1px dashed var(--rim)', textAlign: 'center',
-              color: 'var(--ink-low)', fontSize: '0.8rem',
-            }}>
-              [figure: {figId}]
-            </div>
-          )
+        if (typeof block === 'string') {
+          return renderTextBlock(block, i, usedGlossaryTerms, figures)
         }
-
-        // ── Standalone equation block: entire paragraph is $...$
-        const eqMatch = trimmed.match(/^\$(.+)\$$/s)
-        if (eqMatch) {
-          return (
-            <div key={i} style={{
-              display: 'block',
-              fontFamily: 'var(--font-mono)',
-              color: 'var(--prime)',
-              background: 'var(--depth)',
-              borderLeft: '3px solid var(--prime)',
-              padding: '0.5rem 0.75rem',
-              margin: '1rem 0',
-              borderRadius: '0 4px 4px 0',
-              overflowX: 'auto',
-              fontSize: '0.9rem',
-            }}
-              dangerouslySetInnerHTML={{ __html: texToHtml(eqMatch[1].trim()) }}
-            />
-          )
+        if (block?.type === 'scene') {
+          const Scene = moduleId ? FOUNDATION_SCENES[`${moduleId}/${block.sceneId}`] : null
+          return Scene ? <div key={i} style={{ margin: '1rem 0' }}><Scene /></div> : null
         }
-
-        // ── NOT-this paragraph → amber misconception callout
-        if (trimmed.startsWith('**NOT this.') || trimmed.startsWith('**NOT this:')) {
-          return (
-            <div key={i} style={{
-              background: 'rgba(245,158,11,0.07)',
-              border: '1px solid rgba(245,158,11,0.35)',
-              borderRadius: '8px',
-              padding: '0.75rem 1rem',
-              margin: '1.1rem 0',
-            }}>
-              <div style={{
-                fontSize: '0.62rem', fontWeight: 800, color: '#b45309',
-                textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: '0.4rem',
-              }}>Common Misconception</div>
-              <div style={{ fontSize: 'inherit', lineHeight: 1.65, color: 'var(--ink-mid)' }}>
-                {renderInline(trimmed, usedGlossaryTerms)}
-              </div>
-            </div>
-          )
-        }
-
-        // ── Formal statement paragraph → definition callout
-        if (
-          trimmed.startsWith('The formal statement:') ||
-          trimmed.startsWith('**Formally') ||
-          trimmed.startsWith('**The formal')
-        ) {
-          return (
-            <div key={i} style={{
-              background: 'var(--prime-faint)',
-              borderLeft: '3px solid var(--prime)',
-              borderRadius: '0 6px 6px 0',
-              padding: '0.65rem 1rem',
-              margin: '1.1rem 0',
-            }}>
-              <p style={{ margin: 0, fontSize: 'inherit', color: 'var(--ink-mid)', lineHeight: 1.65 }}>
-                {renderInline(trimmed, usedGlossaryTerms)}
-              </p>
-            </div>
-          )
-        }
-
-        // ── First paragraph: lede treatment
-        if (i === 0) {
-          return (
-            <p key={i} style={{ marginBottom: '1rem', lineHeight: 1.75, color: 'var(--ink-hi)' }}>
-              {renderInline(trimmed, usedGlossaryTerms)}
-            </p>
-          )
-        }
-
-        // ── Regular paragraph
-        return (
-          <p key={i} style={{ marginBottom: '1rem', lineHeight: 1.7 }}>
-            {renderInline(trimmed, usedGlossaryTerms)}
-          </p>
-        )
+        return null
       })}
     </div>
   )
@@ -258,8 +291,11 @@ const mathStyle = {
 }
 
 function renderInline(text, usedGlossaryTerms) {
-  // Split on **bold**, `code`, and $equation$
-  const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`|\$[^\$\n]+\$)/g)
+  // Split on **bold**, `code`, and $equation$ — a `$` preceded by a backslash (`\$`)
+  // is an escaped literal dollar sign, never a math delimiter, so it can't open or
+  // close a match here. This stops two unrelated currency figures in one sentence
+  // (e.g. "$100 ... $70") from being greedily swallowed as one giant "equation".
+  const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`|(?<!\\)\$[^\$\n]+(?<!\\)\$)/g)
   return parts.map((part, i) => {
     if (part.startsWith('**') && part.endsWith('**')) {
       return (
@@ -288,8 +324,9 @@ function renderInline(text, usedGlossaryTerms) {
         />
       )
     }
-    // Plain-text piece (not bold/code/math) — second pass: glossary terms.
-    return applyGlossary(part, i, usedGlossaryTerms)
+    // Plain-text piece (not bold/code/math) — strip the backslash off any escaped
+    // `\$` so it displays as a literal `$`, then second pass: glossary terms.
+    return applyGlossary(part.replace(/\\\$/g, '$'), i, usedGlossaryTerms)
   })
 }
 
