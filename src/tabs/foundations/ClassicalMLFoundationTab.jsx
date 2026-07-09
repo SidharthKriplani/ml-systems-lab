@@ -5,6 +5,7 @@ import { getTracksForModule } from '../../utils/tracks.js'
 import { renderMd } from '../../utils/renderMd'
 import { CheckQuestion } from '../../components/foundations/CheckQuestion'
 import { HighlightPopover } from '../../components/foundations/HighlightPopover.jsx'
+import { GoDeeperPanel } from '../../components/foundations/GoDeeperPanel.jsx'
 import { CLASSICAL_ML_MODULES } from '../../data/foundations/classicalMLModules.js'
 import { InteractivePanel } from '../../components/interactive/InteractivePanel'
 import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '../../utils/foundations/classicalMLFoundationProgress.js'
@@ -258,6 +259,8 @@ export function ClassicalMLFoundationTab({ onNavigate, openModuleId, navOrigin }
           )}
 
           {selected.interactiveId && <InteractivePanel interactiveId={selected.interactiveId} />}
+
+          <GoDeeperPanel key={selected.id} deeperMath={selected.deeperMath} figures={selected.figures} />
 
           {/* Key points */}
           <div style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '10px',

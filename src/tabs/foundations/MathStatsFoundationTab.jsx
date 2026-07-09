@@ -5,6 +5,7 @@ import { getTracksForModule } from '../../utils/tracks.js'
 import { renderMd } from '../../utils/renderMd'
 import { CheckQuestion } from '../../components/foundations/CheckQuestion'
 import { HighlightPopover } from '../../components/foundations/HighlightPopover.jsx'
+import { GoDeeperPanel } from '../../components/foundations/GoDeeperPanel.jsx'
 import { MATH_STATS_MODULES } from '../../data/foundations/mathStatsModules.js'
 import { InteractivePanel } from '../../components/interactive/InteractivePanel'
 import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '../../utils/foundations/mathStatsFoundationProgress.js'
@@ -259,6 +260,8 @@ export function MathStatsFoundationTab({ onNavigate, openModuleId, navOrigin }) 
           )}
 
           {selected.interactiveId && <InteractivePanel interactiveId={selected.interactiveId} />}
+
+          <GoDeeperPanel key={selected.id} deeperMath={selected.deeperMath} figures={selected.figures} />
 
           {/* Key points */}
           <div style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '10px',

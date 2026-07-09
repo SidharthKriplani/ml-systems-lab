@@ -5,6 +5,7 @@ import { getTracksForModule } from '../../utils/tracks.js'
 import { renderMd } from '../../utils/renderMd'
 import { CheckQuestion } from '../../components/foundations/CheckQuestion'
 import { HighlightPopover } from '../../components/foundations/HighlightPopover.jsx'
+import { GoDeeperPanel } from '../../components/foundations/GoDeeperPanel.jsx'
 import { TIME_SERIES_MODULES } from '../../data/foundations/timeSeriesModules.js'
 import { InteractivePanel } from '../../components/interactive/InteractivePanel'
 import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '../../utils/foundations/timeSeriesFoundationProgress.js'
@@ -227,6 +228,8 @@ export function TimeSeriesFoundationTab({ onNavigate, openModuleId, navOrigin })
           )}
 
           {selected.interactiveId && <InteractivePanel interactiveId={selected.interactiveId} />}
+
+          <GoDeeperPanel key={selected.id} deeperMath={selected.deeperMath} figures={selected.figures} />
           <div style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '10px', padding: '1.1rem 1.25rem', marginBottom: '1.25rem' }}>
             <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>Key Points</div>
             <ul style={{ margin: 0, paddingLeft: '1.2rem', listStyle: 'none' }}>

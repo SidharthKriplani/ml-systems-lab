@@ -1537,3 +1537,132 @@ No dangling cross-references found.
 in the 9 `checkQuestions`. Combined with chunks 1–2 (numerics clean, voice/lock clean), the `gradient_boosting`
 module's full Pass-2 adversarial audit is now **complete — 3/3 chunks clean, module confirmed as the reference-
 template quality bar it was written to be.** Not pushed — no git commands run.
+
+---
+
+## Go-Deeper / deeperMath skeleton — rolled out to all 19 foundation tabs — 2026-07-09
+
+Follow-up to the pilot logged above ("Go-Deeper / academic-tier skeleton (task 2b)", 2026-07-08 later
+still), which deliberately shipped the toggle on only ONE family (Deep Learning, with only the `attention`
+module's `deeperMath` populated) and flagged the other 18 tabs as unscoped follow-up. This session did that
+follow-up — **structurally only, no new content authored.**
+
+**New shared component: `src/components/foundations/GoDeeperPanel.jsx`.** Extracted from
+`DeepLearningFoundationTab.jsx`'s original inline block (collapsible "Go Deeper — Academic" trigger,
+`▸ expand` / `▾ collapse`, same card chrome as the rest of the app). Manages its own `open` state
+internally (`useState`); callers pass `key={selected.id}` so switching modules always resets to collapsed,
+same behavior as the original per-tab `deeperOpen` state that reset on `selectedId` change. Renders
+`selected.deeperMath` content when present (array of markdown strings or `{content}` objects — unchanged
+shape/rendering logic, still via `renderMd`) — when absent/empty, renders a lightweight amber "Coming soon"
+placeholder (`rgba(245, 158, 11, 0.08)` background / `rgba(245, 158, 11, 0.5)` border / `#b45309` text —
+the same accent already used by every foundation tab's existing "Before you touch the controls"
+`interactivePrompt` callout, so the placeholder matches an established in-app convention rather than
+inventing a new one) instead of being silently missing or crashing. The panel itself always renders
+regardless of `deeperMath` presence, so the entry point is visually identical across every family.
+
+**DeepLearningFoundationTab.jsx refactored to use it too** (per the task's own instruction — 19/19 via one
+component, not 18 copies + 1 original): removed its local `deeperOpen` state and the `setDeeperOpen(false)`
+line inside the existing module-change reset effect, removed the ~22-line inline collapsible block, replaced
+with a single `<GoDeeperPanel key={selected.id} deeperMath={selected.deeperMath} figures={selected.figures} />`
+in the exact same position (between `InteractivePanel` and the Key Points block). Content/behavior for the
+`attention` module (the one populated module) is unchanged — same 3 `deeperMath` items still render.
+
+**18 remaining `src/tabs/foundations/*FoundationTab.jsx` files wired identically** (BanditsFoundationTab,
+CausalFoundationTab, ClassicalMLFoundationTab, DataFoundationTab, EvalFoundationTab, GraphMLFoundationTab,
+MathStatsFoundationTab, MonitoringFoundationTab, OptimizationFoundationTab, PricingFoundationTab,
+ProbabilisticMLFoundationTab, ProductionFoundationTab, RLFoundationTab, RecSysFoundationTab,
+SelfSupervisedFoundationTab, SystemDesignFoundationTab, TimeSeriesFoundationTab,
+UnsupervisedFoundationTab). Confirmed beforehand that all 18 shared byte-identical anchor lines (`grep -c`
+returned exactly 1 for both the `HighlightPopover` import line and the
+`{selected.interactiveId && <InteractivePanel interactiveId={selected.interactiveId} />}` line in every
+file), so the same two-line diff was applied mechanically via a small Python script rather than 18 separate
+hand-edits: (1) added `import { GoDeeperPanel } from '../../components/foundations/GoDeeperPanel.jsx'`
+directly after the `HighlightPopover` import, (2) inserted
+`<GoDeeperPanel key={selected.id} deeperMath={selected.deeperMath} figures={selected.figures} />` directly
+after the `InteractivePanel` line, before the Key Points block — identical placement to the Deep Learning
+pilot. None of these 18 families have `deeperMath` populated on any module, so every module in them shows
+the "Coming soon" placeholder when expanded; the entry point itself is present and functional everywhere.
+
+**Coverage confirmed, not just claimed:** `grep -l "GoDeeperPanel" src/tabs/foundations/*.jsx | wc -l` →
+**19** (18 newly wired + Deep Learning refactored to use the shared component). Also confirmed
+`grep -rn "deeperOpen" src/tabs/foundations/*.jsx` returns zero matches anywhere — no leftover per-tab local
+state from the old inline pattern survives, including in Deep Learning itself.
+
+**Verify:** all 18 newly-edited tab files esbuild@0.21.5-clean, checked in 3 batches of 6 (not one
+unverified sweep) plus `DeepLearningFoundationTab.jsx` and `GoDeeperPanel.jsx` individually — zero new
+errors introduced (only the pre-existing, unrelated duplicate-`interactiveId`-key warnings already logged
+elsewhere in this file, e.g. `deepLearningModules.js` lines 572/631 and 635/729).
+
+**Explicitly NOT done this pass, by design:** no new `deeperMath` content was authored for any of the 18
+families or for the 13 other Deep Learning modules. Every module outside `attention` will show "Coming
+soon" until content is written — that authoring pass is separate, future work, tracked wherever the lab's
+content backlog lives, not here. This entry covers the skeleton/UI-wiring pass only.
+
+Not pushed — no git commands run, per standard MSL workflow (hand to Sidharth's Mac for build + push).
+
+---
+
+## Currency `$` content escape sweep (renderMd.jsx follow-up) — 2026-07-09
+
+Earlier this session `src/utils/renderMd.jsx`'s math-mode regex was fixed to require backslash-escaped
+`\$` for a literal currency dollar sign, so two unrelated dollar amounts in one paragraph (e.g. "$100 ...
+$70") stop getting swallowed as one giant fake LaTeX span. That was a renderer-only fix — the content
+itself still needed a sweep to add the `\$` escape to every real currency mention across all 21
+`src/data/foundations/*.js` module files (not just `causalModules.js`, the one example mentioned when the
+renderer bug was found).
+
+**Method:** grepped every file for bare `$` characters, then read each hit in context to classify it as
+(a) real LaTeX math (`$θ̂ = (XᵀX)⁻¹Xᵀy$`, `$10^{500000}$`, `$α = 0.1$`, etc. — left untouched), (b) already-
+escaped currency (`\$12k` — already safe, left untouched), (c) `${...}` JS template-literal interpolation
+inside inline SVG figure strings (left untouched — not markdown content at all), (d) a lone `$` inside a
+`figures: { ... }` raw SVG string rendered via `dangerouslySetInnerHTML` without ever passing through
+`texToHtml`/`renderInline` (left untouched — e.g. `pricingModules.js:169`'s axis-label `$`,
+`unsupervisedModules.js:1086/1091/1103/1104`'s "$50 cluster"/"$5 cluster" SVG labels,
+`monitoringModules.js:777`'s "$ risk" SVG label), or (e) genuine unescaped currency prose — escaped to `\$`.
+
+**Files touched (3 of 21 had real currency; the other 18 were either math-only, already escaped, or
+SVG-only and needed no change):**
+- `causalModules.js` — **44 `$` escaped** (every `$` in the file was currency prose: `pot_outcomes` module's
+  summary — $100/$70/$80/$90/$60/$50/$40/$30/$20/$15/$10/$0/$55/−$25 walkthrough of ITE/ATE/randomization
+  math; `randomized_experiments` module's $6.40/$8.00 CACE example and $500K significance-vs-practical-
+  significance example (summary + keyPoints); `uplift_modeling` module's $1M budget line; `sensitivity_analysis`
+  module's $3,000/year earnings line). Confirmed via `grep -oP '(?<!\\)\$' causalModules.js` → 0 bare `$`
+  remain, `grep -o '\\\$'` → 44 escaped.
+- `mathStatsModules.js` — **2 `$` escaped** (one line, `bayes_theorem`-family keyPoint: "P(fraud | transaction
+  > \$10K) ≠ P(transaction > \$10K | fraud)" — the exact two-dollar-same-string pairing pattern the renderer
+  fix targets). All other ~274 `$` in this file are real LaTeX (verified: PCA condition-number formulas,
+  cross-entropy/KL derivations, Bayes formulas) and were left alone.
+- `pricingModules.js` — **11 `$` escaped** across 6 lines: `revenue_vs_margin_objective` module's
+  `interactivePrompt` ($6) and a `checkQuestions` question (c=$6, price $10→$8, 3 instances); 
+  `price_optimization_under_constraints` module's `interactivePrompt` ($14, $11) and matching `checkQuestions`
+  question + 2 of its 4 options (A/C) — this was the clearest real bug instance, two bare `$` in one string
+  ($14 ... $11) that would have opened/closed a fake math span; `per_user_price_randomization`-area paragraph's
+  "$9 and ... $12" SUTVA example. The lone `$` at line 169 (SVG axis label, inside `figures:`) was correctly
+  left un-escaped since it never goes through `texToHtml`.
+
+**Files checked and found to need NO changes** (grep hits were 100% real math, already-escaped currency, or
+`${...}`/SVG-figure noise): `banditsModules.js`, `classicalMLModules.js`, `dataModules.js`,
+`deepLearningModules.js`, `evalModules.js`, `evalRubrics.js`, `graphMLModules.js`, `monitoringModules.js`,
+`optimizationModules.js`, `probabilisticMLModules.js`, `productionModules.js`, `recsysModules.js`,
+`rlModules.js`, `sdScenariosMSL.js`/`-a.js`/`-b.js`, `selfSupervisedModules.js`, `systemDesignModules.js`,
+`timeSeriesModules.js`, `unsupervisedModules.js`.
+
+**Verification per batch (`npx esbuild@0.21.5 <file> --bundle --format=esm --loader:.jsx=jsx
+--external:react --external:react-dom --external:react/jsx-runtime --external:recharts
+--external:lucide-react --outfile=/dev/null`):** all 3 touched files compile clean. `mathStatsModules.js`
+surfaces 2 pre-existing `duplicate-object-key` warnings (`interactiveId` reused across modules) — unrelated
+to this change, not introduced by it.
+
+**Manual render-trace through `renderMd.jsx` (read `texToHtml()`/`renderInline()` fresh, didn't assume):**
+for an escaped pair like `\$100 ... \$70` in `causalModules.js`, `renderInline`'s split regex is
+`(\*\*[^*]+\*\*|`[^`]+`|(?<!\\)\$[^\$\n]+(?<!\\)\$)` — the `(?<!\\)` lookbehind fails at both `\$` positions
+(each is preceded by a backslash), so neither can open or close a math span; the whole sentence stays one
+unsplit plain-text piece. That piece then hits the final branch, `applyGlossary(part.replace(/\\\$/g, '$'),
+...)`, whose `.replace(/\\\$/g, '$')` strips the backslash off each `\$`, leaving literal `$100`/`$70` in the
+rendered output — confirmed correct, not treated as math. Traced the same path for `mathStatsModules.js`'s
+"\$10K ... \$10K" pair and `pricingModules.js`'s "\$14, ... \$11" pair (the `price_optimization_under_constraints`
+`checkQuestions.q` string) — both real, previously-live instances of the exact bug pattern the renderer fix
+was built for (two bare same-string dollar amounts), both now render as plain currency text instead of a
+garbled fake-LaTeX span.
+
+Not pushed — no git commands run, per standard MSL workflow (hand to Sidharth's Mac for build + push).

@@ -5,6 +5,7 @@ import { getTracksForModule } from '../../utils/tracks.js'
 import { renderMd } from '../../utils/renderMd'
 import { CheckQuestion } from '../../components/foundations/CheckQuestion'
 import { HighlightPopover } from '../../components/foundations/HighlightPopover.jsx'
+import { GoDeeperPanel } from '../../components/foundations/GoDeeperPanel.jsx'
 import { DEEP_LEARNING_MODULES } from '../../data/foundations/deepLearningModules.js'
 import { InteractivePanel } from '../../components/interactive/InteractivePanel'
 import { markModuleDone, isModuleDone, getDoneCount, unmarkModuleDone } from '../../utils/foundations/dlFoundationProgress.js'
@@ -89,7 +90,6 @@ export function DeepLearningFoundationTab({ onNavigate, openModuleId, navOrigin 
   const [tick, setTick] = useState(0)
   const [trackPopoverOpen, setTrackPopoverOpen] = useState(false)
   const [recapMode, setRecapMode] = useState(false)
-  const [deeperOpen, setDeeperOpen] = useState(false)
   const trackBtnRef = useRef(null)
   const contentRef = useRef(null)
 
@@ -100,7 +100,7 @@ export function DeepLearningFoundationTab({ onNavigate, openModuleId, navOrigin 
   }, [])
 
   // Close track popover when module selection changes
-  useEffect(() => { setTrackPopoverOpen(false); setRecapMode(false); setDeeperOpen(false) }, [selectedId])
+  useEffect(() => { setTrackPopoverOpen(false); setRecapMode(false) }, [selectedId])
 
   const doneCount = getDoneCount(MODULES)
   const selected = MODULES.find(m => m.id === selectedId)
@@ -294,28 +294,7 @@ export function DeepLearningFoundationTab({ onNavigate, openModuleId, navOrigin 
 
           {selected.interactiveId && <InteractivePanel interactiveId={selected.interactiveId} />}
 
-          {selected.deeperMath && (
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '10px',
-              padding: '1.1rem 1.25rem', marginBottom: '1.25rem' }}>
-              <button onClick={() => setDeeperOpen(o => !o)}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%',
-                  background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-sans)' }}>
-                <span style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  Go Deeper — Academic
-                </span>
-                <span style={{ fontSize: '0.8rem', color: 'var(--ink-low)' }}>{deeperOpen ? '▾ collapse' : '▸ expand'}</span>
-              </button>
-              {deeperOpen && (
-                <div style={{ marginTop: '0.9rem' }}>
-                  {selected.deeperMath.map((block, i) => (
-                    <div key={i} style={{ marginBottom: '0.9rem' }}>
-                      {renderMd(typeof block === 'string' ? block : block.content, { fontSize: '0.88rem', color: 'var(--ink-mid)', lineHeight: 1.65, margin: 0 }, selected.figures || {})}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+          <GoDeeperPanel key={selected.id} deeperMath={selected.deeperMath} figures={selected.figures} />
 
           <div style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '10px',
             padding: '1.1rem 1.25rem', marginBottom: '1.25rem' }}>

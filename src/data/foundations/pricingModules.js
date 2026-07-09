@@ -115,7 +115,7 @@ export const PRICING_MODULES = [
 ---
 
 **So objective choice is a strategy decision, not a math default.** Maximizing revenue/share makes sense in a land-grab (network effects, near-zero marginal cost, winner-take-most). Maximizing contribution makes sense in a harvest phase or a cost-heavy business. And often the true objective is **long-term customer value** — a low intro price that loses margin now but raises retention and lifetime value. This is the pricing analog of RecSys value-model weighting: the *weights on the objective* are a product decision the model then optimizes faithfully. Pick them wrong and every downstream number is precisely optimized toward the wrong destination.`,
-    interactivePrompt: `Before you touch the controls: your unit cost is $6. You find the revenue-maximizing price and ship it. Why is the profit-maximizing price necessarily higher, and what does shipping the revenue-max price do to contribution margin?`,
+    interactivePrompt: `Before you touch the controls: your unit cost is \$6. You find the revenue-maximizing price and ship it. Why is the profit-maximizing price necessarily higher, and what does shipping the revenue-max price do to contribution margin?`,
     keyPoints: [
       `**Revenue and profit peak at different prices.** Revenue P·Q is maximal at |ε| = 1 (MR = 0); profit (P − c)·Q is maximal at MR = MC. They coincide only when marginal cost c = 0. With c > 0 the profit-maximizing price is strictly higher, so revenue-max and profit-max can be opposite moves.`,
       `**Contribution = (P − c) × Q is the identity that catches the trap.** A price cut can raise revenue while margin (P − c) collapses. Selling 40% more units at a thin margin routinely yields *less* total contribution — revenue growth with margin destruction is a common and dangerous outcome.`,
@@ -125,7 +125,7 @@ export const PRICING_MODULES = [
     takeaway: `The most consequential pricing choice is the objective itself: revenue P·Q peaks at |ε| = 1 while profit (P − c)·Q peaks at MR = MC, and they coincide only at zero marginal cost — so with real costs the two optimal prices differ. A price cut that grows revenue can shrink contribution (P − c)×Q, so revenue is a vanity metric whenever c matters. Picking revenue vs margin vs LTV is a strategy decision the model then optimizes faithfully.`,
     checkQuestions: [
       {
-        q: `Unit cost c = $6. Price cut from $10 to $8 raises volume from 1,000 to 1,400 units. Select the two correct statements about this outcome.`,
+        q: `Unit cost c = \$6. Price cut from \$10 to \$8 raises volume from 1,000 to 1,400 units. Select the two correct statements about this outcome.`,
         options: [
           `A) Revenue rose from 10,000 to 11,200 as a direct result of the higher unit volume.`,
           `B) Contribution margin fell from 4,000 to 2,800 despite the revenue increase.`,
@@ -202,7 +202,7 @@ export const PRICING_MODULES = [
 ---
 
 **Mechanically, you handle it with bounded search or Lagrangian methods.** If the constraint is a simple box (P ∈ [P_min, P_max]), clip: the constrained optimum is the unconstrained P* if it's inside the box, else the nearer boundary (profit is concave, so the best feasible price is the closest allowed one to P*). For coupled constraints (a total-inventory or catalog-consistency limit spanning many prices), use a **Lagrangian**: add λ·(constraint) to the objective, and λ is the *shadow price* — how much profit one more unit of slack (one more unit of inventory, one more dollar of allowed ceiling) would buy. The headline lesson: the unconstrained optimum is a starting point, not the answer, and the binding constraints — not the calculus — usually determine the shipped price.`,
-    interactivePrompt: `Before you touch the controls: your unconstrained profit-maximizing price is $14, but a regulatory cap forbids charging above $11. Because profit is concave in price, where does the best *feasible* price land, and why isn't it somewhere in the middle?`,
+    interactivePrompt: `Before you touch the controls: your unconstrained profit-maximizing price is \$14, but a regulatory cap forbids charging above \$11. Because profit is concave in price, where does the best *feasible* price land, and why isn't it somewhere in the middle?`,
     keyPoints: [
       `**The unconstrained problem is argmax over P of (P − c)·Q(P).** With constant elasticity this gives the markup rule P* = c·|ε|/(|ε| − 1). That P* is the textbook answer and is frequently outside the feasible set — too high, too low, or inconsistent with sibling SKUs.`,
       `**Constraints are the real job: floors/ceilings, min-margin, catalog consistency, capacity, legal caps.** A min-margin guarantee (P ≥ c·(1+m)), a per-unit consistency rule across pack sizes, an inventory limit K, and regulatory no-surge caps each shrink the feasible region — and the binding one usually sets the shipped price.`,
@@ -212,11 +212,11 @@ export const PRICING_MODULES = [
     takeaway: `Choosing a price is a constrained optimization, not a one-line argmax: the unconstrained profit-maximizer P* = c·|ε|/(|ε|−1) is a starting point that usually violates floors, ceilings, min-margin, catalog-consistency, capacity, or legal caps. Because profit is concave, box constraints resolve by clipping to the nearer boundary; coupled constraints resolve with a Lagrangian whose multiplier λ is the shadow price of relaxing the constraint. The binding constraint, not the calculus, typically determines the shipped price.`,
     checkQuestions: [
       {
-        q: `Your unconstrained profit-maximizing price is $14, but a regulatory ceiling caps price at $11. Where is the best feasible price?`,
+        q: `Your unconstrained profit-maximizing price is \$14, but a regulatory ceiling caps price at \$11. Where is the best feasible price?`,
         options: [
-          `A) At $11 — profit is concave, so on [P_min, $11] profit keeps rising toward $14, making the nearest allowed price to the optimum best.`,
-          `B) At the midpoint $12.50, since regulatory caps are conventionally split evenly between the unconstrained optimum and the legal ceiling.`,
-          `C) At $14 — a regulatory ceiling only restricts the price for tax-reporting purposes, not the price actually charged to customers.`,
+          `A) At \$11 — profit is concave, so on [P_min, \$11] profit keeps rising toward \$14, making the nearest allowed price to the optimum best.`,
+          `B) At the midpoint \$12.50, since regulatory caps are conventionally split evenly between the unconstrained optimum and the legal ceiling.`,
+          `C) At \$14 — a regulatory ceiling only restricts the price for tax-reporting purposes, not the price actually charged to customers.`,
           `D) At P_min — a binding ceiling on one side of the price range always forces the optimum to jump to the opposite boundary instead.`,
         ],
         answer: `A`,
@@ -366,7 +366,7 @@ export const PRICING_MODULES = [
 
 ---
 
-**Per-user price randomization violates SUTVA and invites legal risk.** A clean A/B test assumes the Stable Unit Treatment Value Assumption: one user's treatment doesn't affect another's outcome. Prices break this because **users talk and compare** — showing person A $9 and person B $12 for the identical item means B can see A's price, feel cheated, and change behavior (churn, screenshot, complain). The treatment leaks across units. On top of the interference, charging different people different prices for the same good is a fairness and often a **legal** problem. So the per-user RCT is frequently off the table before the stats even matter.
+**Per-user price randomization violates SUTVA and invites legal risk.** A clean A/B test assumes the Stable Unit Treatment Value Assumption: one user's treatment doesn't affect another's outcome. Prices break this because **users talk and compare** — showing person A \$9 and person B \$12 for the identical item means B can see A's price, feel cheated, and change behavior (churn, screenshot, complain). The treatment leaks across units. On top of the interference, charging different people different prices for the same good is a fairness and often a **legal** problem. So the per-user RCT is frequently off the table before the stats even matter.
 
 ---
 
