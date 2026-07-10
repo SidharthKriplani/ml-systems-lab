@@ -471,6 +471,63 @@ export const GLOSSARY = {
     sourceModuleTitle: 'Class Imbalance',
     sourceTabId: 'classical_ml_foundation',
   },
+
+  'vc dimension': {
+    term: 'VC Dimension',
+    def: 'The largest number of points a model can label any way you like and still fit perfectly — a classical measure of raw capacity to overfit; a straight line in a plane can do this for some 3 points but not 4.',
+    sourceModuleId: 'generalization',
+    sourceModuleTitle: 'Generalisation Theory',
+    sourceTabId: 'classical_ml_foundation',
+  },
+  'shatter': {
+    term: 'Shatter',
+    def: "A model shatters a set of points if, for every possible labeling of them, it can fit them perfectly — the VC dimension is the size of the largest set it can shatter.",
+    sourceModuleId: 'generalization',
+    sourceModuleTitle: 'Generalisation Theory',
+    sourceTabId: 'classical_ml_foundation',
+  },
+  'learning curve': {
+    term: 'Learning Curve',
+    def: 'Training error and validation error plotted against how much training data you have used — two shapes diagnose bias vs. variance: both high and close together means underfitting, training low with a stubborn gap means overfitting.',
+    sourceModuleId: 'generalization',
+    sourceModuleTitle: 'Generalisation Theory',
+    sourceTabId: 'classical_ml_foundation',
+  },
+  'interpolation threshold': {
+    term: 'Interpolation Threshold',
+    def: 'The exact capacity where a model has just enough parameters to memorise the training set exactly, landing on a jagged, unstable fit — the worst point on the classic bias-variance U, and the point double descent falls again past.',
+    sourceModuleId: 'generalization',
+    sourceModuleTitle: 'Generalisation Theory',
+    sourceTabId: 'classical_ml_foundation',
+  },
+  'double descent': {
+    term: 'Double Descent',
+    def: 'Test error, after rising through the classic bias-variance U, falls again once capacity is pushed far past the interpolation threshold into over-parameterised territory — gradient descent tends to settle on the smoothest fit among the many that work.',
+    sourceModuleId: 'generalization',
+    sourceModuleTitle: 'Generalisation Theory',
+    sourceTabId: 'classical_ml_foundation',
+  },
+  'covariate shift': {
+    term: 'Covariate Shift',
+    def: 'The inputs P(X) drift between training and deployment (new user demographics) while the true relationship between inputs and outputs holds.',
+    sourceModuleId: 'generalization',
+    sourceModuleTitle: 'Generalisation Theory',
+    sourceTabId: 'classical_ml_foundation',
+  },
+  'concept drift': {
+    term: 'Concept Drift',
+    def: 'The relationship P(Y|X) itself changes between training and deployment (fraud tactics evolve) — distinct from covariate shift, where only the inputs move.',
+    sourceModuleId: 'generalization',
+    sourceModuleTitle: 'Generalisation Theory',
+    sourceTabId: 'classical_ml_foundation',
+  },
+  'train-serving skew': {
+    term: 'Train-Serving Skew',
+    def: 'A feature is computed differently in training than it is in serving, so a model that looked great in validation quietly breaks in production for reasons unrelated to bias or variance.',
+    sourceModuleId: 'generalization',
+    sourceModuleTitle: 'Generalisation Theory',
+    sourceTabId: 'classical_ml_foundation',
+  },
 }
 
 // Longest-first so multi-word phrases are tried before any shorter key that

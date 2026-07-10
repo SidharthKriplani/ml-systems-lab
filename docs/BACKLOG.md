@@ -2030,3 +2030,64 @@ completed the full writer → Pass-2 adversarial audit → fix-loop → glossary
 pipeline. Classical ML foundations (`linear_regression` through `class_imbalance`, all modules up to and
 including `gradient_boosting`'s neighbors covered by batches 1-2) are now S-tier-complete by this pipeline's
 bar. Not pushed — no git commands run, per standard MSL workflow (hand to Sidharth's Mac for build + push).
+
+## MSL Batch 9 (`generalization`) — writer → Pass-2 adversarial audit → fix-loop → glossary/interview-question harvest, closing out Classical ML foundations — 2026-07-10
+
+`generalization` was the one Classical ML module never actually touched by the two prior batches, despite
+batch 2's closing sentence implying Classical ML foundations were fully S-tier-complete — confirmed genuinely
+untouched by reading it directly rather than trusting that self-report (a lesson from this same session:
+verify the log, don't trust the log's own summary sentence).
+
+Taken through 3 rounds of the writer→blind-adversarial-audit→fix loop (3B1B-STANDARD.md's Enforcement
+process, cap of 3 rounds):
+
+**Round 1 findings (all fixed):** (1) no persistent worked numeric example anchoring the bias/variance
+discussion — fixed by threading one running pair of houses ($300k training house, $250k held-out house)
+through the bias/variance/tug-of-war/learning-curve sections with real, checkable arithmetic (6,000/300,000=2%,
+50,000/250,000=20%; a second rigid-model pass at 45,000/300,000=15%, 45,000/250,000=18%). (2) no genuine
+in-narrative pause-and-predict gate — added one directly tied to the worked example ("given a 2% training
+error and a 20% test error, would you expect bias or variance?"). (3) a genuine factual error, independently
+verified: the VC-dimension shattering claim stated "any 3 points" (should be "some 3 points, in general
+position") at two occurrences — a hypothesis class has VC dimension d if there EXISTS a set of d points it
+shatters, not that it shatters every set of that size; 3 collinear points are the standard counterexample
+(a line's decision boundary is convex, so the middle point's label is forced by the outer two). Both
+occurrences fixed and the collinear counterexample added inline.
+
+**Round 2 findings (all fixed):** (1) "learning curve" was a load-bearing diagnostic taught only in
+keyPoints/recap, never in summary — added the full diagnostic (two curve-shapes, what each means) directly
+into summary, tied back to the worked example's own numbers. (2) the darts metaphor was introduced then
+abandoned for the houses example with no bridge — added an explicit connective sentence ("the same
+scattered-vs-off-center pattern from the dartboard, now pinned to a number"). (3) an unshown quantitative
+claim ("double the features, double the data needed") — softened to a qualitative directional statement it
+can actually support without a fabricated ratio. (4) checkQuestions Q2 tested why 1,000 parameters is the
+worst point on the double-descent curve without summary ever naming the interpolation/memorization threshold
+as that location — added the explicit naming to the double-descent paragraph.
+
+**Round 3: PASS.** Full re-audit confirmed the VC-dimension claim correct at both occurrences, the worked
+example solid and independently re-verified (all four divisions check out), the pause-and-predict genuine,
+and no remaining rubric-smell or voice-rule violations. No further fixes needed.
+
+**Verification:** on-device esbuild hit a binary-format mismatch on this repo specifically (Mach-O binary
+invoked from the Linux device-bridge VM — "Exec format error" / "word unexpected" depending on invocation);
+`node --check` used as the syntax-validity fallback throughout, consistent with this project's own documented
+constraint that builds only run on macOS. All edits confirmed syntactically valid this way at every round.
+
+**Glossary + interview-question harvest (from the finalized/audited text only):** 8 new glossary terms —
+`VC dimension`, `shatter`, `learning curve`, `interpolation threshold`, `double descent`, `covariate shift`,
+`concept drift`, `train-serving skew` — all net-new, none collide with the existing 57 keys. Deliberately
+excluded as over-generic: "overfitting"/"underfitting" (reused 50+ times elsewhere in this app with the same
+meaning, same reasoning as prior batches' exclusions of "consistency"/"compliance"); "bias"/"variance" as bare
+terms (too generic/ambiguous outside this module's specific framing); "PAC learning" (the module explains it
+but the compound term barely appears verbatim in a clean matchable form). 2 new `questionBank.js` entries
+(ids 155-156, domain "Classical ML"): one on the VC-dimension shattering precision trap (existence-of-some-set
+vs. every-set, with the collinear-points counterexample demanded), one on the double-descent mechanism at the
+interpolation threshold (why 1,000 params is worse than both 100 and 1,000,000) — both grounded strictly in
+the finalized module prose, neither testing anything not taught.
+
+**This closes MSL Batch 9.** Classical ML foundations (`linear_regression` through `generalization`, all 14
+S-tier modules) have now genuinely completed the full writer → Pass-2 adversarial audit → fix-loop →
+glossary/interview-question harvest pipeline — this time verified module-by-module rather than asserted.
+Not pushed — no git commands run, per standard MSL workflow (hand to Sidharth's Mac for build + push).
+
+**Next up (per the aligned parallel-execution plan with GSL):** Batch 10 — `ensembles`, `svm`, `knn` — followed
+by Batch 11 (`naive_bayes`, `calibration`, `feature_selection`) to complete Wave 18/19 from HANDOFF-2026-07-09.md.

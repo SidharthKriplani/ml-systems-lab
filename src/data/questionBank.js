@@ -4153,5 +4153,37 @@ export const EXAM_ONLY_MCQ = [
     "whatsTested": "Whether you know McNemar test compares classifiers on the same test set by testing disagreement patterns, not just accuracy.",
     "antiPattern": "Comparing accuracy directly ignores correlation — both models see the same examples so errors are not independent.",
     "staffFraming": "McNemar: test disagreements (A right/B wrong vs A wrong/B right). Accounts for paired structure. Accuracy comparison assumes independence."
+  },
+  {
+    "id": 155,
+    "domain": "Classical ML",
+    "q": "A candidate says: \"A linear classifier in 2D has VC dimension 3, because it can shatter any 3 points.\" Is this claim correctly stated, and why does the distinction matter?",
+    "options": [
+      "Correctly stated — VC dimension 3 means a line can label any 3 points in the plane however you like, full stop.",
+      "Incorrect — VC dimension only requires SOME set of 3 points be shatterable, not every set; 3 collinear points are a counterexample, since the middle point's label is forced by the outer two.",
+      "Incorrect — VC dimension for a 2D line is actually 2, not 3, because a line has only 2 free parameters (slope and intercept).",
+      "Correctly stated, but only because 'any 3 points' and 'some 3 points' are equivalent once the points are in general position, which is always assumed."
+    ],
+    "correct": 1,
+    "explanation": "VC dimension is defined by existence, not universality: a class has VC dimension d if there EXISTS a set of d points it can shatter, not that it shatters every set of d points. A line shatters some 3-point sets (three points in general position — not collinear) but fails on 3 collinear points: label the two outer points the same class and the middle point opposite, and no line can separate that pattern, because a line's decision boundary is convex on each side. The line's VC dimension is still 3, because the existence of one shatterable 3-point set is all the definition requires — but the common misstatement 'shatters any 3 points' is false and a frequent interview trap.",
+    "whatsTested": "Whether you know VC dimension is an existence claim (some set of size d) rather than a universal claim (every set of size d), and can produce the collinear-points counterexample on demand.",
+    "antiPattern": "Saying a line 'can label any 3 points any way' — collinear points are an immediate counterexample; VC dimension only needs one shatterable configuration to exist.",
+    "staffFraming": "When quoting a VC dimension, always be ready to state 'this is the existence of one shatterable set, not every set of that size' — interviewers probe exactly this gap."
+  },
+  {
+    "id": 156,
+    "domain": "Classical ML",
+    "q": "A model's test error is worse at 1,000 parameters than at 100, but better at 1,000,000 than at 100 — the classic bias-variance U followed by a second decline. What is actually happening at the 1,000-parameter point, and why does 1,000,000 recover?",
+    "options": [
+      "1,000 parameters is a random unlucky training run; re-running with a different seed would remove the dip without changing anything structural.",
+      "1,000 parameters sits near the interpolation threshold — just enough capacity to memorise the training set into a jagged, unstable fit. Pushed far past it to 1,000,000, gradient descent has many zero-training-error solutions available and tends to settle on the smoothest one, which generalises better.",
+      "1,000,000 parameters simply overfits less because more parameters always regularise a model automatically, regardless of where the interpolation threshold sits.",
+      "The 1,000-parameter model is underfitting (too little capacity), and 1,000,000 fixes it the same way any capacity increase would fix underfitting — this is the ordinary bias-variance tradeoff, not double descent."
+    ],
+    "correct": 1,
+    "explanation": "The interpolation threshold is the exact capacity where a model has just enough parameters to fit the training data exactly (zero training error) — at that point there's usually only one way to do it, and it's typically a jagged, high-variance fit that chases every quirk of the data, which is why test error peaks there. Pushed far past that threshold, the model has many different parameter settings that all achieve zero training error, and gradient descent's implicit bias tends to pick the smoothest of them — which happens to generalise well. This is double descent, and it's a distinct phenomenon from ordinary underfitting/overfitting, not an instance of it.",
+    "whatsTested": "Whether you can explain double descent mechanistically (interpolation threshold → many zero-error solutions → implicit bias toward smoothness) rather than just naming the phenomenon.",
+    "antiPattern": "Treating the dip at moderate capacity as noise, or treating double descent as ordinary underfitting fixed by more capacity — the mechanism is specifically about what happens right at and past the interpolation threshold.",
+    "staffFraming": "Double descent isn't 'bigger is always better' — it depends on the optimiser's implicit regularisation, noise level, and architecture; in many practical, noisy settings you never see the second descent at all."
   }
 ];
