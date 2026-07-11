@@ -14,7 +14,7 @@ const MODELS = {
     counts: [18,   22,   30,   40,   55,   60,   45,   35,   28,   20],
   },
   underconfident: {
-    label: 'Underconfident',
+    label: 'Sigmoid-shaped (e.g. random forest)',
     pred:   [0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.95],
     actual: [0.12, 0.20, 0.32, 0.40, 0.48, 0.52, 0.60, 0.68, 0.78, 0.88],
     counts: [25,   38,   52,   60,   68,   65,   58,   48,   35,   22],
