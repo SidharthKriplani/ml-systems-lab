@@ -2149,3 +2149,9 @@ Companion entry to GSL_PLAN.md's Phase 2 log, same session. These 3 modules had 
 
 `npm run check:content-status` after this batch: 8 'clean' entries across 115 tracked modules, 0 failures. (Total clean count reflects both this batch's 3 new entries and whatever the concurrent QnA-pilot commit's own contentStatus.js changes left in place — not independently re-derived from Phase 1's prior 11 count, since that file was modified by the concurrent commit; the current state passes validation, which is what matters.)
 
+
+---
+
+## 2026-07-11 15:21 IST (Saturday) — QnA UI shipped across all 19 foundation family tabs + logreg grid live + sync gap fixed
+
+Interview QnA is now the third view tab (Full module / Quick recap / Interview QnA) in ALL 19 foundation family tabs — completion-gated per family's own isModuleDone, SVG padlock, hover+tap lock explanation, one-shot pulse on unlock, deep-link auto-open (`qna-<id>` in URL hash). New shared components: src/components/foundations/QnAPanel.jsx (stub / parked / answered states, beats, L0-L3 chips, collapsed-by-default, per-level expand-all, TRAP blocks, follow-up jumps, Beyond section) and FoundationViewTabs.jsx (the 3-tab row, one implementation for all 19 tabs). The 19 tab files were transformed with an identical scripted 7-site diff (assertions enforced exactly-once per pattern per file); all 21 JSX files esbuild-verified. New src/data/qnaBank.js carries logistic_regression's 31 audited questions, converted programmatically from docs/QNA-PILOT-logistic-regression.md (byte-identical cmp on 3 spot samples, 18/18 followUp refs resolve, node --check exit 0). ALSO FIXED, found during this build: foundation completion keys (msl-*-foundation-v1) were NOT in syncProgress.js's collected keys — completion (and therefore the QnA gate) was device-local even for signed-in users; the collector now includes the msl-*-foundation-v* pattern, so completion follows the account.

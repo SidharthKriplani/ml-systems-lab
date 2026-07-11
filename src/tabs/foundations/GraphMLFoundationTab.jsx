@@ -5,6 +5,8 @@ import { getTracksForModule } from '../../utils/tracks.js'
 import { renderMd } from '../../utils/renderMd'
 import { CheckQuestion } from '../../components/foundations/CheckQuestion'
 import { HighlightPopover } from '../../components/foundations/HighlightPopover.jsx'
+import { QnAPanel } from '../../components/foundations/QnAPanel.jsx'
+import { FoundationViewTabs } from '../../components/foundations/FoundationViewTabs.jsx'
 import { GoDeeperPanel } from '../../components/foundations/GoDeeperPanel.jsx'
 import { GRAPH_ML_MODULES } from '../../data/foundations/graphMLModules.js'
 import { InteractivePanel } from '../../components/interactive/InteractivePanel'
@@ -42,6 +44,7 @@ export function GraphMLFoundationTab({ onNavigate, openModuleId, navOrigin }) {
   const [tick, setTick] = useState(0)
   const [trackPopoverOpen, setTrackPopoverOpen] = useState(false)
   const [recapMode, setRecapMode] = useState(false)
+  const [qnaMode, setQnaMode] = useState(false)
   const trackBtnRef = useRef(null)
   const contentRef = useRef(null)
 
@@ -52,7 +55,7 @@ export function GraphMLFoundationTab({ onNavigate, openModuleId, navOrigin }) {
   }, [])
 
   // Close track popover when module selection changes
-  useEffect(() => { setTrackPopoverOpen(false); setRecapMode(false) }, [selectedId])
+  useEffect(() => { setTrackPopoverOpen(false); setRecapMode(false); setQnaMode(false) }, [selectedId])
 
   const doneCount = getDoneCount(MODULES)
   const selected = MODULES.find(m => m.id === selectedId)
@@ -161,30 +164,9 @@ export function GraphMLFoundationTab({ onNavigate, openModuleId, navOrigin }) {
             <p style={{ fontSize: '0.925rem', color: 'var(--ink-mid)', margin: 0, lineHeight: 1.5 }}>{selected.subtitle}</p>
           </div>
 
-          {selected.recap && (
-            <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1.25rem' }}>
-              <button
-                onClick={() => setRecapMode(false)}
-                style={{ fontSize: '0.78rem', fontWeight: 700, fontFamily: 'var(--font-sans)', cursor: 'pointer',
-                  padding: '0.4rem 0.9rem', borderRadius: '7px',
-                  background: !recapMode ? 'var(--prime)' : 'var(--surface)',
-                  color: !recapMode ? '#000' : 'var(--ink-mid)',
-                  border: `1px solid ${!recapMode ? 'var(--prime)' : 'var(--rim)'}` }}>
-                Full module
-              </button>
-              <button
-                onClick={() => setRecapMode(true)}
-                style={{ fontSize: '0.78rem', fontWeight: 700, fontFamily: 'var(--font-sans)', cursor: 'pointer',
-                  padding: '0.4rem 0.9rem', borderRadius: '7px',
-                  background: recapMode ? 'var(--prime)' : 'var(--surface)',
-                  color: recapMode ? '#000' : 'var(--ink-mid)',
-                  border: `1px solid ${recapMode ? 'var(--prime)' : 'var(--rim)'}` }}>
-                ⚡ Quick recap
-              </button>
-            </div>
-          )}
+          <FoundationViewTabs hasRecap={!!selected.recap} recapMode={recapMode} setRecapMode={setRecapMode} qnaMode={qnaMode} setQnaMode={setQnaMode} unlocked={isModuleDone(selected.id)} />
 
-          {recapMode && selected.recap && (
+          {!qnaMode && recapMode && selected.recap && (
             <div style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '10px',
               padding: '1.25rem 1.4rem', marginBottom: '1.5rem' }}>
               <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--prime)', textTransform: 'uppercase',
@@ -198,7 +180,7 @@ export function GraphMLFoundationTab({ onNavigate, openModuleId, navOrigin }) {
             </div>
           )}
 
-          {!recapMode && (<>
+          {!qnaMode && !recapMode && (<>
           <div style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '10px', padding: '1.1rem 1.25rem', marginBottom: '1.25rem' }}>
             <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.6rem' }}>Concept</div>
             {renderMd(selected.summary, { fontSize: '0.9rem', color: 'var(--ink-mid)', lineHeight: 1.7, margin: 0 }, selected.figures || {})}
@@ -249,7 +231,10 @@ export function GraphMLFoundationTab({ onNavigate, openModuleId, navOrigin }) {
           )}
           </>)}
 
-          <MarkDoneButton moduleId={selected.id} onDone={() => setTick(t => t + 1)} />
+          {qnaMode && <QnAPanel moduleId={selected.id} unlocked={isModuleDone(selected.id)} />}
+          {!qnaMode && (
+            <MarkDoneButton moduleId={selected.id} onDone={() => setTick(t => t + 1)} />
+          )}
         </div>
       )}
     </div>

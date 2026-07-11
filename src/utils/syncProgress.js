@@ -42,6 +42,11 @@ function collectAllKeys() {
       if ((k.startsWith('msl_score:') || k.startsWith('msl_activity_')) && !keys.includes(k)) {
         keys.push(k)
       }
+      // Foundation family completion keys (e.g. msl-classical-ml-foundation-v1) — these
+      // gate the Interview QnA tab, so they must follow the signed-in user, not the device.
+      if (k.startsWith('msl-') && k.includes('-foundation-v') && !keys.includes(k)) {
+        keys.push(k)
+      }
     }
   } catch {}
   return keys
