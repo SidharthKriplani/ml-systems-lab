@@ -2119,3 +2119,17 @@ All 3 modules in `src/data/foundations/classicalMLModules.js` were flagged mid-s
 `node --check` clean on the full file after every fix round. `contentStatus.js` updated with full receipts for all 3 modules; `npm run check:content-status` passes. Note: editing this shared file changed its whole-file hash, which correctly flagged `generalization`'s recorded hash as stale on the next validator run (documented false-positive limitation) — `generalization`'s own content was independently spot-checked as untouched before refreshing its hash, not silently overwritten.
 
 Classical ML batch (ensembles, svm, knn — 3 of 6 planned) now closed against 3B1B-STANDARD.md. Remaining in this batch: naive_bayes, calibration, feature_selection.
+
+
+---
+
+## 2026-07-11 13:58 IST (Saturday) — Phase 1 ledger reconciliation (MSL side)
+
+Companion entry to GSL_PLAN.md's Phase 1 reconciliation log — same session, same Workflow run. The 7 Classical ML modules `contentStatus.js`'s own header had deliberately withheld from `clean` (linear_regression, logistic_regression, regularization, trees, random_forest, gradient_boosting, class_imbalance — described as done in this doc's prose but never independently backfilled) were investigated by one dedicated agent, instructed NOT to trust BACKLOG.md's prose directly but to independently read the live module and hand-recompute at least one numeric claim per module.
+
+**Result: all 7 came back `clean`, each with real independent verification** — not a rubber-stamp of this doc's own claims. Examples: `linear_regression`'s five-house OLS example was fully hand-recomputed from raw numbers (slope=7.6, intercept=128, R²=0.989, adjusted R²=0.985, SE/t/95% CI all independently re-derived and matched); `logistic_regression`'s claimed Pass-2 fix (a "20×" ratio corrected to "14×") was independently re-derived (0.953/0.069≈13.8) and confirmed present in the live text, not just asserted in this doc.
+
+Written back to `src/data/contentStatus.js` with fresh 2026-07-11 13:58 IST `verifiedBy` receipts and computed `verifiedFileHash` values. `npm run check:content-status` after write-back: **11 'clean' entries across 115 total tracked modules (8 S-tier, 3 A-tier), all with real receipts, 0 failures** (the other 4 clean entries — generalization, ensembles, svm, knn — predate this reconciliation pass).
+
+**Headcount, run alongside this phase:** real enumerated total is **206 Foundations module entries in MSL (200 unique moduleIds — 6 shared across 2 families) across 19 family files**, tier S=38/A=77/B=85 unique. Combined with GSL's 131, real total across both labs is **331 unique modules**, not the ~450-500 estimated from memory — see GSL_PLAN.md's matching entry for the full breakdown. Tier B (85 modules) is the acknowledged scope of the next phase (Phase B), to start once Phase A's remaining `in_progress`/`unclassified` work is closed out.
+
