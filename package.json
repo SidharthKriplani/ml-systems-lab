@@ -9,7 +9,8 @@
     "prerender": "node scripts/prerender-modules.cjs && node scripts/build-prerendered-posts.mjs && node scripts/build-sitemap.mjs && node scripts/generate-rss.cjs",
     "generate-rss": "node scripts/generate-rss.cjs",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "check:content-status": "node scripts/validate-content-status.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.107.0",
