@@ -2033,6 +2033,8 @@ bar. Not pushed — no git commands run, per standard MSL workflow (hand to Sidh
 
 ## MSL Batch 9 (`generalization`) — writer → Pass-2 adversarial audit → fix-loop → glossary/interview-question harvest, closing out Classical ML foundations — 2026-07-10
 
+**2026-07-10 (session start ~evening PT) → 2026-07-11 05:03 IST (logged retroactively — see CLAUDE.md's Recordkeeping section for the new standing rule this entry itself prompted).**
+
 `generalization` was the one Classical ML module never actually touched by the two prior batches, despite
 batch 2's closing sentence implying Classical ML foundations were fully S-tier-complete — confirmed genuinely
 untouched by reading it directly rather than trusting that self-report (a lesson from this same session:
@@ -2084,10 +2086,36 @@ vs. every-set, with the collinear-points counterexample demanded), one on the do
 interpolation threshold (why 1,000 params is worse than both 100 and 1,000,000) — both grounded strictly in
 the finalized module prose, neither testing anything not taught.
 
-**This closes MSL Batch 9.** Classical ML foundations (`linear_regression` through `generalization`, all 14
-S-tier modules) have now genuinely completed the full writer → Pass-2 adversarial audit → fix-loop →
-glossary/interview-question harvest pipeline — this time verified module-by-module rather than asserted.
-Not pushed — no git commands run, per standard MSL workflow (hand to Sidharth's Mac for build + push).
+**This closes MSL Batch 9.** CORRECTION (caught immediately after writing the paragraph below, before
+any git command was given — leaving both versions here deliberately, as a record of the exact over-claim
+pattern this file has warned about twice already this session): the original version of this paragraph said
+"all 14 S-tier modules" — wrong on the count itself. Checked directly against src/data/moduleTiers.js:
+Classical ML has 8 S-tier modules (`linear_regression`, `logistic_regression`, `regularization`,
+`generalization`, `trees`, `random_forest`, `gradient_boosting`, `class_imbalance`) and 6 A-tier modules
+(`ensembles`, `svm`, `knn`, `naive_bayes`, `calibration`, `feature_selection`) — 14 total, but only the first
+8 are S-tier. Accurate statement: **all 8 S-tier Classical ML modules** have now genuinely completed the full
+writer → Pass-2 adversarial audit → fix-loop → glossary/interview-question harvest pipeline (batches 1-2 covered
+6 of them; `gradient_boosting` was already reference-quality pre-existing; `generalization` — the one gap batch
+1-2's own closing sentence wrongly implied was covered — closed just now in batch 9). The 6 A-tier Classical ML
+modules (`ensembles`/`svm`/`knn`/`naive_bayes`/`calibration`/`feature_selection`) are **not yet touched** —
+that is exactly what batches 10-11 below are for. Not pushed — no git commands run, per standard MSL workflow
+(hand to Sidharth's Mac for build + push).
 
 **Next up (per the aligned parallel-execution plan with GSL):** Batch 10 — `ensembles`, `svm`, `knn` — followed
 by Batch 11 (`naive_bayes`, `calibration`, `feature_selection`) to complete Wave 18/19 from HANDOFF-2026-07-09.md.
+
+## 2026-07-11 (IST) — Classical ML batch (ensembles, svm, knn) closed via full rewrite
+
+All 3 modules in `src/data/foundations/classicalMLModules.js` were flagged mid-session as "older/pre-3B1B style" and confirmed by independent blind Pass-1 audits to structurally FAIL 3B1B-STANDARD.md — not patchable, needed full rewrites (same class of finding as GSL's Retrieval A/B batch earlier this session).
+
+**ensembles**: original had jargon-first ordering throughout, no worked numeric example despite being the module's stated deliverable (76/78/84/86% asserted, never derived), the meta-learner's "trust" metaphor never cashed out to a formula, undefined OOB, and a generic-anecdote opening with no cross-module continuity. Rewritten around one running example (6 loan applicants A–F, 3 base models, hard vote → soft vote → a real trained stacking meta-learner with weights 1.3/0.4/1.6/bias −1.45 applied via sigmoid, every number independently recomputed by 2 separate audit passes). Round 1 post-rewrite audit found the `figures.stacking_ensemble` SVG mislabeled 2 of its 3 base models ("linear model"/"boosting" instead of "logistic regression"/"random forest") — fixed, plus a harmless duplicate `interactiveId` key dropped. Round 2 found "stacking"/"meta-learner" named after only 1 concrete instance where the rule requires 2 — fixed by pulling a second instance forward before the naming sentence.
+
+**svm**: original had a flat, scene-less `summary` field, VC dimension and Mercer's theorem both bare name-dropped, zero worked numeric example, all 3 `checkQuestions` testing material never taught in the narrative, and a text–scene lock break against the `svm_margin` figure (`w` never defined in prose). Rewritten around one running example (applicants A/B/D plus a soft-margin violator G) with the VC-dimension → structural-risk-minimization causal chain stated once, in order, and a real RBF kernel computation. Round 1 post-rewrite audit caught a genuine factual error: the worked `w=(1,1)` was asserted as the max-margin solution but was **not actually optimal** for the original A=(1,0)/D=(-1,0) coordinates — fixed by repositioning to A=(0.5,0.5)/D=(-0.5,-0.5), then independently re-verified via full KKT conditions (necessary *and* sufficient for a convex QP) by the round-2 audit agent — confirmed globally optimal, not just plausible-looking. Also fixed in round 1: keyPoints' support-vector-count diagnostic had the gamma direction backwards. Round 2 found a leftover numbering inconsistency ("four applicants"/"a fifth" when only 3 were ever named, debris from before the coordinate fix) — corrected to "three applicants"/"a fourth."
+
+**knn**: original had zero metaphor register, 4 disconnected worked examples instead of one running example, the dimensionality-curse claim asserted rather than shown, a genuine numeric contradiction between the stated O(d log n) formula and an asserted op count, and 2 `checkQuestions` testing untaught material. Rewritten around ONE running example (a music-streaming "similar songs" feature — tempo/amplitude toy geometry → 256-dim production embedding, n=10M) with `checkQuestions` also rewritten to match. Round 1 post-rewrite audit found 2 must-fix items: "a thousand-fold improvement" for the ANN speedup was a real arithmetic error (actual ratio ≈430,000×, off by more than two orders of magnitude) — fixed with the division shown; the 0.48/0.94 curse-of-dimensionality ratios were asserted despite the text explicitly promising "arithmetic, not a hand-wave" — fixed by adding the actual formula. Round 2 confirm audit independently re-verified both fixes by hand plus every other number in the module (183× tempo/amplitude ratio, z-scores, ANN op-count reconciliation, rerank cost, all 5 checkQuestions) and returned a clean **PASS** — no further rounds needed.
+
+**Pattern worth naming:** the svm and ensembles must-fix findings this round were both genuine correctness bugs invisible without independent hand-recomputation (svm's w=(1,1) not actually being optimal; the un-derivable 0.48/0.94 ratios in knn) — reinforcing that the mandatory adversarial pass has to actually redo the arithmetic, not just read the prose for plausibility.
+
+`node --check` clean on the full file after every fix round. `contentStatus.js` updated with full receipts for all 3 modules; `npm run check:content-status` passes. Note: editing this shared file changed its whole-file hash, which correctly flagged `generalization`'s recorded hash as stale on the next validator run (documented false-positive limitation) — `generalization`'s own content was independently spot-checked as untouched before refreshing its hash, not silently overwritten.
+
+Classical ML batch (ensembles, svm, knn — 3 of 6 planned) now closed against 3B1B-STANDARD.md. Remaining in this batch: naive_bayes, calibration, feature_selection.

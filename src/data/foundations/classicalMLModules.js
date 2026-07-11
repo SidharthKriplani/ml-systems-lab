@@ -1655,87 +1655,107 @@ A random forest is a fantastic *baseline*, but on tabular-accuracy leaderboards 
     difficulty: 'intermediate',
     estimatedMin: 28,
     tags: ['ensembles', 'stacking', 'bagging', 'boosting'],
-    summary: `In 2006 Netflix offered a one-million-dollar prize to anyone who could beat their movie-recommendation system by 10%. Teams around the world chased it for three years. And the winning entry, when it finally crossed the line, was not one brilliant model — it was a **blend** of dozens of different models mashed together. That was the lesson the whole field took away: a crowd of different models, combined, beats any single model, even the best one. That is **ensembling**.
+    summary: `Gradient boosting closed on a specific promise: trees trained in a single line, each one's whole job the residual the team has left over, reaches regression, classification, and ranking with one recipe — and XGBoost sharpens that recipe with a regularised, curvature-aware objective. But look at what the recipe actually requires. Every tree in that line has to be built *for* the line — trained after seeing exactly what the previous tree got wrong, in that exact order. That leaves a real gap. What do you do with models that were never built that way at all? A decision tree someone already trained. A logistic regression someone already tuned. A random forest from a different pipeline. None of them were steps in anyone's sequence — each was trained independently, on its own, to solve the same problem separately. Is there any principled way to combine models like that, after the fact, that beats simply picking whichever one scored highest on the validation set?
 
-Here it is in miniature. A bank wants to predict loan default. A decision tree scores 76%. Logistic regression: 78%. A random forest: 84%. Good, not great. Then they take all three and simply let them vote on each applicant. The combination scores 86% — higher than the best single model in the mix. How do three so-so models add up to something better than the best of them?
+Here is a case small enough to check by hand. A bank has three already-trained models scoring loan applicants for default risk — a decision tree, a logistic regression, and a random forest, each built independently, exactly the situation above. Take five applicants, A through E, whose true outcomes are already known: A, C, and E went on to default; B and D did not. Each model outputs its own probability that the applicant defaults. Decision tree: A 0.90, B 0.20, C 0.30, D 0.10, E 0.80. Logistic regression: A 0.60, B 0.40, C 0.80, D 0.30, E 0.40. Random forest: A 0.70, B 0.60, C 0.60, D 0.20, E 0.90. Call anything over 0.5 a "predicts default" — the tree calls A and E as default and gets C wrong (it says 0.30, no-default, but C really defaulted); logistic regression calls A and C as default and gets E wrong; the forest calls A, B, C, and E as default and gets B wrong. Each model: four right, one wrong — 80% apiece. And check this yourself before reading on: each one's single miss lands on a *different* applicant. The tree misses C. Logistic regression misses E. The forest misses B. No two models are wrong about the same person.
 
----
+Pause here and predict: if you let the three models vote — one vote each, majority rules — does the crowd do better than 80%, about the same, or worse?
 
-**Why combining works — and its one condition.**
+Tally it applicant by applicant. A: default, default, default — 3 to 0, crowd says default. Correct. B: no-default, no-default, default — 2 to 1, crowd says no-default. Correct — the forest's one miss gets outvoted. C: no-default, default, default — 2 to 1, crowd says default. Correct — the tree's miss gets outvoted. D: no-default, no-default, no-default — 3 to 0. Correct. E: default, no-default, default — 2 to 1, crowd says default. Correct — logistic regression's miss gets outvoted. Five applicants, five correct calls. The crowd hits 100% — fifteen points above any single model's 80% — and nobody in it is individually smarter than the others; all three are tied. This is the same wisdom-of-crowds mechanism random forest already used on its own trees (recall Galton's ox), except the crowd here isn't restricted to one algorithm — it's three genuinely different ones, each contributing a different kind of mistake.
 
-The trick is that the models are wrong in *different places*. The tree blunders on some applicants; logistic regression happens to get those right; the forest covers a third set. When they vote, each model's mistakes are outvoted by the other two, while their correct answers pile up and agree. The errors cancel; the truth reinforces.
-
-But here is the whole secret: this only works if the models make *different* mistakes. If all three fail on exactly the same applicants, voting changes nothing — you have just repeated one opinion three times. So the single thing that makes an ensemble strong is **diversity**: models whose errors are unrelated. Two mediocre models that fail in different places beat two excellent models that fail in the same places. Diversity, not raw accuracy, is the lever.
+The same trick, at a very different scale, is the real story behind a famous prize. In 2006 Netflix offered a million dollars to whoever could beat its recommendation engine's accuracy by 10%. Teams spent three years chasing it, and the winning entry — like the five-applicant vote above — was not one clever model. It was a blend of over 100 separately trained predictors, combined into a single score. Combine enough independently wrong models and, so long as they're wrong in different places, the crowd beats the best individual member. That combining move — any technique that merges multiple models' predictions into one, on the bet that their independent mistakes cancel while their agreements hold — is **ensembling**.
 
 ---
 
-**Three ways to build a diverse crowd.**
+**Why it only sometimes works.**
 
-There are three classic recipes, and you have already met two of them.
+Look back at applicant C. The vote only rescued the tree's mistake there because the *other two* models happened to get C right. Pause and predict: suppose instead logistic regression's C-prediction had been 0.35 rather than 0.80, and the forest's had been 0.40 rather than 0.60 — a version of C where a sudden income windfall throws off every model that leans on income as a signal, not just the tree. Does the crowd still call it correctly?
 
-**Bagging** builds diversity through data: train each model on a different random resample of the rows, then average. That is exactly what a random forest does, and it mainly cuts *variance* (the twitchiness).
+Run it: tree 0.30, logistic regression 0.35, forest 0.40 — all three under 0.5, all three say no-default. The vote is 0 to 3. Wrong, exactly as wrong as any one model alone would be, because nothing disagreed. The real five-applicant crowd worked only because each model's one mistake fell on a *different* applicant — C, E, and B never overlapped. That non-overlap is the entire mechanism, and it has a name: **diversity**. Errors that are diversified — spread across different applicants, uncorrelated between models — get outvoted. Errors that are correlated — several models wrong on the same applicant, for the same underlying reason — get amplified into unanimous agreement, and voting buys you nothing. Two mediocre models that fail in different places beat two excellent models that fail in the same place. Diversity, not raw accuracy, is the lever an ensemble actually pulls.
 
-**Boosting** builds diversity through sequence: train models one after another, each focused on the mistakes the team has made so far. That is gradient boosting, and it mainly cuts *bias* (the systematic miss).
+---
 
-**Stacking** is the most general and the most powerful. Train several genuinely different models — a tree, a linear model, maybe a neural net — then train one more small model, a **meta-learner**, whose only job is to learn *how much to trust each model in which situation*. It might learn "trust the boosting model for high-income applicants, but lean on logistic regression for people with thin credit files." It learns to combine, rather than just averaging.
+**Manufacturing disagreement on purpose.**
+
+So diversity is the goal. How do you engineer disagreement, instead of hoping three independently built models happen to fail on different applicants? Two of the recipes you already know, though you haven't seen them named as instances of the same underlying goal.
+
+Recall random forest: every tree trains on a different bootstrap resample of the rows, so each tree sees a slightly different slice of the applicants and ends up with slightly different blind spots — diversity manufactured from *data*. That recipe is called **bagging** (bootstrap aggregating), and because each tree's errors are decorrelated by construction, averaging them mainly cuts **variance** — the twitchiness — which is exactly what random forest was built to fix.
+
+Recall gradient boosting: instead of training every model on the whole problem at once, each tree in the line is deliberately built to fix what the earlier trees got wrong — the residual. That's diversity manufactured from *sequence*: tree 2 is diverse from tree 1 by design, because its entire job is the slice of the problem tree 1 failed at. That recipe is called **boosting**, and because each new tree directly attacks the team's remaining error, it mainly cuts **bias** — the systematic miss — exactly what gradient boosting was built to fix.
+
+But both of those recipes assume you're building the models yourself, in a controlled way — resampling rows, or chaining a sequence. That's exactly the gap the opening question left unanswered: a tree, a logistic regression, and a random forest trained with zero coordination between them, exactly our five-applicant crowd. You can still vote on models like that, as we just did. But is a plain vote — every model's opinion weighted the same, no matter how good or bad each one actually is for this *kind* of applicant — really the smartest way to combine them?
+
+---
+
+**Counting labels versus trusting numbers.**
+
+What we did above — one vote per model, majority wins — is called **hard voting**. There's an obvious upgrade: instead of throwing away *how sure* each model was, average the probabilities themselves. A model that says 90% should count for more than one that barely clears 51%. That's **soft voting**, and on the same five applicants it gives the identical answer: averaging (0.90, 0.60, 0.70) for A gives 0.73 (default, correct), and so on for the rest — five for five, matching the vote exactly.
+
+So soft voting looks strictly better — it uses more information for free. Now bring in a sixth applicant, F, who did not default. Tree says 0.40 (correctly leaning no-default). Logistic regression says 0.97 — extremely confident this is a default. Forest says 0.30 (correctly leaning no-default). Hard voting: no-default, default, no-default — 2 to 1, crowd says no-default. Correct. Soft voting: (0.40 + 0.97 + 0.30) / 3 = 1.67 / 3 = 0.557 — over 0.5, crowd says default. **Wrong.**
+
+Soft voting just lost to hard voting, and the reason is worth naming precisely: it's **calibration**. A calibrated model's stated probability matches its real hit rate — when it says "90% chance," it should be right about 90% of the time it says that. Logistic regression's 0.97 here isn't just wrong on direction; it's a badly overconfident number, and averaging takes stated confidence at face value. One inflated probability from one uncalibrated model can drag the whole average past the threshold, even when two of three models, going purely by label, called it correctly. Soft voting beats hard voting only when the base models are calibrated — check that before you switch, or at least be aware which of your models tends to overstate its certainty.
+
+---
+
+**A combiner that learns instead of just averaging.**
+
+Soft voting failed on F for a specific, fixable reason: it always splits trust three ways evenly — 1/3, 1/3, 1/3 — no matter how reliable each model has actually been. What if, instead of a fixed equal split, you could *learn* better weights than an even split — automatically discounting a model like logistic regression when its confidence turns out to be inflated?
+
+Here's the idea before any formal machinery: give each model's prediction a weight, multiply, add, and turn the sum into a final probability — the same shape as soft voting, except the three weights aren't forced to be equal.
 
 [FIGURE: stacking_ensemble]
 
+Now make it exact, on applicant F. Suppose that, from many more rows than this handful of six applicants — enough past out-of-fold predictions to fit three weights reliably — you'd trained a small logistic regression whose *inputs are the base models' own predictions*, not the applicant's raw features, and learned weights: tree = 1.3, logreg = 0.4, forest = 1.6, bias = -1.45. Notice logistic regression's weight (0.4) is far smaller than the other two — the training data taught the combiner that logistic regression's numbers run overconfident, so it learns to discount them, not ignore them.
+
+Apply it to F. Raw score: z = 1.3(0.40) + 0.4(0.97) + 1.6(0.30) - 1.45 = 0.52 + 0.388 + 0.48 - 1.45 = -0.062. Squash it through the sigmoid (always between 0 and 1, the same conversion logistic regression always uses): sigmoid(z) = 1/(1+e^(-z)). For z=-0.062, that's sigmoid(-0.062) ≈ 0.485 — under 0.5, correctly predicting no-default. Where soft voting's flat average (0.557) got fooled, this weighted combination (0.485) gets it right, purely because it learned to trust logistic regression's raw number less. Check it against a second applicant before trusting the pattern: A gives z=1.08 → sigmoid ≈ 0.746 — over 0.5, correctly predicting default, same combiner, same three weights, a different applicant, and it still lines up.
+
+This is **stacking**, and the small trained combiner is a **meta-learner** — typically, as here, a simple logistic regression, trained not on applicant features but on the base models' own predictions. Run the same formula back on the remaining four: B gives z=-0.07 → sigmoid ≈ 0.483 (no-default, correct); C gives z=0.22 → sigmoid ≈ 0.555 (default, correct); D gives z=-0.88 → sigmoid ≈ 0.293 (no-default, correct); E gives z=1.19 → sigmoid ≈ 0.767 (default, correct). Six for six. Its job is exactly "how much to trust each model," and that trust isn't a metaphor — it's the learned coefficients themselves: 1.6 for the forest, 1.3 for the tree, only 0.4 for logistic regression. Bigger weight, more trust; the numbers *are* the answer to "who do you believe."
+
 ---
 
-**The one trap that quietly ruins stacking.**
+**The trap that quietly ruins a stack.**
 
-Stacking has a subtle failure mode you have to design around. To train the meta-learner, you feed it the base models' predictions. But if you let each base model predict on the very rows it was trained on, those predictions are dishonestly good — the models have partly *memorised* those rows, so their outputs look far more reliable than they will be on fresh data. The meta-learner then learns to trust a signal that vanishes at test time, and the whole stack falls apart in production.
+To train that meta-learner, you need the base models' predictions as its input features. Here's the trap: if you let each base model predict on the very rows it was trained on, those predictions are dishonestly good — a model partly memorises rows it has seen, so its output there looks far more reliable than it will be on a fresh applicant. Train the meta-learner on that and it learns to trust a signal that vanishes the moment real, unseen applicants arrive — and the whole stack quietly falls apart in production.
 
-The fix is **out-of-fold predictions**: split the data into folds, train each base model on some folds, and have it predict only on the folds it did *not* see. Those held-out predictions are honest — they show what the base models can really do on unseen rows — so the meta-learner learns from the truth instead of a memory.
+The fix is **out-of-fold (OOF) predictions**: split the training data into folds, train each base model on some folds, and have it predict only on the fold or folds it did *not* see. Those held-out predictions are honest — they show what a base model can really do on rows it never trained on — so the meta-learner learns from the truth instead of a memory. In scikit-learn, cross_val_predict gives you these in one call.
 
 ---
 
 **The belief to drop.**
 
-"More models always help." No — *diversity* helps. Bolt a fifth copy of the same random forest onto your ensemble and you gain essentially nothing; it makes the same mistakes as the other four, so the vote does not budge. But add a model built on a *different* idea — a linear model beside your trees — and even if it is individually weaker, it can lift the whole ensemble, because it fails in places the others do not. When an ensemble stops improving, do not add more of the same. Add something different.
-
----
-
-**Hard votes versus soft votes.**
-
-There are two ways to let classifiers vote. **Hard voting** counts labels — majority wins. **Soft voting** averages the predicted *probabilities* and then thresholds, which usually works better because a model that's 0.9 sure should outweigh one that's barely 0.51. But soft voting has a prerequisite that trips people up: it only makes sense if the base models are **calibrated**. If one model is systematically overconfident, its inflated probabilities dominate the average and drag the ensemble toward its mistakes. So calibrate the base models (or at least check them) before averaging probabilities — otherwise soft voting can underperform plain hard voting.
+"More models always help." No — *diversity* helps, and you already have the proof: bolt a fourth copy of the same random forest onto the crowd and it makes exactly the same mistakes as the original, on exactly applicant B, so the vote does not budge — the same story as the all-three-wrong version of applicant C above, just phrased as adding rather than starting correlated. Add a model built on a genuinely different idea instead — even one that's individually weaker — and it can lift the whole ensemble, because it fails somewhere the others don't. When an ensemble stops improving, don't add more of the same. Add something different.
 
 ---
 
 **Blending versus stacking.**
 
-Two ways to make the honest meta-features, and interviewers like the distinction. **Stacking** uses **K-fold out-of-fold** predictions: every row gets a prediction from a base model that didn't train on it, so you use all the data for both levels. **Blending** is the simpler cousin — hold out a single validation set, train base models on the rest, and let them predict once on that holdout to build meta-features. Blending is easier and has zero fold-leakage risk, but it "wastes" the holdout (base models never train on it) and gives the meta-learner less data. Stacking is more data-efficient but must handle folds carefully.
+There are two ways to build the honest meta-features a stack needs, and interviewers like the distinction. **Stacking** uses K-fold out-of-fold predictions — every row gets a prediction from a base model that didn't train on it, so both levels use all the data. **Blending** is the simpler cousin: hold out a single validation set, train the base models on the rest, and let them predict once on that holdout to build meta-features. Blending is easier and has zero fold-leakage risk, but it "wastes" the holdout (base models never train on it) and gives the meta-learner less data to learn from. Stacking is more data-efficient but has to handle folds carefully.
 
 ---
 
 **Keep the meta-learner simple.**
 
-The meta-learner's input is just a handful of base-model predictions, so it needs almost no capacity. A **regularised logistic regression** (or plain linear model) is the standard choice, and for good reason: a complex meta-learner (another boosting model on top) easily *overfits* the base predictions, especially since those predictions are highly correlated. Simple meta-learner, honest out-of-fold features — that's the reliable recipe.
+Look back at F's meta-learner: three weights and a bias, nothing more. That's typical, and deliberate — the meta-learner's inputs are just a handful of correlated base-model predictions, so it needs almost no capacity. A regularised logistic regression (or plain linear model) is the standard choice: a more complex meta-learner (say, another boosting model stacked on top) easily overfits those correlated predictions instead of learning genuine trust weights. Simple meta-learner, honest out-of-fold features — that's the reliable recipe.
 
 ---
 
 **Out-of-fold must respect time and groups.**
 
-The OOF trick assumes rows are independent — and it leaks exactly like OOB does when they aren't. For **time-series** data, a random fold lets a base model see the future when generating a "held-out" prediction for the past, so the meta-features are leaked; you need time-ordered folds. For **grouped** data (many rows per user), all of a user's rows must fall in the same fold, or a base model trained on some of a user's rows predicts the rest. Get this wrong and the stack looks brilliant offline and collapses in production — the ensemble version of the same leakage that haunts every model here.
+The OOF trick assumes rows are independent — and it leaks exactly like OOB (out-of-bag — the rows each random-forest tree never trains on, from that module) leaks when they aren't. For **time-series** data, a random fold lets a base model train on future rows and generate a "held-out" prediction for the past, leaking the future into the meta-features — use time-ordered folds. For **grouped** data (many rows per user), all of a user's rows must land in the same fold, or a base model trained on some of a user's rows predicts the rest. Get this wrong and the stack looks brilliant offline and collapses in production — the ensemble version of the same leakage that haunts every model in this module.
 
 ---
 
 **Ensembles aren't free.**
 
-The accuracy comes with real costs worth naming: every base model must run at inference, so **latency and memory multiply**; retraining and deployment get more complex; debugging a wrong prediction across five models is far harder than for one; and interpretability drops sharply. For a point or two of accuracy you may pay 5× the serving cost — sometimes worth it (a fraud model, a Kaggle prize), often not (a latency-bound real-time system). That's why production frequently ships a single boosted model or *distills* the ensemble into one smaller model.
+The accuracy comes with real costs worth naming: every base model, and now the meta-learner too, has to run at inference, so latency and memory multiply; retraining and deployment get more complex; debugging a wrong prediction across four models is far harder than for one; and interpretability drops sharply. For a point or two of accuracy you may pay several times the serving cost — sometimes worth it (a fraud model, a Kaggle prize), often not (a latency-bound real-time system). That's why production frequently ships a single boosted model, or distills the ensemble into one smaller model.
 
----
-
-**Where diversity actually comes from.**
-
-Diversity isn't only "different algorithms." You can manufacture it from different **feature subsets**, different **training samples** (bagging), different **loss functions**, different **random seeds**, different **hyperparameters**, different **time windows**, and even different **target definitions**. The most robust ensembles combine several of these axes at once — a tree and a linear model, on different feature sets, with different seeds — because the more *independent* the sources of disagreement, the better the errors cancel.`,
+**Where diversity actually comes from.** It isn't only "different algorithms." You can manufacture it from different feature subsets, different training samples (bagging), different loss functions, different random seeds, different hyperparameters, different time windows, even different target definitions. The most robust ensembles combine several of these axes at once — a tree and a linear model, on different feature sets, with different seeds — because the more independent the sources of disagreement, the better the errors cancel.`,
     keyPoints: [
-      `**Reach for stacking when you already have several different models and enough data to make out-of-fold predictions.**\n\nIt almost always beats any single model by a point or two, because a small meta-learner can work out which base model to trust where — leaning on boosting for one kind of case and a linear model for another. The cost is training time and a bit of plumbing (the out-of-fold step). For a quick win without the plumbing, even a plain average of a few diverse models' probabilities usually edges out the best one on its own.`,
+      `**Reach for stacking when you already have several genuinely different models and enough data for honest out-of-fold predictions.**\n\nIt almost always beats any single model by a point or two, because the meta-learner's learned coefficients literally encode which base model to trust — a smaller weight for a model whose confidence tends to run inflated (like logistic regression's 0.4 versus the forest's 1.6 in the worked example), a larger one for a model that's actually reliable. The cost is training time and the out-of-fold plumbing. For a quick win without the plumbing, a plain average of a few diverse models' probabilities usually still edges out the best one alone — as long as those models are calibrated.`,
       `**The trap that quietly ruins a stack: feeding the meta-learner predictions the base models made on their own training rows.**\n\nA base model partly memorises the rows it trained on, so its predictions there look far better than they will be on new data. Train the meta-learner on those and it learns to trust a signal that disappears at test time. Always build the meta-features from out-of-fold predictions — each base model predicts only on rows it did not train on. In scikit-learn, cross_val_predict gives you these in a single call.`,
-      `**The check: look at whether your models actually make different mistakes.**\n\nFor each model, mark which examples it got wrong on a held-out set, then compare those error patterns across models. If two models are wrong on almost exactly the same examples, they are effectively one model for ensemble purposes and combining them buys nothing. When errors are that correlated, do not add another similar model — add one built on a different idea (a different algorithm, or different features), which is the only thing that will actually move the ensemble.`,
-      `**Soft voting beats hard voting only if the base models are calibrated, and blending and stacking make honest meta-features differently.**\n\nHard voting counts labels; soft voting averages probabilities (usually better) but is dominated by an overconfident model unless the bases are calibrated first. Stacking builds meta-features from K-fold out-of-fold predictions (data-efficient); blending uses a single holdout (simpler, no fold-leakage, but wastes data). Keep the meta-learner simple — a regularised logistic/linear model — since a complex one overfits the correlated base predictions.`,
-      `**Respect time/group boundaries in OOF, and weigh the real cost of ensembling.**\n\nOut-of-fold prediction leaks exactly like OOB when rows aren't independent: use time-ordered folds for temporal data and keep each group (all of a user's rows) in one fold, or the stack looks great offline and dies in production. And ensembles aren't free — every base model runs at inference, so latency, memory, retraining complexity, debugging difficulty, and opacity all multiply for a point or two of accuracy, which is why production often ships one boosted model or distills the ensemble. Manufacture diversity from many axes: algorithms, feature subsets, samples, losses, seeds, hyperparameters, time windows, target definitions.`,
+      `**The check: look at whether your models actually make different mistakes.**\n\nFor each model, mark which examples it got wrong on a held-out set, then compare those error patterns across models. If two models are wrong on almost exactly the same examples, they are effectively one model for ensemble purposes and combining them buys nothing — same as bolting on a duplicate random forest. When errors are that correlated, do not add another similar model — add one built on a different idea (a different algorithm, or different features), which is the only thing that will actually move the ensemble.`,
+      `**Soft voting beats hard voting only if the base models are calibrated — check that before you switch.**\n\nHard voting counts labels, so one badly overconfident model gets exactly one vote like everyone else. Soft voting averages probabilities (usually better, since it uses more information) but a single uncalibrated, overconfident prediction can drag the average past the threshold and outvote two correct models — the exact failure a trained meta-learner is built to avoid by learning to discount that model instead of averaging it in blindly. Stacking builds meta-features from K-fold out-of-fold predictions (data-efficient); blending uses a single holdout (simpler, no fold-leakage, but wastes data). Keep the meta-learner itself simple — a regularised logistic/linear model — since a complex one overfits the correlated base predictions.`,
+      `**Respect time/group boundaries in OOF, and weigh the real cost of ensembling.**\n\nOut-of-fold prediction leaks exactly like OOB (out-of-bag) leakage in random forest when rows aren't independent: use time-ordered folds for temporal data and keep each group (all of a user's rows) in one fold, or the stack looks great offline and dies in production. And ensembling isn't free — every base model plus the meta-learner runs at inference, so latency, memory, retraining complexity, debugging difficulty, and opacity all multiply for a point or two of accuracy, which is why production often ships one boosted model or distills the ensemble. Manufacture diversity from many axes: algorithms, feature subsets, samples, losses, seeds, hyperparameters, time windows, target definitions.`,
     ],
     interactivePrompt: `Before you touch the controls: if you replace one model in the ensemble with an identical copy of an existing model (same algorithm, same hyperparameters, same training data), do you expect the ensemble accuracy to go up, stay the same, or go down?`,
     checkQuestions: [
@@ -1790,25 +1810,26 @@ Diversity isn't only "different algorithms." You can manufacture it from differe
         answer: `C`,
       },
     ],
-    takeaway: `An ensemble combines several models and beats the best single one — but only because they make different mistakes, so voting cancels the errors. Diversity, not the number of models, is the lever: bagging builds it from different data, boosting from fixing mistakes in sequence, and stacking by training a meta-learner to combine genuinely different models — using out-of-fold predictions, or the whole thing leaks.`,
+    takeaway: `An ensemble combines several models and beats the best single one — but only because they make different mistakes, so voting cancels the errors; correlated errors get amplified into consensus instead. Diversity, not the number of models, is the lever: bagging builds it from different data, boosting from fixing mistakes in sequence, and stacking by training a small meta-learner whose learned weights are literally how much to trust each base model — using out-of-fold predictions, or the whole thing leaks.`,
     recap: [
-      "**Ensemble = combine several models, beat the best single one** — because they make different mistakes and voting cancels errors.",
-      "**Diversity, not count, is the lever.**",
-      "**Bagging** builds diversity from different data; **boosting** from fixing mistakes in sequence; **stacking** trains a meta-learner over different models.",
-      "**Stacking must use out-of-fold predictions** — feed the meta-learner base predictions on their own training rows and it leaks.",
-      "**Soft voting beats hard voting only if base models are calibrated.**",
-      "**Respect time/group boundaries in OOF, and weigh the real cost of ensembling.**",
+      "**Ensemble = combine models, beat the best single one** — only because errors are uncorrelated: mistakes get outvoted, agreement reinforces the truth.",
+      "**Diversity, not model count, is the lever** — correlated errors (all three wrong on the same case) get amplified, not cancelled; voting buys nothing.",
+      "**Bagging** (random forest) → diversity from resampled data, cuts **variance**. **Boosting** (gradient boosting) → diversity from sequential residual-fitting, cuts **bias**.",
+      "**Hard voting** counts labels (robust to one bad vote); **soft voting** averages probabilities (usually better) but an uncalibrated, overconfident model can drag the average past the threshold.",
+      "**Stacking**'s meta-learner (usually logistic regression) is trained on base predictions as features — the learned weights ARE the trust in each model.",
+      "**Meta-learner must train on out-of-fold predictions** — feed it a base model's predictions on its own training rows and it leaks, same failure class as OOB (out-of-bag) leakage in random forest.",
+      "**Blending** = single holdout, simpler, wastes data. **Stacking** = K-fold OOF, more data-efficient but needs care.",
+      "**Respect time/group boundaries in OOF** — random folds leak the future or leak across a user's rows. Ensembles also cost real latency, memory, and complexity at inference.",
     ],
-    interactiveId: 'ensemble_viz',
     figures: {
       stacking_ensemble: `<svg viewBox="0 0 480 210" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:480px;font-family:var(--font-sans,sans-serif)">
   <text x="70" y="20" text-anchor="middle" fill="var(--ink-low)" font-size="9">base models</text>
   <rect x="20" y="35" width="100" height="34" rx="6" fill="none" stroke="var(--amber)" stroke-width="1.4"/>
   <text x="70" y="56" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">decision tree</text>
   <rect x="20" y="88" width="100" height="34" rx="6" fill="none" stroke="var(--amber)" stroke-width="1.4"/>
-  <text x="70" y="109" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">linear model</text>
+  <text x="70" y="109" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">logistic regression</text>
   <rect x="20" y="141" width="100" height="34" rx="6" fill="none" stroke="var(--amber)" stroke-width="1.4"/>
-  <text x="70" y="162" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">boosting</text>
+  <text x="70" y="162" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">random forest</text>
   <!-- arrows to meta-learner -->
   <path d="M120 52 C 190 52, 190 105, 250 105" fill="none" stroke="var(--ink-low)" stroke-width="1"/>
   <path d="M120 105 H 250" fill="none" stroke="var(--ink-low)" stroke-width="1"/>
@@ -1833,25 +1854,75 @@ Diversity isn't only "different algorithms." You can manufacture it from differe
     difficulty: 'advanced',
     estimatedMin: 30,
     tags: ['SVM', 'kernel', 'margin', 'dual'],
-    summary: `You are classifying loan applicants as default or no-default. You have a linearly separable training set — there exists some line that perfectly separates the two classes. Logistic regression will find one such line, whichever one minimises cross-entropy loss. But there are infinitely many separating lines. Which one do you want?
+    summary: `The ensembles module showed that a crowd of diverse models beats any single one — but that costs you: every base model has to run at inference, and the crowd only helps if their errors genuinely disagree. Sometimes you don't want a crowd. You want one model that draws the single best possible boundary, with a mathematical reason to trust that "best" means more than "whichever line happened to minimize training error."
 
-SVMs say: the one that is furthest from all training points. If you draw the two parallel boundary lines that touch the nearest points from each class, the space between them is the margin. A wider margin means more room for error — new test points that fall near the boundary are more likely to land on the correct side. Maximize the margin and you minimize the worst-case generalization error. This is the structural risk minimization principle.
+You are back to classifying loan applicants, now with two standardized features: credit score (x1) and income stability (x2), both centered so 0 is average. The training set is linearly separable — some line perfectly divides no-default applicants from default applicants. Logistic regression will find a separating line, whichever one minimizes cross-entropy loss. But there are infinitely many lines that separate these two classes perfectly. Which one do you want?
+
+SVMs answer: the one furthest from every training point, on both sides. Take three applicants. A=(0.5,0.5), no-default. B=(2,2), no-default. D=(-0.5,-0.5), default. The decision function is f(x) = w·x + b; the actual max-margin solution for these points works out to w=(1,1), b=0 (a direct consequence of A and D sitting symmetric about the origin along the (1,1) direction, with B too far out to matter — this is the standard 2-support-vector formula w = 2(A-D)/||A-D||^2), so f(x) = x1+x2. Then f(A)=1, f(D)=-1, f(B)=4. The two parallel lines where f(x)=+1 and f(x)=-1 are the margin edges — A and D sit exactly on them, the closest point from each class to the boundary. Those are the **support vectors**, and they alone define the boundary: move B to (5,5) or to (2.1, 2.1) and the boundary does not shift at all, because the optimizer only cares about the points closest to the edge. Move A even slightly closer to the boundary and the whole line moves to keep it exactly on the edge.
+
+Write the margin in general terms: for weight vector w and bias b, the total gap between the two edge lines is margin = 2 / ||w||. Here ||w|| = ||(1,1)|| = sqrt(2), so the margin is 2/sqrt(2) = sqrt(2) ≈ 1.414 units wide. A wider margin means more room for error: a new applicant landing near the boundary is more likely to fall on the correct side of it.
 
 [FIGURE: svm_margin]
 
-Only a subset of training points define the boundary. The points that sit exactly on the margin edges — the closest points to the boundary — are the support vectors. Move any other training point and the boundary does not change at all. This sparsity is a structural property of the solution: the entire decision boundary is determined by a small minority of training examples.
+---
 
-Real data is not linearly separable. The soft-margin extension introduces slack variables $ξ_i \\geq 0$: allow some points to violate the margin, but penalise each violation with cost $C$. Large $C$: tight margin, few violations, the model tries to classify everything correctly, prone to overfitting. Small $C$: wide margin, allows more violations, smoother boundary, better generalisation. C is the bias-variance dial.
+**Why maximizing the margin actually works.**
 
-The kernel trick makes non-linear boundaries possible without changing the algorithm. The dual form of the SVM only needs dot products $x_i^T x_j$ between training points — it never needs the feature vectors explicitly. Replace each dot product with a kernel function $k(x_i, x_j) = φ(x_i)^Tφ(x_j)$ for some mapping $φ$. The RBF kernel $k(x, x') = \\exp(-γ \|x - x'\|^2)$ corresponds to an infinite-dimensional feature space. You never compute $φ(x)$ — you only compute $k(x_i, x_j)$, which is cheap. The SVM finds a linear separator in the infinite-dimensional space, which appears non-linear back in the original space.
+Here is the chain from "wider margin" to "generalizes better," stated once, in order — not scattered across the module.
 
-**NOT this.** Most people think "SVMs are about the kernel." The kernel is how you apply maximum margin to non-linear boundaries — but maximum margin is the core idea, and the kernel is just a tool. Many practitioners can explain RBF kernels but cannot explain why maximum margin generalises well (structural risk minimization — the margin controls the VC dimension of the classifier). Without the why, you cannot diagnose when SVMs fail or explain their behavior to a stakeholder.
+Recall from the generalization module: a classifier's raw capacity to memorize arbitrary labels is its **VC dimension** — the size of the largest set of points it can *shatter*, meaning label every possible way and still fit perfectly. A line in 2D can shatter some sets of 3 points (three in general position) but no set of 4, so its VC dimension is 3.
 
-The hard limit: SVMs stall at $n > 50\\text{K}$. The kernel matrix $K$ where $K_{ij} = k(x_i, x_j)$ requires $O(n^2)$ memory — 80GB for $n = 100\\text{K}$ in float64. Training time is $O(n^2)$ to $O(n^3)$. For large datasets, use gradient boosting or linear models with SGD.`,
+A margin classifier's *effective* VC dimension isn't fixed at that raw count — it shrinks as the margin widens. A boundary that must keep every training point a full margin away from it has far fewer ways to slice the same points into arbitrary label combinations than a boundary allowed to graze the data. Force a wide margin and you've quietly ruled out most of the wild, overfit-shaped boundaries that a raw VC-dimension-3 line could otherwise draw.
+
+And a smaller VC dimension tightens the bound on the gap between training and test error — the same gap proportional to sqrt(VC/n) relationship from before. Chain it together: **wider margin → smaller effective VC dimension → tighter bound on the train/test gap.** That's **structural risk minimization**: instead of minimizing training error alone (empirical risk), you minimize training error *and* capacity at once, and the margin is the single knob that moves both simultaneously.
+
+---
+
+**The soft margin: when a point crosses the line.**
+
+Real applicants are messier. Add a fourth: G=(0.3, 0), true label default (-1). But f(G) = 0.3+0 = 0.3 — G sits on the *wrong* side of the boundary entirely, not just inside the margin. In the strict version of the problem above (the hard margin), a single point like G makes the whole optimization infeasible: there is no line anymore that keeps every point a full margin away on the correct side.
+
+The soft-margin extension formalizes exactly this situation. For each point i, define a **slack variable** ξ_i ≥ 0 measuring how far it strays into or past the margin: ξ_i = max(0, 1 - y_i·(w·x_i+b)). For A, correctly placed on the margin edge: y_A·(w·x_A+b) = (+1)(1) = 1, so ξ_A = max(0, 1-1) = 0 — no slack needed. For G: y_G·(w·x_G+b) = (-1)(0.3) = -0.3, so ξ_G = max(0, 1-(-0.3)) = 1.3 — a real, sizeable violation.
+
+Every violation costs something. The optimizer minimizes (1/2)||w||² + C·Σξ_i, trading margin width against total slack, and **C** is the exchange rate. Watch the same point G under two different values of C. At C=0.1: G's penalty is 0.1 × 1.3 = 0.13 — cheap. The optimizer would rather pay 0.13 and keep the wide sqrt(2) margin from before than twist the boundary to rescue G, so G stays misclassified and the line barely moves. At C=100: G's penalty is 100 × 1.3 = 130 — expensive enough that the optimizer tilts w and shifts b to pull G onto the correct side, shrinking the margin and possibly turning A or D into ordinary interior points to do it. That's the **bias-variance dial**: small C tolerates violations and keeps a wide, smooth, high-bias boundary; large C fights to correctly classify every point, including outliers like G, at the cost of a narrower, twitchier, high-variance one.
+
+---
+
+**The kernel trick, with a real number.**
+
+So far the boundary has been a straight line — fine when classes are linearly separable, useless when they aren't. The **kernel trick** makes curved boundaries possible without changing the algorithm. The dual form of the SVM never needs the raw feature vectors — only dot products x_i·x_j between training points. Replace every dot product with a **kernel function** k(x_i,x_j) = φ(x_i)·φ(x_j) for some mapping φ, and the SVM finds a linear separator in whatever space φ maps into — which, projected back into the original 2D space, looks non-linear.
+
+The **RBF kernel** is k(x,x') = exp(-γ·||x-x'||²), and you never compute φ(x) itself — only this number. Take the two support vectors from before, A=(0.5,0.5) and D=(-0.5,-0.5): their squared distance is ||A-D||² = (0.5-(-0.5))² + (0.5-(-0.5))² = 1+1 = 2. At γ=0.5: k(A,D) = exp(-0.5×2) = exp(-1) ≈ 0.368 — A and D still register as fairly similar. Push γ to 2: k(A,D) = exp(-2×2) = exp(-4) ≈ 0.0183 — the same two points, the same distance apart, now register as far less similar.
+
+That's what **γ controls geometrically**: how far each training point's influence reaches. Low γ means a wide "zone of similarity" — many points register as close to each other, so the boundary comes out smooth, close to the straight-line case. High γ means the zone shrinks to almost nothing — only points nearly on top of each other register as similar, so the boundary can curl tightly around individual training points, fitting each one's exact neighborhood and ignoring the rest. That is memorization: at high enough γ the model isn't finding structure, it's building a tiny custom bubble around every training point, which is why validation accuracy collapses even as training accuracy hits 100%.
+
+---
+
+**What makes a valid kernel.**
+
+Not just any similarity function works as a kernel. Since k(x_i,x_j) stands in for a real dot product φ(x_i)·φ(x_j) in some feature space, it has to behave like one — two conditions, both inherited straight from what dot products do. **Symmetric**, because φ(x_i)·φ(x_j) = φ(x_j)·φ(x_i) always holds. **Positive semi-definite**, because for any coefficients c_i: the sum over i,j of c_i·c_j·k(x_i,x_j) equals the squared length of a real vector (Σc_i·φ(x_i)), so it can never go negative. **Mercer's theorem** says these two conditions — symmetric, positive semi-definite — are exactly what a function needs to be a valid kernel: proof that some φ exists, without ever constructing it. The RBF kernel satisfies both, which is why γ is a free knob but the exponential shape of the kernel itself isn't negotiable.
+
+---
+
+**NOT this.** Most people think "SVMs are about the kernel." The kernel is how you extend maximum margin to non-linear boundaries — but maximum margin is the core idea, and the kernel is a tool bolted onto it. As shown above, the margin's real power is structural: it shrinks the effective VC dimension and tightens the generalization bound, which is why the boundary generalizes well in the first place. Many practitioners can recite the RBF formula but can't say *why* the margin should be trusted — without that, you can't diagnose a misbehaving SVM or explain it to a stakeholder in anything but jargon.
+
+---
+
+**SVM or logistic regression?**
+
+That same margin-vs-probability distinction is also what separates an SVM from logistic regression. Logistic regression is trained by directly minimizing log-loss, so its output (a sigmoid of w·x+b) is a calibrated probability — a score of 0.73 is meant to mean roughly 73% likely, and you can check that calibration on held-out data. An SVM's raw output is f(x) = w·x + b, a signed distance from the boundary, not a probability at all; turning it into one (Platt scaling) means fitting a *second*, separate model on top, and the result is usually less trustworthy than a probability logistic regression produced natively. Logistic regression's weights are also directly interpretable — each coefficient is a log-odds contribution per feature — while an SVM's boundary, especially through a kernel, has no such clean per-feature story.
+
+What SVMs still win at: small, high-dimensional, cleanly-separated data (text with TF-IDF features, bioinformatics), where the max-margin criterion's focus on the hardest-to-classify points, rather than every point's log-loss, tends to come out ahead. So: prefer SVM for small n, high d, well-separated classes; prefer logistic regression once you need calibrated probabilities, interpretability, or n grows past the point where SVM training is practical.
+
+---
+
+**The hard limit.**
+
+That practicality limit is concrete. The kernel matrix K, where K_ij=k(x_i,x_j), has n² entries, and storing it in float64 costs 8n² bytes. At the hard limit of n=50,000: 8 × 50,000² = 2×10^10 bytes ≈ **20GB** — just to hold the kernel matrix, before training even starts. Training time itself runs O(n²) to O(n³). Past this point, switch to sklearn's LinearSVC (a linear SVM solved without the kernel matrix, O(nd) time) or SGDClassifier with hinge loss.`,
     keyPoints: [
       `**Use kernel SVMs when n < 50K, the feature space is moderate-dimensional, and you have reason to believe the data is separable with a wide margin (e.g., clean binary classification with low noise).**\n\nSVMs excel on small, clean datasets with well-defined boundaries — classic use cases include bioinformatics, text classification with TF-IDF features (linear SVM), and image patches. For n > 50K, switch to sklearn's LinearSVC (liblinear solver, O(nd) time) or SGDClassifier with hinge loss. Always StandardScaler before any SVM — the RBF kernel uses Euclidean distance and an unscaled feature with range [0, 1000] will dominate a feature with range [0, 1] regardless of predictive value.`,
-      `**The production trap: tuning C and γ separately instead of jointly, and forgetting to scale features.**\n\nC and γ interact: C=10, γ=0.01 produces a very different boundary than C=10, γ=10. A coarse grid search that sweeps C with fixed γ will miss the optimum. Always use a 2D grid on log scale: C ∈ {0.01, 0.1, 1, 10, 100}, γ ∈ {0.001, 0.01, 0.1, 1, 10}. The interaction means you need 25 combinations minimum, not 5 + 5. Missing feature scaling is the single most common reason for SVM underperformance — a single unscaled feature can make the kernel compute pure noise.`,
-      `**The diagnostic: count the support vectors. Too many (> 50% of training data) means C is too large or γ is too small — the boundary is effectively ignoring the margin constraint. Too few may mean underfitting.**\n\nA well-calibrated SVM typically has 5–30% of training examples as support vectors. Run svm.n_support_ after fitting. If it is near n, reduce C or increase γ to enforce a wider margin. Check test accuracy on a held-out set and compare to a logistic regression baseline — if they are within 1–2%, the kernel is not buying you anything and logistic regression is the simpler, faster choice.`,
+      `**The production trap: tuning C and gamma separately instead of jointly, and forgetting to scale features.**\n\nC and gamma trade off against each other, not just against themselves. A wide kernel (small gamma, e.g. 0.1) already smooths the boundary on its own, so it takes a much larger C (e.g. 100) to carve a tight fit around outliers. A narrow kernel (large gamma, e.g. 5) is already tightly localized, so a much smaller C (e.g. 1) reaches a comparably complex boundary. Grid-search C alone at a fixed gamma=0.1 and you'd land on C=100 as "the" answer — and never discover that gamma=5 paired with C=1 reaches a similarly good fit through a completely different set of support vectors. Always search C and gamma jointly on a 2D log-scale grid: C in {0.01, 0.1, 1, 10, 100}, gamma in {0.001, 0.01, 0.1, 1, 10} — 25 combinations minimum, not 5 + 5. Missing feature scaling is the single most common reason for SVM underperformance — a single unscaled feature can make the kernel compute pure noise.`,
+      `**The diagnostic: count the support vectors. Too many (> 50% of training data) means C is too large or gamma is too large — the boundary is hugging individual points instead of respecting a wide margin. Too few may mean underfitting.**\n\nA well-calibrated SVM typically has 5–30% of training examples as support vectors. Run svm.n_support_ after fitting. If it is near n, reduce C or reduce gamma to enforce a wider, smoother margin (consistent with the module's own point above: high gamma shrinks each point's zone of influence until the boundary curls tightly around individual points, turning most of them into support vectors). Check test accuracy on a held-out set and compare to a logistic regression baseline — if they are within 1–2%, the kernel is not buying you anything and logistic regression is the simpler, faster choice.`,
     ],
     interactivePrompt: `Before you touch the controls: if you move a training point that is far from the decision boundary to a completely different location, do you expect the boundary to change?`,
     checkQuestions: [
@@ -1860,8 +1931,8 @@ The hard limit: SVMs stall at $n > 50\\text{K}$. The kernel matrix $K$ where $K_
         options: [
           `\`A) Increase C (fewer margin violations, tighter fit). Risk: the boundary turns wiggly and stops generalising past the training set — classic overfitting.\``,
           `\`B) Increase γ (a tighter, more localised RBF kernel). Risk: at high γ the model memorises training points inside tiny "bubbles," again overfitting.\``,
-          `\`C) Switch from RBF to a degree-5 polynomial kernel, since higher-degree polynomial kernels always add more raw capacity with no numerical downside at all.\``,
-          `\`D) Reduce C sharply (e.g. C=0.01), since underfitting with RBF always means C is too high, penalising slack variables far more than needed here.\``,
+          `\`C) Switch from RBF to a degree-5 polynomial kernel instead of raising gamma — polynomial kernels of that degree typically add far more raw capacity, so this is usually the faster fix for underfitting.\``,
+          `\`D) Reduce C sharply (e.g. C=0.01) — a smaller C relaxes the margin penalty, and since the model is underfitting, loosening that penalty is the more direct fix than touching gamma.\``,
         ],
         answer: ['A', 'B'],
       },
@@ -1879,21 +1950,22 @@ The hard limit: SVMs stall at $n > 50\\text{K}$. The kernel matrix $K$ where $K_
         q: `SVMs and logistic regression both find a linear separator. In what situations would you prefer one over the other?`,
         options: [
           `\`A) Prefer SVM for small, high-dimensional, well-separated data; prefer LR for calibrated probabilities, large n, or interpretability.\``,
-          `\`B) Always prefer logistic regression: it learns the same weight vector as a linear SVM when separable, and additionally gives calibrated probabilities outright.\``,
-          `\`C) Prefer SVM whenever class imbalance is present, since its margin criterion is fully independent of class frequency while LR's loss biases toward the majority.\``,
-          `\`D) Prefer logistic regression for all practical applications now; every SVM advantage can be replicated with feature engineering, so SVMs are only academic today.\``,
+          `\`B) Prefer logistic regression once calibrated probabilities matter — Platt-scaling an SVM's margin distances after the fact tends to produce weaker calibration than log-loss training from the start, and that gap outweighs SVM's edge in small, high-dimensional settings.\``,
+          `\`C) Prefer SVM whenever classes are imbalanced, since the margin is set only by the points nearest the boundary, so a 99:1 class split barely shifts the boundary the way logistic regression's loss-driven boundary would.\``,
+          `\`D) Prefer SVM once d exceeds a few hundred features, since logistic regression's decision boundary degrades in high dimensions the same way a distance-based method like k-NN does, while SVM's margin criterion does not.\``,
         ],
         answer: `A`,
       },
     ],
-    takeaway: `SVMs maximise the margin — the gap between classes — and only the points on the margin edge (support vectors) determine the boundary; the kernel trick substitutes dot products with kernel evaluations to get non-linear boundaries without computing the feature map.`,
+    takeaway: `SVMs maximise the margin between classes because a wider margin shrinks the classifier's effective VC dimension and tightens the generalization bound — structural risk minimization. Only the points on the margin edge (support vectors) determine that boundary; slack variables and C formalise how many violations to tolerate along the way, and the kernel trick substitutes a real, checkable similarity number for an explicit feature map to get non-linear boundaries without ever computing it.`,
     recap: [
-      "**SVM = maximise the margin,** the gap between classes.",
-      "**Only support vectors (points on the margin edge) determine the boundary.**",
-      "**Kernel trick:** swap dot products for kernel evaluations → non-linear boundaries without computing the feature map.",
-      "**Soft margin (C) trades margin width for training errors.**",
-      "**Reach for kernel SVM when n < 50K,** moderate dimension, clean separable data — and always scale features.",
-      "**Tune C and γ jointly;** count support vectors — >50% of data means C too large or γ too small.",
+      "**SVM = maximise the margin** — the gap between classes — because a wider margin shrinks the classifier's effective VC dimension and tightens the train/test gap bound (structural risk minimization).",
+      "**margin = 2/||w||;** only the points on the margin edge (**support vectors**) determine the boundary — move any other point and nothing changes.",
+      "**Soft margin:** slack ξᵢ = max(0, 1−yᵢ(w·xᵢ+b)) measures how far a point violates the margin. **C** is the exchange rate between margin width and total slack — small C tolerates violations, large C fights every one.",
+      "**Kernel trick:** swap dot products xᵢ·xⱼ for k(xᵢ,xⱼ) → non-linear boundaries without computing the feature map. Valid kernel ⟺ symmetric + positive semi-definite (**Mercer's theorem**).",
+      "**gamma controls each point's reach** in the RBF kernel — low gamma smooths the boundary, high gamma shrinks it into tight bubbles around individual points → memorisation.",
+      "**SVM vs logistic regression:** SVM for small n, high d, well-separated data; LR for calibrated probabilities, interpretability, or n too large for the kernel matrix.",
+      "**Hard limit:** kernel matrix is O(n²) memory — 20GB at n=50K — switch to LinearSVC or SGDClassifier past that.",
     ],
     interactiveId: 'svm_viz',
     figures: {
@@ -1939,68 +2011,137 @@ The hard limit: SVMs stall at $n > 50\\text{K}$. The kernel matrix $K$ where $K_
     difficulty: 'foundational',
     estimatedMin: 22,
     tags: ['KNN', 'distance metrics', 'ANN'],
-    summary: `A handwritten digit arrives as a 28×28 pixel image. You need to classify it. A decision tree would learn a set of pixel-threshold rules at training time. Logistic regression would learn a weight for every pixel. kNN does neither: it stores all 60,000 training images and at prediction time finds the 3 most similar training images by Euclidean distance across all 784 pixels, then takes a majority vote. Zero training time. A new "7" finds three sevens in the training set, votes 3-0, classification done.
+    summary: `The last module hit a wall at training time: an SVM's kernel matrix is O(n²) to store, which put a hard ceiling at n > 50K training points before a single prediction could even be made. kNN throws that constraint out entirely by refusing to train at all. Picture a music-streaming app's "similar songs" feature: a listener just finished a track, and the app needs to hand back songs like it, right now. kNN's answer is to store every song in the catalog as a point in feature space and, at the moment of the query, find whichever stored points sit closest to the one just played. There is no model to fit, no weights to learn, no kernel matrix to build — the entire training set *is* the model. That simplicity is the whole story, and it is also the whole problem: everything a trained model would have done in advance, kNN defers to the instant someone is waiting for an answer.
 
-The price arrives at query time. Each prediction requires computing the distance from the test image to all 60,000 training images across 784 dimensions: 60,000 × 784 = 47 million multiplications per query. At 1,000 queries per second, that is 47 billion multiplications per second — feasible on fast hardware for MNIST, but already impractical for 1 million images. kNN does not generalize through learned parameters; it memorizes. The entire training set is the model.
+Start with two features per song, small enough to draw: **tempo**, in beats per minute, and **peak amplitude**, the raw loudness of the waveform on a 16-bit scale from 0 to 32,768. Every song is now a point in a two-dimensional room, one wall marked tempo, the other marked amplitude, and "how similar are two songs" becomes a literal question about that room: how far apart are their two points? Measured with an ordinary ruler, straight-line distance in a flat room follows the Pythagorean theorem — for two dimensions, distance squared = (difference in tempo)² + (difference in amplitude)². Stretch that same rule to d dimensions and you get the **Euclidean distance** formula that kNN runs on everywhere:
 
-Feature scaling is not optional. Age ranges from 0 to 100. Income ranges from 0 to 500,000. Without standardization, a 1-dollar difference in income contributes 5,000× more to Euclidean distance than a 1-year age difference. The nearest neighbors are found entirely in the income dimension. A 50-year-old earning 50K a year looks identical to a 1-year-old earning 50K. StandardScaler before kNN is non-negotiable.
+distance(p,q) = sqrt( sum over i of (p_i - q_i)² )
 
-The deeper failure mode is dimensionality. kNN works because nearby points in feature space share labels — local homogeneity. In high dimensions, that assumption breaks. As the number of dimensions grows, the ratio of the distance to the nearest neighbor versus the farthest neighbor converges toward 1. Every point becomes approximately equidistant from every other. The neighborhood concept collapses: there is no meaningful local structure, only a global average. With d = 100, k = 10 nearest neighbors are barely more similar to the query than randomly drawn points.
+— sum the squared difference along every axis, then take the square root. It is nothing more than the diagonal of a d-dimensional room.
 
-The production resurrection of kNN is approximate nearest neighbor search. FAISS, HNSW, and ScaNN build indexes that find approximate nearest neighbors in O(log n) instead of O(n). HNSW at 95% recall@10 queries 10 million vectors in under 1 millisecond. Every embedding-based recommendation system, every vector database (Pinecone, Weaviate, Chroma), and every dense retrieval system in a RAG pipeline is kNN with an approximate index. The algorithm is from the 1960s; the implementation is state of the art.
+Say the just-played query song Q has tempo 128 BPM and peak amplitude 18,000. Two catalog candidates: **Track A** has tempo 132 BPM (nearly identical to Q) but peak amplitude 4,000 (wildly different from Q's 18,000). **Track B** has tempo 70 BPM (58 BPM off — a big tempo gap) but peak amplitude 18,050 (nearly identical to Q's 18,000). Before you read on: which one do you expect raw Euclidean distance to call closer to Q — Track A, with the matching tempo, or Track B, with the matching loudness? Hold that answer.
 
-**NOT this.** kNN is a toy algorithm that does not scale. Nearest-neighbor search is the production architecture for modern retrieval. When a language model generates a query embedding and retrieves relevant documents, it is running kNN against an index of millions of passage embeddings. When a recommendation system finds the top-50 similar users to target for a new item, it is running kNN against a user embedding matrix. The algorithm is ancient. The feature spaces it operates on — dense embeddings from transformers — are not.
+Now the arithmetic, computed in full: distance(Q, Track A) = sqrt((128-132)² + (18000-4000)²) = sqrt(16 + 196,000,000) ≈ 14,000. And distance(Q, Track B) = sqrt((128-70)² + (18000-18050)²) = sqrt(3,364 + 2,500) = sqrt(5,864) ≈ 76.6. Track B — the one with the *wildly different tempo* — comes out roughly 183 times closer than Track A. That is not a signal about musical similarity. It is an accident of units: amplitude lives on a scale of thousands, tempo on a scale of tens, so a modest amplitude gap swamps a genuine tempo gap in the sum of squares, and tempo effectively stops mattering at all.
 
-The formal statement: exact kNN is O(nd) per query where n is the number of indexed vectors and d is the dimensionality. ANN indexes reduce this to O(d log n) or better, with recall controlled by a search parameter. For the digit classifier: n = 60,000, d = 784, brute force takes ~47M ops. For a production recommendation system: n = 10M, d = 256, brute force takes ~2.56B ops per query — ANN takes ~600K ops at 95% recall.`,
+The fix is standardization. Compute each feature's mean and standard deviation across the catalog — real numbers computed once from the data, not learned parameters — say tempo has mean 120, std 25, and amplitude has mean 15,000, std 6,000. Convert every value to a z-score, (value − mean) / std, before computing distance. In z-score space: Q = (0.32, 0.50), Track A = (0.48, -1.83), Track B = (-2.00, 0.51). Now distance(Q, Track A) ≈ sqrt(0.16² + 2.33²) ≈ 2.34 and distance(Q, Track B) ≈ sqrt(2.32² + 0.008²) ≈ 2.32 — nearly tied. Standardized, Track A's loudness gap and Track B's tempo gap are both about 2.3 standard deviations, and the two candidates land almost exactly the same distance from Q. The raw 183x gap was never about the songs. It was about the ruler. **StandardScaler before kNN is non-negotiable** — skip it and whichever feature happens to have the largest raw numbers silently decides every "nearest neighbor" call.
+
+---
+
+**From two features to production scale.**
+
+Two hand-picked features made the geometry easy to see, but a real recommendation system does not hand-pick tempo and amplitude — it uses an **embedding**: a vector of, say, d = 256 numbers produced by a neural net trained so that musically similar songs land near each other and dissimilar songs land far apart. The catalog itself is not five candidate songs; it is n = 10,000,000 tracks. The Euclidean distance formula from above does not change — it is still the square root of a sum of squared differences, just summed over 256 terms instead of 2 — but running it against every catalog song at query time now costs n × d = 10,000,000 × 256 = 2,560,000,000 multiplications, 2.56 billion, for a single "find similar songs" click. This is exact kNN's real cost: **O(nd)** per query, paid once for every one of the millions of button-clicks a live product gets per day.
+
+---
+
+**The curse of dimensionality.**
+
+Scaling up from 2 dimensions to 256 does not just cost more compute — it threatens the very idea of "nearest" song. This failure mode has a name: the **curse of dimensionality**. kNN's entire premise is that nearby points share properties — a song's true nearest neighbors in the embedding space are genuinely more similar than a random song plucked from the catalog. In high dimensions, that premise erodes, because Euclidean distance is a sum of d roughly-independent squared differences, and the Law of Large Numbers governs sums of many roughly-independent terms: the total concentrates tightly around its average, and the *relative* spread around that average shrinks like 1/sqrt(d).
+
+Pause and predict: in a 256-dimension embedding, do you expect the nearest song and a random, unrelated song to sit at wildly different distances from the query, or at nearly the same distance? Here is the illustrative arithmetic — an approximation, not a proof for this exact embedding, but the real mechanism, not a hand-wave. At d = 2 (the tempo/amplitude room above), that relative-spread term is 1/sqrt(2) ≈ 0.71 — a 71% swing around the average distance, plenty of room for a genuinely nearest song to stand out from a random one. A simple way to turn that spread into an illustrative nearest/farthest ratio: (1 − spread/2) / (1 + spread/2), using the 71% swing as spread=0.71 — (1 − 0.355) / (1 + 0.355) = 0.645 / 1.355 ≈ 0.48: the closest candidate sits at about half the distance of the farthest. At d = 256, the same term is 1/sqrt(256) = 1/16 = 0.0625 — just a 6.25% swing — the same formula gives (1 − 0.03125) / (1 + 0.03125) = 0.969 / 1.031 ≈ 0.94: the closest song in the whole 10-million-track catalog and the farthest sit within about 6% of each other's distance from the query. That is the curse made concrete: as d grows, "nearest" and "a random point grabbed off the shelf" become almost interchangeable numbers — exactly the "ratio converges toward 1" behavior kNN is known for, now with an actual number attached instead of an assertion.
+
+---
+
+**Two different problems, two different fixes.**
+
+It is tempting to reach for one fix and assume it solves both the cost problem and the curse — it does not, and confusing the two wastes engineering effort. The **query-cost problem** is that comparing against 10 million songs at O(nd) per click is too slow; that problem is solved by an index that skips most of the catalog. The **curse-of-dimensionality problem** is that the 256-dimensional space itself might not encode real similarity — no index, however fast, fixes a space where "nearest" is meaningless. Its fix is different: dimensionality reduction (PCA down to the components that actually carry signal) or, better, using embeddings that were *trained* — via gradient descent on a task like "these two songs were played back-to-back by real listeners" — specifically so that proximity in the 256 dimensions means real musical similarity, concentrating the discriminative signal instead of spreading it thin across mostly-uninformative axes. A fast index over a meaningless space just returns meaningless neighbors quickly. Both fixes matter, and they solve different halves of the problem.
+
+**Approximate nearest neighbor search.**
+
+The query-cost fix is the production resurrection of kNN: FAISS, HNSW, and ScaNN build indexes that skip most of the catalog instead of scanning all of it, trading a small amount of accuracy for a large amount of speed. That accuracy is measured as **recall@10**: out of the true 10 nearest songs — the ones an exhaustive, brute-force scan would find — what fraction does the index's own top-10 actually contain? 95% recall@10 means that, on average, 9.5 of the 10 truly-closest songs make it into the fast answer; roughly 1 in 20 gets missed.
+
+The textbook complexity for an index like HNSW is **O(d log n)** instead of O(nd) — for this catalog, d × log2(n) ≈ 256 × 23.25 ≈ 5,952 multiplications — 2,560,000,000 / 5,952 ≈ 430,000, a roughly four-hundred-thousand-fold improvement over the 2.56 billion of brute force. But that tidy formula hides a constant, and the constant is not optional to know: HNSW does not examine just one candidate at each of its roughly log2(n) ≈ 23 hops through the graph — at every hop it keeps a candidate list of width **ef** (a tunable search-width parameter, set at query time, not learned, chosen to trade recall against latency), typically ef ≈ 100 for something like 95% recall. The real number of distance computations is closer to ef × log2(n) × d ≈ 100 × 23.25 × 256 ≈ 595,200 — about 600K, matching what production systems actually report. The O(d log n) shape is real; the ~100x gap between the textbook number and the real one is just the ef constant the big-O notation was always allowed to hide.
+
+**Retrieve, then rerank.**
+
+600K ops still is not the final answer a user sees, because a production system rarely trusts the ANN index's raw ranking for its top results. Instead, the index returns a wider shortlist — say the approximate top 200 songs, well past the 10 that will actually be shown, to leave margin for that 5% miss rate — and a second, more careful stage **reranks** just those 200: exact, full-precision distance instead of the approximate index's shortcuts, or a heavier model that is too slow to run against 10 million songs but cheap against 200. Reranking 200 candidates costs 200 × 256 = 51,200 multiplications — trivial next to the 600K spent retrieving the shortlist or the 2.56 billion of scanning the whole catalog. This **retrieve-and-rerank** pattern — cheap, wide, approximate search first, expensive, narrow, precise scoring second — is the shape of nearly every production search and recommendation system, not just kNN's.
+
+**NOT this.** kNN is a toy algorithm from an undergraduate course that does not survive contact with real data. In production, "run a kNN query" is exactly what happens every time a language model retrieves passages for a RAG pipeline, every time a vector database (Pinecone, Weaviate, Chroma) answers a similarity search, and every time this song recommender returns its top 10. The algorithm is from the 1960s. The embedding spaces it now searches — dense vectors from trained neural nets — are not.
+
+---
+
+**When you would actually choose kNN.**
+
+Reach for kNN over a trained classifier like logistic regression or a decision tree when the true decision boundary is irregular and non-linear, training data is small and low-dimensional, or two properties specific to kNN matter: **online learning** and **instance-level explanations**. Online learning means the model updates the instant new data arrives, without a retraining pass — add a new release to the catalog and you insert one more embedding into the index; a decision tree would need to re-split nodes, an SVM would need to re-solve its whole quadratic program. Instance-level explanations mean you can point at exactly which stored examples produced a given answer — "recommended because you played these three songs" names real catalog tracks, where a logistic regression's weighted sum or an SVM's kernel combination has no equivalent to point to.
+
+---
+
+**The formal statement, checked.**
+
+Exact kNN costs **O(nd)** per query. Approximate indexes bring the *asymptotic* shape down to **O(d log n)**, with a real constant — the search-width parameter ef — that turns the textbook number into the one production systems actually spend. For this catalog (n = 10,000,000, d = 256): brute force is n × d = 2,560,000,000 ops; the O(d log n) shape alone is d × log2(n) ≈ 5,952; the real ANN cost with ef ≈ 100 is ef × d × log2(n) ≈ 595,200; and a rerank pass over the top 200 candidates adds another 51,200. Four numbers, all checkable with the same multiplication and the same catalog — nothing here is asserted without the arithmetic behind it.`,
     keyPoints: [
-      `**Always use ANN (FAISS, HNSW) when n > 100K — exact kNN is O(n) per query and completely infeasible at scale. HNSW gives sub-millisecond search over 100M vectors at 95%+ recall.**\n\nFor the digit classifier at 60K training images, brute-force kNN runs in ~1ms per query on modern hardware — acceptable. Scale to 10M items and exact kNN takes ~160ms per query, which kills any real-time system. HNSW reduces this to under 1ms at 95% recall@10. The transition point: once n exceeds ~100K, reach for FAISS or HNSW before any other optimization. The recall-speed tradeoff is controllable via the ef (search width) parameter — set it higher for better recall, lower for lower latency.`,
-      `**Trap: forgetting to scale features. If feature ranges differ by 1000×, kNN sees only the largest-range feature. StandardScaler or L2-normalize embeddings before indexing — this mistake silently destroys retrieval quality with no obvious error.**\n\nFor the digit classifier: pixel values range from 0 to 255, so scaling is uniform and kNN works correctly. For a user-feature matrix with age (0–100) and annual income (0–500,000), raw Euclidean distance finds "nearest neighbors" by income alone. A 20-year-old earning 80K a year is identified as nearest to a 65-year-old earning 80,001, ignoring the 45-year age gap. StandardScaler brings both features to unit variance. For embedding vectors from transformers: L2-normalize before indexing so that cosine similarity equals the dot product — the default in FAISS's IndexFlatIP.`,
-      `**Diagnostic: if kNN performance is unexpectedly poor, check the intra-cluster distance distribution — if all distances are similar (high-dimensional degenerate case), reduce dimensionality with PCA or switch from Euclidean to cosine similarity.**\n\nFor the digit classifier: compute the distribution of distances from each test point to its 10 nearest neighbors. If the min and max distances are nearly identical (e.g., min 18.2, max 19.1 across 60,000 candidates), the curse of dimensionality is active — the 784-dimensional space has too many uninformative pixel dimensions. Fix: apply PCA to retain the top 50 components explaining ~85% of variance, then run kNN in 50 dimensions. Alternatively, switch from raw pixels to learned embeddings from a CNN — the 128-dimensional embedding space concentrates all discriminative information, and kNN in that space is highly effective.`,
+      `**Reach for an ANN index (FAISS, HNSW, ScaNN) once your catalog passes roughly 100K items — and budget for the real op count, not the textbook one.**\n\nO(d log n) is the asymptotic shape, but the actual work is closer to ef x d x log n, where ef is the search-width knob you set (typically ~100 for 95% recall@10). For n=10M, d=256 that is the difference between a textbook ~5,952 ops and a real ~600K ops — still roughly 4,300x cheaper than brute force's 2.56B, but size your latency budget off the real number, not the formula alone.`,
+      `**Standardize every feature before computing distance — skip it and whichever raw-scale feature happens to have the biggest numbers silently decides every "nearest" call.**\n\nOn a 2-feature toy example (tempo 60-200 BPM, peak amplitude 0-32,768), an unscaled distance calculation called a song with a wildly different tempo "183x closer" than one with a nearly-identical tempo, purely because amplitude's raw scale swamped tempo's in the sum of squares. Z-score every feature (value minus mean, divided by std, both computed from the catalog) before indexing, and that 183x gap collapses to a near-tie — the real geometry, not a units artifact.`,
+      `**ANN indexes fix query cost; they do not fix the curse of dimensionality — those are two separate problems with two separate fixes.**\n\nAn index skips most of the catalog to answer faster, but it searches the same space you handed it — a fast index over a meaningless 256-dimension space just returns meaningless neighbors quickly. The curse itself is fixed by dimensionality reduction (PCA) or by using embeddings actually trained so proximity encodes real similarity. Diagnostic: if a sample of nearest-vs-farthest distances in your embedding space are within a few percent of each other, the space itself is the problem, not your index.`,
+      `**In production, kNN means retrieve-and-rerank, not a single kNN call.**\n\nHave the ANN index return a wide shortlist (e.g. the approximate top 200, not just the 10 you will show) to cover its own ~5% miss rate, then rerank that shortlist with an exact or more expensive scorer. Reranking 200 candidates at d=256 costs ~51K ops — trivial next to the ~600K spent retrieving the shortlist. This retrieve-then-rerank shape is the architecture behind essentially every production search and recommendation system, not just kNN.`,
+      `**Choose kNN over a trained classifier specifically when you need online learning or instance-level explanations, not just an irregular boundary.**\n\nOnline learning: adding a new item means inserting one embedding into the index, no retraining pass — unlike a decision tree re-splitting nodes or an SVM re-solving its quadratic program. Instance-level explanations: you can name the exact stored examples behind any answer ("recommended because of these three tracks"), which a logistic regression's weights or an SVM's kernel combination cannot hand you directly.`,
     ],
-    interactivePrompt: `Before you touch the controls: if you add 500 random noise dimensions to the digit feature vectors alongside the original 784 pixel dimensions, do you expect kNN accuracy to go up, stay roughly the same, or drop significantly?`,
+    interactivePrompt: `Before you touch the controls: if you add 500 random noise dimensions on top of the 256-dimension song embedding, do you expect the retrieved "similar songs" to get better, stay about the same, or get worse — and why?`,
     checkQuestions: [
       {
-        q: `Why does KNN fail in 1000 dimensions even with millions of training points?`,
+        q: `In a 256-dimension song-embedding space, why does kNN's "nearest neighbor" concept start to break down even with millions of catalog songs?`,
         options: [
-          `\`A) Training data grows sparse — millions of points across 1000 dimensions leave most volume empty, so no neighbours exist within any radius; more data alone fixes it.\``,
-          `\`B) KNN's O(nd) inference time becomes prohibitive at d=1000; the failure is purely computational, and approximate-neighbour indexes restore full accuracy instantly.\``,
-          `\`C) Curse of dimensionality: nearest and farthest distances converge to nearly the same value, so local averaging breaks down here.\``,
-          `\`D) At d=1000, Euclidean distance violates the triangle inequality entirely, so switching to cosine similarity alone restores a working metric without any reduction.\``,
+          `\`A) The catalog is too small relative to 256 dimensions — adding more songs alone would fix the problem, since the issue is purely a lack of data density.\``,
+          `\`B) Curse of dimensionality: distance is a sum of ~256 roughly-independent squared differences, and by the Law of Large Numbers its relative spread shrinks like 1/sqrt(d), so nearest and farthest songs land within a few percent of each other.\``,
+          `\`C) Exact kNN's O(nd) query cost becomes too slow at this scale, so the failure is purely computational — an ANN index alone restores full nearest-neighbor accuracy.\``,
+          `\`D) At 256 dimensions, Euclidean distance stops satisfying the triangle inequality, so switching to cosine similarity alone fixes the problem with no dimensionality reduction needed.\``,
         ],
-        answer: `C`,
+        answer: `B`,
       },
       {
-        q: `A production recommendation system uses KNN with n=50M items and d=256-dimensional embeddings. Brute-force KNN is too slow. Select the two correct parts of a sound architecture here.`,
+        q: `A music-streaming catalog has n=10M songs with d=256-dimension embeddings. Brute-force kNN is too slow for a live "similar songs" feature. Select the two correct pieces of a sound production architecture.`,
         options: [
-          `\`A) Build an ANN index offline (HNSW or FAISS IVF) over the 50M embeddings, then query it online for a shortlist of top-k approximate candidates per user.\``,
-          `\`B) Re-rank that shortlist with a more expensive scoring function or learned ranker — the classic retrieve-and-rerank pattern used across production search.\``,
-          `\`C) Reduce d=256 to d=16 with PCA and keep brute-force search, since compressing that aggressively at recommendation scale carries essentially no recall cost.\``,
-          `\`D) Shard the 50M items across 100 machines and run brute-force KNN in parallel per shard, which reaches sub-100ms latency with zero accuracy loss.\``,
+          `\`A) Build an ANN index (HNSW/FAISS) offline over the 10M embeddings, then query it online for a wide shortlist of approximate candidates.\``,
+          `\`B) Rerank that shortlist with a more precise or more expensive scorer before returning the final top 10 — the retrieve-and-rerank pattern.\``,
+          `\`C) Reduce d=256 to d=16 with PCA and keep brute-force search, since compressing that aggressively at this scale carries essentially no recall cost.\``,
+          `\`D) Shard the 10M items across 100 machines and run brute-force kNN in parallel per shard, reaching sub-100ms latency with zero accuracy loss.\``,
         ],
         answer: ['A', 'B'],
       },
       {
-        q: `When would you choose KNN over a trained classifier like logistic regression or a decision tree?`,
+        q: `You're choosing between kNN and a trained classifier (logistic regression or a decision tree) for a recommendation feature where new items are added constantly and users ask "why was this recommended?" Which property of kNN specifically makes it attractive here, beyond just an irregular decision boundary?`,
         options: [
-          `\`A) Choose it when n is very large (n > 1M), since KNN needs zero training time while logistic regression and trees scale with training-set size instead.\``,
-          `\`B) Choose it when features are all categorical, since Hamming distance beats log-odds coefficients and consistently outperforms trees on categorical tabular data.\``,
-          `\`C) Choose it when the boundary is irregular and non-linear, training data is small and low-dimensional, you need online learning, or instance-level explanations matter.\``,
-          `\`D) Choose it whenever the positive class prior is below 10%, since local density estimation near rare classes is naturally unaffected by global imbalance.\``,
+          `\`A) Online learning (a new item is just inserted into the index, no retraining) and instance-level explanations (you can name the exact stored examples behind an answer) — neither a decision tree nor logistic regression gives you both for free.\``,
+          `\`B) kNN trains faster than logistic regression on any dataset size, so it is always the right default whenever training speed matters at all.\``,
+          `\`C) kNN naturally produces calibrated probabilities that logistic regression cannot match, making its recommendations easier to explain to users.\``,
+          `\`D) kNN requires no feature engineering whatsoever, unlike a decision tree, which needs hand-built threshold rules regardless of the input data type.\``,
         ],
-        answer: `C`,
+        answer: `A`,
+      },
+      {
+        q: `In the tempo/amplitude example, raw Euclidean distance calls Track B (58 BPM off, nearly identical loudness) about 183x closer to the query than Track A (nearly identical tempo, wildly different loudness). What actually caused this, and what fixes it?`,
+        options: [
+          `\`A) Amplitude's raw scale (thousands) swamps tempo's raw scale (tens) in the sum of squares — a pure units artifact. Standardizing both features to z-scores (mean/std computed from the catalog) fixes it; after scaling, the two candidates land almost the same distance from the query.\``,
+          `\`B) Track B genuinely is more musically similar to the query — the raw distance is correct, and no adjustment is needed since Euclidean distance already captures true similarity.\``,
+          `\`C) The formula itself is wrong for audio features; switching from Euclidean distance to Manhattan distance would fix the imbalance without touching the raw feature scales at all.\``,
+          `\`D) The query song's amplitude value was measured incorrectly; the fix is re-measuring Q's amplitude more precisely rather than any change to how distance is computed.\``,
+        ],
+        answer: `A`,
+      },
+      {
+        q: `HNSW's complexity is O(d log n), which works out to about 5,952 multiplications for this catalog (d=256, n=10M) — but production systems report closer to 600K ops per query at 95% recall. Where does the other ~100x come from?`,
+        options: [
+          `\`A) O(d log n) hides a constant: at each of the ~log2(n) is approx 23 graph hops, HNSW examines a candidate list of width ef (a tunable search-width parameter, ~100 for 95% recall), so the real cost is closer to ef x d x log n is approx 100 x 256 x 23.25 is approx 595,200.\``,
+          `\`B) The 600K figure includes a full brute-force fallback scan run whenever the index's confidence drops below a fixed threshold, which happens on nearly every query.\``,
+          `\`C) Production embeddings always use d=25,600 rather than d=256, so the O(d log n) formula was computed with the wrong dimensionality from the start.\``,
+          `\`D) The gap is entirely index-build overhead amortized per query; the actual per-query search cost really is close to 5,952 and the 600K figure double-counts offline indexing work.\``,
+        ],
+        answer: `A`,
       },
     ],
-    takeaway: `kNN makes one bet — nearby points share labels — so the distance metric and the feature space are the model, k is just a smoothing parameter, and in high dimensions that bet fails because all distances converge; the production answer is ANN indexing over learned embeddings where the space is built to make proximity meaningful.`,
+    takeaway: `kNN makes one bet — nearby points in feature space share labels — so the distance metric, the feature scaling, and the embedding space *are* the model; k is just a smoothing knob on top. That bet costs two different things at scale: query cost, fixed by an ANN index (retrieve, then rerank); and the curse of dimensionality, fixed by dimensionality reduction or embeddings trained so proximity is meaningful — never confuse which fix solves which problem.`,
     recap: [
-      "**kNN's one bet: nearby points share labels.** Zero training time — it just stores the data.",
-      "**The distance metric and feature space ARE the model;** k is just a smoothing parameter.",
-      "**High dimensions break it** — all distances converge (curse of dimensionality).",
-      "**Always scale features** — a 1000× range difference makes kNN see only the largest feature.",
-      "**At scale (n > 100K) use ANN** (FAISS, HNSW) — exact kNN is O(n) per query; HNSW gives sub-ms search over 100M vectors at 95%+ recall.",
-      "**Production answer: ANN over learned embeddings** where the space is built to make proximity meaningful.",
+      "**kNN stores every point, defers all work to query time** — no training phase, unlike SVM's O(n2) kernel-matrix wall.",
+      "**Euclidean distance** = sqrt(sum of (pi-qi)^2) — literal straight-line distance between two points in feature space.",
+      "**Unscaled features distort distance** — tempo vs. raw amplitude: 183x gap on raw units to near-tie after z-score standardization. StandardScaler before kNN, always.",
+      "**Brute force = O(nd)** per query — n=10M, d=256 to 2.56B ops.",
+      "**Curse of dimensionality:** distance = sum of ~d independent terms to relative spread shrinks ~1/sqrt(d) to nearest/farthest ratio moves toward 1 (illustrative: approx 0.48 at d=2 to approx 0.94 at d=256).",
+      "**Two separate problems, two separate fixes:** ANN indexes fix query cost; dimensionality reduction / trained embeddings fix the curse. A fast index over a meaningless space still returns meaningless neighbors.",
+      "**ANN (FAISS/HNSW/ScaNN):** O(d log n) shape, but real cost is approx ef x d x log n (ef approx 100) approx 600K ops — the ~100x gap over the textbook 5,952 is the ef constant, not a contradiction.",
+      "**recall@10** = fraction of the true top-10 (brute force) that the index's own top-10 actually contains.",
+      "**Retrieve-and-rerank:** wide approximate shortlist (~200) to precise rerank (~51K ops) to final top 10 — the shape behind most production search.",
+      "**Choose kNN for:** irregular/nonlinear boundaries, small low-dim data, **online learning** (insert, don't retrain), **instance-level explanations** (name the real neighbors).",
     ],
-    interactiveId: 'knn_viz',
-  },
+    },
   {
     id: 'naive_bayes',
     interactiveId: 'bayes_calculator',
