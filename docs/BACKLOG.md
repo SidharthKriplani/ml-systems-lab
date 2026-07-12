@@ -2188,3 +2188,20 @@ Also refreshed 8 stale `verifiedFileHash` entries for pre-existing clean modules
 5. `learning_rate_schedules` just needs one verify call to confirm the original "no issues" finding.
 
 **Not committed yet:** all 31 touched files (`git diff --stat` above) plus `contentStatus.js` are sitting uncommitted in the working tree alongside the already-merged QnA question data. `CLAUDE.md`, `BRAIN_TRANSFER.md`, and `STATUS.md` also show as modified in `git status` — these were NOT touched by any Phase A fix-stage agent (they were explicitly scoped to `src/data/foundations/*.js` only) and are most likely pre-existing local edits from before this batch; flagging rather than silently folding them into this batch's commit.
+
+
+---
+
+## Session 2026-07-12 (continued) — QnA drafts: 194 modules merged, draft questions now visible in UI, 5 modules still blocked
+
+2026-07-12 09:26 IST (Sunday)
+
+**qnaBank.js**: workflow `wf_d358bb0a-d99` (Task `wk2r9br62`) generated draft question sets for 194 of MSL's 200 modules (6408 questions, questions-only, no answers). Merged with 170 id collisions renamed to keep global question IDs unique across the bank. Commit `cd4c37c`. **MSL now 195/200 modules covered** (194 `draft` + 1 pre-existing `answered`, `logistic_regression`).
+
+**5 modules still blocked, not attempted:** `calibration` (in `classicalMLModules.js`, `evalModules.js`, AND `probabilisticMLModules.js` — 3-way), `class_imbalance` (`classicalMLModules.js` vs `dataModules.js`), `feature_selection` (`classicalMLModules.js` vs `dataModules.js`), `bayesian_inference` (`mathStatsModules.js` vs `probabilisticMLModules.js`), `cold_start` (`recsysModules.js` vs `systemDesignModules.js`) — each id genuinely exists as *different written content* under the same id in 2-3 different source files, confirmed by direct read, not a lookup bug. Excluded from this QnA batch and from the Phase A batch too. This is a real product bug (whichever copy the app's runtime lookup resolves to is the only one a user ever sees) — needs a canonical-copy decision or a rename, not yet made.
+
+**Draft-visibility supersession (user-directed, applies to both GSL and MSL):** `components/foundations/QnAPanel.jsx` no longer stubs `draft`-status entries — draft questions now render with a distinct DRAFT banner (the deep-link `useEffect` gate was also extended to allow `'draft'`). Answer-eligibility (only `clean` narrative modules get real answers) is unchanged. Full rule: root `QNA-INTERVIEW-STANDARD.md`, "Supersession" section. Included in commit `cd4c37c`.
+
+All pushed. HEAD is `ba171e2`. Working tree fully clean.
+
+**Still owed:** the standard's light question-audit pass has not been run on any of these 6408 MSL draft questions — deferred, not forgotten. The 5 id-collision modules need a decision. The Phase A remainder plan (logged in the entry immediately above this one, 08:59 IST) has not been started.

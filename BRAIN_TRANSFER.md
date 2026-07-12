@@ -182,7 +182,11 @@ Later files reference earlier ones. Always update in this sequence:
 
 ## Context for Next Agent
 
-**⚠️ READ FIRST: MSL is in CONTENT FREEZE as of v4.119 (2026-06-21).**
+**⚠️ CURRENT STATE OVERRIDE, added 2026-07-12 09:26 IST (Sunday) — read this paragraph before the v4.119 freeze section below.** Since v4.119, an owner-directed 3B1B content-quality pipeline (writer + blind adversarial audit + fix, module-by-module, tracked in `src/data/contentStatus.js`) and an Interview QnA build (`src/data/qnaBank.js` + `src/components/foundations/QnAPanel.jsx`, gated third view tab on every foundation module) have both landed real, pushed work directly in `src/data/foundations/*.js` and related component files — the kind of work the freeze below explicitly forbids ("Only acceptable work is distribution..."). This was explicit, session-by-session owner direction, not a next-agent decision to defy the freeze. Current real numbers: contentStatus.js 13/115 clean (Phase A cut short mid-run, full breakdown in `docs/BACKLOG.md` 2026-07-12 08:59 IST), qnaBank.js 195/200 modules with draft questions (5 blocked on a real id-collision bug, not yet resolved). HEAD is `ba171e2`, working tree clean. **This override does not repeal the freeze strategy** (distribution-only until 100 email subs/weekly-returning-visitors) — it just means the freeze's premise ("no next agent may write new module content") has not held in practice for several sessions now, and the next agent should get real direction from the user on which regime is current rather than assuming either one silently. Treat `docs/BACKLOG.md`'s latest entries as the authoritative day-to-day state; this file's freeze section below is strategic history that may or may not still be live policy.
+
+---
+
+**⚠️ READ FIRST (freeze context, as of v4.119, 2026-06-21 — see override above for what's actually happened since):**
 
 Before doing anything: read `docs/STRATEGY_CRITIQUE_2026-06-21.md` in full. It captures the strategic pivot that gates this entire project. The next agent does NOT have permission to write new MCQs, Simplify versions, SEO guides, tabs, labs, or spine files. Only acceptable work is distribution (email capture, GSC submission, sitemap, UTM tags, LinkedIn-driven bug fixes). See "HARD RULE" in NEXT.md.
 

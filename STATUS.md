@@ -4,19 +4,20 @@ Read this at session open alongside NEXT.md + CLAUDE.md. One screen of truth.
 
 ---
 
-## Where we are (1 Jul 2026)
+## Where we are (12 Jul 2026)
 
 **Vercel:** live at `ml-systems-lab.vercel.app`  
-**Last meaningful push:** v4.130 (TimeSeriesTab fix + stale repo path)  
-**Content freeze:** IN EFFECT — distribution-only until 100 email subs OR 100 weekly returning visitors  
-**⚠️ Uncommitted local work:** foundations interview-depth gap-fill (5 content files) + mobile master-detail fix (index.css + 17 foundation tabs) + prior S-tier rewrite (10 content files + 10 interactives). **Push commands staged in CLAUDE.md LATEST + PREV — Sidharth runs on Mac.**
+**Last meaningful push:** commit `ba171e2` — MSL qnaBank.js now covers 195/200 modules; draft QnA questions render in the UI  
+**Content freeze:** the v4.119 "distribution-only" freeze (below) was superseded in practice by an owner-directed 3B1B/Phase-A content-quality pass + the QnA interview-mode build across `src/data/foundations/*.js` — real work landed there this session; treat the freeze section further down as historical strategy context, not current scope, until the user formally revises it. See `docs/BACKLOG.md`'s 2026-07-12 08:59 IST entry for the authoritative current state.  
+**Uncommitted local work:** none — `git status` is clean as of HEAD `ba171e2`.
 
 ---
 
-## What just shipped (this session, 1 Jul 2026 — LOCAL, uncommitted)
+## What just shipped (sessions through 12 Jul 2026)
 
-**Foundations interview-depth gap-fill + mobile fix.**  
-Owner-directed content-quality pass driven by an external interview-coverage gap analysis. ~40 foundation modules across 5 `src/data/foundations/` files (classicalML, eval, unsupervised, optimization, data) each got new prose sections in `summary`, new `keyPoints`, and new `checkQuestions` closing senior-MLE interview gaps. Factual fixes: RF calibration direction (away from 0/1 → sigmoid), backwards augmentation diagnostic, softened overclaims, one wrong quiz key. Render fixes: currency-`$`/KaTeX collisions and backtick-apostrophes. **Mobile:** the 17 `foundations/*FoundationTab.jsx` two-pane layouts squeezed the reader to a sliver on phones once a module opened — fixed via a `.foundation-split` master-detail media query in `index.css` + a `className`/`data-open` tag on all 17 (hide list when open, full-width reader). All files parse clean (acorn-jsx 17/17, JS import-parse), brace-balanced, string-audit OK. See CLAUDE.md LATEST for full detail + the two push commands.
+**3B1B Phase A content pipeline — CUT SHORT mid-run at user's direction, not resumed.** `src/data/contentStatus.js` — **13 'clean' / 115 tracked** (S: 4/38, A: 9/77). 100 modules `in_progress`: 75 fixed-but-unverified, 23 fixed-verified-still-failing, 1 disputed (`thompson_sampling`), 1 audited-clean-unconfirmed (`learning_rate_schedules`). Full categorized breakdown + concrete resume plan: `docs/BACKLOG.md`'s 2026-07-12 08:59 IST entry — read that before touching Phase A again, don't re-derive from the workflow journal.
+
+**Interview QnA mode.** Third view tab (Full / Quick recap / Interview QnA) across all 19 foundation family tabs, `src/components/foundations/QnAPanel.jsx` + `src/data/qnaBank.js`. **195/200 modules now have a draft question set** (6408 questions) — 1 module (`logistic_regression`) is fully `answered` (31 questions, audited). **5 modules blocked** by a genuine id-collision bug (`calibration`, `class_imbalance`, `feature_selection`, `bayesian_inference`, `cold_start` — same id, different content, in 2-3 different source files) — not resolved. Per explicit user direction (2026-07-12), `draft`-status questions now RENDER in the UI (distinct DRAFT banner) instead of a coming-soon stub — only real-answer eligibility (still gated on narrative `clean` status) is unchanged. Rule detail: root `QNA-INTERVIEW-STANDARD.md`. **Owed, not done:** the standard's own light question-audit pass has never been run on these 6408 draft questions.
 
 ---
 
