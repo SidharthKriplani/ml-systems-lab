@@ -2205,3 +2205,24 @@ Also refreshed 8 stale `verifiedFileHash` entries for pre-existing clean modules
 All pushed. HEAD is `ba171e2`. Working tree fully clean.
 
 **Still owed:** the standard's light question-audit pass has not been run on any of these 6408 MSL draft questions — deferred, not forgotten. The 5 id-collision modules need a decision. The Phase A remainder plan (logged in the entry immediately above this one, 08:59 IST) has not been started.
+
+
+---
+
+## Session 2026-07-12 (late morning) — check questions now gate Mark Complete, single-select no longer auto-reveals
+
+2026-07-12 11:41 IST (Sunday)
+
+**Trigger:** user-directed UX fix. The per-module "Mark as complete →" button was unconditional — no relationship to whether the module's check questions had actually been attempted. Separately, `CheckQuestion`'s single-select path auto-revealed correct/incorrect the instant an option was clicked (`setSelected(letter); setSubmitted(true)` in the same call) — no explicit "Check answer" step. Only the newer multi-select ("select all that apply") variant already had a submit gate. GSL's equivalent (`FoundationsRunner`'s `QuestionBlock`) already did both of these correctly — select highlights the choice, a separate "Check answer" press reveals, and the completion button stays disabled until every question is submitted — so this brings MSL in line with that, not the other way around.
+
+**`src/components/foundations/CheckQuestion.jsx` (rewritten):** single-select no longer auto-submits on click — it now shares the same explicit "Check answer" button multi-select already had. Added an `onSubmit` callback (fires once, the moment a question is checked — "Try again" afterward doesn't un-attempt it) and a new exported `CheckQuestionsBlock` wrapper that renders a module's full check-question list and reports upward, via `onAllAnsweredChange`, whether every one has been attempted at least once.
+
+**All 19 `src/tabs/foundations/*FoundationTab.jsx`:** identical scripted 5-site diff per file — import line, a new `allAnswered` state (anchored right after the existing `recapMode` state), the check-questions render block swapped for `<CheckQuestionsBlock key={selected.id} checkQuestions={selected.checkQuestions} onAllAnsweredChange={setAllAnswered} />` (`key={selected.id}` remounts it with a clean slate on every module switch — no manual reset code needed anywhere), the `MarkDoneButton` call site, and `MarkDoneButton`'s own definition. The button is now disabled + reads "Attempt all check questions" until `allAnswered`, then enabled with each family's *original* completed-label preserved exactly — 18 of 19 said "Mark as completed"; `PricingFoundationTab` genuinely said "Mark as reviewed" and keeps that wording rather than being flattened. Modules with zero check questions are never blocked (`allAnswered` is OR'd with "this module has no check questions" at the call site, so the gate can't strand a question-less module). Undo is unchanged — it already only ever rendered once a module was actually marked done, which is exactly the constraint asked for; nothing needed fixing there.
+
+**Process note:** the first pass of the 19-file scripted diff hard-coded a single completed-label ("Mark as completed") and correctly ABORTED on `PricingFoundationTab` via a pre-write content assertion — root cause was a genuine per-family label difference (Pricing says "reviewed", everyone else says "complete"), not a script bug. Fixed by detecting each file's original label before rewriting `MarkDoneButton`, and made the second run idempotent (skips any file already containing `CheckQuestionsBlock`) so it only touched the 9 files the first pass hadn't reached, leaving the first 10 exactly as they were.
+
+**Verification:** `node --check` clean on all 19 tab files + `CheckQuestion.jsx`, via sucrase JSX transform (this sandbox's `esbuild` is ARM64-broken for MSL, per the standing known issue — sucrase+node--check is the established fallback). Static verification only — no browser click-through was run this pass; worth confirming manually before calling this fully done.
+
+**Cross-lab:** GSL got the mirror-image fix — it already gated Mark Complete on check questions correctly, but had no Undo button at all. Added `unmarkComplete()` + an Undo button next to "✓ Completed" in `FoundationsRunner.jsx`/`Concepts.jsx`. Full detail in GSL's own `docs/GSL_PLAN.md`, same timestamp.
+
+**Not pushed** — sitting in the working tree. Not committed by me (standing rule: never run git myself).

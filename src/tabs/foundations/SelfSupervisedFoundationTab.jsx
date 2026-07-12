@@ -3,7 +3,7 @@ import { tierOf, TIER_STYLE } from '../../data/moduleTiers.js'
 import { AddToTrackPopover } from '../../components/tracks/AddToTrackPopover.jsx'
 import { getTracksForModule } from '../../utils/tracks.js'
 import { renderMd } from '../../utils/renderMd'
-import { CheckQuestion } from '../../components/foundations/CheckQuestion'
+import { CheckQuestion, CheckQuestionsBlock } from '../../components/foundations/CheckQuestion'
 import { HighlightPopover } from '../../components/foundations/HighlightPopover.jsx'
 import { QnAPanel } from '../../components/foundations/QnAPanel.jsx'
 import { FoundationViewTabs } from '../../components/foundations/FoundationViewTabs.jsx'
@@ -44,6 +44,7 @@ export function SelfSupervisedFoundationTab({ onNavigate, openModuleId, navOrigi
   const [tick, setTick] = useState(0)
   const [trackPopoverOpen, setTrackPopoverOpen] = useState(false)
   const [recapMode, setRecapMode] = useState(false)
+  const [allAnswered, setAllAnswered] = useState(false)
   const [qnaMode, setQnaMode] = useState(false)
   const trackBtnRef = useRef(null)
   const contentRef = useRef(null)
@@ -226,14 +227,14 @@ export function SelfSupervisedFoundationTab({ onNavigate, openModuleId, navOrigi
           {selected.checkQuestions?.length > 0 && (
             <div style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '10px', padding: '1.1rem 1.25rem', marginBottom: '1.5rem' }}>
               <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--prime)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>Check Questions</div>
-              {selected.checkQuestions.map((cq, i) => <CheckQuestion key={i} q={cq.q} options={cq.options} answer={cq.answer} />)}
+              <CheckQuestionsBlock key={selected.id} checkQuestions={selected.checkQuestions} onAllAnsweredChange={setAllAnswered} />
             </div>
           )}
           </>)}
 
           {qnaMode && <QnAPanel moduleId={selected.id} unlocked={isModuleDone(selected.id)} />}
           {!qnaMode && (
-            <MarkDoneButton moduleId={selected.id} onDone={() => setTick(t => t + 1)} />
+            <MarkDoneButton moduleId={selected.id} onDone={() => setTick(t => t + 1)} allAnswered={!selected.checkQuestions?.length || allAnswered} />
           )}
         </div>
       )}
@@ -241,12 +242,13 @@ export function SelfSupervisedFoundationTab({ onNavigate, openModuleId, navOrigi
   )
 }
 
-function MarkDoneButton({ moduleId, onDone }) {
+function MarkDoneButton({ moduleId, onDone, allAnswered }) {
   const done = isModuleDone(moduleId)
   return done ? (
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem',
-        background: 'var(--prime-faint)', border: '1px solid var(--prime)', borderRadius: '8px', padding: '0.6rem 1.1rem' }}>
+        background: 'var(--prime-faint)', border: '1px solid var(--prime)', borderRadius: '8px',
+        padding: '0.6rem 1.1rem' }}>
         <span style={{ color: 'var(--prime)', fontSize: '0.9rem', fontWeight: 700 }}>✓ Completed</span>
       </div>
       <button onClick={() => { unmarkModuleDone(moduleId); onDone() }}
@@ -256,11 +258,12 @@ function MarkDoneButton({ moduleId, onDone }) {
       </button>
     </div>
   ) : (
-    <button onClick={() => { markModuleDone(moduleId); onDone() }}
-      style={{ background: 'var(--prime)', color: '#000', fontWeight: 700, fontSize: '0.9rem',
-        border: 'none', borderRadius: '8px', padding: '0.7rem 1.5rem', cursor: 'pointer',
+    <button onClick={() => { if (allAnswered) { markModuleDone(moduleId); onDone() } }}
+      disabled={!allAnswered}
+      style={{ background: allAnswered ? 'var(--prime)' : 'var(--surface)', color: allAnswered ? '#000' : 'var(--ink-low)', fontWeight: 700, fontSize: '0.9rem',
+        border: allAnswered ? 'none' : '1px solid var(--rim)', borderRadius: '8px', padding: '0.7rem 1.5rem', cursor: allAnswered ? 'pointer' : 'not-allowed',
         fontFamily: 'var(--font-sans)', letterSpacing: '-0.01em' }}>
-      Mark as complete →
+      {allAnswered ? 'Mark as completed' : 'Attempt all check questions'}
     </button>
   )
 }

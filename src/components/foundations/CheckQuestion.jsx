@@ -5,10 +5,18 @@
 // questions (`answer: 'A'|'B'|'C'|'D'`) is unchanged. New: `answer` may also be an array of
 // letters (e.g. `['A','C']`) for a "Select all that apply" multi-select question — checkbox UI,
 // exact-set grading. Data files' `checkQuestions` schema otherwise unchanged.
-import { useState } from 'react'
+//
+// 2026-07-12: single-select no longer auto-reveals on click (previously clicking an option
+// immediately set submitted=true, coloring it green/red instantly with no explicit action).
+// Both single- and multi-select now require pressing "Check answer" before revealing
+// correct/incorrect, matching GSL's FoundationsRunner QuestionBlock behavior. Added an optional
+// `onSubmit` callback (fires once, the moment a question is checked) and a new
+// `CheckQuestionsBlock` wrapper that uses it to track "has every check question in this module
+// been attempted" for the Mark-complete gate (see each *FoundationTab.jsx's MarkDoneButton).
+import { useState, useEffect } from 'react'
 import { renderMd } from '../../utils/renderMd'
 
-export function CheckQuestion({ q, options, answer }) {
+export function CheckQuestion({ q, options, answer, onSubmit }) {
   const isMulti = Array.isArray(answer)
   const [selected, setSelected] = useState(isMulti ? [] : null)
   const [submitted, setSubmitted] = useState(false)
@@ -20,12 +28,18 @@ export function CheckQuestion({ q, options, answer }) {
       setSelected(prev => prev.includes(letter) ? prev.filter(l => l !== letter) : [...prev, letter].sort())
     } else {
       setSelected(letter)
-      setSubmitted(true)
     }
   }
 
-  const revealed = isMulti ? submitted : selected !== null
-  const canSubmit = isMulti && selected.length > 0 && !submitted
+  function check() {
+    if (submitted) return
+    if (isMulti ? selected.length === 0 : selected === null) return
+    setSubmitted(true)
+    onSubmit?.()
+  }
+
+  const revealed = submitted
+  const canSubmit = isMulti ? selected.length > 0 : selected !== null
 
   return (
     <div style={{ marginBottom: '1.25rem', paddingBottom: '1.25rem', borderBottom: '1px solid var(--rim)' }}>
@@ -68,9 +82,9 @@ export function CheckQuestion({ q, options, answer }) {
           )
         })}
       </div>
-      {isMulti && !submitted && (
+      {!revealed && (
         <button
-          onClick={() => canSubmit && setSubmitted(true)}
+          onClick={check}
           disabled={!canSubmit}
           style={{ marginTop: '0.6rem', fontSize: '0.78rem', fontWeight: 700, color: canSubmit ? 'var(--prime)' : 'var(--ink-low)',
             background: 'none', border: `1px solid ${canSubmit ? 'var(--prime)' : 'var(--rim)'}`, borderRadius: '5px',
@@ -89,4 +103,28 @@ export function CheckQuestion({ q, options, answer }) {
       )}
     </div>
   )
+}
+
+// CheckQuestionsBlock — renders every check question for the currently open module and reports,
+// via onAllAnsweredChange, whether all of them have been checked at least once ("attempted" is
+// sticky — pressing "Try again" on an individual question does not un-attempt it). Give it
+// `key={selected.id}` at the call site so switching modules remounts it with a fresh answered-set
+// instead of carrying over the previous module's progress.
+export function CheckQuestionsBlock({ checkQuestions, onAllAnsweredChange }) {
+  const [answeredIdx, setAnsweredIdx] = useState(() => new Set())
+
+  useEffect(() => {
+    onAllAnsweredChange?.(checkQuestions.length > 0 && answeredIdx.size === checkQuestions.length)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [answeredIdx, checkQuestions.length])
+
+  return checkQuestions.map((cq, i) => (
+    <CheckQuestion
+      key={i}
+      q={cq.q}
+      options={cq.options}
+      answer={cq.answer}
+      onSubmit={() => setAnsweredIdx(prev => (prev.has(i) ? prev : new Set(prev).add(i)))}
+    />
+  ))
 }
