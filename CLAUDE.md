@@ -57,24 +57,6 @@ An external gap analysis (ChatGPT) flagged interview-coverage gaps per module. E
 The 17 `src/tabs/foundations/*FoundationTab.jsx` tabs used a two-pane flex layout — selecting a module shrank the list to a fixed **280px sidebar** and squeezed the reading pane into a ~100px sliver on phones. Fix (master-detail pattern, centralised): tagged the identical outer container in all 17 with `className="foundation-split" data-open={selected ? '1' : '0'}`, and added one `@media (max-width: 700px)` block in `src/index.css` that hides the list once a module is open (`> div:first-child { display:none !important }` — `!important` beats the inline width), gives the reader full width with tighter padding, and adds `overflow-wrap: break-word` for long formulas. The existing in-page "← All modules" button handles back-nav. All 17 tabs verified with acorn-jsx (17/17), brace-balanced, string-audit OK; index.css brace-balanced.
 
 ### Push commands (run on Mac — 6 files)
-```bash
-cd ~/Documents/Professional/BreakLabs/labs/ml-systems-lab && \
-rm -f .git/index.lock .git/HEAD.lock && \
-git add src/data/foundations/classicalMLModules.js \
-        src/data/foundations/evalModules.js \
-        src/data/foundations/unsupervisedModules.js \
-        src/data/foundations/optimizationModules.js \
-        src/data/foundations/dataModules.js && \
-git commit -m "Foundations interview-depth gap-fill: prose+keyPoints+quizzes across 40 modules in 5 files; fixed RF calibration direction, wrong answer keys, currency-\$/backtick render hazards" && \
-git push origin main
-```
-```bash
-cd ~/Documents/Professional/BreakLabs/labs/ml-systems-lab && \
-rm -f .git/index.lock .git/HEAD.lock && \
-git add src/index.css src/tabs/foundations/*.jsx && \
-git commit -m "Mobile: foundation tabs use master-detail on phones — hide list when a module is open, full-width reader (17 tabs + index.css media query)" && \
-git push origin main
-```
 
 ---
 
@@ -114,34 +96,8 @@ All work is LOCAL. **Two git pushes pending — Sidharth runs both on Mac.**
 | `GradientBoostingViz.jsx` | Gradient-in-function-space panel (∂L/∂F(xᵢ)=-2×residualᵢ, XGBoost gain formula); **train/test MSE SVG chart** — 60-point noise-free test grid (true sin), gold=train/cyan=test, optimal stopping line, OVERFITTING badge at η≥0.8 |
 
 ### Push command 1 — content (run on Mac)
-```bash
-cd ~/Documents/Professional/BreakLabs/labs/ml-systems-lab && \
-rm -f .git/index.lock .git/HEAD.lock && \
-git add src/data/foundations/classicalMLModules.js \
-        src/data/foundations/evalModules.js \
-        src/data/foundations/optimizationModules.js \
-        src/data/foundations/deepLearningModules.js && \
-git commit -m "S-tier content: 9.5/10 teaching depth — numerical examples + derivations across 10 modules" && \
-git push origin main
-```
 
 ### Push command 2 — interactives (run on Mac, after push 1)
-```bash
-cd ~/Documents/Professional/BreakLabs/labs/ml-systems-lab && \
-rm -f .git/index.lock .git/HEAD.lock && \
-git add src/components/interactive/BiasVarianceViz.jsx \
-        src/components/interactive/GradientDescentDemo.jsx \
-        src/components/interactive/ROCCurveViz.jsx \
-        src/components/interactive/BackpropViz.jsx \
-        src/components/interactive/CrossValidationViz.jsx \
-        src/components/interactive/RandomForestViz.jsx \
-        src/components/interactive/RegularizationViz.jsx \
-        src/components/interactive/DecisionTreeViz.jsx \
-        src/components/interactive/LogisticRegressionViz.jsx \
-        src/components/interactive/GradientBoostingViz.jsx && \
-git commit -m "S-tier interactives: simulation gaps filled — test/train split, divergence, PR curve, gradient bars, CV types, bootstrap viz, instability demo, log-odds, overfitting chart" && \
-git push origin main
-```
 
 ### JSX parse verification
 All 10 interactive files: **10/10 OK** (acorn-jsx, no syntax errors).
@@ -372,20 +328,6 @@ Tapping the active bottom-nav zone button resets it to its default.
 ---
 
 ## Dev and commit workflow
-
-```bash
-# Run locally
-npm run dev       # → http://localhost:5173
-npm run build     # production build (runs on macOS — sandbox builds fail due to ARM64 rollup mismatch)
-
-# Before any git operation — fix recurring lock file issue:
-rm -f .git/index.lock .git/HEAD.lock
-
-# Standard commit
-git add -A
-git commit -m "your message"
-git push          # auto-deploys to Vercel
-```
 
 **Known git quirk:** `.git/index.lock` and `.git/HEAD.lock` appear frequently and block commits. Always run the `rm -f` line before staging. If push says "Everything up-to-date" after a lock error, the commit itself failed — re-run `git add -A && git commit` after clearing locks.
 

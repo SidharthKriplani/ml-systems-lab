@@ -49,3 +49,10 @@ MSL is a judgment + depth SPA for senior MLE interview prep: 130+ Gradient posts
 ## Next session
 
 Read NEXT.md. Short answer: distribution-only — GSC verification → email capture component → LinkedIn cadence.
+
+---
+
+## 2026-07-05 — MEGA-SESSION (full detail in root ../../CLAUDE.md)
+- 3 modules finished (recsys_dl_architectures, recsys_representation_learning, online_experimentation_ml) + 3 interactives (dl_recsys_arch_viz, negative_sampling_viz, experiment_power_viz) registered in InteractivePanel + 14 TRAINER_QUESTIONS (ids 121-134).
+- Difficulty ordering: NEW utils/foundations/sortByDifficulty.js wraps all 19 family tabs + coding drills. Mobile: MyTracksTab + Cheatsheet grids (index.css). Wave 3: Profile 5-card + company logos (28) + Progress reorder.
+- Push via `git add src/`. **NEXT = SEO → ../../HANDOFF-SEO.md** (MSL has generate-rss but NO prerender yet — port GSL's scripts/prerender-gt.js pattern).

@@ -83,8 +83,9 @@ export const ParallelTrendsViz = forwardRef(function ParallelTrendsViz(props, re
 
       <div style={{ fontSize: '0.68rem', color: 'var(--ink-low)', marginTop: '8px', lineHeight: 1.5 }}>
         At 0 the treated line is parallel to control pre-policy and the naive DiD nails the true +12.
-        Tilt the pre-trend and the DiD swallows the pre-existing drift — reporting a bigger "effect" that
-        is really divergence that started before the policy. An event study on the pre-period catches this.
+        Tilt the pre-trend and the DiD swallows the pre-existing drift — reporting a smaller "effect" that
+        understates the true impact, because the downward pre-trend eats into the apparent post-period jump.
+        An event study on the pre-period catches this.
       </div>
     </div>
   )

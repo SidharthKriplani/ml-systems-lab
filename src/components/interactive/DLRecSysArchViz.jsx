@@ -45,9 +45,17 @@ const ARCHS = {
     name: 'SASRec',
     tag: 'unidirectional sequence',
     interaction: 'causal self-attention over ordered history → next item',
-    candidateDependent: true,
+    candidateDependent: false,
     ordered: true,
-    note: 'Left-to-right self-attention over the ORDER of interactions. Naturally autoregressive next-item prediction.',
+    note: 'Left-to-right self-attention over the ORDER of interactions — the candidate only enters at the final scoring step, same as DLRM/DeepFM/Wide&Deep. Naturally autoregressive next-item prediction.',
+  },
+  bert4rec: {
+    name: 'BERT4Rec',
+    tag: 'bidirectional / masked-item (cloze)',
+    interaction: 'bidirectional self-attention over ordered history → masked-item prediction',
+    candidateDependent: false,
+    ordered: true,
+    note: 'Bidirectional self-attention with a masked-item (cloze) objective — sees past AND future context in training, but the candidate only enters at scoring, and it is not usable autoregressively the way SASRec is.',
   },
 }
 
@@ -123,8 +131,11 @@ export const DLRecSysArchViz = forwardRef(function DLRecSysArchViz(props, ref) {
       <div style={{ fontSize: '0.72rem', color: 'var(--ink-mid)', lineHeight: 1.5, padding: '6px 8px', background: 'var(--depth)', border: '1px solid var(--rim)', borderRadius: 6 }}>
         <b style={{ color: 'var(--ink-hi)' }}>{a.name}</b> — {a.tag}. {a.note}
       </div>
+      <div style={{ fontSize: '0.6rem', color: 'var(--ink-low)', marginTop: 4, fontStyle: 'italic' }}>
+        Attention/relevance percentages above are illustrative example weights for this one demo history, not real model output.
+      </div>
       <div style={{ fontSize: '0.66rem', color: 'var(--ink-low)', marginTop: 8, lineHeight: 1.5 }}>
-        Watch the history bars: only <b>DIN</b> and <b>SASRec</b> re-weight the history against the candidate, so the user's representation becomes candidate-dependent. Wide&Deep / DeepFM / DLRM pool the history into one fixed vector. That single distinction is DIN's reason to exist.
+        Watch the history bars: only <b>DIN</b> re-weights the history against the candidate, so the user's representation becomes candidate-dependent. Wide&Deep / DeepFM / DLRM / SASRec / BERT4Rec pool the history into one fixed-per-candidate vector — SASRec and BERT4Rec instead model the *order* of that history, but neither changes its representation based on which candidate you're scoring. That single distinction is DIN's reason to exist.
       </div>
     </div>
   )

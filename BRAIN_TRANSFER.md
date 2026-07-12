@@ -79,12 +79,6 @@ ML Systems Lab (MSL) is a browser-only production ML judgment practice tool. 300
 
 **End of every session, before closing:**
 
-```bash
-cd "/Users/ASUS/Documents/Professional/GitHub/upskill platforms (4)/ml-systems-lab"
-rm -f .git/index.lock .git/HEAD.lock
-git add -A && git commit -m "v4.X: [what shipped — be specific]" && git push
-```
-
 **Known sandbox issue:** The AI sandbox cannot remove `.git/HEAD.lock` due to file permissions. If `git commit` fails with "cannot lock ref HEAD", the user must run the commit from their own terminal. Always provide the exact command.
 
 **Why this matters:**
