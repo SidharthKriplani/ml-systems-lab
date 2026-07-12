@@ -12,14 +12,16 @@ The hard part is not the algorithm — it is that without labels, you cannot mea
 
 Evaluation without labels uses three internal metrics. Silhouette score: (b - a) / max(a, b) where a = mean distance to same-cluster points, b = mean distance to nearest different-cluster points. Range [-1, 1], higher is better — but biased toward spherical clusters. Davies-Bouldin index: ratio of within-cluster scatter to between-cluster distance, lower is better. Calinski-Harabasz index: ratio of between-cluster to within-cluster dispersion, higher is better. None of these is a substitute for domain evaluation. A silhouette score of 0.7 on clusters that mix bargain hunters with power users is useless.
 
+Two other failure modes compound as the data or K get large. The curse of dimensionality: as feature count grows, distances between points become statistically similar — with 512 features, the gap between the nearest and farthest neighbor distance shrinks, so "nearest centroid" becomes a nearly arbitrary label. Init sensitivity: K-means starts from randomly placed centroids and only guarantees convergence to a local optimum, not the global one — different random initializations can land on different final clusters, and with a large K (say 150) relative to a modest sample size (10,000 points, about 67 points per cluster on average), those clusters are small enough that which points land where becomes unstable from run to run.
+
 The metric that matters is business validity: pull 20 random examples from each cluster and ask "does this make sense?" Can your recommendation team write a distinct strategy for each segment? If not, the clustering has not solved the problem regardless of what any internal metric says.
 
 [FIGURE: cluster_shapes]
 
 NOT-this: "Clustering finds the true segments in your data." Clustering finds segments consistent with the algorithm's assumptions. The "true segments" only exist if your domain actually has discrete groups, not a continuous distribution. Most behavioral data is continuous — clustering imposes discretization. Use clustering to generate hypotheses, not to discover ground truth.`,
     keyPoints: [
-      `**Always evaluate clusters qualitatively — look at 20 random examples from each cluster and ask whether the segment makes business sense.**\n\nInternal metrics (silhouette, Davies-Bouldin) measure geometric quality, not business utility. A cluster with silhouette score 0.8 that mixes bargain hunters with power users is useless. Geometric quality and business utility are independent — you need both.`,
-      `**Trap: treating the number of clusters K as a hyperparameter to optimize numerically.**\n\nK is a business decision: "How many user segments can our recommendation system actually serve distinctly?" Start from that constraint, then use the elbow method to verify feasibility. Optimizing K on the silhouette score alone divorces the clustering from its purpose.`,
+      `**Always evaluate clusters qualitatively — look at 20 random examples from each cluster and ask whether the segment makes business sense.**\n\nInternal metrics (silhouette, Davies-Bouldin) measure geometric quality, not business utility. A cluster with silhouette score 0.7 that mixes bargain hunters with power users is useless. Geometric quality and business utility are independent — you need both.`,
+      `**Trap: treating the number of clusters K as a hyperparameter to optimize numerically.**\n\nK is a business decision: "How many user segments can our recommendation system actually serve distinctly?" Start from that constraint, then use the elbow method to verify feasibility — plot within-cluster sum of squares (WCSS) against K; WCSS drops fast at first and then flattens, and the "elbow" is the K where the drop visibly bends from steep to shallow, marking the point where adding more clusters stops buying much tighter fit. Optimizing K on the silhouette score alone divorces the clustering from its purpose.`,
       `**Diagnostic: if silhouette scores are near 0 for all K values you try, your data does not have cluster structure under that algorithm's geometry.**\n\nTry a different algorithm — DBSCAN for density-based structure — or transform the feature space. Near-zero silhouette across all K is a signal about the data and the algorithm's fit to it, not just a bad hyperparameter choice.`,
     ],
     checkQuestions: [
@@ -74,6 +76,7 @@ NOT-this: "Clustering finds the true segments in your data." Clustering finds se
       "**Real test = business validity:** pull 20 per cluster, ask \"does this make sense?\"",
       "**K is a business decision,** not a metric to optimize.",
       "**Near-zero silhouette across all K = no cluster structure** under that geometry.",
+      "**Next up:** each family gets its own deep-dive — K-Means Clustering, DBSCAN, and Hierarchical Clustering modules follow this one.",
     ],
     figures: {
       cluster_shapes: `<svg viewBox="0 0 360 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
@@ -129,15 +132,17 @@ NOT-this: "Clustering finds the true segments in your data." Clustering finds se
 
 [FIGURE: kmeans_steps]
 
-K-means minimizes the within-cluster sum of squared distances (inertia): Σₖ Σᵢ ∈ cluster k ‖xᵢ - μₖ‖². This is NP-hard in general — K-means finds a local minimum. The result depends on initialization. K-means++ fixes this: choose the first centroid uniformly at random, then each subsequent centroid with probability proportional to distance from the nearest existing centroid. This produces better local optima with fewer restarts. sklearn uses it by default with n_init=10.
+K-means minimizes the within-cluster sum of squared distances (inertia): Σₖ Σᵢ ∈ cluster k ‖xᵢ - μₖ‖². This is NP-hard in general — K-means finds a local minimum. The result depends on initialization. K-means++ fixes this: choose the first centroid uniformly at random, then each subsequent centroid with probability proportional to the squared distance from the nearest existing centroid. This produces better local optima with fewer restarts. sklearn uses k-means++ by default; note that sklearn's default n_init changed in v1.4 to 'auto', which resolves to a single run when init='k-means++' (versions before 1.4 defaulted to n_init=10).
 
 Elbow method: plot inertia vs K. Inertia always decreases as K increases — more clusters always fit tighter. Look for the elbow where marginal gain of adding a cluster drops off. This is approximate and often there is no clear elbow in real data.
 
-Three structural limitations to know. First: K-means assumes spherical clusters (Euclidean distance to centroid). If your data has non-spherical or unequal-density clusters, K-means draws the wrong boundaries regardless of K. Second: sensitive to outliers — one outlier pulls a centroid far from the cluster. Third: requires specifying K in advance, and an incorrect K produces confident but wrong assignments.
+Silhouette score is a per-point diagnostic: it compares each point's average distance to points in its own cluster (cohesion) against its average distance to points in the nearest other cluster (separation), and ranges from -1 to 1 — near 1 means well-clustered, near 0 means the point sits on a cluster boundary, and negative means it was probably assigned to the wrong cluster. Averaged across all points, scores below roughly 0.25 signal weak or absent structure (e.g., curse-of-dimensionality noise) — so a uniformly low average like 0.08-0.12 across every K tested is a structural warning that no choice of K will fix, not a sign you have not found the right K yet.
 
-NOT-this: "K-means finds the natural clusters." K-means partitions space into Voronoi cells — every point gets assigned to the nearest centroid. If your data has non-spherical or unequal-density clusters, K-means draws the wrong boundaries regardless of K. Try DBSCAN or GMM when clusters are not spherical or equal in size.`,
+Three structural limitations to know. First: K-means assumes spherical clusters (Euclidean distance to centroid). If your data has non-spherical or unequal-density clusters, K-means draws the wrong boundaries regardless of K. Second: sensitive to outliers — one outlier pulls a centroid far from the cluster. (K-medoids addresses this directly by using an actual data point, the medoid, as the cluster center instead of the mean — more robust to outliers and more interpretable, at higher compute cost; choose k-medoids over k-means when outliers or interpretability matter more than speed.) Third: requires specifying K in advance, and an incorrect K produces confident but wrong assignments.
+
+NOT-this: "K-means finds the natural clusters." K-means partitions space into Voronoi cells — every point gets assigned to the nearest centroid. Try DBSCAN or GMM when clusters are not spherical or equal in size.`,
     keyPoints: [
-      `**Always run K-means with K-means++ initialization and n_init=10 — a single random initialization frequently gets trapped in a poor local minimum.**\n\nRunning 10 times and taking the best result (lowest inertia) adds 10× compute but significantly improves cluster quality. This is the sklearn default for good reason — do not override it to save time on exploratory runs.`,
+      `**Always run K-means with K-means++ initialization and n_init=10 — a single random initialization frequently gets trapped in a poor local minimum.**\n\nRunning 10 times and taking the best result (lowest inertia) adds 10× compute but significantly improves cluster quality. As of sklearn 1.4, this is no longer the default (n_init now defaults to 'auto', which runs only once with k-means++ init) — so set n_init=10 explicitly rather than relying on the default.`,
       `**Trap: using K-means on high-dimensional data without dimensionality reduction.**\n\nIn high dimensions, Euclidean distance concentrates — all points become approximately equidistant, making centroid-based assignment meaningless. Apply PCA to 20–50 dimensions first. This is not optional at 100+ features; it is the difference between signal and noise.`,
       `**Diagnostic: after clustering, compute the per-cluster variance of key business metrics (revenue, engagement).**\n\nIf all clusters have similar metric distributions, the clustering is not capturing meaningful signal. Try different features or a different algorithm. Clusters that look geometrically clean but collapse to the same business profile have not solved the segmentation problem.`,
     ],
@@ -1002,21 +1007,23 @@ The encoder/decoder shape should match the data. **Dense** (fully-connected) aut
     id: 'gmm',
     interactiveId: 'gmm_viz',
     title: 'Gaussian Mixture Models',
-    subtitle: 'EM algorithm, soft assignments, model selection with BIC/AIC',
+    subtitle: 'EM algorithm, soft assignments, model selection with BIC',
     difficulty: 'advanced',
     estimatedMin: 38,
     tags: ['GMM', 'EM algorithm', 'probabilistic clustering', 'soft assignment'],
-    summary: `You have customer purchase amounts. Some customers buy once for 5 dollars (app purchases), some buy regularly for 50 dollars (subscription), some buy occasionally for 500 dollars (enterprise). The distribution of purchase amounts is trimodal — three distinct subpopulations. K-means would split them by which of 3 centroids is nearest. But a customer who buys for 25 dollars sometimes and 80 dollars sometimes — do they belong to the 5-dollar cluster or the 50-dollar cluster? GMM assigns soft probabilities: 70% probability they are in the 50-dollar cluster, 30% in the 5-dollar cluster. Both models apply.
+    summary: `You have per-transaction purchase amounts x. Some transactions are 5 dollars (app purchases), some are 50 dollars (subscriptions), some are 500 dollars (enterprise). The distribution of purchase amounts is trimodal — three distinct subpopulations. K-means would split them by which of 3 centroids is nearest. But a single $26 transaction sits between the $5 and $50 clusters — does it belong to the 5-dollar cluster or the 50-dollar cluster? GMM computes a responsibility for each component, worked out below.
 
-Gaussian Mixture Model: P(x) = Σₖ πₖ N(x | μₖ, Σₖ) where πₖ is the mixing weight (Σπₖ = 1), N(x | μₖ, Σₖ) is the k-th Gaussian component. Fitted via EM.
+Gaussian Mixture Model: P(x) = Σₖ πₖ N(x | μₖ, Σₖ) where πₖ is the mixing weight (Σπₖ = 1), N(x | μₖ, Σₖ) is the k-th Gaussian component evaluated at a single scalar transaction amount x — not an aggregate over a customer's several purchases. Responsibility for component k at a point x is r_k(x) = πₖN(x|μₖ,Σₖ) / Σⱼ πⱼN(x|μⱼ,Σⱼ). Worked example: take the $5 cluster as (π=0.45, μ=5, σ=8) and the $50 cluster as (π=0.35, μ=50, σ=12). At x=26: N(26|5,8)≈0.00159 and N(26|50,12)≈0.00450, so πₖN(x|μₖ,Σₖ) gives 0.45×0.00159≈0.00072 for the $5 cluster and 0.35×0.00450≈0.00157 for the $50 cluster. Normalizing those two — 0.00072/(0.00072+0.00157) and 0.00157/(0.00072+0.00157) — gives responsibilities of about 31% for the $5 cluster and 69% for the $50 cluster for that one $26 transaction. A customer with several transactions gets one responsibility vector per transaction, not a single blended number for the customer.
+
+Fitted via EM, which alternates two steps until log-likelihood stops improving: the E-step computes every point's responsibility r_k(x) for every component using the formula above; the M-step then re-estimates πₖ, μₖ, Σₖ as the responsibility-weighted mixing fraction, mean, and covariance over all points. Each E/M pair provably does not decrease the log-likelihood, but the landscape is multimodal, so EM only hill-climbs to whichever local optimum is nearest its starting point.
 
 [FIGURE: soft_assignment]
 
-Covariance types control cluster shape: full (each component has a different Σₖ — arbitrary ellipsoids), tied (all components share one Σ), diag (Σₖ is diagonal — axis-aligned ellipsoids, fewer parameters), spherical (Σₖ = σₖ²I — each component is K-means-like). Full covariance is most expressive but requires the most parameters. Spherical is equivalent to soft K-means.
+Covariance types control cluster shape: full (each component has a different Σₖ — arbitrary ellipsoids), tied (all components share one Σ), diag (Σₖ is diagonal — axis-aligned ellipsoids, fewer parameters), spherical (Σₖ = σₖ²I — each component is K-means-like). Full covariance is most expressive but requires the most parameters. Spherical alone is not enough to equal soft K-means — it also has to be tied (one shared σ² across every component, not a separate σₖ² per component); spherical-and-tied covariance is equivalent to soft K-means, and as σ→0 it reduces further to hard K-means's plain Euclidean nearest-centroid rule. Untied (per-component) spherical covariance still lets each cluster use its own scale, so it does not collapse to that rule.
 
 Bayesian Information Criterion for model selection: BIC = k·log(n) - 2·log(L̂). Lower is better. Penalizes model complexity. Fit GMMs with K=1 to 20, plot BIC, take the minimum.
 
-NOT-this: "GMM is just soft K-means." Soft K-means is GMM with spherical covariance and equal mixing weights. Full GMM with full covariance can fit elliptical clusters of any orientation and size — qualitatively different from K-means geometry. The covariance matrix is the key structural difference.`,
+NOT-this: "GMM is just soft K-means." Soft K-means is GMM with spherical, tied covariance (one shared σ² across every component, not per-component σₖ²) and equal mixing weights. Full GMM with full covariance can fit elliptical clusters of any orientation and size — qualitatively different from K-means geometry. The covariance matrix is the key structural difference.`,
     keyPoints: [
       `**Use BIC to select the number of components — fit K=1 to 20, take the K with minimum BIC.**\n\nThis is more principled than the elbow method and penalizes overfitting. If BIC keeps decreasing past K=20, your data does not have well-defined Gaussian components — try HDBSCAN or examine whether a distributional assumption is appropriate at all.`,
       `**Trap: initializing GMM randomly on high-dimensional data leads to component collapse — a component gets assigned 0 weight and disappears.**\n\nUse K-means to initialize the component means before running EM. Sklearn's GaussianMixture does this by default with init_params=\`'kmeans'\`. Multiple restarts (n_init > 1) further reduce the risk of degenerate solutions.`,
@@ -1069,7 +1076,8 @@ NOT-this: "GMM is just soft K-means." Soft K-means is GMM with spherical covaria
     recap: [
       "**Soft probabilistic assignment:** $P(x)=\\Sigma\\pi_k\\,N(x|\\mu_k,\\Sigma_k)$, fitted by EM.",
       "**Lifts three K-means limits:** soft membership, elliptical clusters, log-likelihood as fit criterion.",
-      "**Covariance type controls shape:** full (any ellipsoid), tied, diag, spherical (= soft K-means).",
+      "**EM alternates E-step and M-step:** E-step computes each point's responsibility $r_k(x)=\\pi_k N(x|\\mu_k,\\Sigma_k)/\\Sigma_j\\pi_j N(x|\\mu_j,\\Sigma_j)$ per component; M-step re-estimates $\\pi_k,\\mu_k,\\Sigma_k$ as the responsibility-weighted mixing fraction/mean/covariance.",
+      "**Covariance type controls shape:** full (any ellipsoid), tied, diag, spherical (spherical + tied = soft K-means).",
       "**EM only finds a local optimum** — use multiple restarts.",
       "**Select K by BIC** ($k\\log n - 2\\log\\hat{L}$, lower better), fit K=1–20, take the minimum.",
       "**Init means with K-means** to avoid component collapse (sklearn default).",
@@ -1095,13 +1103,13 @@ NOT-this: "GMM is just soft K-means." Soft K-means is GMM with spherical covaria
   <!-- membership lines -->
   <line x1="166" y1="110" x2="112" y2="110" stroke="var(--prime)" stroke-width="1.4" stroke-dasharray="4,2"/>
   <line x1="178" y1="110" x2="248" y2="110" stroke="var(--amber)" stroke-width="1.4" stroke-dasharray="4,2"/>
-  <text x="172" y="95" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">this customer</text>
+  <text x="172" y="95" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">this $26 purchase</text>
   <!-- probability bars -->
   <text x="180" y="160" text-anchor="middle" fill="var(--ink-low)" font-size="8">soft assignment</text>
   <rect x="70" y="168" width="150" height="16" rx="3" fill="var(--prime)" opacity="0.8"/>
   <rect x="220" y="168" width="70" height="16" rx="3" fill="var(--amber)" opacity="0.85"/>
-  <text x="145" y="180" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">70% $50</text>
-  <text x="255" y="180" text-anchor="middle" fill="#000" font-size="9" font-weight="700">30% $5</text>
+  <text x="145" y="180" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">69% $50</text>
+  <text x="255" y="180" text-anchor="middle" fill="#000" font-size="9" font-weight="700">31% $5</text>
 </svg>`,
     },
   },
@@ -1137,13 +1145,13 @@ It is fast (scales to millions of points), makes no assumption about the shape o
 
 **Reconstruction and density: two more lenses.**
 
-A **reconstruction** method (the autoencoder from the last lesson) learns to rebuild normal data, then flags anything it rebuilds badly. A **density** method like **LOF** (Local Outlier Factor) compares how crowded a point's neighbourhood is versus its neighbours' neighbourhoods — a point sitting in a sparse patch surrounded by dense ones stands out. The clever bit about LOF is that it judges density *locally*, so it can flag the odd point at the edge of a loose cluster without wrongly flagging an entire tight-but-small cluster.
+A **reconstruction** method (an autoencoder — the same architecture used for dimensionality reduction) learns to rebuild normal data, then flags anything it rebuilds badly. A **density** method like **LOF** (Local Outlier Factor) compares how crowded a point's neighbourhood is versus its neighbours' neighbourhoods — a point sitting in a sparse patch surrounded by dense ones stands out. The clever bit about LOF is that it judges density *locally*, so it can flag the odd point at the edge of a loose cluster without wrongly flagging an entire tight-but-small cluster.
 
 ---
 
 **Turning a score into a decision (and checking it works).**
 
-All of these produce a continuous *score*, not a yes/no. To act on it you pick a threshold — flag the top 1%, or flag as many as your review team can actually investigate, or tune it against whatever few labels you have. And do not fool yourself into thinking you need labelled anomalies to *train* — you do not, and that is the whole point. But grab even a tiny labelled set to *check* the detector: if the precision at your threshold is not clearly better than the base rate, the method is barely beating random and you should try another. A common practical check is Precision@50 — have an expert eyeball the top 50 flagged items and count how many are real.
+All of these produce a continuous *score*, not a yes/no. To act on it you pick a threshold — flag the top 1%, or flag as many as your review team can actually investigate, or tune it against whatever few labels you have. And do not fool yourself into thinking you need labelled anomalies to *train* — you do not, and that is the whole point. But grab even a tiny labelled set to *check* the detector: if the precision at your threshold is not at least 2× the base rate, the method is barely beating random and you should try another. A common practical check is Precision@50 — have an expert eyeball the top 50 flagged items and count how many are real.
 
 ---
 
@@ -1187,7 +1195,7 @@ Since you usually can't label anomalies, evaluation is a craft. **Synthetic anom
 
 A production detector isn't a score, it's an alerting system, and that layer is where most of them fail. **Deduplicate** so one incident doesn't fire fifty alerts. Manage **alert fatigue** — too many false positives and investigators stop trusting the system, so a technically-good detector becomes useless. Add **severity scoring** and **investigation queues** so the worst cases surface first, wire a **false-positive feedback loop** back into tuning, and **monitor for drift** — "normal" shifts over time, so a detector calibrated last quarter silently degrades. The model produces scores; the operational layer decides whether anyone acts on them.`,
     keyPoints: [
-      `**Use Isolation Forest as your default anomaly detector for tabular data — it is fast (O(n log n)), handles high dimensions, requires no distributional assumption, and has one tunable parameter (contamination rate = expected fraction of anomalies).**\n\nFor time-series data with contextual anomalies, switch to an LSTM or transformer autoencoder that reconstructs sequences — Isolation Forest treats each point independently and misses anomalies that only appear anomalous in context.`,
+      `**Use Isolation Forest as your default anomaly detector for tabular data — it is fast (O(n log n)), handles high dimensions, requires no distributional assumption, and its key tunable parameter is the contamination rate (expected fraction of anomalies) — though n_estimators (number of trees) and max_samples (subsample size per tree) are also commonly adjusted.**\n\nFor time-series data with contextual anomalies, switch to an LSTM or transformer autoencoder that reconstructs sequences — Isolation Forest treats each point independently and misses anomalies that only appear anomalous in context.`,
       `**Trap: using per-feature Z-scores to flag anomalies.**\n\nMultivariate anomalies — combinations that are individually normal but jointly unusual — are invisible to per-feature analysis. A transaction of 100 dollars at 3pm in New York is normal on each dimension; together they might be anomalous for a user who has never used the card outside California. Always use multivariate methods.`,
       `**Diagnostic: always test your anomaly detector on a small labeled holdout set, even if you cannot label everything.**\n\nIf precision at threshold is less than 2× the base rate, the method is barely better than random — try a different method or transform the feature space. Precision@50 (expert review of the top 50 flagged samples) is a practical operating metric when full labeled sets are unavailable.`,
       `**Know one-class SVM, the novelty/outlier split, and the time-series anomaly taxonomy.**\n\nOne-class SVM wraps a nonlinear boundary around clean normal data — good on small/medium sets, but scaling- and (nu, gamma)-sensitive and O(n²)–O(n³), so not for millions of points. Novelty detection assumes clean training data and flags new anomalies (one-class SVM, autoencoders); outlier detection assumes contaminated training data and finds anomalies within it (Isolation Forest, LOF). For time series, distinguish point, contextual (abnormal-in-context), and collective/sequence anomalies — per-point methods miss the latter two, which need sequence models. Standardise for distance/kernel/reconstruction methods (Isolation Forest is less scale-sensitive but still affected).`,

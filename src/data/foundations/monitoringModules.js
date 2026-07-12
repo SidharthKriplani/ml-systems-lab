@@ -14,13 +14,13 @@ export const MONITORING_MODULES = [
 
 **Four causes, four precise questions.**
 
-*Data drift* asks: has **P(X)** changed? The inputs shifted — your transactions now have a different income distribution than training. You detect it with statistical tests (PSI, KS, chi-squared) on feature distributions. It may or may not hurt performance, depending on whether the input-output relationship also moved.
+*Data drift* asks: has **P(X)** changed? The inputs shifted — your transactions now have a different income distribution than training. You detect it with statistical tests — PSI (Population Stability Index), the KS (Kolmogorov–Smirnov) test, and chi-squared — on feature distributions. It may or may not hurt performance, depending on whether the input-output relationship also moved.
 
 *Concept drift* asks: has **P(Y|X)** changed? The relationship itself moved — a profile that was 3% fraud is now 15% because tactics evolved. You can only confirm it with labels, by watching performance degrade. This one genuinely needs retraining on recent data.
 
-*Prior shift* asks: has **P(Y)** changed while P(X|Y) held? The base rate went from 1% to 3% — more fraud, not different fraud. Often a threshold adjustment is enough.
+*Prior shift* asks: has **P(Y)** changed while P(X|Y) held? The base rate went from 1% to 3% — more fraud, not different fraud. Like concept drift, you can only confirm it with labels — but where concept drift shows the same transaction profile mapping to a different fraud rate, prior shift shows the overall base rate moving while each profile's own rate stays put. Often a threshold adjustment is enough.
 
-*Infrastructure drift* asks: is the pipeline broken? Schema changed, latency spiked, a dependency degraded. That's an engineering fix, not a model fix.
+*Infrastructure drift* asks: is the pipeline broken? Schema changed, latency spiked, a dependency degraded. Often the failure is silent: failed requests fall back to a default not-fraud prediction instead of erroring loudly, so recall drops from false negatives even though the features that did make it through the pipeline look completely normal. That's an engineering fix, not a model fix.
 
 ---
 
@@ -40,7 +40,7 @@ And that's why "just watch the output score distribution" isn't enough. Output m
         q: `Your fraud model is flagging more transactions as fraudulent over time, but actual fraud labels (available after investigation) show no increase in fraud rate. What type of drift is this?`,
         options: [
           `A) Concept drift — P(Y|X) shifted, so the same features now map to a higher fraud probability`,
-          `B) Prior or data drift — P(Y) is stable, feature shifts are mechanically pushing scores up`,
+          `B) Data drift — P(Y) is stable, feature shifts are mechanically pushing scores up`,
           `C) Infrastructure drift — a library update altered score computation, inflating raw outputs`,
           `D) Overfitting decay — the model memorized noise and now generalizes badly to new traffic`,
         ],
@@ -129,7 +129,7 @@ Population Stability Index sums, across bins of a feature, how much probability 
 
 $PSI = \\sum (p_{train} - p_{new}) \ln(p_{train}/p_{new})$
 
-Below 0.1 the population is stable; 0.1–0.2 is mild drift worth a look; above 0.2 is real drift that needs action. For income moving from 55K to 70K, PSI will likely clear 0.2 — an actionable signal *months* before any label confirms the harm.
+Below 0.1 the population is stable; 0.1–0.2 is mild drift worth a look; above 0.2 is real drift that needs action. For income moving from 55K to 70K, here's the arithmetic behind that claim: split training income into 5 equal-frequency bins (<35K, 35–50K, 50–65K, 65–80K, >80K), each holding 20% of the training population by construction. After the shift, those same bins hold roughly 8%, 12%, 18%, 32%, and 30% of the new population — mass moves out of the bottom bins into the top two. Summing $(p_{train}-p_{new})\ln(p_{train}/p_{new})$ bin by bin gives 0.110 + 0.041 + 0.002 + 0.056 + 0.041 ≈ **0.25**, above the 0.2 action threshold — an actionable signal *months* before any label confirms the harm.
 
 [FIGURE: psibands]
 
@@ -141,13 +141,13 @@ For continuous features, the Kolmogorov-Smirnov test takes the largest gap betwe
 
 $D = \max|F_{train}(x) - F_{new}(x)|$
 
-It's distribution-free and notices shifts anywhere, not just in the mean. The trap: with a million daily requests, D = 0.015 will be "statistically significant" (p < 0.001) yet operationally meaningless — so pair it with a *practical* floor like D > 0.05. For categorical features, chi-squared checks whether category frequencies still match training. And when you want one bounded, uniformly-thresholdable number across very different features, Jensen-Shannon divergence sits neatly in [0, 1].
+It's distribution-free and notices shifts anywhere, not just in the mean. The trap: with a million daily requests, D = 0.015 will be "statistically significant" (p < 0.001) yet operationally meaningless — so pair it with a *practical* floor like D > 0.05. For categorical features, chi-squared checks whether category frequencies still match training: $\chi^2 = \sum \frac{(O_i - E_i)^2}{E_i}$, comparing observed category counts $O_i$ against the counts $E_i$ expected under the training distribution. And when you want one bounded, uniformly-thresholdable number across very different features, Jensen-Shannon divergence — computed with log base 2, unlike the natural-log PSI and KS above — sits neatly in [0, 1].
 
 ---
 
 **One caution on what an alert means.** Statistical significance is not business significance. A drift alert means *investigate,* not *retrain.* Sometimes a feature moves a lot and the model stays accurate because the learned relationship still holds; other times a subtle shift in one important feature wrecks accuracy while 49 others look fine. So you run both: drift detection as the early warning that *something* changed, and performance monitoring on delayed labels as the confirmation that it *matters.* The alert says "look here." The labels tell you if it's a real problem.`,
     keyPoints: [
-      `**Use PSI for binned continuous and ordinal features as your default drift metric.** Build 10 equal-frequency bins from the training distribution — not equal-width, because skewed distributions put all the signal in a few dense center buckets with equal-width binning. Add boundary bins for values falling outside the training range. Apply the rule: PSI < 0.1 is stable, 0.1–0.2 is investigate, > 0.2 is act. The loan income example with a median shift from 55K to 70K dollars will produce PSI well above 0.2. These thresholds are stable enough to apply without per-feature recalibration, which is why the financial industry standardized on them.`,
+      `**Use PSI for binned continuous and ordinal features as your default drift metric.** Build 10 equal-frequency bins from the training distribution — not equal-width, because skewed distributions put all the signal in a few dense center buckets with equal-width binning. Add boundary bins for values falling outside the training range. Apply the rule: PSI < 0.1 is stable, 0.1–0.2 is investigate, > 0.2 is act. The loan income example (5 equal-frequency training bins at 20% each shifting to roughly 8/12/18/32/30% after the move to 70K) computes to PSI ≈ 0.25 — see the worked bin-by-bin sum above, not just an asserted number. These thresholds are stable enough to apply without per-feature recalibration, which is why the financial industry standardized on them.`,
       `**The most common production trap is acting on statistical significance rather than practical significance.** With 1M daily serving requests, the KS test will flag D = 0.015 as p < 0.001. That is a shift of 1.5 percentage points in the CDF — real, but almost certainly not affecting model performance. Engineers who fire a retraining pipeline on every statistically significant drift alert spend all their time on retraining overhead and still miss the actual incidents, because the threshold is too sensitive. Set D > 0.05 as your practical floor. For PSI, trust the 0.1/0.2 boundaries — they were empirically calibrated over decades of financial model deployment, not derived from theory.`,
       `**The diagnostic: monitor prediction score distribution first, then feature distributions.** The prediction score distribution changes before any feature drift alerts fire and before any labels arrive. A loan model's score distribution shifting from mean 0.35 to mean 0.28 over two months is the earliest signal — the model is scoring the new population differently. Once you see score drift, run PSI on each feature ordered by training-time importance. The first high-PSI, high-importance feature is your root cause. This narrows a 50-feature investigation to a 1-feature investigation within minutes.`,
     ],
@@ -159,7 +159,7 @@ It's distribution-free and notices shifts anywhere, not just in the mean. The tr
           `A) Yes — p<0.001 means the age distribution has definitively shifted and the model is likely degraded now`,
           `B) Yes — any statistically significant drift in a top feature warrants an immediate on-call page`,
           `C) No — KS is the wrong tool for continuous features; rerun with PSI before deciding anything`,
-          `D) No — at 1M samples D=0.015 is significant but not practical; use D > 0.05 or PSI > 0.1 instead`,
+          `D) No — at 1M samples D=0.015 is significant but not practical; apply KS's own practical floor of D > 0.05 before alerting (PSI's 0.1/0.2 bands are a separate binned-feature metric, not a direct swap-in for KS's D)`,
         ],
         answer: `D`,
       },
@@ -201,7 +201,7 @@ It's distribution-free and notices shifts anywhere, not just in the mean. The tr
   <path d="M150,108 C200,108 210,76 250,76 C290,76 300,108 350,108" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3 2"/>
   <text x="140" y="72" text-anchor="middle" fill="var(--prime)" font-size="7">train (55K)</text>
   <text x="250" y="72" text-anchor="middle" fill="#ef4444" font-size="7">new (70K)</text>
-  <text x="180" y="117" text-anchor="middle" fill="var(--ink-low)" font-size="7">income distribution shifts right → PSI &gt; 0.2</text>
+  <text x="180" y="117" text-anchor="middle" fill="var(--ink-low)" font-size="7">income distribution shifts right → PSI ≈ 0.25 (see worked example)</text>
 </svg>`,
     },
     recap: [
@@ -218,10 +218,10 @@ It's distribution-free and notices shifts anywhere, not just in the mean. The tr
     id: 'concept_drift',
     interactiveId: 'drift_lag_viz',
     title: 'Concept Drift Detection',
-    subtitle: 'DDM, EDDM, ADWIN, sudden/gradual/recurring drift in batch vs streaming',
+    subtitle: 'Page-Hinkley, ADWIN, and EMA checks for sudden, gradual, and recurrent drift',
     difficulty: 'advanced',
     estimatedMin: 20,
-    tags: ['concept drift', 'ADWIN', 'DDM', 'online learning'],
+    tags: ['concept drift', 'ADWIN', 'Page-Hinkley', 'online learning'],
     summary: `A credit model trained in 2019 is running through 2020 when the pandemic hits in March. Overnight, employment, spending, and default rates all shift. The model's features — employment status, recent spending, credit utilization — encode *pre-pandemic* relationships. After March, the same feature values mean something completely different: someone employed with steady spending is now a far worse risk than the old data would suggest, because the whole macro backdrop changed. Feature PSI reads 0.35 — severe. But even before PSI trips, the model's error rate on the post-March cohort is already compounding. This is **sudden concept drift** — the nastiest kind, because it doesn't build up gently enough to notice.
 
 ---
@@ -232,7 +232,7 @@ It's distribution-free and notices shifts anywhere, not just in the mean. The tr
 
 *Sudden* drift is an abrupt regime change from a specific event — COVID, a new regulation, a competitor launch. It happens at a point in time. Catch it with the Page-Hinkley test (a running sum of errors crossing a threshold) or ADWIN, which compares a recent window to a historical one and collapses the window when they diverge — visible within days.
 
-*Gradual* drift is a slow slide: an aging user base, evolving seasons, shifting preferences over months. No single day looks wrong. Catch it with an exponential moving average of the error rate that alerts when it stays above a control limit — the 90-day trend is alarming even though no day is.
+*Gradual* drift is a slow slide: an aging user base, evolving seasons, shifting preferences over months. No single day looks wrong. Catch it with an exponential moving average of the error rate that alerts when it stays above a control limit — for example, an error rate creeping from 2.0% to 2.6% over 90 days is a change of only +0.0067 percentage points a day, well inside normal daily noise, but that same 90-day window is exactly the sustained deviation an EMA control-limit check is designed to flag.
 
 *Recurrent* drift is a pattern that returns: holiday fraud, annual cycles, weekday-vs-weekend behavior. Catch it with time-series decomposition of the error rate. The right response isn't retraining — it's keeping seasonal models and switching between them on schedule.
 
@@ -244,11 +244,15 @@ Concept drift is defined against *labels* — you can only truly confirm it once
 
 ---
 
-**And don't reflexively retrain from scratch.** Sudden drift usually does need retraining on recent data — the old patterns are dead. But gradual drift can sometimes be handled with online updates or recalibration, and recurrent drift with seasonal model-switching. Full retraining is the most expensive lever, so exhaust cheaper recalibration and threshold adjustment first, and pull it only when they fail to close the gap.`,
+**Concept drift vs. its look-alikes.** Concept drift is specifically P(Y|X) changing — the relationship between features and label breaking, which is what makes retraining a valid fix. Three things get confused with it: *data drift* is P(X) changing while P(Y|X) stays fixed (new email clients shift the feature distribution, but spam still looks like spam — recalibration, not retraining, is the fix); *prior shift* is P(Y) changing on its own (spam volume rises or falls, but the mapping from features to label is still correct — adjust the decision threshold to the new base rate, don't retrain); *infrastructure drift* isn't drift at all — a broken preprocessing step or extraction bug that mimics a performance drop and is fixed by rolling back the change, not retraining.
+
+---
+
+**And don't reflexively retrain on recent data alone.** Sudden drift usually does need retraining soon — the old patterns are dead for the affected segment — but that retraining should draw on a sliding window that includes enough pre-drift history, not just the most recent post-drift data, or you'll regress on the customers the regime change never touched (see the Trap below). Gradual drift can sometimes be handled with online updates or recalibration, and recurrent drift with seasonal model-switching. Full retraining is the most expensive lever, so exhaust cheaper recalibration and threshold adjustment first, and pull it only when they fail to close the gap.`,
     keyPoints: [
       `**Set up an automated concept drift detection pipeline that monitors prediction accuracy on delayed labels — this is the ground truth signal.** PSI and KS on features are early warning indicators that something may have changed. Model performance on actual labels is the definitive measure of whether that change matters. Run both: features give you the 7-day early warning, labels give you the confirmation that warrants retraining.`,
       `**Trap: retraining on only the most recent data after sudden drift.** If pre-drift patterns still apply to a large portion of your user base — customers who were not affected by the regime change — a model trained only on post-drift data will regress on those users. Use a sliding window that includes enough pre-drift history to maintain performance across the full distribution. Validate on both pre-drift and post-drift held-out data before deploying.`,
-      `**Diagnostic: after detecting drift, split validation data by time period — before and after the suspected drift date.** If pre-drift accuracy is high and post-drift accuracy is low, you have confirmed the drift date. Retrain on post-drift data and verify that the performance gap closes. If it does not close after retraining, the features themselves may be insufficient to represent the new target relationship — feature engineering is required, not just data recency.`,
+      `**Diagnostic: after detecting drift, split validation data by time period — before and after the suspected drift date.** If pre-drift accuracy is high and post-drift accuracy is low, you have confirmed the drift date. Retrain using a sliding window that includes pre-drift history — not post-drift data alone, which regresses the unaffected segment (see the Trap above) — and verify that the performance gap closes on both the pre-drift and post-drift validation slices. If it does not close after retraining, the features themselves may be insufficient to represent the new target relationship — feature engineering is required, not just data recency.`,
     ],
     interactivePrompt: `Before you touch the controls: your credit model's error rate has been climbing 0.2% per week for the past 8 weeks — what detection algorithm would catch this, and why wouldn't a simple threshold alert have fired?`,
     checkQuestions: [
@@ -336,9 +340,9 @@ Concept drift is defined against *labels* — you can only truly confirm it once
 
 **What each one tends to mean.**
 
-A falling score distribution means either fewer genuinely risky events (could be real) or a feature that shifted the wrong way (pipeline). A dropping high-confidence rate means the inputs have moved outside the model's training range — it's seeing unfamiliar data. A flattening histogram means a key discriminative feature is missing or corrupted, leaving the model unable to tell the classes apart.
+A falling score distribution means either fewer genuinely risky events (could be real) or a feature that shifted — which could be a genuine population change (a new customer segment, a seasonal cohort — see monitoring_taxonomy's income-shift example) or a pipeline bug; the shift alone doesn't tell you which. A dropping high-confidence rate means the inputs have moved outside the model's training range — it's seeing unfamiliar data. A flattening histogram means a key discriminative feature is missing or corrupted, leaving the model unable to tell the classes apart.
 
-You measure all of this with the same tools as feature drift: PSI on the score distribution (same 0.1/0.2 bands), Jensen-Shannon divergence between current and reference histograms (bounded in [0, 1]), and a z-test on the mean-score shift.
+You measure all of this with the same tools as feature drift: PSI on the score distribution (same 0.1/0.2 bands), Jensen-Shannon divergence between current and reference histograms (bounded in [0, 1]), and a z-test on the mean-score shift — z = (current mean − baseline mean) / SE(baseline mean), flag when |z| > 2. That |z| > 2 rule is exactly keyPoint 1's alert-at-2σ check computed as a formal test statistic — the z-test isn't a separate metric, it's how the 2σ deviation gets measured.
 
 ---
 
@@ -346,7 +350,7 @@ You measure all of this with the same tools as feature drift: PSI on the score d
     keyPoints: [
       `**Set reference baselines for score distribution, high-confidence rate, and histogram shape from the first 4 weeks of deployment — these are your "healthy" benchmarks.** Alert when current statistics deviate more than 2σ from baseline. The 4-week window captures natural weekly variation so that normal Monday-vs-Friday patterns do not generate spurious alerts.`,
       `**Trap: setting alert thresholds too tight.** If your score distribution naturally varies ±15% week-over-week due to business seasonality, a 2σ threshold generates constant alerts. Calibrate thresholds based on observed natural variation from the first month of production traffic, not on theoretical distributions. A threshold that produces more than one alert per week during normal operation needs to be widened.`,
-      `**Diagnostic: when prediction distribution shifts, check the feature distributions of high-confidence positive predictions specifically.** If a key feature — for example, \`transaction_velocity\` — has suddenly shifted for high-confidence predictions, the feature pipeline is the root cause. If feature distributions are clean for high-confidence predictions but the score distribution has still shifted, the change is in the data itself, not the pipeline — possible concept drift or genuine fraud rate change.`,
+      `**Diagnostic: when prediction distribution shifts, check the feature distributions of high-confidence positive predictions specifically.** If a key feature — for example, \`transaction_velocity\` — has suddenly shifted for high-confidence predictions, the feature pipeline is the likely cause — but confirm before concluding that: a genuine population shift (a new market, a seasonal cohort, as in monitoring_taxonomy's income example) can produce the identical signature without any pipeline bug, so check pipeline logs and whether the new values are even plausible first. If feature distributions are clean for high-confidence predictions but the score distribution has still shifted, the change is in the data itself, not the pipeline — possible concept drift or genuine fraud rate change.`,
     ],
     interactivePrompt: `Before you touch the controls: the fraud model's mean prediction score dropped from 3.1% to 2.7% this week with no code changes — name two different root causes that would produce identical score distribution shifts.`,
     checkQuestions: [
@@ -375,7 +379,7 @@ You measure all of this with the same tools as feature drift: PSI on the score d
         options: [
           `A) Retrain on the last 30 days and see if the score distribution snaps back to reference shape post-deploy`,
           `B) Wait for 7-day labels and compute precision/recall, since only confirmed accuracy can localize the cause`,
-          `C) Check features behind high-confidence positives: a shifted key feature there points to the pipeline`,
+          `C) Check features behind high-confidence positives: a shifted key feature there narrows it to a data-side cause — pipeline bug or genuine drift — the sharpest first move`,
           `D) Compare P99 latency and endpoint error rate before and after, since a pipeline bug always trips infra too`,
         ],
         answer: `C`,
@@ -405,10 +409,10 @@ You measure all of this with the same tools as feature drift: PSI on the score d
     takeaway: `Prediction distribution monitoring is your earliest warning — it fires days before delayed labels arrive — but a changed score distribution tells you behavior changed, not whether the change is correct or wrong.`,
     recap: [
       "**See predictions now, labels in 7 days:** three signals fire before any label.",
-      "**Falling mean score:** fewer risky events (real) or a feature shifted the wrong way (pipeline).",
+      "**Falling mean score:** fewer risky events (real) or a feature shifted — genuine population change or pipeline bug, the shift alone doesn't say which.",
       "**Collapsing high-confidence rate:** inputs moved outside the training range — unfamiliar data.",
       "**Flattening histogram:** a key discriminative feature is missing or corrupted — classes no longer separate.",
-      "**Same tools as feature drift:** PSI on scores (0.1/0.2), Jensen-Shannon in [0,1], z-test on mean shift.",
+      "**Same tools as feature drift:** PSI on scores (0.1/0.2), Jensen-Shannon in [0,1], z-test on mean shift (|z|>2 — the formal version of the 2σ alert rule).",
       "**Set baselines from first 4 weeks; alert at 2σ** — captures Monday-vs-Friday variation.",
       "**Behavior changed ≠ model wrong:** earliest warning, so investigate the inputs before retraining on reflex.",
     ],

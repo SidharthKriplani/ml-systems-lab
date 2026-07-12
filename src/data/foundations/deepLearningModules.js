@@ -15,7 +15,7 @@ export const DEEP_LEARNING_MODULES = [
 
 **One hidden layer is the fix.**
 
-Slip a layer of two neurons between the inputs and the output, pass each through a non-linear squash, and suddenly the network can draw curved, bent, folded boundaries. For XOR: one hidden neuron learns to fire on the "exactly one on" cases, the other suppresses the "both on / both off" cases, and the output combines them. The hidden layer has *transformed* the input into a new space where a straight line finally works — and that is what every hidden layer in every network is doing: reshaping the representation until the decision becomes easy.
+Slip a layer of two neurons between the inputs and the output, pass each through a non-linear squash, and suddenly the network can draw curved, bent, folded boundaries. For XOR: one hidden neuron learns to fire whenever *either* input is on — an OR gate, active on three of the four cases — and the other fires only when *both* are on — an AND gate, active on just one case. Neither neuron alone can fire only on the "exactly one on" cases: that pattern is XOR itself, and no single linear-plus-squash unit can separate it (push the weights high enough to fire on (0,1) and (1,0) and you necessarily also fire on (1,1)). It's the *combination* — OR minus AND, i.e. OR-and-not-AND — that fires only on "exactly one on." The hidden layer has *transformed* the input into a new space where a straight line finally works — and that is what every hidden layer in every network is doing: reshaping the representation until the decision becomes easy.
 
 ---
 
@@ -112,7 +112,7 @@ Feed it x₁ = 1.0, x₂ = 0.5, with a hidden layer of two ReLU units (W₁ = [[
 
 Now go backward. Picture the gradient as a message passed down through the floors of a building: the loss sits on the top floor and hands instructions to W₂ first, one floor down, then further down to W₁, one more floor below. Pause and predict before reading on: which of the two ends up with the *smaller* gradient — W₂, right next to the output, or W₁, one extra handoff away — and why?
 
-Walk the chain rule backward and the answer is a little surprising: W₂'s gradient averages about −0.115, and W₁'s about −0.109 — almost the *same size*, despite the extra hop. Look at what's sitting on that hidden floor: **ReLU**, whose slope is a clean 1 for every active neuron. The message passed down that floor essentially untouched. The one hop that *did* cost something was the output floor's **sigmoid** — its slope there was about 0.25, and that's the only toll the whole backward trip paid.
+Walk the chain rule backward, naming each handoff as you go. The output floor's error signal is δ₂ = (prediction − target) · sigmoid′(z₂) · 2 ≈ −0.242 — that's the message sigmoid hands down. From there, dL/dW₂ = δ₂ · a₁ = [−0.109, −0.121], averaging about −0.115. One more hop down: the hidden floor's error signal is δ₁ = δ₂ · W₂ · ReLU′(z₁) = [−0.169, 0.121]. Since both of z₁'s entries are positive, ReLU′ is 1 for each one, so this hop barely shrinks anything — δ₁'s two entries are the same order of magnitude as δ₂, not a fraction of it. That gives dL/dW₁ = δ₁ · x = [−0.169, −0.085, 0.121, 0.060]. Here's the part that's genuinely surprising: those four entries aren't all the same sign — two are positive, because W₂'s second weight is negative and flips the sign of that hidden unit's contribution. Average them with their signs intact and you get about −0.018, roughly six times smaller than W₂'s −0.115. That shrinkage has nothing to do with the ReLU hop itself (which passed the error signal through essentially unchanged) — it comes from two of the four entries partly cancelling each other out. The one hop that *did* shrink the signal was the output floor's **sigmoid** — its slope there was about 0.25, the only toll the whole backward trip paid; ReLU's slope of 1 charged nothing.
 
 ---
 
@@ -177,7 +177,6 @@ ReLU stops the message from shrinking on the way down — but it trades one fail
         answer: `D`,
       },
     ],
-    interactiveId: 'backprop_viz',
   },
   {
     id: 'activations',
@@ -201,7 +200,7 @@ The **activation function** is the little non-linear squash applied after each l
 
 **ReLU's own flaw: the dead neuron.**
 
-Look again at the same slope that just fixed vanishing gradients: ReLU's slope is exactly 1 for positive inputs, and exactly **0** for negative ones. Vanishing gradients were about the signal getting small everywhere at once; the dead neuron is a different failure — the signal goes to *exactly, permanently* zero for one specific neuron. If a neuron's input lands negative for *every* training example — often because one too-large gradient step shoved its bias down — ReLU outputs 0, its own slope there is 0, and it receives zero gradient *forever*. It cannot recover on its own: a slope of zero means no future update ever nudges it back toward positive territory. This isn't rare in practice — a too-high learning rate can silently kill 20–30% of a network's ReLU neurons within the first epoch, invisible on the loss curve.
+Look again at the same slope that just fixed vanishing gradients: ReLU's slope is exactly 1 for positive inputs, and exactly **0** for negative ones. Vanishing gradients were about the signal getting small everywhere at once; the dead neuron is a different failure — the signal goes to *exactly, permanently* zero for one specific neuron. If a neuron's input lands negative for *every* training example — often because one too-large gradient step shoved its bias down — ReLU outputs 0, its own slope there is 0, and it receives zero gradient *forever*. It cannot recover on its own: a slope of zero means no future update ever nudges it back toward positive territory. This isn't rare in practice — a too-high learning rate can silently kill a large share of a network's ReLU neurons within the first epoch, invisible on the loss curve.
 
 **Leaky ReLU** fixes this cheaply by giving negatives a tiny slope (0.01) instead of a flat zero, so a trickle of gradient always flows and a neuron can climb back to positive territory. **GELU** goes further with a smooth curve that never fully flatlines and softly gates each input by how positive it is — which is why BERT, GPT, and essentially every modern Transformer use it.
 
@@ -209,22 +208,28 @@ Look again at the same slope that just fixed vanishing gradients: ReLU's slope i
 
 **One rule that is not up for debate: the output activation.**
 
-All of the above is about the *hidden* layers. The *output* activation is a correctness constraint, not a preference. For a probability (binary classification) you must use **sigmoid**; for a set of class probabilities, **softmax**; for a plain number (regression), no activation at all. Putting a ReLU on the output of a classifier would let it emit nonsensical values — you match the output activation to what the answer is supposed to *be*, and that is a rule, not a tuning knob.`,
+All of the above is about the *hidden* layers. The *output* activation is a correctness constraint, not a preference. For a probability (binary classification) you must use **sigmoid** [squashes any real number into the open interval (0,1)]; for a set of class probabilities, **softmax** [exponentiates each logit and divides by the sum of all the exponentials, so every output lands in (0,1) and the whole set sums to exactly 1]; for a plain number (regression), no activation at all. Putting a ReLU on the output of a classifier would let it emit nonsensical values — you match the output activation to what the answer is supposed to *be*, and that is a rule, not a tuning knob.
+
+---
+
+**Softmax's own trap: confident on data it has never seen.**
+
+Cross-entropy only stops penalising a prediction once the correct class's logit is far ahead of every other logit, so training keeps pushing the network to widen that gap for as long as it helps the loss. That habit doesn't switch off on an input the network is actually unsure about — an ambiguous test example still gets pushed through the same wide-gap machinery, so softmax reports 99% confidence on something that is genuinely closer to a coin flip. Two fixes, both applied without changing the architecture: **temperature scaling** — divide every logit by a constant T>1 before the softmax, which shrinks the gap and cools the reported confidence without changing which class wins — and **label smoothing** — during training, replace the one-hot target (1 for the correct class, 0 for every other) with a softened target (for example 0.9 on the correct class, the remaining 0.1 split across the rest), so cross-entropy stops rewarding an infinitely wide gap in the first place.`,
     interactivePrompt: `Before you touch the controls: a network has 10 sigmoid hidden layers — can you predict which layers will have the largest gradient norms, and which will have the smallest, before running any training?`,
     keyPoints: [
       `**Use GELU for hidden layers in Transformers and deep MLPs; use ReLU when compute is tight and the network is shallow (under 6 layers); use sigmoid only as an output activation for binary classification.** The output activation is a semantic constraint, not a tuning choice: sigmoid for probability outputs, softmax for multi-class distributions, linear for regression targets. Changing the output activation to match the loss function is correctness, not experimentation.`,
-      `**The production trap: dying ReLU neurons that silently reduce model capacity.** A network trained with too-high a learning rate can have 20–30% of its ReLU neurons permanently dead after the first epoch — those neurons contribute nothing to any forward pass but still consume memory and compute. You will not notice from the loss curve alone. Monitor the fraction of dead neurons by checking how many neurons produce exactly zero output across a validation batch. Anything above 10% is a capacity problem. Fix: lower the learning rate, use a better initialiser, or switch to Leaky ReLU or GELU.`,
+      `**The production trap: dying ReLU neurons that silently reduce model capacity.** A network trained with too-high a learning rate can end up with a large share of its ReLU neurons permanently dead after the first epoch — those neurons contribute nothing to any forward pass but still consume memory and compute. You will not notice from the loss curve alone. Monitor the fraction of dead neurons by checking how many neurons produce exactly zero output across a validation batch. There's no universal cutoff (it depends on the architecture), but a high or rising fraction signals a capacity problem. Fix: lower the learning rate, use a better initialiser, or switch to Leaky ReLU or GELU.`,
       `**The diagnostic: gradient norm ratio between first and last hidden layer.** Log the mean absolute gradient at each layer's weights after one backward pass. In a healthy 10-layer network with ReLU, the ratio should be within 10× between first and last layer. With sigmoid, expect 10⁶× or more — every layer of sigmoid compresses gradients by 4×. If you see a large ratio with ReLU, dying neurons are the cause: neurons with zero output contribute zero gradient to the weight update for that layer.`,
     ],
     takeaway: `The history of activation functions is a sequence of gradient-flow fixes: sigmoid killed gradients through saturation, ReLU fixed saturation but introduced dead neurons, GELU eliminated both — and each step unlocked a new generation of viable network depth.`,
     recap: [
       `**Picks up from Backprop's own promise:** Backprop closed on "ReLU trades vanishing gradients for the dead neuron" — this module starts there, not by re-deriving vanishing gradients from scratch.`,
       `**Recall — sigmoid kills gradients:** as Backprop showed, its slope is at most 0.25, multiplied in at every layer → ~0.25¹⁰ ≈ one-in-a-million after 10 layers, early layers stop learning. Activation choice is what decides whether the learning signal survives the trip backward through the layers — the whole history of activations is a sequence of gradient-flow fixes.`,
-      `**ReLU fixes saturation:** "keep positives, zero out negatives" gives a clean slope of 1 for any active neuron, so it passes the backward signal through untouched — the single change that finally made 20-plus-layer networks trainable.`,
+      `**ReLU fixes saturation:** "keep positives, zero out negatives" gives a clean slope of 1 for any active neuron, so it passes the backward signal through untouched — the same fix that turned the 10-layer sigmoid network above from stalled to fully trainable.`,
       `**ReLU's own flaw — the dead neuron — is a different failure than vanishing gradients:** not the signal shrinking everywhere, but going *exactly, permanently* zero for one neuron. If a neuron's input is negative for *every* example (often after one too-large gradient step shoves its bias down), it outputs 0, its slope is 0, and it receives zero gradient *forever* — dead and never recovers. Leaky ReLU gives negatives a tiny slope (0.01) so a trickle of gradient always flows; GELU does the same with a smooth curve.`,
       `**GELU:** a smooth curve that never fully flatlines and softly gates each input by how positive it is (weighting it by its probability of being positive under N(0,1)) — which is why BERT, GPT, and essentially every modern Transformer use it over ReLU.`,
       `**Output activation is a correctness constraint, not a preference:** all of the above is about *hidden* layers. For the output you must match the answer's type — sigmoid for a probability (binary), softmax for a class distribution, and no activation at all for a plain regression number. Putting ReLU on a classifier's output is a bug, not a tuning choice.`,
-      `**Diagnostic — dead-neuron fraction:** count how many neurons output exactly zero across a validation batch; above 10% is a capacity problem (a too-high LR can kill 20–30% of ReLUs in one epoch, invisible on the loss curve). Fix by lowering the learning rate, using a better initialiser, or switching to Leaky ReLU / GELU.`,
+      `**Diagnostic — dead-neuron fraction:** count how many neurons output exactly zero across a validation batch; a high or rising fraction is a capacity problem (a too-high LR can silently kill a large share of ReLUs in one epoch, invisible on the loss curve). Fix by lowering the learning rate, using a better initialiser, or switching to Leaky ReLU / GELU.`,
     ],
     checkQuestions: [
       {
@@ -278,19 +283,19 @@ All of the above is about the *hidden* layers. The *output* activation is a corr
     id: 'batch_norm',
     interactiveId: 'batch_norm_viz',
     title: 'Batch Normalisation & Regularisation',
-    subtitle: 'BatchNorm, LayerNorm, Dropout, weight decay — why each works',
+    subtitle: 'BatchNorm vs LayerNorm — why normalisation stabilises training, and why it comes with free regularisation',
     difficulty: 'intermediate',
     estimatedMin: 31,
-    tags: ['batch norm', 'layer norm', 'dropout', 'regularisation'],
+    tags: ['batch norm', 'layer norm', 'regularisation'],
     summary: `Take a 10-layer network mid-training. Layer 5 tweaks its weights — fine. But layer 6 had learned to expect a certain *distribution* of numbers coming from layer 5, and that distribution just moved. So layer 6 scrambles to adjust, which shifts what layer 7 sees, and so on up the stack. Every layer is chasing a moving target created by the layers below it. To keep this from blowing up, you are forced to use a tiny learning rate so no single update destabilises everything above it — and training crawls. This wobble was one of the big reasons deep networks were so fragile to train before 2015.
 
-**Batch normalisation** fixed it with a simple idea: at each layer, before passing the numbers on, *re-centre and re-scale them* so they have a consistent, tidy distribution (mean 0, spread 1) across the batch. Now layer 6 always sees inputs in a familiar range no matter what layer 5 did, and the moving-target problem largely goes away. (It also keeps a pair of learned dials, γ and β, that let the network re-stretch the numbers if the task actually needs it, so nothing is lost.) The payoff is big: you can crank the learning rate 5–10× higher, the network stops caring so much about initialisation, and training converges much faster.
+**Batch normalisation** fixed it with a simple idea: at each layer, before passing the numbers on, *re-centre and re-scale them* so they have a consistent, tidy distribution (mean 0, spread 1 — using the batch's own mean μ_batch and spread σ_batch) across the batch. Now layer 6 always sees inputs in a familiar range no matter what layer 5 did, and the moving-target problem largely goes away. (It also keeps a pair of learned dials, γ and β, that let the network re-stretch the numbers if the task actually needs it, so nothing is lost.) The payoff is big: the original paper (Ioffe & Szegedy, 2015) reports that batch norm let them raise the learning rate roughly 5–10× above what worked without it, the network stops caring so much about initialisation, and training converges much faster. (Later work — Santurkar et al., 2018 — argued this speed-and-stability payoff comes less from taming the moving-target problem and more from smoothing the loss landscape, making the optimisation surface easier to descend regardless of which story you tell about the mechanism.)
 
 ---
 
 **A happy side effect: free regularisation.**
 
-Here is a subtlety that turns out to matter. The mean and spread used to normalise are computed from the *current mini-batch* — so the exact same example gets normalised a little differently depending on which other examples happen to share its batch. That tiny, ever-changing jitter acts like a mild regulariser: the network cannot lean too hard on any one example's exact representation, because that representation keeps shifting. (Later work argued this "smoothing the loss landscape" effect, more than the moving-target story, is the real reason batch norm helps so much.)
+Here is a subtlety that turns out to matter. The mean and spread used to normalise are computed from the *current mini-batch* — so the exact same example gets normalised a little differently depending on which other examples happen to share its batch. That tiny, ever-changing jitter acts like a mild regulariser: the network cannot lean too hard on any one example's exact representation, because that representation keeps shifting.
 
 ---
 
@@ -303,7 +308,7 @@ There is a second normaliser, **layer norm**, and picking the wrong one is a gen
 (One practical gotcha with batch norm: at inference you have no batch, so it switches to running averages collected during training. Forget to flip the model into eval mode and a single-example prediction gets normalised against a batch of one — which quietly produces garbage, with no error.)`,
     interactivePrompt: `Before you touch the controls: if you forget to call model.eval() at inference time with batch norm, what happens to a single-sample prediction — and why would it fail silently rather than throwing an error?`,
     keyPoints: [
-      `**Batch norm for CNNs on images (batch size ≥ 16); layer norm for Transformers, RNNs, and any variable-length or small-batch task.**\n\nThe choice comes from what the statistics *mean*, not from tuning. Batch norm needs a batch of at least ~8 comparable examples or its per-batch estimates are too noisy to help. And always switch the model to eval mode at inference, so it uses the running averages instead of a (possibly size-1) batch — forgetting this is the single most common silent failure in deployed vision models.`,
+      `**Batch norm for CNNs on images (batch size ≥ ~8 comparable examples); layer norm for Transformers, RNNs, and any variable-length or small-batch task.**\n\nThe choice comes from what the statistics *mean*, not from tuning. Batch norm needs a batch of at least ~8 comparable examples or its per-batch estimates are too noisy to help. And always switch the model to eval mode at inference, so it uses the running averages instead of a (possibly size-1) batch — forgetting this is the single most common silent failure in deployed vision models.`,
       `**The trap: batch norm's train-versus-inference mismatch.**\n\nDuring training each example is normalised using its mini-batch's mean and spread; at inference the model uses running averages collected during training. If the input distribution shifts — new data source, different camera, different preprocessing — those stored averages are stale and the normalisation is wrong, and accuracy degrades with no error, no NaN, no warning. Fix it by running a few forward passes over data from the new distribution (in train mode) to refresh the running statistics before switching back to eval.`,
       `**The diagnostic: compare training loss at a large batch versus a small one.**\n\nIf the same model trains noticeably worse and noisier at batch size 4 than at 32, batch norm is the culprit — with only four samples the per-batch mean and variance are poor estimates and destabilise the normalisation. Swap in group norm or layer norm and re-run; if the gap closes, that confirms it.`,
     ],
@@ -311,8 +316,8 @@ There is a second normaliser, **layer norm**, and picking the wrong one is a gen
     recap: [
       `**The problem — a moving target:** when a layer updates its weights, the distribution of numbers it emits shifts, so the layer above (which had learned to expect the old distribution) must scramble to re-adjust — and so on up the stack. Every layer chases a moving target, forcing a tiny learning rate so no update destabilises everything above it. Training crawls.`,
       `**Batch norm:** before passing numbers on, re-centre and re-scale each layer's outputs to mean 0, spread 1 *across the batch*, so the next layer always sees a familiar range. A learned pair of dials (γ scale, β shift) lets the network re-stretch if the task actually needs it, so nothing is lost.`,
-      `**Payoff:** you can crank the learning rate 5–10× higher, the network stops caring so much about initialisation, and training converges much faster — this is what made pre-2015 deep nets far less fragile.`,
-      `**Free regularisation:** the mean/spread come from the *current* mini-batch, so the same example is normalised slightly differently depending on its batch-mates. That ever-changing jitter mildly regularises — the network can't lean on any one example's exact representation (later work argues this loss-landscape smoothing, not the moving-target story, is the real reason BN helps).`,
+      `**Payoff:** the original paper (Ioffe & Szegedy, 2015) reports raising the learning rate roughly 5–10× above what worked without it, the network stops caring so much about initialisation, and training converges much faster — this is what made pre-2015 deep nets far less fragile. (Later work — Santurkar et al., 2018 — argued this speed/stability payoff comes less from taming the moving target and more from smoothing the loss landscape.)`,
+      `**Free regularisation:** the mean/spread come from the *current* mini-batch, so the same example is normalised slightly differently depending on its batch-mates. That ever-changing jitter mildly regularises — the network can't lean on any one example's exact representation.`,
       `**Batch norm vs layer norm is a correctness choice, not a knob:** BN normalises a feature *across the batch*, which only makes sense if the batch's examples are comparable — meaningless for tokens from different sentence positions. LN instead normalises *across a single example's features*, well-defined for one token at any position with any batch size. So CNNs on images use BN; Transformers, variable-length, and small-batch tasks use LN.`,
       `**Batch norm inference gotcha:** at inference there's no batch, so BN switches to running averages collected during training. Forget to call \`model.eval()\` and a single-example prediction gets normalised against a batch of one — silently producing garbage with no error thrown.`,
       `**Diagnostic:** if the same model trains much noisier and worse at batch 4 than at 32, BN's per-batch mean/variance estimates are too poor with few samples — swap in group norm or layer norm and if the gap closes, that confirms it.`,
@@ -415,8 +420,8 @@ That bias correction matters more than it looks. Take the very first step, defau
 
 **So why does SGD sometimes win?**
 
-Here is the twist. On image-classification benchmarks, a well-tuned **SGD with momentum** often *beats* Adam on validation accuracy, even though Adam trains faster. The reason ties back to the sharp-versus-flat-minima idea: Adam's per-weight rescaling lets it slide neatly into the *nearest* minimum, which tends to be a sharp, narrow one. Plain SGD keeps more of its gradient noise, which jostles it toward *flatter, wider* minima — and flat minima generalise better, especially when the test data drifts from training. So the trade is real: Adam gives you speed, SGD (tuned, with patience) can give a slightly better final model. Whichever you use, never leave the learning rate fixed for the whole run — decay it over time, and for Transformers *warm it up* first (start tiny and ramp up over the first few thousand steps), or the early, unreliable gradients will blow training up.`,
-    interactivePrompt: `Before you touch the controls: if Adam uses a different effective learning rate for every parameter, what happens to a parameter whose gradient has been consistently near-zero for 1000 steps — does it get a large or small update next?`,
+Here is the twist. On image-classification benchmarks, a well-tuned **SGD with momentum** — which keeps a running *velocity* v_t = β·v_{t-1} + g_t (β typically 0.9, no bias correction, no per-parameter rescaling — just gradient history rolling into the update direction like a ball gathering speed downhill) and updates w_t = w_{t-1} − η·v_t — often *beats* Adam on validation accuracy, even though Adam trains faster. The reason ties back to the sharp-versus-flat-minima idea: Adam's per-weight rescaling lets it slide neatly into the *nearest* minimum, which tends to be a sharp, narrow one. Plain SGD keeps more of its gradient noise, which jostles it toward *flatter, wider* minima — and flat minima generalise better, especially when the test data drifts from training. So the trade is real: Adam gives you speed, SGD (tuned, with patience) can give a slightly better final model. Whichever you use, never leave the learning rate fixed for the whole run — decay it over time, and for Transformers *warm it up* first (start tiny and ramp up over the first few thousand steps), or the early, unreliable gradients will blow training up.`,
+    interactivePrompt: `Before you touch the controls: this demo runs plain gradient descent on a single weight w, chasing the loss L(w) = (w − 3)² with one fixed learning rate α that you set with the slider — the same α applied every step, no per-parameter adaptation like Adam's. If you push α up past the point where each step should comfortably shrink the loss, what happens to the trajectory — does it still glide smoothly into the minimum, or does it start overshooting and oscillating around w*=3 (or diverging outright)? Watch what a single fixed step size does once the weight gets close to the target.`,
     keyPoints: [
       `**Adam (or AdamW) when training speed matters; SGD+momentum for image classification when you want the best generalisation and can afford a full run.**\n\nAdam is the safe default for Transformers and NLP. For vision with a big compute budget, well-tuned SGD+momentum often edges ahead on validation accuracy. And whenever you add weight decay to Adam, use **AdamW**: plain Adam's L2 penalty gets distorted by the per-parameter rescaling, while AdamW applies the decay uniformly — always prefer it.`,
       `**The trap: running Adam on a Transformer with no learning-rate warmup.**\n\nAt the very start, Adam's running estimates have no history, so the first few hundred steps take confident, full-size steps in noisy, unreliable directions — and the loss spikes or diverges in the first epoch. Ramp the learning rate up from near-zero over the first 1,000–4,000 steps so the estimates can settle before big updates land. Missing warmup is the most common cause of early Transformer training blow-ups.`,
@@ -429,7 +434,7 @@ Here is the twist. On image-classification benchmarks, a well-tuned **SGD with m
       `**RMSProp:** swaps the sum for a decaying average, v_t = β·v_{t-1}+(1−β)·g_t² — old squared gradients fade instead of piling up, so the step never collapses.`,
       `**Adam:** adds momentum on RMSProp's scale — m_t=β1·m_{t-1}+(1−β1)·g_t, v_t=β2·v_{t-1}+(1−β2)·g_t², bias-corrected m̂_t=m_t/(1−β1^t), v̂_t=v_t/(1−β2^t), update w_t=w_{t-1}−η·m̂_t/(√v̂_t+ε). Adam is the default for most deep learning.`,
       `**Bias correction ≈ full step on step 1:** with g_1=1.0, β1=0.9, β2=0.999 → m_1=0.1, v_1=0.001 (both mostly zero-init) → correction gives m̂_1=0.1/0.1=1.0, v̂_1=0.001/0.001=1.0 → update ≈ −η already, from one noisy gradient with zero history. That's exactly why Transformers need learning-rate warmup — the earliest steps are the least trustworthy ones Adam takes, and a full-size η then is the most common cause of an early blow-up.`,
-      `**SGD+momentum sometimes wins:** on image classification, well-tuned SGD often *beats* Adam on validation accuracy — Adam's per-weight rescaling slides neatly into the *nearest* (often sharp) minimum, while SGD keeps more gradient noise and drifts toward flatter, wider minima that generalise better under distribution shift. The trade is real: Adam gives speed, tuned SGD can give a slightly better final model.`,
+      `**SGD+momentum sometimes wins:** momentum keeps a running velocity v_t = β·v_{t-1} + g_t (β≈0.9) and updates w_t = w_{t-1} − η·v_t — plain gradient history rolled into the step, no bias correction, no per-parameter rescaling. On image classification, well-tuned SGD+momentum often *beats* Adam on validation accuracy — Adam's per-weight rescaling slides neatly into the *nearest* (often sharp) minimum, while SGD keeps more gradient noise and drifts toward flatter, wider minima that generalise better under distribution shift. The trade is real: Adam gives speed, tuned SGD can give a slightly better final model.`,
       `**Use AdamW whenever you add weight decay:** plain Adam's L2-in-the-loss penalty gets distorted by the per-parameter rescaling (√v̂ divides the penalty down on exactly the weights that need it most — backwards), whereas AdamW applies the decay uniformly and directly to the weights. Always prefer AdamW.`,
       `**Never leave the learning rate fixed for the whole run:** decay it over time, and for Transformers *warm it up* first (start near-zero, ramp over ~1,000–4,000 steps) — at the start Adam's running estimates have no history, so full-size steps in noisy directions spike or diverge the loss. Missing warmup is the most common cause of early Transformer blow-ups.`,
       `**Diagnostic:** if Adam reaches a lower *training* loss but the same or worse *validation* loss than SGD, it found a *sharper* minimum, not a better one — and a shift in the test distribution punishes sharp minima. Lean toward SGD's flatter optima when deployment data differs; take Adam when training speed is the bottleneck.`,
@@ -456,14 +461,14 @@ Here is the twist. On image-classification benchmarks, a well-tuned **SGD with m
         answer: `A`,
       },
       {
-        q: `A new dataset is available and you are fine-tuning a pre-trained ResNet with Adam. The last layer is randomly initialised, the rest are pre-trained. What learning rate do you use for each part?`,
+        q: `You are training a Transformer from scratch with Adam (default β1=0.9, β2=0.999) at a target learning rate of 3e-4, no warmup. Training loss spikes and diverges within the first 200 steps. What is the most likely fix?`,
         options: [
-          `A) Use one shared learning rate (e.g. 1e-3) but apply 100× higher weight decay to the pre-trained layers than to the last layer — weight decay alone is sufficient to preserve pre-trained knowledge without needing separate rates.`,
-          `B) Use a higher rate for the pre-trained layers (e.g. 1e-3) and a lower one for the random last layer (e.g. 1e-5), since the pre-trained layers must adapt aggressively to the new task while the random layer should update conservatively.`,
-          `C) Use identical rates everywhere, but train in two phases: converge the last layer alone first, then unfreeze all layers jointly — Adam's own adaptive scaling already gives pre-trained layers smaller effective updates automatically at every step.`,
-          `D) Use differential rates: much smaller for pre-trained layers (1e-5–1e-4, avoiding catastrophic forgetting) and much larger for the random last layer (1e-3–1e-2, needing substantial updates) — a 10–100× ratio is typical.`,
+          `A) Add a learning-rate warmup: ramp the rate from near-zero up to 3e-4 over the first 1,000–4,000 steps, since Adam's earliest updates have no gradient history behind them and bias correction already makes those first steps close to full-size.`,
+          `B) Raise β2 from 0.999 to 0.9999 so Adam's second-moment estimate averages over a longer window, which will smooth out the early spikes without changing the learning rate at all.`,
+          `C) Switch to plain SGD with no momentum, since any adaptive optimiser is inherently unstable during the first few hundred steps of training regardless of the learning rate used.`,
+          `D) Lower ε from 1e-8 to 1e-10 to avoid a division instability in Adam's denominator during the first few steps of training.`,
         ],
-        answer: `D`,
+        answer: `A`,
       },
     ],
   },
@@ -486,11 +491,10 @@ Picture a stencil — a small cut-out pattern you can lay over any part of a lar
 
 **NOT this.** "CNNs were designed for images." The principle — local patterns plus translation equivariance — applies anywhere locality matters. 1D CNNs classify audio and DNA sequences, where adjacent time steps or nucleotides are locally related. 3D CNNs process video, where nearby frames in time are locally correlated. Graph CNNs extend the idea to molecular structures and social networks. The architecture is not about pixels; it is about exploiting whatever spatial or sequential structure your data has. If your input has the property that neighboring elements are more related than distant elements, a convolutional inductive bias is appropriate. If your input is a bag of features with no meaningful ordering, it is not.`,
     keyPoints: [
-      `**Use CNNs over MLPs whenever the input has local structure — weight sharing cuts parameters 10–100× and builds in the right inductive bias.**\n\nA flat MLP applied to a 224×224 image needs 150M parameters in the first layer alone. A convolutional layer with 64 filters of size 3×3 needs 64×9×3 = 1,728 parameters, regardless of image size. The accuracy gain is not from having more parameters — it is from encoding the assumption that local patterns repeat, which is correct for images, audio, and sequences.`,
-      `**Trap: deepening a CNN without residual connections kills gradients — VGG-19 was state of the art; ResNet-152 beat it by simply adding skip connections. Depth without residuals is not free.**\n\nWith plain convolutions, a 50-layer network was harder to train than a 34-layer network — more depth actually hurt. The skip connection output = F(x) + x gives the gradient a direct path: ∂L/∂x includes the identity term regardless of what F does. This one change unlocked reliable training at 100+ layers. If your CNN depth is above ~10 layers and you are not using residuals, the network is likely training with near-zero gradient in early layers.`,
+      `**Use CNNs over MLPs whenever the input has local structure — weight sharing cuts parameters 10–100× and builds in the right inductive bias.**\n\nA flat MLP applied to a 224×224 RGB image (150,528 raw pixel values) flattened into a first layer of 1,000 output units needs 150,528×1,000 ≈ 150M parameters just for that one layer. A convolutional layer with 64 filters of size 3×3 over 3 input channels needs 64×9×3 = 1,728 weights (before biases), regardless of image size. The accuracy gain is not from having more parameters — it is from encoding the assumption that local patterns repeat, which is correct for images, audio, and sequences.`,
+      `**Trap: deepening a CNN without residual connections kills gradients — VGG-19 was state of the art; ResNet-152 beat it by simply adding skip connections. Depth without residuals is not free.**\n\nWith plain convolutions, a 34-layer network was harder to train than an 18-layer network — more depth actually hurt. The skip connection output = F(x) + x gives the gradient a direct path: ∂L/∂x includes the identity term regardless of what F does. This one change unlocked reliable training at 100+ layers. If your CNN depth is above ~10 layers and you are not using residuals, the network is likely training with near-zero gradient in early layers.`,
       `**Diagnostic: if early-layer filters look like random noise after training, the network is not learning — check learning rate, initialization, and whether input is normalized.**\n\nHealthy early filters in a CNN trained on images look like oriented edge detectors and color blobs — not random static. Visualize the first-layer weights after 1 epoch. If they are still indistinguishable from the initialization, the gradient is not reaching them. Candidate causes: learning rate too small for the layer depth, missing or wrong normalization on inputs, or vanishing gradients from missing residuals.`,
     ],
-    interactivePrompt: `Before you touch the controls: a 3×3 filter applied with stride 1 to a 28×28 image produces a 26×26 output — if you stack three such layers, what is the receptive field of a single output neuron in the final layer, and does it see the full image?`,
     checkQuestions: [
       {
         q: `A convolutional layer has filter size 3×3, 64 input channels, 128 output channels. How many parameters? How does this compare to a fully connected layer with the same input/output dimensions? Select the TWO correct statements.`,
@@ -530,7 +534,7 @@ Picture a stencil — a small cut-out pattern you can lay over any part of a lar
       `**Pooling = position invariance:** keep only the max activation over a small region, so a feature that appeared slightly left or right gives the same pooled value. The downside is lost localisation — after a few pooling layers you know a feature exists in a region but not exactly where (why segmentation uses skip connections / U-Nets).`,
       `**Stacking builds a hierarchy:** layer 1 detects edges, layer 2 combines them into corners and curves, layer 3 into shapes, layer 4 into objects — and each deeper neuron's *receptive field* grows, so it "sees" a wider slice of the original image.`,
       `**Not just images:** the real principle is local patterns + translation equivariance, which applies to 1D (audio, DNA), 3D (video), and graphs (molecules, social networks) — any data where neighbouring elements are more related than distant ones. A bag of unordered features is where it does *not* apply.`,
-      `**Trap — depth without residuals kills gradients:** a plain 50-layer CNN trained *worse* than a 34-layer one; the skip connection (output = F(x) + x) gives the gradient a direct identity path (∂L/∂x keeps an identity term regardless of F), which unlocked reliable training past 100 layers. Above ~10 layers with no residuals, early layers likely train on near-zero gradient.`,
+      `**Trap — depth without residuals kills gradients:** a plain 34-layer CNN trained *worse* than an 18-layer one; the skip connection (output = F(x) + x) gives the gradient a direct identity path (∂L/∂x keeps an identity term regardless of F), which unlocked reliable training past 100 layers. Above ~10 layers with no residuals, early layers likely train on near-zero gradient.`,
       `**Diagnostic:** visualise first-layer filters after one epoch — healthy ones look like oriented edge detectors and colour blobs. Still-random static means the gradient isn't reaching them: check learning rate, input normalisation, and missing residuals.`,
     ],
     figures: {
@@ -575,15 +579,16 @@ Picture a stencil — a small cut-out pattern you can lay over any part of a lar
     difficulty: 'intermediate',
     estimatedMin: 31,
     tags: ['RNN', 'LSTM', 'GRU', 'vanishing gradient', 'sequential data'],
-    summary: `Try to classify the sentiment of "The movie was not good." Process it token by token with a vanilla RNN. At each step, the hidden state h_t is updated: h_t = tanh(W_h · h_{t-1} + W_x · x_t). By the time the model reaches "good," it needs to remember that "not" appeared two steps earlier to get the sentiment right. The gradient of the loss with respect to h_0 — the state that captured "not" — must travel back through 4 Jacobian matrices, one per timestep. Each Jacobian for the tanh activation has a spectral radius that, on average, is less than 1. Multiply four of them together and the gradient shrinks: if each Jacobian contributes a factor of 0.5, the combined factor is 0.5⁴ = 0.0625. After 20 steps the factor is 0.5²⁰ ≈ 10⁻⁶. The model cannot learn that "not" reverses the sentiment — the signal from that early token cannot reach the loss gradient strongly enough to update the corresponding weights.
+    summary: `Try to classify the sentiment of "The movie was not good." Process it token by token with a vanilla RNN. At each step, the hidden state h_t is updated: h_t = tanh(W_h · h_{t-1} + W_x · x_t). Tokenized by word, "not" is the 4th token and "good" is the 5th, so the hidden state that captures "not" is h_4. By the time the model reaches "good" and computes the loss from h_5, the gradient of that loss with respect to h_4 must travel back through exactly 1 Jacobian matrix — one per timestep of separation, and here the two tokens are only one timestep apart. Each Jacobian for the tanh activation has a spectral radius that, on average, is less than 1, so every additional timestep of separation multiplies in another shrinking factor: if each Jacobian contributes a factor of 0.5, a 4-timestep separation shrinks the gradient by 0.5⁴ = 0.0625, and a 20-timestep separation shrinks it by 0.5²⁰ ≈ 10⁻⁶. In a longer review — say one where "not" sits 20 tokens before the word the sentiment hinges on — the signal from that early token cannot reach the loss gradient strongly enough to update the corresponding weights.
 
-The LSTM was designed specifically to defeat this. Rather than passing the gradient only through the hidden state h_t, it adds a cell state C_t with an additive update path: C_t = f_t ⊙ C_{t-1} + i_t ⊙ g_t. The forget gate f_t ∈ (0, 1) decides how much of the previous cell state to keep. The gradient of C_t with respect to C_{t-1} is f_t — and the LSTM can learn to keep f_t near 1 for timesteps where memory should be preserved. When f_t ≈ 1, the gradient flows backward through the cell state unchanged, giving the early token a direct path to the loss. The input gate i_t decides what new information to write to the cell state. The output gate o_t decides what to expose as the hidden state h_t = o_t ⊙ tanh(C_t). The GRU achieves similar behavior with two gates instead of four, fewer parameters, and empirically comparable performance on most tasks.
+The LSTM was designed specifically to defeat this. Rather than passing the gradient only through the hidden state h_t, it adds a cell state C_t with an additive update path: C_t = f_t ⊙ C_{t-1} + i_t ⊙ g_t. The forget gate f_t ∈ (0, 1) decides how much of the previous cell state to keep. The gradient of C_t with respect to C_{t-1} is f_t — and the LSTM can learn to keep f_t near 1 for timesteps where memory should be preserved. When f_t ≈ 1, the gradient flows backward through the cell state unchanged, giving the early token a direct path to the loss. The input gate i_t decides what new information to write to the cell state. The output gate o_t decides what to expose as the hidden state h_t = o_t ⊙ tanh(C_t). The GRU achieves similar behavior with two gates instead of four and fewer parameters: an update gate z_t controls the mix between the old state and a candidate state new_h_t, h_t = (1 - z_t) ⊙ h_{t-1} + z_t ⊙ new_h_t, so z_t near 0 preserves the old state much like the LSTM's forget gate near 1, while z_t near 1 writes in the candidate — empirically comparable performance to the LSTM on most tasks.
 
 **NOT this.** "Transformers made RNNs obsolete." For offline NLP with the full sequence available, transformers win on almost every benchmark. But RNNs remain the correct tool for streaming inference: when you are processing an audio stream, a live trading feed, or a robotics sensor reading, you do not have the full sequence at inference time. Transformer attention requires all positions to be present simultaneously — O(n²) memory to compute the attention matrix. An RNN processes each new token in O(1) with fixed memory. For sequences beyond ~16K tokens where attention memory becomes prohibitive, or for tasks with strict sequential causality and real-time constraints, the RNN is not a fallback — it is the right architecture.`,
     keyPoints: [
       `**Use LSTMs for sequential tasks where the full sequence is not available at inference time — streaming audio, live trading, real-time sensor processing.**\n\nTransformer attention requires all positions simultaneously; an LSTM processes each new token in O(1) with fixed memory. That is the decision boundary: if inference is sequential and unbounded, use an LSTM. If inference can wait for the full sequence and length is under ~16K tokens, use a Transformer.`,
       `**Trap: vanishing gradient is not fully fixed by LSTMs for all sequence lengths. Beyond ~200 steps even LSTMs struggle — for long-range dependencies in offline settings, attention is strictly better.**\n\nThe forget gate keeps gradients alive by learning f_t ≈ 1, but it is learned under gradient pressure from the task. For dependencies spanning hundreds of steps, the gradient through the cell state path still attenuates — product of 200 forget gate values, each slightly below 1, compounds. LSTMs win over vanilla RNNs at 20–50 steps. For 500+ steps with the full sequence available, use attention.`,
       `**Diagnostic: plot gradient norms per time step during backpropagation through time — if the norm at step 1 is < 1e-4 while step T is 1.0, you have vanishing gradients regardless of LSTM gates.**\n\nHook into the backward pass and log ‖∂L/∂h_t‖ for each t. A healthy LSTM should show gradient norms decaying by at most ~100× from the last timestep to the first for sequences under 100 steps. Exponential decay is the vanishing gradient signature. Check that forget gate biases are initialized to 1.0 (not 0.0) — a forget bias of 0 means sigmoid(0) = 0.5, which already shrinks the cell state gradient path by half at every step from initialization.`,
+      `**Trap: LSTMs/GRUs are trained with teacher forcing — the ground-truth previous token is fed in at every decoding step — but at inference time there is no ground truth, so the model must feed back its own predictions. That training/inference mismatch is exposure bias.**\n\nDuring training the decoder conditions each step on the correct prior token regardless of what the model itself would have predicted, so every gradient update is computed on the correct trajectory. At test time the model instead conditions on its own last prediction; one wrong token early in the sequence shifts every hidden state downstream onto a trajectory the model never trained on, and errors compound. Two standard fixes: scheduled sampling, which mixes in the model's own predictions during training with increasing probability as training progresses, and professor forcing, which adds an adversarial loss that pushes the free-running (self-fed) hidden-state trajectory to match the teacher-forced one.`,
     ],
     interactivePrompt: `Before you touch the controls: if the forget gate f_t is a sigmoid and is initialized at 0.5 for all timesteps, estimate how much the gradient attenuates across a 10-step sequence through the cell state path alone.`,
     checkQuestions: [
@@ -628,7 +633,6 @@ The LSTM was designed specifically to defeat this. Rather than passing the gradi
       `**Trap — LSTMs don't fully fix vanishing:** beyond ~200 steps the product of many forget gates (each just under 1) still compounds toward zero. LSTMs beat vanilla RNNs at 20–50 steps; for 500+ step dependencies with the full sequence available, attention is strictly better.`,
       `**Diagnostic:** initialise the forget-gate bias to 1.0, not 0 — sigmoid(0)=0.5 already halves the cell-state gradient path at every step from the start. Then log ‖∂L/∂h_t‖ per timestep; exponential decay toward step 1 is the vanishing signature.`,
     ],
-    interactiveId: 'rnn_viz',
   },
   {
     id: 'attention',
@@ -650,7 +654,7 @@ The old way (encoder-decoder RNNs, circa 2014) could not do this at all — it c
 
 **Q, K, V — the mechanism.**
 
-Think of it like a library search: you show up with a question (a **query**), every book carries a catalog tag describing what it's about (a **key**), and the book itself is what you walk away with (its **value**). You compare your question against each tag and lean on the books whose tags match best. In self-attention, every word does all three jobs at once — question-asker, catalog-tag, and payload — for every other word, simultaneously.
+Put a name on the shape of that leaning: "bank"’s version of the question would be answered by "river"’s version of the tag — a comparison the model has to make, not a copy it can shortcut. Think of it like a library search: you show up with a question (a **query**), every book carries a catalog tag describing what it's about (a **key**), and the book itself is what you walk away with (its **value**). You compare your question against each tag and lean on the books whose tags match best. In self-attention, every word does all three jobs at once — question-asker, catalog-tag, and payload — for every other word, simultaneously.
 
 None of this is hand-designed. Each token's embedding is multiplied by three learned matrices — W_Q, W_K, W_V — trained by the exact same backpropagation that trains every other weight in the network; the network decides for itself, from data, what makes a good "question" and a good "tag" for the task at hand. To decide how much word *i* should attend to word *j*, compare *i*'s query with *j*'s key (a dot product) — a big match means "this one is relevant." Run all those scores through a softmax [reminder: softmax turns any list of numbers into positive weights that sum to 1] so they become attention weights, then take the weighted average of the *values*. That is the whole operation.
 
@@ -669,6 +673,8 @@ Divide each raw score by √d_k (here d_k = 2, so √2 ≈ 1.41) to get the **sc
 **Many heads, many kinds of relationship.**
 
 A single attention pass, with one W_Q/W_K/W_V, can only capture one *kind* of relationship at a time. So Transformers run several in parallel — **multi-head attention** — each head with its own learned W_Q, W_K, W_V, and therefore its own queries, keys, and values. One head might specialize in grammatical links (verb ↔ subject), another in word meaning, another in position. Their outputs are combined, giving the model several different lenses on the same sentence instead of forcing everything through one.
+
+**One more choice: how far is each word allowed to look?** Everything worked out above let "bank" look at every other word in the sentence, before and after it — that’s *bidirectional* attention, right for tasks like classification where the whole sequence is sitting there to read at once. Generation is different: predicting the next word one token at a time, the model must not be allowed to peek at words that come after the one it’s producing. The fix is a **causal mask** — before the softmax, every score for a "future" position is forced to −∞, so softmax turns it into exactly 0 weight. That single restriction is the entire difference between encoder-style (bidirectional) attention and decoder-style (causal, or masked) attention.
 
 The catch is cost: comparing every word with every other word is **O(n²)** — double the sequence length and you quadruple the work and memory. That quadratic cost is the single biggest constraint on long-context Transformers, and a whole family of tricks (FlashAttention, sparse attention, and others) exists to tame it.`,
     interactivePrompt: `Before you touch the controls: in multi-head attention with 8 heads and d_model=512, each head operates on dimension 64 — can a single head with d_model=512 represent everything 8 heads with d=64 can, and what would be lost?`,
@@ -718,7 +724,7 @@ The catch is cost: comparing every word with every other word is **O(n²)** — 
       {
         q: `Attention has O(n²) complexity in sequence length n. For a 10,000-token document, what is the computational problem, and what are the main approximation approaches?`,
         options: [
-          `A) Full attention needs n×n=100M scores per head; across many heads/layers, storing all matrices costs ~200GB, exceeding GPU memory. Fixes: sparse attention (O(n·k)), linear attention (O(n)), FlashAttention (tiled O(n²), 2–4× faster).`,
+          `A) Full attention needs n×n=100M scores per head; assuming a 32-layer, 16-head model (512 attention matrices total) at fp32 (4 bytes/score, so 100M × 4B = 400MB per matrix), storing all of them costs ≈512×400MB≈200GB, exceeding GPU memory. Fixes: sparse attention (O(n·k)), linear attention (O(n)), FlashAttention (tiled O(n²), 2–4× faster).`,
           `B) At d_model=512, each pairwise dot product costs O(512) not O(1), so total cost is O(n×d) rather than O(n²); the real fix is reducing the projection dimension d (e.g. d=64) while still computing every one of the n×n pairs.`,
           `C) The bottleneck is purely sequential GPU throughput — n=10,000 tokens need ceil(n/b) sequential steps for batch size b; fixes include raising GPU batch size, skipping zero-attention pairs, or pooling the attention matrix into a fixed-size summary.`,
           `D) The true bottleneck is the position-embedding lookup table, which at d_model=512 needs 10,000×512=5M parameters; fixes replace learned embeddings with computed encodings like RoPE or ALiBi to remove that memory cost.`,
@@ -728,83 +734,34 @@ The catch is cost: comparing every word with every other word is **O(n²)** — 
     ],
     interactiveId: 'attention_viz',
     figures: {
-      attention_heatmap: `<svg viewBox="0 0 340 280" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:340px;font-family:var(--font-sans,sans-serif)">
-  <!-- tokens -->
+      attention_heatmap: `<svg viewBox="0 0 340 170" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:340px;font-family:var(--font-sans,sans-serif)">
+  <!-- "bank"'s query row against The / bank / river keys -- the exact weights computed above -->
+  <text x="170" y="18" text-anchor="middle" font-size="11" fill="var(--ink-low)">Attention weights for query = "bank"</text>
   <g font-size="10" fill="var(--ink-mid)">
-    <!-- row labels (queries) left -->
-    <text x="36" y="103" text-anchor="end">The</text>
-    <text x="36" y="133" text-anchor="end">cat</text>
-    <text x="36" y="163" text-anchor="end">sat</text>
-    <text x="36" y="193" text-anchor="end">on</text>
-    <text x="36" y="223" text-anchor="end">mat</text>
-    <!-- col labels (keys) top -->
-    <text x="62" y="82" text-anchor="middle">The</text>
-    <text x="102" y="82" text-anchor="middle">cat</text>
-    <text x="142" y="82" text-anchor="middle">sat</text>
-    <text x="182" y="82" text-anchor="middle">on</text>
-    <text x="222" y="82" text-anchor="middle">mat</text>
+    <text x="62" y="52" text-anchor="middle">The</text>
+    <text x="170" y="52" text-anchor="middle">bank</text>
+    <text x="278" y="52" text-anchor="middle">river</text>
   </g>
-  <!-- axis labels -->
-  <text x="140" y="270" text-anchor="middle" font-size="11" fill="var(--ink-low)">Key</text>
-  <text x="12" y="165" text-anchor="middle" font-size="11" fill="var(--ink-low)" transform="rotate(-90,12,165)">Query</text>
-  <!-- heatmap cells: each cell 40x30, starting at (42,87) -->
-  <!-- row 0 (The): low attention everywhere -->
-  <rect x="42" y="87" width="40" height="30" fill="var(--depth)" opacity="0.9"/>
-  <rect x="82" y="87" width="40" height="30" fill="var(--prime)" opacity="0.12"/>
-  <rect x="122" y="87" width="40" height="30" fill="var(--prime)" opacity="0.1"/>
-  <rect x="162" y="87" width="40" height="30" fill="var(--prime)" opacity="0.08"/>
-  <rect x="202" y="87" width="40" height="30" fill="var(--prime)" opacity="0.1"/>
-  <!-- row 1 (cat): high on sat -->
-  <rect x="42" y="117" width="40" height="30" fill="var(--prime)" opacity="0.1"/>
-  <rect x="82" y="117" width="40" height="30" fill="var(--depth)" opacity="0.9"/>
-  <rect x="122" y="117" width="40" height="30" fill="var(--prime)" opacity="0.6"/>
-  <rect x="162" y="117" width="40" height="30" fill="var(--prime)" opacity="0.08"/>
-  <rect x="202" y="117" width="40" height="30" fill="var(--prime)" opacity="0.1"/>
-  <!-- row 2 (sat): high on cat -->
-  <rect x="42" y="147" width="40" height="30" fill="var(--prime)" opacity="0.08"/>
-  <rect x="82" y="147" width="40" height="30" fill="var(--prime)" opacity="0.5"/>
-  <rect x="122" y="147" width="40" height="30" fill="var(--depth)" opacity="0.9"/>
-  <rect x="162" y="147" width="40" height="30" fill="var(--prime)" opacity="0.12"/>
-  <rect x="202" y="147" width="40" height="30" fill="var(--prime)" opacity="0.1"/>
-  <!-- row 3 (on): medium on mat -->
-  <rect x="42" y="177" width="40" height="30" fill="var(--prime)" opacity="0.08"/>
-  <rect x="82" y="177" width="40" height="30" fill="var(--prime)" opacity="0.1"/>
-  <rect x="122" y="177" width="40" height="30" fill="var(--prime)" opacity="0.12"/>
-  <rect x="162" y="177" width="40" height="30" fill="var(--depth)" opacity="0.9"/>
-  <rect x="202" y="177" width="40" height="30" fill="var(--prime)" opacity="0.35"/>
-  <!-- row 4 (mat): high on on -->
-  <rect x="42" y="207" width="40" height="30" fill="var(--prime)" opacity="0.08"/>
-  <rect x="82" y="207" width="40" height="30" fill="var(--prime)" opacity="0.1"/>
-  <rect x="122" y="207" width="40" height="30" fill="var(--prime)" opacity="0.1"/>
-  <rect x="162" y="207" width="40" height="30" fill="var(--prime)" opacity="0.4"/>
-  <rect x="202" y="207" width="40" height="30" fill="var(--depth)" opacity="0.9"/>
-  <!-- cell borders -->
-  <rect x="42" y="87" width="200" height="150" fill="none" stroke="var(--rim)" stroke-width="0.5"/>
-  <line x1="82" y1="87" x2="82" y2="237" stroke="var(--rim)" stroke-width="0.5"/>
-  <line x1="122" y1="87" x2="122" y2="237" stroke="var(--rim)" stroke-width="0.5"/>
-  <line x1="162" y1="87" x2="162" y2="237" stroke="var(--rim)" stroke-width="0.5"/>
-  <line x1="202" y1="87" x2="202" y2="237" stroke="var(--rim)" stroke-width="0.5"/>
-  <line x1="42" y1="117" x2="242" y2="117" stroke="var(--rim)" stroke-width="0.5"/>
-  <line x1="42" y1="147" x2="242" y2="147" stroke="var(--rim)" stroke-width="0.5"/>
-  <line x1="42" y1="177" x2="242" y2="177" stroke="var(--rim)" stroke-width="0.5"/>
-  <line x1="42" y1="207" x2="242" y2="207" stroke="var(--rim)" stroke-width="0.5"/>
-  <!-- color bar -->
-  <defs>
-    <linearGradient id="cb" x1="0" y1="1" x2="0" y2="0">
-      <stop offset="0%" stop-color="var(--depth)"/>
-      <stop offset="100%" stop-color="var(--prime)"/>
-    </linearGradient>
-  </defs>
-  <rect x="260" y="87" width="14" height="150" fill="url(#cb)" rx="2"/>
-  <text x="276" y="92" font-size="9" fill="var(--ink-low)">1.0</text>
-  <text x="276" y="237" font-size="9" fill="var(--ink-low)">0.0</text>
+  <!-- cells: width 100, height 60, y=60 -->
+  <rect x="12" y="60" width="100" height="60" fill="var(--prime)" opacity="0.014"/>
+  <rect x="116" y="60" width="100" height="60" fill="var(--prime)" opacity="0.003"/>
+  <rect x="220" y="60" width="100" height="60" fill="var(--prime)" opacity="0.982"/>
+  <rect x="12" y="60" width="308" height="60" fill="none" stroke="var(--rim)" stroke-width="0.5"/>
+  <line x1="112" y1="60" x2="112" y2="120" stroke="var(--rim)" stroke-width="0.5"/>
+  <line x1="216" y1="60" x2="216" y2="120" stroke="var(--rim)" stroke-width="0.5"/>
+  <g font-size="11" fill="var(--ink-mid)" text-anchor="middle">
+    <text x="62" y="94">1.4%</text>
+    <text x="166" y="94">0.3%</text>
+    <text x="270" y="94">98.2%</text>
+  </g>
+  <text x="170" y="140" text-anchor="middle" font-size="10" fill="var(--ink-low)">Exact softmax output from the worked example above:</text>
+  <text x="170" y="155" text-anchor="middle" font-size="10" fill="var(--ink-low)">"bank" leans almost entirely on "river."</text>
 </svg>`,
     },
   },
   {
     id: 'transformers',
     interactiveId: 'attention_viz',
-    interactivePrompt: 'A transformer block is stacked self-attention + feed-forward, repeated N times. Explore the attention step — the core operation the whole block is built around.',
     title: 'Transformer Architecture',
     subtitle: 'Self-attention, positional encoding, encoder vs decoder, pre-norm vs post-norm',
     difficulty: 'intermediate',
@@ -816,13 +773,13 @@ The catch is cost: comparing every word with every other word is **O(n²)** — 
 
 **Positional encoding: telling the model where each word sits.**
 
-The fix is to stamp each word's representation with a position signal before the first layer — a little pattern that says "I am word 1," "I am word 2," and so on. The original Transformer used sine and cosine waves of different frequencies for this (they extend smoothly to positions longer than anything seen in training); modern models like LLaMA use **RoPE**, which bakes *relative* position straight into the attention comparison. Either way, once positions are added, the model can finally tell word order apart.
+The fix is to stamp each word's representation with a position signal before the first layer — a little pattern that says "I am word 1," "I am word 2," and so on. The original Transformer used sine and cosine waves of different frequencies for this (the original paper only hedged that this *may* let the model extrapolate to unseen lengths — in practice that extrapolation is weak); modern models like LLaMA use **RoPE**, which bakes *relative* position straight into the attention comparison. RoPE's relative encoding is friendlier to extrapolation than absolute position encodings, but base RoPE still degrades past the trained context length without added scaling tricks (position interpolation, NTK-aware/YaRN scaling). Either way, once positions are added, the model can finally tell word order apart.
 
 ---
 
 **The Transformer block.**
 
-Stack the pieces and you get the repeating block every Transformer is built from: normalise the inputs, run **multi-head attention** (words look at each other), add the result back through a **residual shortcut**, normalise again, run a small two-layer **feed-forward network** (FFN) on each word, and add that back too. Two details matter. The FFN is deliberately *wide* — usually 4× the model's width in the middle — because it acts as the model's *memory*, where a lot of its factual knowledge is stored; shrink it and the model measurably forgets facts. And the **residual shortcuts** are not decoration: they give the gradient a direct path back to every layer, which is the only reason you can stack dozens of these blocks without the signal dying (exactly the vanishing-gradient fix from earlier).
+Stack the pieces and you get the repeating block every Transformer is built from: normalise the inputs, run **multi-head attention** (words look at each other), add the result back through a **residual shortcut**, normalise again, run a small two-layer **feed-forward network** (FFN) on each word, and add that back too. Two details matter. The FFN is deliberately *wide* — usually 4× the model's width in the middle — because it acts as the model's *memory*, where a lot of its factual knowledge is stored; shrinking it is reported in interpretability and scaling studies to cost the model retrievable facts (this module doesn't walk through a worked number for that drop, unlike the √d_k computation in the attention module — treat the direction as right, not the exact magnitude). And the **residual shortcuts** are not decoration: they give the gradient a direct path back to every layer — necessary, but not sufficient, for stacking dozens of these blocks without the signal dying (exactly the vanishing-gradient fix from earlier). Residuals give the gradient a path; whether that path stays well-scaled as depth grows still depends on where LayerNorm sits relative to it, which is why Pre-LN vs Post-LN (below) matters.
 
 [FIGURE: transformer_block]
 
@@ -831,19 +788,19 @@ Stack the pieces and you get the repeating block every Transformer is built from
 **Two flavours: encoder and decoder.**
 
 The same block comes in two modes, set by *who is allowed to look at whom*. **Encoder-only** (BERT-style) lets every word see every other word, in both directions — great for *understanding* tasks like classification, where you want the fullest possible context. **Decoder-only** (GPT-style) masks the future, so each word can only see the words *before* it — which is exactly what you need to *generate* text one token at a time. Decoder-only models also get a training bonus: *every* token in a sequence is a prediction target at once, giving them far more learning signal per pass than BERT's "predict just the 15% we masked," which is a big part of why decoder-only models dominate at scale.`,
-    interactivePrompt: `Before you touch the controls: if you remove the residual connections from a 12-layer Transformer but keep everything else identical, what would you expect to happen to the gradient norms in the first three layers?`,
+    interactivePrompt: `A transformer block is stacked self-attention + feed-forward, repeated N times. Explore the attention step — the core operation the whole block is built around. Before you touch the controls: if you remove the residual connections from a 12-layer Transformer but keep everything else identical, what would you expect to happen to the gradient norms in the first three layers?`,
     keyPoints: [
       `**Encoder-only for understanding (classification, NER, QA); decoder-only for generation (language models, chat); encoder-decoder for sequence-to-sequence tasks (translation, summarisation).** The architecture determines the training objective, which determines what the model can do. A decoder-only model cannot be directly used for tasks requiring bidirectional context (e.g., masked span filling) without changing its attention pattern. Use Pre-LN (LayerNorm before attention and FFN sub-layers) — every modern large model (LLaMA, GPT-3, PaLM) uses Pre-LN because Post-LN (original Transformer) causes gradient norms to blow up in early training and requires very careful warmup schedules to stabilise.`,
-      `**The production trap: reducing d_ff below 4×d_model to cut compute.** The FFN stores factual knowledge in its weight matrices. Reducing d_ff from 4× to 2× on a large language model produces a measurable drop in downstream knowledge-intensive task performance — not just a small accuracy delta but a loss of specific factual associations the model can no longer store. Profile d_ff reduction on your specific tasks before accepting this tradeoff. The attention heads are frequently a safer target for compute reduction (fewer heads, or smaller d_k per head) without losing as much stored knowledge.`,
+      `**The production trap: reducing d_ff below 4×d_model to cut compute.** The FFN stores factual knowledge in its weight matrices. Reducing d_ff from 4× to 2× on a large language model is reported in interpretability and scaling studies to cost downstream knowledge-intensive task performance — not just a small accuracy delta but a loss of specific factual associations the model can no longer store. (No worked number for this is shown in this module; treat the direction as reliable, not the exact size.) Profile d_ff reduction on your specific tasks before accepting this tradeoff. The attention heads are frequently a safer target for compute reduction (fewer heads, or smaller d_k per head) without losing as much stored knowledge.`,
       `**The diagnostic: check training loss curve shape in the first 1000 steps.** A healthy Transformer training run shows a rapid initial drop followed by smooth decay. A loss spike in the first 500 steps (then recovery) is the signature of insufficient learning rate warmup — Adam's moment estimates were too noisy for the initial learning rate. A flat loss that does not decrease at all is the signature of a missing or inverted causal mask in a decoder model — the model is attending to future tokens and the prediction task is trivially solved (training loss looks low, generation is random). Both are diagnosable before committing GPU hours.`,
     ],
     takeaway: `The Transformer's power rests on three mutually dependent components: direct all-to-all attention for O(1) path length, residual connections that route gradients to every layer simultaneously, and a 4×-expanded FFN that stores and retrieves factual knowledge — each degrades measurably without the others.`,
     recap: [
       `**Attention's blind spot — no sense of order:** raw self-attention is permutation-equivariant, so "dog bit man" and "man bit dog" produce the same (reordered) outputs. It sees a *set* of words, not a sequence.`,
-      `**Positional encoding fixes it:** add a position-dependent vector to each token's embedding. Sinusoidal encodings (sin/cos at many frequencies) extrapolate to unseen lengths because PE(pos+k) is a linear function of PE(pos); modern models use RoPE, which encodes *relative* position directly in the attention scores and generalises well to longer sequences.`,
+      `**Positional encoding fixes it:** add a position-dependent vector to each token's embedding. Sinusoidal encodings (sin/cos at many frequencies) have the property that PE(pos+k) is a linear function of PE(pos), which the original paper hedged *may* help extrapolation to unseen lengths — in practice that extrapolation is weak; modern models use RoPE, which encodes *relative* position directly in the attention scores. RoPE is friendlier to extrapolation than absolute encodings, but base RoPE still degrades past the trained context length without added scaling tricks (position interpolation, NTK-aware/YaRN scaling).`,
       `**The block, in order:** norm → multi-head attention → residual add → norm → feed-forward network (FFN) → residual add. Pre-norm (norm inside the residual branch) is the stable modern default.`,
       `**The FFN is deliberately ~4× wide:** it's the model's *memory* where factual knowledge is stored and retrieved — shrink it and the model measurably forgets facts, even though it's often overlooked next to attention.`,
-      `**Residual shortcuts route gradients to every layer at once** — ∂L/∂x keeps a direct identity path back regardless of the block's transform, which is the only reason you can stack dozens of Transformer blocks and still train them.`,
+      `**Residual shortcuts route gradients to every layer at once** — ∂L/∂x keeps a direct identity path back regardless of the block's transform. That's necessary but not sufficient to stack dozens of Transformer blocks and train them: LayerNorm placement still determines whether that path stays well-scaled (see Pre-LN vs Post-LN below) — residuals alone don't stop Post-LN's early-training blow-ups.`,
       `**Two flavours:** encoder-only (BERT — bidirectional, both-sides context, best for *understanding* tasks) and decoder-only (GPT — masks future tokens so it can only look left, best for *generation*, and since every token is a training target it gets denser signal per pass).`,
       `**Pre-LN over Post-LN:** every modern large model uses Pre-LN because Post-LN blows up gradient norms early in training and needs careful warmup to survive — a stability property, not a preference.`,
     ],

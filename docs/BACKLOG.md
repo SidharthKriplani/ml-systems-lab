@@ -2155,3 +2155,36 @@ Companion entry to GSL_PLAN.md's Phase 2 log, same session. These 3 modules had 
 ## 2026-07-11 15:21 IST (Saturday) — QnA UI shipped across all 19 foundation family tabs + logreg grid live + sync gap fixed
 
 Interview QnA is now the third view tab (Full module / Quick recap / Interview QnA) in ALL 19 foundation family tabs — completion-gated per family's own isModuleDone, SVG padlock, hover+tap lock explanation, one-shot pulse on unlock, deep-link auto-open (`qna-<id>` in URL hash). New shared components: src/components/foundations/QnAPanel.jsx (stub / parked / answered states, beats, L0-L3 chips, collapsed-by-default, per-level expand-all, TRAP blocks, follow-up jumps, Beyond section) and FoundationViewTabs.jsx (the 3-tab row, one implementation for all 19 tabs). The 19 tab files were transformed with an identical scripted 7-site diff (assertions enforced exactly-once per pattern per file); all 21 JSX files esbuild-verified. New src/data/qnaBank.js carries logistic_regression's 31 audited questions, converted programmatically from docs/QNA-PILOT-logistic-regression.md (byte-identical cmp on 3 spot samples, 18/18 followUp refs resolve, node --check exit 0). ALSO FIXED, found during this build: foundation completion keys (msl-*-foundation-v1) were NOT in syncProgress.js's collected keys — completion (and therefore the QnA gate) was device-local even for signed-in users; the collector now includes the msl-*-foundation-v* pattern, so completion follows the account.
+
+
+---
+
+## Session 2026-07-12 — Phase A remainder workflow CUT SHORT at user's direction: progress logged, not resumed
+
+2026-07-12 08:59 IST (Sunday)
+
+**What happened:** Workflow `wf_c7935ddf-7e6` (Task `w2l5jksfd`, "Writer+adversarial two-pass audit-fix-verify on the 105 remaining MSL S/A-tier modules") was launched 2026-07-11 and ran unattended. It stalled mid-run — the transcript's last recorded event is an agent `started` with no matching `result`, and no further progress happened for roughly 10 hours (almost certainly the same device-bridge disconnect logged elsewhere this session, compounded by a long idle gap). When work resumed, the user explicitly said to cut it here rather than resume — this entry logs exactly what state it's in so a future session can pick it up cleanly instead of re-deriving this from the raw journal.
+
+**Real progress, reconstructed directly from the workflow's journal (`journal.jsonl` in run `wf_c7935ddf-7e6`'s transcript dir), not from any self-reported summary:**
+
+- **Audit stage: 105/105 complete.** Every module got a cold, blind first-principles audit. 103 modules had real, concrete findings; 2 (`thompson_sampling`, `learning_rate_schedules`) came back with no issues.
+- **Fix stage: 103/103 complete** (the 2 no-issue modules skip fix by design). Every one of these 103 fixes was actually written to disk — confirmed via `git diff --stat` on the live working tree (31 files touched, ~16.2k insertions before the QnA data is even counted), not just a self-reported "done."
+- **Verify stage: only 29/105 completed before the cutoff** (2 more were `started` but never finished — those 2 modules' verify never landed and are treated as not-yet-verified). Of the 29 that did complete: **5 PASS** (`random_forest`, `missing_value_handling`, `distribution_shift`, `epsilon_greedy`, `gradient_boosting`), **24 FAIL** (fixed but the independent blind re-verify still found real residual issues).
+
+**`contentStatus.js` updated to reflect exactly this, nothing rounded up:**
+- **5 modules → `clean`**, real `verifiedBy` receipts (audit + fix + independent PASS verify, referencing `journal.jsonl`).
+- **23 modules → `in_progress`**, noted as fixed-and-verified-but-still-failing (1 of the 24 FAIL ids, `thompson_sampling`, is handled separately below since it was never actually fixed).
+- **75 modules → `in_progress`**, noted as fixed-and-written-to-disk-but-UNVERIFIED — real work landed in these files, just never independently confirmed before the cutoff.
+- **`learning_rate_schedules` → `in_progress`**, noted as audited-clean-but-never-independently-confirmed (verify never reached it).
+- **`thompson_sampling` → `in_progress`**, flagged as a genuine unresolved discrepancy: round1 cold audit said "no issues," but the independent blind verify (which runs on every module regardless of fix status) found real issues on that same untouched content. The two audits disagree and neither was re-run to break the tie. Needs a fresh look, not a default resolution either way.
+
+Also refreshed 8 stale `verifiedFileHash` entries for pre-existing clean modules sharing `classicalMLModules.js` with the newly-fixed `random_forest`/`gradient_boosting` (content confirmed untouched via the same count==1-targeted-replace methodology used throughout this batch).
+
+**How to use what's here, concretely:**
+1. The 5 `clean` modules need nothing further — ship as-is.
+2. The 75 "fixed, unverified" modules already have real fixes sitting in the working tree. The cheapest way to close them is to run ONLY the verify stage against them (skip audit+fix, they're done) — roughly a quarter of the cost of a fresh Phase A pass over the same set, since verify is one blind-agent call per module instead of three.
+3. The 23 "fixed, verified, still failing" modules need a real round-2 fix→verify pass — their first fix didn't fully land. Full residual-issue text is in `journal.jsonl` per module (`verify` stage results) — pull it fresh rather than re-deriving from memory when that round starts.
+4. `thompson_sampling` needs a tie-breaking fresh audit before it can be called anything other than "disputed."
+5. `learning_rate_schedules` just needs one verify call to confirm the original "no issues" finding.
+
+**Not committed yet:** all 31 touched files (`git diff --stat` above) plus `contentStatus.js` are sitting uncommitted in the working tree alongside the already-merged QnA question data. `CLAUDE.md`, `BRAIN_TRANSFER.md`, and `STATUS.md` also show as modified in `git status` — these were NOT touched by any Phase A fix-stage agent (they were explicitly scoped to `src/data/foundations/*.js` only) and are most likely pre-existing local edits from before this batch; flagging rather than silently folding them into this batch's commit.

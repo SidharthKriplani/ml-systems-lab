@@ -17,19 +17,19 @@ export const RECSYS_MODULES = [
 
 ---
 
-**So the system splits into two stages with opposite objectives.** *Candidate generation* (retrieval) cheaply narrows 10M → ~hundreds using methods so cheap they can touch every item — embedding lookups, approximate nearest neighbor, precomputed lists. It optimizes **recall**: don't lose the good items. *Ranking* then runs an expensive, feature-rich model over only those few hundred survivors and optimizes **precision**: order them exactly right. The cheap stage runs over everything; the expensive stage runs only over what the cheap stage kept.
+**So the system splits into two stages with opposite objectives.** *Candidate generation* (retrieval) cheaply narrows 10M → ~1,000 using methods so cheap they can touch every item — embedding lookups, approximate nearest neighbor, precomputed lists. It optimizes **recall**: don't lose the good items. *Ranking* then runs an expensive, feature-rich model over only those ~1,000 survivors and optimizes **precision**: order them exactly right. The cheap stage runs over everything; the expensive stage runs only over what the cheap stage kept.
 
 ---
 
 **The consequence that trips up juniors: the two stages have different metrics because they have different jobs.** Retrieval is judged on recall@k (did the relevant items make the shortlist?), ranking on NDCG/precision (are they ordered well?). And retrieval's recall is a *ceiling* — an item retrieval drops is gone forever; no ranker can order an item it never received. A brilliant ranker on top of a mediocre retriever is capped by the retriever. This is why "great model, mediocre recommendations" almost always means: audit retrieval recall first.`,
-    interactivePrompt: `Before you touch the controls: the funnel narrows 10M → hundreds → tens. If you make the retrieval stage narrower to save latency, which metric can you never recover downstream, and why?`,
+    interactivePrompt: `Before you touch the controls: the funnel narrows 10M → ~1,000 → top-k. If you make the retrieval stage narrower to save latency, which metric can you never recover downstream, and why?`,
     keyPoints: [
       `**The two-stage split is forced by arithmetic, not taste.** 10M items × ~1ms/item = 10,000s per request against a ~100ms budget — a 100,000× gap. You cannot run the precise model over the full catalog, so a cheap recall stage must run first and an expensive precision stage second.`,
       `**Retrieval optimizes recall; ranking optimizes precision — different jobs, different metrics.** Retrieval's only sin is dropping a good item (unrecoverable); ranking's job is ordering the survivors. Judge retrieval on recall@k, ranking on NDCG/precision@k. Conflating the two is a classic interview tell.`,
       `**Retrieval recall is a hard ceiling on final quality.** If recall@500 = 0.7, then 30% of items the user would have loved never reach the ranker, and no ranking sophistication recovers them. Diagnose a "good ranker, bad results" system by measuring retrieval recall before touching the ranker.`,
-      `**The stage counts are a budget allocation.** A typical split: retrieval 10M→~1k in ~2ms, ranking ~1k→~100 in ~20ms, then a re-rank/business-rules pass ~100→~10. Each stage gets a hard millisecond allocation; one overrunning stage steals from the next.`,
+      `**The stage counts are a budget allocation.** A typical split: retrieval 10M→~1k in ~2ms, ranking ~1k→~100 in ~20ms. Each stage gets a hard millisecond allocation; one overrunning stage steals from the next.`,
     ],
-    takeaway: `A recommender is a recall-then-precision funnel forced by a ~100,000× latency gap: cheap candidate generation maximizes recall over millions (setting an unraiseable ceiling on final quality), then an expensive ranker maximizes precision over the few hundred survivors. One model cannot occupy both ends of the funnel.`,
+    takeaway: `A recommender is a recall-then-precision funnel forced by a ~100,000× latency gap: cheap candidate generation maximizes recall over millions (setting an unraiseable ceiling on final quality), then an expensive ranker maximizes precision over the ~1,000 survivors. One model cannot occupy both ends of the funnel.`,
     checkQuestions: [
       {
         q: `An interviewer asks you to "design YouTube recommendations." You have a strong ranking model. What is the correct *first* architectural move?`,
@@ -64,10 +64,10 @@ export const RECSYS_MODULES = [
     ],
     recap: [
       `**The two-stage split is forced by a latency wall, not preference:** 10M items × ~1ms each ≈ 10,000s per request vs a ~100ms budget = a 100,000× gap. You cannot score the full catalog with the precise model at request time.`,
-      `**Two stages, opposite objectives:** candidate generation (retrieval) is cheap and maximizes *recall* over millions; ranking is expensive and maximizes *precision* over the few hundred survivors. The cheap stage runs over everything; the expensive stage only over what the cheap stage kept.`,
-      `**Retrieval recall is an unraiseable ceiling:** an item retrieval drops is gone — no ranker can order an item it never received. recall@500 = 0.6 means 40% of loved items are lost before ranking. Tell: "great ranker, mediocre feed" → audit retrieval recall first.`,
+      `**Two stages, opposite objectives:** candidate generation (retrieval) is cheap and maximizes *recall* over millions; ranking is expensive and maximizes *precision* over the ~1,000 survivors. The cheap stage runs over everything; the expensive stage only over what the cheap stage kept.`,
+      `**Retrieval recall is an unraiseable ceiling:** an item retrieval drops is gone — no ranker can order an item it never received. recall@500 = 0.7 means 30% of loved items are lost before ranking. Tell: "great ranker, mediocre feed" → audit retrieval recall first.`,
       `**Different jobs → different metrics:** judge retrieval on recall@k, ranking on NDCG/precision@k. Conflating them is a junior tell.`,
-      `**Stages are a budget allocation:** e.g. retrieval 10M→1k (~2ms) → rank 1k→100 (~20ms) → re-rank 100→10 (~5ms). Each stage has a hard ms allocation; one overrun steals from the next.`,
+      `**Stages are a budget allocation:** e.g. retrieval 10M→1k (~2ms) → rank 1k→100 (~20ms). Each stage has a hard ms allocation; one overrun steals from the next.`,
     ],
     figures: {
       twostage: `<svg viewBox="0 0 360 92" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
@@ -102,15 +102,19 @@ export const RECSYS_MODULES = [
 
 ---
 
-**Training: in-batch negatives are the standard recipe, and *why* matters.** You have positives (user clicked item) but no explicit negatives. The trick: within a training batch, treat every *other* user's clicked item as a negative for this user — one batch of B pairs yields B positives and B×(B−1) negatives for free, trained with a softmax/contrastive loss. But random in-batch negatives are too *easy* — separating a clicked cooking video from a random car-parts listing gives near-zero gradient and teaches nothing subtle. So you add **hard negatives**: high-scoring-but-not-clicked items that force the model to learn fine distinctions. Popularity also biases in-batch negatives (popular items appear as negatives more often, getting over-penalized), which is corrected with a **logQ / sampled-softmax correction**.`,
+**Training: in-batch negatives are the standard recipe, and *why* matters.** You have positives (user clicked item) but no explicit negatives. The trick: within a training batch, treat every *other* user's clicked item as a negative for this user — one batch of B pairs yields B positives and B×(B−1) negatives for free, trained with a softmax/contrastive loss. But random in-batch negatives are too *easy* — separating a clicked cooking video from a random car-parts listing gives near-zero gradient and teaches nothing subtle. So you add **hard negatives**: high-scoring-but-not-clicked items that force the model to learn fine distinctions. Popularity also biases in-batch negatives (popular items appear as negatives more often, getting over-penalized), which is corrected with a **logQ / sampled-softmax correction**. Concretely, it subtracts each item's log sampling probability from its logit before the softmax, so an item isn't over-penalized just for being sampled as a negative more often.
+
+---
+
+**Retrieval's output is a shortlist, not a final answer.** The few hundred candidates ANN returns still aren't ordered — that's the next module's job. Ranking takes exactly this shortlist and runs a more expensive model over it to produce the final top-k.`,
     interactivePrompt: `Before you touch the controls: the item tower runs offline and the user tower runs live. Which one can you afford to make big and slow, and which must stay cheap — and why does that asymmetry exist?`,
     keyPoints: [
       `**Two towers exist to make item embeddings query-independent.** A joint (cross-attention) scorer ties an item's representation to the querying user, forcing 10M fresh scores per request. Two separate towers + a dot product let you precompute all item vectors offline and index them once.`,
-      `**Dot-product / cosine is chosen because ANN indexes are built for it.** Retrieval = encode one user live, then ANN-lookup nearest item vectors (~10ms over 100M). The item tower can be arbitrarily expensive (it runs offline); the user tower must be cheap (it runs per request). That asymmetry is the whole point.`,
+      `**Dot-product / cosine is chosen because ANN indexes are built for it.** Retrieval = encode one user live, then ANN-lookup nearest item vectors (~10ms over 10M). The item tower can be arbitrarily expensive (it runs offline); the user tower must be cheap (it runs per request). That asymmetry is the whole point. Retrieval's output — the few hundred nearest neighbors — is a shortlist for the ranking stage next, not the final recommendation list.`,
       `**In-batch negatives give free negatives, but random ones are too easy.** B positives per batch yield B×(B−1) negatives at no cost. Random negatives produce tiny gradients; hard-negative mining (high-scoring non-clicks) forces fine distinctions and is what actually raises recall.`,
       `**Popularity bias in negatives needs a correction.** Popular items appear as in-batch negatives disproportionately and get over-suppressed; a logQ / sampled-softmax correction (subtract log sampling probability from the logit) restores an unbiased objective.`,
     ],
-    takeaway: `Two-tower retrieval decouples user and item encoding so item embeddings can be precomputed offline and ANN-indexed — turning "score 10M items" into "encode one user + a ~10ms neighbor lookup." It's trained with in-batch negatives plus hard-negative mining (random negatives are too easy) and a logQ correction for popularity bias.`,
+    takeaway: `Two-tower retrieval decouples user and item encoding so item embeddings can be precomputed offline and ANN-indexed — turning "score 10M items" into "encode one user + a ~10ms neighbor lookup." It's trained with in-batch negatives plus hard-negative mining (random negatives are too easy) and a logQ correction for popularity bias. The output is a shortlist of a few hundred candidates handed to the ranking stage next — not a final recommendation list.`,
     checkQuestions: [
       {
         q: `Why can't a cross-attention model that jointly encodes (user, item) be used for retrieval, even though it is more accurate than a two-tower model?`,
@@ -145,10 +149,10 @@ export const RECSYS_MODULES = [
     ],
     recap: [
       `**Joint scoring is most accurate but impossible at retrieval scale:** it ties an item's representation to the querying user, forcing 10M fresh scores per request. Two-tower breaks the dependency — user tower + item tower into a shared space, similarity = dot product u·v.`,
-      `**Query-independent items → precompute offline + ANN:** compute all item embeddings once, index them (HNSW/IVF/ScaNN). At request time: encode one user (one forward pass) + ANN lookup for nearest item vectors ≈ 10ms over 100M. Dot-product/cosine is chosen because ANN is built for it.`,
+      `**Query-independent items → precompute offline + ANN:** compute all item embeddings once, index them (HNSW/IVF/ScaNN). At request time: encode one user (one forward pass) + ANN lookup for nearest item vectors ≈ 10ms over 10M. Dot-product/cosine is chosen because ANN is built for it.`,
       `**Cost asymmetry is the design lever:** the item tower runs offline so it can be big and slow; the user tower runs live so it must be cheap. Exploit this — put expensive features on the item side.`,
       `**In-batch negatives = free negatives but too easy:** a batch of B pairs gives B positives + B×(B−1) negatives. Random negatives yield near-zero gradient; **hard-negative mining** (high-scoring non-clicks) forces fine distinctions and actually lifts recall.`,
-      `**Popularity bias in negatives needs a correction:** popular items appear as negatives disproportionately and get over-suppressed → apply a logQ / sampled-softmax correction to restore an unbiased objective.`,
+      `**Popularity bias in negatives needs a correction:** popular items appear as negatives disproportionately and get over-suppressed → apply a logQ / sampled-softmax correction to restore an unbiased objective. Retrieval's output is a shortlist of a few hundred candidates, not a final list — the ranking stage (next module) takes over from here to produce the ordered top-k.`,
     ],
     figures: {
       twotower: `<svg viewBox="0 0 360 112" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
@@ -168,7 +172,6 @@ export const RECSYS_MODULES = [
   },
   {
     id: 'learning_to_rank',
-    interactiveId: 'value_model_mixer_viz',
     title: 'Ranking & Learning-to-Rank',
     subtitle: 'Pointwise vs pairwise vs listwise — why the loss must match the ranking objective',
     difficulty: 'intermediate',
@@ -184,12 +187,11 @@ export const RECSYS_MODULES = [
 
 ---
 
-**Pairwise LTR optimizes the thing you actually care about: relative order.** It looks at pairs (i, j) where i is more relevant than j and penalizes ranking j above i (RankNet, LambdaRank, and the ubiquitous BPR for implicit feedback). This aligns the loss with the objective — you're directly minimizing inversions. **LambdaMART** (pairwise gradients weighted by the NDCG change each swap causes) is the classic strong baseline and still wins many tabular ranking bake-offs.
+**Pairwise LTR optimizes the thing you actually care about: relative order.** It looks at pairs (i, j) where i is more relevant than j and penalizes ranking j above i (RankNet, LambdaRank, and the ubiquitous BPR for implicit feedback). This aligns the loss with the objective — you're directly minimizing inversions. Ranking quality itself is usually graded by **NDCG@k (Normalized Discounted Cumulative Gain)**: each relevant item's contribution is divided by log₂(its rank + 1), so a hit at position 1 (log₂2 = 1) counts at its full relevance value, while the same hit at position 10 (log₂11 ≈ 3.46) counts for only about 1/3.46 ≈ 29% of that value — this position discount is exactly why an inversion near the top costs far more than one near the bottom. **LambdaMART** (pairwise gradients weighted by the NDCG change each swap causes) is the classic strong baseline and still wins many tabular ranking bake-offs.
 
 ---
 
 **Listwise LTR optimizes the whole ordered list at once** (ListNet, ListMLE, softmax cross-entropy over the list, or directly approximating NDCG). It's the most aligned with metrics like NDCG@k that depend on the entire ranking and its position discounts, but it's harder to optimize and more sensitive to list construction. The practical rule: **pointwise is the easy default, pairwise/listwise align the loss with the ranking objective** — reach for them when relative order and top-of-list quality are what the product is graded on. Note ranking has features retrieval couldn't afford: cross features (user×item), real-time context, candidate-set features, and the user's session so far.`,
-    interactivePrompt: `Before you touch the controls: you're combining click, dwell, and share heads into one score. Predict what happens to top-of-list quality if one head is uncalibrated relative to the others — and why the loss family (pointwise vs pairwise) interacts with that.`,
     keyPoints: [
       `**The loss must match the objective: order, not absolute score.** Pointwise minimizes per-item error and can waste capacity calibrating items whose relative order is never in doubt, while under-weighting the boundary pairs that decide the ranking. Pairwise/listwise optimize order directly.`,
       `**Pairwise (RankNet/LambdaRank/BPR) minimizes inversions; LambdaMART weights each pair by its NDCG impact.** This directly targets ranking quality and is the classic strong baseline — especially LambdaMART on tabular features, and BPR for implicit feedback.`,
@@ -261,7 +263,7 @@ export const RECSYS_MODULES = [
 
 ---
 
-**Batch features are computed on a schedule; real-time features are computed per event.** "User's 90-day purchase count" is a batch feature — recomputed nightly, cheap, stable. "Items viewed in the last 5 minutes" is a real-time feature — it must reflect *this* session, so it's computed online from a streaming store. The two live in different systems (a warehouse vs a low-latency feature store), and the recommender reads both at serving time. The design question is which signals *need* to be fresh: session intent decays in minutes, so a stale "recent views" feature is nearly useless; long-term taste is stable, so a day-old "favorite genre" is fine.
+**Batch features are computed on a schedule; real-time features are computed per event.** "User's 90-day purchase count" is a batch feature — recomputed nightly, cheap, stable. "Items viewed in the last 5 minutes" is a real-time feature — it must reflect *this* session, so it's computed online from a streaming store. The two live in different systems (a warehouse vs a low-latency online store), and the recommender reads both at serving time. The design question is which signals *need* to be fresh: session intent decays in minutes, so a stale "recent views" feature is nearly useless; long-term taste is stable, so a day-old "favorite genre" is fine.
 
 ---
 
@@ -430,12 +432,12 @@ export const RECSYS_MODULES = [
 
 ---
 
-**The closed-loop causal trap and how debiasing breaks it.** The core issue is causal: you observe clicks *conditional on* being shown at a position, but you want P(relevant), which requires reasoning about what *would* have happened under a different exposure. **Inverse Propensity Scoring (IPS)** is the standard tool: weight each observed interaction by 1/P(shown | position) so items shown in low-attention slots count *more* when they still got clicked, recovering an unbiased relevance estimate. Propensities are estimated from a position-bias model or from deliberate **randomization** (occasionally shuffling positions to gather unbiased data). The naming to know: **IPS / doubly-robust estimators / counterfactual learning-to-rank** — all attack the same "learn from logs you generated" trap. And randomization/exploration isn't just for cold start; it's how you keep collecting the unbiased signal debiasing needs.`,
+**The closed-loop causal trap and how debiasing breaks it.** The core issue is causal: you observe clicks *conditional on* being shown at a position, but you want P(relevant), which requires reasoning about what *would* have happened under a different exposure. **Inverse Propensity Scoring (IPS)** is the standard tool: weight each observed interaction by 1/P(shown | position) so items shown in low-attention slots count *more* when they still got clicked, recovering an unbiased relevance estimate. Propensities are estimated from a position-bias model or from deliberate **randomization** (occasionally shuffling positions to gather unbiased data). The naming to know: **IPS / doubly-robust estimators / counterfactual learning-to-rank** — all attack the same "learn from logs you generated" trap. And randomization/exploration isn't just for cold start; it's how you keep collecting the unbiased signal debiasing needs — and that same controlled randomization budget is what lets you validate that an IPS or doubly-robust correction actually recovered true relevance, rather than just swapping in a differently-biased estimate.`,
     keyPoints: [
       `**Raw clicks are not relevance — position bias contaminates them.** Top slots get clicks regardless of quality, so training on raw clicks teaches the model to resurface whatever was already on top, a self-reinforcing loop. The tell: precision@1 higher for items historically shown at *low* positions (they had to be genuinely good to get clicked there).`,
       `**Popularity bias is the flywheel turned pathological.** Popular items get exposure → interactions → look relevant → more exposure, starving niche/new items of the data needed to rank them. Uncorrected, coverage collapses toward a shrinking head while short-term clicks still look fine.`,
       `**IPS breaks the loop by reweighting.** Weight each interaction by 1/P(shown | position) so clicks earned in low-attention slots count more, recovering an unbiased relevance estimate. Propensities come from a position-bias model or from deliberate randomization; doubly-robust and counterfactual LTR are the same family.`,
-      `**Randomization/exploration is the data source debiasing depends on.** Occasionally shuffling positions (or exploring) gathers the unbiased observations that let you estimate propensities and train counterfactually — it's not only a cold-start tool.`,
+      `**Randomization/exploration is the data source debiasing depends on.** Occasionally shuffling positions (or exploring) gathers the unbiased observations that let you estimate propensities and train counterfactually — it's not only a cold-start tool, and that same budget is what lets you validate that an IPS or doubly-robust correction actually recovered true relevance rather than swapping in a differently-biased estimate.`,
     ],
     takeaway: `A recommender trains on logs it generated, so raw clicks encode position bias (rank drives clicks) and popularity bias (the flywheel amplifies the head) rather than relevance — a closed-loop causal trap where the model imitates its own past. Inverse Propensity Scoring (weight by 1/P(shown|position)), fed by deliberate randomization, recovers an unbiased relevance estimate; doubly-robust and counterfactual LTR are the same idea.`,
     checkQuestions: [
@@ -443,7 +445,7 @@ export const RECSYS_MODULES = [
         q: `Your LTR model shows *higher* precision@1 for items that were historically displayed at low positions than for items displayed at high positions. What does this reveal, and what's the principled fix?`,
         options: [
           `A) Label noise — low-position items accumulate roughly 5-10x fewer clicks, producing noisier labels; commission editorial relevance judgments for the bottom three ranking positions specifically.`,
-          `B) Position bias: items that still got clicked from low positions were genuinely strong. Fix with inverse-propensity weighting (1/P(click|position)) plus position randomization.`,
+          `B) Position bias: items that still got clicked from low positions were genuinely strong. Fix with inverse-propensity weighting (1/P(shown|position)) plus position randomization.`,
           `C) Overfitting to a small set of head queries that dominate the training log; fix with query-frequency-weighted sampling that down-samples the top 100 most frequent queries.`,
           `D) Feature leakage from an explicit popularity feature correlated with position; removing all popularity-derived features from the model resolves the asymmetry.`,
         ],
@@ -513,7 +515,7 @@ export const RECSYS_MODULES = [
 
 ---
 
-**Online evaluation measures the objective directly, via A/B tests.** Split traffic, ship the candidate to one arm, and measure **CTR, dwell, session length, retention, revenue** — the things offline metrics only proxy. The discipline: offline metrics are a cheap *filter* (kill obviously worse models before they touch users), never the *decision* (the A/B test decides). Watch for the traps — novelty effects (a new model gets a temporary bump), delayed metrics (retention takes weeks), guardrail metrics (don't win CTR by tanking a harm metric), and sample-ratio mismatch. The offline-online gap is not eliminated; it's *managed*: use offline to filter, online to decide, and treat a persistent gap as a signal that your offline proxy or your logs are broken.`,
+**Online evaluation measures the objective directly, via A/B tests.** Split traffic, ship the candidate to one arm, and measure **CTR, dwell, session length, retention, revenue** — the things offline metrics only proxy. The discipline: offline metrics are a cheap *filter* (kill obviously worse models before they touch users), never the *decision* (the A/B test decides). Watch for the traps — novelty effects (a new model gets a temporary bump), delayed metrics (retention takes weeks), guardrail metrics (don't win CTR by raising a harm metric), and sample-ratio mismatch (SRM: the observed control/treatment traffic split doesn't match the intended ratio — e.g. 48/52 instead of 50/50 — a sign the randomization or logging pipeline itself is broken, which invalidates trust in the whole test's readout, not just one metric). The offline-online gap is not eliminated; it's *managed*: use offline to filter, online to decide, and treat a persistent gap as a signal that your offline proxy or your logs are broken.`,
     keyPoints: [
       `**Offline metrics are cheap proxies computed on biased historical logs; online metrics measure the objective on live traffic.** Recall@k / NDCG@k / MAP / AUC each capture a slice of ranking quality; CTR / dwell / retention / revenue capture what the business actually wants. The former filter; the latter decide.`,
       `**The gap is structural, not accidental — four causes.** (1) Logs are biased toward the old model, penalizing new-but-good rankings for disagreeing; (2) counterfactual blindness — unlogged better items have no label; (3) metric ≠ objective (click-NDCG rewards clickbait while retention falls); (4) offline can't see diversity, feedback loops, or downstream behavior change.`,
@@ -546,7 +548,7 @@ export const RECSYS_MODULES = [
         q: `Your candidate ranker wins CTR in an A/B test. Before shipping, select the *two* most important additional checks.`,
         options: [
           `A) Guardrail metrics — confirm the CTR win didn't come at the cost of a harm metric (reports, "see fewer") or of dwell/retention, since click-optimizing models often win CTR via clickbait.`,
-          `B) Rule out a novelty effect and a sample-ratio mismatch, either of which can produce a spurious short-term CTR win that fails to hold once the test is ramped to full traffic.`,
+          `B) Rule out a novelty effect (a temporary CTR bump that fades once the model stops being new) and a sample-ratio mismatch (a broken randomization/logging pipeline that invalidates trust in the whole test's readout, not just a fading bump).`,
           `C) Confirm the candidate's p99 inference latency is strictly below the incumbent's, since a slower model is disqualified from replacing it in production regardless of CTR.`,
           `D) Confirm the ranker's output embedding dimension exactly matches the retrieval stage's 64-dimensional space, since a mismatch would leave the downstream dot product undefined.`,
         ],
@@ -556,7 +558,7 @@ export const RECSYS_MODULES = [
     recap: [
       `**Offline = cheap proxies on biased logs; online = the real objective on live traffic.** Recall@k (did relevant items make the shortlist), NDCG@k (ordered near the top, position-discounted), MAP, AUC (P(relevant outranks irrelevant)) — all computed on *historical* logs. CTR/dwell/retention/revenue are what the business actually wants.`,
       `**The gap is structural — four causes:** (1) logs are biased toward the old model, so a new-but-good ranking is penalized for disagreeing; (2) counterfactual blindness — unlogged better items have no label; (3) metric ≠ objective (click-NDCG rewards clickbait while retention falls); (4) no system effects (diversity, feedback loops, behavior change).`,
-      `**A/B testing is the decision procedure, with traps:** novelty effects (temporary bump), delayed metrics (retention takes weeks), guardrail metrics (don't win CTR by tanking a harm metric), sample-ratio mismatch. Ramp gradually; pre-register north-star + guardrails.`,
+      `**A/B testing is the decision procedure, with traps:** novelty effects (temporary bump), delayed metrics (retention takes weeks), guardrail metrics (don't win CTR by raising a harm metric), sample-ratio mismatch. Ramp gradually; pre-register north-star + guardrails.`,
       `**Discipline: offline to filter, online to decide.** Offline kills obviously worse models cheaply; the A/B test makes the call. A *persistent* offline-online gap is a signal your offline proxy or logging pipeline is broken — not noise to average away.`,
     ],
     figures: {
@@ -589,7 +591,7 @@ export const RECSYS_MODULES = [
 
 ---
 
-**A value model turns many predictions into one score, and its weights encode what the business values.** A serious ranker predicts several calibrated outcomes — p(click), p(long dwell), p(share), p(complete), p(report) — and combines them: **score = 1.0·p(click) + 1.2·p(dwell) + 0.5·p(share) − 3.0·p(report)**. "Rank by engagement" is not a design; that weighted expression *is*. The weights are a **product decision, not a learned parameter** — there is no weight vector that maximizes every objective at once (pushing CTR up promotes clickbait and raises the report rate), so the weights are tuned by **online A/B tests against a north-star** (long-term retention, healthy-session rate), never by offline loss.
+**A value model turns many predictions into one score, and its weights encode what the business values.** A serious ranker predicts several calibrated outcomes (each predicted pᵢ must be a real probability, not merely a correctly-ranked score) — p(click), p(long dwell), p(share), p(complete), p(report) — and combines them: **score = 1.0·p(click) + 1.2·p(dwell) + 0.5·p(share) − 3.0·p(report)**. "Rank by engagement" is not a design; that weighted expression *is*. The weights are a **product decision, not a learned parameter** — there is no weight vector that maximizes every objective at once (pushing CTR up promotes clickbait and raises the report rate), so the weights are tuned by **online A/B tests against a north-star** (long-term retention, healthy-session rate), never by offline loss.
 
 ---
 
@@ -597,7 +599,7 @@ export const RECSYS_MODULES = [
 
 ---
 
-**Guardrails and diversity ride inside the same score.** Harm signals (report, "see fewer", hide) enter the value model as *negative* weights, so harmful-but-clicky content is demoted at ranking time rather than filtered after the fact. Diversity and freshness enter as re-ranking adjustments so the feed doesn't collapse onto one topic. And every head must be **calibrated** — the weighted sum treats each pᵢ as a real probability, so an uncalibrated head silently doubles its own effective weight and corrupts the whole ranking.`,
+**Guardrails ride inside the score; diversity rides at re-ranking.** Harm signals (report, "see fewer", hide) enter the value model as *negative* weights, so harmful-but-clicky content is demoted at ranking time rather than filtered after the fact. Diversity and freshness enter as re-ranking adjustments so the feed doesn't collapse onto one topic. And every head must be **calibrated** — the weighted sum treats each pᵢ as a real probability, so an uncalibrated head silently doubles its own effective weight and corrupts the whole ranking.`,
     interactivePrompt: `Before you touch the controls: push the CTR weight up and the report penalty toward zero. Predict what happens to the report-rate of the top items — and explain why no single weight vector wins every objective at once.`,
     keyPoints: [
       `**A single short-term signal always has a pathological maximum.** CTR → clickbait, watch-time → rabbit holes, comments → outrage. Optimizing one engagement proxy directly produces the failure mode; objective design is the real staff-level skill.`,
@@ -642,7 +644,7 @@ export const RECSYS_MODULES = [
       `**"Maximize engagement" is an abdication:** any single short-term signal has a pathological maximum — CTR → clickbait, watch-time → rabbit holes, comments → outrage. Staff-level RecSys is *objective design*: choosing what to optimize so the system is still good in a year.`,
       `**A value model fuses calibrated predictions into one score:** score = 1.0·p(click) + 1.2·p(dwell) + 0.5·p(share) − 3.0·p(report). The weights encode business value and are a *product decision tuned online against a north-star* (long-term retention), never fit by offline loss — no weight vector maxes every objective at once.`,
       `**Engagement vs quality is a delayed-feedback tradeoff:** this session's max watch-time can lower next month's retention. Encode a proxy for *long-term* value (completion, satisfaction, dwell-past-threshold) — the Netflix/YouTube move from views/clicks toward valued watch time and retention.`,
-      `**Guardrails ride the same score:** harm signals (report, "see fewer", hide) enter as *negative* weights so bad-but-clicky content is demoted at ranking time, not filtered after; diversity/freshness enter at re-ranking.`,
+      `**Guardrails ride inside the score; diversity rides at re-ranking:** harm signals (report, "see fewer", hide) enter as *negative* weights so bad-but-clicky content is demoted at ranking time, not filtered after; diversity/freshness enter at re-ranking.`,
       `**Calibration is load-bearing:** the weighted sum treats each pᵢ as a real probability — an uncalibrated head silently doubles its own effective weight and corrupts the ranking. Calibrate every head or the weights lie.`,
     ],
     figures: {
@@ -737,7 +739,7 @@ export const RECSYS_MODULES = [
         q: `Your team runs a solid two-tower retriever plus a GBDT ranker on tabular features. When is switching the ranker to DLRM or DIN actually justified, rather than cargo-culting?`,
         options: [
           `A) Always — deep architectures strictly dominate gradient-boosted trees on tabular ranking benchmarks such as the Criteo and Avazu leaderboards, so any switch is by definition an upgrade.`,
-          `B) When a GBDT captures a concrete signal poorly: many hand-engineered categorical crosses (DLRM) or a dominant history-vs-candidate interaction (DIN); otherwise the DL model mostly adds cost.`,
+          `B) When a GBDT captures a concrete signal poorly: many feature crosses it can't cheaply represent (DLRM's automatic pairwise interactions) or a dominant history-vs-candidate interaction (DIN); otherwise the DL model mostly adds cost.`,
           `C) Whenever offline AUC falls below the 0.9 threshold, since deep architectures are the only known technique capable of pushing tabular ranking AUC past that specific bar.`,
           `D) Only once the catalog exceeds roughly 1M items, since that is documented as the point at which gradient-boosted tree training stops converging within a reasonable time budget.`,
         ],
@@ -793,7 +795,7 @@ export const RECSYS_MODULES = [
     difficulty: 'advanced',
     estimatedMin: 24,
     tags: ['RecSys', 'embeddings', 'negative sampling', 'contrastive', 'logQ correction'],
-    summary: `The counter-intuitive lesson of retrieval training is that the *encoder architecture* is rarely what limits recall — the **negative-sampling scheme** is. You can swap a deeper tower in for a shallower one and move recall a point or two; change how you pick negatives and recall can move ten points. This module is about why that is, and about the single most famous failure mode in the field: naive in-batch negatives collapsing under popularity skew.
+    summary: `Picture every user and every item as a point in the same embedding space: training's whole job, every step, is to drag a user's point closer to the items they'd click and further from the ones they wouldn't — pull here, push there, nothing more exotic than that. Here's a thought experiment that makes the point concrete before naming it: imagine training a shallow one-layer tower and a much deeper four-layer tower against the *same* lazy random negatives — with the negatives left alone, going deeper buys at most a small recall bump, because both towers are still learning from the same weak push-pull signal. Now imagine leaving that shallow tower exactly as it is and changing only *which points it gets pushed away from* — the negative-sampling scheme. That single change moves recall by far more than the encoder swap did, because the negatives are what define the push-pull signal in the first place, not the tower's depth. So the *encoder architecture* is rarely what limits recall — the **negative-sampling scheme** is. This module is about why that is, and about the single most famous failure mode in the field: naive in-batch negatives collapsing under popularity skew. Before you read the mechanism: if every negative comes from other users' positives in the same batch, what happens to the one item almost everybody likes — does it get pulled toward users, or pushed away?
 
 [FIGURE: objective]
 
@@ -804,6 +806,14 @@ export const RECSYS_MODULES = [
 ---
 
 **The three negative-sampling schemes, and their tradeoffs.** (1) **In-batch negatives** — the cheap default: within a batch of B (user, item) pairs, use every *other* user's positive as a negative, giving B×(B−1) negatives for free with no extra lookups. The problem: batches are sampled from the *interaction* distribution, so **popular items appear as negatives far more often** than rare ones. (2) **Hard negatives** — mined items that score *high but weren't clicked* (near-misses). Random in-batch negatives are usually trivially easy (a cooking video vs a random car part → near-zero gradient, nothing learned); hard negatives sit right on the decision boundary and produce the gradient that actually sharpens fine distinctions, which is what lifts recall. (3) **Popularity / logQ correction** — because in-batch sampling over-represents popular items as negatives, they get systematically *over-penalised*; the fix is to subtract each item's **log sampling probability** from its logit (u·vⱼ − log Q(j)), the sampled-softmax correction, restoring an unbiased objective.
+
+---
+
+**A worked pass through the numbers, so this isn't just formulas.** Take a batch of B = 256 (user, item) pairs: in-batch negatives give B×(B−1) = 256 × 255 = 65,280 negatives for free, one lookup each. Now take one popular item and one long-tail item that both happen to score the same raw dot product against a user, u·v = 2.0. Q(j) here isn't learned or guessed — it's estimated directly from a streaming count of how often each item appears as a positive in the interaction log (the same trick the YouTube two-tower retrieval paper uses): say the popular item is Q(popular) = 0.01 (roughly 1 in 100 interactions) and the long-tail item is Q(rare) = 0.0001 (roughly 1 in 10,000). The correction u·v − log Q(j) gives: popular → 2.0 − log(0.01) = 2.0 − (−4.61) = 6.61; rare → 2.0 − log(0.0001) = 2.0 − (−9.21) = 11.21. Both scores go up (subtracting the log of a fraction always adds a positive number), but the rare item's score jumps nearly twice as far — 9.21 versus 4.61 — because it was sampled far less often than its raw score alone would justify. That's the correction working: it inflates an under-sampled item's contribution to the denominator by more than an over-sampled item's, so a popular item that shows up as a negative in almost every batch stops getting a disproportionate share of the "push away" gradient just because it's popular.
+
+---
+
+**Regularisation and temperature are a separate, secondary lever — they shape geometry, not sampling bias.** L2 penalties on the embedding tables and unit-normalising u and v control how spread out the embedding space is and stop any one dimension from dominating; a temperature term scaling the logits (u·v / τ) controls how sharply the softmax separates near-tied scores. Neither one touches *which* negatives get sampled, so neither corrects for popularity skew — a heavily-regularised, low-temperature model trained on the same popularity-skewed in-batch negatives still learns "popular = negative." That's why the sampling scheme is the first-order lever on recall and regularisation/temperature the second: fix the negatives first, then use regularisation and temperature to sharpen a geometry the sampling already got right.
 
 [FIGURE: collapse]
 

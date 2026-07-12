@@ -14,14 +14,14 @@ export const SYSTEM_DESIGN_MODULES = [
 
 **The framework forces constraints to surface before any architectural decision.**
 
-(1) Clarify requirements — QPS, latency SLA, label availability, the cost asymmetry between a false positive and a false negative. (2) Frame as an ML problem — is this ranking, classification, regression, retrieval? (3) Data strategy — where do labels come from, how fresh, how biased. (4) Model design. (5) Serving architecture. (6) Monitoring. The single most common interview failure is skipping to step 4.
+(1) Clarify requirements — QPS (queries per second), latency SLA (service-level agreement), label availability, the cost asymmetry between a false positive and a false negative. (2) Frame as an ML problem — is this ranking, classification, regression, retrieval? (3) Data strategy — where do labels come from, how fresh, how biased. (4) Model design. (5) Serving architecture. (6) Monitoring. The single most common interview failure is skipping to step 4.
 
 ---
 
 **Why the ordering is load-bearing.** Every downstream choice is a function of the earlier answers. A 200ms transformer is disqualified the instant the SLA turns out to be 50ms. A supervised model is disqualified the instant you learn there are no labels and none are coming. If you pick the model first, you discover these walls after weeks of work instead of in the first five minutes.`,
     keyPoints: [
       `**Steps 1–3 constrain every architecture decision: clarify, frame, and plan data before touching a model.** Without QPS, latency SLA, label availability, and the cost asymmetry between error types, every later decision is a guess. Concretely: a "design a spam filter" prompt has no single right answer until you know whether it blocks the email synchronously (needs <100ms) or quarantines async (can take seconds), and whether a false positive (real mail lost) costs more than a false negative (spam delivered).`,
-      `**Steps 4–5 are coupled, not sequential: model choice and serving architecture must be solved together.** A model requiring 50GB RAM cannot run on one server; a 200ms model cannot serve real-time. Choosing the model first and discovering the serving wall later wastes the most expensive weeks of a project.`,
+      `**Steps 4–5 are coupled, not sequential: model choice and serving architecture must be solved together.** A model whose memory footprint exceeds your target serving hardware's capacity can't run there as a single instance; a 200ms model cannot serve real-time. Choosing the model first and discovering the serving wall later wastes the most expensive weeks of a project.`,
       `**Step 6 is not optional: a deployed model has no built-in signal for its own decay.** Without monitoring input distributions, prediction distributions, and the business metric, the first symptom of failure is a revenue drop days after the damage began. Define the retraining trigger before launch, not after the first incident.`,
     ],
     takeaway: `ML system design is constraint-propagation: the latency SLA, label availability, and error-cost asymmetry established in steps 1–3 disqualify most architectures before you ever compare models — which is why jumping to step 4 is the defining junior mistake.`,
@@ -51,7 +51,7 @@ export const SYSTEM_DESIGN_MODULES = [
         options: [
           `A) It sets the operating point and even the framing — e.g. a two-stage design (cheap auto-approve, expensive review) plus a human-in-the-loop, decided before modeling begins.`,
           `B) It determines the learning rate and batch size used during training, which is why it's fundamentally a step-4 hyperparameter concern.`,
-          `C) Knowing it early lets you rule out single-stage synchronous designs before any model is chosen, the same way a hard latency SLA rules out slow architectures.`,
+          `C) It's one of the constraints elicited in step 1 -- without it, every downstream decision, including step 4's model choice, is effectively a guess rather than a reasoned pick.`,
           `D) Regulators require the exact cost ratio documented in a compliance filing before deployment, independent of the system's actual design.`,
         ],
         answer: ['A', 'C'],
@@ -60,7 +60,7 @@ export const SYSTEM_DESIGN_MODULES = [
     recap: [
       `**The 6 steps in order:** clarify requirements → frame as an ML problem → data strategy → model → serving → monitoring. Jumping straight to "model" (step 4) is the single most common interview failure — the classic junior tell.`,
       `**Steps 1–3 are load-bearing constraints, not preamble:** QPS, latency SLA, label availability, and the FP-vs-FN cost asymmetry disqualify most architectures up front. A 200ms transformer dies the instant the SLA turns out to be 50ms; a supervised model dies the instant you learn there are no labels coming. Elicit these in the first five minutes, not after weeks of work.`,
-      `**Model and serving are coupled, solve them together:** a 200ms model can't serve real-time, a 50GB-RAM model can't run on one box. Choose the model first and you discover the serving wall after the most expensive weeks are spent.`,
+      `**Model and serving are coupled, solve them together:** a 200ms model can't serve real-time, a model whose memory footprint exceeds the target hardware's capacity can't run there as a single instance. Choose the model first and you discover the serving wall after the most expensive weeks are spent.`,
       `**Monitoring (step 6) is not optional:** a deployed model has no built-in signal for its own decay, so without monitoring input distributions, prediction distributions, and the business metric, the first symptom of failure is a revenue drop days after the damage began. Define the retraining trigger before launch.`,
       `**Cost asymmetry shapes the whole design, not just training:** if a false positive (blocking a legit transaction) costs far more than a false negative, you may need a two-stage design (cheap model auto-approves, expensive model reviews the rest) plus a human-in-the-loop — architectural choices that must be decided before modeling, not tuned as class weights inside it.`,
     ],
@@ -97,12 +97,22 @@ export const SYSTEM_DESIGN_MODULES = [
 
 ---
 
-**The data flywheel is why incumbents are so hard to displace.** More users → more interaction data → better models → more engagement → more users. A new entrant with no interaction history can't run collaborative filtering at all and must limp along on content features until it accumulates a base.`,
+**Re-ranking exists because "most relevant" and "best final list" aren't the same thing.** A ranker sorted purely by predicted engagement will happily fill the whole list with near-duplicates of one dominant interest — each individually well-scored, but repetitive as a set. Re-ranking corrects for that after ranking, not instead of it: it caps how many near-duplicate items can sit together, injects freshness the ranker alone would never favor, and applies business rules (e.g., no two ads back-to-back) on top of the ranker's precision-ordered list. Skip re-ranking and the ranker's raw output ships as-is — accurate item-by-item, but monotonous overall.
+
+---
+
+**The data flywheel is why incumbents are so hard to displace.** More users → more interaction data → better models → more engagement → more users. Much of that model quality comes from collaborative filtering — inferring what a user will like from patterns across *other* users' interactions (people who watched X also watched Y), not from anything intrinsic to the item itself. A new entrant with no interaction history can't run collaborative filtering at all and must limp along on content features until it accumulates a base.
+
+---
+
+**Cold start is the flywheel's edge case, and it has a specific playbook.** A user with zero watch history can't be served by collaborative filtering, so the system leans on what it does have: context (device, time of day, location), content features (the item's own attributes, not who else liked it), and a popularity fallback (globally or regionally trending items) to make the first few recommendations reasonable. From there, every watch-time signal in the session — a 2-second skip vs. a 30-second watch — updates a real-time embedding for that user, so personalization sharpens within the same session rather than waiting for a next login.`,
     interactivePrompt: `Before you touch the controls: if you narrow the retrieval stage to cut latency, which metric has a hard ceiling you can never recover downstream — and why?`,
     keyPoints: [
       `**The funnel exists because accuracy and scale can't be one model.** Retrieval must be fast and high-recall (a missed item is unrecoverable); ranking can be expensive and precise because it only sees hundreds of candidates. Different objectives → different architectures → different stages.`,
       `**Retrieval recall caps final quality.** If retrieval's recall@1000 is 0.7, then 30% of the items a user would have loved are already gone before ranking starts — and no amount of ranking sophistication recovers them. Diagnose a "great ranker, mediocre results" system by auditing retrieval recall first.`,
-      `**The data flywheel compounds the incumbent advantage.** Collaborative signal requires interaction history; a cold platform has none, so it underperforms an incumbent even with identical architecture until it accrues data. Exploration is the deliberate cost that keeps the flywheel fed with signal on new items.`,
+      `**Re-ranking curates the ranked list, it doesn't re-score it.** A ranker optimizing pure predicted engagement can fill an entire list with near-duplicates of one dominant interest — 10 videos from the same creator, each well-scored individually but monotonous as a set. Re-ranking caps near-duplicates, injects freshness, and layers business rules on top of the ranker's output after the fact.`,
+      `**The data flywheel compounds the incumbent advantage.** Collaborative signal (patterns across other users' interactions) requires interaction history; a cold platform has none, so it underperforms an incumbent even with identical architecture until it accrues data. Exploration is the deliberate cost that keeps the flywheel fed with signal on new items.`,
+      `**Cold start leans on context + content + popularity, then adapts fast.** With no watch history to run collaborative filtering on, a first session opens on context, content features, and a trending fallback; early watch-time signals (a skip vs. a long watch) then update a real-time embedding within that same session, so personalization sharpens without waiting for a next login.`,
     ],
     takeaway: `A recommender is a recall-then-precision funnel: retrieval cheaply maximizes recall over millions (and sets an unraiseable ceiling on final quality), ranking expensively maximizes precision over the survivors — one model can't occupy both ends.`,
     checkQuestions: [
@@ -161,21 +171,21 @@ export const SYSTEM_DESIGN_MODULES = [
     difficulty: 'advanced',
     estimatedMin: 26,
     tags: ['RecSys', 'ranking', 'pre-ranking', 'candidate generation'],
-    summary: `The gap between a recommender *prototype* and a recommender *system* is the entire engineering stack around the model. A prototype runs a ranker over a few thousand items and prints results. Production has to serve millions of users inside a ~100ms budget, A/B-test each stage independently, degrade gracefully when any component dies, and correct position bias so the ranker doesn't just resurface whatever the last model showed.
+    summary: `The gap between a recommender *prototype* and a recommender *system* is the entire engineering stack around the model. A prototype runs a ranker over a few thousand items and prints results. Production has to serve millions of users inside a ~100ms end-to-end budget — of which the four funnel stages below account for roughly 30ms of actual compute, the remainder consumed by network round-trips between services, feature-store lookups, and serialization at each hop — A/B-test each stage independently, degrade gracefully when any component dies, and correct position bias so the ranker doesn't just resurface whatever the last model showed.
 
 [FIGURE: fourstage]
 
 ---
 
-**Modern stacks have four stages, not three.** Between cheap retrieval and the expensive ranker sits a **pre-ranking** (a.k.a. coarse-ranking) stage: a lightweight model that trims thousands of retrieved candidates to a few hundred before the heavy ranker runs. Without it, the full ranker either blows the latency budget or is forced to score too few candidates. Retrieval (10M→5k, ~1ms) → pre-rank (5k→500, ~5ms) → rank (500→50, ~20ms) → re-rank (50→10, ~5ms).
+**Modern stacks have four stages, not three.** Between cheap retrieval and the expensive ranker sits a **pre-ranking** (a.k.a. coarse-ranking) stage: a lightweight model that trims thousands of retrieved candidates to a few hundred before the heavy ranker runs. Without it, the full ranker either blows the latency budget or is forced to score too few candidates. Retrieval (10M→5k, ~1ms) → pre-rank (5k→500, ~5ms) → rank (500→50, ~20ms) → re-rank (50→10, ~5ms). Re-ranking is a distinct final pass, not a smaller repeat of ranking: it takes the ranker's top ~50 scored candidates and applies constraints a per-item relevance score can't express on its own — deduplicating near-identical items, enforcing diversity across categories or sources, and injecting business rules (promotions, freshness floors, do-not-show lists) — before the top ~10 go to the user. See *reranking_diversity* for the algorithms and *recsys_feedback_loops* for how re-ranking's choices feed the position-bias problem below.
 
 ---
 
-**Latency is allocated, not hoped for.** Each stage has a hard millisecond budget and a single overrunning stage cascades. If feature retrieval slips from 10ms to 25ms, only 15ms remains for ranking — forcing fewer candidates or a simpler model, both of which cost quality. Measure the budget end-to-end in production, never from component microbenchmarks.
+**Latency is allocated, not hoped for.** Each stage has a hard millisecond budget and a single overrunning stage cascades. The Rank stage's ~20ms budget, for example, splits roughly 10ms for feature retrieval and 10ms for the model's forward pass; if feature retrieval slips from 10ms to 15ms, only 5ms remains for scoring — forcing fewer candidates or a simpler model, both of which cost quality. Measure the budget end-to-end in production, never from component microbenchmarks.
 
 ---
 
-**The hardest correctness problem is the feedback loop.** The ranker trains on interactions shaped by what the *previous* ranker chose to show. Position 1 gets clicks regardless of quality; train on raw clicks and you teach the model to reproduce position effects, not relevance. Inverse-propensity weighting and counterfactual learning are the tools that recover an unbiased relevance estimate.`,
+**The hardest correctness problem is the feedback loop.** The ranker itself is a learning-to-rank (LTR) model — trained to order candidates against each other, not just score each one in isolation — and its quality is measured with rank-sensitive metrics like precision@1 (whether the single top-ranked item is actually relevant). The ranker trains on interactions shaped by what the *previous* ranker chose to show. Position 1 gets clicks regardless of quality; train on raw clicks and you teach the model to reproduce position effects, not relevance. Inverse-propensity weighting — reweighting each observed click by 1/P(click|position) to cancel out position's effect on the raw signal — and counterfactual learning are the tools that recover an unbiased relevance estimate.`,
     interactivePrompt: `Before you touch the controls: widen the Rank stage to score more candidates. Which stage's latency dominates, and why does the pre-ranking stage exist to prevent exactly this?`,
     keyPoints: [
       `**Pre-ranking is the stage most people forget.** Retrieval returns thousands; the full ranker can't afford to score thousands in-budget. A cheap pre-ranker (small two-tower or GBM) cuts 5k→500 so the expensive ranker only scores hundreds. Consistency matters: if the pre-ranker and ranker disagree wildly, good candidates get cut before the ranker ever sees them (pre-ranking/ranking consistency is its own tuning problem).`,
@@ -218,7 +228,7 @@ export const SYSTEM_DESIGN_MODULES = [
     recap: [
       `**Production RecSys is a 4-stage funnel, not 3:** retrieval (10M→5k, ~1ms) → pre-rank (5k→500, ~5ms) → rank (500→50, ~20ms) → re-rank (50→10, ~5ms). The gap between a *prototype* and a *system* is this entire stack — serving millions inside ~100ms, A/B-testing each stage, degrading gracefully, correcting position bias.`,
       `**Pre-ranking (coarse-ranking) is the stage interviews forget:** a lightweight model (small two-tower or GBM) trims thousands → hundreds so the heavy ranker fits its budget — without it the ranker either blows latency or scores too few candidates. Its own tuning problem is *pre-rank/rank consistency*: if the two disagree wildly, good candidates get cut before the ranker ever sees them.`,
-      `**Latency is allocated, not hoped for — a hard per-stage budget measured end-to-end.** One overrunning stage cascades: if feature fetch slips 10ms→25ms, ranking loses 15ms and must drop candidates or simplify. Profile the whole request path in production; the bottleneck is usually feature retrieval, not inference.`,
+      `**Latency is allocated, not hoped for — a hard per-stage budget measured end-to-end.** One overrunning stage cascades: the Rank stage's 20ms splits ~10ms feature fetch + ~10ms scoring, so if feature fetch slips 10ms→15ms, scoring loses 5ms and must drop candidates or simplify. Profile the whole request path in production; the bottleneck is usually feature retrieval, not inference.`,
       `**Each stage is independently trained, monitored, and deployed** — an organizational choice as much as technical, letting a small team improve retrieval this week without re-testing ranking. Blur the boundaries and the pipeline becomes one un-shippable unit.`,
       `**The feedback loop is the hardest correctness bug:** the ranker trains on interactions shaped by what the *previous* ranker showed, and position 1 gets clicks regardless of quality — train on raw clicks and you learn position effects, not relevance. Fix with inverse-propensity weighting (weight by 1/P(click|position)) plus occasional randomization for unbiased data.`,
     ],
@@ -249,7 +259,7 @@ export const SYSTEM_DESIGN_MODULES = [
 
 ---
 
-**The two-tower trick: encode separately, compare with a dot product.** A user tower and an item tower map into the same embedding space; similarity is a plain dot product. Because an item's embedding no longer depends on who's asking, you compute *all* item embeddings offline, once, and index them for approximate-nearest-neighbor (ANN) search. At query time you encode just the one user and look up neighbors — ~10ms across 100M items.
+**The two-tower trick: encode separately, compare with a dot product.** A user tower and an item tower map into the same embedding space; similarity is a plain dot product. Because an item's embedding no longer depends on who's asking, you compute *all* item embeddings offline, once, and index them for approximate-nearest-neighbor (ANN) search. At query time you encode just the one user and look up neighbors — ~10ms across 100M items. Retrieval quality itself is measured as **recall@K**: the fraction of truly relevant items that land inside the top K candidates the tower hands to the ranker. A tower with recall@100 of 60% is failing to surface 40% of the relevant items before the ranker ever sees them — no ranker can recover items retrieval never returned.
 
 ---
 
@@ -272,14 +282,14 @@ export const SYSTEM_DESIGN_MODULES = [
         answer: `B`,
       },
       {
-        q: `Select the two changes that most directly attack a two-tower model's low recall@100 (currently 60%).`,
+        q: `A two-tower model's recall@100 — the fraction of truly relevant items that make it into its top-100 candidates — is stuck at 60%. Which single change most directly attacks that low recall?`,
         options: [
           `A) Hard-negative mining plus richer features and a larger embedding dimension, to better separate close items in the space.`,
           `B) Expand the ANN candidate set from 100 to 500, letting the downstream ranker filter more aggressively over more survivors.`,
           `C) Reduce embedding dim from 256 down to 64 so the ANN index shrinks and more items become individually reachable.`,
           `D) Switch dot-product similarity to L2 distance instead, mainly for numerical stability in high-dimensional spaces.`,
         ],
-        answer: ['A', 'B'],
+        answer: `A`,
       },
       {
         q: `Your item catalog updates prices every few minutes, but the ANN index is rebuilt nightly. What's the failure mode and the right fix?`,
@@ -294,7 +304,7 @@ export const SYSTEM_DESIGN_MODULES = [
     ],
     recap: [
       `**Joint (cross-attention) scoring is most accurate but impossible at retrieval scale:** scoring every user against every item is O(all items)/query — 10M items × 1000 users/s = 10B joint forward passes/second, an overnight warehouse job, not real-time retrieval.`,
-      `**The two-tower trick — encode separately, compare with a dot product:** a user tower and item tower map into the same space; similarity is just u·v. Because an item's embedding no longer depends on who's asking, you compute *all* item embeddings offline once and ANN-index them; at query time you encode one user and look up neighbors — ~10ms across 100M items.`,
+      `**Two-tower: encode separately, compare via u·v.** Item embeddings are query-independent → precompute + ANN-index once; query time = encode user + lookup, ~10ms/100M items.`,
       `**What you give up, and who restores it:** encoding the two sides apart loses fine user×item feature interactions — exactly what the joint model was good at. That job is handed downstream to the cross-attention *ranker*, which only scores the few hundred candidates retrieval already narrowed. Two-tower for recall, cross-encoder for precision.`,
       `**Training recipe = in-batch softmax + hard-negative mining:** other items in the batch serve as negatives; explicitly mining high-scoring-but-unclicked items forces fine distinctions. Random negatives are too easy — separating a clicked video from a random one gives near-zero gradient and teaches nothing subtle.`,
       `**Ops: ANN staleness scales with catalog volatility.** When item features change, the indexed embedding is stale. Fast-changing catalogs (price, inventory) need delta re-embedding of changed items; stable catalogs tolerate weekly full rebuilds. Staleness is a continuous freshness-vs-cost tradeoff, not a corner case.`,
@@ -320,17 +330,17 @@ export const SYSTEM_DESIGN_MODULES = [
     interactiveId: 'neighbor_explosion_viz',
     interactivePrompt: 'Semantic search is nearest-neighbor over embeddings — turn the knob and see the recall–latency tradeoff of scanning more neighbors.',
     title: 'Semantic Search & Embeddings',
-    subtitle: 'Bi-encoder vs cross-encoder, ANN indexes: FAISS / ScaNN / HNSW',
+    subtitle: 'Bi-encoder vs cross-encoder, ANN indexes: HNSW / IVF',
     difficulty: 'advanced',
     estimatedMin: 22,
-    tags: ['semantic search', 'FAISS', 'HNSW', 'embeddings', 'retrieval'],
+    tags: ['semantic search', 'HNSW', 'IVF', 'embeddings', 'retrieval'],
     summary: `Keyword search breaks the moment the user's words don't match the document's. "heart attack symptoms" misses a page that says "myocardial infarction presentation" — same meaning, zero shared tokens, and BM25 has no idea. Semantic search maps queries and documents into an embedding space where *meaning* decides similarity.
 
 [FIGURE: encoders]
 
 ---
 
-**Solving vocabulary creates a scale problem.** The most accurate comparison is a **cross-encoder** — feed query and document in together so the model weighs every interaction. But it reruns per query-document pair, so it can't exceed a few hundred documents per query. Useless over 50M docs. The **bi-encoder** (two-tower) encodes each side separately: slightly less precise, but document embeddings are query-independent, so precompute them offline and retrieve with ANN over billions in milliseconds.
+**Solving vocabulary creates a scale problem.** The most accurate comparison is a **cross-encoder** — feed query and document in together so the model weighs every interaction. But it reruns per query-document pair, so it can't exceed a few hundred documents per query. Useless over 50M docs. The **bi-encoder** (two-tower) encodes each side separately: slightly less precise, but document embeddings are query-independent, so precompute them offline and retrieve with ANN (Approximate Nearest Neighbor) over billions in milliseconds.
 
 ---
 
@@ -338,7 +348,7 @@ export const SYSTEM_DESIGN_MODULES = [
 
 ---
 
-**The encoder's pretraining objective decides whether its embeddings are usable.** Raw BERT (trained with masked-LM) makes poor similarity embeddings; SBERT adds pooling + contrastive fine-tuning, and modern encoders (E5, BGE) trained with hard negatives push recall much higher. And every ANN index has a recall-vs-latency knob (HNSW's ef_search, IVF's nprobe) that must be calibrated on tail queries, not benchmarks — a 15ms P99 met on head queries will break on the tail.`,
+**The encoder's pretraining objective decides whether its embeddings are usable.** Raw BERT (trained with masked-LM) makes poor similarity embeddings; SBERT adds pooling + contrastive fine-tuning, and modern encoders (E5, BGE) trained with hard negatives push recall much higher — measured as recall@K, the fraction of queries whose correct document lands in the top K results returned. And every ANN index has a recall-vs-latency knob: HNSW's ef_search sets how many candidates stay in the search frontier during graph traversal (bigger ef_search = more of the graph explored = higher recall, higher latency), while IVF's nprobe sets how many inverted-list clusters get scanned per query (more clusters probed = more of the data actually checked = higher recall, higher latency). That knob must be calibrated on tail queries, not benchmarks — a 15ms P99 met on head queries will break on the tail.`,
     keyPoints: [
       `**Bi-encoder for retrieval, cross-encoder for re-ranking — forced by scale, not preference.** Cross-encoder models query×document interaction directly (more accurate) but is O(N) per query; bi-encoder precomputes document embeddings offline. Retrieve top 50–200 with the bi-encoder, re-rank with the cross-encoder.`,
       `**The pretraining objective determines embedding quality.** MLM-trained BERT clusters poorly for similarity; contrastively fine-tuned encoders (SBERT → E5/BGE) with hard negatives are what make retrieval work. Don't reach for raw \`bert-base\` embeddings and expect recall.`,
@@ -382,7 +392,7 @@ export const SYSTEM_DESIGN_MODULES = [
       `**Cross-encoder vs bi-encoder is forced by scale, not preference:** a cross-encoder feeds query and document in together (most accurate) but reruns per query-document pair → O(N)/query, so it caps at a few hundred docs = re-ranking only. A bi-encoder (two-tower) encodes each side separately (slightly less precise) so document embeddings are query-independent → precompute offline + ANN over billions = retrieval.`,
       `**Production uses both in sequence:** bi-encoder retrieves the top few hundred from millions (fast), cross-encoder re-ranks just those hundreds (slow but precise, where the cost is affordable). The same recall-then-precision split as RecSys.`,
       `**Embedding quality is set by the pretraining objective:** raw BERT trained with masked-LM makes poor similarity embeddings that don't cluster by meaning; SBERT adds pooling + contrastive fine-tuning, and E5/BGE trained with hard negatives push recall much higher. Don't reach for raw \`bert-base\` and expect recall.`,
-      `**Every ANN index has a recall-vs-latency knob** (HNSW's ef_search, IVF's nprobe) — calibrate it on *tail* queries, not benchmarks. A 15ms P99 met on head queries breaks on the tail, because rare/poorly-covered queries need deeper traversal to reach the same recall.`,
+      `**Every ANN index has a recall-vs-latency knob:** HNSW's ef_search controls how many candidates stay in the search frontier during graph traversal (bigger = more explored = higher recall, higher latency); IVF's nprobe controls how many inverted-list clusters get scanned per query (more probed = higher recall, higher latency). Calibrate it on *tail* queries, not benchmarks. A 15ms P99 met on head queries breaks on the tail, because rare/poorly-covered queries need deeper traversal to reach the same recall.`,
     ],
     figures: {
       encoders: `<svg viewBox="0 0 360 104" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
@@ -420,11 +430,15 @@ export const SYSTEM_DESIGN_MODULES = [
 
 ---
 
+**Every head must be calibrated, not just correctly ranked, or the sum lies.** The value model adds the heads together as if each pᵢ were a real probability on the same 0–1 scale. Say the true click probability for an item is p(click) = 0.1, but the click head is uncalibrated and outputs 0.2 — that head's contribution to the value score is now double what it should be, silently outweighing a correctly-calibrated dwell head standing right next to it in the same sum. A head can have perfect ranking accuracy (it sorts items in the right order) and still wreck the value model this way, because ranking accuracy only cares about order, not the actual magnitude of the probability.
+
+---
+
 **Guardrails ride in the same score.** Harm signals (report, "see fewer", hide) enter the value model as *negative* weights, so harmful-but-clicky content is demoted at ranking time rather than filtered after the fact.`,
     interactivePrompt: `Before you touch the controls: predict what happens to the report-rate of the top-3 items as you push the CTR weight up and the report penalty toward zero — and why no single weight vector wins every objective.`,
     keyPoints: [
       `**Multi-task ≠ multi-objective. The model predicts multiple heads; the value model combines them.** Keep them separate conceptually: the heads are learned (p(click), p(dwell), …); the combination weights are chosen to encode business value and tuned online.`,
-      `**Shared-bottom is cheap but suffers negative transfer when tasks conflict; MMoE's per-task gates route conflicting tasks to different experts.** Symptom of negative transfer: adding a task *lowers* another task's metric versus training it alone. MMoE (or PLE) is the standard fix at scale.`,
+      `**Shared-bottom is cheap but suffers negative transfer when tasks conflict; MMoE's per-task gates route conflicting tasks to different experts.** Symptom of negative transfer: adding a task *lowers* another task's metric versus training it alone. MMoE (or PLE — Progressive Layered Extraction, a variant that stacks shared and task-specific expert layers instead of MMoE's single shared layer) is the standard fix at scale.`,
       `**Value-model weights are tuned online, not offline.** Offline loss can't see long-term retention or harm. Weights are calibrated by A/B tests against a north-star metric — which is why every prediction head must be *calibrated* (a probability, not just a rank score) for the weighted sum to be meaningful.`,
     ],
     takeaway: `Staff-level ranking predicts several calibrated outcomes with a multi-task model (MMoE routes conflicting tasks to separate experts) and fuses them with a value model whose weights are a business decision tuned by online A/B tests — with harm signals entering as negative weights so guardrails live inside the ranking score.`,
@@ -453,7 +467,7 @@ export const SYSTEM_DESIGN_MODULES = [
         q: `Select the two correct statements about how value-model weights (click, dwell, share, report) should be set.`,
         options: [
           `A) They should be treated as a product decision, tuned via online A/B tests against a north-star metric like 30-day retention.`,
-          `B) Offline click loss alone can't see long-term value or harm, so grid-searching NDCG on the click label alone isn't sufficient.`,
+          `B) Offline click loss alone can't see long-term value or harm, so grid-searching a ranking metric like NDCG (Normalized Discounted Cumulative Gain, an offline ranking-quality score) on the click label alone isn't sufficient.`,
           `C) Fitting them by minimizing offline cross-entropy on historical logs is sufficient, since the logs already encode the true optimum.`,
           `D) Setting the report weight to the exact negative of the click weight and leaving the rest at 1.0 gives the optimum by symmetry.`,
         ],
@@ -463,7 +477,7 @@ export const SYSTEM_DESIGN_MODULES = [
     recap: [
       `**Real feeds rank by a value model, not one metric:** "rank by engagement" is not a design; "rank by 1.0·p(click) + 1.2·p(dwell) + 0.5·p(share) − 3.0·p(report)" is. A staff-level ranker predicts several outcomes, then the value model combines them into the single score that decides order.`,
       `**Multi-task ≠ multi-objective — keep them separate:** the *multi-task model* learns multiple heads (p(click), p(dwell), p(share), p(report)); the *value model* is the weighted combination of those heads. Heads are learned; combination weights are chosen.`,
-      `**Shared-bottom is cheap but negative-transfers when tasks conflict:** one trunk feeding all heads gets pulled in opposite directions (clickbait maximizes clicks but minimizes dwell), so every task suffers. Tell of negative transfer: adding a task *lowers* another's metric vs training it alone. **MMoE/PLE** fixes it — several expert sub-networks with per-task gates that route conflicting tasks to different experts.`,
+      `**Shared-bottom is cheap but negative-transfers when tasks conflict:** one trunk feeding all heads gets pulled in opposite directions (clickbait maximizes clicks but minimizes dwell), so every task suffers. Tell of negative transfer: adding a task *lowers* another's metric vs training it alone. **MMoE/PLE** (PLE = Progressive Layered Extraction, a variant that stacks shared and task-specific expert layers on top of MMoE's single shared layer) fixes it — several expert sub-networks with per-task gates that route conflicting tasks to different experts.`,
       `**Value-model weights are a business decision, tuned online, not a learned parameter:** they encode what a share is worth vs a click, how hard to penalize a report — and no weight vector maxes every objective (pushing CTR up promotes clickbait). Tune them by online A/B against a north-star (long-term retention), not offline loss.`,
       `**Heads must be calibrated or the weights lie:** the weighted sum treats each pᵢ as a real probability with comparable scale — an uncalibrated head that outputs 2× true probability has its effective weight doubled. **Guardrails ride the same score as negative weights** on harm signals (report, "see fewer", hide), so harmful-but-clicky content is demoted at ranking time, not filtered after.`,
     ],
@@ -496,7 +510,7 @@ export const SYSTEM_DESIGN_MODULES = [
 
 **But it only pays off at scale.** For one model and two data scientists, hand-rolled infra is genuinely simpler — build the platform then and you've built abstraction with no users. For ten models across teams, the platform amortizes fast and the hand-rolled path becomes a coordination disaster. The skill is knowing which side of that line you're on; the common failure is building platform infrastructure before any model is in production.`,
     keyPoints: [
-      `**The feature store solves coordination: features computed once, registered, consumed with point-in-time correctness.** Without it, each team reinvents features with subtle divergences (nulls, timezones, windows), and training-serving skew appears when models ship. Debugging skew across three implementations is a week of engineering per incident.`,
+      `**The feature store solves coordination: features computed once, registered, consumed with point-in-time correctness.** Without it, each team reinvents features with subtle divergences (nulls, timezones, windows), and training-serving skew appears when models ship. Debugging skew across three implementations is a week of engineering per incident. Point-in-time correctness also blocks a specific failure mode: a training row for event time t must only be enriched with feature values computed by t — a feature computed after t (for example, a 7-day aggregate that includes days after the label) leaks future information into training and inflates offline metrics.`,
       `**A model registry with versioning and lineage is what makes rollback one API call.** It links the deployed model to its training run, data, and eval metrics. The first production degradation without a registry turns into a multi-day investigation.`,
       `**Build the platform at ~5–10 models across teams, not before.** For 1–2 models, MLflow/W&B + FastAPI + git-versioned SQL features + manual dashboards is simpler and faster. Premature platform-building is abstraction with no users to amortize it.`,
     ],
@@ -506,7 +520,7 @@ export const SYSTEM_DESIGN_MODULES = [
         q: `Select the two correct statements about whether a 3-data-scientist startup shipping its first model should build a full ML platform now.`,
         options: [
           `A) Not yet — MLflow/W&B tracking plus FastAPI + Docker serving and git-versioned SQL features cover this stage well.`,
-          `B) Platform infra amortizes past roughly 3–5 production models, or once a large share of engineering time goes to tooling.`,
+          `B) Platform infra amortizes past roughly 5–10 production models, or once a large share of engineering time goes to tooling.`,
           `C) A feature store must be built before any model exists, because retrofitting it later is provably impossible.`,
           `D) A model registry and full serving infra are mandatory for any production deployment, regardless of team size.`,
         ],
@@ -556,7 +570,7 @@ export const SYSTEM_DESIGN_MODULES = [
     difficulty: 'advanced',
     estimatedMin: 25,
     tags: ['LTR', 'learning-to-rank', 'LambdaMART', 'position bias'],
-    summary: `A trap that catches almost everyone: training a classifier to predict relevance and sorting by its score is *not* the same as training a ranker. A classifier tuned for per-item accuracy can get every absolute score right and still order them wrong — because ranking is *relative*. What matters is which item beats which, not the exact number on each.
+    summary: `A trap that catches almost everyone: training a classifier to predict relevance and sorting by its score is *not* the same as training a ranker. A classifier tuned for per-item accuracy can achieve low average error across all items and still order them wrong — because ranking is *relative*. What matters is which item beats which, not the exact number on each.
 
 [FIGURE: ltr]
 
@@ -569,15 +583,15 @@ export const SYSTEM_DESIGN_MODULES = [
 **The deeper problem none of these fixes alone: position bias.** Click data is contaminated by *where* items were shown. Position 1 collects clicks whether or not it deserved them, so training on raw clicks teaches the model to reproduce position effects — a self-reinforcing loop where it keeps promoting whatever the last model promoted. Breaking it needs inverse-propensity weighting: weight each example by 1/P(click|position), so position-1 examples count less and position-5 examples count more.`,
     keyPoints: [
       `**LambdaMART is the tabular workhorse: GBM with gradients weighted by NDCG impact.** Each item's gradient sums LambdaRank pair-gradients weighted by how much swapping the pair changes NDCG. A rank-1-vs-2 swap gets a much larger gradient than rank-98-vs-99 — NDCG-aware training without a differentiable NDCG.`,
-      `**Position bias is a correctness bug that loss choice alone can't fix.** Position 1 gets ~10× the clicks of position 10 regardless of relevance; raw-click training reproduces the prior model's ranking. Inverse-propensity weighting (1/P(click|position)) plus occasional randomization recovers unbiased relevance.`,
-      `**Online distillation decouples quality from serving latency.** A large teacher with expensive features (cross-attention, full history) trains offline; a small student matches its rankings without those features and serves fast. The standard pattern when the most accurate model is too slow to serve directly.`,
+      `**Position bias is a correctness bug that loss choice alone can't fix.** Position 1 gets ~10× the clicks of position 10 regardless of relevance — because users scan top-down and rarely look past the first few results, so top slots accumulate clicks from visibility alone, not just quality; raw-click training reproduces the prior model's ranking. Inverse-propensity weighting (1/P(click|position)) plus occasional randomization recovers unbiased relevance.`,
+      `**Online distillation decouples quality from serving latency.** A large teacher with expensive features (cross-attention, full history) trains offline; a small student matches its rankings without those features and serves fast. The standard pattern when the most accurate model is too slow to serve directly — but the student only learned to imitate the teacher on the queries it was trained on, so as live traffic drifts from that training distribution, the student's imitation quality degrades even though it still matches the teacher on held-out data (distribution shift between training and serving).`,
     ],
     takeaway: `Ranking is a relative problem, so you train for order (LambdaMART weights each gradient by NDCG impact) not for per-item accuracy — but click-trained rankers also inherit position bias, which only inverse-propensity weighting (not a better loss) removes.`,
     checkQuestions: [
       {
-        q: `A classifier assigns correct absolute relevance probabilities to every item, yet its ranking is worse than a pairwise model with less accurate scores. How is that possible?`,
+        q: `A classifier achieves high average accuracy on its relevance-score predictions across all items, yet its ranking is worse than a pairwise model with less accurate scores. How is that possible?`,
         options: [
-          `A) It isn't possible — correct absolute scores on every item mathematically guarantee a correct final ordering.`,
+          `A) It isn't possible — high average accuracy across all items mathematically guarantees a correct final ordering.`,
           `B) A classifier spends capacity getting easy items' absolute scores right and can misorder the few hard, high-value pairs near the top.`,
           `C) The classifier's raw scores need an additional softmax normalization step before sorting; without that step the resulting order is arbitrary.`,
           `D) Only if the classifier is uncalibrated — calibrating it would make its ranking exactly match the pairwise model's.`,
@@ -606,10 +620,10 @@ export const SYSTEM_DESIGN_MODULES = [
       },
     ],
     recap: [
-      `**Sorting a classifier ≠ training a ranker:** ranking is *relative* — what matters is which item beats which, not the exact score on each. A classifier tuned for per-item accuracy can get every absolute score right and still misorder the few hard, high-value pairs near the top.`,
+      `**Sorting a classifier ≠ training a ranker:** ranking is *relative* — what matters is which item beats which, not the exact score on each. A classifier tuned for per-item accuracy can achieve low average error across all items and still misorder the few hard, high-value pairs near the top.`,
       `**Three ways to train for order, cost and fidelity rising together:** *pointwise* scores each item alone (misses the relative point); *pairwise* learns "A ranks above B" (fixes pairs but treats a rank-1 swap like a rank-100 swap); *listwise* optimizes the whole list (what you want, but expensive and label-noise sensitive).`,
       `**LambdaMART is the tabular workhorse:** gradient-boosted trees whose gradients are weighted by |ΔNDCG| — a swap near the top gets a far bigger push than one near the bottom, injecting a ranking-aware signal without needing NDCG to be differentiable (it's sorting-based, zero-gradient almost everywhere).`,
-      `**Position bias is a correctness bug loss choice alone can't fix:** position 1 gets ~10× the clicks of position 10 regardless of relevance, so raw-click training reproduces the prior model's ranking in a self-reinforcing loop. Break it with inverse-propensity weighting (weight each example by 1/P(click|position)) plus occasional randomization — not a better loss.`,
+      `**Position bias is a correctness bug loss choice alone can't fix:** position 1 gets ~10× the clicks of position 10 regardless of relevance — top slots accumulate clicks from visibility alone since users scan top-down and rarely reach lower results — so raw-click training reproduces the prior model's ranking in a self-reinforcing loop. Break it with inverse-propensity weighting (weight each example by 1/P(click|position)) plus occasional randomization — not a better loss.`,
       `**Online distillation decouples quality from serving latency:** a large teacher with expensive features (cross-attention, full history) trains offline; a small student matches its rankings without those features and serves fast. The standard pattern when the most accurate model is too slow — watch for train/serve distribution shift as live traffic drifts from the distillation set.`,
     ],
     figures: {
@@ -799,9 +813,9 @@ export const SYSTEM_DESIGN_MODULES = [
 ---
 
 **Define the fallback before the incident, not during it.** Every real-time system needs a documented answer to "what happens when the model endpoint is slow or down": popularity response, rule-based score, or last cached prediction, behind a circuit breaker that trips to the fallback when error rate crosses a threshold. The organizational catch: model-builders optimize accuracy, serving-builders optimize latency, and unless the budget is explicit and shared, each optimizes its own half and the system misses the SLA that only exists when you add both.`,
-    interactivePrompt: `Before you touch the controls: turn off async fan-out for four feature sources. Predict whether the SLA breaks before the model even runs — and why parallel fetch is the difference between max and sum.`,
+    interactivePrompt: `Before you touch the controls: turn off async fan-out for four feature sources. With the sliders at their defaults, predict whether the total (features + inference + network + serialization) still crosses the 50ms SLA once everything is summed — and why parallel fetch is the difference between paying the max and paying the sum.`,
     keyPoints: [
-      `**The latency budget is a hard per-component allocation set before deployment.** A 50ms fraud budget: features 5–10ms, inference 10–20ms, network 2–5ms, serialization 1–2ms. If inference alone eats 40ms, there's no room for features. Profile end-to-end in production — the bottleneck is usually feature retrieval, not inference.`,
+      `**The latency budget is a hard per-component allocation set before deployment.** A 50ms fraud budget: features 5–10ms, inference 10–20ms, network 2–5ms, serialization 1–2ms. If inference alone eats 40ms, there's no room for features. Profile end-to-end in production, measured at P99 (the 99th-percentile latency — the slow-tail request that determines whether the SLA is actually met, not the average): a typical fraud-scoring trace splits like 27ms of feature-store round-trips against 9ms of inference out of a 40ms total, which is why the bottleneck is usually feature retrieval, not inference.`,
       `**Async fan-out turns a sum into a max.** Four 8ms features cost 8ms in parallel, 32ms in serial. Every multi-source system must fan out and time out (slow source → default value, not a blocked request).`,
       `**A predefined fallback + circuit breaker is mandatory.** Without it, engineers improvise under incident pressure and make it worse. Define the degraded response (popularity/rule/cache) and trip to it automatically when error rate spikes.`,
     ],
@@ -811,7 +825,7 @@ export const SYSTEM_DESIGN_MODULES = [
         q: `Select the two correct parts of the fix when a fraud model has 150ms P99 against a 50ms SLA.`,
         options: [
           `A) Profile to attribute the 150ms across features, inference, and network before changing anything else.`,
-          `B) Co-locate features in Redis with async parallel fetch, and serve a distilled or quantized GBM instead of the full model.`,
+          `B) Cache precomputed feature aggregates so serving is a lookup, and fetch the remaining live features with async parallel calls plus per-source timeouts instead of serial round-trips.`,
           `C) Move fraud scoring entirely to a nightly batch job and use yesterday's risk score at transaction time.`,
           `D) Add a request queue and process fraud checks strictly sequentially to remove concurrency spikes.`,
         ],
@@ -840,7 +854,7 @@ export const SYSTEM_DESIGN_MODULES = [
     ],
     recap: [
       `**Real-time ML has one hard constraint batch never faces:** the prediction must arrive before the user's patience runs out. A fraud model answering in 500ms is useless when the transaction clears in 200ms; a 2-second recommender has already lost the session.`,
-      `**Budget milliseconds like money, not vibes:** everything that makes the model better (more features, more layers) makes it slower, so design in numbers — "this adds 15ms, the SLA is 50ms, so 35ms is left." A 50ms fraud budget: features 5–10ms, inference 10–20ms, network 2–5ms, serialization 1–2ms. Profile end-to-end in production; the bottleneck is usually feature retrieval, not inference.`,
+      `**Budget milliseconds like money, not vibes:** everything that makes the model better (more features, more layers) makes it slower, so design in numbers — "this adds 15ms, the SLA is 50ms, so 35ms is left." A 50ms fraud budget: features 5–10ms, inference 10–20ms, network 2–5ms, serialization 1–2ms. Profile end-to-end in production at P99 (the 99th-percentile latency, not the average) — a typical trace splits like 27ms of feature-store round-trips against 9ms of inference out of a 40ms total, which is why the bottleneck is usually feature retrieval, not inference.`,
       `**Async fan-out turns a sum into a max:** issue all feature-store requests in parallel and wait for the *max*, not the *sum* — four 8ms features cost 8ms in parallel, 32ms in serial. Pair each with a timeout that returns a default rather than blocking past the SLA.`,
       `**Precompute and cache what you can:** stream user aggregates into a cache so serving is a lookup plus a light adjustment, not a heavy recompute.`,
       `**Fallback + circuit breaker are design, not ops:** every real-time system needs a documented answer to "what happens when the model endpoint is slow or down" — a popularity response, rule-based score, or last cached prediction, behind a circuit breaker that trips automatically when error rate crosses a threshold. Define it before the incident, and make the budget explicit so accuracy and serving teams don't each optimize only half.`,
@@ -857,7 +871,7 @@ export const SYSTEM_DESIGN_MODULES = [
   {
     id: 'sequential_recsys',
     interactiveId: 'attention_viz',
-    interactivePrompt: 'SASRec is self-attention over a session. Watch how each position attends back to earlier items — the mechanism that keeps early-session signal alive where a GRU would decay it.',
+    interactivePrompt: 'This is the same self-attention math SASRec runs over a session: pick a token to set its query, then watch it score against every other position\'s key. Toggle the causal mask for GPT-style (look only backward) vs BERT-style (look both ways) attention, and toggle ÷√d to see why unscaled dot products saturate the softmax. SASRec applies this exact mechanism to session items instead of words, so a later item can attend directly back to an early one instead of the signal decaying through a GRU\'s hidden state.',
     title: 'Sequential & Session-Based RecSys',
     subtitle: 'GRU4Rec, SASRec, next-item prediction, short vs long-term intent',
     difficulty: 'advanced',
@@ -907,12 +921,12 @@ export const SYSTEM_DESIGN_MODULES = [
         answer: `C`,
       },
       {
-        q: `Select the two correct statements about how the system correctly served a 6th comedy clip despite a strong lifetime documentary profile.`,
+        q: `Select the two correct statements about how the system correctly recommended a 5th cooking video despite a strong lifetime indie-film profile.`,
         options: [
           `A) The long-term profile and session encoder are concatenated into the ranker as separate signals, not merged destructively.`,
-          `B) The in-session comedy state can outweigh the lifetime profile for the next slot without the profile itself being deleted.`,
-          `C) The model retrained online on just the 5 comedy clips, permanently and irreversibly overwriting the documentary profile.`,
-          `D) A hard-coded business rule forces comedy recommendations after any 3 consecutive comedy views in a row.`,
+          `B) The in-session cooking-video state can outweigh the lifetime indie-film profile for the next slot without the profile itself being deleted.`,
+          `C) The model retrained online on just the 4 cooking videos, permanently and irreversibly overwriting the indie-film profile.`,
+          `D) A hard-coded business rule forces cooking-video recommendations after any 3 consecutive cooking-video views in a row.`,
         ],
         answer: ['A', 'B'],
       },
@@ -949,9 +963,7 @@ export const SYSTEM_DESIGN_MODULES = [
     difficulty: 'advanced',
     estimatedMin: 26,
     tags: ['ANN', 'HNSW', 'IVF-PQ', 'quantization', 'retrieval'],
-    summary: `Once retrieval is a dot product between a query embedding and every item embedding, the bottleneck is search, not the model. Exact nearest-neighbor over 100M vectors of dimension 256 is 100M·256 ≈ 25.6 billion multiply-adds per query — hopeless in 10ms. Approximate nearest-neighbor (ANN) trades a sliver of recall for two-to-three orders of magnitude speedup.
-
-[FIGURE: ann]
+    summary: `Once retrieval is a dot product between a query embedding and every item embedding, the bottleneck is search, not the model. Exact nearest-neighbor over 100M vectors of dimension 256 is 100M·256 ≈ 25.6 billion multiply-adds per query — that's 51.2 billion FLOPs (each multiply-add counts as 2), and even a well-optimized multi-core CPU sustaining ~50 billion FLOP/s of dot-product throughput needs ≈1 second per query, ~100× over the 10ms budget, before counting the ~100GB of vectors (100M × 256 × 4 bytes) that would have to stream from memory on every query — hopeless in 10ms. Approximate nearest-neighbor (ANN) trades a sliver of recall for two-to-three orders of magnitude speedup.
 
 ---
 
@@ -960,6 +972,8 @@ export const SYSTEM_DESIGN_MODULES = [
 ---
 
 **Recall and latency are one knob, turned at query time.** HNSW's \`efSearch\` (how many candidates to keep on the walk) and IVF's \`nprobe\` (how many cells to scan) both trade recall for latency continuously: nprobe=8 might hit 0.92 recall at 3ms, nprobe=64 hits 0.99 recall at 12ms. You don't pick "an index" — you pick an operating point on its recall–latency curve, and that point is a product decision (how many good candidates can the funnel afford to lose?).
+
+[FIGURE: ann]
 
 ---
 
@@ -983,7 +997,7 @@ export const SYSTEM_DESIGN_MODULES = [
         answer: ['A', 'B'],
       },
       {
-        q: `Retrieval recall@1000 is 0.90 at nprobe=8 and 3ms. The latency budget allows 12ms and the ranker keeps missing relevant items. What's the correct single-knob change?`,
+        q: `Retrieval recall is 0.92 at nprobe=8 and 3ms. The latency budget allows 12ms and the ranker keeps missing relevant items. What's the correct single-knob change?`,
         options: [
           `A) Rebuild the index nightly instead of weekly — the real issue here is staleness, not the recall number itself.`,
           `B) Raise nprobe from 8 to 64 so more IVF cells are scanned, lifting recall toward ~0.99 within the 12ms budget.`,
@@ -1042,7 +1056,7 @@ export const SYSTEM_DESIGN_MODULES = [
 
 ---
 
-**DPP models diversity as volume, not pairwise patching.** A Determinantal Point Process assigns a set a probability proportional to the *determinant* of a kernel matrix built from item quality and similarity — geometrically, the squared volume the item vectors span. Redundant items are near-parallel vectors spanning near-zero volume, so DPP naturally down-weights whole redundant *sets*, not just adjacent pairs. It's the principled cousin of MMR.
+**DPP models diversity as volume, not pairwise patching.** A Determinantal Point Process assigns a set a probability proportional to the *determinant* of a kernel matrix built from item quality and similarity — geometrically, the squared volume the item vectors span. Redundant items are near-parallel vectors spanning near-zero volume, so DPP naturally down-weights whole redundant *sets*, not just adjacent pairs. It's the principled cousin of MMR. Concretely, using the same A/B/C items from the MMR example above: for the redundant set {A, B}, the 2×2 kernel L = [[0.9², 0.9·0.88·0.95], [0.9·0.88·0.95, 0.88²]] = [[0.81, 0.752], [0.752, 0.774]] has det(L) = 0.81·0.774 − 0.752² ≈ 0.061 — tiny, because A and B are near-parallel (0.95 similar). For the diverse set {A, C}, L = [[0.81, 0.9·0.80·0.2], [0.9·0.80·0.2, 0.64]] = [[0.81, 0.144], [0.144, 0.64]] has det(L) = 0.81·0.64 − 0.144² ≈ 0.498 — about 8× larger, because A and C actually span volume (only 0.2 similar). DPP assigns {A, C} far higher probability than {A, B}, the same call MMR made by picking C over B — but reached by comparing whole-set volumes instead of one pairwise penalty.
 
 ---
 
@@ -1056,11 +1070,11 @@ export const SYSTEM_DESIGN_MODULES = [
     takeaway: `The ranker scores items one at a time, so the top-k by raw score over-concentrates on near-duplicates; re-ranking imposes *set-level* properties — MMR trades relevance against redundancy greedily, DPP models diversity as the volume item vectors span, and freshness boosts plus hard business rules ride the same stage because they too constrain the set.`,
     checkQuestions: [
       {
-        q: `Select the two correct statements about why a feed's top-10 by ranker score can be 9 near-duplicate clips about the same match.`,
+        q: `Select the two correct statements about why a feed's top-10 by ranker score can be 10 near-identical basketball clips.`,
         options: [
           `A) The ranker scores each item independently, so it structurally can't represent that item #2 adds little given item #1.`,
           `B) Redundancy is a set-level property; the fix is a re-ranking step like MMR or DPP that penalizes similarity to chosen items.`,
-          `C) The ranker is overfit specifically to football content, and adding L2 regularization alone makes the duplicates disappear.`,
+          `C) The ranker is overfit specifically to basketball content, and adding L2 regularization alone makes the duplicates disappear.`,
           `D) The candidates being shown are simply stale, so refreshing the retrieval stage alone resolves the diversity problem.`,
         ],
         answer: ['A', 'B'],
@@ -1089,17 +1103,18 @@ export const SYSTEM_DESIGN_MODULES = [
     recap: [
       `**The ranker scores each item independently, so the top-k by score is often a redundant set:** it answers "how good is this item for this user?" one at a time, with no notion that #2 adds nothing after #1 if they're near-duplicates. "Best 10 items" ≠ "best set of 10" — diversity is a *set* property the per-item ranker structurally cannot express, so it must be imposed after scoring.`,
       `**MMR trades relevance against redundancy greedily:** pick items one at a time to maximize λ·relevance(i) − (1−λ)·max-similarity(i, already-chosen). λ high → mostly follow the ranker; λ low → aggressively diversify. Concretely, a 0.88-relevance item that's 0.95-similar to an already-picked item collapses in marginal value, letting a less-similar 0.80 item leapfrog it. Cheap, tunable — the default production diversifier.`,
-      `**DPP models diversity as spanned volume, not pairwise patching:** a Determinantal Point Process gives a set probability ∝ the determinant of a quality×similarity kernel = the squared volume the item vectors span. Redundant items are near-parallel vectors spanning ~0 volume, so DPP down-weights whole redundant *sets*, not just adjacent pairs — the principled cousin of MMR, at higher compute.`,
+      `**DPP models diversity as spanned volume, not pairwise patching:** a Determinantal Point Process gives a set probability ∝ the determinant of a quality×similarity kernel = the squared volume the item vectors span. Redundant items are near-parallel vectors spanning ~0 volume, so DPP down-weights whole redundant *sets*, not just adjacent pairs — the principled cousin of MMR, at higher compute. Concretely, using the earlier A/B/C example: {A, C}'s kernel determinant (≈0.498) is about 8× {A, B}'s (≈0.061) — DPP prefers the diverse set for the same reason MMR does, just measured as spanned volume instead of a pairwise penalty.`,
       `**Freshness/exploration slots counter the ranker's under-scoring of new items:** thin engagement history makes an engagement-trained ranker systematically under-score fresh items (a cold-start feedback trap), so a freshness boost or explicit exploration slot in re-ranking counteracts it.`,
       `**Hard business rules are set-level, so they ride the same re-rank stage after scoring:** "no more than 2 items per creator in the top 10," quotas, "at least 1 from a followed account" — these constrain the *set*, which the per-item ranker cannot enforce, so they're applied post-scoring, not in the ranker.`,
     ],
     figures: {
-      rerank: `<svg viewBox="0 0 360 110" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
+      rerank: `<svg viewBox="0 0 360 124" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
   <text x="8" y="14" fill="var(--ink-low)" font-size="7.5">ranker top-k (by score)</text>
   ${['🏀','🏀','🏀','🏀','🏀'].map((_, i) => '<rect x="' + (8 + i*30) + '" y="22" width="26" height="20" rx="4" fill="var(--prime-faint)" stroke="var(--prime)"/><text x="' + (21 + i*30) + '" y="36" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">B</text>').join('')}
   <text x="8" y="58" fill="var(--ink-low)" font-size="7.5">after MMR / DPP re-rank (diverse set)</text>
   ${[['B','var(--prime)'],['C','var(--amber)'],['B','var(--prime)'],['D','var(--rim)'],['C','var(--amber)']].map((s, i) => '<rect x="' + (8 + i*30) + '" y="66" width="26" height="20" rx="4" fill="var(--depth)" stroke="' + s[1] + '"/><text x="' + (21 + i*30) + '" y="80" text-anchor="middle" fill="var(--ink-hi)" font-size="8" font-weight="700">' + s[0] + '</text>').join('')}
   <text x="8" y="102" fill="var(--ink-mid)" font-size="7">λ·relevance − (1−λ)·max-similarity-to-chosen · + freshness + business rules</text>
+  <text x="8" y="116" fill="var(--ink-mid)" font-size="6.5">B = basketball (this module's running example) · C, D = other content categories · B repeats twice below, illustrating the "≤2 per creator" cap</text>
 </svg>`,
     },
   },
@@ -1118,11 +1133,11 @@ export const SYSTEM_DESIGN_MODULES = [
 
 ---
 
-**Popularity self-reinforces into a rich-get-richer spiral.** A popular item is shown more → gets more clicks (partly *because* it was shown more, not because it's better) → the model reads those clicks as quality → shows it even more. A worked sketch: item X and item Y are equally good, but X starts with 2× the exposure. X collects ~2× the clicks, the model scores it higher, next round X gets 3× exposure, then 5×… the gap widens every cycle even though true quality never differed. The long tail starves.
+**Popularity self-reinforces into a rich-get-richer spiral.** A popular item is shown more → gets more clicks (partly *because* it was shown more, not because it's better) → the model reads those clicks as quality → shows it even more. An illustrative sketch, not a derived computation: item X and item Y are equally good, but X starts with 2× the exposure. X collects ~2× the clicks, the model scores it higher, so it gets even more exposure next round — no formula here fixes the exact multiple, it just keeps compounding cycle over cycle (a 2× exposure head start can plausibly become 3×, then 5×, and climbing) even though true quality never differed. The long tail starves.
 
 ---
 
-**Exposure bias is the formal name; IPW is the standard correction.** Inverse-Propensity Weighting reweights each logged example by 1/P(shown) — an item shown 10% of the time counts 10× when it *is* clicked, an item shown 90% of the time counts ~1.1×. This mathematically un-does the exposure imbalance so the model estimates *relevance* rather than *what got shown*. IPW needs the logging propensities (the probability each item was shown), which is why serious systems log them, and it has high variance when propensities are tiny — so it's paired with randomization: a small fraction of traffic serves items uniformly (or ε-greedy) to inject unbiased exposure the model can learn from.
+**Exposure bias is the formal name; IPW is the standard correction.** Inverse-Propensity Weighting reweights each logged example by 1/P(shown) — an item shown 10% of the time counts 10× when it *is* clicked, an item shown 90% of the time counts ~1.1×. This mathematically un-does the exposure imbalance so the model estimates *relevance* rather than *what got shown*. IPW needs the logging propensities (the probability each item was shown), which is why serious systems log them, and it has high variance when propensities are tiny — so it's paired with randomization: a small fraction of traffic serves items uniformly (or ε-greedy: serve randomly with probability ε, otherwise serve the current best) to inject unbiased exposure the model can learn from.
 
 ---
 
@@ -1168,7 +1183,7 @@ export const SYSTEM_DESIGN_MODULES = [
     ],
     recap: [
       `**A recommender manufactures its own training data:** you can only click what you were shown, and what you were shown was yesterday's model's choice — so logs aren't a neutral sample of preference, they're preference *conditioned on the old policy*. Train naively and the system teaches itself to keep doing what it already did.`,
-      `**Popularity self-reinforces into a rich-get-richer spiral:** a popular item is shown more → gets more clicks (partly *because* shown more, not better) → the model reads clicks as quality → shows it even more. Two equally-good items where one starts with 2× exposure diverge every cycle (2× → 3× → 5× clicks) even though true quality never differed. The long tail starves.`,
+      `**Popularity self-reinforces into a rich-get-richer spiral:** a popular item is shown more → gets more clicks (partly *because* shown more, not better) → the model reads clicks as quality → shows it even more. Two equally-good items where one starts with 2× exposure diverge every cycle — an illustrative 2× → 3× → 5× exposure lead, not a derived formula — even though true quality never differed. The long tail starves.`,
       `**Exposure bias is the formal name; IPW is the standard correction:** Inverse-Propensity Weighting reweights each logged example by 1/P(shown) — an item shown 10% of the time counts 10× when clicked, one shown 90% counts ~1.1× — un-doing the exposure imbalance so the model estimates *relevance*, not *what got shown*. Requires logged propensities.`,
       `**IPW is high-variance when P(shown) is tiny** (1/P blows up), so it's paired with **randomization / ε-greedy exploration** — a small traffic slice serving items uniformly injects unbiased exposure the model can learn from, keeping propensities bounded away from zero.`,
       `**Left uncorrected, the loop produces filter bubbles and echo chambers:** a user shown one viewpoint clicks it → the model infers preference → shows more → the world narrows, and the *narrowing itself* is misread as stronger preference. Short-term engagement rises while coverage collapses. Same fix as popularity: propensity de-biasing plus deliberate exploration/diversity injection.`,

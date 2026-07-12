@@ -58,7 +58,7 @@ With several classes you compute precision/recall/F1 per class, then average the
 
 **Single numbers that survive imbalance.**
 
-F1 ignores true negatives entirely, which is why two better summaries exist for skewed data. **Balanced accuracy** is the average of recall across classes (equivalently, the mean of sensitivity and specificity) — it doesn't reward always-predict-majority. **Matthews correlation coefficient (MCC)** uses all four boxes of the confusion matrix in one correlation-style score from −1 to +1, and is widely regarded as the most honest single number under imbalance because a model can't fake it by ignoring a class. When you need one number and the classes are skewed, prefer balanced accuracy or MCC over raw accuracy or F1.
+F1 ignores true negatives entirely, which is why two better summaries exist for skewed data. **Balanced accuracy** is the average of recall across classes — it doesn't reward always-predict-majority. In the binary case specifically, that average is just the mean of sensitivity and specificity, since specificity is recall on the negative class; with more than two classes there's no single "specificity" to pair it with, so it stays the plain average of per-class recall. **Matthews correlation coefficient (MCC)** uses all four boxes of the confusion matrix in one correlation-style score from −1 to +1, and is widely regarded as the most honest single number under imbalance because a model can't fake it by ignoring a class. When you need one number and the classes are skewed, prefer balanced accuracy or MCC over raw accuracy or F1.
 
 ---
 
@@ -70,7 +70,7 @@ Often the real constraint is capacity, not a threshold: a fraud team reviews the
 
 **Curves beat single thresholds: ROC-AUC vs PR-AUC.**
 
-Precision and recall are measured *at one threshold*; to summarise a model across all thresholds you use an area-under-curve. **ROC-AUC** plots TPR against FPR — but on rare-positive problems it can look flatteringly high, because a huge TN count keeps FPR tiny even when the model floods you with false positives relative to the few real positives. **PR-AUC** (precision vs recall) ignores true negatives and so exposes that failure. Rough heuristic: when positives are scarce, PR-AUC is usually the more honest summary — though it's a heuristic, not a law (PR-AUC has its own quirks under shifting prevalence).
+Precision and recall are measured *at one threshold*; to summarise a model across all thresholds you use an area-under-curve. **ROC-AUC** plots TPR against FPR — but on rare-positive problems it can look flatteringly high, because a huge TN count keeps FPR tiny even when the model floods you with false positives relative to the few real positives. **PR-AUC** (precision vs recall) ignores true negatives and so exposes that failure. Rough heuristic: when positives are scarce, PR-AUC is usually the more honest summary — though it's a heuristic, not a law (PR-AUC has its own quirks under shifting prevalence). This section only covers what you need to choose between them as a summary metric — how each curve is actually built and read threshold-by-threshold is where the next module, ROC Curve & AUC, picks up.
 
 ---
 
@@ -90,7 +90,7 @@ One discipline ties it together. The decision threshold is a *parameter you tune
         q: `A cancer screening model has precision=0.95 and recall=0.40. Is this a good model?`,
         options: [
           `A) Yes — precision=0.95 means nearly all positive predictions are correct, cutting unnecessary follow-up biopsies, lab costs, and patient anxiety`,
-          `B) It depends — F1=0.57 is a moderate blended score, acceptable for screening only if the population is genuinely low-risk overall`,
+          `B) It depends — F1=0.56 is a moderate blended score, acceptable for screening only if the population is genuinely low-risk overall`,
           `C) Yes — high precision always outweighs recall in medicine, since false alarms erode patient trust in the screening program`,
           `D) No — recall=0.40 means 60% of cancers are missed; screening needs recall above 0.90, even lowering the threshold to accept more false alarms`,
         ],
@@ -210,7 +210,7 @@ There is a lovely second reading of AUC that needs no curve at all. AUC is exact
 
 **Where it quietly lies: rare positives.**
 
-Now the catch. FPR is FP / (FP + TN), and on imbalanced data that TN is enormous — 9,900 legit transactions for every 100 frauds. So even 500 false alarms give FPR = 500 / 10,400 ≈ 0.05, which looks tiny. The ROC curve sits comfortably in the top-left, AUC = 0.91, everyone is happy. But look at precision: 100 / (100 + 500) = 0.17. Six out of every seven alerts your fraud team chases are wrong.
+Now the catch. FPR is FP / (FP + TN), and on imbalanced data that TN is enormous — 9,900 legit transactions for every 100 frauds. So even 500 false alarms give FPR = 500 / 9,900 ≈ 0.05, which looks tiny. The ROC curve sits comfortably in the top-left, AUC = 0.91, everyone is happy. But look at precision: 100 / (100 + 500) = 0.17. Five out of every six alerts your fraud team chases are wrong.
 
 The fix is the **precision-recall (PR) curve**, which plots precision against recall and never touches TN at all. When positives are rare, it is the honest picture — a model that looks production-ready on ROC-AUC can be exposed as a false-alarm machine on PR-AUC. Rule of thumb: if your positive class is under about 10% of the data, use **PR-AUC**, not ROC-AUC.
 
@@ -279,7 +279,7 @@ AUC is binary by construction, so for K classes you extend it. **One-vs-rest (Ov
       {
         q: `Your fraud model has AUC=0.96. The business team says the alert queue has too many false alarms. What happened and how do you fix it?`,
         options: [
-          `A) AUC measures ranking quality, not precision at the deployed threshold — raise the threshold, or recalibrate with Platt scaling if precision stays poor`,
+          `A) AUC measures ranking quality, not precision at the deployed threshold — raise the threshold, or recalibrate the model's probabilities if precision stays poor`,
           `B) AUC=0.96 is suspiciously too high and indicates severe overfitting to the training distribution — retrain with much heavier L2 regularization now`,
           `C) The model needs far more training data to fix this — high AUC with high false alarms always means too few examples of legitimate transactions exist`,
           `D) Switch to a completely different model architecture entirely and from scratch — AUC=0.96 proves the current model family is fundamentally unsuited here`,
@@ -331,7 +331,7 @@ AUC is binary by construction, so for K classes you extend it. **One-vs-rest (Ov
     recap: [
       `**The ROC curve tries every threshold at once:** plot TPR (recall — fraction of frauds caught) up the side against FPR (fraction of legit wrongly flagged) along the bottom, sweeping all thresholds. Random guessing gives the diagonal (AUC 0.5); a perfect model hugs the top-left (AUC 1.0).`,
       `**AUC is a pure ranking score with a clean probabilistic meaning:** AUC = P(model scores a random real positive above a random real negative). AUC 0.91 means it ranks a random fraud above a random legit transaction 91% of the time — which is why it ignores your threshold entirely. It equals the normalized Mann-Whitney U statistic.`,
-      `**Rare positives quietly fool ROC-AUC:** FPR = FP/(FP+TN), and on imbalanced data that TN is enormous (9,900 legit per 100 fraud), so even 500 false alarms give FPR ≈ 0.05 — the curve sits in the top-left, AUC 0.91 — while precision is only 100/(100+500) = 0.17. Six of every seven alerts are wrong.`,
+      `**Rare positives quietly fool ROC-AUC:** FPR = FP/(FP+TN), and on imbalanced data that TN is enormous (9,900 legit per 100 fraud), so even 500 false alarms give FPR ≈ 0.05 — the curve sits in the top-left, AUC 0.91 — while precision is only 100/(100+500) = 0.17. Five of every six alerts are wrong.`,
       `**When positives are under ~10%, use PR-AUC:** precision-recall curve plots precision vs recall and never touches TN, so it exposes the false-alarm floods ROC-AUC hides. It's a heuristic, not a law — PR-AUC has its own quirks under shifting prevalence.`,
       `**AUC picks the model; the cost matrix picks the threshold:** AUC is threshold-independent, so it says nothing about the specific cutoff you'll run. Choose the model by AUC, then set the operating point by plotting the precision-recall trade-off against your costs — at 80% recall, how many alerts/day does that make?`,
       `**AUC is blind to calibration:** it's pure ranking, so multiply every predicted probability by 0.5 and the AUC is unchanged while every probability is now a lie. If you use the probability itself (pricing, expected value, a downstream model), check calibration separately (reliability diagram, Brier score).`,
@@ -361,7 +361,7 @@ AUC is binary by construction, so for K classes you extend it. **One-vs-rest (Ov
   <!-- good model curve -->
   <path d="M50,240 Q80,180 110,130 Q140,90 170,65 Q200,45 230,32 Q260,24 290,22" fill="none" stroke="var(--prime)" stroke-width="2.5"/>
   <text x="120" y="105" fill="var(--prime)" font-size="9" font-weight="700">Good model</text>
-  <text x="120" y="116" fill="var(--prime)" font-size="9">AUC ≈ 0.87</text>
+  <text x="120" y="116" fill="var(--prime)" font-size="9">AUC ≈ 0.91</text>
   <!-- perfect classifier -->
   <path d="M50,240 L50,22 L290,22" fill="none" stroke="var(--amber)" stroke-width="2" stroke-dasharray="5,3"/>
   <text x="55" y="35" fill="var(--amber)" font-size="9" font-weight="700">Perfect</text>
@@ -393,7 +393,7 @@ The simplest is **Mean Reciprocal Rank**. It cares about one thing: the position
 
 **MAP — did you find them all, and early?**
 
-**Mean Average Precision** rewards surfacing relevant results both early *and* completely. For one query, walk down the list, and each time you hit a relevant result note the precision so far; average those, then divide by the total number of relevant results. For our example (relevant at 1, 3, 7, three relevant total): (1/3)(1/1 + 2/3 + 3/7) ≈ 0.70. Average across queries to get MAP. It only needs yes/no relevance labels, which makes it cheap to collect.
+**Mean Average Precision** rewards surfacing relevant results both early *and* completely. For one query, walk down the list, and each time you hit a relevant result note the precision so far; sum those, then divide by the total number of relevant results. For our example (relevant at 1, 3, 7, three relevant total): (1/3)(1/1 + 2/3 + 3/7) ≈ 0.70. Average across queries to get MAP. It only needs yes/no relevance labels, which makes it cheap to collect.
 
 ---
 
@@ -424,6 +424,12 @@ Pure relevance metrics miss things a real recommender must balance. **Coverage**
 **The elephant: position bias in click labels.**
 
 If your relevance labels come from *clicks*, they're contaminated. The item at position 1 gets more clicks **because it was shown first**, not because it's more relevant — so training or evaluating on raw clicks teaches the model to reproduce the old ranking's position effects rather than true relevance, a self-reinforcing loop. The fixes are their own field: **inverse-propensity weighting** to down-weight clicks that only happened due to position, **interleaving** (blend two rankers' results and see which gets clicked, which cancels position bias), and **counterfactual evaluation**. Never treat click data as clean relevance.
+
+---
+
+**Offline-online gaps: it isn't always position bias.**
+
+Position bias in click labels is not the only reason a healthy offline score can miss what users feel. The offline test set itself can be **stale** — judgments and even the candidate catalog were captured at some past date, so a model can keep matching outdated ground truth while the real catalog and real user intent have moved on. And offline metrics are almost always computed **per item** — one score per query, per result list — while the actual user experience unfolds **per session**, across several searches or scroll loads in a row; a ranking that scores fine query-by-query can still feel repetitive or exhausting once you look at the whole session. When an offline number and online sentiment disagree, check the freshness of your judgments and whether you're measuring the right unit (item vs. session) before assuming the metric itself is wrong.
 
 ---
 
@@ -555,9 +561,9 @@ Here is the catch. The holdout set was built from interaction logs collected six
 
 Offline metrics measure how well a model predicts *past* behaviour. Online metrics measure how real users respond *now*. Three structural gaps drive them apart.
 
-**Distribution shift.** The historical test set is not live traffic — preferences, the catalog, and the context all drift over time.
+**Distribution shift.** The historical test set is not live traffic — preferences, the catalog, and the context all drift over time. A model tuned on a holdout built from last winter's logs still ranks now-discontinued items near the top and has never seen anything added to the catalog since, so its offline score reflects a version of the product that no longer exists.
 
-**Proxy labels.** A click is not satisfaction. Someone who clicked a clickbait headline and bounced immediately was not helped, but offline NDCG counts it as a win. You are measuring a stand-in for the thing you actually care about.
+**Proxy labels.** A click is not satisfaction. Someone who clicked a clickbait headline and bounced immediately was not helped, but offline NDCG counts it as a win. Clicks are also **position-biased**: an item shown at rank 1 gets clicked far more than an equally good item buried at rank 8, simply because it was seen first — so a raw click log conflates relevance with how prominently the old model chose to display the item. You are measuring a stand-in for the thing you actually care about.
 
 **Feedback loops.** Once deployed, the model *shapes* the data it will later be trained on. Show recommendation A, users interact with A, those interactions become tomorrow's training set. The model changes the future distribution just by being live.
 
@@ -573,7 +579,7 @@ Nowhere near perfectly. For search and recommendation, the correlation between a
 
 **The habit that keeps you honest.**
 
-A strong offline result is a *hypothesis*, not a verdict. Models can overfit the evaluation set itself — lifting offline NDCG while making the real experience worse — for instance by memorising which items were in the historical judgment pool. So treat every offline win as "promising, let's test it," never as "done." Two guardrails make offline numbers trustworthy: split your data by *time* (train on the past, test on the most recent window, never a random shuffle across all dates), and shadow-deploy the new model on live traffic before the A/B test to catch distribution shift before it costs you anything.
+A strong offline result is a *hypothesis*, not a verdict. Models can overfit the evaluation set itself — a kind of **leakage**, where information about the evaluation set bleeds into what the model has effectively learned — lifting offline NDCG while making the real experience worse — for instance by memorising which items were in the historical judgment pool. So treat every offline win as "promising, let's test it," never as "done." Two safeguards make offline numbers trustworthy: split your data by *time* (train on the past, test on the most recent window, never a random shuffle across all dates), and shadow-deploy the new model on live traffic before the A/B test to catch distribution shift before it costs you anything.
 
 ---
 
@@ -710,9 +716,9 @@ You can partly de-bias offline log evaluation with **inverse propensity scoring*
     difficulty: 'intermediate',
     estimatedMin: 30,
     tags: ['data leakage', 'validation', 'temporal split', 'label leakage'],
-    summary: `You are building a model to predict next-week stock returns. Among your features you include one called "average return over the next 7 days." You train, validate, and get **95% accuracy** — numbers you have never seen. You ship it. In production, accuracy is **2%.** What happened?
+    summary: `You are building a model to predict whether a stock will go up over the next week — a next-week up/down classification. Among your features you include one called "whether the stock rose over the next 7 days." You train, validate, and get **95% accuracy** — numbers you have never seen. You ship it. In production, accuracy is **2%.** What happened?
 
-The feature cheated. "Average return over the next 7 days" is computed from the very thing you are trying to predict. The model did not learn anything — it read the answer straight off that feature. During validation the answer was sitting right there in the inputs; in production that information does not exist yet, so the model is worthless. This is **data leakage**: information from the future, or from the outcome itself, sneaking into the training features.
+The feature cheated. "Whether the stock rose over the next 7 days" is computed from the very thing you are trying to predict. The model did not learn anything — it read the answer straight off that feature. During validation the answer was sitting right there in the inputs; in production that information does not exist yet, so the model is worthless. This is **data leakage**: information from the future, or from the outcome itself, sneaking into the training features.
 
 The dangerous part is that a normal train/test split does *not* catch it — because both halves are contaminated the same way. Leakage comes in three main flavours, each with its own fix.
 
@@ -778,13 +784,13 @@ A few cheap experiments smoke out leakage. **Shuffle the labels** and retrain �
 
 Leakage often isn't caught offline at all — it surfaces after deploy. The signatures: an **offline-online collapse** (0.97 validation, 0.64 live), a **null-rate spike** on a feature that turns out to be unavailable at serving time, **feature-freshness** violations (a value that was instant offline takes hours to compute live), or a top feature that simply *can't be computed* in the real-time path. Monitoring these in production is your last line of defence when the offline audit misses a leak.`,
     keyPoints: [
-      `**When to audit for leakage: any time validation looks too good to be true.**\n\nRed flags: AUC above 0.95 on a problem where domain experts only manage 70–80%; a single feature with far higher importance than all the others (can it even be known at prediction time?); train and validation accuracy within a point or two of each other with no regularisation (the test set is probably contaminated); or AUC jumping ten-plus points right after you add one new feature group (check that group's causal link to the label).`,
+      `**When to audit for leakage: any time validation looks too good to be true.**\n\nRed flags: AUC above 0.97 on a problem where domain experts only manage 70–80%; a single feature with far higher importance than all the others (can it even be known at prediction time?); train and validation accuracy within a point or two of each other with no regularisation (the test set is probably contaminated); or AUC jumping ten-plus points right after you add one new feature group (check that group's causal link to the label).`,
       `**The most common trap: target encoding computed on the full dataset before the split.**\n\nTarget encoding replaces a category with the average outcome for that category. Compute those averages over the whole dataset (test rows included) and each test row's feature now carries information from its own label — a direct leak. Fix: compute the encodings out-of-fold (each row encoded using only the other folds), or wrap it in a scikit-learn Pipeline inside cross-validation. It is easy to miss because the code looks completely innocent.`,
       `**The diagnostic: for every feature, ask whether its value would exist at the exact moment of prediction.**\n\nFor each feature, write down what data it uses, when that data becomes available, and whether that is before or after the prediction time. Any feature whose data only arrives after the prediction moment is leakage. You can do this whole audit in a spreadsheet. Inheriting a model? Check its top five features by importance and confirm each one passes the timestamp test.`,
       `**Preprocessing leaks too, and the taxonomy is bigger than three types.**\n\nAnything that learns from data — scaler, imputer, PCA, feature selection, SMOTE, target encoding — must be fit on the training fold only; wrap it in a scikit-learn Pipeline so CV re-fits it inside each fold. Beyond temporal/group/label, watch for duplicate/near-duplicate leakage, proxy features (an ID range encoding cohort), post-outcome features, aggregation-window leakage (a rolling window reaching past prediction time), and survivorship bias. And distinguish three timestamps — event, feature-computation, and data-availability — joining features as of *availability* (what point-in-time feature-store joins enforce).`,
       `**Mirror production in the split, prove it with negative controls, and monitor after deploy.**\n\nReal systems often need a combined group-plus-time holdout (future data AND unseen users), matched to the production question (new user/session/transaction/event). Catch leaks with negative controls: shuffle labels (a clean model drops to chance), compare random vs temporal split (a gap = temporal leak), and drop the top suspicious feature (a crater = it carried the leak). Leakage frequently surfaces only in production — an offline-online collapse, a feature null-rate spike, a freshness violation, or a top feature that can't be computed in the serving path — so monitor these as the last line of defence.`,
     ],
-    interactivePrompt: `Before you touch the controls: if a model achieves 95% validation accuracy on a stock return prediction task and the training features include "return over the next 7 days" — what exactly is the model learning, and what will happen at deployment?`,
+    interactivePrompt: `Before you touch the controls: if a model achieves 95% validation accuracy on a stock up/down prediction task and the training features include "whether the stock rose over the next 7 days" — what exactly is the model learning, and what will happen at deployment?`,
     checkQuestions: [
       {
         q: `You build a churn prediction model with AUC=0.97. In production, AUC drops to 0.64. What went wrong and how do you debug?`,
@@ -849,9 +855,9 @@ Leakage often isn't caught offline at all — it surfaces after deploy. The sign
     ],
     takeaway: `Data leakage is a data engineering error, not a modeling error — the fix is upstream in feature computation, and the single question that catches most leakage is whether each feature value would exist at the exact moment of prediction in production with no knowledge of future events.`,
     recap: [
-      `**Leakage = future or outcome information sneaking into features** — a feature like "average return over the next 7 days" reads the answer straight off, giving 95% validation and 2% production. A normal train/test split doesn't catch it because both halves are contaminated the same way.`,
+      `**Leakage = future or outcome information sneaking into features** — a feature like "whether the stock rose over the next 7 days" reads the answer straight off, giving 95% validation and 2% production. A normal train/test split doesn't catch it because both halves are contaminated the same way.`,
       `**Temporal leakage — peeking at the future:** a random split of time-ordered data lets some training rows come from *after* the test rows' prediction time. Fix with a strict time cutoff — every feature built only from data that existed before that row's prediction moment; train on the past, test on the future.`,
-      `**Group leakage — the same subject on both sides:** patient/user 142's January visit trains the model and their June visit tests it, so it memorises habits that won't exist for brand-new subjects at deployment. Fix by splitting by group — all of one subject's rows go entirely to one side.`,
+      `**Group leakage — the same subject on both sides:** the same user (or patient, or store) shows up in both train and test — trained on some of their transactions, tested on others — so it memorises habits that won't exist for brand-new subjects at deployment. Fix by splitting by group — all of one subject's rows go entirely to one side.`,
       `**Label leakage — right time, wrong causal direction:** the feature has a valid timestamp but is a *consequence* of the outcome, not a cause ("days in ICU" only exists because the patient was hospitalised). The audit isn't "when was it computed?" but "does it come before or after the outcome in the causal chain?"`,
       `**The one question that catches almost everything:** would this exact value exist at the moment of prediction in production, knowing nothing about future events? If no, it's leakage. Red flags: AUC > 0.97 where experts disagree, one feature towering over all others, no train/val gap, or a mediocre model suddenly brilliant after one new feature group.`,
       `**Preprocessing leaks too — fit on the training fold only:** anything that *learns* from data (StandardScaler's mean/variance, imputer fills, PCA components, feature selection, SMOTE, target encoding) must be fit on train and applied to val/test. Wrap it all in a scikit-learn Pipeline so CV re-fits the whole chain inside each fold and leakage becomes structurally impossible.`,
@@ -868,10 +874,10 @@ Leakage often isn't caught offline at all — it surfaces after deploy. The sign
   <rect x="40" y="46" width="140" height="20" rx="4" fill="var(--teal)" opacity="0.55"/>
   <text x="110" y="60" text-anchor="middle" fill="var(--ink-hi)" font-size="8.5">valid feature (built from past)</text>
   <rect x="40" y="74" width="250" height="20" rx="4" fill="#ef4444" opacity="0.4"/>
-  <text x="110" y="88" text-anchor="middle" fill="var(--ink-hi)" font-size="8.5">"return over next 7 days"</text>
+  <text x="110" y="88" text-anchor="middle" fill="var(--ink-hi)" font-size="8.5">"rose over next 7 days"</text>
   <text x="248" y="88" text-anchor="middle" fill="#ef4444" font-size="8.5" font-weight="700">reaches into future = LEAK</text>
-  <rect x="40" y="102" width="130" height="20" rx="4" fill="#ef4444" opacity="0.4"/>
-  <text x="105" y="116" text-anchor="middle" fill="var(--ink-hi)" font-size="8.5">"days in ICU" (after outcome)</text>
+  <rect x="210" y="102" width="100" height="20" rx="4" fill="#ef4444" opacity="0.4"/>
+  <text x="260" y="116" text-anchor="middle" fill="var(--ink-hi)" font-size="8.5">"days in ICU" (after outcome)</text>
   <text x="180" y="196" text-anchor="middle" fill="var(--ink-low)" font-size="9">valid = fully left of the line · any bar crossing right = leakage</text>
 </svg>`,
     },
@@ -892,7 +898,7 @@ A single split is just one of the many ways you *could* have divided the data. Y
 
 **k-fold: don't trust one split, average many.**
 
-k-fold cross-validation runs several splits and averages them. With k=5 on 5,000 examples: cut the data into 5 groups of 1,000; train on 4,000 and test on the held-out 1,000; rotate so each group is the test set exactly once; average the 5 scores. Now every example is tested once, and your estimate is far steadier. Standard choices are k=5 (tests on 80% each time) or k=10 (90%, but slower). Leave-one-out (k = n) sounds ideal but is actually noisy — a single weird test example swings each fold's score.
+k-fold cross-validation runs several splits and averages them. With k=5 on 5,000 examples: cut the data into 5 groups of 1,000; train on 4,000 and test on the held-out 1,000; rotate so each group is the test set exactly once; average the 5 scores. Now every example is tested once, and your estimate is far steadier. Standard choices are k=5 (trains on 80% each time, tests on the other 20%) or k=10 (trains on 90%, tests on 10%, but slower). Leave-one-out (k = n) sounds ideal but is actually noisy — a single weird test example swings each fold's score.
 
 [FIGURE: cv_folds]
 
@@ -961,7 +967,7 @@ Stratification isn't only for single-label classification. For **regression**, s
       `**Match the CV strategy to your deployment assumption — it is not a style choice.**\n\nPlain k-fold (k=5 or 10): rows are independent, no time order, no repeated subjects. Stratified k-fold: any imbalanced classification, so every fold keeps the same class mix. Group k-fold: the model will score entities (users, patients, stores) it has never seen, so all rows from one entity stay on one side. Walk-forward: any time-series data, always. Use the wrong one and you are measuring a deployment scenario that does not exist.`,
       `**The most common trap: plain k-fold on time-series data.**\n\nIt produces validation scores that look fine and mean nothing. The tell: CV says AUC 0.85, then it drops sharply the moment you run a proper time-ordered holdout. Always split by time for time-series, default to an expanding walk-forward window, and add a purge gap (say 7 days) between train and validation so rolling-window features cannot bleed across the boundary.`,
       `**The diagnostic: if you tuned hyperparameters and reported the best fold score, that number is inflated.**\n\nTrying 100 configurations and reporting the best one's validation score is selection bias — you implicitly fit to that partition, and the more you tried, the worse the inflation. Fix it with nested CV (search only in the inner fold) or a separate test set never touched during tuning. Quick check: retrain with the chosen settings and score on data the tuning never influenced — if it drops a lot, the bias was real.`,
-      `**Reach for the right variant, and read fold spread honestly.**\n\nRepeated k-fold shrinks estimate variance on small/unstable data; stratified group k-fold handles imbalance and repeated subjects together; expanding windows use all history (stable world) while rolling windows keep only recent data (strong drift). Stratify regression on binned targets and multi-label with iterative stratification so no fold misses a rare label. And every learned transform (scaler, imputer, selector, encoder, SMOTE) must be fit inside each fold via a Pipeline — fitting before CV leaks.`,
+      `**Reach for the right variant, and read fold spread honestly.**\n\nRepeated k-fold shrinks estimate variance on small/unstable data; stratified group k-fold handles imbalance and repeated subjects together; expanding windows use all history (stable world) while rolling windows keep only recent data (strong drift). Stratify regression on binned targets and multi-label with iterative stratification so no fold misses a rare label.`,
       `**Know what nested CV estimates and that folds aren't independent.**\n\nNested CV gives an unbiased estimate of your model-selection *procedure*; the shipped model is then retrained on all training data with the chosen hyperparameters, so report the nested score but don't mistake it for the exact deployed model. And because k-fold training sets overlap heavily, fold scores are correlated — mean ± std is a useful spread and instability flag but not a valid confidence interval, so don't treat the std as a rigorous statistical bound.`,
     ],
     interactivePrompt: `Before you touch the controls: if you use standard 5-fold CV on 3 years of daily transaction data, what specific problem does this introduce — and would your reported AUC be too high or too low as a result?`,
@@ -979,7 +985,7 @@ Stratification isn't only for single-label classification. For **regression**, s
       {
         q: `You run 5-fold CV and get AUC scores [0.83, 0.84, 0.92, 0.85, 0.83]. The mean is 0.854. Should you report this as your model's performance?`,
         options: [
-          `A) No — report mean ± std of 0.854 ± 0.035 and investigate why fold 3 is an outlier; the spread itself is real information about instability`,
+          `A) No — report mean ± std of 0.854 ± 0.034 and investigate why fold 3 is an outlier; the spread itself is real information about instability`,
           `B) Yes — the mean alone is the correct summary statistic here, and five folds is already a large enough sample to report reliably as-is`,
           `C) No — quietly discard the outlier fold at 0.92 and report the plain mean of the remaining four folds, since that is more representative`,
           `D) Yes — 0.854 is actually a conservative estimate, since some folds may simply have been unlucky and the true performance likely sits closer to 0.92`,
@@ -1019,7 +1025,7 @@ Stratification isn't only for single-label classification. For **regression**, s
     ],
     takeaway: `Every CV strategy embeds an assumption about deployment — pick the wrong one and you are evaluating a scenario that does not exist, which is why walk-forward is mandatory for time-series and group k-fold is mandatory whenever new entities appear at inference time.`,
     recap: [
-      `**A single split has high variance — k-fold averages many:** one 80/20 split can land on easy examples (87%) and mislead your tuning (deploy → 79%). k-fold cuts the data into k groups, trains on k−1 and tests on the held-out one, rotates, and averages — every example tested once, a far steadier estimate. k=5 (test on 80%) or k=10 (90%, slower); leave-one-out is actually noisy (one weird example swings each fold).`,
+      `**A single split has high variance — k-fold averages many:** one 80/20 split can land on easy examples (87%) and mislead your tuning (deploy → 79%). k-fold cuts the data into k groups, trains on k−1 and tests on the held-out one, rotates, and averages — every example tested once, a far steadier estimate. k=5 (trains on 80%, tests on 20%) or k=10 (trains on 90%, tests on 10%, slower); leave-one-out is actually noisy (one weird example swings each fold).`,
       `**Stratified — for imbalanced classes:** at a 5% positive rate a careless split can hand you one fold with 1% positives and another with 9% — secretly different problems. Stratified k-fold forces each fold to hold roughly the same class ratio; use it for any classification under ~20% positive.`,
       `**Group — when the same subject repeats and you deploy on new entities:** plain k-fold lets patient 142's January visit train and their June visit test, so the model memorises a patient it already knows. Group k-fold keeps all of one entity's rows on one side, so test folds are always unseen entities — the real deployment situation.`,
       `**Time-series → walk-forward, and mind the gap:** plain k-fold on time-ordered data is *wrong* (trains on month 10 to predict month 3). Train on [start…t], test on [t…t+1], expand, always keeping time in order. Add a **purge gap** — drop rows within one feature-window of the boundary — so a 7-day rolling feature can't share raw data across the split.`,
@@ -1090,11 +1096,13 @@ Stratification isn't only for single-label classification. For **regression**, s
     difficulty: 'intermediate',
     estimatedMin: 30,
     tags: ['error analysis', 'failure modes', 'slicing', 'debugging'],
-    summary: `An NLP intent classifier scores **94% accuracy**. The product team is ready to ship. Before you sign off, you pull 200 of its mistakes and actually read them. The breakdown is stark: 67% are short 3-word commands ("turn on light"), 18% are code-switching (Spanish phrases mixed into English), 12% are negations ("don't turn on"). The model looks great on paper and fails on exactly the inputs your core users send most. That single accuracy number hid all of it.
+    summary: `An NLP intent classifier scores **94% accuracy**. The product team is ready to ship. Before you sign off, you pull 200 of its mistakes and actually read them. The breakdown is stark: 67% are short 3-word commands ("turn on light"), 18% are code-switching (Spanish phrases mixed into English), 12% are negations ("don't turn on"), and the remaining 3% is a long tail of one-off causes (typos, out-of-vocabulary slang, garbled audio) too scattered to bucket individually. The model looks great on paper and fails on exactly the inputs your core users send most. That single accuracy number hid all of it.
 
 That is what **error analysis** is for: turning "the model has 6% error" into "the model fails on 3-word commands, and here is why." The aggregate metric tells you a problem *exists*; error analysis tells you *which* group has it, *what kind* it is, and *what will fix it*.
 
 [FIGURE: error_slices]
+
+Before you even sample individual errors, look at the **confusion matrix** — the table of predicted class vs. actual class counts. It's the fastest way to see *which* classes get confused with which: a spike in the "negation → positive" cell tells you exactly where to start sampling, before you've read a single example.
 
 ---
 
@@ -1118,6 +1126,8 @@ Back to the classifier: two-thirds of the errors are short commands, because the
 
 And never let a high headline number end the conversation. A model that is 96% accurate but fails 100% of the time on one demographic, or a 98% spam filter that misses every email in one language, is not acceptable. Break errors down by subgroup, confidence, input length, and any business-critical slice. The aggregate metric is the *last* thing you report, not the first.
 
+That "one demographic" case is worth naming precisely: **error slicing** asks *where* the model is wrong, on any slice, so you can fix it. **Subgroup fairness analysis** is the narrower, harm-focused case of slicing — it asks whether the model is wrong *more often* for a **protected group** (race, gender, age, disability status, and similar) in a way that causes real-world harm, even when that slice's raw error rate looks unremarkable next to a noisier one. Slicing becomes a fairness analysis the moment the slice in question is a protected group and the disparity carries real cost.
+
 ---
 
 **Small slices lie — check the support before you react.**
@@ -1138,6 +1148,12 @@ Don't lump all errors together — **FPs and FNs usually have different causes a
 
 ---
 
+**Comparing two models with error analysis, not just their scores.**
+
+When two models tie on the aggregate metric, error analysis is how you pick between them: compare their confusion matrices to see which classes each one fails on, compare their critical-segment slices, check whether their errors are high-confidence (confidently wrong) or genuinely uncertain, and check the **correlation between their error sets**. If the two models are wrong on different examples, their errors are uncorrelated and they are strong candidates to **ensemble** — combining them can cancel out each other's mistakes. If they are wrong on the same examples, ensembling buys you little.
+
+---
+
 **From notebook to monitor.**
 
 Error analysis shouldn't be a one-time notebook exercise you do before launch and forget. The slices you discover — 3-word commands, code-switching, new merchant categories — should become **monitored production slices**, tracked continuously so you catch when a slice's error rate creeps up after deploy. A finding that lives only in a notebook decays; a finding wired into monitoring keeps paying off.
@@ -1154,7 +1170,7 @@ When errors trace to *annotation ambiguity*, the fix is a labeling process, not 
 
 Before claiming a fix works, run an **ablation**: remove the suspicious feature, or add the targeted data, or apply the augmentation — then compare the *slice* metric before and after, not just the aggregate. And prioritise slices with more than a raw error count: **impact = slice volume × error rate × cost per error × fix feasibility.** A big, expensive, easily-fixed slice beats a small, cheap, mysterious one — the count of total errors alone will point you at the wrong work.`,
     keyPoints: [
-      `**Always stratify errors by confidence level first — high-confidence wrong predictions (model says 0.95 positive, it is negative) indicate systematic bias, not random noise. These are your priority.**\n\nFor the intent classifier: sample 100 errors. Group them into confidence buckets: errors where model confidence was 0.5–0.7, 0.7–0.9, and 0.9–1.0. High-confidence errors in the 0.9–1.0 bucket are the model doubling down on a wrong pattern — a systematic feature or data problem. Low-confidence errors near 0.5 are boundary cases where the model is appropriately uncertain. Fix the high-confidence bucket first. In sklearn: sort errors by abs(predicted_prob - 0.5) descending, inspect the top 30. They will cluster by a specific pattern almost every time.`,
+      `**Always stratify errors by confidence level first — high-confidence wrong predictions (model says 0.95 positive, it is negative) indicate systematic bias, not random noise. These are your priority.**\n\nFor the intent classifier: sample 200 errors. Group them into confidence buckets: errors where model confidence was 0.5–0.7, 0.7–0.9, and 0.9–1.0. High-confidence errors in the 0.9–1.0 bucket are the model doubling down on a wrong pattern — a systematic feature or data problem. Low-confidence errors near 0.5 are boundary cases where the model is appropriately uncertain. Fix the high-confidence bucket first. In sklearn: sort errors by abs(predicted_prob - 0.5) descending, inspect the top 30. They will cluster by a specific pattern almost every time.`,
       `**Trap: sampling errors uniformly and concluding that common categories matter most. A rare error category that happens to affect high-value users or safety-critical decisions matters more than a common category that does not. Weight by business impact, not frequency.**\n\nFor the intent classifier: 12% of errors are negation patterns ("don't turn on"). This seems small. But those are the errors where the assistant does the opposite of what was asked — a user explicitly said not to do something and the system did it anyway. The business impact of acting on a negation error is catastrophically higher than misclassifying a benign 3-word utterance. Prioritize by cost(error type) × frequency(error type), not frequency alone. The cost matrix is a business decision, not a modeling decision.`,
       `**Diagnostic: if error categories do not have obvious fixes, you have a data gap — collect 200 examples from the hardest category and retrain. This typically moves more metric than any architectural change.**\n\nFor the intent classifier: code-switching errors (Spanish phrases in English queries) represent 18% of all errors. The model has almost no Spanish-English mixed examples in training. The fix is not a larger model or a better architecture — it is 200 labeled code-switching examples added to the training set. Retrain. Measure the category error rate on a held-out slice of code-switching examples. If it drops from 60% to 20%, the data gap was the problem. If it stays high, there is a feature representation problem. Data collection is cheaper than architecture search and should come first.`,
       `**Check slice support, name the real root cause, and slice FP/FN separately.**\n\nDon't react to a 40%-error slice of 5 examples — report slice size, a confidence interval on the rate, and a minimum-support threshold before concluding. Match the fix to the real cause: label noise, data scarcity, distribution shift, feature blindness, annotation ambiguity, preprocessing bug, or threshold/calibration issue — more data won't cure a calibration bug or genuine ambiguity. And build the breakdown twice, once for false positives and once for false negatives, since they usually have different causes and costs.`,
@@ -1203,10 +1219,10 @@ Before claiming a fix works, run an **ablation**: remove the suspicious feature,
         answer: `D`
       },
       {
-        q: `In your error slicing, one segment shows a 45% error rate versus 8% overall — but that segment has only 6 examples. What's the right move?`,
+        q: `In your error slicing, one segment shows a 50% error rate versus 8% overall — but that segment has only 6 examples (3 of 6 wrong). What's the right move?`,
         options: [
-          `A) Treat it as the single top-priority failure immediately and without question — a 45% error rate is nearly six times the 8% overall baseline rate`,
-          `B) With n=6 the CI is enormous (roughly 12%-80%) and it may be pure noise — report slice size and a CI, apply a minimum-support threshold before acting`,
+          `A) Treat it as the single top-priority failure immediately and without question — a 50% error rate is more than six times the 8% overall baseline rate`,
+          `B) With n=6 the CI is enormous (roughly 12%-88%) and it may be pure noise — report slice size and a CI, apply a minimum-support threshold before acting`,
           `C) Delete those 6 examples from the evaluation set entirely, since a segment that tiny cannot be modeled or trusted reliably in any analysis anyway`,
           `D) Immediately collect 200 brand new examples for that exact segment and retrain the model — small-but-high-error slices always signal a genuine data gap`,
         ],
@@ -1422,12 +1438,10 @@ Ablation is the empirical partial derivative of the system — it measures the m
 
 The interaction trap: the feature interactions component showed zero marginal contribution in the leave-one-out ablation (AUC remained 0.91 when removed). But interactions might synergize with temporal aggregations — try removing both together. Without feature interactions and temporal aggregations: AUC 0.86. The pair contributes more than their individual marginal effects. Neither is truly vestigial; each depends on the other being present. Confirm before removing anything: re-add the component and verify that AUC returns to its prior level.
 
-**NOT this.** A component that does not hurt when removed was useless. Interactions. Feature A might have near-zero marginal contribution alone but be essential when combined with feature B. Ablation in isolation misses synergies. Always confirm by re-adding components you are considering removing and verifying the result is reversible. If removing A and then re-adding A does not restore the original AUC, you have an interaction effect that requires pairwise ablation to diagnose.
-
 The formal statement: ablation is leave-one-out estimation of component importance. Marginal contribution of component C = AUC(full) − AUC(full \ {C}). For interactions, estimate pairwise contribution of {C, D} = AUC(full) − AUC(full \ {C, D}) and compare to the sum of individual contributions.`,
     keyPoints: [
       `**Run ablation before any architectural investment — it takes a few training runs and tells you which components actually matter. Engineers routinely build elaborate features that ablation would have shown are vestigial in 2 hours.**\n\nFor the fraud detection system: the team spent two weeks building a 50-feature interaction matrix before running any ablation. The ablation showed that none of the interaction features contributed beyond what graph embeddings already captured. Two hours of ablation would have saved two weeks of engineering. The protocol: immediately after reaching a working baseline, run one ablation pass over all major components. Report AUC with and without each component. Only invest further engineering time in components that show a positive marginal contribution.`,
-      `**Trap: ablating on the training set or a small dev set. Component importance is estimated from held-out performance. Ablation on training data reflects memorization, not generalization — run on the same evaluation set you use for model selection.**\n\nFor the fraud detection system: if the ablation was run on the training set, the feature interactions component would show a large positive contribution — trees always find spurious interactions that fit training data but do not generalize. On the held-out validation set, that same component shows zero contribution. The rule: every ablation result must come from held-out performance on the same evaluation set used for model selection. Never trust a component's training-set importance as evidence that it generalizes.`,
+      `**Trap: ablating on the training set or a small dev set. Component importance is estimated from held-out performance. Ablation on training data reflects memorization, not generalization — run on the same evaluation set you use for model selection.**\n\nFor the fraud detection system: if the ablation was run on the training set, the feature interactions component would likely show a large positive contribution — a model can fit spurious interactions that match idiosyncrasies of the training data without those interactions generalizing. On the held-out validation set, that same component shows zero contribution. The rule: every ablation result must come from held-out performance on the same evaluation set used for model selection. Never trust a component's training-set importance as evidence that it generalizes.`,
       `**Diagnostic: if multiple ablations show near-zero contribution, your system is likely dominated by a single component. This is a fragility signal — the system will break when that one component degrades.**\n\nFor the fraud detection system: if removing graph embeddings drops AUC from 0.91 to 0.83, and removing everything else barely moves AUC, the system is entirely dependent on graph embeddings. If the graph data pipeline goes down, the system degrades from AUC 0.91 to 0.83 instantly. Operational resilience requires backup components. If graph embeddings are unavailable, can temporal aggregations carry enough signal to maintain acceptable performance? Ablation answers this: the AUC without graph embeddings is 0.83. Is that acceptable? That is a business decision — but ablation gives you the number you need to make it.`,
     ],
     interactivePrompt: `Before you touch the controls: if removing component A from the full system drops AUC from 0.91 to 0.83, and removing component B drops it from 0.91 to 0.90, can you conclude that component A is always more important than B, or can you think of a scenario where that ranking would reverse?`,
@@ -1450,7 +1464,7 @@ The formal statement: ablation is leave-one-out estimation of component importan
           `C) Ask whether using age is legally permitted, whether it is a true causal driver or just a proxy for something else, and what fairness implications follow`,
           `D) The feature ablation result carries no relevance to fairness analysis at all — those are separate considerations that should never be combined`,
         ],
-        answer: `B`
+        answer: `C`
       },
       {
         q: `You remove component X from your system and AUC goes up from 0.82 to 0.84. What do you conclude and what do you do next?`,
@@ -1460,7 +1474,7 @@ The formal statement: ablation is leave-one-out estimation of component importan
           `C) Component X may be redundant or harmful for AUC — verify the improvement holds across 5 seeds and check if X targets a non-AUC objective instead`,
           `D) Run more ablations removing other components simultaneously alongside X, to confirm the interaction effect that is causing this AUC improvement`,
         ],
-        answer: `D`
+        answer: `C`
       },
     ],
     takeaway: `Ablation is the empirical partial derivative of your system — remove one component, measure the drop, repeat — and two hours of ablation before committing to any architecture investment will consistently outperform two weeks of speculative engineering.`,
@@ -1502,10 +1516,10 @@ The formal statement: ablation is leave-one-out estimation of component importan
   {
     id: 'evaluation_in_prod',
     title: 'Evaluation in Production',
-    subtitle: 'Shadow mode, champion-challenger, guardrail metrics, significance at scale',
+    subtitle: 'Shadow mode, staged rollout, guardrail metrics, significance at scale',
     difficulty: 'intermediate',
     estimatedMin: 30,
-    tags: ['production evaluation', 'shadow mode', 'A/B testing', 'champion-challenger'],
+    tags: ['production evaluation', 'shadow mode', 'A/B testing', 'staged rollout'],
     summary: `An A/B test runs for **2 days**. The treatment shows **+18% CTR**. The team ships it. Two weeks later, revenue is **down 4%.** What happened?
 
 **Novelty.** People click new things just because they are new. Once the shine wears off, engagement settles back — and here, below baseline. The 2-day test ran entirely inside the novelty window, so it measured novelty, not the model. The team optimised for a signal that was never going to last.
@@ -1535,6 +1549,12 @@ Before any high-stakes launch, run the new model in **shadow mode**: it sees the
 **"Significant" is not the same as "worth it."**
 
 A small p-value only says the effect is unlikely to be pure noise. It does not tell you the effect will *last*, that it is *big enough to matter*, or that the experiment was *run properly*. At ten million daily users, a 0.01% CTR bump hits p < 0.0001 in a single day — and that is about a thousand extra clicks. Is a whole new model to retrain, deploy, and maintain worth a thousand clicks a day? "Is this effect real?" and "Is this effect worth acting on?" are different questions, and at scale the first is almost always yes. So a trustworthy test needs all of it: random assignment (a user always in the same arm), enough time, a pre-registered metric and sample size, and guardrails watched throughout.
+
+---
+
+**Check the lift holds across segments.**
+
+A significant, practically-meaningful average lift can still be an artifact of one subgroup carrying the whole result. If the aggregate lift comes almost entirely from one platform, one region, or one power-user cohort while every other segment is flat or negative, you have found a group whose behaviour moves the average, not a broadly better model -- and it can vanish, or reverse, in segments you did not check. Before shipping, break the primary metric out by the segments that matter for your product (platform, geography, new vs. returning users) and confirm the lift holds directionally in each one, not just in the pooled number.
 
 ---
 
@@ -1570,7 +1590,7 @@ Standard A/B analysis assumes **SUTVA** — one user's outcome depends only on t
 
 **Short-term wins, long-term harm: delayed metrics.**
 
-The metric that moves inside the test window is often not the one you care about. CTR responds in minutes; **retention, revenue quality, refunds, churn, and lifetime value** unfold over weeks or months. A model that boosts short-term clicks by pushing clickbait can simultaneously *reduce* long-term retention — and a two-week test may never see it. Guardrails plus a long-lived **holdout group** (a fraction of users permanently excluded from all changes) are how you catch effects that only appear after the experiment ends.
+The metric that moves inside the test window is often not the one you care about. CTR responds in minutes; **retention, revenue quality, refunds, churn, and lifetime value** unfold over weeks or months. A model that boosts short-term clicks by pushing clickbait can simultaneously *reduce* long-term retention — and a two-week test may never see it. Guardrails plus a long-lived **holdout group** (a fraction of users permanently excluded from all changes) are how you catch effects that only appear after the experiment ends. A holdout group also beats running a *series* of individual A/B tests for measuring a model's real long-term value: each individual test only measures one change's effect over its own short window, and changes that each look like a win in isolation can still cancel out or net negative in aggregate -- one feature's engagement gain cannibalising another's. Comparing the holdout's cumulative trajectory against everyone else over months is how you catch that a year of individually-shipped "wins" actually added up to nothing, or worse.
 
 ---
 
@@ -1578,9 +1598,9 @@ The metric that moves inside the test window is often not the one you care about
 
 At scale dozens of tests run at once, and they can **interact** — test A changes the ranking that test B is also modifying, so the effects aren't additive. Two defenses: **mutual exclusion** (tests touching the same surface can't share users) and **experiment layers** (an orthogonalisation scheme where each user is in one experiment per layer, so tests in different layers are randomised independently). Use **factorial design** deliberately when you *want* to measure an interaction, but only after confirming independence. Document which tests ran simultaneously so surprising results can be traced.`,
     keyPoints: [
-      `**Always run A/B tests for at least 2 full business cycles before making a decision — novelty effects typically last 3–7 days and can fully reverse a 15% positive signal.**\n\nFor the recommendation test: the +18% CTR was measured on days 1–2. On days 3–14, CTR in the treatment arm declines steadily as novelty fades. By day 14, CTR in treatment is 2% below control. If the test had run for 2 weeks, the team would have seen the reversal before shipping. The diagnostic: plot daily CTR for treatment vs control separately. If treatment CTR is declining toward control CTR over the first 7 days, novelty is explaining the effect. If treatment CTR is stable and above control at day 14, the effect is real.`,
-      `**Trap: peeking at results before the planned end date inflates Type I error. Running a sequential test that checks significance daily at α = 0.05 gives a true false positive rate of ~30% by day 20. Use sequential testing methods (mSPRT, always-valid inference) if you need to peek.**\n\nFor the recommendation test: the team checks results every morning. On day 3, p = 0.03. They stop the test and ship. The problem: every day of peeking at α = 0.05 is an independent opportunity to cross the significance threshold by noise alone. With 20 days of peeking, the probability of at least one false positive reaches ~30%. The fix: use an always-valid sequential test framework (Spotify's SPRT, Microsoft's ExP). These frameworks compute valid p-values at any stopping point by construction, letting you stop early when the result is clear without inflating false positive rate.`,
-      `**Diagnostic: if your positive A/B test result reverses after shipping, check novelty curves — plot daily CTR separately for users in their first 7 days of exposure vs later. If day-1 CTR is much higher than day-7, you measured novelty.**\n\nFor the recommendation model: after shipping and observing revenue decline, segment users by days since first exposure to the new model. New-to-model users (day 1–3): CTR 22% above baseline. Users 4–7 days in: CTR 8% above baseline. Users 8+ days in: CTR 3% below baseline. The novelty curve is unmistakable. The model was not better — it was new. The operational fix: run all future tests for at least 14 days and require that the treatment effect is stable (non-declining) in the last 7 days before shipping.`,
+      `**Always run A/B tests for at least 2 full business cycles before making a decision — novelty effects typically last 3–7 days and can fully reverse a 15% positive signal.**\n\nFor the recommendation test: the +18% CTR was measured on days 1–2. On days 3–14, CTR in the treatment arm declines steadily as novelty fades. By day 14, CTR in treatment is 2% below control -- the same underlying reversal that shows up as the -4% revenue drop the team discovers two weeks after shipping in the summary above. If the test had run for 2 weeks, the team would have seen the reversal before shipping. The diagnostic: plot daily CTR for treatment vs control separately. If treatment CTR is declining toward control CTR over the first 7 days, novelty is explaining the effect. If treatment CTR is stable and above control at day 14, the effect is real.`,
+      `**Trap: peeking at results before the planned end date inflates Type I error. Running a sequential test that checks significance daily at α = 0.05 gives a true false positive rate of ~30% by day 20. Use sequential testing methods (mSPRT, always-valid inference) if you need to peek.**\n\nFor the recommendation test: the team checks results every morning instead of waiting for a pre-set stopping point. By day 2, p crosses 0.05 -- this is the same +18% CTR result described in the summary above -- so they stop the test right there and ship. The problem: every day of peeking at α = 0.05 is an independent opportunity to cross the significance threshold by noise alone. With 20 days of peeking, the probability of at least one false positive reaches ~30%. The fix: use an always-valid sequential test framework (Spotify's SPRT, Microsoft's ExP). These frameworks compute valid p-values at any stopping point by construction, letting you stop early when the result is clear without inflating false positive rate.`,
+      `**Diagnostic: if your positive A/B test result reverses after shipping, check novelty curves — plot daily CTR separately for users in their first 7 days of exposure vs later. If day-1 CTR is much higher than day-7, you measured novelty.**\n\nFor the recommendation model: after shipping and observing the -4% revenue decline, segment users by days since first exposure to the new model (here "baseline" means each cohort's own pre-launch CTR, not the control arm). New-to-model users (day 1–3): CTR 22% above their own baseline. Users 4–7 days in: CTR 8% above baseline. Users 8+ days in: CTR 3% below baseline. Averaged across the whole treatment population this is the same decay already seen in the aggregate numbers above -- a strong day 1-2 lift (the +18% CTR from the summary) settling toward, then below, control by day 14. The novelty curve is unmistakable. The model was not better — it was new. The operational fix: run all future tests for at least 14 days and require that the treatment effect is stable (non-declining) in the last 7 days before shipping.`,
       `**Sanity-check the split, size the test up front, and reduce variance to go faster.**\n\nBefore reading any metric, run a sample-ratio-mismatch (SRM) check — a 50/50 design that comes back 55/45 signals a broken pipeline and makes every downstream number untrustworthy. Compute required sample size from a target MDE and 80% power beforehand, since underpowered tests both miss real wins and exaggerate the ones they report (winner's curse). CUPED (subtracting pre-experiment behaviour) cuts metric variance and shortens tests without more traffic. Roll out in stages: shadow → 1% canary → 5/10/25/50% → full, with automated rollback on guardrails.`,
       `**Mind interference, delayed metrics, and overlapping experiments.**\n\nUser-level A/B tests assume SUTVA (one user's outcome depends only on their own arm) — marketplaces, social networks, and shared-inventory systems violate it, so cluster-randomise or use switchbacks or the measured lift is biased. Short-window metrics (CTR) can move opposite to long-run ones (retention, LTV, refunds, churn); catch these with guardrails and a permanent holdout group. When many tests run at once, prevent contamination with mutual exclusion or experiment layers, and use factorial design only when you've confirmed independence and actually want the interaction.`,
     ],
@@ -1692,7 +1712,7 @@ At scale dozens of tests run at once, and they can **interact** — test A chang
 
 ---
 
-**Sample-ratio mismatch: the plumbing sanity check.** You assigned 50/50, but the logs show 50.0% control and 48.3% treatment. That 1.7-point gap sounds tiny — but at scale it is astronomically unlikely by chance, and it means the *randomization itself is broken*: maybe treatment errors out and those users silently drop, maybe a redirect fails, maybe logging is lossy on one arm. When assignment is broken, the two groups are no longer comparable and **every downstream metric is untrustworthy** — including the win you were about to celebrate. The check is a **chi-square goodness-of-fit test** on the observed split against the intended ratio. If SRM fires, you stop and fix the plumbing; you do not interpret the results. It is the first thing a senior person looks at.
+**Sample-ratio mismatch: the plumbing sanity check.** You assigned 50/50, but the logs show 51.7% control and 48.3% treatment. That 1.7-point gap sounds tiny — but at scale it is astronomically unlikely by chance, and it means the *randomization itself is broken*: maybe treatment errors out and those users silently drop, maybe a redirect fails, maybe logging is lossy on one arm. When assignment is broken, the two groups are no longer comparable and **every downstream metric is untrustworthy** — including the win you were about to celebrate. The check is a **chi-square goodness-of-fit test** on the observed split against the intended ratio. If SRM fires, you stop and fix the plumbing; you do not interpret the results. It is the first thing a senior person looks at.
 
 [FIGURE: guardrails]
 
@@ -1728,7 +1748,7 @@ At scale dozens of tests run at once, and they can **interact** — test A chang
         answer: ['A', 'B'],
       },
       {
-        q: `You planned a 50/50 experiment. After a day, exposure logs show 50.1% control and 47.9% treatment across 2 million users. What should you conclude and do?`,
+        q: `You planned a 50/50 experiment. After a day, exposure logs show 51.1% control and 48.9% treatment across 2 million users. What should you conclude and do?`,
         options: [
           `A) A 2-point gap like this is well within normal randomization noise at this scale of traffic; proceed and interpret the metrics completely as usual`,
           `B) At 2M users that split is astronomically unlikely by chance, so randomization or logging is broken; stop, run a chi-square, fix the plumbing first`,

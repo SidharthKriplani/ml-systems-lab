@@ -34,9 +34,9 @@ Build one feature-computation layer that both training and serving call — a fe
     keyPoints: [
       `**Use it when you have separate training and serving codepaths for the same feature.** The diagnostic question: if you ran the training pipeline and the serving pipeline on the same raw event at the same moment, would they produce the identical feature value? If the answer is anything other than "yes, by construction," skew is accumulating. The specific failure to watch for is language differences: a Python Spark training job and a Java serving microservice implementing the "same" feature will diverge. Floating-point operations are not associative across languages. Null handling defaults differ. Timezone parsing behavior differs. These differences are individually tiny and collectively catastrophic.`,
       `**The most common production trap is preprocessing parameter mismatch.** The StandardScaler is fit on training data — mean=120, std=45. Then one of three things goes wrong: (1) the serving code refits the scaler on production data instead of loading the saved parameters; (2) the scaler is saved correctly but deserialized incorrectly, silently using default parameters; (3) a new serving engineer reimplements the normalization from scratch. In all three cases, the model receives feature values in a completely different numerical range than it was trained on. The fix is architectural: serialize the fitted scaler inside the model artifact as a single sklearn Pipeline, not as a separate file. The scaler travels with the model weights and is loaded atomically. Any other approach relies on operational discipline that will eventually break.`,
-      `**The diagnostic is log-and-replay.** Instrument production to log every raw input feature value alongside every prediction. After 24 hours, run offline evaluation on the logged features and compare to actual production performance. The gap between them is skew, measured directly. Then compute PSI for each feature between the logged production distribution and the training distribution. Any feature with PSI > 0.1 is a candidate. Sort by feature importance — a high-PSI feature that ranks 47th in importance is not your problem; a high-PSI feature that ranks 2nd is. This narrows the investigation from "something is wrong" to "it is this specific feature, and here is why."`,
+      `**A related-but-distinct failure: label definition drift.** Everything above is about a *feature* being computed differently at training time vs. serving time. A cousin problem is the *label* itself changing definition between when the model was trained and when it's evaluated later — for example, training defined "churned" as 30 days of inactivity, but months later the production labeling pipeline was updated to use a 45-day window. No feature changed at all; the ground truth the model is being judged against now means something different. It produces the same symptom as feature skew — good offline, bad/random in production with similar-looking feature distributions — so the same log-and-replay diagnostic surfaces it, but the fix is different: audit the label-generation logic for drift, not the feature pipeline.`,
+      `**The diagnostic is log-and-replay.** Instrument production to log every raw input feature value alongside every prediction. After 24 hours, run offline evaluation on the logged features and compare to actual production performance. The gap between them is skew, measured directly. Then compute PSI (Population Stability Index) for each feature: bucket the feature's values into ~10 ranges, find what fraction of training data and what fraction of production data fall into each bucket, and sum (prod_pct − train_pct) × ln(prod_pct / train_pct) across all buckets — a distribution-divergence score that is 0 when the two histograms match exactly and grows as buckets that used to hold a lot of the data become empty (or vice versa). A feature whose training bucket had 40% of values but whose production bucket now has 10% will show a large PSI even if the overall mean barely moved. Any feature with PSI > 0.1 is a candidate. Sort by feature importance — a high-PSI feature that ranks 47th in importance is not your problem; a high-PSI feature that ranks 2nd is. This narrows the investigation from "something is wrong" to "it is this specific feature, and here is why."`,
     ],
-    takeaway: `Training-serving skew is an infrastructure problem, not a modeling problem. The model cannot compensate for receiving different feature values than it was trained on. Two separately maintained codepaths will always drift. The only reliable fix is a single shared computation function with serialized preprocessing parameters — anything else is relying on discipline that will eventually fail at the worst moment.`,
     checkQuestions: [
       {
         q: `Your model predicts churn well offline but performs randomly in production, though aggregate feature distributions look similar. Select the two mechanisms most likely to explain this.`,
@@ -117,7 +117,7 @@ Build one feature-computation layer that both training and serving call — a fe
     tags: ['feature engineering', 'online features', 'point-in-time', 'backfill'],
     summary: `A fraud model ships with 94% offline AUC. In production it scores 82%. No code changed. No error fired. The model is even getting the exact feature it trained on — "number of transactions in the last 7 days" — but the *value* is wrong.
 
-At training time that number came from a SQL query over a history table: an exact count. In production it comes from a Redis structure that counts approximately to stay fast. For most users the two agree. For high-volume accounts — the very users most likely to be fraud — the approximation drifts from the true count by up to 15%. The model was taught to trust these counts as exact, and now it is scoring live traffic on values it never learned from. Twelve points of accuracy, gone. Not a model failure — an infrastructure failure.
+At training time that number came from a SQL query over a history table: an exact count. In production it comes from a Redis structure that counts approximately to stay fast. For most users the two agree. For high-volume accounts — the very users most likely to be fraud — the approximation drifts furthest from the true count, since probabilistic counters like HyperLogLog trade precision for speed exactly where volume is highest. The model was taught to trust these counts as exact, and now it is scoring live traffic on values it never learned from. Twelve points of accuracy, gone. Not a model failure — an infrastructure failure.
 
 ---
 
@@ -125,7 +125,7 @@ At training time that number came from a SQL query over a history table: an exac
 
 *Language:* the Python training code and the Java serving code implement one formula two ways, and the small differences add up. *Data source:* batch SQL and real-time Redis handle nulls and completeness differently. *Timestamp:* training computes the feature at label time, serving computes it at request time hours later — for a rolling 7-day window that gap matters. *Preprocessing:* a scaler saved under one library version can load differently under a newer one, shifting every value silently. *Leakage:* a training feature used data that won't exist at serving time, inflating the offline score.
 
-One shared computation path removes all five at once: a single library or service computes "transactions in last 7 days" identically whether the caller is the training pipeline or the live endpoint.
+One shared computation path removes four of the five at once — language, data source, timestamp, and preprocessing all collapse into a single well-tested implementation: a single library or service computes "transactions in last 7 days" identically whether the caller is the training pipeline or the live endpoint. Leakage needs one more discipline on top of that: even a single shared function will leak if it's called with a wrong or late as-of timestamp, so point-in-time join enforcement is required in addition to the shared path, not replaced by it.
 
 ---
 
@@ -139,11 +139,11 @@ Here is the subtle one. When you build a training row for a fraud event at time 
 
 **One warning worth internalizing.** "It's the same logic, just in another language" is a hope, not a fact — it's only true once you've tested that both produce byte-identical output on identical input. Re-implementing SQL window logic in Java quietly changes null handling, overflow, and rounding, and on high-value accounts those small differences can outweigh the model's entire learned signal for that user.`,
     keyPoints: [
-      `**Build one feature computation path shared by training and serving, even if it means running Python at serving time or invoking a service from the training pipeline.**\n\nThe cost of maintaining two codepaths is not the engineering time to write them — it is the silent accuracy degradation that accumulates once they diverge. Every language boundary, data source switch, and library version difference is a potential skew source. One path eliminates all of them structurally.`,
-      `**Trap: point-in-time join mistakes are the most common leakage source in production ML.**\n\nWhen constructing a training row for an event at time T, join only features that were computed and available before T. Using a feature from after T — even by one second — is leakage. The model learns a relationship that includes future information. In production it never has that information. Offline AUC looks great; production performance is worse than expected, and you spend weeks debugging the wrong things.`,
+      `**Build one feature computation path shared by training and serving, even if it means running Python at serving time or invoking a service from the training pipeline.**\n\nThe cost of maintaining two codepaths is not the engineering time to write them — it is the silent accuracy degradation that accumulates once they diverge. Every language boundary, data source switch, and library version difference is a potential skew source. One path eliminates the language, data source, timestamp, and preprocessing sources of skew structurally — leakage still needs point-in-time join enforcement on top of it (see the trap below).`,
+      `**Trap: point-in-time join mistakes are a common, easy-to-miss leakage source in production ML.**\n\nWhen constructing a training row for an event at time T, join only features that were computed and available before T. Using a feature from after T — even by one second — is leakage. The model learns a relationship that includes future information. In production it never has that information. Offline AUC looks great; production performance is worse than expected, and you spend weeks debugging the wrong things.`,
       `**Diagnostic: run both pipelines on the same 1,000 held-out examples and compute mean absolute difference per feature.**\n\nAny feature with MAD greater than 1% of its standard deviation is a training-serving skew candidate. Sort by feature importance. A high-skew feature that ranks 47th in importance is noise; a high-skew feature that ranks 2nd is your accuracy gap. This narrows the investigation from "something is wrong" to "it is this specific feature, and here is the computation difference that causes it."`,
     ],
-    interactivePrompt: `Before you touch the controls: a fraud model trains on Python-computed SQL window counts and serves with a Java Redis approximation — at what transaction volume does the 0-15% approximation error start shifting predictions enough to matter?`,
+    interactivePrompt: `Before you touch the controls: a fraud model trains on Python-computed SQL window counts and serves with a Java Redis approximation — at what transaction volume does the growing approximation error start shifting predictions enough to matter?`,
     checkQuestions: [
       {
         q: `You are building a loan default prediction model with a "total_outstanding_loan_balance" feature. Which two statements about implementing training and serving correctly are true?`,
@@ -186,7 +186,7 @@ Here is the subtle one. When you build a training row for a fraud event at time 
         answer: `C`,
       },
     ],
-    takeaway: `Training-serving skew is not discovered through monitoring — it is prevented by building a single feature computation path that makes two diverging implementations structurally impossible.`,
+    takeaway: `Training-serving skew from language, data source, timestamp, and preprocessing differences is not discovered through monitoring — it is prevented by building a single feature computation path that makes two diverging implementations structurally impossible. Skew from leakage needs one more discipline on top: point-in-time join enforcement.`,
     figures: {
       pit: `<svg viewBox="0 0 360 96" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
   <text x="8" y="13" fill="var(--ink-low)" font-size="8">building a training row for event T — join only what existed before T</text>
@@ -203,7 +203,7 @@ Here is the subtle one. When you build a training row for a fraud event at time 
     recap: [
       `**Same feature, wrong value:** SQL exact count at train vs Redis approximate count at serve → 94% AUC drops to 82%.`,
       `**Worst on high-volume accounts** — the very users most likely to be fraud.`,
-      `**Five culprits, feature terms:** language, data source, timestamp, preprocessing, leakage. One shared path kills all five.`,
+      `**Five culprits, feature terms:** language, data source, timestamp, preprocessing, leakage. One shared path kills four; leakage still needs point-in-time joins.`,
       `**Point-in-time join = the honesty rule:** for an event at T, join only values that existed *before* T.`,
       `**Rolling window leak:** feature computed an hour late can include post-event transactions → offline AUC is a mirage.`,
       `**Diagnostic:** run both pipelines on same 1,000 examples, MAD per feature; MAD > 1% of std = skew candidate, sort by importance.`,
@@ -235,17 +235,21 @@ It keeps every past value of a feature, stamped with time. That is what lets you
 
 A live fraud request needs this user's spend average in under 5ms. The online store (Redis, DynamoDB, Cassandra) holds only the *latest* value per user and returns it at memory speed. No history — that's the offline store's job. It's sized for latency at peak traffic, not for storage.
 
+**Online-store latency failure modes.** The online store's P50 latency can look fine while P99 spikes badly, and the usual causes are specific, not vague "network blips": a hot key (one popular entity — a viral post, a high-volume account — absorbing a disproportionate share of reads, so requests queue up behind it), memory pressure that forces the store to evict cached keys under load, or an oversized serialized feature vector that's slow to deserialize on every read. The fixes track the causes directly: hash or shard hot keys so no single partition takes outsized traffic, add capacity so eviction pressure eases, and put a circuit breaker in front of the store so a P99 spike degrades gracefully instead of cascading into the caller.
+
 ---
 
 **The registry and materialization: the parts a plain database lacks.**
 
-The *registry* is the governance layer: it records each feature's definition, owner, freshness SLA, upstream dependencies, and which models consume it — so teams can find what already exists and know what breaks if a pipeline is retired. *Materialization* is the act of computing features from raw data and writing them to both stores: batch (Spark, Airflow, hourly/daily) when some staleness is fine, or streaming (Kafka → Flink → Redis) when 5-minute freshness matters, like fraud or live inventory.
+The *registry* is the governance layer: it records each feature's definition, owner, freshness SLA, upstream dependencies, and which models consume it — so teams can find what already exists and know what breaks if a pipeline is retired. *Materialization* is the act of computing features from raw data and writing them to both stores: batch (Spark, Airflow, hourly/daily) when some staleness is fine, or streaming (Kafka → Flink → Redis) when 5-minute freshness matters, like fraud or live inventory. Each write to the online store is typically stamped with a TTL a little longer than the materialization interval -- insurance against a value going stale forever if a job stalls. But that insurance has a sharp edge: if materialization stops for good (a pipeline decommissioned, a job silently failing) the online store keeps serving its last computed value as if nothing were wrong, right up until that TTL lapses -- then the key vanishes and a lookup returns null. Serving code almost always treats a missing key as "impute the default," not "raise an error," so the model quietly starts scoring on a placeholder value with no exception anywhere in the stack. No error in the logs is not evidence a feature pipeline is healthy -- only an explicit freshness check is.
 
 And that's the real answer to "isn't this just a database?" A database stores bytes. A feature store adds four things a database won't: point-in-time-correct history, one shared computation path across online and offline, a registry for discovery and lineage, and materialization with freshness monitoring. With all four, training-serving consistency becomes a property of the *system* — not a hope resting on individual engineers remembering to match each other.`,
     keyPoints: [
       `**Establish point-in-time join correctness in your training pipeline before building anything else — this is the hardest invariant to get right and the primary reason feature stores exist.**\n\nEverything else in a feature store is optimization. The offline store's value is precisely that it can answer "what were this user's features at timestamp T" using only data available before T. Without this guarantee, training datasets contain temporal leakage, offline metrics are inflated, and the gap between evaluation and production performance is structural.`,
       `**Trap: materialization lag creates freshness gaps that can be catastrophic for time-sensitive applications.**\n\nIf a feature is computed hourly and a user event happens 50 minutes into the cycle, the online store has 50-minute-old data. For fraud detection, a user who just moved 100K dollars is invisible for up to an hour. Design materialization frequency based on the feature's staleness tolerance — and monitor actual freshness, not scheduled frequency. The schedule and the actual update time are not the same thing.`,
       `**Diagnostic: compare feature values your model sees at training time versus at serving time for the same user events.**\n\nAny systematic difference — even small — is training-serving skew that will silently degrade accuracy. The dual-write pattern makes this check explicit: run the old pipeline and the new feature store simultaneously on real traffic, compare outputs on a sample of entities, and assert identity before cutting over. Do this before the feature store is in the critical path, not after.`,
+      `**Trap: online-store P99 latency spikes have specific, diagnosable causes.**\n\nThe three usual suspects are a hot key (one popular entity absorbing a disproportionate share of reads, so requests queue behind it), memory pressure that forces the store to evict cached keys under load, and an oversized serialized feature vector that's slow to deserialize on every read. Fix each directly: hash or shard hot keys, add capacity, and put a circuit breaker in front of the store so a latency spike degrades gracefully instead of cascading into the caller.`,
+      `**Trap: a dead materialization pipeline fails silently, not loudly.**\n\nOnline-store writes are typically set with a TTL a little longer than the materialization interval. If materialization stops for good, the store keeps serving its last good value until that TTL lapses -- then the key vanishes, a lookup returns null, and serving code almost always imputes a default rather than raising an error. A model can degrade for weeks with nothing in the logs to flag it; the only real defense is monitoring a feature_last_updated_timestamp against the freshness SLA, not waiting for an exception that will never come.`,
     ],
     interactivePrompt: `Before you touch the controls: five teams each compute "user average spend in 30 days" independently — what specific difference in implementation would cause the fraud team's value to be higher than the recommendation team's for the same user at the same moment?`,
     checkQuestions: [
@@ -350,19 +354,20 @@ Cold start is one of four silent failure modes in production feature stores. Her
 
 **The theme:** don't expect the store to handle these for you. Cold-start defaults, freshness SLAs, and deprecation workflows are decisions you make *per feature.* The infrastructure computes and serves values; it has no idea what a sensible default is for a new user, what "fresh enough" means for your use case, or which models break when a pipeline is turned off. Those calls are yours.`,
     keyPoints: [
-      `**Define a cold start strategy for every feature before deployment — either a carefully chosen fallback default or a separate model trained on sparse-history users.**\n\nUndocumented cold start behavior is a production incident waiting to happen. Zero is almost never the right default: in a feature distribution where the median is 5, a default of zero pushes the model toward its most extreme low-value prediction for every new user. Use the population median from the training set, and add an explicit \`is_new_entity\` binary feature so the model can distinguish cold start inputs from established users with genuinely low feature values.`,
-      `**Trap: backfilling a new feature incorrectly is one of the most common sources of temporal leakage in production ML.**\n\nAlways verify that backfilled values use only data available at each historical timestamp. The check: compare the backfilled feature distribution for last month against what you would have computed last month in real time. Any systematic difference — even a few percent — means the backfill used future data and the training set is contaminated.`,
+      `**Define a cold start strategy for every feature before deployment — either a carefully chosen fallback default or a separate model trained on sparse-history users.**\n\nUndocumented cold start behavior is a production incident waiting to happen. Zero is almost never the right default: in a feature distribution where the median is 5, a default of zero pushes the model toward its most extreme low-value prediction for every new user. Use the population median from the training set, and add an explicit \`is_new_entity\` binary feature so the model can distinguish cold start inputs from established users with genuinely low feature values. For item-side cold start specifically, effective fixes go beyond a single fallback default: content-based features (scoring from the item's own attributes when it has no engagement history yet), exploration injection (deliberately over-serving new items to collect real signal fast), warm-start embeddings borrowed from similar existing items, and Bayesian smoothing of the engagement prior (shrinking a new item's estimate toward the population average until enough real data accumulates).`,
+      `**Stale features fail silently — treat freshness as a monitored SLA, not an assumption.**\n\nWhen a materialization job dies overnight, the online store keeps returning values successfully; there is no exception and no alert unless you built one. Ship a \`feature_last_updated_timestamp\` in every serving response and monitor it against your freshness SLA — that timestamp is the only signal that catches a stale pipeline before the model quietly starts scoring on last week's numbers.`,
+      `**Trap: backfilling a new feature incorrectly is one of the most common sources of temporal leakage in production ML.**\n\nAlways verify that backfilled values use only data available at each historical timestamp. The check: compare the backfilled feature distribution for last month against what you would have computed last month in real time. Any systematic difference — even a few percent — means the backfill used future data and the training set is contaminated. A concrete version of that check as an automated test: store expected values for a sample of entities (e.g. 100) at several historical timestamps before touching the pipeline, then after any pipeline change recompute those same entities at those same timestamps and assert the values still match — a golden-snapshot regression suite that fails before contaminated data ever reaches training.`,
       `**Diagnostic: monitor the null rate of each feature in the online store in production.**\n\nA feature that was 0% null in training but 5% null in production indicates a cold start or freshness issue the model was never trained to handle. Null rate is the earliest and most reliable signal for feature store failures — it responds immediately to pipeline outages, join failures, and deprecation events, before downstream model metrics have time to degrade.`,
     ],
     interactivePrompt: `Before you touch the controls: a new user's feature "average spend in last 30 days" is null — the model gets zero after imputation — what prediction does the model produce, and is that prediction meaningful?`,
     checkQuestions: [
       {
-        q: `Your recommendation model suddenly degrades in production. Feature distributions look normal on average, but P99 latency for feature retrieval spiked from 5ms to 800ms. What happened and what do you do?`,
+        q: `A materialization job dies overnight. The online feature store keeps serving requests successfully — no exception, no alert — but every value it returns is now a day (or a week) old. What is the module's recommended defense against this?`,
         options: [
-          `A) A P99 spike to 800ms while P50 stays at 5ms is just statistical noise from garbage collection in the monitoring agent; ignore it and monitor only the P50 trend instead`,
-          `B) High P99 retrieval latency causes the endpoint to timeout and fall back to null/default features; investigate Redis hot keys and memory eviction, then add a circuit breaker`,
-          `C) The model itself is running slowly due to a software regression in the ONNX runtime's graph optimizer; P99 feature retrieval latency is always caused by model inference time, never I/O`,
-          `D) Degrade gracefully by disabling all personalization features until P99 returns below the 100ms SLA baseline — feature retrieval is non-essential to the core ranking model`,
+          `A) Nothing can be done at the serving layer; wait for downstream model metrics to degrade, then investigate the pipeline`,
+          `B) Ship a feature_last_updated_timestamp in every serving response and monitor it against the freshness SLA — this is the earliest signal a stale pipeline is failing`,
+          `C) Add a strict schema validator that rejects any request older than 24 hours; schema validation catches staleness the same way it catches type mismatches`,
+          `D) Retrain the model nightly so it adapts to whatever staleness happens to be present in that day's features`,
         ],
         answer: `B`,
       },
@@ -450,7 +455,7 @@ A *watermark* is how a streaming system announces "every event up to time T is n
     keyPoints: [
       `**Design your training pipeline around label delay from day one — decide the label cutoff window empirically and build a consistent data split that respects it.**\n\nModels trained with inconsistent label windows give unreliable offline metrics. If chargebacks arrive over 7 days, your training data from the last 7 days has systematically under-labeled positives. Either exclude that window entirely or weight labels by expected completeness at training time. The completeness curve — fraction of expected labels received as a function of days since the event — tells you exactly where to draw the line.`,
       `**Trap: using processing time instead of event time for feature windows produces features that drift with pipeline latency.**\n\n"Transactions in the last hour" computed from processing time expands and contracts as pipeline throughput varies. Use event timestamps for all business logic. This requires watermarks that account for the actual lateness distribution of your data source — measure the 99th percentile of event arrival lag and set your watermark tolerance accordingly.`,
-      `**Diagnostic: plot the distribution of event arrival lag (event time vs processing time) for your specific data source.**\n\nIf the 99th percentile lag is greater than 5 minutes and your feature windows are shorter than 1 hour, you need watermarks with at least 5-minute tolerance. Re-measure this distribution whenever upstream systems change — a new mobile OS version, a new attribution pipeline, or a new data collection method can shift the completeness curve significantly.`,
+      `**Diagnostic: plot the distribution of event arrival lag (event time vs processing time) for your specific data source.**\n\nSet your watermark tolerance to that measured 99th-percentile lag itself, not a flat round number — a p99 lag of 45 minutes needs roughly a 45-minute tolerance, not 5. If that tolerance is longer than your feature windows, either widen the windows or accept that the slowest stragglers get dropped. Re-measure this distribution whenever upstream systems change — a new mobile OS version, a new attribution pipeline, or a new data collection method can shift the completeness curve significantly.`,
     ],
     interactivePrompt: `Before you touch the controls: a fraudulent chargeback arrives 7 days after the order — if your training pipeline runs daily and uses labels from the last 30 days, what fraction of your positive examples in the most recent week are missing?`,
     checkQuestions: [
@@ -465,14 +470,14 @@ A *watermark* is how a streaming system announces "every event up to time T is n
         answer: ['A', 'C'],
       },
       {
-        q: `A Flink streaming job computes "user_session_click_count" in a 30-minute tumbling window with 5-minute allowed lateness. An event arrives 8 minutes late. What happens to the feature?`,
+        q: `A streaming pipeline sets a watermark tolerance of 5 minutes for a "transactions in the last hour" feature, based on event time. An event's timestamp falls 8 minutes behind where the watermark has already advanced. What happens to that event, and what does it do to the feature?`,
         options: [
-          `A) Flink automatically extends the allowed_lateness parameter to 12 minutes at runtime via its adaptive watermark heuristic and recomputes the window`,
-          `B) The event is buffered in Flink's internal RocksDB state backend and silently incorporated into the next 30-minute window's computation instead`,
-          `C) The event falls outside the 5-minute allowed_lateness window and is dropped or routed to a side output; the session count underestimates by at least one click`,
-          `D) The window remains open indefinitely, ignoring the configured allowed_lateness entirely, until all late events arrive and it closes with the fully complete count`,
+          `A) The watermark automatically widens its tolerance to 8 minutes for this one event and includes it in the window anyway`,
+          `B) The event arrived past the watermark's tolerance, so it is treated as too late — dropped or handled separately — and the feature undercounts by at least one event`,
+          `C) The pipeline falls back to processing time for this event only, since it missed its event-time cutoff`,
+          `D) The window stays open indefinitely until every late event has arrived, however long that takes, so the count stays fully accurate`,
         ],
-        answer: `C`,
+        answer: `B`,
       },
       {
         q: `Your fraud model trains on features at transaction time with labels available 7 days later (when chargebacks are processed). The last 7 days of data in your training set have systematically lower fraud rates than older data. Why?`,
@@ -551,7 +556,7 @@ At *ingestion:* does the data even exist, in the expected volume, with the expec
 
 And the mindset that ties it together: data quality is never "done at launch." Upstream teams change schemas, inject nulls, and shift distributions all the time, and they will not tell you. The real question isn't "is our data clean today?" — it's "will our monitoring catch the problem before the model does?" A pipeline that screams on day one of a schema change beats one that silently retrains on corrupted features for six weeks.`,
     keyPoints: [
-      `**Add freshness and volume checks first — they catch 80% of data pipeline failures and take 30 minutes to implement.**\n\nA table that should have 10,000 rows but has 0 is an emergency. Catching it before the feature pipeline runs is the difference between a 30-minute incident and a 6-hour one. Alert when no new rows have arrived for more than the expected latency, and alert when record count falls below 70% of the rolling 7-day average. These two checks are the floor, not the ceiling.`,
+      `**Add freshness and volume checks first — an empty or truncated upstream table is the most catastrophic failure mode, and it is the cheapest to catch: one row-count check and one recency check per table.**\n\nA table that should have 10,000 rows but has 0 is an emergency. Catching it before the feature pipeline runs is the difference between a 30-minute incident and a 6-hour one. Alert when no new rows have arrived for more than the expected latency, and alert when record count falls below 70% of the rolling 7-day average. These two checks are the floor, not the ceiling.`,
       `**Trap: monitoring aggregate statistics but not per-slice quality hides the failures that matter most.**\n\nA table with 10,000 rows and 0.1% overall null rate can have 100% null rate for iOS users — exactly the segment most affected by a specific data pipeline bug. Always monitor data quality stratified by the key business dimensions your model cares about: platform, geography, user segment, device type. Aggregate metrics pass; per-slice checks catch the real failures.`,
       `**Diagnostic: set up a daily data quality report that diffs current column statistics against a snapshot from training time.**\n\nAny column whose mean shifts more than 2σ from the training distribution is a drift candidate requiring investigation. This check costs one SQL query per feature and catches the silent degradation pattern — upstream changes the data, the pipeline reports success, the model retrains on shifted features, and no one notices until a business metric moves six weeks later.`,
     ],
@@ -560,7 +565,7 @@ And the mindset that ties it together: data quality is never "done at launch." U
       {
         q: `Your training pipeline runs successfully every day, but model performance has been slowly degrading over 3 weeks with no code changes. Select the two correct diagnostic steps.`,
         options: [
-          `A) Check per-feature PSI over time and null-rate trends across the 3-week window for a slow, spike-free drift pattern`,
+          `A) Check per-feature mean-shift (>2σ from the training distribution) over time and null-rate trends across the 3-week window for a slow, spike-free drift pattern`,
           `B) Redeploy the exact same model artifact to reset an internal staleness counter that Kubernetes maintains for long-running pods`,
           `C) Check label distribution shifts, data volume changes, and upstream schema changes over the same period`,
           `D) Gradual degradation without any spikes is always caused by concept drift specifically; retrain immediately on only the most recent 7 days`,
@@ -591,7 +596,7 @@ And the mindset that ties it together: data quality is never "done at launch." U
         q: `How do you implement data quality checks that catch issues before they affect model training, without slowing down the pipeline significantly?`,
         options: [
           `A) Run all data quality checks after model training completes, via a nightly Airflow DAG with a 6-hour SLA, so they never block the pipeline's critical path`,
-          `B) Use a stratified strategy: real-time schema validation at ingestion, fast statistical checks after each batch, and full PSI checks daily; gate training on all checks passing`,
+          `B) Use a stratified strategy: real-time schema validation at ingestion, fast statistical checks after each batch, and full distribution-drift (2σ mean-shift) checks daily; gate training on all checks passing`,
           `C) Sample exactly 1% of records using reservoir sampling for quality checks and extrapolate the results, since full dataset validation is too slow for any daily pipeline`,
           `D) Data quality checks should run in a fully separate pipeline on a different Kubernetes namespace that never blocks model training at all — alerts get addressed only after deployment`,
         ],
@@ -637,7 +642,7 @@ And the mindset that ties it together: data quality is never "done at launch." U
 
 *Human annotation* has experts or crowd workers label examples directly — Scale AI or Surge for hard tasks, MTurk for easy ones, running from roughly fifty cents to five dollars an example. You *must* measure quality: inter-annotator agreement (Cohen's κ) above 0.7 is acceptable, 0.8 is good, and below 0.6 means the task itself is ambiguous — fix the guidelines before spending on more labels.
 
-*Weak supervision* (Snorkel) writes many noisy labeling rules — keywords, regex, heuristics, model votes — and combines them into one probabilistic label that's better than any single rule.
+*Weak supervision* (Snorkel) writes many *labeling functions* — small heuristics such as keyword matches, regexes, existing classifiers, or crowd rules-of-thumb — each of which votes a label or abstains on every example. A small set of *gold-labeled examples* (a few hundred, hand-labeled) is held out to estimate each labeling function's accuracy and how often functions agree with each other; Snorkel's label model uses those estimates to weight and combine the noisy votes into one probabilistic label per example. Worked example: five labeling functions, each roughly 65-75% accurate alone, weighted and combined against the gold set, can produce an aggregate label model above 90% accuracy — because their errors aren't perfectly correlated with each other, so they cancel out when combined — all without collecting a single additional human label beyond the gold set.
 
 *Active learning* trains a model, finds the examples it's most unsure about, and sends only those to humans — often reaching the same accuracy as random labeling with 5–10× fewer labels.
 
@@ -649,9 +654,15 @@ If the truth for an event at time T only arrives at T+7 days, you must drop the 
 
 ---
 
+**A second common trap: labels that are quietly biased by subgroup.**
+
+Aggregate accuracy can look fine — 92% overall — while one demographic group's error rate is far higher, because that group is a small enough share of the test set to hide inside the average. Two checks catch this: per-group accuracy metrics (compute accuracy separately for each subgroup — never trust the blended number alone), and *confident learning* — a technique, implemented in the open-source \`cleanlab\` library, that flags likely-mislabeled examples by finding where the model's predicted-probability distribution disagrees with the label it was actually given. Run a confident-learning audit on the affected subgroup specifically: if it surfaces a disproportionate share of likely-mislabeled examples there, the disparity is a labeling problem, not just a sampling artifact — the fix is auditing and relabeling those examples plus reweighting the minority class, not just collecting a bigger test set.
+
+---
+
 **And the myth to kill:** "we have tons of data, we don't need labels." Data is not labeled data. Ten million unlabeled rows teach a supervised model nothing. Label quality is the ceiling on model quality — a model can't learn the right thing from the wrong signal, no matter how much you feed it. Spend on annotation *quality* before annotation *quantity.*`,
     keyPoints: [
-      `**Invest in annotation quality infrastructure before annotation quantity — a 95%-accurate labeling interface with inter-annotator tracking produces better models than 3× more labels from a 75%-accurate interface.**\n\nLabel quality sets the ceiling on model quality. A model trained on systematically biased labels learns the bias as signal and reproduces it at inference. No amount of additional data fixes systematic noise. Measure Cohen's κ on a 200-example sample before scaling. If κ < 0.6, the labeling task is too ambiguous — refine the guidelines before committing budget to 10,000 more noisy labels.`,
+      `**Invest in annotation quality infrastructure before annotation quantity — a more accurate labeling interface with inter-annotator tracking — even if it produces fewer total labels — tends to beat a noisier interface pumping out a much larger volume of labels.**\n\nLabel quality sets the ceiling on model quality. A model trained on systematically biased labels learns the bias as signal and reproduces it at inference. No amount of additional data fixes systematic noise. Measure Cohen's κ on a 200-example sample before scaling. If κ < 0.6, the labeling task is too ambiguous — refine the guidelines before committing budget to 10,000 more noisy labels.`,
       `**Trap: ignoring label delay in training data construction is the most common subtle bug in production ML pipelines.**\n\nIf ground truth for event at time T arrives at T+7 days, exclude the last 7 days from training to avoid future leakage. Training pipelines that use "the last 30 days of data" without respecting label delay will have systematically under-labeled positive examples in the most recent window. The model learns that recent traffic is low-converting — a temporal artifact of the data construction, not a real pattern.`,
       `**Diagnostic: compute inter-annotator agreement on a 200-example sample before scaling annotation.**\n\nIf κ < 0.6, the labeling task is too ambiguous to scale. The agreement number tells you whether the problem is the guidelines (fixable), the task definition (refine), or genuine boundary ambiguity (accept and use label smoothing). Collecting 10,000 more labels with κ = 0.5 does not improve the model — it amplifies the inconsistency.`,
     ],
@@ -703,7 +714,7 @@ If the truth for an event at time T only arrives at T+7 days, you must drop the 
       `**Getting labels right is usually the real bottleneck** — harder than picking a model or building features.`,
       `**Natural labels** = free from behavior (clicks, purchases, chargebacks); the catch is delay.`,
       `**Human annotation** = \\$0.50–\\$5/example; measure Cohen's κ — >0.7 acceptable, >0.8 good, <0.6 = ambiguous task, fix guidelines first.`,
-      `**Weak supervision (Snorkel):** many noisy rules → one probabilistic label. **Active learning:** label only uncertain examples, 5–10× fewer labels.`,
+      `**Weak supervision (Snorkel):** many *labeling functions* (heuristics) vote or abstain on each example; a small gold-labeled set calibrates each function's accuracy, then the label model combines the noisy votes into one probabilistic label. **Active learning:** label only uncertain examples, 5–10× fewer labels.`,
       `**Label-delay trap:** truth at T+7d → drop the last 7 days, or the model "learns" recent traffic is safe.`,
       `**Kill the myth "we have tons of data, we don't need labels":** unlabeled rows teach a supervised model nothing.`,
       `**Spend on label quality before quantity** — quality is the ceiling; more labels from a biased process amplify the bias.`,
@@ -730,7 +741,7 @@ If the truth for an event at time T only arrives at T+7 days, you must drop the 
 
 **Three properties separate infrastructure from debt.**
 
-*Idempotency:* re-running a step on the same input gives the identical output, no duplicates — done with fixed seeds, content-hashed data, and atomic overwrites. *Fast-fail on bad data:* check availability and schema *before* any compute runs, because a model trained on 60% of the data is worse than not retraining at all. *Complete lineage:* every artifact traces back to its exact data version, code commit, and parameters — without it, debugging is archaeology.
+*Idempotency:* re-running a step on the same input gives the identical output, no duplicates — done with fixed seeds, content-hashed data, and atomic overwrites. *Fast-fail on bad data:* check availability and schema *before* any compute runs — for example, if an outage cuts the upstream feed off mid-afternoon and training starts anyway on just the first 60% of that day's rows, the model learns a skewed slice missing an entire segment of the day's traffic (evenings, say) and deploys with full confidence in that skew; a model trained on a truncated, unrepresentative slice like that is worse than staying on the current model, which was validated on a complete day. *Complete lineage:* every artifact traces back to its exact data version, code commit, and parameters — without it, debugging is archaeology, and you cannot roll production back to the last model trained before a bug was introduced, because you do not know which models that bug touched.
 
 The orchestrator you pick (Airflow, Prefect, Kubeflow, Metaflow) matters far less than whether it enforces those three.
 
@@ -738,11 +749,10 @@ The orchestrator you pick (Airflow, Prefect, Kubeflow, Metaflow) matters far les
 
 **The real test.** Training and deployment are just two of the eight stages; without the other six you have technical debt dressed up as a system. So ask one question: can a new person reproduce the current production model from scratch, deterministically, in under two hours, without asking anyone? If yes, you have a pipeline. If no, you have scripts — and a week-long reconstruction waiting for you at the worst possible moment.`,
     keyPoints: [
-      `**Build the evaluation step before optimizing model quality — an automated gate that compares new models to the current production model prevents regressions and eliminates manual review bottlenecks.**\n\nThis is the highest-leverage infrastructure investment. Without an evaluation gate, every model update requires human judgment under time pressure with incomplete information. With one, the decision was made in advance under no pressure: "a challenger must match or exceed the champion on these specific metrics before promotion." That is the decision-making context you want.`,
+      `**Build the evaluation step before optimizing model quality — an automated gate that compares new models to the current production model prevents regressions and cuts manual review down to only the cases it cannot auto-resolve.**\n\nThis is the highest-leverage infrastructure investment. Without an evaluation gate, every model update requires human judgment under time pressure with incomplete information. With one, the decision was made in advance under no pressure: "a challenger must match or exceed the champion on these specific metrics before promotion." That is the decision-making context you want.`,
       `**Trap: non-idempotent pipelines make debugging impossible — if rerunning a step produces different outputs, you can never reproduce a historical result or isolate a regression.**\n\nEnforce idempotency from the start: fix random seeds, version data snapshots by content hash, use UPSERT instead of INSERT, and overwrite partitions atomically. The test is simple: run the same step twice on the same input and assert identical output. If the assertion fails, you have a non-idempotent step that will silently produce different models on different runs.`,
       `**Diagnostic: ask "can a new team member reproduce the current production model from scratch in under 2 hours using only documented steps?"**\n\nIf the answer is no, the pipeline has critical gaps. The gaps are exactly where the next incident will live: undocumented data transformations, implicit file path assumptions, preprocessing parameters stored in someone's local environment, or model artifacts without provenance. Name the gaps before the incident names them for you.`,
     ],
-    interactivePrompt: `Before you touch the controls: the training script is a cron job running weekly — if the upstream data source changes its schema on Tuesday, when do you find out, and what does the deployed model do in the meantime?`,
     checkQuestions: [
       {
         q: `Your daily retraining pipeline fails on day 3 because the upstream data source was unavailable. Select the two correct design choices for handling this gracefully.`,
@@ -806,7 +816,7 @@ The orchestrator you pick (Airflow, Prefect, Kubeflow, Metaflow) matters far les
       `**Eight stages:** ingestion → feature engineering → training → evaluation → deployment gate → serving → monitoring → retraining trigger.`,
       `**Three properties separate infra from debt:** idempotency, fast-fail on bad data, complete lineage.`,
       `**Idempotency:** re-run same input → identical output. Fixed seeds, content-hashed data, atomic overwrites, UPSERT not INSERT.`,
-      `**Fast-fail:** check availability + schema *before* compute — a model trained on 60% of the data is worse than not retraining.`,
+      `**Fast-fail:** check availability + schema *before* compute — e.g. an outage cuts the feed off mid-afternoon and training runs anyway on the first 60% of the day's rows: the model learns a slice missing an entire segment of traffic and deploys with full confidence in that skew, worse than staying on the current, fully-validated model.`,
       `**Orchestrator choice (Airflow/Prefect/Kubeflow) matters less than whether it enforces those three.**`,
       `**The real test:** can a new person reproduce prod from scratch, deterministically, in <2 hours, without asking anyone?`,
     ],
@@ -836,6 +846,24 @@ This is the part teams underbuild. A model trained on scaler-normalized features
 
 ---
 
+**Experiment tracking is the registry's other job, upstream of deployment.**
+
+Before a model ever reaches Staging, two data scientists might independently train candidate models with different hyperparameters. Experiment tracking — the piece of the registry that tools like MLflow implement — is what lets them collaborate without a meeting: both log every run's hyperparameters, metrics, and dataset version to the same shared experiment instead of a personal notebook. That experiment shows up in a comparison UI, sortable by any metric (validation AUC, F1, whatever matters for the task), and because each run captured its hyperparameters, metrics, and dataset version together, any run in the list can be reproduced exactly. Pick the winning run by sorting, then register only that one.
+
+---
+
+**A deployment gate is a specific automated check, not a metaphor.**
+
+"What gate it passed" means a concrete test run at promotion time: a schema-compatibility check (does this version's expected input schema match what the target environment will send it?), a metric threshold (does validation AUC clear the bar the last production model set?), or a required sign-off recorded in the registry. A promotion with no gate is a file copy with delusions of process. A promotion behind a gate is blocked automatically the moment a check fails, before a human has to notice the problem in production.
+
+---
+
+**Multi-environment deployment: config is not weights, and it needs its own versioning.**
+
+Dev, staging, and prod often run different data schemas — a column added in staging before prod catches up, a mocked field in dev that's real downstream. The fix is to keep environment-specific config (schema mapping, feature-flag state, resource limits) versioned separately from the model weights, and associate the triple (model_version, environment, config_version) at the moment of promotion, not baked in at training time. Every promotion into an environment runs that environment's schema-compatibility gate first, so a mismatch fails loudly at promotion instead of silently at inference.
+
+---
+
 **Rollback is the part that's time-critical.**
 
 When a model goes bad, you promote the previous version back to Production in a single API call. But only if that artifact still exists — delete it and your "rollback" becomes rebuilding from scratch mid-incident, hours instead of minutes. So never delete production artifacts; a year of storage costs less than one hour of a live incident.
@@ -845,6 +873,7 @@ That's the whole difference from "just an S3 folder." Plain storage hands you a 
       `**Register every model artifact before deployment — even for teams of one — and store the complete inference artifact: weights plus preprocessing pipeline plus feature schema.**\n\nWhen something goes wrong in production, the registry is the first place you look. A model registered without its scaler requires manual reconstruction of preprocessing parameters during an incident. A model registered without its dataset hash cannot be compared to the previous model to identify what changed. Register everything, atomically, before the model ever touches production traffic.`,
       `**Trap: storing only model weights without preprocessing artifacts will cause a silent production failure the first time the scaler version or schema ordering changes.**\n\nA StandardScaler fit on training data with mean=120, std=45, deployed without the fitted scaler, will receive raw feature values and interpret them as if they were normalized. The model has never seen inputs in that range. Predictions will be wrong with full confidence and no error. Serialize the fitted scaler inside the model artifact as a single sklearn Pipeline — the scaler travels with the weights and is loaded atomically.`,
       `**Diagnostic: attempt to reproduce a model registered 3 months ago using only the registry metadata.**\n\nIf you cannot, the registry is incomplete. The gaps you find are exactly where the next incident investigation will stall. Add dataset version tracking and code commit hash to every registration as mandatory fields, not optional ones. Lineage that is optional gets skipped under deadline pressure — which is exactly when you need it most.`,
+      `**Experiment tracking (e.g. MLflow) and deployment gates are both registry features, not afterthoughts — and multi-environment deployments need their own versioned config.**\n\nExperiment tracking logs every training run's hyperparameters, metrics, and dataset version to a shared, sortable comparison UI, so two scientists can pick a winner without a meeting. A deployment gate is a concrete automated check — schema compatibility, a metric threshold, or a required sign-off — run at promotion time, not a vague notion of "passing something." And when the same model moves through dev, staging, and prod with different schemas, keep environment-specific config versioned separately from the weights, associate (model_version, environment, config_version) at promotion, and run that environment's schema-compatibility gate before every promotion.`,
     ],
     interactivePrompt: `Before you touch the controls: a fraud model was updated 4 weeks ago and is now missing a new fraud pattern — what three registry queries do you run in the first 5 minutes of the incident?`,
     checkQuestions: [
@@ -911,6 +940,9 @@ That's the whole difference from "just an S3 folder." Plain storage hands you a 
       `**Rollback is time-critical:** promote previous version in one API call — but only if the artifact still exists.`,
       `**Never delete production artifacts** — a year of storage costs less than one hour of a live incident.`,
       `**Not "just an S3 folder":** approval trail + deployment lineage + instant rollback + a record of which model decided what, when.`,
+      `**Experiment tracking (e.g. MLflow)** logs hyperparameters + metrics + dataset version per run to a shared, sortable comparison UI — how two scientists pick a winner without a meeting.`,
+      `**A deployment gate is a concrete automated check** run at promotion time — schema compatibility, a metric threshold, or a required sign-off — not a vague notion of "passing something."`,
+      `**Multi-environment deployment:** keep environment-specific config versioned separately from weights, bind (model_version, environment, config_version) at promotion, and run a schema-compatibility gate before every promotion.`,
     ],
   },
   {
@@ -936,18 +968,26 @@ A biased assignment still produces a p-value, a confidence interval, a tidy resu
 
 ---
 
+**One more piece, specific to testing ML model changes: latency and versioning.** A new model is a new deployable, not just a new arm — before it ever sees production traffic, confirm it meets the latency SLA (a slower model changes the user experience by itself, independent of what it predicts), then run it through the same canary ramp (1–5% traffic) as any other change. Two details matter more here than in a generic A/B test: assignment must happen *before* the model runs, so a timeout or error in the challenger can't leak into which arm a request gets logged under; and every prediction must be logged with the exact model_version that produced it, or you can't tell which model's output actually rendered.
+
+---
+
 **The single most important check: Sample Ratio Mismatch.**
 
-You intended 50/50 and observed 52/48. That is *not* noise — it's the fingerprint of a systematic bug in assignment or logging. Even a 1% mismatch means your two groups came from different populations, and then every comparison is invalid no matter how significant it looks. Run a χ² test on the raw split *before* you open any metric dashboard. Above 1% SRM, there is no valid analysis to do.
+You intended 50/50 and observed 52/48 — each arm is 2 percentage points off its target. That is *not* noise — it's the fingerprint of a systematic bug in assignment or logging. SRM is measured with a χ² test on the raw split, not by eyeballing the percentages: run it *before* you open any metric dashboard, and treat any split the test flags as statistically significant — a split like 52/48 fails it decisively at any real sample size — as disqualifying. Once SRM is flagged, every downstream comparison is invalid no matter how significant it looks; there is no valid analysis to do until the root cause (hashing, bot filtering, logging) is found and fixed.
 
 [FIGURE: srm]
 
 ---
 
+**A second, different kind of interaction effect: network effects between arms, not within them.** Experiment interference (above) is the same user landing in multiple experiments. A SUTVA violation is different — treatment leaks across arms through the system itself. In a marketplace test where treated sellers get a new dashboard, control buyers still interact with those treated sellers, so control buyer behavior shifts even though no control user was ever treated. Control and treatment are no longer independent populations, and a metric computed as if they were misstates the true effect. Detect it by watching guardrail metrics in the arm that received no treatment; mitigate it with geo- or marketplace-cluster randomization, so a whole region or seller cluster sits in one arm instead of mixing treated and control counterparties in the same market.
+
+---
+
 **And for the long view: holdout groups.** Permanently hold 5–10% of traffic out of *all* experiments and compare production against it over time. This catches novelty effects — the wins that look great in a two-week test but fade once the shine wears off — and shows the true cumulative impact of your ML work. All of this is why "A/B testing is just feature flags and if/else" misses the point: the flag is the mechanism; everything above is the safety system that makes the mechanism produce answers you can trust.`,
     keyPoints: [
-      `**Implement an experiment registry before running more than 2 simultaneous experiments — without it, experiment interference silently invalidates results and you make product decisions on corrupted data.**\n\nhash(user_id + experiment_id) % 100 gives orthogonal assignments only if each experiment uses a different salt. Without the registry tracking what is running, two experiments may accidentally share users in ways that correlate treatment assignments, confound their effects, and produce results that look significant but measure the interaction, not the treatment.`,
-      `**Trap: running experiments past their planned duration on a fixed sample size is a form of p-hacking, regardless of your statistical reasoning for the extension.**\n\nOnce an experiment runs past its pre-specified duration, extending it is outcome-dependent stopping. You looked at the data, saw it was close to significance, and extended. That is exactly what p-hacking looks like from the outside. Plan sample size before starting. If you need to extend, use sequential testing methods (mSPRT) that account for the additional looks.`,
+      `**Implement an experiment registry before running more than 2 simultaneous experiments — without it, experiment interference silently invalidates results and you make product decisions on corrupted data.**\n\nhash(user_id + experiment_id) % 100 gives orthogonal assignments because experiment_id itself is the per-experiment salt — each experiment's distinct id string sends the same user to an effectively independent bucket in every experiment, with no separate salt value needed on top of it. Without the registry tracking what is running, two experiments may still accidentally share users in ways that correlate treatment assignments, confound their effects, and produce results that look significant but measure the interaction, not the treatment.`,
+      `**Trap: running experiments past their planned duration on a fixed sample size is a form of p-hacking, regardless of your statistical reasoning for the extension.**\n\nOnce an experiment runs past its pre-specified duration, extending it is outcome-dependent stopping. You looked at the data, saw it was close to significance, and extended. That is exactly what p-hacking looks like from the outside. Plan sample size before starting — and plan for a minimum duration of 7-14 days regardless: shorter windows let day-of-week effects (weekday vs. weekend behavior swings a metric on its own) and novelty effects masquerade as a treatment effect. If you need to extend past the plan, use sequential testing methods (mSPRT) that account for the additional looks.`,
       `**Diagnostic: audit your last 10 A/B test results — if more than 30% were positive, your testing framework likely has inflated Type I error.**\n\nUnder pure noise at α=0.05 with a single primary metric and no peeking, you expect 5% false positives. If your win rate is 30%, you are either measuring real effects (unlikely across all features) or you have peeking, multiple comparisons, or SRM issues inflating the Type I error. The win rate is the fastest diagnostic for whether your experimentation infrastructure is measuring reality.`,
     ],
     interactivePrompt: `Before you touch the controls: you split even/odd user IDs into control and treatment — what specific property of user IDs would cause this assignment to be systematically biased rather than random?`,
@@ -1008,15 +1048,17 @@ You intended 50/50 and observed 52/48. That is *not* noise — it's the fingerpr
   <text x="129" y="55" text-anchor="middle" fill="var(--ink-hi)" font-size="7">48%</text>
   <text x="274" y="55" text-anchor="middle" fill="var(--ink-hi)" font-size="7">52%</text>
   <rect x="6" y="70" width="348" height="18" rx="4" fill="none" stroke="#ef4444"/>
-  <text x="180" y="82" text-anchor="middle" fill="#ef4444" font-size="7.5" font-weight="700">SRM &gt; 1% = assignment/logging bug — no valid analysis exists downstream</text>
+  <text x="180" y="82" text-anchor="middle" fill="#ef4444" font-size="7.5" font-weight="700">SRM flagged by the χ² test = assignment/logging bug — no valid analysis exists downstream</text>
 </svg>`,
     },
     recap: [
       `**Experiment interference:** same power users land in treatment across six concurrent tests → all six results structurally broken.`,
+      `**Network interference (a SUTVA violation):** a different problem from experiment interference — treatment leaks across arms through the system itself (e.g. treated sellers change what control buyers see); fix with geo/cluster randomization.`,
       `**An A/B bug is scarier than a model bug:** it hides behind real-looking p-values and confidence intervals.`,
       `**Trustworthy assignment:** deterministic \`hash(user_id + experiment_id)\`, orthogonal splitting (per-experiment salt), registry, traffic ramp 1→5→20→50%, guardrail metrics.`,
+      `**Testing ML model changes specifically:** confirm latency SLA compliance and run a canary before launch, assign traffic *before* the model runs, and log \`model_version\` with every prediction.`,
       `**Most important check = Sample Ratio Mismatch:** intended 50/50, observed 52/48 is a bug fingerprint, not noise.`,
-      `**Run a χ² test on the raw split *before* opening any metric dashboard.** Above 1% SRM there's no valid analysis.`,
+      `**Run a χ² test on the raw split *before* opening any metric dashboard.** SRM is a χ²-test result, not a fixed percentage — treat any flagged split (like 52/48) as disqualifying.`,
       `**Extending a fixed-N experiment past its planned duration = p-hacking** — use sequential methods (mSPRT) if you must look again.`,
       `**Permanent 5–10% holdout** across all experiments catches novelty effects and shows true cumulative ML impact.`,
     ],
@@ -1028,7 +1070,7 @@ You intended 50/50 and observed 52/48. That is *not* noise — it's the fingerpr
     difficulty: 'advanced',
     estimatedMin: 29,
     tags: ['online learning', 'concept drift', 'model staleness', 'shadow mode', 'canary'],
-    summary: `A news recommender retrains once a week. A big crypto story breaks Tuesday and interest spikes within hours. The weekly model doesn't surface crypto until Sunday — five days after the peak, three days after it started fading. An online model, updating on every click in real time, is surfacing crypto within minutes. For trending content, that five-day lag is real lost engagement.
+    summary: `A news recommender retrains once a week. A big crypto story breaks Tuesday and interest spikes within hours. The weekly model doesn't surface crypto until Sunday — five days after the peak. An online model, updating on every click in real time, is surfacing crypto within minutes. For trending content, that five-day lag is real lost engagement.
 
 [FIGURE: lag]
 
@@ -1044,13 +1086,25 @@ Compare a daily-retrained model against an online model on the metric you care a
 
 **If it's warranted, pick the right algorithm — and mind deep models.**
 
-FTRL is Google's workhorse for large-scale online *linear* models (ads serving), efficient with sparse gradients and L1/L2. Online SGD updates weights per example or mini-batch, fine for linear models and shallow nets. But deep models hit **catastrophic forgetting:** trained on a stream, they overwrite what they haven't seen lately. Feed a recommender two weeks of crypto-heavy traffic and it starts recommending *only* crypto, having forgotten sports, politics, and finance. Fixes: *experience replay* (mix a buffer of diverse old examples into each update) and *elastic weight consolidation* (protect the weights that mattered for older patterns).
+FTRL (Follow-The-Regularized-Leader) is Google's workhorse for large-scale online *linear* models (ads serving): it keeps a running per-feature sum of past gradients and uses that sum, weight by weight, to decide whether to zero the weight out entirely (L1) or just shrink it (L2) — efficient because it never has to store or replay individual past examples, only the running sums. Online SGD updates weights per example or mini-batch, fine for linear models and shallow nets. But deep models hit **catastrophic forgetting:** trained on a stream, they overwrite what they haven't seen lately. Feed a recommender two weeks of crypto-heavy traffic and it starts recommending *only* crypto, having forgotten sports, politics, and finance. Fixes: *experience replay* (mix a buffer of diverse old examples into each update) and *elastic weight consolidation* (protect the weights that mattered for older patterns).
+
+---
+
+**Rolling out the online model needs its own staged process — you don't flip all traffic to a model that updates every second.**
+
+Two stages, in order. First, **shadow mode**, typically 1-2 weeks: the challenger runs alongside the current production model on live traffic, its predictions get logged, but it never actually serves a response to a user. This is where you catch the challenger silently degrading (or improving) before it can hurt anyone, and 1-2 weeks is enough to see it across a full weekly traffic cycle. Second, once shadow mode looks clean, **canary release**: start serving the challenger's real predictions to a small slice of traffic — 1% — and only widen that slice (5%, 25%, 50%, 100%) after each step clears fixed metric gates (the business metric you're optimizing, plus guardrails like latency and error rate). Any gate failure at any step rolls the slice back to 0%, not just pauses it.
 
 ---
 
 **The sneakiest failure: feedback loops.**
 
-The model's own predictions shape user behavior, that behavior becomes training data, and the data reinforces the predictions. A model that leans slightly toward crypto drives crypto clicks, which show up as a strong crypto signal, which makes it lean harder — a filter bubble compounding at the speed of online updates. Break it with *exploration* (ε-greedy, Thompson sampling).
+The model's own predictions shape user behavior, that behavior becomes training data, and the data reinforces the predictions. A model that leans slightly toward crypto drives crypto clicks, which show up as a strong crypto signal, which makes it lean harder — a filter bubble compounding at the speed of online updates. Break it with *exploration*: spend a small fixed slice of traffic, say 5%, on picks other than the model's top prediction (ε-greedy), or sample each candidate's predicted click-through rate from its own uncertainty range rather than always serving the single highest point estimate, so an under-shown category with wide uncertainty still gets a fair shot at winning that slice (Thompson sampling). Either way, categories the model hasn't reinforced yet keep getting real traffic instead of being starved out.
+
+---
+
+**Not all "the world changed" is the same problem — three kinds of shift, three different fixes.**
+
+Split the joint distribution P(X, Y) into inputs and label: **covariate shift** is P(X) changing while P(Y|X) — the actual input-to-label relationship — stays the same (e.g. your fraud model sees more mobile traffic this quarter, but a given transaction pattern is exactly as fraudulent as before). Because the relationship itself hasn't moved, this can often be corrected without retraining, by *importance weighting*: reweight training examples to look more like the new input distribution. **Label shift** is P(Y) changing on its own (e.g. fraud becomes rarer overall, say during a platform-wide crackdown) while P(Y|X) again stays fixed; this can often be fixed with *threshold recalibration* alone — the model's scores are still valid, just the operating point needs to move with the new base rate. **Concept drift** is the one that actually forces retraining: P(Y|X) itself changes — the same transaction pattern that used to be safe now genuinely is fraud, because fraudsters adapted their behavior. No amount of reweighting or threshold-tuning fixes a relationship that has itself changed; you need new labeled data reflecting the new relationship.
 
 ---
 
@@ -1126,7 +1180,9 @@ The model's own predictions shape user behavior, that behavior becomes training 
       `**Online gives up three things:** harder to debug (which update broke it?), audit (no fixed version), roll back (revert to what?).`,
       `**Algorithms:** FTRL for large sparse linear (ads), online SGD for linear/shallow. Deep models hit **catastrophic forgetting.**`,
       `**Catastrophic forgetting:** 2 weeks of crypto traffic → recommends only crypto. Fix with experience replay + elastic weight consolidation.`,
+      `**Rollout is staged too:** shadow mode (1-2 weeks, log predictions, don't serve) then canary (1% → 100% with metric gates at each step, rolled back to 0% on any gate failure).`,
       `**Feedback loops:** predictions shape behavior → behavior becomes training data → bias compounds. Break with exploration (ε-greedy, Thompson).`,
+      `**Three kinds of shift, three fixes:** covariate shift (P(X) changes, P(Y|X) stable) → importance weighting; label shift (P(Y) changes) → threshold recalibration; concept drift (P(Y|X) itself changes) → retraining required.`,
       `**"More current is always better" is wrong:** batch has auditability, debuggability, one-click rollback. Use online only when the measured gain justifies it.`,
     ],
   },
