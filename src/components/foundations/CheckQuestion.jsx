@@ -62,7 +62,12 @@ export function CheckQuestion({ q, options, answer, onSubmit }) {
             if (isChosen && !isCorrect) { bg = 'rgba(239,68,68,0.1)';  border = '1px solid rgba(239,68,68,0.4)';  color = 'var(--ink-hi)' }
             if (!isChosen && isCorrect) { bg = 'rgba(34,197,94,0.08)'; border = '1px solid rgba(34,197,94,0.35)'; color = 'var(--ink-mid)' }
           } else if (isChosen) {
-            bg = 'var(--surface)'
+            // Selected but not yet checked -- faint theme-amber highlight, distinct from the
+            // card's own var(--surface) background (which is what this used to be set to,
+            // making the selection effectively invisible).
+            bg = 'var(--prime-bg-light)'
+            border = '1px solid var(--prime-glow)'
+            color = 'var(--prime)'
           }
           return (
             <div

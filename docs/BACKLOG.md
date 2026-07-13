@@ -2226,3 +2226,16 @@ All pushed. HEAD is `ba171e2`. Working tree fully clean.
 **Cross-lab:** GSL got the mirror-image fix — it already gated Mark Complete on check questions correctly, but had no Undo button at all. Added `unmarkComplete()` + an Undo button next to "✓ Completed" in `FoundationsRunner.jsx`/`Concepts.jsx`. Full detail in GSL's own `docs/GSL_PLAN.md`, same timestamp.
 
 **Not pushed** — sitting in the working tree. Not committed by me (standing rule: never run git myself).
+
+
+---
+
+## Session 2026-07-13 — fix: selected check-question option had no visible highlight before checking
+
+2026-07-13 06:53 IST (Monday)
+
+**Bug (user-reported):** in the check-question gate shipped 2026-07-12, selecting an option before pressing "Check answer" produced no visible highlight. Root cause: the pre-check `isChosen` branch in `src/components/foundations/CheckQuestion.jsx` set its background to `var(--surface)` — the exact same color as the question card's own background, so the "selected" state was rendered but invisible. The post-check reveal logic (chosen-correct → green, chosen-wrong → red, and the actual correct option highlighted green even when the user picked wrong) was already correct and untouched.
+
+**Fix:** pre-check selected state now uses `var(--prime-bg-light)` background + `var(--prime-glow)` border + `var(--prime)` text — the theme's amber/gold accent (`--prime: #e8a030`), matching the exact convention already used for "picked" states elsewhere in the app (e.g. `TimeSeriesTab.jsx`'s `isPicked` styling). Verified via sucrase JSX transform + `node --check`.
+
+**Not pushed** — sitting in the working tree alongside anything else uncommitted.
