@@ -2239,3 +2239,67 @@ All pushed. HEAD is `ba171e2`. Working tree fully clean.
 **Fix:** pre-check selected state now uses `var(--prime-bg-light)` background + `var(--prime-glow)` border + `var(--prime)` text — the theme's amber/gold accent (`--prime: #e8a030`), matching the exact convention already used for "picked" states elsewhere in the app (e.g. `TimeSeriesTab.jsx`'s `isPicked` styling). Verified via sucrase JSX transform + `node --check`.
 
 **Not pushed** — sitting in the working tree alongside anything else uncommitted.
+
+
+---
+
+## Session 2026-07-14 — fix: 5 id-collision modules resolved via rename (content preserved, no merge/delete)
+
+2026-07-14 19:57 IST (Tuesday)
+
+**Trigger:** user-directed. The 5 modules flagged 2026-07-12 09:26 IST as "needs a canonical-copy decision or a rename" — user chose rename (preserve all content, make every copy independently addressable) over picking a winner.
+
+**Root-cause correction before fixing:** re-investigated the actual blast radius before touching anything, since the original flag ("whichever copy the app's runtime lookup resolves to is the only one a user ever sees") turned out to be imprecise. Each Foundations family tab (`*FoundationTab.jsx`) imports its own family's module array and does `.find(m => m.id === X)` scoped to that array only — so within the Foundations UI itself, e.g. `classicalMLModules.js`'s `calibration` and `evalModules.js`'s `calibration` never actually collided; each tab correctly showed its own family's content. The real collision was narrower and different: `qnaBank.js`'s `qnaForModule(moduleId)` and `contentStatus.js`'s `CONTENT_STATUS[moduleId]` are both flat global dicts keyed by the bare id — those genuinely cross-contaminate between two same-named modules from different families (one family's QnA/clean-status silently applies to both). Fixed the real bug, not the originally-assumed one.
+
+**Also discovered before fixing:** `contentStatus.js` already had verified-`clean` receipts for `calibration` and `feature_selection` with `sourceFile: "src/data/foundations/classicalMLModules.js"` explicitly named — meaning the already-audited-clean content for those two ids lives in `classicalMLModules.js`, not the sibling file. This flips the naive "rename the newer/less-central file" default: `classicalMLModules.js` had to KEEP the bare id in both cases so its existing clean receipt stays accurate, and the *sibling* file's copy got renamed instead. Also found `calibration` was a genuine 3-way collision (`classicalMLModules.js` / `evalModules.js` / `probabilisticMLModules.js`), not the 2-way the original flag implied — caught via a full-lab-wide grep before declaring done, not assumed from the earlier note.
+
+**Renames applied (5 `src/data/foundations/*.js` files, `id:` field only, count==1-asserted targeted replace, all now grep-confirmed unique lab-wide):**
+- `evalModules.js`: `calibration` → `calibration_eval` (kept: `classicalMLModules.js`'s `calibration`, has the verified-clean receipt)
+- `probabilisticMLModules.js`: `calibration` → `calibration_probabilistic` (3rd leg of the 3-way collision, caught on a follow-up full scan after the first pass only handled 2 of 3)
+- `dataModules.js`: `feature_selection` → `feature_selection_data` (kept: `classicalMLModules.js`'s `feature_selection`, has the verified-clean receipt)
+- `classicalMLModules.js`: `class_imbalance` → `class_imbalance_classical_ml` (kept: `dataModules.js`'s `class_imbalance` — no clean-receipt constraint either way, arbitrary but documented choice)
+- `systemDesignModules.js`: `cold_start` → `cold_start_system_design` (kept: `recsysModules.js`'s `cold_start`)
+- `mathStatsModules.js`: `bayesian_inference` → `bayesian_inference_mathstats` (kept: `probabilisticMLModules.js`'s `bayesian_inference`; this id has no tier — B by default, untracked in `contentStatus.js` by that file's own seeding rule, so no ledger entry needed for the renamed copy either)
+
+**`moduleTiers.js`:** added `calibration_eval`, `calibration_probabilistic`, `feature_selection_data` to `TIER_A` (matching their kept sibling's tier); added `class_imbalance_classical_ml`, `cold_start_system_design` to `TIER_S` (same reasoning). Without this, the renamed copies would have silently defaulted to Tier B.
+
+**`contentStatus.js`:** seeded 5 new `unclassified` entries (one per renamed id, `bayesian_inference_mathstats` excluded per the B-tier rule above) with a note explaining the split, so none of them silently vanish from the Phase A ledger. **Not part of the "115 modules" Phase A batch already scoped** — these are newly-surfaced, never-audited content that only became visible once the ids were disambiguated. Flagging as new backlog, not silently folding into the existing count.
+
+**Scope check — confirmed NOT touched, correctly out of scope:** `src/tabs/SystemDesignTab.jsx`'s own `cold_start` entry (a different quiz-question array, unrelated file, coincidental id reuse), `ModelEvalTab.jsx`'s `calibration` widget-tab id, `MockInterviewTab.jsx`'s `calibration` topic-weight key, `companyTracks.js`'s `calibration` target, `glossary.js`/`foundationsGlossary.js`'s `calibration` entries, `drills/*.js` subtopic tags — all of these are independent namespaces (topic tags, widget ids, unrelated arrays) that happen to share the string, not part of the Foundations-module-id collision. Verified via a full `src/` grep before concluding scope, not assumed.
+
+**Verification:** `node --check` clean on all 7 touched files (5 data files + `moduleTiers.js` + `contentStatus.js`). Post-fix lab-wide grep confirms: the 5 original ids each now occur exactly once across `src/data/foundations/*.js`; the 6 new ids (5 renames + the 3-way's extra leg) each occur exactly once. No duplicate-id collisions remain.
+
+**Not pushed** — sitting in the working tree. Not committed by me (standing rule: never run git myself). Exact files touched this entry: `src/data/foundations/{evalModules,probabilisticMLModules,dataModules,classicalMLModules,systemDesignModules,mathStatsModules}.js`, `src/data/moduleTiers.js`, `src/data/contentStatus.js`.
+
+
+---
+
+## Session 2026-07-14 (evening) — manual browser confirmation: check-question gating UX (item 6 closed)
+
+2026-07-14 20:26 IST (Tuesday)
+
+The check-question-gating/highlight/Undo UX shipped 2026-07-12 (`10792ff`, `5f3a3c9`) had only been statically verified (`node --check`/esbuild) until now — flagged as still owed in the 2026-07-12 09:26 IST entry above. User ran `npm run dev` locally (native macOS process, not the device-bridge VM — the bridge's embedded Linux VM can't run this repo's dev server at all, `@rollup/rollup-linux-arm64-gnu` missing since `node_modules` were built for native macOS) and manually clicked through at `localhost:5173`:
+- Selected option before pressing "Check answer" → confirmed amber (`--prime-bg-light`) highlight now visible, not invisible.
+- Confirmed the completion button stays "Attempt all check questions" (disabled) until every check question on the module has been checked, then flips to the module's original completed-label ("Mark as completed" / "Mark as reviewed" for Pricing) once all are attempted.
+
+**Item 6 (manual click-through) is now closed for MSL's half.** GSL's Undo-button half confirmed separately, same session — see `GSL_PLAN.md` same timestamp.
+
+---
+
+## Session 2026-07-14 22:06 IST (Tuesday) — Phase A batch closed (100 modules), id-collision + thompson_sampling done, contentStatus.js fully receipt-verified
+
+Closes out this session's 3 explicit MSL asks: 5 id-collision modules, thompson_sampling, Phase A.
+
+**5 id-collision modules — resolved by rename, not content merge** (calibration, feature_selection, class_imbalance, cold_start, bayesian_inference — calibration was a genuine 3-way collision, not the 2-way one earlier docs described). Each now has a unique id across its colliding source files; the file already holding a verified-clean receipt kept the bare id, siblings got a `_<sourcefile>` suffix. `moduleTiers.js` and `contentStatus.js` updated to match.
+
+**Phase A — 100 MSL modules run through Workflow `wf_4232dbd7-219`** (fix stage: cold audit against CONTENT-AUDIT-RUBRIC.md + 3B1B-STANDARD.md per file-group; verify stage: independent agent re-check, gated to only the modules a fix was actually applied to, for cost reasons — see this session's earlier cost-ROI note):
+
+- **87 clean, no fix needed** — independent cold audit found zero genuine issues: ucb_algorithms, contextual_bandits, bandits_in_recsys, dag_confounding, rct_design, observational_ci, iv, did, uplift_modeling, linear_regression, regularization, data_quality_audit, feature_engineering, categorical_encoding, feature_scaling, data_splits_and_leakage, data_versioning_and_pipelines, activations, batch_norm, optimizers, cnns, attention, transformers, metrics_first_principles, auc_roc, ranking_metrics, offline_vs_online, validation_traps, cross_validation, error_analysis, evaluation_in_prod, online_experimentation_ml, probability_basics, random_variables, joint_distributions, information_theory, linear_algebra_basics, eigendecomposition, svd, pca_theory, convex_optimization, hypothesis_testing, mle_map, sampling_distributions, monitoring_taxonomy, data_drift_detection, prediction_monitoring, gradient_descent_fundamentals, sgd_and_minibatch, adagrad_rmsprop, learning_rate_schedules, training_serving_skew, feature_engineering_prod, feature_store, feature_store_traps, late_arriving_data, data_quality, label_generation, pipelines, model_registry, ab_infra, online_learning, two_stage_architecture, candidate_generation, learning_to_rank, features_and_freshness, feedback_loops_bias, offline_online_eval, multi_objective_tradeoffs, recsys_dl_architectures, recsys_representation_learning, design_framework, recsys_overview, recsys_stack, two_tower, semantic_search, multitask_ranking, ml_platform, ranking_systems, real_time_ml, sequential_recsys, embeddings_ann, reranking_diversity, recsys_feedback_loops, clustering_overview, gmm, anomaly_detection.
+- **4 fixed and independently confirmed clean** (stage-1 fix + a separate blind agent re-verified PASS): pot_outcomes, rdd, trees, momentum.
+- **9 fixed by me directly** (independent verify agent found a genuine residual issue after stage-1's fix; I applied the exact quoted fix myself using the verify agent's finding as ground truth — **not re-verified by a third agent**, disclosed honestly in each module's `contentStatus.js` `note`): mab_problem (SUTVA grounding), thompson_sampling (bracketed the variance formula `α·β / [(α+β)²·(α+β+1)]` — this closes the earlier disputed/tie-never-broken status from the cut-short Phase A run), neural_nets (hierarchical-composition grounding), backprop (new batch-size/gradient-averaging section), rnns_lstms (fixed a checkQuestion wording bug + defined `g_t` before use), ablation (new "Rigor checklist"), concept_drift (qualified an overclaimed "visible within days"), adam_adamw (added real ResNet-50/ImageNet numbers + sharp/flat-minima grounding), kmeans (EM/GMM terminology glosses + handoff to the GMM module).
+
+**contentStatus.js**: all 100 entries carry real `verifiedBy`/`note` receipts + `sourceFile`+`verifiedFileHash` pairs (sha256-based, matching the validator's own algorithm). `npm run check:content-status` → **0 FAILUREs, 0 STALE warnings** (13 sibling-file hash-staleness warnings from this batch's edits were resolved via 3 refresh passes — each sibling module's own content confirmed untouched, not re-audited, per this repo's established convention).
+
+**Real current MSL state, re-verified this session, not from memory:** 113 'clean' / 120 tracked (S: 36/40, A: 77/80).
+
+**Still owed, unchanged from the last entry, not attempted this session:** the 5 renamed-not-yet-content-fixed id-collision siblings' own audit status (rename only resolved the lookup bug, not content quality — check each independently before trusting); MSL's remaining ~15 untracked/unclassified modules; the QnA standard's own question-quality audit (never run on the ~6,400+ MSL draft questions).
