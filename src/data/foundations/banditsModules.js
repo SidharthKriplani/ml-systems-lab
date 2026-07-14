@@ -21,12 +21,12 @@ en the optimal arm's expected reward and your policy's expected rewards. A model
 
 $R_T = Σ_{a≠a*} Δ_a · E[N_a(T)] where Δ_a = μ* − μ_a is the suboptimality gap for arm a an$
 
-d N_a(T) is the number of times you pull it.** Minimising regret means minimising pulls on suboptimal arms — but identifying which arms are suboptimal requires the exploration you are trying to limit. This is the circular dependency that makes the problem hard. Pseudo-regret compares to the best arm's true mean μ* using its expected reward, so it averages only over the algorithm's action-selection randomness and the noise in individual reward draws cancels out; expected regret instead compares against the realized reward sequence itself, so it also averages over that reward noise directly. Pseudo-regret is the looser, more tractable quantity, and it's what nearly all bandit regret bounds — including the Lai-Robbins bound below — actually establish.`,
+d N_a(T) is the number of times you pull it.** Minimising regret means minimising pulls on suboptimal arms — but identifying which arms are suboptimal requires the exploration you are trying to limit. This is the circular dependency that makes the problem hard. Pseudo-regret compares to the best arm's true mean μ* using its expected reward, so it averages only over the algorithm's action-selection randomness and the noise in individual reward draws cancels out; the raw (unaveraged) regret instead compares against the realized reward sequence itself, so as a random variable it also carries that reward noise — but once you take its expectation, E[regret] equals pseudo-regret exactly, since E[X_t] = μ_{a_t}. Pseudo-regret is the lower-variance, more tractable quantity to analyze, and it's what nearly all bandit regret bounds — including the Lai-Robbins bound below — actually establish.`,
       `**Lai-Robbins lower bound (1985): for any consistent algorithm (sub-polynomial regret on every instance), expected regret satisfies E[R_T] ≥ Σ_{a: Δ_a > 0} Δ_a / KL(μ_a, μ*) · ln T.** This is Ω(log T) and cannot be beaten asymptotically. Algorithms achieving O(log T) regret are optimal. The KL term tells you why near-optimal arms are expensive: if two arms are very similar (small KL), you need many pulls to distinguish them, and each suboptimal pull costs Δ_a.`,
       `**Instance regret vs minimax regret are different goals.** UCB-type algorithms achieve O(log T) on specific instances but O(√(KT log T)) in the worst case — the matching √(KT) lower-bound rate (no log factor) is only attained by specially-tuned variants like MOSS, not generic UCB. EXP3 achieves O(√(KT ln K)) in the fully adversarial setting without any distributional assumptions. An algorithm optimal for T = 10^6 may underperform at T = 1000 — asymptotic optimality says nothing about finite-horizon performance where prior warm-starting and instance-specific constants dominate.`,
       `**Stochastic MAB assumes rewards are i.i.d. from fixed but unknown distributions.** The optimal arm is fixed. Most recommendation and ad-serving problems are approximately stochastic over short windows. UCB and Thompson Sampling are designed for this setting and achieve O(log T) regret.`,
       `**Adversarial MAB removes all distributional assumptions — the environment can choose reward sequences after seeing your algorithm (but not your random coin flips).** Relevant for strategic actors, financial markets, and settings where the reward distribution shifts in response to your policy. EXP3 is the algorithm for this setting.`,
-      `**Production applications: online ad serving (each ad is an arm, reward is click/conversion, up to tens of millions of arms), recommendation ranking (which item at position 1, with delayed feedback), clinical trials (adaptive randomisation toward better treatments — with major statistical and regulatory complications), and hyperparameter tuning (Hyperband allocates compute budget across configurations).**`,
+      `**Production applications: online ad serving (each ad is an arm, reward is click/conversion, up to tens of millions of arms), recommendation ranking (which item at position 1, with delayed feedback), clinical trials (adaptive randomisation toward better treatments — regulated trials require pre-registered stopping rules, statistically corrected inference after adaptive sampling, careful handling of delayed outcomes, and checking SUTVA — the assumption that one patient's treatment assignment doesn't affect another's outcome, which contagion or shared-resource effects can violate), and hyperparameter tuning (Hyperband allocates compute budget across configurations).**`,
       `**Finite horizon matters.** Most theory is asymptotic (T → ∞) and instance-dependent factors (Δ values, K) dominate at realistic horizons. In production, content has short lifecycles — an article is relevant for hours. At T = 1000 and K = 20, priors and warm-start heuristics matter more than matching the Lai-Robbins asymptotic constant.`,
     ],
     checkQuestions: [
@@ -41,12 +41,12 @@ d N_a(T) is the number of times you pull it.** Minimising regret means minimisin
         answer: ['A', 'C'],
       },
       {
-        q: `What is the difference between pseudo-regret and expected regret? Which is typically analyzed in theory?`,
+        q: `What is the difference between (raw) regret and pseudo-regret? Which is typically analyzed in theory?`,
         options: [
-          `A) Pseudo-regret compares to the best arm's true mean, averaging only over algorithm randomness; theory analyzes it since reward noise cancels`,
+          `A) Regret carries realized reward-draw noise; pseudo-regret uses arm means and excludes it. Their expectations are equal, but pseudo-regret's lower variance is why theory analyzes it`,
           `B) They are equivalent terms in every paper — theory picks whichever one happens to be notationally convenient for that particular derivation`,
-          `C) Expected regret is the stronger, tighter bound since it folds in reward noise; pseudo-regret discards noise and is a looser quantity overall`,
-          `D) Pseudo-regret is defined only for adversarial bandit settings; expected regret is the term reserved specifically for stochastic bandit analysis`,
+          `C) Regret is the stronger, tighter bound since it folds in reward noise; pseudo-regret discards noise and is a looser quantity overall`,
+          `D) Pseudo-regret is defined only for adversarial bandit settings; regret is the term reserved specifically for stochastic bandit analysis`,
         ],
         answer: `A`,
       },
@@ -75,7 +75,7 @@ d N_a(T) is the number of times you pull it.** Minimising regret means minimisin
     recap: [
       `**Explore vs exploit:** try arms to learn value, pick the best as often as possible — do both at once.`,
       `**Regret, not reward accuracy:** greedy on a perfect reward model still incurs linear O(T) regret if it never explores.`,
-      `**Regret decomposes:** $R_T = Σ_{a≠a*} Δ_a · E[N_a(T)]$ — minimise pulls on suboptimal arms.`,
+      `**Pseudo-regret decomposes:** $R_T = Σ_{a≠a*} Δ_a · E[N_a(T)]$ — minimise pulls on suboptimal arms.`,
       `**Lai-Robbins lower bound Ω(log T):** any consistent algorithm pulls suboptimal arms ∝ ln T / KL(μ_a, μ*).`,
       `**KL term = cost of near-optimal arms:** small gap → many pulls to distinguish.`,
       `**Stochastic vs adversarial:** i.i.d. fixed distributions (UCB/TS, O(log T)) vs no assumptions (EXP3, O(√(KT ln K))).`,
@@ -304,7 +304,7 @@ instance-optimal (low regret when gaps are large) but not minimax-optimal. Use U
 
 The mechanism is elegant. Headline E's Beta(1,1) posterior is wide — it samples uniformly across 0 to 1. Its sampled value frequently exceeds the 10% concentrations of A through D. So TS explores headline E aggressively — not because it randomly picks an arm with probability ε, but because uncertainty genuinely warrants it. After 50 more impressions of E, its posterior narrows around whatever its true CTR turns out to be. If E is bad (true CTR 2%), its posterior concentrates near 0.02 and almost never samples above the other headlines. Exploration of E drops to near zero automatically. This is exploration proportional to P(arm is optimal) — not uniform, not confidence-bound-based, but posterior-sampling.
 
-The update rule is trivially simple. On each impression: if click, α += 1; if no click, β += 1. The mean of Beta(α, β) is α/(α+β), which converges to the true CTR as data accumulates. The variance is α·β / (α+β)²·(α+β+1), which shrinks as α+β grows. Exploration happens automatically where it is most informative.
+The update rule is trivially simple. On each impression: if click, α += 1; if no click, β += 1. The mean of Beta(α, β) is α/(α+β), which converges to the true CTR as data accumulates. The variance is α·β / [(α+β)²·(α+β+1)], which shrinks as α+β grows. Exploration happens automatically where it is most informative.
 
 **NOT this.** "Thompson Sampling always requires conjugate priors — Beta for Bernoulli rewards." Beta-Binomial is the most common case, but TS generalizes to any likelihood with an appropriate prior. For Gaussian rewards (continuous feedback like watch time), use Normal-Normal conjugate. For non-conjugate settings, sample from an approximate posterior using Laplace approximation or neural last-layer variance. The conjugate prior is a computational convenience, not a theoretical requirement.`,
     keyPoints: [
@@ -312,7 +312,7 @@ The update rule is trivially simple. On each impression: if click, α += 1; if n
       `**TS exploration is proportional to P(arm a is optimal): arm a is pulled with probability P(θ_a > θ_j for all j≠a | observations).**\n\nAs arm a accumulates observations and its posterior concentrates near a low value, this probability collapses toward zero. UCB in contrast applies a fixed confidence bonus √(2 ln t / N_a) regardless of how implausible it is that the arm is optimal — TS gives up on clearly inferior arms faster. This is why TS empirically outperforms UCB at finite horizons: the posterior shape adapts to the data in a way that a worst-case Hoeffding-bound formula cannot.`,
       `**Applying frequentist stopping rules to TS experiments inflates Type-I error.**\n\nClassical A/B testing uses fixed random allocation, then applies a p-value test at a predetermined sample size. TS continuously reallocates traffic toward better variants. The allocation is no longer random — it is outcome-dependent. A p-value at a fixed sample size applied to TS data will reject the null too often because you are peeking at adaptive data. Use Bayesian stopping criteria (P(variant B is best) > 0.95, or expected loss < threshold) or always-valid sequential p-values that account for the adaptive allocation.`,
     ],
-    interactivePrompt: `Before you touch the controls: you have 3 headlines with posteriors Beta(50, 450), Beta(5, 45), and Beta(1, 1). All three have roughly the same empirical mean near 10%. Which headline will Thompson Sampling explore most aggressively, and why?`,
+    interactivePrompt: `Before you touch the controls: you have 3 headlines with posteriors Beta(50, 450) and Beta(5, 45) — both with an empirical mean near 10% — and Beta(1, 1), the flat uninformative prior (uniform over [0,1], mean 0.5, no data yet). Which headline will Thompson Sampling explore most aggressively, and why?`,
     checkQuestions: [
       {
         q: `Walk through one step of Beta-Binomial Thompson Sampling for 3 ads with posteriors Beta(10,90), Beta(5,45), Beta(1,1). What are the likely samples and which arm gets pulled?`,

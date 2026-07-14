@@ -635,7 +635,7 @@ export const SYSTEM_DESIGN_MODULES = [
     },
   },
   {
-    id: 'cold_start',
+    id: 'cold_start_system_design',
     title: 'Cold-Start Strategies',
     subtitle: 'New user, new item, new platform — bootstrapping without interaction history',
     difficulty: 'intermediate',

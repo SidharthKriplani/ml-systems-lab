@@ -1072,6 +1072,12 @@ A single tree is controlled by a handful of parameters worth knowing by name. \`
 
 ---
 
+**Reading feature importance: a hidden bias.**
+
+Fit a tree and scikit-learn hands back \`feature_importances_\` — one number per feature, built by adding up how much impurity each feature's splits removed across the whole tree. It's tempting to read that list as "this is what matters." But it has a built-in bias: a fine-grained numeric feature like income offers many candidate cut points (we saw seven just among these eight applicants — 30.5, 36.5, 42, 48, 55, 60.5, 66.5), so it gets far more chances to win a split than a feature with only one possible cut, like a yes/no flag. More opportunities to split means a higher importance score, even when the flag was just as predictive. The fix is **permutation importance**: shuffle one feature's values, rerun the model, and measure how much accuracy drops. A feature that truly mattered will hurt the model when scrambled; a feature that only won splits by having more chances will barely move it.
+
+---
+
 **Categoricals and missing values: mind the implementation.**
 
 "Trees handle mixed types" is true in principle but depends on the library. scikit-learn's classic trees actually need **numeric input** — you must encode categories yourself (and one-hot encoding a high-cardinality category can fragment the tree). True native categorical splits and native missing-value handling live in specific implementations (LightGBM, CatBoost, and newer histogram-based trees). So don't claim "trees just take categoricals" in an interview without naming which implementation.
@@ -2409,7 +2415,7 @@ Finally, calibration is not permanent. A model calibrated on last year's data ca
     },
   },
   {
-    id: 'class_imbalance',
+    id: 'class_imbalance_classical_ml',
     interactiveId: 'class_imbalance_viz',
     title: 'Class Imbalance',
     subtitle: 'SMOTE, threshold tuning, class weights, precision@K',

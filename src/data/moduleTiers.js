@@ -9,6 +9,7 @@ export const TIER_S = [
   // Classical ML
   'linear_regression', 'logistic_regression', 'regularization', 'generalization',
   'trees', 'random_forest', 'gradient_boosting', 'class_imbalance',
+  'class_imbalance_classical_ml',
   // Evaluation
   'metrics_first_principles', 'auc_roc', 'ranking_metrics', 'offline_vs_online',
   'offline_online_eval', 'validation_traps', 'cross_validation',
@@ -18,7 +19,7 @@ export const TIER_S = [
   'pot_outcomes', 'rct_design',
   // Recommender Systems
   'two_stage_architecture', 'candidate_generation', 'learning_to_rank',
-  'cold_start', 'feedback_loops_bias',
+  'cold_start', 'cold_start_system_design', 'feedback_loops_bias',
   // System Design
   'design_framework', 'recsys_overview', 'recsys_stack',
   // Deep Learning
@@ -34,6 +35,7 @@ export const TIER_S = [
 export const TIER_A = [
   // Classical ML
   'ensembles', 'svm', 'knn', 'naive_bayes', 'calibration', 'feature_selection',
+  'calibration_eval', 'calibration_probabilistic', 'feature_selection_data',
   // Math & Stats
   'random_variables', 'joint_distributions', 'information_theory',
   'linear_algebra_basics', 'eigendecomposition', 'svd', 'pca_theory',

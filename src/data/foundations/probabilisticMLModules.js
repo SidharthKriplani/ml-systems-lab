@@ -544,7 +544,7 @@ In practice, full BNNs are infeasible at any useful scale. The empirical punchli
     },
   },
   {
-    id: 'calibration',
+    id: 'calibration_probabilistic',
     interactiveId: 'temperature_scaling_viz',
     title: 'Probabilistic Calibration',
     subtitle: 'Reliability diagrams, ECE, overconfidence in NNs, temperature scaling, Platt scaling, isotonic regression',

@@ -1305,7 +1305,7 @@ Two final structural traps. **Selection leakage**: correlation filtering, mutual
     },
   },
   {
-    id: 'feature_selection',
+    id: 'feature_selection_data',
     title: 'Feature Selection',
     subtitle: `Reduce dimensionality to fight overfitting, cut training cost, and build models that generalize.`,
     difficulty: 'intermediate',
