@@ -107,7 +107,7 @@ export const RECSYS_MODULES = [
 ---
 
 **Retrieval's output is a shortlist, not a final answer.** The few hundred candidates ANN returns still aren't ordered — that's the next module's job. Ranking takes exactly this shortlist and runs a more expensive model over it to produce the final top-k.`,
-    interactivePrompt: `Before you touch the controls: the item tower runs offline and the user tower runs live. Which one can you afford to make big and slow, and which must stay cheap — and why does that asymmetry exist?`,
+    interactivePrompt: `Before you touch the controls: this funnel is candidate generation's own — 10M items indexed by ANN, narrowed to a few hundred candidates under a strict latency budget. Pull that budget tighter and watch the recall ceiling drop. At what point does the ceiling start silently dropping items your two-tower model actually scored well, and why can no amount of hard-negative mining or logQ correction earn them back once retrieval has already discarded them?`,
     keyPoints: [
       `**Two towers exist to make item embeddings query-independent.** A joint (cross-attention) scorer ties an item's representation to the querying user, forcing 10M fresh scores per request. Two separate towers + a dot product let you precompute all item vectors offline and index them once.`,
       `**Dot-product / cosine is chosen because ANN indexes are built for it.** Retrieval = encode one user live, then ANN-lookup nearest item vectors (~10ms over 10M). The item tower can be arbitrarily expensive (it runs offline); the user tower must be cheap (it runs per request). That asymmetry is the whole point. Retrieval's output — the few hundred nearest neighbors — is a shortlist for the ranking stage next, not the final recommendation list.`,

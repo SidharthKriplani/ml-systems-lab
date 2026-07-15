@@ -818,11 +818,11 @@ The same block comes in two modes, set by *who is allowed to look at whom*. **En
     ],
     checkQuestions: [
       {
-        q: `Why does the transformer use positional encodings, and why does standard sinusoidal encoding allow the model to generalise to longer sequences than seen in training?`,
+        q: `Why does the transformer use positional encodings, and why does standard sinusoidal encoding have a theoretical property that could support extrapolation to longer sequences than seen in training — even though, per the original paper and in practice, that extrapolation benefit is weak?`,
         options: [
           `A) Self-attention operates on the full sequence at once, so it needs explicit position markers. Sinusoidal encoding doesn't beat learned embeddings at generalising — both fail past the training max — but it saves the parameter cost of storing a learned table.`,
           `B) Positional encodings exist because fixed-size attention matrices require every position to share the same embedding dimension. Sinusoidal encoding generalises because its high-frequency components repeat at short, regular wavelengths, giving familiar sub-patterns even at unseen positions.`,
-          `C) Self-attention is permutation-equivariant, so it needs an added position-dependent vector per token. Sinusoidal encoding extrapolates because PE(pos+k) is a linear function of PE(pos), unlike learned embeddings with no representation for unseen positions.`,
+          `C) Self-attention is permutation-equivariant, so it needs an added position-dependent vector per token. Sinusoidal encoding has a theoretical edge because PE(pos+k) is a linear function of PE(pos), unlike learned embeddings with no representation for unseen positions — though the original paper only hedged this *may* help, and in practice the extrapolation is weak.`,
           `D) Positional encodings compensate for the lack of recurrence, since RNNs encode order through sequential hidden-state updates. Sinusoidal encoding generalises because its frequency bands are tuned to match the natural frequency spectrum of language, independent of sequence length.`,
         ],
         answer: `C`,

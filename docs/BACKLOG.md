@@ -2744,3 +2744,23 @@ Not fixed this pass (findings only, recorded in `contentStatus.js` as `in_progre
 - 5 in_progress modules from this round + the audit is nowhere near finished: only 20 of the ~175 never-yet-re-audited modules have been covered. Honest answer to "will this be the last audit": no — expect more of these on every future pass until the full backlog is covered, and even fully-covered modules can regress if touched by later edits.
 - Live dev-server verification of the AttentionViz fix and the TransformerBlockViz upgrade — not done, should be checked in a browser before fully trusting either.
 - Everything else previously open (DonutCupViz decision is now resolved; AttentionViz bug is now resolved) — remaining: GSL STATUS.md refresh, PAT rotation (user action), expanding the audit further.
+
+## Session 2026-07-15 16:54 IST (Wednesday) — Phase 1 round 4 fixes: all 5 recorded defects closed (4 confirmed + 1 investigated-and-cleared)
+
+Picked up immediately after the user pushed round 4's audit findings. Dispatched 5 parallel fix agents (one per module, since each lived in a different file this round so no race risk):
+
+- **`metrics_first_principles`**: removed the invented, undemonstrated "2x cost ratio" bright-line rule; replaced with an honest hedge matching every sibling heuristic's style in the same file.
+- **`candidate_generation`**: rewrote `interactivePrompt` to match what its linked `retrieval_funnel_viz` widget actually shows (funnel/latency/recall-ceiling), instead of asking a tower-asymmetry question the widget can't demonstrate. Correction to my own round-4 note: no module named `two_tower` exists in `recsysModules.js` — the agent found the actual sibling reusing this widget correctly is `two_stage_architecture`, used as the real style reference.
+- **`transformers`**: added the same "weak in practice" hedge already present in summary/recap to the checkQuestion and its marked-correct answer, resolving the confidence-level contradiction without removing the real PE(pos+k)-linearity mechanism.
+- **`ab_infra`**: defined SUTVA and mSPRT inline at their first use each. (This agent's device-bridge connection dropped mid-task before writing anything — no partial edit, file was untouched. Rather than re-dispatching, I applied its already-fully-specified fix myself directly, verified `node --check` clean.)
+- **`recsys_stack`**: investigated rather than blindly fixed, per instruction. Traced the actual IPW/propensity-weighting mechanism through to its survivorship implication (a click surviving a ~10x positional handicap is a purer relevance signal) and concluded the round-4 flag was itself an incomplete read of the module's own mechanism — the question's direction was correct all along. Strengthened the answer's explanation to make the survivorship logic explicit so a future reader (or auditor) doesn't have to infer it. Not marked as "confirmed defect, fixed" — marked as "investigated, not a real defect, explanation clarified."
+
+### Verification
+- `node --check` clean on all 5 touched files (evalModules.js, recsysModules.js, deepLearningModules.js, productionModules.js, systemDesignModules.js).
+- `scripts/check-duplicate-keys.mjs`: 0 duplicate keys across 65 files.
+- `contentStatus.js`: 5 in_progress entries closed to clean with fix/investigation notes; sibling hash refresh across all 5 touched files. Caught my own oversight mid-refresh: missed `reranking_diversity` (systemDesignModules.js, line 119) in the first sibling-refresh pass — `validate-content-status.mjs` flagged it as a stale-hash warning immediately, fixed within the same turn before reporting back. `node scripts/validate-content-status.mjs` → **199 'clean' / 206 tracked** (S: 37/41, A: 76/79), zero stale-hash warnings, zero warnings of any kind.
+
+### Still open
+- Live dev-server verification of everything shipped today (AttentionViz fix, TransformerBlockViz upgrade, all round-3/round-4 content fixes) — still not done.
+- Audit coverage: 20 of ~175 never-yet-re-audited modules done (round 4). ~155 remain.
+- GSL's STATUS.md refresh, PAT rotation (user action) — unchanged, still open.

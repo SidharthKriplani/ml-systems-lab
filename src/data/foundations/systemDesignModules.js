@@ -208,7 +208,7 @@ export const SYSTEM_DESIGN_MODULES = [
         q: `Your LTR ranker shows higher precision@1 for items that were historically shown at low positions than high positions. Cause and fix?`,
         options: [
           `A) Label noise — low-position items collect fewer clicks and noisier implicit labels; collecting more editorial relevance judgments for those items fixes it.`,
-          `B) Position bias — top positions accrue clicks regardless of relevance, so raw-click training resurfaces prior top items; fix with propensity weighting.`,
+          `B) Position bias — top positions rack up clicks from visibility alone (~10x a low position, regardless of relevance), diluting their true-relevance rate, while an item that earned clicks despite a low position is a purer relevance signal; fix with propensity weighting.`,
           `C) Overfitting to head queries that are consistently shown at top positions; fix it with query-frequency-weighted sampling during every single training run.`,
           `D) Feature leakage from popularity features that are strongly correlated with historical position; remove every popularity feature entirely from the set.`,
         ],
