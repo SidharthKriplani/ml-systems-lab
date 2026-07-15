@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useImperativeHandle, forwardRef } from 'react'
+import React, { useState, useMemo, useCallback, useRef, useEffect, useImperativeHandle, forwardRef } from 'react'
 
 // A single Transformer block's forward pass, computed live -- not a canned
 // animation. Fixed, hand-picked weights (same "illustrative toy" convention
@@ -23,6 +23,10 @@ import React, { useState, useMemo, useCallback, useImperativeHandle, forwardRef 
 const TOKENS = ['The', 'cat', 'sat', 'down']
 const N = 4
 const D = 4
+// Number of distinct pipeline stages the Play/Step animation reveals, in
+// order: x0 (embed+pos-enc), ln1, head1 attn, head2 attn, attnOut (concat+Wo),
+// res1 (residual add), ln2, ffnOut (FFN), res2 (block output -- the payoff).
+const STAGE_COUNT = 9
 
 const W = {"TOKENS":["The","cat","sat","down"],"EMB":[[0.9,0.1,0.0,0.2],[0.1,0.9,0.2,0.1],[0.2,0.2,0.9,0.1],[0.1,0.3,0.2,0.9]],"PE":[[0.0,0.3,0.0,0.3],[0.252441,0.162091,0.003,0.299985],[0.272789,-0.124844,0.006,0.29994],[0.042336,-0.296998,0.008999,0.299865]],"Wq1":[[0.8,0.0],[0.0,0.8],[0.0,0.0],[0.0,0.0]],"Wk1":[[0.8,0.0],[0.0,0.8],[0.0,0.0],[0.0,0.0]],"Wv1":[[0.0,0.0],[0.0,0.0],[1.0,0.0],[0.0,1.0]],"Wq2":[[1.02046,-1.277833],[0.209049,-0.283885],[-0.226325,-0.107799],[-1.009993,-0.115966]],"Wk2":[[-0.432607,1.6615],[0.112893,-0.176315],[-0.140644,-0.334023],[-0.527575,-0.1954]],"Wv2":[[1.0,0.0],[0.0,1.0],[0.0,0.0],[0.0,0.0]],"Wo":[[1.0,0.0,0.0,0.0],[0.0,1.0,0.0,0.0],[0.0,0.0,1.0,0.0],[0.0,0.0,0.0,1.0]],"W1":[[0.000615,0.149373,-0.137069,-0.445296,-0.227335,-0.495823,0.030072,0.670108,-0.246103,-0.310237,0.244921,0.178444,0.052707,-0.465234,-0.014626,0.347652],[-0.672107,-0.228808,-0.950611,-0.644769,-0.920868,-0.117546,-0.633723,0.135632,0.078376,-0.093465,-1.25838,-0.269346,-0.02425,0.056654,-0.765068,-0.238877],[-0.48926,-0.404419,0.530449,-0.403767,-0.016261,0.442195,-0.2918,-0.055851,0.055232,0.031891,-0.612528,0.03807,0.679412,-0.773572,0.429691,0.059677],[-0.320735,1.000208,0.38113,-0.599644,0.037258,0.288345,-0.094391,0.341455,-0.033259,0.333624,0.719261,-0.337831,0.101569,-0.231654,0.063634,-0.593597]],"b1":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"W2":[[-0.17379,-0.058859,0.269629,0.343567],[-0.397058,-0.238393,0.194071,-0.597726],[-0.138951,-0.029186,0.377104,0.206821],[-0.098164,-0.110573,-0.075059,0.457059],[-0.128407,-0.091104,0.105777,-0.036231],[-0.059185,-0.33422,-0.003456,-0.133074],[0.349838,0.195927,-0.007243,0.200514],[-0.101961,0.315638,-0.00162,0.175015],[-0.387268,0.104004,-0.506461,-0.610599],[-0.091343,-0.269978,0.049216,0.673427],[-0.249517,-0.187183,0.061621,0.147904],[-0.052922,-0.061779,0.210739,0.155972],[-0.310103,-0.023754,0.010586,-0.316345],[0.077952,-0.257387,0.29162,0.057824],[0.026792,-0.177309,-0.035583,-0.599324],[-0.339422,0.108852,-0.63857,0.253983]],"b2":[0.0,0.0,0.0,0.0]}
 
@@ -113,40 +117,102 @@ function VectorRow({ vec, lo, hi, cellW = 22 }) {
     </div>
   )
 }
-function Stage({ label, children }) {
+// reached: this stage has been revealed by the Play/Step walkthrough (or the
+// walkthrough hasn't been engaged, in which case everything defaults to
+// revealed -- see TransformerBlockViz's initial activeStage). active: this is
+// the CURRENT stage of an in-progress Play/Step animation -- gets an extra
+// glow so the eye has somewhere to land. final: the block-output stage, which
+// stays visually distinct (bordered) once reached since it's the payoff of
+// the whole pipeline.
+function Stage({ label, children, reached = true, active = false, final = false }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, minWidth: 92 }}>
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, minWidth: 92,
+      padding: 5, borderRadius: 8,
+      opacity: reached ? 1 : 0.32,
+      border: final ? `1.5px solid ${reached ? 'var(--prime)' : 'var(--rim)'}` : '1.5px solid transparent',
+      boxShadow: active
+        ? '0 0 0 2px var(--prime), 0 0 14px rgba(240,165,0,0.55)'
+        : (final && reached ? '0 0 10px rgba(240,165,0,0.3)' : 'none'),
+      transition: 'opacity 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease',
+    }}>
       <div style={{ fontSize: '0.56rem', color: 'var(--ink-low)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'center', height: 26 }}>{label}</div>
       {children}
     </div>
   )
 }
-function Arrow() {
-  return <div style={{ color: 'var(--ink-ghost)', fontSize: '1rem', alignSelf: 'center', marginTop: 12 }}>&rarr;</div>
+function Arrow({ active = false }) {
+  return <div style={{ color: active ? 'var(--prime)' : 'var(--ink-ghost)', fontSize: '1rem', alignSelf: 'center', marginTop: 12, transition: 'color 0.35s ease' }}>&rarr;</div>
 }
-function PlusBadge() {
+function PlusBadge({ active = false }) {
   return (
-    <div style={{ alignSelf: 'center', marginTop: 12, width: 18, height: 18, borderRadius: '50%', border: '1.5px solid var(--amber, #F0A500)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', color: 'var(--amber, #F0A500)', fontWeight: 700 }}>+</div>
+    <div style={{
+      alignSelf: 'center', marginTop: 12, width: 18, height: 18, borderRadius: '50%',
+      border: `1.5px solid ${active ? 'var(--prime)' : 'var(--amber, #F0A500)'}`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem',
+      color: active ? 'var(--prime)' : 'var(--amber, #F0A500)', fontWeight: 700,
+      opacity: active ? 1 : 0.5,
+      boxShadow: active ? '0 0 8px rgba(240,165,0,0.5)' : 'none',
+      transition: 'opacity 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease, color 0.35s ease',
+    }}>+</div>
   )
 }
 
 const heat = (w) => `rgba(240,182,20,${(w * 0.85 + 0.05).toFixed(3)})`
 
 function AttnMatrix({ weights, selected, label }) {
+  // Local hover state -- {i, j} of the hovered cell, or null. Drives the
+  // row-token / column-token highlight so query->key reads visually, not
+  // just via the numeric title tooltip.
+  const [hover, setHover] = useState(null)
+  const cellSize = 24
+  const rowLabelStyle = (i) => ({
+    fontSize: '0.6rem', fontFamily: 'var(--font-mono)', textAlign: 'right', paddingRight: 4,
+    color: i === selected ? 'var(--prime)' : (hover && hover.i === i ? 'var(--ink-hi)' : 'var(--ink-low)'),
+    fontWeight: (i === selected || (hover && hover.i === i)) ? 700 : 500,
+    border: hover && hover.i === i ? '1px solid var(--prime)' : '1px solid transparent',
+    borderRadius: 3, transition: 'color 0.15s ease, border-color 0.15s ease',
+  })
+  const colLabelStyle = (j) => ({
+    fontSize: '0.6rem', fontFamily: 'var(--font-mono)', textAlign: 'center', paddingBottom: 2,
+    color: j === selected ? 'var(--prime)' : (hover && hover.j === j ? 'var(--ink-hi)' : 'var(--ink-low)'),
+    fontWeight: (j === selected || (hover && hover.j === j)) ? 700 : 500,
+    border: hover && hover.j === j ? '1px solid var(--prime)' : '1px solid transparent',
+    borderRadius: 3, transition: 'color 0.15s ease, border-color 0.15s ease',
+  })
   return (
     <div>
       <div style={{ fontSize: '0.56rem', color: 'var(--ink-low)', marginBottom: 3, textAlign: 'center' }}>{label}</div>
       <table style={{ borderCollapse: 'collapse' }}>
+        <thead>
+          <tr>
+            <td />
+            {TOKENS.map((t, j) => (
+              <td key={t} style={colLabelStyle(j)}>{t}</td>
+            ))}
+          </tr>
+        </thead>
         <tbody>
           {weights.map((row, i) => (
             <tr key={i}>
+              <td style={rowLabelStyle(i)}>{TOKENS[i]}</td>
               {row.map((w, j) => (
-                <td key={j} title={`${TOKENS[i]}\u2192${TOKENS[j]}: ${w.toFixed(2)}`} style={{
-                  width: 20, height: 16, textAlign: 'center', fontSize: '0.48rem', fontFamily: 'var(--font-mono)',
-                  background: w === 0 ? 'transparent' : heat(w),
-                  color: w > 0.5 ? '#000' : 'var(--ink-hi)',
-                  border: i === selected ? '1px solid var(--prime)' : '1px solid var(--rim)',
-                }}>{w < 0.005 ? '\u00b7' : w.toFixed(1).replace('0.', '.')}</td>
+                <td
+                  key={j}
+                  title={`${TOKENS[i]}→${TOKENS[j]}: ${w.toFixed(2)}`}
+                  onMouseEnter={() => setHover({ i, j })}
+                  onMouseLeave={() => setHover(h => (h && h.i === i && h.j === j ? null : h))}
+                  style={{
+                    width: cellSize, height: cellSize - 4, textAlign: 'center', fontSize: '0.52rem', fontFamily: 'var(--font-mono)',
+                    background: w === 0 ? 'transparent' : heat(w),
+                    color: w > 0.5 ? '#000' : 'var(--ink-hi)',
+                    border: (hover && hover.i === i && hover.j === j)
+                      ? '1.5px solid var(--prime)'
+                      : (i === selected ? '1px solid var(--prime)' : '1px solid var(--rim)'),
+                    boxShadow: (hover && hover.i === i && hover.j === j) ? '0 0 6px rgba(240,165,0,0.6)' : 'none',
+                    cursor: 'default', transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
+                  }}
+                >{w < 0.005 ? '·' : w.toFixed(1).replace('0.', '.')}</td>
               ))}
             </tr>
           ))}
@@ -159,9 +225,57 @@ function AttnMatrix({ weights, selected, label }) {
 export const TransformerBlockViz = forwardRef(function TransformerBlockViz(props, ref) {
   const [selected, setSelected] = useState(1) // default to "cat"
   const [causal, setCausal] = useState(false) // false = encoder (bidirectional), true = decoder (causal)
+  // -1 = walkthrough not engaged (nothing "in progress"); 0..STAGE_COUNT-1 =
+  // stages revealed up to & including this index. Defaults to fully revealed
+  // (matches the pre-animation static layout) so the diagram still renders
+  // correctly if this component is ever used outside InteractiveShell (no
+  // autoplay driver). InteractiveShell auto-calls play() once this mounts and
+  // scrolls into view, which resets to -1 and animates the reveal.
+  const [activeStage, setActiveStage] = useState(STAGE_COUNT - 1)
+  const timerRef = useRef(null)
 
-  const reset = useCallback(() => { setSelected(1); setCausal(false) }, [])
-  useImperativeHandle(ref, () => ({ reset }), [reset])
+  const clearTimer = useCallback(() => {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
+  }, [])
+
+  const reset = useCallback(() => {
+    clearTimer()
+    setSelected(1)
+    setCausal(false)
+    setActiveStage(-1)
+  }, [clearTimer])
+
+  const play = useCallback(() => {
+    clearTimer()
+    // Reveal the next stage immediately (snappier than waiting a full tick),
+    // restarting from the top if we'd already finished.
+    setActiveStage(prev => {
+      const start = prev >= STAGE_COUNT - 1 ? -1 : prev
+      return Math.min(start + 1, STAGE_COUNT - 1)
+    })
+    timerRef.current = setInterval(() => {
+      setActiveStage(prev => {
+        const next = prev + 1
+        if (next >= STAGE_COUNT - 1) {
+          clearTimer()
+          return STAGE_COUNT - 1
+        }
+        return next
+      })
+    }, 650)
+  }, [clearTimer])
+
+  const pause = useCallback(() => { clearTimer() }, [clearTimer])
+
+  const step = useCallback(() => {
+    clearTimer()
+    setActiveStage(prev => Math.min(prev + 1, STAGE_COUNT - 1))
+  }, [clearTimer])
+
+  // Stop any running interval on unmount.
+  useEffect(() => clearTimer, [clearTimer])
+
+  useImperativeHandle(ref, () => ({ reset, play, pause, step }), [reset, play, pause, step])
 
   const block = useMemo(() => forwardBlock(causal), [causal])
 
@@ -172,6 +286,9 @@ export const TransformerBlockViz = forwardRef(function TransformerBlockViz(props
   const rangeLn2 = vecRange(block.ln2)
   const rangeFfn = vecRange(block.ffnOut)
   const rangeRes2 = vecRange(block.res2)
+
+  const reached = (idx) => idx <= activeStage
+  const isActive = (idx) => idx === activeStage
 
   const btn = (active) => ({
     padding: '6px 11px', minHeight: 32, borderRadius: 6, cursor: 'pointer', fontSize: '0.7rem', fontFamily: 'var(--font-sans)',
@@ -191,38 +308,38 @@ export const TransformerBlockViz = forwardRef(function TransformerBlockViz(props
 
       <div style={{ overflowX: 'auto', paddingBottom: 6 }}>
         <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', minWidth: 780 }}>
-          <Stage label={`"${TOKENS[selected]}" + pos.enc`}>
+          <Stage label={`"${TOKENS[selected]}" + pos.enc`} reached={reached(0)} active={isActive(0)}>
             <VectorRow vec={X0[selected]} lo={rangeX0[0]} hi={rangeX0[1]} />
           </Stage>
-          <Arrow />
-          <Stage label="LayerNorm">
+          <Arrow active={reached(0)} />
+          <Stage label="LayerNorm" reached={reached(1)} active={isActive(1)}>
             <VectorRow vec={block.ln1[selected]} lo={rangeLn1[0]} hi={rangeLn1[1]} />
           </Stage>
-          <Arrow />
-          <Stage label="head 1 attn">
-            <AttnMatrix weights={block.head1.weights} selected={selected} label="Q\u00b7K \u2192 softmax" />
+          <Arrow active={reached(1)} />
+          <Stage label="head 1 attn" reached={reached(2)} active={isActive(2)}>
+            <AttnMatrix weights={block.head1.weights} selected={selected} label="Q·K → softmax" />
           </Stage>
-          <Stage label="head 2 attn">
-            <AttnMatrix weights={block.head2.weights} selected={selected} label="Q\u00b7K \u2192 softmax" />
+          <Stage label="head 2 attn" reached={reached(3)} active={isActive(3)}>
+            <AttnMatrix weights={block.head2.weights} selected={selected} label="Q·K → softmax" />
           </Stage>
-          <Arrow />
-          <Stage label="concat + Wo">
+          <Arrow active={reached(3)} />
+          <Stage label="concat + Wo" reached={reached(4)} active={isActive(4)}>
             <VectorRow vec={block.attnOut[selected]} lo={rangeAttn[0]} hi={rangeAttn[1]} />
           </Stage>
-          <PlusBadge />
-          <Stage label="residual add">
+          <PlusBadge active={reached(4)} />
+          <Stage label="residual add" reached={reached(5)} active={isActive(5)}>
             <VectorRow vec={block.res1[selected]} lo={rangeRes1[0]} hi={rangeRes1[1]} />
           </Stage>
-          <Arrow />
-          <Stage label="LayerNorm">
+          <Arrow active={reached(5)} />
+          <Stage label="LayerNorm" reached={reached(6)} active={isActive(6)}>
             <VectorRow vec={block.ln2[selected]} lo={rangeLn2[0]} hi={rangeLn2[1]} />
           </Stage>
-          <Arrow />
-          <Stage label="FFN (4\u00d7 wide, ReLU)">
+          <Arrow active={reached(6)} />
+          <Stage label="FFN (4× wide, ReLU)" reached={reached(7)} active={isActive(7)}>
             <VectorRow vec={block.ffnOut[selected]} lo={rangeFfn[0]} hi={rangeFfn[1]} />
           </Stage>
-          <PlusBadge />
-          <Stage label="block output">
+          <PlusBadge active={reached(7)} />
+          <Stage label="block output" reached={reached(8)} active={isActive(8)} final>
             <VectorRow vec={block.res2[selected]} lo={rangeRes2[0]} hi={rangeRes2[1]} />
           </Stage>
         </div>

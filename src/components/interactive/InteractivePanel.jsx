@@ -23,7 +23,7 @@ const registry = {
   backprop_viz:               lazy(() => import('./BackpropViz').then(m => ({ default: m.BackpropViz }))),
   neural_net_geometry_viz:    lazy(() => import('./NeuralNetGeometryViz').then(m => ({ default: m.NeuralNetGeometryViz }))),
   eigen_geometry_viz:         lazy(() => import('./EigenGeometryViz').then(m => ({ default: m.EigenGeometryViz }))),
-  donut_cup_viz:               lazy(() => import('./DonutCupViz').then(m => ({ default: m.DonutCupViz }))),
+  // donut_cup_viz: archived to _archive/DonutCupViz.jsx 2026-07-15 -- replaced by ring_warp_viz on neural_nets, no module references it anymore.
   ring_warp_viz:               lazy(() => import('./RingWarpViz').then(m => ({ default: m.RingWarpViz }))),
   transformer_block_viz:       lazy(() => import('./TransformerBlockViz').then(m => ({ default: m.TransformerBlockViz }))),
   ensemble_viz:               lazy(() => import('./EnsembleViz').then(m => ({ default: m.EnsembleViz }))),
@@ -135,7 +135,7 @@ export function InteractivePanel({ interactiveId }) {
             Loading...
           </div>
         }>
-          <InteractiveShell>
+          <InteractiveShell key={interactiveId}>
             <Component />
           </InteractiveShell>
         </Suspense>
