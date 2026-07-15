@@ -2640,3 +2640,42 @@ Direct response to being asked why "clean"-tagged content keeps producing new bu
 **Verification:** `node --check` clean on `contentStatus.js` and `CLAUDE.md`-adjacent files throughout; `scripts/check-duplicate-keys.mjs` run against the full on-device `src/data/` tree (0 found); `scripts/validate-content-status.mjs` run on-device (199 clean entries, all real receipts, 0 stale-hash warnings); `CLAUDE.md`'s line/byte count checked before and after the insertion (344→362 lines, 36,410→38,139 bytes, delta matches exactly what was inserted) specifically because an earlier `device_stage_files` call on this same file silently truncated to 15,875 bytes with no error -- caught by comparing byte counts rather than trusting the stage response, avoided editing a corrupted local copy that would have destroyed 65% of the file on push.
 
 Files touched: `ml-systems-lab/scripts/check-duplicate-keys.mjs` (new), `ml-systems-lab/scripts/extract-numeric-claims.mjs` (new), `ml-systems-lab/src/data/contentStatus.js` (3 corrected entries + 74 bulk hash refreshes), `~/mnt/BreakLabs/CLAUDE.md` (new Recordkeeping rule 6, edited directly on-device via `device_bash`+Python after the staging bridge silently truncated this file -- flagging that truncation as a real bridge bug worth remembering for future large-file edits).
+
+## Session 2026-07-15 15:12 IST (Wednesday) — Phase 1 round 2: 16-module blind audit, 13/16 FAIL; 4 voice-fix modules closed; 6 mechanical fixes shipped; 7 findings recorded, not yet fixed
+
+Per explicit user direction to pick up multiple threads at once: expanded the Phase 1 audit sample, fixed the 4 already-known voice-craft-violation modules, ported the new verification tooling to GSL, and refreshed both repos' STATUS.md. This entry covers the audit expansion + voice fixes; GSL tooling port is logged in GSL's own `docs/GSL_PLAN.md`.
+
+### Voice-craft fixes (4 modules, dispatched as parallel agents, each independently fixed+verified+pushed)
+`gradient_boosting`, `rct_design`, `training_serving_skew`, `data_splits_and_leakage` — all had voice-craft-only violations found by the earlier 12-module sample (jargon-before-demonstration, mostly). Each agent independently re-derived the exact violations against `3B1B-STANDARD.md`, applied minimal surgical fixes, verified `node --check` + esbuild, and pushed. All 4 confirmed clean on-device. Full per-module detail in each `contentStatus.js` entry's `note` field.
+
+### Blind adversarial audit round 2 — 16 more modules sampled from the remaining ~92 "clean"-tagged pool
+
+**Result: 13 of 16 FAILED, 3 PASSED.** This is a markedly worse hit rate than round 1 (3/12, 25%) — round 2 came in at 13/16 (81%). Combined across both rounds: 16 of 28 sampled "clean" modules (57%) had genuine, independently-verified defects. This further undermines confidence in the remaining ~64 unaudited "clean" modules.
+
+**PASS (3):** `regularization`, `convex_optimization`, `two_tower` — each independently re-derived every number and checked voice compliance from scratch; genuinely clean.
+
+**FAIL, fixed this session (6, all mechanical -- rendering bugs or single well-scoped numeric errors):**
+- `svd`: 3 stray-backtick rendering bugs (apostrophes mistyped as escaped backticks, breaking the markdown inline-code pairing regex and swallowing adjacent math into spurious code spans).
+- `pca_theory`: a single-escaped `\lambda_k` silently parsed as literal "lambdak" instead of λ; a stray backtick; and a "65,000× variance" claim that didn't survive independent recomputation, replaced with a shown derivation (~21,700×).
+- `sampling_distributions`: a t-critical-value off-by-one (2.042 stated for n=30, actually the value for n=31 under the question's own df=n−1 convention; correct value 2.045).
+- `information_theory`: a substantive VAE/KL misattribution across 4 locations plus a reversed KL direction in the takeaway — the module attributed posterior mode-seeking to the ELBO's explicit prior-matching term instead of the implicit KL(q(z|x)‖p(z|x)) that falls out of the ELBO identity. All 5 locations fixed.
+- `logistic_regression`: the "gradient shrinks to 4.5%" claim conflated a factor of the MSE gradient with the full gradient; true value ≈9%, propagated across 3 locations (summary/keyPoints/recap), all fixed.
+- `ablation`: fixed 1 of 4 reported defects — a single-backslash formula (`AUC(full \ {C})`) silently dropped by JS's string-escaping rules, verified via `node` that the literal backslash never survived parsing. **3 more defects on this module are NOT fixed** (see below).
+
+**FAIL, findings recorded but NOT yet fixed (7 modules) — flagged `in_progress` in `contentStatus.js`, not left as false "clean":**
+- `random_forest`: undefined-term-before-use ("bootstrap resampling"), duplicated-word typo ("validation set set aside").
+- `probability_basics`: a linked interactive's preset (20% spam prior) contradicts the module's own stated 30% (×3); `interactivePrompt`'s "1% prevalence" contradicts the adjacent worked example's 0.1%, and no interactive preset reproduces the module's own ≈9% result; a checkQuestion requires the binomial PMF, never taught; the opening "FREE" 5×-likelihood example is set up but never completed.
+- `cross_validation`: "200 configurations" (summary) vs "100 configurations" (keyPoints) for the identical claim; summary calls nested CV "the only" honest setup, contradicted by keyPoints/checkQuestions which also correctly allow a separate test set; recap omits 3 fully-taught named techniques.
+- `ranking_metrics`: a checkQuestion tests reading 1/MRR as an "effective rank," never taught; an ungrounded NDCG@1-vs-@10 diagnostic asserted with no worked example; "counterfactual evaluation" named twice, never defined.
+- `dag_confounding`: a checkQuestion's marked-correct answer is DAG-logically false as drawn (W isn't actually on the stated backdoor path); the general collider definition contradicts its own notation, its own next example, and the figure.
+- `iv`: the 2SLS description is internally self-contradictory about whether/how controls carry into stage 2, and disagrees with the module's own recap; "always-takers, never-takers" named with zero definition.
+- `did`: the `paralleltrends` SVG figure's own caption says "Gap = DiD estimate," but the drawn gap (36 units) overstates the true DiD estimate computable from the figure's own solid lines (24 units) by 50% — the counterfactual line's slope doesn't match its own caption's definition.
+- (Note: `ablation` has 3 more items in this same category, tracked under its own entry above since 1 of its 4 was fixed.)
+
+### Verification
+All 6 mechanically-fixed modules: `node --check` + `npx esbuild --bundle` clean (zero warnings) on all 3 touched files (`mathStatsModules.js`, `classicalMLModules.js`, `evalModules.js`), re-confirmed with `scripts/check-duplicate-keys.mjs` (0 across all 65 `src/data/**/*.js` files), pushed and re-verified on-device. `contentStatus.js` updated for all 20 audited-this-round modules (10 clean+fixed, 3 clean+re-verified, 7 in_progress+findings) plus a bulk hash refresh for 52 sibling entries across the 6 touched files — `scripts/validate-content-status.mjs` now reports 0 stale-hash warnings, 192 clean entries with real receipts.
+
+### Still open
+The 7 findings above (plus `ablation`'s remaining 3) are logged with enough detail to fix directly from the note — not yet applied, given the scope already shipped this session. Whether to continue expanding the audit sample to the remaining ~64 modules, given a combined 57% hit rate across 28 sampled so far, is a decision for the user. `AttentionViz` bug still blocked on user repro info. Live dev-server verification still outstanding for everything shipped this entire session.
+
+Files touched: `src/data/foundations/mathStatsModules.js` (5 module fixes), `src/data/foundations/classicalMLModules.js` (1 module fix, `gradient_boosting`/`logistic_regression`), `src/data/foundations/evalModules.js` (1 module fix, `ablation`), `src/data/foundations/causalModules.js` (`rct_design` voice fix), `src/data/foundations/productionModules.js` (`training_serving_skew` voice fix), `src/data/foundations/dataModules.js` (`data_splits_and_leakage` voice fix), `src/data/contentStatus.js` (20 entries updated + 52 hash refreshes).

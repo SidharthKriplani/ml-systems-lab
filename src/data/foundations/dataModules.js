@@ -1134,27 +1134,27 @@ Here is the leak. Patient 147 has nine visits in your data. The random split sca
 
 ---
 
-**Group leakage — the same entity on both sides.**
+**The same entity on both sides.**
 
-That was patient 147: related rows (same patient, user, or household) split across train and test, so the test set is not truly independent. The fix is a **group split** — every row from a given patient goes entirely to one side, so validation always contains patients the model has never seen.
-
----
-
-**Temporal leakage — training on the future.**
-
-With time-ordered data, a random split lets the model train on March to predict January — the reverse of reality, where you never have tomorrow's data today. The fix is a **time cutoff**: train on everything before a date, validate on everything after.
+That was patient 147: related rows (same patient, user, or household) split across train and test, so the test set is not truly independent — this is **group leakage**. The fix is a **group split** — every row from a given patient goes entirely to one side, so validation always contains patients the model has never seen.
 
 ---
 
-**Preprocessing leakage — the quiet one.**
+**Training on the future.**
 
-Fit a scaler (or imputer) on all 5,000 records *before* splitting, and its mean and spread were computed partly from the validation rows — so the training transform is tainted by the data you are supposed to be judging on. **Target encoding leaks worse, and differently.** A target encoder replaces each category with the *mean of the label* for that category — fit it on all 5,000 records before splitting, and every validation row's encoded value was computed using the labels of the very validation rows it will later be graded on. That is not a distributional statistic sneaking across the boundary like a scaler's mean and spread; it is the label itself, smuggled into a feature column before training even starts. Fit every transformer — scaler, imputer, or target encoder — on the *training* data only, then apply it to validation. A pipeline enforces this so you do not have to remember.
+With time-ordered data, a random split lets the model train on March to predict January — the reverse of reality, where you never have tomorrow's data today. That's **temporal leakage**. The fix is a **time cutoff**: train on everything before a date, validate on everything after.
 
 ---
 
-**Feature leakage — the answer hiding in a column.**
+**The quiet one.**
 
-A feature like "rehospitalised_within_30_days" on a readmission-prediction row *is the label wearing a disguise* — it could only be known after the outcome. Any feature that needs knowledge of the future is unavailable at prediction time. The classic tell: a single new feature makes accuracy jump 15 points. Real features never do that.
+Fit a scaler (or imputer) on all 5,000 records *before* splitting, and its mean and spread were computed partly from the validation rows — so the training transform is tainted by the data you are supposed to be judging on. This is **preprocessing leakage**. **Target encoding leaks worse, and differently.** A target encoder replaces each category with the *mean of the label* for that category — fit it on all 5,000 records before splitting, and every validation row's encoded value was computed using the labels of the very validation rows it will later be graded on. That is not a distributional statistic sneaking across the boundary like a scaler's mean and spread; it is the label itself, smuggled into a feature column before training even starts. Fit every transformer — scaler, imputer, or target encoder — on the *training* data only, then apply it to validation. A pipeline enforces this so you do not have to remember.
+
+---
+
+**The answer hiding in a column.**
+
+A feature like "rehospitalised_within_30_days" on a readmission-prediction row *is the label wearing a disguise* — it could only be known after the outcome. This is **feature leakage**: any feature that needs knowledge of the future is unavailable at prediction time. The classic tell: a single new feature makes accuracy jump 15 points. Real features never do that.
 
 ---
 
