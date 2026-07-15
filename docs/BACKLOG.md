@@ -2419,3 +2419,62 @@ all of today by a device-bridge tool outage; bridge reconnected, push completed 
   documented deviations are in the subagent's own handback, not re-litigated here.
 - No `contentStatus.js` entries were touched this session — these are narrative-prose and schema fixes,
   not narrative-verification-pipeline passes, so `clean` status is not implicated either way.
+
+## Session 2026-07-15 09:15 IST (Wednesday) — Real 3B1B-STANDARD.md adversarial audit (all 14 DL modules), not just the continuity check
+
+User correctly called out that the 08:20/09:00 IST passes today checked continuity (voice rule 11) only,
+not the actual full audit mechanism `3B1B-STANDARD.md` itself defines (Pass 2 adversarial checklist:
+jargon-second, precision cash-out, numeric self-check, pause-and-predict, one persistent example, crisis→
+inevitability, mechanical labeling, one worked illustration, unexplained origins) — a scoping gap on my
+part, not a missing standard. Ran the real thing: one independent auditor agent per module, all 14,
+blind to any prior reasoning, against the full checklist.
+
+**Raw violation counts (summary+interactivePrompt only; keyPoints/recap/checkQuestions checked for flat
+factual errors only, per the standard's own "Where it applies" scoping):** neural_nets 8, backprop 8,
+activations 9, batch_norm 8, optimizers 6, cnns 7, rnns_lstms 6, attention 8, transformers 9 (most
+severe — zero worked illustration anywhere in the module), pretraining 9, finetune 7, quantization 8,
+dl_serving 10, dl_debugging 9. **~112 total findings.** Most are voice-rule/prose-craft issues (jargon
+named before being demonstrated twice, missing pause-and-predict beats, metaphors abandoned mid-module,
+scattered rather than single worked illustrations, hyperparameter origins like LoRA rank=8 or ε left
+unstated) — real per the standard, but they require actual rewriting, not point-fixes.
+
+**Fixed now — the subset that were genuine factual/numeric/internal-contradiction bugs, not voice-craft:**
+- `dl_debugging` `recap[0]` still contained the exact "picks up from Model Serving... what happens before
+  that assumption holds" contradiction that the 09:00 IST entry's `summary` rewrite was supposed to
+  retire — the earlier fix only touched `summary`, missed this. Now aligned with the capstone framing.
+- `dl_serving`: 524KB × 512 tokens ≈ 268MB, not the stated 256MB — fixed by stating the exact byte count
+  (512 KiB/token, not a lossy "~524 KB" rounding) so the arithmetic is exact. Also fixed a real internal
+  contradiction: "~300 chats fit in 80GB (model already loaded)" ignored the model's own ~14GB footprint;
+  corrected to ~260 chats after accounting for it.
+- `quantization`: the stated formula `x_int = round(x_float / scale)` with `scale=(max−min)/255` produces
+  out-of-int8-range values for any non-zero-centered range (verified: the module's own outlier example
+  produces x_int=232, outside [0,255]) — missing the zero-point/min offset. Fixed by adding `− min` to
+  the numerator in both `summary` and `recap`; now correctly spans [0,255].
+- `finetune`: the worked example claimed a 4096×4096 matrix "inside" LLaMA-2 70B, but 4096 is LLaMA-2
+  7B's hidden size (70B's is 8192) — decoupled the illustrative matrix from a specific named model.
+  Also the "14 bytes/param → 980GB" full-fine-tune memory figure didn't match either standard convention;
+  changed to 12 bytes/param (fp16 weights+grads, fp32 Adam m+v) → 840GB, matching the convention the
+  QLoRA paper itself uses. Also clarified `takeaway`'s "0.2% of its parameters" (whole-model trainable
+  fraction) doesn't contradict `summary`'s "99.6% cut" (a single matrix's own update) — different scopes,
+  now stated as such rather than left as an apparent contradiction.
+- `batch_norm`: "the original paper... reports raising the learning rate roughly 5–10×" doesn't match
+  Ioffe & Szegedy (2015)'s actual reported figures (~5× in the main experiment, up to 30× in their
+  "BN-x30" variant) — corrected in both `summary` and `recap`.
+- `pretraining`: "500 tries — 500 fine-tuning steps" silently equated dataset size (500 labelled
+  examples) with optimizer step count — not the same quantity without an unstated batch-size/epoch
+  assumption. Reworded to remove the false equivalence while keeping the fog/valley metaphor intact.
+
+All fixes verified `node --check` clean, cloud and on-device.
+
+**Explicitly NOT done — stated plainly, not silently dropped:** the ~100 remaining voice-rule findings
+(jargon-before-demonstration across nearly every module, missing in-narrative pause-and-predict beats in
+`activations`/`rnns_lstms`/`transformers`, `transformers`' complete lack of any worked illustration,
+abandoned/switched metaphors in `optimizers`/`pretraining`/`attention`/`dl_serving`, several continuity
+callbacks this session's own edits added that the auditors found too generic — `optimizers`, `cnns`,
+`quantization`, `dl_serving` all flagged their own new callback sentences as not naming the *specific*
+point the prior module left off at, despite being factually accurate). These are real per
+`3B1B-STANDARD.md` but are rewrite-scale work, not edit-scale — attempting to patch all ~100 in this same
+session would repeat the exact shallow-fix pattern this audit was run to catch. Recommended next step:
+run the standard's own prescribed writer+adversarial-auditor loop (capped at 3 iterations) one module at a
+time, starting with `transformers` (most severe) and `rnns_lstms` (most systemic — zero metaphors used
+anywhere in the module).
