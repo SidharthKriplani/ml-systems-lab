@@ -2795,3 +2795,32 @@ Attempted per user request to start `npm run dev` on the device bridge and verif
 - Live dev-server verification — still blocked, needs the user's own terminal.
 - A-tier/B-tier audit coverage — essentially untouched (only a handful of A-tier modules got incidentally covered via file-sharing with S-tier targets in earlier rounds).
 - GSL STATUS.md, PAT rotation — unchanged, still open.
+
+## Session 2026-07-15 17:41 IST (Wednesday) — Phase 1 round 5 fixes: all 8 findings closed
+
+Dispatched 6 parallel fix agents (one per file, grouping same-file modules together) for all 8 round-5 findings.
+
+**`trees`** — 5 defects fixed: hand-picked "0.35" corrected to the true midpoint 0.325 (Gini conclusion unaffected); opening linear-vs-tree claim softened to match what the single-split worked example actually shows; tree_partition figure clarified via added prose rather than a full redraw; "axis-aligned" glossed at first use; calibration methods given a forward-pointer matching the existing class_imbalance pattern.
+
+**`auc_roc`** — both defects fixed: the "100" numerator in the precision worked example now states its 100%-recall assumption explicitly; a concordant-pairs explanation added next to the Mann-Whitney U mention so checkQuestion 4 is grounded.
+
+**`two_stage_architecture`** — the cross-module "~1,000 vs a few hundred" contradiction resolved: all 9 occurrences (summary, interactivePrompt, keyPoints, takeaway, recap x2, SVG figure x2) changed to "a few hundred," matching the 3-module consensus already established elsewhere in the same file. Confirmed the latency-gap arithmetic doesn't depend on this count.
+
+**`design_framework`** + **`recsys_overview`** (same file) — design_framework's two-stage/human-in-the-loop concept moved from recap-only into keyPoints so the quiz is grounded. recsys_overview got a brief exploitation-collapse grounding with a forward-pointer to the two modules that fully cover it, and a fixed interactivePrompt that flags the shared widget shows more (4-stage/100ms) than this module teaches (3-stage/50ms) rather than silently leaving the reader to reconcile it — chose to preserve the module's intentionally simpler framing over rewriting it to match its own deeper-dive sibling.
+
+**`backprop`** + **`attention`** (same file) — backprop's stale "(the network above)" corrected to "below" after confirming the actual render order in DeepLearningFoundationTab.jsx. attention's checkQuestion 3 correct answer tightened from 341 to 252 characters (no facts removed), bringing its length-ratio tell from 1.48x down to 1.09x, in line with its own distractors' natural spread.
+
+**`gradient_descent_fundamentals`** — all 4 defects fixed, most notably the SVG math bug: independently re-derived the gd_convergence curve's Bezier path (`M20,183 Q210,10 400,183`) and confirmed its real vertex is (210, 96.5) via two independent methods (vertex-form algebra and the Bezier midpoint formula), while the dots/minimum-marker were plotted against an implied vertex of (210, 10) — a genuine ~2x-steeper parabola, 86.5px off. Resampled every dot onto the curve's real parabola and moved the minimum marker to the true vertex. Plus: learning rate now named before its first casual use; a second concrete demonstration added within the same hillside scene before naming "the gradient" (3B1B-STANDARD's two-demonstration rule); and a continuity lead-in added referencing loss_landscape_intuition's saddle-point/plateau coverage.
+
+One agent (gradient_descent_fundamentals) ran two read-only git commands (`git diff --stat`, `git status --porcelain`) mid-task to sanity-check change size — a minor violation of "do not run git commands" (no state was mutated, self-disclosed honestly in its report, all further verification switched to plain file reads). Noting it here rather than letting it pass silently.
+
+### Verification
+- `node --check` clean on all 6 touched files (classicalMLModules.js, evalModules.js, recsysModules.js, systemDesignModules.js, deepLearningModules.js, optimizationModules.js).
+- `scripts/check-duplicate-keys.mjs`: 0 duplicate keys across 65 files.
+- `git status --short` matched exactly the 6 files expected touched, before contentStatus.js/BACKLOG.md were also updated.
+- `contentStatus.js`: 8 in_progress entries closed to clean with fix notes; sibling hash refresh across all 6 files (including `reranking_diversity`, which my extraction regex has now missed twice in a row due to a literal `{`/`}` inside its own note text breaking the non-greedy pattern — manually included this time by building the sibling line list from a direct id-by-id `grep -n` lookup instead of a regex sweep, to stop relying on a regex that's demonstrated it can silently drop entries). `node scripts/validate-content-status.mjs` → **199 'clean' / 206 tracked** (S: 37/41, A: 76/79), zero stale-hash warnings.
+
+### Still open
+- Live dev-server verification — still blocked (device bridge can't run vite, Chrome extension not connected), needs the user's own terminal.
+- Audit coverage: all S-tier now covered at least once; A-tier/B-tier (~140 modules) still essentially untouched.
+- GSL STATUS.md refresh, PAT rotation — unchanged, still open.

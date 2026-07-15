@@ -115,7 +115,7 @@ Pause here: how would you compute the gradient for just **one** of those hundred
 
 ---
 
-**Watch it work (the network above).**
+**Watch it work (the network below).**
 
 Feed it x₁ = 1.0, x₂ = 0.5, with a hidden layer of two **ReLU** units [ReLU(z) = max(0, z) — pass positive inputs through unchanged, zero out negative ones] (W₁ = [[0.5, −0.3], [0.2, 0.8]], b₁ = [0.1, −0.1]) and a sigmoid output (W₂ = [0.7, −0.5], b₂ = 0), against a target of 1.0. Forward: the hidden layer computes z₁ = [0.45, 0.5] — both positive, so ReLU passes both through unchanged to a₁ = [0.45, 0.5] — the output layer computes z₂ = 0.065, and sigmoid squashes that to a prediction of about 0.516. The loss is **mean squared error**, L = (prediction − target)² — against a target of 1.0, that's L = (0.516 − 1.0)² ≈ 0.234. That squaring is exactly where the ×2 in the next step comes from: d/dprediction of (prediction − target)² is 2(prediction − target).
 
@@ -737,7 +737,7 @@ The catch is cost: comparing every word with every other word is **O(n²)** — 
       {
         q: `Attention has O(n²) complexity in sequence length n. For a 10,000-token document, what is the computational problem, and what are the main approximation approaches?`,
         options: [
-          `A) Full attention needs n×n=100M scores per head; assuming a 32-layer, 16-head model (512 attention matrices total) at fp32 (4 bytes/score, so 100M × 4B = 400MB per matrix), storing all of them costs ≈512×400MB≈200GB, exceeding GPU memory. Fixes: sparse attention (O(n·k)), linear attention (O(n)), FlashAttention (tiled O(n²), 2–4× faster).`,
+          `A) Full attention needs n×n=100M scores/head; a 32-layer, 16-head model has 512 matrices, each ≈400MB at fp32, totaling ≈200GB — exceeding GPU memory. Fixes: sparse attention (O(n·k)), linear attention (O(n)), FlashAttention (tiled O(n²), 2–4× faster).`,
           `B) At d_model=512, each pairwise dot product costs O(512) not O(1), so total cost is O(n×d) rather than O(n²); the real fix is reducing the projection dimension d (e.g. d=64) while still computing every one of the n×n pairs.`,
           `C) The bottleneck is purely sequential GPU throughput — n=10,000 tokens need ceil(n/b) sequential steps for batch size b; fixes include raising GPU batch size, skipping zero-attention pairs, or pooling the attention matrix into a fixed-size summary.`,
           `D) The true bottleneck is the position-embedding lookup table, which at d_model=512 needs 10,000×512=5M parameters; fixes replace learned embeddings with computed encodings like RoPE or ALiBi to remove that memory cost.`,

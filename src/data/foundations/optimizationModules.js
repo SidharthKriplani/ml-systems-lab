@@ -90,7 +90,9 @@ The shape of the landscape is not a detail. It determines whether your optimizer
     difficulty: 'foundational',
     estimatedMin: 40,
     tags: ['gradient', 'learning-rate', 'update-rule', 'calculus', 'convergence'],
-    summary: `You are training a neural network with 500,000 parameters, and you need the settings that make its loss smallest. How hard could that be? Try to brute-force it — just 10 possible values per parameter — and you face $10^{500000}$ combinations to check. For scale, the observable universe holds about $10^{80}$ atoms. Brute force is not slow; it is flat-out impossible. You need a completely different idea, and it comes from one simple picture.
+    summary: `The last module ended on a warning: saddle points and flat plateaus, not local minima, are the real obstacles waiting in a deep network's loss landscape. Gradient descent is the algorithm that actually has to fight through them, starting now.
+
+You are training a neural network with 500,000 parameters, and you need the settings that make its loss smallest. How hard could that be? Try to brute-force it — just 10 possible values per parameter — and you face $10^{500000}$ combinations to check. For scale, the observable universe holds about $10^{80}$ atoms. Brute force is not slow; it is flat-out impossible. You need a completely different idea, and it comes from one simple picture.
 
 Imagine you are standing somewhere on a vast, foggy hillside, trying to reach the lowest point in the valley. You cannot see anything, but you can feel the slope of the ground under your feet. So you do the obvious thing: feel which way is downhill, take a small step that way, and repeat. Step by step, you descend. That is **gradient descent**, and it is the entire idea.
 
@@ -98,13 +100,15 @@ Imagine you are standing somewhere on a vast, foggy hillside, trying to reach th
 
 **The update rule.**
 
-"Feel the slope" has a precise name: the **gradient**. At any point, the gradient points in the direction of steepest *uphill*; flip its sign and you have the steepest way *down*. So each step is:
+Notice the slope is not the same everywhere on that hillside: near the rim of the valley the ground tilts sharply, so a big downhill push is available; near the floor it is almost flat, so barely any push is left. That changing steepness — the direction and strength of "downhill" at your current spot — has a precise name: the **gradient**. At any point, the gradient points in the direction of steepest *uphill*; flip its sign and you have the steepest way *down*. So each step is:
 
 new weights = old weights − (step size) × gradient
 
+That step size has a name too: the **learning rate**, and getting it right is most of the game.
+
 Concretely: say one weight currently sits at 2.0, the gradient there is 3.0, and the learning rate is 0.1. The update is new weight = 2.0 − (0.1 × 3.0) = 2.0 − 0.3 = 1.7 — a small nudge downhill, not a leap to the bottom.
 
-Compute the gradient, step a little in the downhill direction, repeat — fifty thousand times, a million times, until the loss stops dropping. That step size has a name too: the **learning rate**, and getting it right is most of the game.
+Compute the gradient, step a little in the downhill direction, repeat — fifty thousand times, a million times, until the loss stops dropping.
 
 [FIGURE: gd_convergence]
 
@@ -253,41 +257,41 @@ A few characteristic failure modes, each with a tell and a fix. **Vanishing grad
   <line x1="15" y1="195" x2="410" y2="195" stroke="var(--ink-low)" stroke-width="1"/>
   <text x="415" y="198" fill="var(--ink-low)" font-size="10">param</text>
   <text x="18" y="10" fill="var(--ink-low)" font-size="10">loss</text>
-  <!-- minimum marker -->
-  <circle cx="210" cy="10" r="3" fill="var(--ink-low)"/>
-  <!-- too small lr: many small steps from x=3 (right side) -->
+  <!-- minimum marker: true vertex of the M20,183 Q210,10 400,183 curve, at t=0.5 -> (210, 96.5) -->
+  <circle cx="210" cy="96.5" r="3" fill="var(--ink-low)"/>
+  <!-- too small lr: many small steps from x=3 (right side); y sampled from the curve at each x -->
   <g stroke="var(--ink-low)" stroke-width="1.2" fill="var(--ink-low)" opacity="0.8">
-    <circle cx="378" cy="145" r="3"/>
-    <circle cx="362" cy="120" r="3"/>
-    <circle cx="348" cy="98" r="3"/>
-    <circle cx="335" cy="79" r="3"/>
-    <circle cx="323" cy="62" r="3"/>
-    <circle cx="312" cy="48" r="3"/>
-    <circle cx="302" cy="36" r="3"/>
-    <line x1="378" y1="145" x2="362" y2="120"/><line x1="362" y1="120" x2="348" y2="98"/>
-    <line x1="348" y1="98" x2="335" y2="79"/><line x1="335" y1="79" x2="323" y2="62"/>
-    <line x1="323" y1="62" x2="312" y2="48"/><line x1="312" y1="48" x2="302" y2="36"/>
+    <circle cx="378" cy="164.1" r="3"/>
+    <circle cx="362" cy="151.9" r="3"/>
+    <circle cx="348" cy="142.1" r="3"/>
+    <circle cx="335" cy="133.9" r="3"/>
+    <circle cx="323" cy="127.1" r="3"/>
+    <circle cx="312" cy="121.4" r="3"/>
+    <circle cx="302" cy="116.8" r="3"/>
+    <line x1="378" y1="164.1" x2="362" y2="151.9"/><line x1="362" y1="151.9" x2="348" y2="142.1"/>
+    <line x1="348" y1="142.1" x2="335" y2="133.9"/><line x1="335" y1="133.9" x2="323" y2="127.1"/>
+    <line x1="323" y1="127.1" x2="312" y2="121.4"/><line x1="312" y1="121.4" x2="302" y2="116.8"/>
   </g>
-  <text x="385" y="142" fill="var(--ink-low)" font-size="9">too small</text>
-  <!-- just right: 5 steps converging, starting from left x=-3 -->
+  <text x="385" y="160" fill="var(--ink-low)" font-size="9">too small</text>
+  <!-- just right: 5 steps converging, starting from left x=-3; y sampled from the curve at each x -->
   <g stroke="var(--prime)" stroke-width="1.5" fill="var(--prime)">
-    <circle cx="42" cy="145" r="3.5"/>
-    <circle cx="100" cy="58" r="3.5"/>
-    <circle cx="175" cy="16" r="3.5"/>
-    <circle cx="210" cy="10" r="3.5"/>
-    <line x1="42" y1="145" x2="100" y2="58"/><line x1="100" y1="58" x2="175" y2="16"/>
-    <line x1="175" y1="16" x2="210" y2="10"/>
+    <circle cx="42" cy="164.1" r="3.5"/>
+    <circle cx="100" cy="125.5" r="3.5"/>
+    <circle cx="175" cy="99.4" r="3.5"/>
+    <circle cx="210" cy="96.5" r="3.5"/>
+    <line x1="42" y1="164.1" x2="100" y2="125.5"/><line x1="100" y1="125.5" x2="175" y2="99.4"/>
+    <line x1="175" y1="99.4" x2="210" y2="96.5"/>
   </g>
-  <text x="15" y="142" fill="var(--prime)" font-size="9">just right</text>
-  <!-- too large lr: overshoots, diverges from x=-2.5 -->
+  <text x="15" y="160" fill="var(--prime)" font-size="9">just right</text>
+  <!-- too large lr: overshoots, diverges from x=-2.5; y sampled from the curve at each x -->
   <g stroke="var(--amber)" stroke-width="1.5" fill="var(--amber)">
-    <circle cx="83" cy="100" r="3.5"/>
-    <circle cx="337" cy="100" r="3.5"/>
-    <circle cx="42" cy="145" r="3.5"/>
-    <circle cx="378" cy="145" r="3.5"/>
-    <line x1="83" y1="100" x2="337" y2="100"/>
-    <line x1="337" y1="100" x2="42" y2="145"/>
-    <line x1="42" y1="145" x2="378" y2="145"/>
+    <circle cx="83" cy="135.2" r="3.5"/>
+    <circle cx="337" cy="135.2" r="3.5"/>
+    <circle cx="42" cy="164.1" r="3.5"/>
+    <circle cx="378" cy="164.1" r="3.5"/>
+    <line x1="83" y1="135.2" x2="337" y2="135.2"/>
+    <line x1="337" y1="135.2" x2="42" y2="164.1"/>
+    <line x1="42" y1="164.1" x2="378" y2="164.1"/>
   </g>
   <text x="150" y="94" fill="var(--amber)" font-size="9">too large (diverges)</text>
 </svg>`,

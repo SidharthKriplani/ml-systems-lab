@@ -17,19 +17,19 @@ export const RECSYS_MODULES = [
 
 ---
 
-**So the system splits into two stages with opposite objectives.** *Candidate generation* (retrieval) cheaply narrows 10M → ~1,000 using methods so cheap they can touch every item — embedding lookups, approximate nearest neighbor, precomputed lists. It optimizes **recall**: don't lose the good items. *Ranking* then runs an expensive, feature-rich model over only those ~1,000 survivors and optimizes **precision**: order them exactly right. The cheap stage runs over everything; the expensive stage runs only over what the cheap stage kept.
+**So the system splits into two stages with opposite objectives.** *Candidate generation* (retrieval) cheaply narrows 10M → a few hundred using methods so cheap they can touch every item — embedding lookups, approximate nearest neighbor, precomputed lists. It optimizes **recall**: don't lose the good items. *Ranking* then runs an expensive, feature-rich model over only those few hundred survivors and optimizes **precision**: order them exactly right. The cheap stage runs over everything; the expensive stage runs only over what the cheap stage kept.
 
 ---
 
 **The consequence that trips up juniors: the two stages have different metrics because they have different jobs.** Retrieval is judged on recall@k (did the relevant items make the shortlist?), ranking on NDCG/precision (are they ordered well?). And retrieval's recall is a *ceiling* — an item retrieval drops is gone forever; no ranker can order an item it never received. A brilliant ranker on top of a mediocre retriever is capped by the retriever. This is why "great model, mediocre recommendations" almost always means: audit retrieval recall first.`,
-    interactivePrompt: `Before you touch the controls: the funnel narrows 10M → ~1,000 → top-k. If you make the retrieval stage narrower to save latency, which metric can you never recover downstream, and why?`,
+    interactivePrompt: `Before you touch the controls: the funnel narrows 10M → a few hundred → top-k. If you make the retrieval stage narrower to save latency, which metric can you never recover downstream, and why?`,
     keyPoints: [
       `**The two-stage split is forced by arithmetic, not taste.** 10M items × ~1ms/item = 10,000s per request against a ~100ms budget — a 100,000× gap. You cannot run the precise model over the full catalog, so a cheap recall stage must run first and an expensive precision stage second.`,
       `**Retrieval optimizes recall; ranking optimizes precision — different jobs, different metrics.** Retrieval's only sin is dropping a good item (unrecoverable); ranking's job is ordering the survivors. Judge retrieval on recall@k, ranking on NDCG/precision@k. Conflating the two is a classic interview tell.`,
       `**Retrieval recall is a hard ceiling on final quality.** If recall@500 = 0.7, then 30% of items the user would have loved never reach the ranker, and no ranking sophistication recovers them. Diagnose a "good ranker, bad results" system by measuring retrieval recall before touching the ranker.`,
-      `**The stage counts are a budget allocation.** A typical split: retrieval 10M→~1k in ~2ms, ranking ~1k→~100 in ~20ms. Each stage gets a hard millisecond allocation; one overrunning stage steals from the next.`,
+      `**The stage counts are a budget allocation.** A typical split: retrieval 10M→a few hundred in ~2ms, ranking a few hundred→~100 in ~20ms. Each stage gets a hard millisecond allocation; one overrunning stage steals from the next.`,
     ],
-    takeaway: `A recommender is a recall-then-precision funnel forced by a ~100,000× latency gap: cheap candidate generation maximizes recall over millions (setting an unraiseable ceiling on final quality), then an expensive ranker maximizes precision over the ~1,000 survivors. One model cannot occupy both ends of the funnel.`,
+    takeaway: `A recommender is a recall-then-precision funnel forced by a ~100,000× latency gap: cheap candidate generation maximizes recall over millions (setting an unraiseable ceiling on final quality), then an expensive ranker maximizes precision over the few hundred survivors. One model cannot occupy both ends of the funnel.`,
     checkQuestions: [
       {
         q: `An interviewer asks you to "design YouTube recommendations." You have a strong ranking model. What is the correct *first* architectural move?`,
@@ -64,17 +64,17 @@ export const RECSYS_MODULES = [
     ],
     recap: [
       `**The two-stage split is forced by a latency wall, not preference:** 10M items × ~1ms each ≈ 10,000s per request vs a ~100ms budget = a 100,000× gap. You cannot score the full catalog with the precise model at request time.`,
-      `**Two stages, opposite objectives:** candidate generation (retrieval) is cheap and maximizes *recall* over millions; ranking is expensive and maximizes *precision* over the ~1,000 survivors. The cheap stage runs over everything; the expensive stage only over what the cheap stage kept.`,
+      `**Two stages, opposite objectives:** candidate generation (retrieval) is cheap and maximizes *recall* over millions; ranking is expensive and maximizes *precision* over the few hundred survivors. The cheap stage runs over everything; the expensive stage only over what the cheap stage kept.`,
       `**Retrieval recall is an unraiseable ceiling:** an item retrieval drops is gone — no ranker can order an item it never received. recall@500 = 0.7 means 30% of loved items are lost before ranking. Tell: "great ranker, mediocre feed" → audit retrieval recall first.`,
       `**Different jobs → different metrics:** judge retrieval on recall@k, ranking on NDCG/precision@k. Conflating them is a junior tell.`,
-      `**Stages are a budget allocation:** e.g. retrieval 10M→1k (~2ms) → rank 1k→100 (~20ms). Each stage has a hard ms allocation; one overrun steals from the next.`,
+      `**Stages are a budget allocation:** e.g. retrieval 10M→a few hundred (~2ms) → rank a few hundred→100 (~20ms). Each stage has a hard ms allocation; one overrun steals from the next.`,
     ],
     figures: {
       twostage: `<svg viewBox="0 0 360 92" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
   <polygon points="10,14 350,14 250,80 110,80" fill="var(--prime-faint)" stroke="var(--prime)"/>
-  <text x="180" y="30" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">Candidate generation — 10M → ~1000</text>
+  <text x="180" y="30" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">Candidate generation — 10M → a few hundred</text>
   <text x="180" y="42" text-anchor="middle" fill="var(--ink-mid)" font-size="7.5">cheap · recall · ~2ms · touches every item</text>
-  <text x="180" y="62" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">Ranking — ~1000 → top-k</text>
+  <text x="180" y="62" text-anchor="middle" fill="var(--ink-hi)" font-size="9" font-weight="700">Ranking — a few hundred → top-k</text>
   <text x="180" y="74" text-anchor="middle" fill="var(--ink-mid)" font-size="7.5">expensive · precision · ~20ms · survivors only</text>
   <text x="10" y="90" fill="var(--ink-low)" font-size="7">1ms/item over 10M = 10,000s vs a 100ms budget → 100,000× gap</text>
 </svg>`,
