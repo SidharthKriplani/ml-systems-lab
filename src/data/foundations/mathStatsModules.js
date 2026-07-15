@@ -278,7 +278,6 @@ This is where ML enters. Your model produces a predicted distribution $\\hat{y}$
       "**Mutual information $I(X;Y)=H(X)-H(X|Y)$** detects nonlinear dependence correlation misses; $I=0$ ⟹ truly independent. Cov=0 ⟹ $I=0$ only for jointly Gaussian variables.",
       "**Data processing inequality:** $Y=f(X)$ ⟹ $H(Y) \\le H(X)$ — a function/coarsening of a variable can only lose information, never gain it.",
     ],
-    interactiveId: 'information_theory_viz',
   },
   {
     id: 'linear_algebra_basics',
@@ -832,18 +831,18 @@ SVMs, logistic regression, lasso, ridge — all convex. Neural networks: not con
     tags: ['statistics', 'hypothesis testing', 'p-values', 'A/B testing'],
     summary: `Your team builds a new checkout button — different color, slightly repositioned. You run it for two weeks. 10,000 users see the new version; 10,000 see the old one. Conversion: 3.2% versus 3.0%. The difference is 0.2 percentage points. Is this real, or did you just get lucky?
 
-The question you need to answer: if the button had no effect whatsoever — if both groups were drawn from the same underlying population — how often would random sampling produce a gap of at least 0.2 percentage points just by chance? That probability is the p-value. A p-value of 0.03 means: if the null hypothesis were true, you would see a difference this large or larger about 3% of the time by chance alone.
+The question you need to answer: if the button had no effect whatsoever — if both groups were drawn from the same underlying population — how often would random sampling produce a gap of at least 0.2 percentage points just by chance? That probability is the p-value. Work it out for this test: pooled conversion rate ≈3.1%, standard error of the gap ≈0.245 percentage points, so the observed 0.2-point gap is under one standard error from zero — the p-value comes out to about **0.41**. A p-value of 0.41 means: if the null hypothesis were true, you would see a difference this large or larger about 41% of the time by chance alone — nowhere near rare enough to reject the null. This particular gap is comfortably explained by noise, not a real effect.
 
 If p falls below your threshold α (commonly 0.05), you reject the null. Type I error (false positive): you rejected when the null was true — happens with probability α. Type II error (false negative): you failed to reject when there was a real effect. The probability of *detecting* a real effect is power $= 1 - β$. Power is not determined by p-values — it is determined before the experiment by choosing your sample size.
 
 Now suppose your product manager runs 20 A/B tests simultaneously, each at α = 0.05. Under the null, each test has a 5% chance of a false positive. With 20 tests, you expect $20 \\times 0.05 = 1$ false positive. Finding three "significant" results is entirely consistent with all null hypotheses being true. The Bonferroni correction divides α by the number of tests: test each at $α/20 = 0.0025$. The Benjamini-Hochberg procedure controls the false discovery rate — the fraction of significant results that are false — and is less conservative.
 
-**NOT this.** Most people read p < 0.05 as "there is a 95% probability the effect is real." Wrong. The p-value is a property of the *data* under the null hypothesis, not a probability about the hypothesis. It says nothing about P(null is true). To compute that, you need a prior — Bayesian territory. A p-value of 0.001 on a 10-million-user dataset can come from a conversion difference of 0.001%, which is statistically real but commercially irrelevant. Statistical significance is not practical significance. Always pair p-values with effect sizes and confidence intervals.`,
+**NOT this.** Most people read p < 0.05 as "there is a 95% probability the effect is real." Wrong. The p-value is a property of the *data* under the null hypothesis, not a probability about the hypothesis. It says nothing about P(null is true). To compute that, you need a prior — Bayesian territory. A p-value of 0.001 on a 10-million-user-per-arm dataset can come from a conversion lift as small as ≈0.025 percentage points — about a 1% relative lift on a 3% baseline — small enough that many teams would consider it commercially marginal. Statistical significance is not practical significance. Always pair p-values with effect sizes and confidence intervals.`,
     interactivePrompt: `Before you touch the controls: if you run 20 A/B tests and 1 comes back significant at p = 0.05, how confident are you that the winning variant actually works — very confident, moderately confident, or do you think there is a good chance it is a false positive?`,
     keyPoints: [
       `**Use hypothesis testing when you need to decide whether an observed difference exceeds what chance alone can explain.** Pre-commit to your α and the minimum detectable effect size before collecting data. The sample size formula $n = 2(z_{α/2} + z_β)^2 σ^2 / δ^2$ requires specifying $δ$ (the smallest effect you care about) and $β$ (acceptable miss rate) before a single observation. Post-hoc power calculations — done after seeing the results — are not valid.`,
       `**The production trap: peeking.** Checking p-values as data accumulates and stopping when p < 0.05 inflates Type I error far above α. If you check after every 100 users, the effective false positive rate can reach 20–30% even at a nominal α = 0.05. Use sequential testing methods (always-valid p-values or alpha-spending functions) if you need continuous monitoring, or commit to a fixed sample size and look once.`,
-      `**The diagnostic: separate statistical significance from practical significance.** With n = 1,000,000, a 0.001% conversion lift achieves p < 0.001 — statistically significant, practically irrelevant. Report Cohen's d, percent lift, or absolute conversion change alongside every p-value. If the effect size is smaller than the minimum you pre-specified as meaningful, the result does not justify a ship decision regardless of the p-value.`,
+      `**The diagnostic: separate statistical significance from practical significance.** With n = 10,000,000 per arm, a lift of only ≈0.025 percentage points (about 1% relative, on a 3% baseline) achieves p < 0.001 — statistically significant, but easy to overstate as a business win. Report Cohen's d, percent lift, or absolute conversion change alongside every p-value. If the effect size is smaller than the minimum you pre-specified as meaningful, the result does not justify a ship decision regardless of the p-value.`,
     ],
     checkQuestions: [
       {
@@ -883,11 +882,10 @@ Now suppose your product manager runs 20 A/B tests simultaneously, each at α = 
       "**Type I (α) = false positive when null true; Type II (β) = miss.** Power = 1−β, fixed by sample size beforehand.",
       "**Multiple comparisons:** 20 tests at α=0.05 → expect 1 false positive; finding 3 \"significant\" is consistent with all nulls.",
       "**Corrections:** Bonferroni tests each at α/m (conservative, FWER); Benjamini-Hochberg controls FDR (less conservative).",
-      "**Statistical ≠ practical significance:** at n=1M, a 0.001% lift is p<0.001 but commercially irrelevant.",
+      "**Statistical ≠ practical significance:** at n=10M/arm, a ≈0.025-point (≈1% relative) lift is p<0.001 but easy to overstate as a business win.",
       "**Peeking inflates Type I error to 20–30%** — use sequential/always-valid methods or fix n and look once.",
       "**Always pair the p-value with effect size (Cohen's d, % lift) and a confidence interval** before deciding.",
     ],
-    interactiveId: 'hypothesis_testing_viz',
   },
   {
     id: 'mle_map',
@@ -960,7 +958,7 @@ As $n → ∞$, the likelihood dominates and MAP converges to MLE — the data e
   <path d="M20,82 C160,82 200,34 245,34 C285,34 300,74 340,80" fill="none" stroke="var(--prime)" stroke-width="1.8"/>
   <text x="245" y="30" text-anchor="middle" fill="var(--prime)" font-size="7" font-weight="700">posterior (MAP 0.67)</text>
   <line x1="300" y1="20" x2="300" y2="82" stroke="var(--amber)" stroke-dasharray="2 2"/><line x1="245" y1="34" x2="245" y2="82" stroke="var(--prime)" stroke-dasharray="2 2"/>
-  <text x="10" y="100" fill="var(--ink-low)" font-size="7.5">prior pulls MLE toward 0.5 — exactly L2 regularisation. More data ⟹ likelihood dominates.</text>
+  <text x="10" y="100" fill="var(--ink-low)" font-size="7.5">10 flips, 7 heads: prior pulls MLE 0.7 toward 0.5 → MAP 0.67 — exactly L2 regularisation.</text>
 </svg>`,
     },
     recap: [

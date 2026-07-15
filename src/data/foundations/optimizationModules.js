@@ -498,7 +498,6 @@ The solution is to give the optimizer memory. Momentum maintains a velocity vect
       "**Momentum escapes saddle points and plateaus:** the accumulated velocity carries it straight through the flat zero-gradient region where plain GD freezes, turning a stall into a slowdown.",
       "**β sets the effective memory window:** β=0.9 averages ~1/(1−0.9) = 10 steps (smooths mini-batch noise, still responsive), β=0.99 ~100 steps (handles very noisy gradients but is slow to react when the landscape changes character).",
     ],
-    interactiveId: 'momentum_viz',
     checkQuestions: [
       {
         q: `A model trains on a narrow ravine loss landscape. Plain SGD oscillates and makes slow progress. Which two of the following correctly describe the mechanism by which momentum fixes this?`,
@@ -751,7 +750,6 @@ OneCycleLR (Smith, 2018) goes further: ramp $α$ up from $α_{min}$ to a peak 5�
       "**OneCycleLR:** ramp up to a 5–10× peak over the first ~30% of steps, then cosine-decay the rest — aggressive exploration up front, fine convergence at the end.",
       "**Canonical Transformer schedule = linear warmup + cosine decay to near zero,** worth 5–10% accuracy over a naive fixed rate; it also pairs with early stopping so training both moves fast and lands cleanly.",
     ],
-    interactiveId: 'lr_schedule_viz',
     checkQuestions: [
       {
         q: `A transformer language model diverges in the first 100 training steps when trained with Adam and α=1e-4, β2=0.999. No warmup is used. What is the likely cause and fix?`,

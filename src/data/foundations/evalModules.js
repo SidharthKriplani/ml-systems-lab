@@ -337,7 +337,6 @@ AUC is binary by construction, so for K classes you extend it. **One-vs-rest (Ov
       `**AUC is blind to calibration:** it's pure ranking, so multiply every predicted probability by 0.5 and the AUC is unchanged while every probability is now a lie. If you use the probability itself (pricing, expected value, a downstream model), check calibration separately (reliability diagram, Brier score).`,
       `**Precision moves with prevalence — the formula:** precision = $\\pi\\cdot TPR / (\\pi\\cdot TPR + (1-\\pi)\\cdot FPR)$. The ROC (TPR vs FPR) doesn't move when prevalence shifts, but precision drops as positives get rarer — a model validated at 5% fraud posts worse precision when live fraud falls to 1%, at identical ROC-AUC. Use partial AUC in your operating FPR band, and state OvR vs OvO for multiclass since the averaging changes the number.`,
     ],
-    interactiveId: 'roc_curve_viz',
     figures: {
       roc_curve: `<svg viewBox="0 0 320 280" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:320px;font-family:var(--font-sans,sans-serif)">
   <!-- axes -->
@@ -1033,7 +1032,6 @@ Stratification isn't only for single-label classification. For **regression**, s
       `**Tuning on the folds you then report is cheating:** trying 200 configs and reporting the best fold score is biased upward by the search itself. Fix with **nested CV** — an outer loop estimates quality on data the tuning never touched while the inner loop does the full hyperparameter search.`,
       `**Nested CV scores the *procedure*, not the shipped model:** it gives an unbiased estimate of your model-selection process; the deployed model is retrained on *all* training data with the chosen hyperparameters, so report the nested score but don't confuse it for the exact model. And because k-fold training sets overlap heavily, fold scores are correlated — mean ± std is a useful spread and instability flag, not a valid confidence interval.`,
     ],
-    interactiveId: 'cross_validation_viz',
     figures: {
       cv_folds: `<svg viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:400px;font-family:var(--font-sans,sans-serif)">
   <!-- title -->
@@ -1402,7 +1400,6 @@ Keep the two steps separate. **Calibration** makes the probability *truthful* (0
       `**ECE is binning-sensitive:** bin count and placement change it, empty/tiny bins make it noisy, and equal-width bins waste resolution when predictions cluster (use adaptive/equal-count bins). In multiclass, choose top-label ECE (is the predicted class's confidence honest?) vs classwise ECE (is every class honest?) — they can disagree, so always pair ECE with the diagram.`,
       `**Calibration decays after deployment even when AUC is stable:** covariate shift and base-rate shift both break it because the score→true-rate mapping depends on the distribution. Monitor ECE/reliability over time and *by cohort* (geography, device, segment) and re-fit on recent data. And calibration (making the probability truthful) is a separate step from thresholding (choosing the decision cutoff from costs) — fixing one doesn't fix the other.`,
     ],
-    interactiveId: 'calibration_curve_viz',
     figures: {
       reliability_curve: `<svg viewBox="0 0 280 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:280px;font-family:var(--font-sans,sans-serif)">
   <line x1="40" y1="220" x2="240" y2="220" stroke="var(--ink-low)" stroke-width="1"/>

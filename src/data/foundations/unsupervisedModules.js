@@ -211,7 +211,6 @@ NOT-this: "K-means finds the natural clusters." K-means partitions space into Vo
       "**High-D first reduce:** distances concentrate → PCA to 20–50 dims before clustering.",
       "**Hard-assignment limit of EM on GMM** with shared isotropic $\\sigma^2 I$, $\\sigma\\to0$.",
     ],
-    interactiveId: 'kmeans_viz',
     figures: {
       kmeans_steps: `<svg viewBox="0 0 480 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:480px;font-family:var(--font-sans,sans-serif)">
   <!-- Panel 1: Init -->
@@ -481,7 +480,6 @@ NOT-this: "DBSCAN does not require K, so it is always better than K-means." DBSC
       "**Explicit -1 noise label is operationally valuable** — route to human review.",
       "**Fails on varying density** — single ε breaks; HDBSCAN fixes it.",
     ],
-    interactiveId: 'dbscan_viz',
     figures: {
       core_border_noise: `<svg viewBox="0 0 360 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
   <text x="180" y="16" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">core / border / noise (minPts = 4)</text>
@@ -664,7 +662,6 @@ Match the tool to the goal. For **visualisation** of nonlinear structure, **t-SN
       "**Whitening** rescales components to unit variance but amplifies low-variance noise.",
       "**Linear, variance-based, outlier-sensitive;** 2D plot is for hypotheses, not proof of separability.",
     ],
-    interactiveId: 'pca_viz',
     figures: {
       pca_variance: `<svg viewBox="0 0 320 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:320px;font-family:var(--font-sans,sans-serif)">
   <!-- scatter points (elongated ellipse cloud) -->
@@ -1084,7 +1081,6 @@ NOT-this: "GMM is just soft K-means." Soft K-means is GMM with spherical, tied c
       "**Init means with K-means** to avoid component collapse (sklearn default).",
       "**Overlapping ellipses = K too large;** points between centers = K too small.",
     ],
-    interactiveId: 'gmm_viz',
     figures: {
       soft_assignment: `<svg viewBox="0 0 360 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
   <text x="180" y="16" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">GMM gives a probability, not a hard label</text>
@@ -1275,7 +1271,6 @@ A production detector isn't a score, it's an alerting system, and that layer is 
       "**Novelty (clean training) vs outlier (contaminated training)** decides method and data handling.",
       "**Time-series anomalies:** point, contextual, collective — per-point methods miss the last two; a detector is an alerting system, not a score.",
     ],
-    interactiveId: 'anomaly_detection_viz',
     figures: {
       isolation: `<svg viewBox="0 0 400 190" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:400px;font-family:var(--font-sans,sans-serif)">
   <text x="100" y="18" text-anchor="middle" fill="var(--ink-hi)" font-size="10" font-weight="700">normal point</text>
