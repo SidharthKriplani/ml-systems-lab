@@ -2,7 +2,7 @@ export const DEEP_LEARNING_MODULES = [
   {
     id: 'neural_nets',
     interactiveId: 'neural_net_geometry_viz',
-    interactiveIds: ['neural_net_geometry_viz', 'donut_cup_viz'],
+    interactiveIds: ['neural_net_geometry_viz', 'ring_warp_viz'],
     title: 'Neural Network Fundamentals',
     subtitle: 'Hidden layers, universal approximation, depth vs width, XOR',
     difficulty: 'foundational',
