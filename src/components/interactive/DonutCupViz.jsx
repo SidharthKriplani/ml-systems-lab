@@ -41,9 +41,9 @@ function torusPoint(u, v) {
 // cross-section profile (down the outside, across the base, up the inside,
 // then the "rim gap" that closes the loop back to the outside start), v is
 // the full azimuthal sweep around the vertical axis. ---
-const RHO_OUTER = 1.7;
-const RHO_INNER = 1.05;
-const CUP_H = 2.6;
+const RHO_OUTER = 1.5;
+const RHO_INNER = 1.1;
+const CUP_H = 3.2;
 
 function wallProfile(s) {
   // s in [0,1), one full lap of u. Returns [rho0, z0] of the wall centerline.
@@ -60,25 +60,42 @@ function bodyPoint(u, v) {
 
 // --- Handle: a genuine small tube-loop (this DOES want the tube-around-a-
 // centerline construction, since a real handle is round and has its own
-// hole) -- built for u wrapped near 0, then blended onto the body only in
-// that neighbourhood so it reads as attached at the rim gap. ---
-const HANDLE_HALF = (30 * Math.PI) / 180;
-const HANDLE_LOOP_R = 0.85;   // how far the loop's centerline bulges out
-const HANDLE_BASE_RHO = RHO_OUTER + 0.15;
-const HANDLE_Z = CUP_H / 2 - 0.15;
-const HANDLE_TUBE = 0.22;
-const HANDLE_THETA_SPAN = (26 * Math.PI) / 180;
+// hole) -- built on a band of u sitting on the OUTER wall (s=0.08..0.22,
+// upper-middle of the wall), then blended onto the body only in that band.
+//
+// REVISED again after a shaded 3-D render (not just the flat wireframe)
+// exposed a real bug: theta_c (the handle centerline's azimuth) was
+// centered at 0 regardless of where the attach band actually sat in u,
+// so at the band edges the handle path and the body path pointed in
+// different directions -- the blend then tore a diagonal gouge across the
+// wall to connect them. Fixing theta_c to center on U_CENTER, and making
+// the centerline's rho/z baseline track the wall's own two edge values
+// (RHO0,Z0)/(RHO1,Z1) instead of a fixed constant, removes that mismatch:
+// at p=0 and p=1 the handle path now sits exactly on the wall, so the
+// blend only ever bends, never tears. Verified with a matplotlib
+// plot_surface shaded render (not wireframe) before shipping -- wireframe
+// alone had hidden this bug through the whole session.
+const S_LO = 0.08, S_HI = 0.22;
+const U_LO = S_LO * TWO_PI, U_HI = S_HI * TWO_PI;
+const U_CENTER = (U_LO + U_HI) / 2;
+const HANDLE_HALF = (U_HI - U_LO) / 2;
+const [RHO0, Z0] = wallProfile(S_LO);
+const [RHO1, Z1] = wallProfile(S_HI);
+const HANDLE_LOOP_R = 1.15;   // how far the loop's centerline bulges outward
+const HANDLE_DIP = 0.55;      // how far it dips below the wall's linear trend
+const HANDLE_TUBE = 0.42;
+const HANDLE_THETA_SPAN = (30 * Math.PI) / 180;
 
 function handleCenterline(p) {
   const bulge = Math.sin(Math.PI * p);
   return [
-    HANDLE_BASE_RHO + HANDLE_LOOP_R * bulge, // rho_c
-    (p - 0.5) * HANDLE_THETA_SPAN,           // theta_c
-    HANDLE_Z - 0.55 * bulge,                 // z_c (dips like a real handle's curve)
+    RHO0 + (RHO1 - RHO0) * p + HANDLE_LOOP_R * bulge, // rho_c
+    U_CENTER + (p - 0.5) * HANDLE_THETA_SPAN,         // theta_c -- centered on U_CENTER, not 0
+    Z0 + (Z1 - Z0) * p - HANDLE_DIP * bulge,          // z_c: wall's own trend, plus a dip for the loop
   ];
 }
 function handlePoint(u, v) {
-  const d = (((u + Math.PI) % TWO_PI) + TWO_PI) % TWO_PI - Math.PI; // wrap to [-PI,PI]
+  const d = (((u - U_CENTER + Math.PI) % TWO_PI) + TWO_PI) % TWO_PI - Math.PI; // wrap to [-PI,PI]
   const p = smoothstep(-HANDLE_HALF, HANDLE_HALF, d);
   const [rhoC, thetaC, zC] = handleCenterline(p);
   const rho = rhoC + HANDLE_TUBE * Math.cos(v);
@@ -86,7 +103,7 @@ function handlePoint(u, v) {
   return [rho * Math.cos(thetaC), rho * Math.sin(thetaC), z];
 }
 function blendWeight(u) {
-  const d = Math.abs((((u + Math.PI) % TWO_PI) + TWO_PI) % TWO_PI - Math.PI);
+  const d = Math.abs((((u - U_CENTER + Math.PI) % TWO_PI) + TWO_PI) % TWO_PI - Math.PI);
   return 1 - smoothstep(HANDLE_HALF * 0.5, HANDLE_HALF, d);
 }
 function mugPoint(u, v) {

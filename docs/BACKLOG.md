@@ -2515,3 +2515,28 @@ grep confirms the new geometry constants and camera landed on-device: 1 (both pa
 **Still not done:** this is a visual/numeric self-check (my own Python render + a Node cross-check), not
 the same as the user or anyone else seeing it live in the running app — that confirmation is still
 pending, same caveat as everything else pushed today.
+
+## Session 2026-07-15 12:50 IST (Wednesday) — DonutCupViz.jsx: fixed a real theta-mismatch bug, handle now a genuine loop with a visible hole
+
+User shared 4 reference images (photoreal mug renders with a full round torus-shaped handle + visible hole, a donut render, and a fragment of source material referencing "continuous functions induce topologies... with a typical activation function" -- almost certainly the classic Olah-style torus/mug homeomorphism used to illustrate manifold deformation). Asked me to use the references to do better, or substitute something easier if that's more tractable. Kept the same illustration (it's directly on-topic for this module and the references made the target shape unambiguous) and fixed the actual geometry instead.
+
+**Root cause, found only after switching from wireframe to a shaded `matplotlib plot_surface` render** (the wireframe canvas style the app actually uses had been hiding this): `handleCenterline`'s `theta_c` (the handle loop's azimuth around the vertical axis) was computed as `(p - 0.5) * HANDLE_THETA_SPAN` -- centered on azimuth 0 -- regardless of where the attach band actually sat in `u`. The blend band was centered near `u = PI` (from the old wrap-around-PI logic), so at the band edges the handle path and the body path pointed in completely different directions. Linearly blending between them didn't produce a loop attached to the wall -- it tore a diagonal gouge across the cup wall to connect two mismatched positions. This is very likely what was *also* wrong in the version already on device (it had the same `(p-0.5)*THETA_SPAN` centered-at-0 pattern) -- the flat wireframe rendering just didn't make the tear obvious the way a shaded solid render does.
+
+**Fix:**
+- `theta_c` now centers on `U_CENTER` (the actual midpoint of the handle's attach band in `u`), not 0.
+- The handle's `rho_c`/`z_c` baseline now linearly tracks the wall's own two edge values (`RHO0,Z0` at the band's low edge, `RHO1,Z1` at the high edge -- both read directly from `wallProfile`), with the loop's outward bulge and downward dip added on top, instead of interpolating toward a fixed constant that didn't match the wall.
+- Moved the attach band from the old (buggy) location near `u=PI` -- which actually landed on the INSIDE wall near the base, not the outside wall -- to `s=0.08..0.22`, the upper-middle of the OUTSIDE wall (`bodyPoint`'s `s<0.40` segment), matching where a real mug handle attaches.
+- Retuned proportions for a taller, more mug-like body (`RHO_OUTER 1.7->1.5`, `RHO_INNER 1.05->1.1`, `CUP_H 2.6->3.2`) and a chunkier handle (`HANDLE_TUBE 0.22->0.42`, loop radius `0.85->1.15`) so the handle reads as a substantial round loop instead of a thin wire, matching the reference images' proportions.
+
+**Verification (same bar as the last rebuild, extended with one more step this session found was necessary):**
+1. Iterated in Python/matplotlib -- but this time with `ax.plot_surface(..., shade=True)` (a shaded solid), not just wireframe -- through 5 candidate parameter sets, viewing each PNG before moving on. The wireframe-only check from the last rebuild had NOT been enough to catch the theta-mismatch bug; the shaded render made the gouge immediately obvious on the first candidate and confirmed its disappearance on the fix.
+2. Also rendered a 4-panel wireframe strip (t=0, 0.4, 0.75, 1.0) in the exact style the app's canvas uses (same ring/meridian line drawing, same projection formula) to confirm the actual in-app rendering style still reads correctly, not just the shaded debug view.
+3. Ported the final math to `DonutCupViz.jsx`, then cross-checked the shipped JS against the Python reference at 5 sample (u,v) points -- matched to 5 decimal places (both cloud copy and the on-device copy after transfer, via a Node `eval()` harness pulling just the math block out of the file).
+4. `npx esbuild --bundle` passed against the cloud copy (9.4kb, no errors). The on-device copy's `esbuild` binary hit an unrelated `Exec format error` (looks like a platform/binary mismatch for this device's node_modules, not a code issue) -- substituted the same Node `eval()` math cross-check on-device instead, which matched the cloud values exactly, confirming the transferred file is both syntactically fine (same bytes esbuild already accepted) and numerically correct.
+
+**Not yet done / explicitly flagged:**
+- Still not confirmed in a live running dev server -- every check so far is static (Python reference render, Node math eval, esbuild bundle check). This is the same caveat repeated every session on this file and remains true.
+- Did not re-run the full Python-render-and-inspect loop for the t=0 -> t=1 mid-transition frames beyond the 4-panel sanity strip; only the t=1 (mug) endpoint got the full multi-iteration visual tuning treatment this session.
+- Have not gone back to re-examine whether the *previous* "visually verified" v3 handle (before this fix) had this same theta-centering bug baked into its own visual check -- if the earlier Python verification for v3 also only used wireframe, it would have had the same blind spot; not re-audited this session.
+
+Files touched: `src/components/interactive/DonutCupViz.jsx` (handle geometry constants + `handleCenterline`/`handlePoint`/`blendWeight`, body proportions).
