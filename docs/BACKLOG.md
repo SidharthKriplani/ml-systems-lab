@@ -2867,3 +2867,25 @@ Prompted directly by the 18:02 correction above: the 7 modules genuinely never a
 - Live dev-server verification — still blocked (device bridge can't run vite, Chrome extension not connected), needs the user's own terminal.
 - `calibration_probabilistic`'s keyPoints density/voice-parity gap (flagged above, not fixed).
 - GSL: STATUS.md refreshed this session (18:02-ish entry above), PAT rotation explicitly deprioritized by user.
+
+## Session 2026-07-15 20:13 IST (Wednesday) — Built cross-device Tracks sync (account-scoped, merge-based)
+
+Same feature as the sibling GSL session entry (see genai-systems-lab/docs/GSL_PLAN.md 2026-07-15 20:13 IST for the shared design rationale) -- built independently for this repo since the two apps don't share code, only a design.
+
+"My Tracks" (`msl-tracks-v1`) now syncs across devices for signed-in users via the existing Supabase `user_progress` table (no schema change, RLS already scopes rows to `auth.uid()=user_id`). New `src/utils/tracksSync.js` with real item-level union merge (tracks merged by id, items merged by a newly-added per-item `uid`, conflicts resolved by newest `updatedAt`/`addedAt`, deletions via tombstones in `msl-tracks-tombstones-v1` so they can't be resurrected by a stale device) -- deliberately kept out of the generic `STATIC_PROGRESS_KEYS` whole-value-overwrite path in `syncProgress.js`, which is unsafe for a growing, hand-curated artifact like tracks.
+
+MSL-specific note: this repo's general progress sync only auto-pushes via a manual "Sync now" button in Profile (no nav-change auto-push like GSL has) -- for tracks specifically, this build closes that gap with its own debounced auto-push (1.5s) triggered on every edit via a new `msl_tracks` window-event listener in App.jsx, independent of the manual-sync-only pattern the rest of this repo's progress still uses.
+
+Item-creation functions stamp `uid` at creation: this repo's actual function names are `addModule`, `createNote`, and `addItem` (no separate `addQuestion` exists here, unlike GSL -- confirmed via direct grep before editing, not assumed). `seedTierTracks()`'s bulk item creation doesn't stamp uid at creation (bypasses the three functions above) but is covered by `getTracks()`'s idempotent backfill migration on next read, so no gap in practice.
+
+### Verification
+- `node --check` clean on `tracks.js`/`tracksSync.js`; `@babel/parser` + esbuild JSX parse clean on `App.jsx`/`ProfilePage.jsx` (esbuild flagged 2 pre-existing duplicate-key warnings in App.jsx at lines 241/263, unrelated to this change, not introduced by it).
+- `scripts/check-duplicate-keys.mjs`: 0 duplicate keys across 65 files.
+- Standalone Node test of the pure `mergeTracks` function (duplicated verbatim into a temp file since the real module can't import in plain Node -- `supabase.js` uses `import.meta.env`): 3/3 scenarios PASS -- union-of-adds, deletion-propagates, rename-newer-wins.
+- `git status --short` matches exactly the expected 4 files: `src/App.jsx`, `src/tabs/ProfilePage.jsx`, `src/utils/tracks.js` (modified) + `src/utils/tracksSync.js` (new).
+
+### Known limitations (by design)
+Not real-time (eventually consistent on next pull, not live collab). Guests keep local-only tracks, no new sign-in prompt added.
+
+### Not yet done
+Live cross-device verification needs a real two-device browser session -- still blocked on this bridge (no working dev server). Logic/wiring/merge-correctness verified; the end-to-end check needs the user's own machine.

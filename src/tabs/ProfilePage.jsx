@@ -9,6 +9,7 @@
 import { useState, useEffect } from 'react'
 import { signOut } from '../utils/auth.js'
 import { pushProgressToSupabase, pullProgressFromSupabase } from '../utils/syncProgress.js'
+import { pullAndMergeTracks } from '../utils/tracksSync.js'
 import { authEnabled, supabase } from '../utils/supabase.js'
 import { downloadProgressJSON } from '../utils/export.js'
 import { Icon } from '../components/Icon.jsx'
@@ -319,7 +320,8 @@ export default function ProfilePage({ user, onNavigate, onShowAuth }) {
     setSyncState('syncing')
     const { error: pushErr } = await pushProgressToSupabase(user)
     const { error: pullErr } = await pullProgressFromSupabase(user)
-    setSyncState(pushErr || pullErr ? 'error' : 'done')
+    const { error: tracksErr } = await pullAndMergeTracks(user)
+    setSyncState(pushErr || pullErr || tracksErr ? 'error' : 'done')
     setTimeout(() => setSyncState('idle'), 3000)
   }
 

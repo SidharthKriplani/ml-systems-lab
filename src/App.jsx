@@ -11,6 +11,7 @@ import AuthModal    from './components/auth/AuthModal.jsx'
 import { ACCESS_CODE, STORAGE_KEY, isUnlocked as checkUnlocked } from './utils/unlock.js'
 import { authEnabled, onAuthStateChange } from './utils/supabase.js'
 import { pullProgressFromSupabase } from './utils/syncProgress.js'
+import { pullAndMergeTracks, scheduleTracksPush } from './utils/tracksSync.js'
 import { upsertLeaderboardRow } from './utils/leaderboard.js'
 import StudyRoom from './study/StudyRoom.jsx'
 import { BUILD_PROJECTS } from './tabs/BuildHubTab.jsx'
@@ -1108,6 +1109,10 @@ export default function App() {
         if (event === 'SIGNED_IN') {
           // Pull remote progress on fresh sign-in (may overwrite local — intentional)
           await pullProgressFromSupabase(session.user)
+          // My Tracks uses its own item-level merge (not whole-value overwrite —
+          // see tracksSync.js) so track items added on another device since the
+          // last sync aren't silently discarded.
+          await pullAndMergeTracks(session.user)
           setIsUnlocked(checkUnlocked()) // re-check after pull
           // upsertLeaderboardRow was never actually called anywhere in the app —
           // signed-in users with real progress never got a leaderboard row written,
@@ -1127,6 +1132,17 @@ export default function App() {
     })
     return () => subscription.unsubscribe()
   }, [])
+
+  // Auto-push My Tracks to Supabase (debounced) on every local edit. Unlike the
+  // rest of MSL's progress sync — which only pushes when the user clicks
+  // "Sync now" in Profile — Tracks push automatically so edits made on one
+  // device show up on another without the user remembering to visit Profile.
+  useEffect(() => {
+    if (!user) return
+    function onTracksChanged() { scheduleTracksPush(user) }
+    window.addEventListener('msl_tracks', onTracksChanged)
+    return () => window.removeEventListener('msl_tracks', onTracksChanged)
+  }, [user])
 
   // Reactive redirect: a signed-in user lands on Progress, not the marketing Home
   // (uniform with PAL/GSL — Home is the signed-out surface).
