@@ -25,6 +25,7 @@ const registry = {
   eigen_geometry_viz:         lazy(() => import('./EigenGeometryViz').then(m => ({ default: m.EigenGeometryViz }))),
   donut_cup_viz:               lazy(() => import('./DonutCupViz').then(m => ({ default: m.DonutCupViz }))),
   ring_warp_viz:               lazy(() => import('./RingWarpViz').then(m => ({ default: m.RingWarpViz }))),
+  transformer_block_viz:       lazy(() => import('./TransformerBlockViz').then(m => ({ default: m.TransformerBlockViz }))),
   ensemble_viz:               lazy(() => import('./EnsembleViz').then(m => ({ default: m.EnsembleViz }))),
   hypothesis_testing_viz:     lazy(() => import('./HypothesisTestingViz').then(m => ({ default: m.HypothesisTestingViz }))),
   calibration_curve_viz:      lazy(() => import('./CalibrationCurveViz').then(m => ({ default: m.CalibrationCurveViz }))),

@@ -278,7 +278,6 @@ Cross-entropy only stops penalising a prediction once the correct class's logit 
         answer: `A`,
       },
     ],
-    interactiveId: 'activation_functions',
     figures: {
       activations: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
   <text x="90" y="18" text-anchor="middle" fill="var(--ink-hi)" font-size="10" font-weight="700">sigmoid</text>
@@ -369,7 +368,6 @@ There is a second normaliser, **layer norm**, and picking the wrong one is a gen
         answer: `A`,
       },
     ],
-    interactiveId: 'batch_norm_viz',
     figures: {
       norm_axes: `<svg viewBox="0 0 360 210" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
   <text x="90" y="16" text-anchor="middle" fill="var(--ink-hi)" font-size="11" font-weight="700">BatchNorm</text>
@@ -747,7 +745,6 @@ The catch is cost: comparing every word with every other word is **O(n²)** — 
         answer: `A`,
       },
     ],
-    interactiveId: 'attention_viz',
     figures: {
       attention_heatmap: `<svg viewBox="0 0 340 170" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:340px;font-family:var(--font-sans,sans-serif)">
   <!-- "bank"'s query row against The / bank / river keys -- the exact weights computed above -->
@@ -776,7 +773,7 @@ The catch is cost: comparing every word with every other word is **O(n²)** — 
   },
   {
     id: 'transformers',
-    interactiveId: 'attention_viz',
+    interactiveId: 'transformer_block_viz',
     title: 'Transformer Architecture',
     subtitle: 'Self-attention, positional encoding, encoder vs decoder, pre-norm vs post-norm',
     difficulty: 'intermediate',
