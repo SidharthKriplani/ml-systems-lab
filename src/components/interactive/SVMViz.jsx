@@ -107,6 +107,7 @@ export const SVMViz = forwardRef(function SVMViz(props, ref) {
   const rafRef = useRef(null);
   const dirRef = useRef(1);
   const lastTsRef = useRef(0);
+  const holdRef = useRef(0); // ms remaining to rest at an endpoint before reversing
 
   const play = useCallback(() => {
     if (animRef.current) return;
@@ -122,12 +123,16 @@ export const SVMViz = forwardRef(function SVMViz(props, ref) {
         if (!lastTsRef.current) lastTsRef.current = ts;
         const dt = ts - lastTsRef.current;
         lastTsRef.current = ts;
-        setLiftT(prev => {
-          let next = prev + dirRef.current * dt / 2600;
-          if (next >= 1) { next = 1; dirRef.current = -1; }
-          if (next <= 0) { next = 0; dirRef.current = 1; }
-          return next;
-        });
+        if (holdRef.current > 0) {
+          holdRef.current -= dt;
+        } else {
+          setLiftT(prev => {
+            let next = prev + dirRef.current * dt / 5800;
+            if (next >= 1) { next = 1; dirRef.current = -1; holdRef.current = 700; }
+            if (next <= 0) { next = 0; dirRef.current = 1; holdRef.current = 700; }
+            return next;
+          });
+        }
         rafRef.current = requestAnimationFrame(tick);
       };
       rafRef.current = requestAnimationFrame(tick);
@@ -138,6 +143,7 @@ export const SVMViz = forwardRef(function SVMViz(props, ref) {
     if (animRef.current) { clearInterval(animRef.current); animRef.current = null; }
     if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
     lastTsRef.current = 0;
+    holdRef.current = 0;
   }, []);
 
   const reset = useCallback(() => {

@@ -368,6 +368,7 @@ A norm ‖v‖ measures a vector's length; different norms make different tradeo
   },
   {
     id: 'eigendecomposition',
+    interactiveId: 'eigen_geometry_viz',
     title: 'Eigenvalues & Eigenvectors',
     subtitle: 'Geometric intuition, spectral theorem, power iteration',
     difficulty: 'intermediate',
