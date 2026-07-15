@@ -2764,3 +2764,34 @@ Picked up immediately after the user pushed round 4's audit findings. Dispatched
 - Live dev-server verification of everything shipped today (AttentionViz fix, TransformerBlockViz upgrade, all round-3/round-4 content fixes) — still not done.
 - Audit coverage: 20 of ~175 never-yet-re-audited modules done (round 4). ~155 remain.
 - GSL's STATUS.md refresh, PAT rotation (user action) — unchanged, still open.
+
+## Session 2026-07-15 17:10 IST (Wednesday) — Phase 1 round 5: 17-module S-tier sweep, 8/17 FAIL — S-tier now fully covered at least once this session
+
+Dispatched 6 parallel audit-only agents across 8 files, covering all remaining never-yet-re-audited S-tier modules plus lighter-touch confirmation passes on a few already-PASSed-this-session modules (pot_outcomes, design_framework, recsys_overview, neural_nets, backprop, attention, feature_engineering). Result: 9 PASS, 8 FAIL — a noticeably higher failure rate than round 4 (8/17 ≈ 47% vs round 4's 5/20 = 25%), including two modules (design_framework, recsys_overview) that had already been marked PASS in round 4's lighter-touch pass and turned out to have real issues on a deeper look.
+
+**`trees` — 5 defects**, the most in a single module this round: a hand-picked "0.35" threshold falsely claimed as an algorithmic midpoint (true midpoint is 0.325); the module's own worked example resolves in a single-feature linear split, directly undercutting its own opening claim that trees beat linear models on this exact data; a figure depicting a multi-region carve that the actual computed tree never produces; "axis-aligned" used before it's defined; and a minor dangling reference to calibration methods with no forward-pointer to the dedicated module.
+
+**`gradient_descent_fundamentals` — 4 defects**, most serious of the round: the `gd_convergence` SVG's plotted curve and its "convergence step" dots are drawn from two different, mathematically inconsistent parabolas — parametrized the Bezier path exactly and found the curve's real vertex at (210, 96.5), while every dot (including the "minimum" marker) was plotted against a ~2x-steeper parabola with vertex forced to (210, 10), floating 67-87px above where the curve actually sits. Plus 3 lower-confidence voice defects (learning rate used before formally named, gradient named after only one demonstration, missing cross-module continuity handoff).
+
+**`two_stage_architecture` — real cross-module numeric contradiction**: this module says "~1,000" candidates survive retrieval (6 places, including its own figure), while 3 sibling modules that consume or share this exact number (`candidate_generation`, `learning_to_rank`, `recsys_dl_architectures`) all consistently say "a few hundred" — `two_stage_architecture` looks like the stale outlier.
+
+**`recsys_overview` and `design_framework` — both had checkQuestions testing material never taught in the fields that actually render before the quiz** (only in `recap`, a non-default toggle tab): recsys_overview also has a text-scene lock violation where its shared interactive renders a 4-stage funnel at 100ms while its own prose describes a 3-stage funnel at 50ms.
+
+**`auc_roc`, `backprop`, `attention` — minor defects only** (unlabeled input assumption, stale relative-position reference, and an MCQ length-tell respectively) — none touch previously-verified numeric content, all of which re-confirmed correct.
+
+**9 PASS**: generalization, offline_vs_online, validation_traps, learning_to_rank, feedback_loops_bias, offline_online_eval, pot_outcomes, neural_nets, feature_engineering.
+
+### Milestone: all S-tier modules have now been independently re-audited at least once this session (41 S-tier total; 37 currently clean, 4 in_progress from this round's findings alongside round 4's still-open... wait, round 4's 5 were all closed this session — the 4 in_progress S-tier entries are from this round only, since round-4's S-tier findings were already fixed). A-tier and B-tier remain almost entirely uncovered (~140+ modules).
+
+### Verification
+- `node --check` clean on contentStatus.js (source files were NOT touched this round — audit-only, no fixes applied).
+- `node scripts/validate-content-status.mjs` → 191 'clean' / 206 tracked (S: 29/41, A: 76/79), zero stale-hash warnings (no source files changed, so no hashes needed refreshing).
+
+### Dev-server verification — blocked, not done
+Attempted per user request to start `npm run dev` on the device bridge and verify AttentionViz/TransformerBlockViz live. Failed: `Cannot find module @rollup/rollup-linux-arm64-gnu` — a documented, known binary-architecture mismatch through this Linux VM bridge (same root cause as the pre-existing esbuild-Exec-format-error note already in this repo's own CLAUDE.md). Chrome extension is also not connected to this session. Live verification of everything shipped today genuinely requires the user to run `npm run dev` on their own Mac terminal directly.
+
+### Still open
+- 8 new findings from this round, not yet fixed (recorded above and in contentStatus.js as in_progress).
+- Live dev-server verification — still blocked, needs the user's own terminal.
+- A-tier/B-tier audit coverage — essentially untouched (only a handful of A-tier modules got incidentally covered via file-sharing with S-tier targets in earlier rounds).
+- GSL STATUS.md, PAT rotation — unchanged, still open.
