@@ -1,7 +1,7 @@
 export const DEEP_LEARNING_MODULES = [
   {
     id: 'neural_nets',
-    interactiveId: 'backprop_viz',
+    interactiveId: 'neural_net_geometry_viz',
     title: 'Neural Network Fundamentals',
     subtitle: 'Perceptron, universal approximation, depth vs width, XOR',
     difficulty: 'foundational',
@@ -1174,7 +1174,7 @@ Push down to 4-bit and PTQ starts dropping 2–5% accuracy — too many weights 
       {
         q: `Post-training quantization (PTQ) vs quantization-aware training (QAT): when do you use each, and what is the typical accuracy difference?`,
         options: [
-          `A) PTQ quantizes in minutes using a small calibration set; typical INT8 drop is under 0.5% but INT4 drops 1–3%. QAT fine-tunes with fake quantization, taking longer but recovering most of that loss — use PTQ fast, QAT when INT4-or-below matters.`,
+          `A) PTQ quantizes in minutes using a small calibration set; typical INT8 drop is under 1% but INT4 drops 2–5%. QAT fine-tunes with fake quantization, taking longer but recovering most of that loss — use PTQ fast, QAT when INT4-or-below matters.`,
           `B) PTQ and QAT produce identical accuracy at INT8 since 256 levels sit below the model's noise floor; the only difference is speed (PTQ minutes, QAT days), and QAT only matters once you drop to INT4 or INT2.`,
           `C) PTQ is always preferable to QAT because QAT's straight-through estimator biases the gradient during fake-quantized training, converging to different weights than the unquantized model — PTQ avoids this by quantizing only after full-precision convergence.`,
           `D) QAT is always preferable regardless of bit width, recovering 2–5% accuracy even at INT8; PTQ is only used because QAT requires modifying training code to insert fake-quantization nodes, adding engineering complexity.`,
@@ -1416,7 +1416,7 @@ A shorter pair worth knowing by the same two-question habit: training loss falli
           `C) The model converged to a degenerate solution outputting one class for everything, caused by too many residual layers whose skip connections trivially learn the identity function instead of the task.`,
           `D) The training set is 99% one class, so the model hits 99% training accuracy by always predicting it, while a balanced test set makes that same behaviour land near 50% — fixed with class-balanced sampling or a weighted loss.`,
         ],
-        answer: ['A', 'B'],
+        answer: ['A', 'D'],
       },
       {
         q: `Validation loss oscillates rather than decreasing monotonically. You're using SGD+momentum with lr=0.01 and batch size 64. List three possible causes and fixes.`,

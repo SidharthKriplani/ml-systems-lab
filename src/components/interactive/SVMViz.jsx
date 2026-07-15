@@ -69,44 +69,99 @@ function computeRBFGrid() {
 
 const RBF_GRID = computeRBFGrid();
 
+// Concentric-circle data for the "kernel lift" mode -- not separable by ANY straight
+// line in raw (x,y), which is the whole point of this mode: the kernel trick's
+// classic textbook example. phi(x,y) = (x, y, r^2) with r^2 = (x-0.5)^2+(y-0.5)^2
+// lifts these into two flat, height-separated bands in 3D.
+function generateConcentricPoints() {
+  const rng = mulberry32(7);
+  const pts = [];
+  // inner ring (class -1, blue), r in [0.03, 0.13]
+  for (let i = 0; i < 14; i++) {
+    const angle = rng() * Math.PI * 2;
+    const r = 0.03 + rng() * 0.10;
+    pts.push({ x: 0.5 + r * Math.cos(angle), y: 0.5 + r * Math.sin(angle), cls: -1 });
+  }
+  // outer ring (class +1, amber), r in [0.27, 0.42]
+  for (let i = 0; i < 16; i++) {
+    const angle = rng() * Math.PI * 2;
+    const r = 0.27 + rng() * 0.15;
+    pts.push({ x: 0.5 + r * Math.cos(angle), y: 0.5 + r * Math.sin(angle), cls: 1 });
+  }
+  return pts;
+}
+const CONCENTRIC_POINTS = generateConcentricPoints();
+const R2 = (p) => (p.x - 0.5) ** 2 + (p.y - 0.5) ** 2;
+const INNER_MAX_R2 = Math.max(...CONCENTRIC_POINTS.filter(p => p.cls === -1).map(R2));
+const OUTER_MIN_R2 = Math.min(...CONCENTRIC_POINTS.filter(p => p.cls === 1).map(R2));
+const PLANE_Z = (INNER_MAX_R2 + OUTER_MIN_R2) / 2; // the separating plane's height
+
 export const SVMViz = forwardRef(function SVMViz(props, ref) {
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
   const [mode, setMode] = useState("Linear");
   const [cValue, setCValue] = useState(1);
+  const [liftT, setLiftT] = useState(0); // 0 = flat top-down, 1 = fully lifted + tilted view
 
-  const animRef = useRef(null)
+  const animRef = useRef(null);
+  const rafRef = useRef(null);
+  const dirRef = useRef(1);
+  const lastTsRef = useRef(0);
 
   const play = useCallback(() => {
-    if (animRef.current) return
+    if (animRef.current) return;
     animRef.current = setInterval(() => {
       setCValue(prev => {
-        const next = +(prev + 0.5).toFixed(1)
-        return next > 10 ? 0.1 : next
-      })
-    }, 400)
-  }, [])
+        const next = +(prev + 0.5).toFixed(1);
+        return next > 10 ? 0.1 : next;
+      });
+    }, 400);
+    if (!rafRef.current) {
+      lastTsRef.current = 0;
+      const tick = (ts) => {
+        if (!lastTsRef.current) lastTsRef.current = ts;
+        const dt = ts - lastTsRef.current;
+        lastTsRef.current = ts;
+        setLiftT(prev => {
+          let next = prev + dirRef.current * dt / 2600;
+          if (next >= 1) { next = 1; dirRef.current = -1; }
+          if (next <= 0) { next = 0; dirRef.current = 1; }
+          return next;
+        });
+        rafRef.current = requestAnimationFrame(tick);
+      };
+      rafRef.current = requestAnimationFrame(tick);
+    }
+  }, []);
 
   const pause = useCallback(() => {
-    if (animRef.current) { clearInterval(animRef.current); animRef.current = null }
-  }, [])
+    if (animRef.current) { clearInterval(animRef.current); animRef.current = null; }
+    if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
+    lastTsRef.current = 0;
+  }, []);
 
   const reset = useCallback(() => {
-    pause()
-    setCValue(1)
-    setMode("Linear")
-  }, [pause])
+    pause();
+    setCValue(1);
+    setLiftT(0);
+    dirRef.current = 1;
+    setMode("Linear");
+  }, [pause]);
 
   const step = useCallback(() => {
-    pause()
-    setCValue(c => Math.min(10, +(c + 0.5).toFixed(1)))
-  }, [pause])
+    pause();
+    setCValue(c => Math.min(10, +(c + 0.5).toFixed(1)));
+    setLiftT(l => (l < 0.999 ? 1 : 0));
+  }, [pause]);
 
-  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step])
+  useImperativeHandle(ref, () => ({ play, pause, reset, step }), [play, pause, reset, step]);
 
   useEffect(() => {
-    return () => { if (animRef.current) clearInterval(animRef.current) }
-  }, [])
+    return () => {
+      if (animRef.current) clearInterval(animRef.current);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -169,7 +224,28 @@ export const SVMViz = forwardRef(function SVMViz(props, ref) {
       ctx.font = "10px var(--font-sans, sans-serif)";
       ctx.fillText(`margin = ${(marginHalf * 2).toFixed(2)}`, PAD + (0.50 * plotW) - 20, PAD - 6);
 
-    } else {
+      // Draw points
+      for (const p of SVM_POINTS) {
+        const [cx, cy] = toCanvas(p.x, p.y);
+        const isSV = SUPPORT_VECTORS.has(p);
+        const r = 5;
+        if (isSV) {
+          ctx.beginPath();
+          ctx.arc(cx, cy, r + 5, 0, Math.PI * 2);
+          ctx.strokeStyle = p.cls === 1 ? "rgba(240,165,0,0.8)" : "rgba(80,130,220,0.8)";
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = p.cls === 1 ? "#F0A500" : "#5080DC";
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255,255,255,0.3)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+    } else if (mode === "RBF kernel") {
       // RBF mode: paint grid
       const N = 20;
       const cellW = plotW / N;
@@ -205,32 +281,76 @@ export const SVMViz = forwardRef(function SVMViz(props, ref) {
         }
       }
       ctx.restore();
-    }
 
-    // Draw points
-    for (const p of SVM_POINTS) {
-      const [cx, cy] = toCanvas(p.x, p.y);
-      const isSV = SUPPORT_VECTORS.has(p);
-      const r = 5;
-
-      if (mode === "Linear" && isSV) {
-        // Support vector ring
+      // Draw points
+      for (const p of SVM_POINTS) {
+        const [cx, cy] = toCanvas(p.x, p.y);
+        const r = 5;
         ctx.beginPath();
-        ctx.arc(cx, cy, r + 5, 0, Math.PI * 2);
-        ctx.strokeStyle = p.cls === 1 ? "rgba(240,165,0,0.8)" : "rgba(80,130,220,0.8)";
-        ctx.lineWidth = 1.5;
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = p.cls === 1 ? "#F0A500" : "#5080DC";
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255,255,255,0.3)";
+        ctx.lineWidth = 1;
         ctx.stroke();
       }
 
-      ctx.beginPath();
-      ctx.arc(cx, cy, r, 0, Math.PI * 2);
-      ctx.fillStyle = p.cls === 1 ? "#F0A500" : "#5080DC";
-      ctx.fill();
-      ctx.strokeStyle = "rgba(255,255,255,0.3)";
-      ctx.lineWidth = 1;
-      ctx.stroke();
+    } else {
+      // "Kernel lift (3D)" mode -- phi(x,y) = (x, y, r^2). liftT=0 is a flat
+      // top-down view (two rings, no straight line separates them); as liftT
+      // rises we both raise each point by its r^2 and tilt the view, so the two
+      // classes visibly separate into height bands that a flat plane can cut.
+      const cx0 = W / 2, cy0 = H / 2 + 10;
+      const scale = Math.min(plotW, plotH) * 0.85;
+      const elev = liftT * (50 * Math.PI / 180); // 0 -> 50 degrees
+      const liftScale = 1.9;
+
+      function project(x, y, z) {
+        const X = (x - 0.5) * scale;
+        const Y = (y - 0.5) * scale;
+        const Z = z * scale * liftScale;
+        const Y2 = Y * Math.cos(elev) - Z * Math.sin(elev);
+        return [cx0 + X, cy0 - Y2];
+      }
+
+      // separating plane at height PLANE_Z, drawn as a translucent parallelogram,
+      // fading in once the lift makes it meaningful.
+      if (liftT > 0.15) {
+        const corners = [
+          [0.02, 0.02], [0.98, 0.02], [0.98, 0.98], [0.02, 0.98],
+        ].map(([x, y]) => project(x, y, PLANE_Z * liftT));
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, (liftT - 0.15) / 0.5) * 0.35;
+        ctx.fillStyle = "#F0A500";
+        ctx.beginPath();
+        corners.forEach(([px, py], i) => (i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py)));
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = "#F0A500";
+        ctx.lineWidth = 1;
+        ctx.globalAlpha = Math.min(1, (liftT - 0.15) / 0.5) * 0.8;
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // points, raised by r^2 * liftT
+      for (const p of CONCENTRIC_POINTS) {
+        const z = R2(p) * liftT;
+        const [px, py] = project(p.x, p.y, z);
+        ctx.beginPath();
+        ctx.arc(px, py, 5, 0, Math.PI * 2);
+        ctx.fillStyle = p.cls === 1 ? "#F0A500" : "#5080DC";
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255,255,255,0.3)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = "rgba(230,230,230,0.55)";
+      ctx.font = "10px var(--font-sans, sans-serif)";
+      ctx.fillText(liftT < 0.05 ? "raw (x, y) -- no line separates the rings" : "lifted (x, y, x²+y²) -- a flat plane now does", PAD, 16);
     }
-  }, [mode, cValue]);
+  }, [mode, cValue, liftT]);
 
   useEffect(() => {
     draw();
@@ -246,6 +366,7 @@ export const SVMViz = forwardRef(function SVMViz(props, ref) {
       canvas.width = Math.round(rect.width * dpr);
       canvas.height = Math.round(rect.height * dpr);
       const ctx = canvas.getContext("2d");
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.scale(dpr, dpr);
       draw();
     });
@@ -273,7 +394,7 @@ export const SVMViz = forwardRef(function SVMViz(props, ref) {
       />
       <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
         <div style={{ display: "flex", gap: 4 }}>
-          {["Linear", "RBF kernel"].map(m => (
+          {["Linear", "RBF kernel", "Kernel lift (3D)"].map(m => (
             <button
               key={m}
               onClick={() => setMode(m)}
@@ -302,14 +423,26 @@ export const SVMViz = forwardRef(function SVMViz(props, ref) {
             />
           </label>
         )}
+        {mode === "Kernel lift (3D)" && (
+          <label style={{ fontSize: 13, color: "var(--ink-mid, #aaa)", flex: 1, minWidth: 180 }}>
+            Lift: flat (t=0) &rarr; lifted (t=1) — t = {liftT.toFixed(2)}
+            <input
+              type="range" min={0} max={1} step={0.01} value={liftT}
+              onChange={e => { pause(); setLiftT(Number(e.target.value)); }}
+              style={{ width: "100%", marginTop: 4, accentColor: "var(--prime, #F0A500)", cursor: "pointer" }}
+            />
+          </label>
+        )}
       </div>
       <div style={{ marginTop: 8, fontSize: 12, color: "var(--ink-mid, #aaa)", display: "flex", gap: 20, flexWrap: "wrap" }}>
         <span>Mode: <strong style={{ color: "var(--prime, #F0A500)" }}>{mode}</strong></span>
-        <span>Support vectors: <strong style={{ color: "var(--prime, #F0A500)" }}>{svCount}</strong></span>
-        <span>Margin width: <strong style={{ color: "var(--prime, #F0A500)" }}>{marginWidth}</strong></span>
+        {mode === "Linear" && <span>Support vectors: <strong style={{ color: "var(--prime, #F0A500)" }}>{svCount}</strong></span>}
+        {mode === "Linear" && <span>Margin width: <strong style={{ color: "var(--prime, #F0A500)" }}>{marginWidth}</strong></span>}
       </div>
       <p style={{ marginTop: 10, fontSize: 11, color: "var(--ink-low, #888)", lineHeight: 1.5 }}>
-        Support vectors are the points closest to the decision boundary — they are the only points that define it. Moving any non-support-vector point doesn't change the boundary. The SVM maximizes the margin between classes.
+        {mode === "Kernel lift (3D)"
+          ? "This is the kernel trick made literal: phi(x,y) = (x, y, x²+y²) lifts every point by its squared distance from the center. The inner ring stays low, the outer ring rises higher, and a flat plane -- something no straight line in 2D could do -- now separates them. The SVM's dual form never actually computes phi; it only needs the dot products, i.e. the kernel k(x,x') = phi(x)·phi(x')."
+          : "Support vectors are the points closest to the decision boundary — they are the only points that define it. Moving any non-support-vector point doesn't change the boundary. The SVM maximizes the margin between classes."}
       </p>
       <div style={{ marginTop: 4, fontSize: 11, color: "var(--ink-ghost, #555)", display: "flex", gap: 16 }}>
         <span style={{ color: "#F0A500" }}>&#9679; Class +1</span>

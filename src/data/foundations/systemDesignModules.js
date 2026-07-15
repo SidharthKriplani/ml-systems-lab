@@ -727,7 +727,7 @@ export const SYSTEM_DESIGN_MODULES = [
 
 ---
 
-**Counterfactual (off-policy) evaluation lets you estimate a new ranker's online performance from logged data, before serving it.** Because logs were collected under the *old* policy, you reweight by inverse propensity (how likely the old policy was to show each item) to estimate what the *new* policy would have earned. It's how you kill bad candidates before they ever touch live traffic.`,
+**Counterfactual (off-policy) evaluation lets you estimate a new ranker's online performance from logged data, before serving it.** Because logs were collected under the *old* policy, you reweight by inverse propensity (how likely the old policy was to show each item — an item the old policy showed only 5% of the time gets its logged outcome weighted ×20, since 1/0.05 = 20) to estimate what the *new* policy would have earned. It's how you kill bad candidates before they ever touch live traffic.`,
     interactivePrompt: `Before you touch the controls: the report penalty here is a guardrail entering the score as a negative weight. Predict what a launch looks like on the primary metric versus the guardrail as you drop that penalty toward zero.`,
     keyPoints: [
       `**Calibration matters exactly when the score becomes a number, not just an order.** Auctions (pCTR×bid), value models (Σwᵢpᵢ), and thresholds all consume the magnitude. Measure with ECE / reliability diagrams; fix with Platt or isotonic on held-out data. Deep models are overconfident by default.`,

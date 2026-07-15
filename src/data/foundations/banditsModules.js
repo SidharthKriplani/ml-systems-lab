@@ -476,24 +476,12 @@ The naive alternative — train a supervised reward model and select greedily �
 
 This gives exact O(d√T) regret guarantees with efficient O(d²) online updates via Sherman-Morrison. The Yahoo! news paper found the theory-suggested α was 25× too large — always tune α empirically, never use the theoretical constant.`,
     keyPoints: [
-      `**Ridge regression for reward:
-
-$θ̂_a = A_a^{-1} b_a where A_a = Σ x_i x_i^T + λI and b_a = Σ r_i x_i.** The λI regularisation ensures A_a is invertib$
-
-le even with few observations (no data collapse) and acts as an isotropic Gaussian prior θ ~ N(0, I/λ). Without it, early rounds with few observations per arm produce degenerate, numerically unstable solutions.`,
-      `**Confidence ellipsoid: under the linear model
-
-$r_t = θ_a^T x_t + ε_t with subgaussian noise, the true θ_a lies in the ellipsoid {θ : (θ − θ̂_a)^T A_a (θ − θ̂_a) ≤ β} with$
-
-high probability.** The UCB for context x is the maximum of θ^T x over this ellipsoid: θ̂_a^T x + α√(x^T A_a^{-1} x). The term x^T A_a^{-1} x is the width of the ellipsoid projected onto direction x — how much the estimated reward could plausibly differ from the predicted value.`,
+      `**Ridge regression for reward: θ̂_a = A_a^{-1} b_a where A_a = Σ x_i x_i^T + λI and b_a = Σ r_i x_i.** The λI regularisation ensures A_a is invertible even with few observations (no data collapse) and acts as an isotropic Gaussian prior θ ~ N(0, I/λ). Without it, early rounds with few observations per arm produce degenerate, numerically unstable solutions.`,
+      `**Confidence ellipsoid: under the linear model r_t = θ_a^T x_t + ε_t with subgaussian noise, the true θ_a lies in the ellipsoid {θ : (θ − θ̂_a)^T A_a (θ − θ̂_a) ≤ β} with high probability.** The UCB for context x is the maximum of θ^T x over this ellipsoid: θ̂_a^T x + α√(x^T A_a^{-1} x). The term x^T A_a^{-1} x is the width of the ellipsoid projected onto direction x — how much the estimated reward could plausibly differ from the predicted value.`,
       `**Geometric intuition for x^T A^{-1} x: A_a = X_a^T X_a + λI accumulates the information from all observed contexts.** Directions in R^d well-covered by historical observations have large eigenvalues in A_a, which correspond to small eigenvalues in A_a^{-1} — the UCB bonus is small there. Directions under-observed have small A_a eigenvalues and large A_a^{-1} eigenvalues — the UCB bonus is large. Exploration is targeted at the directions in context space where you lack data.`,
       `**Confidence parameter α: theory gives α = O(σ√(d ln T)) ≈ 5 for Yahoo! news parameters.** The empirically optimal α was 0.2 — 25× smaller. Theory is conservative: it guarantees coverage for all possible θ and all reward realisations, including adversarial worst cases. Actual estimation error is much smaller. Always tune α on held-out OPE data in the range [0.1, 1.0] rather than using the theoretical value.`,
-      `**Disjoint model: separate (A_a, b_a, θ̂_a) per arm, no information sharing across arms.** The exploration bonus is arm-specific — an arm with few observations has high uncertainty for all contexts. Works best when arms have genuinely different response patterns to the same features. Storage: K × d² floats for A_a^{-1}; with K=100, d=50, that's 25M floats — feasible.`,
-      `**Hybrid model:
-
-$reward = β^T z_t + θ_a^T x_t where z_t are shared features ($
-
-e.g., user features) and x_t are arm-specific features (e.g., ad content features). β is shared across all arms, enabling information sharing.** More sample-efficient when arms share response patterns to shared features. Harder to implement — requires joint statistics and more complex updates.`,
+      `**Disjoint model: separate (A_a, b_a, θ̂_a) per arm, no information sharing across arms.** The exploration bonus is arm-specific — an arm with few observations has high uncertainty for all contexts. Works best when arms have genuinely different response patterns to the same features. Storage: K × d² floats for A_a^{-1}; with K=100, d=50, that's 250K floats — feasible.`,
+      `**Hybrid model: reward = β^T z_t + θ_a^T x_t where z_t are shared features (e.g., user features) and x_t are arm-specific features (e.g., ad content features). β is shared across all arms, enabling information sharing.** More sample-efficient when arms share response patterns to shared features. Harder to implement — requires joint statistics and more complex updates.`,
       `**Sherman-Morrison online update: after one new observation (x, r), A_a_new = A_a + x x^T.** Naive recomputation of A_a^{-1} costs O(d³). Sherman-Morrison: (A + xx^T)^{-1} = A^{-1} − (A^{-1} x x^T A^{-1}) / (1 + x^T A^{-1} x). Cost: O(d²) — two matrix-vector products. At d=100 and 10,000 QPS, this is 10^8 FLOPs/second — feasible on one core. This enables real-time updates without full matrix inversion.`,
       `**Reward model misspecification: if the true reward is nonlinear (f(x) = sin(x^T θ)) but LinUCB uses a linear model, the confidence ellipsoid no longer contains the true parameter.** The algorithm may be systematically over-confident in directions where the linear approximation is wrong. Detection: monitor reward model residuals on held-out data. Large systematic residuals (not random noise) indicate misspecification — switch to NeuralTS or add polynomial/interaction features.`,
       `**Covariate shift breaks the calibration: A_a was built on historical contexts.** If the current context distribution differs from historical (new user demographics, seasonal shifts), x^T A_a^{-1} x may be small — the new context looks "in-distribution" for old data but is genuinely novel. The UCB is under-calibrated. Fix: periodic reset of A_a with a forgetting factor, or use only recent observations to compute A_a.`,
@@ -517,7 +505,7 @@ e.g., user features) and x_t are arm-specific features (e.g., ad content feature
           `C) Per-request O(d²) per arm across K arms is a few GFLOPS, feasible on one core; Sherman-Morrison updates are similarly feasible, with locking for concurrent writes`,
           `D) The per-request cost is unavoidably O(d³) due to full matrix inversion every time, making this infeasible to serve without dedicated GPU acceleration`,
         ],
-        answer: `D`,
+        answer: `C`,
       },
       {
         q: `In the Yahoo! news experiment, α=0.2 was optimal, far below the theoretically motivated α=O(√(d ln T)). What does this imply about the theory-practice gap in LinUCB?`,
@@ -582,14 +570,14 @@ e.g., user features) and x_t are arm-specific features (e.g., ad content feature
 [FIGURE: opebv]`,
     interactivePrompt: `Before you touch the controls: as the evaluation policy diverges from the logging policy, importance weights blow up. Which estimator's error explodes first — the Direct Method, plain IS, or Doubly Robust — and which stays usable longest?`,
     keyPoints: [
-      `**Direct method (DM): train a reward model r̂(x, a) on logged data, evaluate as V̂_DM(π_e) = Σ_t Σ_a π_e(a|x_t) · r̂(x_t, a).** Low variance — the reward model is smooth and the estimate is deterministic. Biased whenever r̂ is wrong in contexts where π_e takes actions the behaviour policy rarely took — and those are exactly the interesting contexts where a better policy diverges from the baseline.`,
+      `**Direct method (DM): train a reward model r̂(x, a) on logged data, evaluate as V̂_DM(π_e) = (1/T) Σ_t Σ_a π_e(a|x_t) · r̂(x_t, a).** Low variance — the reward model is smooth and the estimate is deterministic. Biased whenever r̂ is wrong in contexts where π_e takes actions the behaviour policy rarely took — and those are exactly the interesting contexts where a better policy diverges from the baseline.`,
       `**Importance Sampling (IS): V̂_IS(π_e) = (1/T) Σ_t w_t · r_t where w_t = π_e(a_t | x_t) / π_b(a_t | x_t).** Unbiased — in expectation it equals V(π_e). Variance can be enormous when π_e concentrates on actions π_b rarely took: if π_b assigned probability 0.01 to action a but π_e assigns 0.9, the weight is 90. That single observation contributes reward × 90 to the estimate.`,
       `**SNIPS (Self-Normalized IS):
 
 $V̂_SNIPS = Σ_t w_t r_t / Σ_t w_t.** Normalising by the sum of weig$
 
 hts substantially reduces variance at the cost of a small bias. Consistent but biased in finite samples. Practically the default when propensities vary significantly across rounds — the effective sample size N_eff = (Σ w_t)² / Σ w_t² is much higher than for raw IS.`,
-      `**Doubly Robust (DR): V̂_DR = (1/T) Σ_t [r̂(x_t, a_t) + w_t (r_t − r̂(x_t, a_t))].** Consistent if either r̂ is correct (then the IS correction w_t(r_t − r̂) averages to zero and DR reduces to DM) or propensities w_t are correct (then DR reduces to IS). Two chances to be right — that is what "doubly robust" means. The production standard.`,
+      `**Doubly Robust (DR): V̂_DR = (1/T) Σ_t [Σ_a π_e(a|x_t)·r̂(x_t,a) + w_t (r_t − r̂(x_t, a_t))].** Consistent if either r̂ is correct (then the IS correction w_t(r_t − r̂) averages to zero and DR reduces to DM) or propensities w_t are correct (then DR reduces to IS). Two chances to be right — that is what "doubly robust" means. The production standard.`,
       `**Variance explosion from small propensities: monitor the effective sample size
 
 $N_eff = (Σ w_t)² / Σ w_t².** N_eff tells you how many i.i.d. samp$
@@ -609,7 +597,7 @@ les the weighted dataset is worth. If N_eff falls below 5-10% of T, a handful of
           `C) IS weights are fundamentally undefined here, since you cannot ever evaluate a deterministic policy using a purely uniform logging policy`,
           `D) IS weights are w_t = K = 10 applied uniformly to every round regardless of arm, giving variance that grows proportionally with K squared`,
         ],
-        answer: `B`,
+        answer: `A`,
       },
       {
         q: `Why is the doubly robust estimator called "doubly robust"? Construct a simple example where one model is wrong but DR is still consistent.`,
@@ -641,7 +629,7 @@ of sample size, a handful of high-weight observations dominate the estimate and 
       `**OPE goal:** estimate a new policy's value from logged behaviour-policy data, without deploying it.`,
       `**Direct method (DM):** train r̂(x,a); low variance, biased where π_e diverges from π_b — exactly the interesting contexts.`,
       `**Importance sampling (IS):** reweight by w_t = π_e/π_b; unbiased but variance explodes when policies diverge.`,
-      `**Doubly robust (DR):** $V̂_DR = (1/T) Σ_t [r̂ + w_t(r_t − r̂)]$; consistent if either r̂ or propensities are right — the production standard.`,
+      `**Doubly robust (DR):** $V̂_DR = (1/T) Σ_t [Σ_a π_e(a|x_t)·r̂(x_t,a) + w_t(r_t − r̂)]$; consistent if either r̂ or propensities are right — the production standard.`,
       `**Monitor N_eff = (Σw)²/Σw²:** below 5-10% of T → a few high-weight rows dominate, OPE unreliable; clip weights to trade bias for variance.`,
       `**Log propensities at serve time:** reconstructing later breaks every IS estimator.`,
       `**Partial feedback:** you only see the reward of the action taken — counterfactual estimation is what makes OPE hard.`,
@@ -778,10 +766,10 @@ xpire automatically — after a change, the window fills with new observations i
 $μ̂_a = Σ γ^(t−s) r_s / Σ γ^(t−s) where γ ∈ (0,1).** Effective me$
 
 mory length ≈ 1/(1−γ) rounds. Smoother than SW-UCB — old observations don't vanish abruptly but fade gradually. Behaves like an exponential moving average of rewards. γ = 0.99 gives effective memory of 100 rounds; γ = 0.999 gives 1000 rounds.`,
-      `**Change-point detection + reset: run CUSUM or Page-Hinkley on each arm's reward stream.** CUSUM maintains a cumulative sum statistic and signals a change when it exceeds a threshold. On detection, reset that arm's statistics (N_a = 0, μ̂_a = flat prior). More principled than windowing — only forgets when change is actually detected, not continuously. Requires tuning the detection threshold: low threshold → fast detection but frequent false alarms; high threshold → fewer false alarms but slow detection.`,
+      `**Change-point detection + reset: run CUSUM or Page-Hinkley on each arm's reward stream.** CUSUM maintains a cumulative sum statistic and signals a change when it exceeds a threshold; Page-Hinkley is the same idea applied to a running mean-deviation statistic instead of raw reward. On detection, reset that arm's statistics (N_a = 0, μ̂_a = flat prior). More principled than windowing — only forgets when change is actually detected, not continuously. Requires tuning the detection threshold: low threshold → fast detection but frequent false alarms; high threshold → fewer false alarms but slow detection.`,
       `**EXP3 (Exponential-weight algorithm for Exploration and Exploitation): the adversarial bandit algorithm.** Maintains weights w_a per arm. Selects arm with probability proportional to w_a plus uniform exploration floor γ/K. Importance-weights the observed reward: x̂_{a,t} = r_t / p_{a_t,t}. Updates: w_{a_t} ← w_{a_t} × exp(γ x̂_{a_t,t} / K). Achieves E[R_T] ≤ O(√(KT ln K)) against any adversarial sequence with no distributional assumptions.`,
       `**EXP3 importance-weighted reward: x̂_{a,t} = r_t / p_{a,t} × 1(a_t = a).** Unbiased: E[x̂_{a,t}] = p_{a,t} × μ_a / p_{a,t} = μ_a. The importance weighting compensates for selection probability — rare arms have their observed rewards scaled up to correct for how rarely they are pulled. Variance is O(K/γ) per arm per round — high, especially with small γ. This is the cost of the adversarial guarantee: no distributional structure means you must pay for all information gathering.`,
-      `**REXP3 (Restarting EXP3): for non-stationary adversarial settings with Υ change points, run EXP3 in epochs of length T/Υ, restarting at each epoch.** If Υ is unknown, use a doubling schedule: epochs of length 1, 2, 4,... The cost of not knowing Υ is logarithmic — the doubling trick adds at most a constant factor to regret.`,
+      `**REXP3 (Restarting EXP3): for non-stationary adversarial settings with Υ change points, run EXP3 in epochs of length T/Υ, restarting at each epoch.** If Υ is unknown, use a doubling schedule: epochs of length 1, 2, 4,... The cost of not knowing Υ is only logarithmic in T — the doubling trick loses at most a log-T factor relative to knowing Υ in advance.`,
       `**Seasonality is not non-stationarity.** Weekly cycles and hour-of-day patterns are predictable and recurring. Sliding window and discounted UCB handle the weekend-weekday difference by forgetting weekday observations on weekends — discarding useful data. The correct treatment: include day_of_week and hour_of_day as context features in a contextual bandit. The model learns that preferences differ predictably by time. Non-stationary algorithms are for genuine concept drift and external shocks — not for predictable patterns.`,
       `**EXP3 vs UCB for moderately non-stationary settings: EXP3 achieves O(√(KT ln K)) against adversarial sequences but O(√(KT ln K)) is worse than UCB's O(log T) for stationary settings.** In practice, most production problems have stochastic structure with occasional abrupt changes — neither purely stationary nor fully adversarial. Sliding window or discounted UCB typically outperforms EXP3 because they exploit stochastic structure when present. EXP3 is the right choice when the adversary is strategic or the reward distribution is fundamentally unpredictable.`,
     ],
@@ -817,14 +805,14 @@ mory length ≈ 1/(1−γ) rounds. Smoother than SW-UCB — old observations don
         answer: `B`,
       },
       {
-        q: `REXP3 achieves O(Υ^{1/3} K^{1/3} T^{2/3}) regret with Υ change points. How does this compare to the lower bound, and what is the cost of not knowing Υ?`,
+        q: `REXP3 restarts EXP3 every T/Υ rounds. Each restarted run is a fresh EXP3 instance over a horizon of length T/Υ, so it inherits the O(√(K·(T/Υ)·ln K)) bound taught above. Summing this bound across all Υ epochs, what is REXP3's total regret order, and how does it compare to the informal lower bound Ω(√(ΥKT))?`,
         options: [
-          `A) REXP3 matches the lower bound exactly here, so there is provably no remaining gap between REXP3 and the true minimax optimal rate`,
-          `B) REXP3 has worse than O(T) regret whenever Υ grows large, which makes the whole algorithm essentially unusable in any real deployment`,
-          `C) The true lower bound is just O(1) for non-stationary bandits overall, since change points are always directly observable in practice`,
-          `D) The minimax bound is Ω(√(ΥKT)); REXP3 misses it, but EXP3-R with detection nears it, and not knowing Υ costs only a log T penalty`,
+          `A) Summing Υ epochs of O(√(K(T/Υ) ln K)) each gives Υ·√(K(T/Υ) ln K) = O(√(ΥKT ln K)) — matching the lower bound up to the ln K factor`,
+          `B) The per-epoch bounds add linearly to O(ΥKT ln K) — quadratically worse than the lower bound, since regret bounds never combine via square roots`,
+          `C) Restarting resets regret to zero at each epoch boundary, so REXP3's total regret is just the single-epoch bound O(√(K(T/Υ) ln K)), independent of Υ`,
+          `D) REXP3's regret is unrelated to the per-epoch EXP3 bound; it is a separate O(Υ^{1/3}K^{1/3}T^{2/3}) rate that must be taken on faith`,
         ],
-        answer: `D`,
+        answer: `A`,
       },
     ],
     takeaway: `Standard UCB/TS freezes on a historically dominant arm after a change point because N_a is too large for the empirical mean to move quickly — it takes O(N_a) post-change observations to detect the drop. The right production strategy combines CUSUM-based change detection for abrupt shifts (immediate statistics reset) and sliding window or discounted UCB for gradual drift (continuous forgetting). Predictable seasonality is not non-stationarity — recurring patterns belong in contextual features where the model learns them, not in a forgetting mechanism that discards them.`,

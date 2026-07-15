@@ -765,7 +765,7 @@ Definitions. Total Effect (TE) = Direct Effect (DE) + Indirect Effect (IE). Natu
 
 Baron-Kenny (classical approach): (1) regress outcome on treatment; (2) regress mediator on treatment; (3) regress outcome on both treatment and mediator. The indirect effect equals the coefficient of treatment on mediator multiplied by the coefficient of mediator on outcome. Widely used and intuitive — but requires no unmeasured confounding of the mediator-outcome relationship, a strong assumption that an RCT does not guarantee. The RCT randomizes treatment, not the mediator.
 
-Counterfactual approach (Imai, Keele, Tingley): Average Causal Mediation Effect (ACME) uses sensitivity analysis to assess robustness to unmeasured mediator-outcome confounding. More rigorous than Baron-Kenny.
+Counterfactual approach (Imai, Keele, Tingley): estimates the Average Causal Mediation Effect (ACME) under sequential ignorability — treatment is as-good-as-randomized given pre-treatment confounders (as in Baron-Kenny), and the mediator is additionally as-good-as-randomized given treatment and those same confounders (the assumption Baron-Kenny simply asserts without naming). Because that second piece is rarely guaranteed even in a clean RCT, the approach pairs its ACME estimate with a sensitivity analysis to assess robustness to unmeasured mediator-outcome confounding. More rigorous than Baron-Kenny because it names and stress-tests the assumption Baron-Kenny leaves implicit.
 
 What mediation analysis is not: controlling for the mediator in a regression. Controlling for M in a regression estimates the controlled direct effect, not the natural direct effect — and introduces collider bias if the mediator and outcome share an unmeasured common cause. M is a post-treatment variable. Any unmeasured variable that affects both M and Y creates a backdoor path through M that conditioning on M opens rather than closes. Mediation requires a structural model, not just adding an extra covariate to the regression.`,
     keyPoints: [
@@ -814,7 +814,7 @@ What mediation analysis is not: controlling for the mediator in a regression. Co
       `**Baron-Kenny (three regressions) is intuitive but leans on a strong assumption:** it requires *no unmeasured confounding of the mediator–outcome relationship*, and an RCT does *not* provide it — indirect effect = (T→M coefficient) × (M→Y coefficient).`,
       `**An RCT randomises T, not M:** so a mediator–outcome confounder survives randomisation — this is exactly why clean treatment randomisation still doesn't buy you a valid mediation decomposition.`,
       `**Controlling for M in a regression is *not* mediation:** it gives the *controlled* direct effect, and because M is post-treatment, conditioning on it opens collider bias if M and Y share any unmeasured common cause. Mediation needs a structural model, not one extra covariate.`,
-      `**Always run the Imai-Keele-Tingley sensitivity analysis (ACME):** it reports how strong an unmeasured mediator–outcome confounder would have to be to overturn your NDE/NIE — without it, the decomposition can't be defended.`,
+      `**Always run the Imai-Keele-Tingley sensitivity analysis:** it reports how strong an unmeasured mediator–outcome confounder would have to be to overturn your NDE/NIE — without it, the decomposition can't be defended.`,
     ],
     figures: {
       mediationdag: `<svg viewBox="0 0 360 122" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">

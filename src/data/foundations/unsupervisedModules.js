@@ -833,7 +833,6 @@ NOT-this: "t-SNE cluster distances are interpretable." The distances between clu
   {
     id: 'autoencoders_dim_reduction',
     interactiveId: 'vae_viz',
-    interactivePrompt: 'An autoencoder squeezes data through a bottleneck and reconstructs it — explore the encoder → latent → decoder path and how the bottleneck forces a compressed representation.',
     title: 'Autoencoders for Dimensionality Reduction',
     subtitle: 'Encoder-decoder mechanics, bottleneck, VAE, anomaly detection via reconstruction error',
     difficulty: 'advanced',
@@ -849,7 +848,7 @@ The magic is in the squeeze. Because everything has to pass through that 32-numb
 
 ---
 
-**Three flavours worth knowing.**
+**Two flavours worth knowing.**
 
 A **denoising autoencoder** makes the job harder on purpose: it feeds in a *corrupted* input (add noise, or blank out some pixels) and asks the network to reconstruct the *clean* original. To pull that off, the encoder has to learn the real underlying structure rather than memorise surface detail — which makes it a popular way to pre-train representations when you have lots of unlabelled data.
 
@@ -916,7 +915,7 @@ The encoder/decoder shape should match the data. **Dense** (fully-connected) aut
         q: `You train an autoencoder for anomaly detection and find that reconstruction error is high for both normal and anomalous samples. Which two of the following correctly diagnose this?`,
         options: [
           `A) High error on normal samples signals underfitting — bottleneck too small, model too shallow, or features not standardised`,
-          `B) If error were also low for anomalies, that would separately indicate the bottleneck is too large and the model is memorising`,
+          `B) High error on the anomalies too rules out a too-large, memorising bottleneck (that failure mode gives low anomaly error) — this pattern is general underfitting, not a working detector`,
           `C) The training data must be contaminated with anomalies, so simply retrain the model on a cleaner dataset from another source`,
           `D) Autoencoders always start out with high reconstruction error regardless of architecture; just wait for more training epochs`,
         ],

@@ -545,7 +545,7 @@ And kill the assumption that "stable AUC means calibration is fine." A model can
     keyPoints: [
       `**Monitor ECE on every batch of ground truth labels that arrives — calibration drift is silent and systematic, exactly the kind of error that causes financial mispricing or risk misallocation to compound undetected.** Plot the reliability diagram alongside the ECE scalar: ECE tells you the magnitude, the diagram tells you which buckets are miscalibrated and in which direction.`,
       `**Trap: applying temperature scaling fit on stale data.** If you recalibrate using labels from 6 months ago, you are correcting for past calibration drift, not current. Fit recalibration only on recent labels from the last 30–60 days. A recalibration model trained on stale data can shift the current calibration in the wrong direction, making ECE worse instead of better.`,
-      `**Diagnostic: if ECE is increasing but AUC is stable, apply temperature scaling as the first-line fix — it corrects the overall miscalibration in one parameter without retraining.** If ECE improvement from temperature scaling is greater than 0.03, the recalibration was justified. If improvement is less than 0.01, the problem is per-bucket conditional miscalibration rather than a uniform scaling issue, and isotonic regression is required instead.`,
+      `**Diagnostic: if ECE is increasing but AUC is stable, apply temperature scaling as the first-line fix — it corrects the overall miscalibration in one parameter without retraining.** If ECE improvement from temperature scaling is greater than 0.03, the recalibration was justified. If improvement is less than 0.01, the problem is per-bucket conditional miscalibration rather than a uniform scaling issue, and isotonic regression is required instead — a non-parametric monotonic step-function fit that can correct each probability bucket independently, unlike Platt/temperature scaling's single global parameter.`,
     ],
     interactivePrompt: `Before you touch the controls: the insurance model's AUC held steady at 0.82 while ECE climbed from 0.03 to 0.09 — why doesn't stable AUC mean calibration is fine, and what business harm is already occurring?`,
     checkQuestions: [
@@ -560,11 +560,11 @@ And kill the assumption that "stable AUC means calibration is fine." A model can
         answer: `D`,
       },
       {
-        q: `Which two statements correctly explain why a pricing model's AUC can hold steady at 0.90 while its 0.15 predictions actually claim at 22%?`,
+        q: `Which two statements correctly explain why a pricing model's AUC can hold steady at 0.82 while its 0.15 predictions actually claim at 22%?`,
         options: [
           `A) AUC and calibration measure independent things — one scores rank order, the other scores probability`,
           `B) A model can keep ordering risky customers above safe ones correctly while its absolute scores drift off`,
-          `C) AUC of 0.90 isn't high enough to guarantee calibration; only AUC above 0.95 gives reliable probabilities`,
+          `C) AUC of 0.82 isn't high enough to guarantee calibration; only AUC above 0.95 gives reliable probabilities`,
           `D) Calibration drift always drags AUC down too, so the steady AUC means the diagram was mismeasured`,
         ],
         answer: ['A', 'B'],
@@ -614,7 +614,7 @@ And kill the assumption that "stable AUC means calibration is fine." A model can
     difficulty: 'advanced',
     estimatedMin: 20,
     tags: ['model staleness', 'silent failure', 'monitoring', 'model decay'],
-    summary: `You take a two-week vacation. No alerts, no pages — the model is "running fine." You come back, check the business metric the model drives, and it has slid 8% in the wrong direction over the last ten days. Nothing caught it, because each individual signal stayed under its threshold: no single feature's drift crossed the line, the prediction distribution moved too slowly to trip a z-test, and the model kept answering at low latency with zero errors. Technically functioning, empirically wrong. This is **silent model staleness.**
+    summary: `You take a two-week vacation. No alerts, no pages — the model is "running fine." You come back, check the business metric the model drives, and it has slid 6% in the wrong direction over the last 4 days. Nothing caught it, because each individual signal stayed under its threshold: no single feature's drift crossed the line, the prediction distribution moved too slowly to trip a z-test, and the model kept answering at low latency with zero errors. Technically functioning, empirically wrong. This is **silent model staleness.**
 
 ---
 
@@ -642,7 +642,7 @@ And retire the belief that "if it's running, it's working." A model can serve ev
       `**Trap: relying only on label-based monitoring.** Labels can take days or weeks to arrive. By the time label-based accuracy confirms degradation, the model has been wrong for the entire label delay period. You need leading indicators — prediction distribution, feature drift — that fire days before labels confirm the diagnosis.`,
       `**Diagnostic: compare model performance in the first week after deployment to the most recent week.** If the gap is greater than 5 percentage points and no known change explains it, the model has gone stale. This 5-minute check should be part of every weekly team review — it catches gradual drift that no alert threshold was calibrated to catch.`,
     ],
-    interactivePrompt: `Before you touch the controls: every individual monitoring metric is below its alert threshold, but the business KPI has drifted 6% in the wrong direction over 10 days — what does this pattern tell you, and what combination of signals would you check next?`,
+    interactivePrompt: `Before you touch the controls: every individual monitoring metric is below its alert threshold, but the business KPI has drifted 6% in the wrong direction over 4 days — what does this pattern tell you, and what combination of signals would you check next?`,
     checkQuestions: [
       {
         q: `How would you design a staleness detection system for a recommendation model where engagement labels are available daily but the model is retrained monthly?`,
@@ -655,7 +655,7 @@ And retire the belief that "if it's running, it's working." A model can serve ev
         answer: `A`,
       },
       {
-        q: `Every individual metric sits just below its threshold — PSI at 0.19, prediction drift inside 3σ — yet the business KPI has slid 6% over 10 days. Which two statements correctly diagnose the staleness signal here?`,
+        q: `Every individual metric sits just below its threshold — PSI at 0.19, prediction drift inside 3σ — yet the business KPI has slid 6% over 4 days. Which two statements correctly diagnose the staleness signal here?`,
         options: [
           `A) It's co-firing: several silent indicators moving the same direction is the pattern a health score catches`,
           `B) A composite health score exists precisely to surface this "everything drifting a little" pattern early`,
@@ -678,7 +678,7 @@ And retire the belief that "if it's running, it's working." A model can serve ev
     figures: {
       cofiring: `<svg viewBox="0 0 360 120" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
   <text x="8" y="12" fill="var(--ink-low)" font-size="7.5">Each signal stays under its line — together they spell staleness</text>
-  ${[['Feature PSI','0.19 / 0.20',0.95],['Prediction drift','2.7σ / 3σ',0.90],['Business KPI','−6% / −(5d)',0.82],['30-day accuracy','−2.6 / −3 pts',0.87]].map((r,i)=>`
+  ${[['Feature PSI','0.19 / 0.20',0.95],['Prediction drift','2.7σ / 3σ',0.90],['Business KPI','4d / 5d',0.8],['30-day accuracy','−2.6 / −3 pts',0.87]].map((r,i)=>`
   <text x="8" y="${30+i*20}" fill="var(--ink-mid)" font-size="7">${r[0]}</text>
   <rect x="120" y="${22+i*20}" width="200" height="9" rx="2" fill="var(--depth)" stroke="var(--rim)"/>
   <rect x="120" y="${22+i*20}" width="${r[2]*200}" height="9" rx="2" fill="#f59e0b" opacity="0.8"/>

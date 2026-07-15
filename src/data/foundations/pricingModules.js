@@ -39,7 +39,7 @@ export const PRICING_MODULES = [
       `**Observational price/quantity data is endogenous.** Firms raise price when demand is high, so high prices and high quantities co-occur in the record. A naive regression absorbs that and returns a biased, sometimes positive, "elasticity." Price is correlated with the demand shock — the textbook endogeneity failure.`,
       `**Unbiased elasticity needs experiments or instruments.** Randomize price (geo/switchback tests) or use an instrument that shifts price for a reason unrelated to demand (a cost or tax shock). Both break the price↔demand-shock correlation so the estimated %ΔQ / %ΔP is causal.`,
     ],
-    takeaway: `Elasticity ε = %ΔQ / %ΔP is the single number that decides whether a price move grows or shrinks volume, and the log-log demand model reads it off as a slope. But you cannot regress observed quantity on observed price — firms set price in response to demand, so that estimate is endogenously biased (even positive). Real elasticity comes from an experiment or an instrument that moves price independently of demand.`,
+    takeaway: `Elasticity ε = %ΔQ / %ΔP is the single number that decides whether a price move grows or shrinks revenue, and the log-log demand model reads it off as a slope. But you cannot regress observed quantity on observed price — firms set price in response to demand, so that estimate is endogenously biased (even positive). Real elasticity comes from an experiment or an instrument that moves price independently of demand.`,
     checkQuestions: [
       {
         q: `A product has estimated |ε| = 1.6. Select the two correct statements about what happens if you cut price by 5%.`,

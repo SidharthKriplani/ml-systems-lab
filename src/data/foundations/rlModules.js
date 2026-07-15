@@ -11,9 +11,9 @@ export const RL_MODULES = [
 
 [FIGURE: loop]
 
-The MDP (Markov Decision Process) is the formal language for this. It has five components. The state space S is all possible positions the robot can be in. The action space A is all directions it can move. The transition function T(s, a, s') = P(s' | s, a) is the probability of landing in s' after moving in direction a from state s. The reward function R(s, a, s') is the immediate reward received on that transition. The discount factor γ ∈ [0, 1) controls how much future rewards are worth relative to immediate ones: γ = 0 means the robot cares only about the next step, γ = 0.99 means a reward 100 steps away still matters almost as much as one received now.
+The MDP (Markov Decision Process) is the formal language for this. It has five components. The state space S is all possible positions the robot can be in. The action space A is all directions it can move. The transition function T(s, a, s') = P(s' | s, a) is the probability of landing in s' after moving in direction a from state s. The reward function R(s, a, s') is the immediate reward received on that transition. The discount factor γ ∈ [0, 1) controls how much future rewards are worth relative to immediate ones: γ = 0 means the robot cares only about the next step, γ = 0.99 means a reward 100 steps away has decayed to about 37% of its value (0.99^100 ≈ 0.37) — still meaningfully non-negligible, giving an effective planning horizon of roughly 1/(1-γ) ≈ 100 steps, versus a 1-step horizon at γ = 0.
 
-The return G_t = R_t + γR_{t+1} + γ²R_{t+2} + ... is the discounted sum of all future rewards from time t. The policy π(a | s) is the probability of taking action a in state s. The agent's goal is to find π* — the optimal policy — that maximizes expected return E[G_t] from every starting state.
+The return G_t = R_{t+1} + γR_{t+2} + γ²R_{t+3} + ... is the discounted sum of all future rewards from time t. The policy π(a | s) is the probability of taking action a in state s. The agent's goal is to find π* — the optimal policy — that maximizes expected return E[G_t] from every starting state.
 
 The Markov property is the key assumption underpinning everything: the next state depends only on the current state and action, not the full history. For the grid robot this holds perfectly — knowing where you are now is enough to navigate. It breaks whenever the current observation is insufficient: a robot that sees only a camera image cannot distinguish a locked door from an unlocked one, because the relevant information — whether a key was picked up earlier — is not in the current frame. The fix is to augment the state representation to include whatever history is needed.
 
@@ -69,7 +69,7 @@ NOT this: RL is only for games and robotics. Any sequential decision problem wit
     takeaway: `The MDP is just a formal way of saying: at every step the agent sees a state, picks an action, gets a reward, and ends up somewhere new — and the goal is to find the policy that makes those rewards add up to as much as possible.`,
     recap: [
       "**MDP = 5 components:** state space $S$, actions $A$, transitions $T(s,a,s')$, reward $R$, discount $\\gamma \\in [0,1)$.",
-      "**Return** $G_t = R_t + \\gamma R_{t+1} + \\gamma^2 R_{t+2} + \\dots$ — goal is a policy $\\pi^*$ maximizing $E[G_t]$.",
+      "**Return** $G_t = R_{t+1} + \\gamma R_{t+2} + \\gamma^2 R_{t+3} + \\dots$ — goal is a policy $\\pi^*$ maximizing $E[G_t]$.",
       "**Markov property:** next state depends only on current state+action, not history. Break it, augment the state.",
       "**\\gamma tunes horizon:** 0 = myopic, 0.99 = ~100 steps of future still matter.",
       "**Write all 5 components explicitly before coding** — reward ambiguity is the #1 failure.",
@@ -88,7 +88,7 @@ NOT this: RL is only for games and robotics. Any sequential decision problem wit
   <text x="180" y="72" text-anchor="middle" fill="var(--amber)" font-size="8">reward R, next state s'</text>
   <text x="40" y="100" fill="var(--ink-low)" font-size="8">s &#8594; a &#8594; R &#8594; s' &#8594; a' &#8594; ...  one episode, over and over</text>
   <text x="40" y="118" fill="var(--ink-low)" font-size="8">Markov: s' depends only on (s, a), never on the history.</text>
-  <text x="40" y="136" fill="var(--ink-low)" font-size="8">Goal: find &#960; maximizing G&#8348; = R&#8348; + &#947;R&#8348;&#8330;&#8321; + &#947;&#178;R&#8348;&#8330;&#8322; + ...</text>
+  <text x="40" y="136" fill="var(--ink-low)" font-size="8">Goal: find &#960; maximizing G&#8348; = R&#8348;&#8330;&#8321; + &#947;R&#8348;&#8330;&#8322; + &#947;&#178;R&#8348;&#8330;&#8323; + ...</text>
   <defs>
     <marker id="ah" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="var(--ink-low)"/></marker>
     <marker id="ah2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="var(--amber)"/></marker>
@@ -116,7 +116,7 @@ Value iteration starts with an arbitrary value estimate and repeatedly applies t
 NOT this: you need to know the transition model T(s, a, s') to use Bellman equations. Model-based RL uses the equations directly with a known or learned T. Model-free RL — Q-learning, TD learning — uses samples to estimate the Bellman updates without ever modeling T explicitly. The Bellman structure guides both approaches by telling you what quantity to estimate.`,
     keyPoints: [
       `**Learn the Q-function Q*(s, a), not V*(s), for most RL applications.**\n\nQ*(s, a) tells you which action to take directly — argmax_a Q*(s, a) — without needing transition probabilities. V*(s) tells you how good a state is but not what to do, so unless you have a model of transitions, V alone cannot produce a policy.`,
-      `**Tabular Q-learning is infeasible for large or continuous state spaces — this is not a performance issue, it is a physical impossibility.**\n\nA robot with 6 joint angles discretized at 100 positions per joint has 10^12 states. Storing a Q-table for this requires more memory than exists. The moment the state space is too large to enumerate, you need function approximation — neural networks — which breaks the convergence guarantee.`,
+      `**Tabular Q-learning is infeasible for large or continuous state spaces — this is not a performance issue, it is a physical impossibility.**\n\nA robot with 6 joint angles discretized at 100 positions per joint has 10^12 states. Storing a Q-table for this requires ~8 TB even at 8 bytes/entry — technically storable today, but wildly impractical to fill from experience (you would need to visit and revisit trillions of state-action pairs), and it only gets worse as joints or precision increase. The moment the state space is too large to enumerate, you need function approximation — neural networks — which breaks the convergence guarantee.`,
       `**If Q-values grow without bound during training, the Bellman backup is diverging due to a feedback loop between the prediction and the target.**\n\nThe target y = R + γ max Q_θ(s') depends on the same θ being updated, so each gradient step shifts both the prediction and the target. Fix this with a target network: freeze θ^- for K steps so the target is stationary, then copy θ into θ^-.`,
     ],
     interactivePrompt: `Before you touch the controls: in the 4×4 grid, position (0,0) is the goal and (3,3) is the start. With γ = 0.9 and a reward of +1 only at the goal, roughly what value would you assign to a state 3 steps away from the goal?`,
@@ -157,7 +157,7 @@ NOT this: you need to know the transition model T(s, a, s') to use Bellman equat
           `A) Pong has approximately 10^6 states after discretising pixel values into coarse bins, which is borderline tractable computationally but far too slow for real-time online training without dedicated specialised tensor-processing hardware clusters`,
           `B) Pong has roughly 10^20 states once the full preprocessing pipeline is applied, which is an enormous number but could in principle still be handled by a sufficiently large distributed computing cluster spanning an entire data centre`,
           `C) Pong has exactly 84×84×3 = 21,168 states after standard DQN preprocessing, which makes tabular dynamic programming tractable in theory but impractically slow in practice purely because of the size of the discrete action space`,
-          `D) Pong at 84×84 grayscale has 2^{7056} states — vastly more than atoms in the observable universe (~2^{266}); storing V*(s) for every one is impossible, so DQN compresses the value function into ~10M parameters instead`,
+          `D) Pong at 84×84 with binary (on/off) pixels already has 2^{7056} states — vastly more than atoms in the observable universe (~2^{266}); storing V*(s) for every one is impossible, so DQN compresses the value function into ~1.7M parameters instead (the standard Nature-2015 conv+fc architecture)`,
         ],
         answer: `D`
       },
@@ -352,13 +352,14 @@ The Policy Gradient Theorem gives the gradient: ∇_θ J(θ) = E_π[∇_θ log �
 
 REINFORCE is the direct implementation: sample a full episode, compute G_t at each timestep, update θ ← θ + α Σ_t G_t ∇_θ log π_θ(a_t | s_t). The problem is that G_t includes all future rewards — noise unrelated to a_t's actual contribution. A good action followed by bad luck is indistinguishable from a genuinely bad action. Gradient estimates have enormous variance.
 
-Baseline subtraction solves this. Replace G_t with (G_t - b(s_t)) where b depends only on the state, not the action. The expected gradient is unchanged — any state-dependent term subtracts to zero because the policy log-gradient sums to zero over actions. But variance drops by centering returns around the state's average value. The optimal baseline is V^π(s_t) itself, giving the advantage A(s_t, a_t) = G_t - V^π(s_t) — how much better this action was than average.
+Baseline subtraction solves this. Replace G_t with (G_t - b(s_t)) where b depends only on the state, not the action. The expected gradient is unchanged — any state-dependent term subtracts to zero because the policy log-gradient sums to zero over actions. But variance drops by centering returns around the state's average value. The standard practical baseline is V^π(s_t) itself, giving the advantage A(s_t, a_t) = G_t - V^π(s_t) — how much better this action was than average. (The true variance-minimizing baseline is technically a score-weighted average of returns, not V^π(s) exactly — but V^π(s) captures almost all the benefit and is far simpler to estimate, which is why it's the one actually used in practice.)
 
 NOT this: policy gradients are unbiased because they use sampled returns. Unbiased in expectation does not mean useful in practice. REINFORCE has extremely high variance for long-horizon tasks, and the gradient estimate from a single trajectory is dominated by random noise. This is why actor-critic methods — which replace G_t with a learned critic estimate — dominate in practice.`,
     keyPoints: [
       `**Always subtract a baseline from returns in policy gradient updates.**\n\nUsing the mean return or a learned value function as baseline reduces variance by 10–100× with zero bias cost — the baseline integrates to zero over the policy distribution. Skipping the baseline is skipping the most important and cheapest variance reduction available.`,
-      `**If σ_θ(s) → 0 early in training, the policy has collapsed to deterministic and exploration has stopped — gradient signal becomes zero.**\n\nAdd an entropy bonus H[π_θ] to the loss to maintain policy spread throughout training. Without it, the network converges to the first good-looking action it found and stops exploring whether there is something better.`,
-      `**If policy gradient training is noisy with high variance in returns across episodes, you need more environment samples per update — not a learning rate change.**\n\nGradient signal-to-noise ratio improves as √(num_samples). Doubling the number of parallel environments halves gradient noise. Collect longer rollouts or more parallel workers before tuning any other hyperparameter.`,
+      `**If σ_θ(s) → 0 early in training, the policy has collapsed to deterministic and exploration has stopped — and the gradient does not go quietly: the Gaussian score function (a-μ)/σ² blows up as σ→0, so the collapse shows up as gradient-variance explosion and numerical instability, not a clean zero signal.**\n\nAdd an entropy bonus H[π_θ] to the loss to maintain policy spread throughout training. Without it, the network converges to the first good-looking action it found and stops exploring whether there is something better.`,
+      `**If policy gradient training is noisy with high variance in returns across episodes, you need more environment samples per update — not a learning rate change.**\n\nGradient signal-to-noise ratio improves as √(num_samples). Quadrupling the number of parallel environments halves gradient noise. Collect longer rollouts or more parallel workers before tuning any other hyperparameter.`,
+      `**In a two-player zero-sum game (poker, adversarial self-play), a deterministic policy is always exploitable — the opponent observes it and plays the exact counter.** The game-theoretic optimum is a Nash equilibrium, which in general requires a mixed (stochastic) strategy over actions — something argmax Q*(s,a) cannot represent at all, but a stochastic policy π_θ(a|s) can. This is a second, independent reason (beyond continuous actions) that policy gradients generalize where value-based methods break down.`,
     ],
     interactivePrompt: `Before you touch the controls: the robotic arm gets +10 for reaching the target in under 20 steps and -0.1 per step. Over 10 episodes, returns range from -2 to +8. Without a baseline, every action in every episode gets weighted by a different G_t. What would happen to the gradient if you used V(s) = 3 as a constant baseline?`,
     checkQuestions: [
@@ -390,7 +391,7 @@ NOT this: policy gradients are unbiased because they use sampled returns. Unbias
           `C) Any deterministic policy in a zero-sum game is exploitable — the opponent learns the best response and wins; the Nash equilibrium needs a mixed strategy, which argmax Q*(s,a) cannot represent but policy gradients can via self-play or CFR`,
           `D) Stochastic policies are needed in poker specifically because partial observability of hidden cards makes any deterministic policy exploitable; in fully observable zero-sum games, by contrast, a deterministic optimal policy is always guaranteed to exist`,
         ],
-        answer: `C`
+        answer: `D`
       },
     ],
     takeaway: `Policy gradients optimize the policy directly by increasing the log-probability of actions proportionally to how much better than average they were — and subtracting a state-value baseline from the returns is mandatory, not optional, because it reduces gradient variance by 10–100× at zero bias cost.`,
@@ -419,7 +420,7 @@ Actor-critic solves both. Maintain two networks simultaneously. The actor π_θ(
 
 The advantage has a key property: E_{a~π}[A(s, a)] = 0. It is zero-mean across actions. This means it carries only relative information — this action was above average, that one was below. Unlike raw Q(s, a), which can be large and positive for all actions in a highly valuable state, the advantage removes the state's baseline value and isolates the signal about action quality. This is what makes actor-critic gradient estimates so much lower variance than REINFORCE.
 
-Generalized Advantage Estimation (GAE) extends this. Instead of the one-step advantage R + γV(s') - V(s), GAE accumulates a weighted average of n-step advantages: Â^GAE = δ_t + γλδ_{t+1} + (γλ)²δ_{t+2} + ... where δ_t = R_{t+1} + γV(s_{t+1}) - V(s_t). λ = 0 gives the one-step TD error — low variance, high bias. λ = 1 gives the full Monte Carlo advantage — no bias, high variance. λ = 0.95 is the standard for most tasks. PPO, SAC, and most modern actor-critics use GAE.
+Generalized Advantage Estimation (GAE) extends this. Instead of the one-step advantage R + γV(s') - V(s), GAE accumulates a weighted average of n-step advantages: Â^GAE = δ_t + γλδ_{t+1} + (γλ)²δ_{t+2} + ... where δ_t = R_{t+1} + γV(s_{t+1}) - V(s_t). λ = 0 gives the one-step TD error — low variance, high bias. λ = 1 gives the full Monte Carlo advantage — no bias, high variance. λ = 0.95 is the standard for most tasks. PPO, TRPO, and most modern on-policy actor-critics use GAE.
 
 NOT this: the actor and critic have separate learning problems that can interfere with each other. The two networks are cooperative, not adversarial — the critic provides variance-reducing signal to the actor, and the actor's improving policy makes the critic's targets more stable. The instability risk is that a slow or inaccurate critic injects biased gradient into the actor. Mitigate by setting critic learning rate 3–10× higher than actor learning rate, so the critic leads.`,
     keyPoints: [
@@ -440,11 +441,7 @@ NOT this: the actor and critic have separate learning problems that can interfer
         answer: ['A', 'B']
       },
       {
-        q: `In GAE, what does setting
-
-$λ=0 vs λ=0.95 vs λ=1 do to the advantage estimate? When wo$
-
-uld you choose each?`,
+        q: `In GAE, what does setting λ=0 vs λ=0.95 vs λ=1 do to the advantage estimate? When would you choose each?`,
         options: [
           `A) λ=0 uses only the immediate reward with no bootstrapping at all, giving unbiased but extremely high-variance estimates; λ=1 instead uses the full critic value with pure bootstrapping, giving low-variance but high-bias estimates; λ=0.95 sits at a middle ground; choose λ=0 when episodes are very short and λ=1 only once the critic is well-trained`,
           `B) λ in GAE actually controls the learning-rate schedule for the critic network rather than the advantage estimate itself; λ=0 means the critic updates once per full episode and λ=1 means it updates every step; λ=0.95 is the standard value balancing update frequency against stability`,
@@ -742,6 +739,7 @@ NOT this: if the agent performs well in simulation, it will perform well in prod
       `**Red-team the reward function before training — list every way an agent could maximize the reward without satisfying the underlying objective.**\n\nThis adversarial analysis takes 2 hours and prevents the most common production failures. For each exploit, add a penalty term or constraint before training begins. Reward hacking patterns are almost always predictable in advance if you think adversarially.`,
       `**Always maintain a hard fallback policy that activates if the RL agent's action confidence drops below a threshold.**\n\nRL agents degrade unpredictably. A simple rule-based or supervised learning fallback prevents a partial RL failure from becoming a total outage. Never deploy an RL agent without it. This is non-optional.`,
       `**In production, compare the RL agent's average reward per episode against a simple heuristic policy — if the RL agent underperforms the heuristic after deployment, you have distribution shift.**\n\nTraining distribution and deployment distribution diverged. The agent learned to optimize for the training world, which differs from the real one. First diagnostic step: compare on the heuristic baseline, then investigate what changed in the deployment distribution.`,
+      `**Off-policy evaluation (OPE) estimates a new policy π_e's performance from data already logged under the old policy π_b, without deploying it live.** The importance-sampling (IS) estimator reweights each logged outcome by how much more or less likely π_e was to take that action: V̂^IS = (1/N) Σ_n w_n·r_n where w_n = π_e(a_n|s_n)/π_b(a_n|s_n). For a single-step bandit this is manageable, but for a T-step sequential MDP the trajectory-level weight is a product Π_t w_t — variance grows exponentially in T, and delayed rewards make this worse by stretching T further before a reward lands. The doubly robust (DR) estimator fixes this by combining a fitted reward model R̂(s,a) with an IS correction on the residual; it stays consistent if EITHER the reward model OR the importance weights are accurate — hence "doubly robust" — which is why it dominates plain IS in practice.`,
     ],
     interactivePrompt: `Before you touch the controls: the RL agent is trained with reward = clicks + 0.1 × session_length. In production it starts generating clickbait titles. What penalty term would you add to the reward function to counteract this — and how would you verify it works before full deployment?`,
     checkQuestions: [
@@ -753,7 +751,7 @@ NOT this: if the agent performs well in simulation, it will perform well in prod
           `C) IS estimation is invalid when π_b is ε-greedy because ε-greedy is not a proper probability distribution; use only the Direct Method (reward model) for evaluation and ignore the IS estimator entirely`,
           `D) The IS estimator always has zero variance when the behaviour policy π_b is known exactly; variance only occurs when π_b must be estimated from data; with a known ε-greedy policy the IS estimator is both unbiased and zero-variance`,
         ],
-        answer: `B`
+        answer: `A`
       },
       {
         q: `Your RL agent for robot manipulation works perfectly in simulation (95% success rate) but achieves only 20% in the real lab. Which two of the following are independent sources of the sim-to-real gap, each needing a distinct fix?`,
@@ -773,7 +771,7 @@ NOT this: if the agent performs well in simulation, it will perform well in prod
           `C) RL is inappropriate here due to: delayed outcomes (months-long credit assignment), non-stationary patient populations, catastrophic (not expected-value) safety requirements, low sample counts (hundreds not millions), regulatory interpretability requirements, and distribution shift from the changing policy; recommend contextual bandits with Thompson sampling + posterior-based safety arm exclusion, or a Bayesian adaptive clinical trial design (REMAP-style response-adaptive randomisation) which is FDA-recognised and provides both statistical validity and adaptivity`,
           `D) The main risk is that RL requires too many patient interactions to learn a good policy; the fix is to use transfer learning from existing clinical trial data to pre-train the policy before deploying it in a new trial, which reduces the number of patients needed to fewer than 100`,
         ],
-        answer: `D`
+        answer: `C`
       },
     ],
     takeaway: `The most important production RL skill is red-teaming your reward function before training — listing every way an agent could maximize the proxy without satisfying the actual objective, then adding penalties for each exploit before a single training step runs.`,
