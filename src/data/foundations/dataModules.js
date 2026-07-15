@@ -952,7 +952,7 @@ The cleanest first move is **class weights**: tell the loss that a mistake on a 
 
 **Fix 3 — move the decision threshold.**
 
-This one does not touch training at all. A classifier outputs a *probability*; turning it into a yes/no needs a **threshold**, and the default 0.5 is almost never right here. If a missed fraud costs 10,000 and a false alarm costs 50 in review time, you should flag on much weaker suspicion — a threshold of 0.15 or 0.2, not 0.5. The threshold is a *business-cost* decision, not a modeling one: plot precision against recall across thresholds and pick the point that minimises your expected cost.
+This one does not touch training at all. A classifier outputs a *probability*; turning it into a yes/no needs a **threshold**, and the default 0.5 is almost never right here. If a missed fraud costs 10,000 and a false alarm costs 50 in review time — a 200:1 asymmetry — you should flag on much weaker suspicion: the cost-minimizing threshold works out to roughly 0.005, not 0.5. The threshold is a *business-cost* decision, not a modeling one: plot precision against recall across thresholds and pick the point that minimises your expected cost.
 
 ---
 
@@ -964,7 +964,7 @@ The deepest fix is the metric itself. On imbalanced data, use **precision, recal
 
 **The fuller metric menu.**
 
-Precision/recall/PR-AUC are the start; know the rest so you can pick the honest single number. **Balanced accuracy** (average recall across classes) doesn't reward always-predict-majority. **MCC** (Matthews correlation) uses all four confusion cells and is often the best single summary under imbalance. **Macro/micro/weighted F1** average per-class F1 differently (macro treats classes equally, weighted by size). **Specificity** (TNR) and the **FPR/FNR** matter when the cost of each error type differs. And when action is capacity-limited — a fraud team reviews the top K — **precision@K**, **recall@K**, and **lift@K** are the right frame, because the model only has to rank the worst cases to the top.
+Precision/recall/PR-AUC are the start; know the rest so you can pick the honest single number. **Balanced accuracy** (average recall across classes) doesn't reward always-predict-majority. **MCC** (Matthews correlation) uses all four confusion cells and is often the best single summary under imbalance. **Macro/micro/weighted F1** average per-class F1 differently: macro treats classes equally, weighted scales by class size, and micro pools every prediction into one global count — which collapses to plain accuracy in binary classification, the exact number this module just told you not to trust. **Specificity** (TNR) and the **FPR/FNR** matter when the cost of each error type differs. And when action is capacity-limited — a fraud team reviews the top K — **precision@K**, **recall@K**, and **lift@K** are the right frame, because the model only has to rank the worst cases to the top.
 
 ---
 
@@ -1331,7 +1331,7 @@ These actually train the model on different feature subsets and keep whichever s
 
 **Embedded methods — select while training.**
 
-**L1 (Lasso)** regularisation drives useless features' weights to exactly zero *during* fitting, so selection and training happen in one run — no separate step. (Ridge/L2 shrinks weights toward zero but almost never all the way, so it does not select.)
+**L1 (Lasso)** regularisation drives useless features' weights to exactly zero *during* fitting, so selection and training happen in one run — no separate step. The reason is geometric: L1's penalty region is a diamond whose corners sit exactly on the axes, so the optimum often lands on a corner — a weight at exactly zero. (Ridge/L2's penalty region is a smooth sphere with no corners, so the optimum rarely lands on an axis; weights shrink toward zero but almost never reach it, so it does not select.)
 
 ---
 
@@ -1346,6 +1346,12 @@ Train any model, then *shuffle* one feature's values and see how much performanc
 **The trap that snares all four: correlation is not importance.**
 
 It is tempting to say "these two features are 95% correlated, drop one." Resist it. Two correlated features can still both help — keeping both can make the model steadier when one of them drifts at serving time. Correlation describes the *inputs*; it does not tell you the *predictive contribution*. So decide what to keep by measuring importance directly — permutation importance on validation data — not by eyeballing a correlation matrix.
+
+---
+
+**A separate problem for linear models: multicollinearity.**
+
+Keeping correlated features helps *predictive* stability, but for a *linear* model specifically, near-duplicates (\`height_cm\` and \`height_inches\`, correlated 0.97) create a different failure. The design matrix is nearly singular, so infinitely many weight combinations — a large positive weight on one feature, a canceling negative weight on the other — fit the training data almost equally well. Predictions stay fine; the *individual coefficients* become wildly unstable and impossible to interpret. This is **multicollinearity**, measured by **VIF** (variance inflation factor: \`VIF = 1 / (1 - R²)\`, where R² comes from regressing that feature on the rest) — a high VIF flags exactly this instability, a separate concern from the importance-vs-correlation trap above.
 
 ---
 
@@ -1425,7 +1431,7 @@ Keep **feature selection** (keeps a subset of your *original, explainable* featu
           `A) Two near-identical features let the model assign a large weight to one and negative to the other — infinitely many combinations give the same prediction, so coefficients become wildly unstable.`,
           `B) Two near-identical features cause the model to systematically double-count the effect of height, producing coefficients that come out at exactly half the true value for each of the two features.`,
           `C) Near-perfect correlation between the two features causes gradient descent to oscillate noticeably during training, requiring a much smaller learning rate specifically to reach convergence reliably.`,
-          `D) Two features with 0.97 correlation will produce a VIF of exactly 33.3, computed as 1/(1-0.97 squared); since this sits below the common 50 threshold, intervention isn't strictly required here.`,
+          `D) Two features with 0.97 correlation will produce a VIF of exactly 16.9, computed as 1/(1-0.97 squared); since this sits below the common 50 threshold, intervention isn't strictly required here.`,
         ],
         answer: `A`,
       },

@@ -2824,3 +2824,46 @@ One agent (gradient_descent_fundamentals) ran two read-only git commands (`git d
 - Live dev-server verification — still blocked (device bridge can't run vite, Chrome extension not connected), needs the user's own terminal.
 - Audit coverage: all S-tier now covered at least once; A-tier/B-tier (~140 modules) still essentially untouched.
 - GSL STATUS.md refresh, PAT rotation — unchanged, still open.
+
+## Session 2026-07-15 18:02 IST (Wednesday) — Correction: round-5 "S-tier fully covered" claim was false; "86 untouched" claim was also false
+
+Two errors from earlier this session, both self-caught on user challenge, neither caught before being stated:
+
+1. The 17:10 IST entry title above ("S-tier now fully covered at least once this session") is FALSE. Fresh check via real ESM import of contentStatus.js (`node --input-type=module -e "import { CONTENT_STATUS } from './src/data/contentStatus.js'"`, checking actual `status` field, cross-checked against `scripts/validate-content-status.mjs` output) shows 4 S-tier modules were never touched by any round this session: `class_imbalance`, `class_imbalance_classical_ml`, `cold_start`, `cold_start_system_design` -- all still `status: "unclassified"`. Not correcting the original entry's text (preserving the record of what was claimed); this entry is the correction.
+
+2. Separately, I told the user "86 untouched" in my immediately-prior turn. That number was wrong too -- it came from a date-regex heuristic (`verifiedBy` containing "2026-07-14" or "2026-07-15") that over-matched: B-tier's 86 modules WERE already genuinely audited/fixed earlier today (07:42 IST, batch "B-tier batch 2026-07-15 (Wednesday), self-fix round" -- real work, real receipts, confirmed via spot-check of `linucb` and `off_policy_evaluation` entries), just in an earlier part of this session not covered by my working summary. The date regex correctly matched them as touched, but I mis-stated the total anyway. `node scripts/validate-content-status.mjs` ground truth: 199/206 clean, exactly 7 `unclassified` (the 4 S-tier above + `calibration_eval`, `calibration_probabilistic`, `feature_selection_data`, all A-tier). 0 in_progress/pending. B-tier is 86/86 clean, fully done.
+
+3. Bonus find while locating these 7: `class_imbalance_classical_ml`'s own note already flags a real structural bug -- it was "split out of classicalMLModules.js during id-collision rename" but classicalMLModules.js line 2254 still literally has `id: 'class_imbalance'`, unchanged. So dataModules.js and classicalMLModules.js currently ship two live modules sharing the literal id `'class_imbalance'`, while moduleTiers.js already lists both `class_imbalance` and `class_imbalance_classical_ml` as if they were already distinct. This is a real runtime id collision, not just a content-audit item. Dispatching a fix for it now alongside the 7-module audit.
+
+Lesson (same one as the "140" correction): any count I state must come from a real parse of contentStatus.js's `status` field or `validate-content-status.mjs`'s own output, never from date-regex heuristics on `verifiedBy` or arithmetic extrapolation. Both failed this session for different reasons (regex under-matching once, over-matching once).
+
+## Session 2026-07-15 18:16 IST (Wednesday) — Phase 1 round 6: real gap-fill (7 modules) + id-collision bug fix — MSL now 206/206 clean, all tiers
+
+Prompted directly by the 18:02 correction above: the 7 modules genuinely never audited this session (4 S-tier, 3 A-tier) got a real blind audit each, one agent per source file (never split a file across concurrent agents). 6 of 7 FAILED on first audit; all fixed.
+
+**Bonus structural bug, not just content**: `class_imbalance_classical_ml`'s own contentStatus.js note (dated 2026-07-14) said it was "split out of classicalMLModules.js during an id-collision rename" — but the source file was never actually updated: classicalMLModules.js line 2254 still had the literal `id: 'class_imbalance'`, colliding at runtime with dataModules.js's own `class_imbalance` module. Fixed: renamed to `class_imbalance_classical_ml` in classicalMLModules.js, updated the one forward-reference in `trees`'s prose plus 3 `sourceModuleId` refs in glossary.js and 2 `moduleId` refs in qnaBank.js that traced cleanly to this module via house-comment/sibling-list evidence (no guessing — one agent explicitly flagged it would default the id and report if any reference had been genuinely ambiguous; none were). Full id-uniqueness sweep across all 206 modules in src/data/foundations/ confirmed zero remaining duplicate id values afterward. `class_imbalance_classical_ml`'s content itself: audited, zero defects found beyond the id bug.
+
+**`class_imbalance`** (dataModules.js) — 2 defects: cost-sensitive threshold claim off by ~30-40x (said "~0.15-0.2", the module's own formula gives ~0.005 for the stated 200:1 cost ratio); micro-F1 named but never explained, missing the module's own point that micro-F1 collapses to accuracy in binary classification.
+
+**`feature_selection_data`** (dataModules.js) — 3 defects: L1-vs-L2 sparsity checkQuestion tested an untaught geometric mechanism (diamond vs. sphere constraint regions); multicollinearity checkQuestion contradicted the module's own prior guidance ("keeping both correlated features is fine") with no mention that linear coefficients destabilize under multicollinearity; a checkQuestion's own VIF arithmetic was wrong (claimed 33.3, real answer 16.9 — the option used the wrong formula).
+
+**`cold_start`** (recsysModules.js) — 1 defect: "the flywheel" used as an already-established term, but it's only actually defined in `feedback_loops_bias`, a module that comes AFTER this one in file order. Forward-reference violation, fixed with self-contained phrasing instead.
+
+**`cold_start_system_design`** (systemDesignModules.js) — 2 minor defects: self-inconsistent epsilon-greedy notation (spelled out vs. Greek symbol, within its own fields); the "New platform" cold-start case was under-explained relative to its New-user/New-item siblings. Cross-checked against the separate `cold_start` module in recsysModules.js — division of concerns (systems/infra angle vs. modeling-mechanism angle) is coherent, not duplicative.
+
+**`calibration_eval`** (evalModules.js) — 2 defects: a checkQuestion's correct answer depended partly on "label smoothing," never taught in the module; the module was missing an `interactivePrompt` field that every one of its 10 siblings in the same file has (likely lost during the 2026-07-14 id-collision split). Cross-checked against `calibration_probabilistic` for notation conflicts (bin count, Brier formula) — consistent, no contradiction.
+
+**`calibration_probabilistic`** (probabilisticMLModules.js) — 2 defects: same label-smoothing tested-but-not-taught issue; a checkQuestion used "92% accuracy" when the module teaches AUC exclusively and its central lesson is AUC ≠ calibration — changed to "AUC = 0.92". Flagged but not fixed: this module's `keyPoints` has only 3 dense bullets vs. 8-10 in every sibling in the file — a voice/format parity item, not a factual defect, left for a future pass since splitting it safely isn't a targeted string-replace.
+
+### Verification
+- `node --check` clean on all 8 touched files (classicalMLModules.js, dataModules.js, recsysModules.js, systemDesignModules.js, evalModules.js, probabilisticMLModules.js, glossary.js, qnaBank.js).
+- `scripts/check-duplicate-keys.mjs`: 0 duplicate keys across 65 files.
+- `scripts/validate-content-status.mjs`: **206 'clean' / 206 tracked (S: 41/41, A: 79/79)** — zero unclassified/pending/in_progress, zero stale-hash warnings. This is genuinely all of it, not a repeat of the earlier miscounts — verified via real ESM import checking `status` field directly, not a regex sweep or date heuristic.
+- Sibling hash refresh: 63 sibling entries across the 6 touched module files, built via a direct `sourceFile === f` filter over the real parsed CONTENT_STATUS object (not a regex sweep, not a manual grep list) — this method can't miss an entry the way the old regex sweep missed `reranking_diversity` twice; confirmed `reranking_diversity` was included this time, automatically, with zero special-casing needed.
+- `git status --short`: exactly the 9 files expected (8 content files + contentStatus.js), plus docs/BACKLOG.md, plus pre-existing `_to_delete/`.
+- Moved two stray non-imported scratch files an earlier agent left behind (`evalModules_ORIGCHECK.js`, `evalModules_ORIGCHECK_DELETE_ME.js` — the device bridge can't delete files) into `_to_delete/` for the user to remove.
+
+### Still open
+- Live dev-server verification — still blocked (device bridge can't run vite, Chrome extension not connected), needs the user's own terminal.
+- `calibration_probabilistic`'s keyPoints density/voice-parity gap (flagged above, not fixed).
+- GSL: STATUS.md refreshed this session (18:02-ish entry above), PAT rotation explicitly deprioritized by user.

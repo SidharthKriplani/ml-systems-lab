@@ -351,7 +351,7 @@ export const RECSYS_MODULES = [
 
 ---
 
-**Exploration is the bridge that turns cold items warm.** Even with content features, the system's estimate of a new item is uncertain, and a pure-exploitation ranker (always show the current best predicted item) will rarely surface it — so it never gathers the interaction data that would improve the estimate, a self-reinforcing starvation. **Exploration** (ε-greedy, or better, uncertainty-aware bandits like Thompson sampling / UCB) deliberately shows uncertain items to gather signal. It trades a little short-term engagement to feed the flywheel — and it's the explicit cost that keeps the long tail and new content alive.`,
+**Exploration is the bridge that turns cold items warm.** Even with content features, the system's estimate of a new item is uncertain, and a pure-exploitation ranker (always show the current best predicted item) will rarely surface it — so it never gathers the interaction data that would improve the estimate, a self-reinforcing starvation. **Exploration** (ε-greedy, or better, uncertainty-aware bandits like Thompson sampling / UCB) deliberately shows uncertain items to gather signal. It trades a little short-term engagement to break that starvation loop — and it's the explicit cost that keeps the long tail and new content alive.`,
     keyPoints: [
       `**Two distinct problems, two fixes.** User cold start (no history for a new user) is solved with popularity fallbacks, context, onboarding, and aggressive real-time embedding updates. Item cold start (no interactions for a new item) is solved by building the item tower on content features rather than a learned per-item ID embedding.`,
       `**Content features are what make a new item recommendable at all.** An ID-embedding two-tower has no vector for an unseen item; content features (text/image/audio/category/creator) give it a reasonable embedding on day one before any interaction exists.`,
@@ -395,7 +395,7 @@ export const RECSYS_MODULES = [
       `**Cold start = collaborative filtering's structural blind spot:** it learns from interaction history, so it can say nothing about an entity it has never seen interact. Two distinct faces need different fixes.`,
       `**User cold start (new user, no history):** ladder of fixes — popularity/segment fallback (floor) → available context (device, language, location, time) → lightweight onboarding → aggressive **real-time embedding updates** from the first few signals so personalization happens within the session, not after a nightly retrain.`,
       `**Item cold start (new item, no interactions):** a pure ID-embedding two-tower has *no vector* for an unseen item. Build the item tower on **content features** (text/image/audio/category/creator) so a new item is embeddable on day one — content features are what make new items recommendable at all.`,
-      `**Exploration bridges cold → warm:** even with content features, a new item's estimate is uncertain and a pure-exploitation ranker rarely surfaces it, so it never gathers improving signal (self-reinforcing starvation). Uncertainty-aware exploration (Thompson/UCB, or ε-greedy) trades a little engagement to feed the flywheel and keep the tail alive.`,
+      `**Exploration bridges cold → warm:** even with content features, a new item's estimate is uncertain and a pure-exploitation ranker rarely surfaces it, so it never gathers improving signal (self-reinforcing starvation). Uncertainty-aware exploration (Thompson/UCB, or ε-greedy) trades a little engagement to break that starvation loop and keep the tail alive.`,
     ],
     figures: {
       coldstart: `<svg viewBox="0 0 360 96" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;font-family:var(--font-sans,sans-serif)">
@@ -407,7 +407,7 @@ export const RECSYS_MODULES = [
   <text x="270" y="33" text-anchor="middle" fill="var(--amber)" font-size="8.5" font-weight="700">Item cold start</text>
   <text x="270" y="45" text-anchor="middle" fill="var(--ink-mid)" font-size="7">content features → embeddable day 1</text>
   <text x="270" y="55" text-anchor="middle" fill="var(--ink-mid)" font-size="7">exploration gathers first signal</text>
-  <text x="180" y="82" text-anchor="middle" fill="var(--ink-low)" font-size="7.5">exploration is the bridge that turns cold items warm — the flywheel's deliberate cost</text>
+  <text x="180" y="82" text-anchor="middle" fill="var(--ink-low)" font-size="7.5">exploration is the bridge that turns cold items warm — a deliberate cost against starvation</text>
 </svg>`,
     },
   },

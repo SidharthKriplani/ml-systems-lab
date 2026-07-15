@@ -1341,6 +1341,7 @@ Keep the two steps separate. **Calibration** makes the probability *truthful* (0
       `**Read Brier and ECE carefully — neither is a pure calibration number.**\n\nBrier = reliability − resolution + uncertainty, so a lower Brier can come entirely from better discrimination (resolution) while calibration is flat or worse — check the reliability term or diagram directly. ECE is binning-sensitive (bin count, empty bins; use adaptive/equal-count bins) and in multiclass you must choose top-label vs classwise ECE, which can disagree. Random forests miscalibrate *away* from 0/1 (sigmoid curve, under-confident at extremes) while neural nets are commonly — not universally — overconfident.`,
       `**Handle multiclass, monitor for drift, and keep calibration separate from thresholding.**\n\nOne-vs-rest multiclass calibration needs renormalising (per-class probabilities won't sum to 1); temperature scaling avoids this by scaling all logits together. Calibration decays under covariate and base-rate shift even when AUC is unchanged, so monitor ECE/reliability over time and by cohort (geography, device, segment) and re-fit on recent data. And calibration (making the probability truthful) is a different step from thresholding (choosing the decision cutoff from costs) — fixing one doesn't fix the other.`,
     ],
+    interactivePrompt: `Before you touch the controls: if you switch the model from "Perfectly calibrated" to "Overconfident," do you expect ECE to go up or down — and which region of the curve, low or high predicted probability, do you expect to pull furthest from the diagonal?`,
     checkQuestions: [
       {
         q: `A model has AUC = 0.91 and ECE = 0.15. What does this mean and what do you do?`,
@@ -1356,7 +1357,7 @@ Keep the two steps separate. **Calibration** makes the probability *truthful* (0
         q: `Your reliability diagram shows the model is overconfident at high probabilities (0.8-1.0 bucket shows actual positive rate of 0.55). Which two of the following are valid explanations and fixes? Select two.`,
         options: [
           `A) Log loss rewards confident predictions even on noisy labels, which is part of why neural networks tend to be systematically overconfident`,
-          `B) Temperature scaling with T>1 compresses high probabilities back down, and label smoothing during training reduces overconfidence directly`,
+          `B) Temperature scaling with T>1 compresses high probabilities back down toward the diagonal without changing which class wins`,
           `C) The model likely has insufficient training data at high-probability predictions; oversampling high-confidence examples would fix this issue`,
           `D) The reliability diagram is measuring the wrong thing here; overconfidence really just means the 0.5 decision threshold should be raised up`,
         ],

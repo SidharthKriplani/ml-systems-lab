@@ -61,7 +61,9 @@
 //
 // 2026-07-09 addition (batch 2): 8 terms from the finalized (writer + Pass-2
 // adversarial audit both complete, fixes applied) `trees`, `random_forest`,
-// and `class_imbalance` modules in classicalMLModules.js (sourceTabId
+// and `class_imbalance_classical_ml` (id renamed 2026-07-15 to resolve an
+// id collision with dataModules.js's own `class_imbalance`; this comment
+// updated to match) modules in classicalMLModules.js (sourceTabId
 // 'classical_ml_foundation'). All 8 are net-new. Deliberately excluded:
 // "precision"/"recall"/"F1"/"threshold"/"class weight" (generic terms reused
 // with the same meaning across many other module families in this app —
@@ -453,21 +455,21 @@ export const GLOSSARY = {
   'cost matrix': {
     term: 'Cost Matrix',
     def: 'A dollar (or other real) cost assigned to each cell of the confusion matrix, drawn from the actual business consequence of each mistake — turns "missing a positive is worse than a false alarm" into a number you can optimise a threshold against.',
-    sourceModuleId: 'class_imbalance',
+    sourceModuleId: 'class_imbalance_classical_ml',
     sourceModuleTitle: 'Class Imbalance',
     sourceTabId: 'classical_ml_foundation',
   },
   'precision@k': {
     term: 'Precision@K',
     def: 'Precision measured only on the top K cases by predicted score — the right metric when action is capacity-limited (a team can only review K alerts) rather than governed by a global threshold.',
-    sourceModuleId: 'class_imbalance',
+    sourceModuleId: 'class_imbalance_classical_ml',
     sourceModuleTitle: 'Class Imbalance',
     sourceTabId: 'classical_ml_foundation',
   },
   'smote': {
     term: 'SMOTE',
     def: 'A minority-class oversampling technique that creates synthetic examples in between real minority points, rather than duplicating them outright — must be applied only inside cross-validation folds, after the split, or it leaks.',
-    sourceModuleId: 'class_imbalance',
+    sourceModuleId: 'class_imbalance_classical_ml',
     sourceModuleTitle: 'Class Imbalance',
     sourceTabId: 'classical_ml_foundation',
   },
