@@ -12,6 +12,148 @@
 // nature of the diagnostic-walkthrough answer shape, not by fiat.
 
 export const QNA_BANK = {
+  "cold_start": {
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
+    beats: [
+      {
+        name: "Beat 1 — Cold start as collaborative filtering's structural blind spot",
+        questions: [
+          { id: "qna-cf-blindspot-def-01", level: 0, q: "What is the cold-start problem in a recommender system, in one sentence?", difficulty: "easy" },
+          { id: "qna-cf-signal-source-01", level: 0, q: "What does collaborative filtering actually learn from, and what does it need in order to work at all?", difficulty: "easy" },
+          { id: "qna-cf-blindspot-mechanism-01", level: 1, q: "Why can't collaborative filtering say anything useful about a user or item it has never seen interact?", difficulty: "medium" },
+          { id: "qna-coldstart-two-faces-01", level: 1, q: "What are the two distinct faces of the cold-start problem this module covers, and why do they need different fixes rather than one shared fix?", difficulty: "medium" },
+          { id: "qna-coldstart-diagnosis-01", level: 2, q: "Given a recommender that's suddenly failing on some slice of traffic, how would you tell whether you're looking at user cold start or item cold start, and why does that diagnosis change which fix you reach for?", difficulty: "hard" },
+        ],
+      },
+      {
+        name: "Beat 2 — User cold start: the fix ladder",
+        questions: [
+          { id: "qna-user-coldstart-def-01", level: 0, q: "What makes a user 'cold start', and why can't the system retrieve items similar to what they've liked?", difficulty: "easy" },
+          { id: "qna-user-coldstart-ladder-01", level: 0, q: "What is the ladder of fixes for user cold start, from cheapest to smartest?", difficulty: "easy" },
+          { id: "qna-popularity-fallback-01", level: 1, q: "Why does a popularity or trending fallback work as a floor for a brand-new user, despite being completely non-personalized?", difficulty: "medium" },
+          { id: "qna-context-signal-01", level: 1, q: "What kinds of context signals can substitute for interaction history on a brand-new user's very first request, and why do they help before any click has happened?", difficulty: "medium" },
+          { id: "qna-onboarding-vs-context-01", level: 2, q: "Onboarding (asking a new user to pick interests) versus passive context signals — what's the actual tradeoff between leaning on one over the other for a new user's first session?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Beat 3 — Real-time embedding updates and fast first-session personalization",
+        questions: [
+          { id: "qna-realtime-embedding-def-01", level: 0, q: "What does it mean to update a user's embedding 'in real time' within a session, as opposed to the usual retraining cadence?", difficulty: "easy" },
+          { id: "qna-realtime-vs-nightly-01", level: 1, q: "Why does waiting for a nightly retrain fail a brand-new user, even though the retrain will eventually incorporate their history correctly?", difficulty: "medium" },
+          { id: "qna-realtime-embedding-mechanism-01", level: 1, q: "Mechanically, what actually updates during a session to make first-session personalization improve as the user clicks and skips?", difficulty: "medium" },
+          { id: "qna-realtime-embedding-boundary-01", level: 2, q: "Real-time in-session embedding updates versus the onboarding/context fixes — which one narrows the cold-start window fastest, and what does each one fail to cover that the other one does?", difficulty: "hard" },
+        ],
+      },
+      {
+        name: "Beat 4 — Item cold start: why the ID-embedding tower fails, and the content-feature fix",
+        questions: [
+          { id: "qna-id-embedding-failure-01", level: 1, q: "Why does a pure ID-embedding two-tower model have literally no vector for an item that was uploaded a minute ago?", difficulty: "easy" },
+          { id: "qna-item-coldstart-def-01", level: 0, q: "What makes an item 'cold start', and why can't collaborative signal place it?", difficulty: "easy" },
+          { id: "qna-content-feature-bridge-01", level: 1, q: "How do content features let a brand-new item get a reasonable embedding before any interactions exist?", difficulty: "medium" },
+          { id: "qna-content-vs-id-embedding-01", level: 1, q: "Why is building the item tower on content features specifically a fix for cold start, rather than just a general quality improvement to the model?", difficulty: "medium" },
+          { id: "qna-content-feature-limits-01", level: 2, q: "If a platform has excellent content features and a well-trained content-based item tower, is item cold start fully solved? What's left?", difficulty: "hard" },
+        ],
+      },
+      {
+        name: "Beat 5 — Exploration: the bridge that turns cold items warm",
+        questions: [
+          { id: "qna-exploitation-starvation-01", level: 0, q: "What does a pure-exploitation ranker do when scoring a brand-new item with an uncertain estimate?", difficulty: "easy" },
+          { id: "qna-starvation-loop-01", level: 1, q: "Walk through the self-reinforcing loop that traps a new item under pure exploitation — why does never being shown become a loop rather than a one-time miss?", difficulty: "medium" },
+          { id: "qna-exploration-mechanisms-01", level: 1, q: "What are the two categories of exploration mechanism this module points to for surfacing uncertain items, and how do they differ in what they use to decide who gets shown?", difficulty: "medium" },
+          { id: "qna-exploration-cost-01", level: 1, q: "What is the actual cost being paid when a system deliberately explores uncertain new items, and why is that cost worth paying rather than pure waste?", difficulty: "medium" },
+          { id: "qna-exploration-necessity-01", level: 2, q: "Is exploration optional for a platform that has already solved item cold start with strong content features? Why or why not?", difficulty: "hard" },
+        ],
+      },
+      {
+        name: "Beat 6 — User cold start vs item cold start: comparison and synthesis",
+        questions: [
+          { id: "qna-coldstart-single-cause-01", level: 1, q: "Both faces of cold start trace back to one underlying cause. What is it, and how does it show up differently for a user versus an item?", difficulty: "medium" },
+          { id: "qna-user-vs-item-fix-01", level: 2, q: "User cold start and item cold start are both 'cold start' — but they're fixed with almost entirely different levers. What's the actual dividing line for which lever addresses which problem?", difficulty: "medium" },
+          { id: "qna-exploration-scope-01", level: 2, q: "Does exploration solve user cold start, item cold start, or both? Justify from the mechanism.", difficulty: "hard" },
+        ],
+      },
+    ],
+    cases: [
+      { id: "qna-case-new-video-upload-01", level: 3, q: "A pure ID-embedding two-tower recommender cannot recommend items uploaded in the last hour at all. Walk through your diagnosis of the root cause and the fix you'd make.", difficulty: "medium" },
+      { id: "qna-case-content-features-added-01", level: 3, q: "Your platform adds content features so new items can now be embedded, yet new items still almost never get shown. Walk through why that's still happening and what you'd change.", difficulty: "medium" },
+      { id: "qna-case-new-user-first-session-01", level: 3, q: "Design the first session for a brand-new user with zero history. Walk through which signals you'd combine, in what order, and why skipping the real-time embedding update specifically would hurt.", difficulty: "medium" },
+      { id: "qna-case-long-tail-flatline-diagnosis-01", level: 3, q: "New-item impressions have flatlined even though your item tower is content-based and embeds new uploads correctly. Walk through how you'd figure out whether the remaining gap is a content-feature problem or an exploration problem.", difficulty: "hard" },
+    ],
+  },
+  "cold_start_system_design": {
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
+    beats: [
+      {
+        name: "Beat 1 — Cold start as a systematic failure mode of every recommender",
+        questions: [
+          { id: "qna-sysdesign-coldstart-def-01", level: 0, q: "In a system-design sense, what is cold start, and why is it a systematic failure mode rather than an occasional edge case?", difficulty: "easy" },
+          { id: "qna-coldstart-interview-stakes-01", level: 1, q: "Why do interviewers specifically probe cold start, according to this module's framing — what does a naive design silently do, and to whom?", difficulty: "medium" },
+          { id: "qna-coldstart-root-cause-01", level: 1, q: "What is the one root cause underneath all cold-start failures, regardless of which of the three problems you're looking at?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Beat 2 — New user: context, onboarding, popularity prior, and a fast embedding update",
+        questions: [
+          { id: "qna-newuser-signals-01", level: 0, q: "For a brand-new user with zero history, what three categories of signal does this module say a system should fall back on?", difficulty: "easy" },
+          { id: "qna-newuser-priors-mechanism-01", level: 1, q: "Mechanically, how do context, onboarding, and popularity priors each contribute something different to a new user's first-session ranking?", difficulty: "medium" },
+          { id: "qna-newuser-embedding-speed-01", level: 1, q: "Why does the new-user fix specifically call for a rapid real-time embedding update rather than waiting for the next scheduled retrain?", difficulty: "medium" },
+          { id: "qna-newuser-social-import-01", level: 2, q: "Requiring every new user to link a social account to import their prior history, versus running the context + onboarding + popularity-prior playbook — what's actually wrong with the import approach as a substitute?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Beat 3 — New item: content-based embedding as the architectural fix",
+        questions: [
+          { id: "qna-newitem-def-01", level: 0, q: "What makes an item 'cold' in this module's sense, and why can't collaborative signal place it?", difficulty: "easy" },
+          { id: "qna-newitem-content-fix-01", level: 0, q: "What is the single most important architectural choice for solving item cold start, according to this module?", difficulty: "easy" },
+          { id: "qna-newitem-embedding-space-01", level: 1, q: "How does feeding text, image, and creator features into a two-tower item tower let a never-seen item land near similar known items in embedding space?", difficulty: "medium" },
+          { id: "qna-newitem-vs-retrain-01", level: 1, q: "Why won't retraining the collaborative-filtering model more frequently, say hourly instead of daily, fix item cold start on its own?", difficulty: "medium" },
+          { id: "qna-newitem-necessary-not-sufficient-01", level: 2, q: "Content-based embeddings place a new item in the right neighborhood of embedding space. Does that alone guarantee the item actually gets shown to users? Why or why not?", difficulty: "hard" },
+        ],
+      },
+      {
+        name: "Beat 4 — New platform: the flywheel's ignition problem",
+        questions: [
+          { id: "qna-newplatform-def-01", level: 0, q: "What is the 'new platform' cold-start problem, and how is its scope different from new-user or new-item cold start alone?", difficulty: "easy" },
+          { id: "qna-newplatform-playbook-01", level: 1, q: "Why does the new-platform fix amount to running the new-user and new-item playbooks simultaneously, rather than needing a fundamentally different third playbook?", difficulty: "medium" },
+          { id: "qna-flywheel-ignition-01", level: 1, q: "What is meant by the flywheel's 'ignition problem', and what has to happen before collaborative filtering can start contributing signal on a brand-new platform?", difficulty: "medium" },
+          { id: "qna-newplatform-vs-newitem-01", level: 2, q: "A platform launching today with zero users and zero items, versus an established platform onboarding one brand-new item — both get called 'cold start'. What's actually different about the two situations, and does the same fix simply scale down from one to the other?", difficulty: "hard" },
+        ],
+      },
+      {
+        name: "Beat 5 — Exploration as the engine that ends cold start",
+        questions: [
+          { id: "qna-pureexploit-failure-01", level: 0, q: "What does a pure-exploitation system do when it encounters an item with an uncertain value estimate, and why does that matter for cold start?", difficulty: "easy" },
+          { id: "qna-exploration-mechanisms-sysdesign-01", level: 0, q: "What three concrete exploration mechanisms does this module name for allocating impressions to under-explored items?", difficulty: "easy" },
+          { id: "qna-explore-exploit-framing-01", level: 1, q: "Why does this module say that, framed as a bandit, cold start is the exploration-exploitation tradeoff — not just a problem exploration happens to help with?", difficulty: "medium" },
+          { id: "qna-exploration-necessity-sysdesign-01", level: 1, q: "Why is exploration described as mandatory rather than optional, even after content-based embeddings have solved the 'can this item be represented at all' half of item cold start?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Beat 6 — The cost of exploration: a measurable budget, not a freebie",
+        questions: [
+          { id: "qna-exploration-cost-def-01", level: 0, q: "What, concretely, does a system give up when it explores an under-explored item instead of showing its current best-predicted item?", difficulty: "easy" },
+          { id: "qna-exploration-cost-tradeoff-01", level: 1, q: "Why is exploration's cost described as something you spend now to buy, rather than a pure loss — what is it actually buying?", difficulty: "medium" },
+          { id: "qna-exploration-budgeting-01", level: 2, q: "How would you reason about how much exploration budget to allocate — what would push you toward spending more of it versus less?", difficulty: "hard" },
+        ],
+      },
+      {
+        name: "Beat 7 — Synthesis: three problems, one cause, two levers",
+        questions: [
+          { id: "qna-three-problems-one-cause-01", level: 0, q: "This module frames cold start as three separate problems unified by one cause and solved by two levers. What is the cause, and what are the two levers?", difficulty: "medium" },
+          { id: "qna-two-levers-scope-01", level: 2, q: "Of the two levers — content-based embeddings and exploration — which one addresses which of the three problems, and where do they overlap?", difficulty: "hard" },
+          { id: "qna-coldstart-user-vs-item-vs-platform-01", level: 2, q: "Rank new-user, new-item, and new-platform cold start by how much of the fix is 'representation' — getting a usable embedding at all — versus how much is 'exposure' — actually getting shown. Where does each problem sit, and why?", difficulty: "hard" },
+        ],
+      },
+    ],
+    cases: [
+      { id: "qna-case-video-platform-launch-01", level: 3, q: "You're designing a brand-new short-video platform's recommender from scratch — day one, zero users, zero videos. Walk through the cold-start strategy you'd design and in what order you'd bring each piece online.", difficulty: "hard" },
+      { id: "qna-case-newuser-signup-flow-01", level: 3, q: "Product wants to drop the onboarding interest-picker to reduce signup friction. Walk through what you'd lose and what you'd substitute to keep new-user cold start under control.", difficulty: "medium" },
+      { id: "qna-case-exploration-budget-cut-01", level: 3, q: "Leadership wants to cut the exploration budget because it's suppressing short-term engagement metrics. Walk through how you'd reason about whether to fight that decision and what you'd propose instead.", difficulty: "hard" },
+      { id: "qna-case-creator-complaint-01", level: 3, q: "A creator complains their newly uploaded, well-produced video got almost no views despite good production quality. Walk through your diagnosis process across the two levers this module gives you.", difficulty: "medium" },
+    ],
+  },
   "logistic_regression": {
     status: "answered", // draft | parked | answered
     auditDate: "2026-07-11",
@@ -334,8 +476,8 @@ export const QNA_BANK = {
     ],
   },
   "mab_problem": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Explore-Exploit Tradeoff & the A/B Testing Baseline",
@@ -414,8 +556,8 @@ export const QNA_BANK = {
     ],
   },
   "epsilon_greedy": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Beat 1 — Why explore at all: the exploration-exploitation tradeoff vs. naive fixed-allocation testing",
@@ -490,8 +632,8 @@ export const QNA_BANK = {
     ],
   },
   "ucb_algorithms": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why UCB over epsilon-greedy — the optimism principle",
@@ -573,8 +715,8 @@ export const QNA_BANK = {
     ],
   },
   "thompson_sampling": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The sample-and-select mechanism",
@@ -582,7 +724,7 @@ export const QNA_BANK = {
           { id: "qna-ts-mechanism-01", level: 0, q: "What is Thompson Sampling actually doing at each round — what gets sampled, and how does it decide which arm to show?", difficulty: "easy" },
           { id: "qna-ts-mechanism-02", level: 1, q: "Why sample a single draw from each arm's posterior instead of just always picking the arm with the highest posterior mean?", difficulty: "medium" },
           { id: "qna-ts-mechanism-03", level: 1, q: "The module contrasts TS's exploration with an arm being explored 'with probability epsilon.' What's the real difference between that kind of random exploration and what TS is doing when it samples from a posterior?", difficulty: "medium" },
-          { id: "qna-ts-mechanism-04", level: 2, q: "What happens to an arm that has never been pulled the very first time Thompson Sampling runs, and why does that follow naturally from the mechanism rather than needing a special cold-start rule?", difficulty: "medium" }
+          { id: "qna-ts-mechanism-04", level: 1, q: "What happens to an arm that has never been pulled the very first time Thompson Sampling runs, and why does that follow naturally from the mechanism rather than needing a special cold-start rule?", difficulty: "medium" }
         ],
       },
       {
@@ -633,7 +775,7 @@ export const QNA_BANK = {
       {
         name: "TS and experimentation stopping rules",
         questions: [
-          { id: "qna-ts-stopping-01", level: 0, q: "Why can't you just apply a standard fixed-sample-size p-value test to data collected while Thompson Sampling was running?", difficulty: "medium" },
+          { id: "qna-ts-stopping-01", level: 1, q: "Why can't you just apply a standard fixed-sample-size p-value test to data collected while Thompson Sampling was running?", difficulty: "medium" },
           { id: "qna-ts-stopping-02", level: 1, q: "What specifically about how TS allocates traffic breaks the assumptions behind a classical frequentist significance test?", difficulty: "medium" },
           { id: "qna-ts-stopping-03", level: 1, q: "What does a Bayesian stopping criterion like 'P(variant B is best) > 0.95' give you in this adaptive setting that a classical p-value doesn't?", difficulty: "medium" },
           { id: "qna-ts-stopping-04", level: 2, q: "Besides the probability that a variant is best, what other quantity might you want to check before stopping an experiment, and why isn't a high P(best) alone always sufficient to act on?", difficulty: "hard" }
@@ -649,8 +791,8 @@ export const QNA_BANK = {
     ],
   },
   "contextual_bandits": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Contextual bandit formulation",
@@ -732,8 +874,8 @@ export const QNA_BANK = {
     ],
   },
   "linucb": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Ridge regression reward model",
@@ -750,7 +892,7 @@ export const QNA_BANK = {
           { id: "qna-ucb-index-01", level: 0, q: "What are the two terms that make up the LinUCB index for a given context and arm, and what does each one represent?", difficulty: "easy" },
           { id: "qna-ellipsoid-assumption-01", level: 1, q: "What statistical assumption about the true reward parameters justifies representing your uncertainty as a confidence ellipsoid rather than a single point estimate?", difficulty: "medium" },
           { id: "qna-ucb-derivation-01", level: 1, q: "Walk me through how the exploration bonus term in the LinUCB index falls out of maximizing predicted reward over the confidence ellipsoid.", difficulty: "hard" },
-          { id: "qna-greedy-vs-ucb-01", level: 2, q: "What would happen to LinUCB's exploration behavior if you dropped the bonus term entirely and just acted greedily on the point estimate?", difficulty: "medium" }
+          { id: "qna-greedy-vs-ucb-01", level: 1, q: "What would happen to LinUCB's exploration behavior if you dropped the bonus term entirely and just acted greedily on the point estimate?", difficulty: "medium" }
         ],
       },
       {
@@ -815,8 +957,8 @@ export const QNA_BANK = {
     ],
   },
   "off_policy_evaluation": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why off-policy evaluation exists",
@@ -896,8 +1038,8 @@ export const QNA_BANK = {
     ],
   },
   "bandits_in_recsys": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Filter bubble and the cold-start problem",
@@ -978,8 +1120,8 @@ export const QNA_BANK = {
     ],
   },
   "non_stationary_bandits": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why standard UCB/TS freezes after a change point",
@@ -1053,8 +1195,8 @@ export const QNA_BANK = {
     ],
   },
   "pot_outcomes": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The Fundamental Problem of Causal Inference",
@@ -1130,12 +1272,11 @@ export const QNA_BANK = {
       { id: "qna-case-estimand-mismatch-01", level: 3, q: "A team ran an experiment only on users who opted into a beta feature, and now wants to use the measured effect to justify rolling the feature out to the entire user base. Walk through what estimand they actually measured, what estimand they need for that decision, and how you'd assess whether the extrapolation is defensible.", difficulty: "hard" },
       { id: "qna-case-network-spillover-01", level: 3, q: "You're evaluating a feature rollout on a connected user base where friends can see each other's activity, and you suspect the control group's baseline is contaminated. Walk through how you'd diagnose that, and what change you'd propose to the experiment design next time.", difficulty: "hard" },
       { id: "qna-case-observational-pricing-01", level: 3, q: "A stakeholder wants 'the causal effect' of a price change computed from historical data, where prices were raised only in certain regions based on a pricing team's judgment rather than randomly. Walk through what assumption you'd need to lean on to make any causal claim here, and how you'd argue for or against it holding.", difficulty: "hard" },
-      { id: "qna-case-post-treatment-control-01", level: 3, q: "After an experiment wraps up, a teammate wants to add a variable measured after treatment assignment — like activity during the treatment window — as a control to 'clean up' the effect estimate. Walk through how you'd evaluate whether that's a good idea.", difficulty: "medium" }
     ],
   },
   "dag_confounding": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Motivation: why raw correlations and instinct-based controls aren't enough",
@@ -1200,7 +1341,7 @@ export const QNA_BANK = {
         name: "Diagnosing your control set: the 'control for everything' myth",
         questions: [
           { id: "qna-control-everything-myth-01", level: 0, q: "What's wrong with the instinct to just 'control for everything you happen to have data on' in a regression?", difficulty: "easy" },
-          { id: "qna-effect-shift-diagnostic-01", level: 1, q: "If adding a new control variable to your model causes the treatment effect estimate to shift substantially, what are the two very different explanations for that shift, and how do you tell which one you're in?", difficulty: "medium" },
+          { id: "qna-effect-shift-diagnostic-01", level: 2, q: "If adding a new control variable to your model causes the treatment effect estimate to shift substantially, what are the two very different explanations for that shift, and how do you tell which one you're in?", difficulty: "medium" },
           { id: "qna-effect-shift-diagnostic-02", level: 2, q: "Why can two analysts run what looks like the 'same' regression on the same data, choose different control sets, and walk away with opposite conclusions about whether a treatment works?", difficulty: "hard" },
           { id: "qna-dag-before-regression-01", level: 1, q: "Why does this approach insist you draw the DAG before you even look at which variables are available to control for, rather than deciding controls after seeing what's in the dataset?", difficulty: "medium" }
         ],
@@ -1215,8 +1356,8 @@ export const QNA_BANK = {
     ],
   },
   "rct_design": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why Randomization Beats Adjustment Sets",
@@ -1291,8 +1432,8 @@ export const QNA_BANK = {
     ],
   },
   "observational_ci": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The Selection Problem",
@@ -1374,8 +1515,8 @@ export const QNA_BANK = {
     ],
   },
   "iv": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Motivating problem: why correlational estimates of a causal effect fail (education/ability example)",
@@ -1445,8 +1586,8 @@ export const QNA_BANK = {
     ],
   },
   "did": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Setting up DiD: treated vs. control, before vs. after",
@@ -1519,8 +1660,8 @@ export const QNA_BANK = {
     ],
   },
   "rdd": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The RDD setup — threshold assignment and local randomization",
@@ -1593,8 +1734,8 @@ export const QNA_BANK = {
     ],
   },
   "uplift_modeling": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The targeting problem: propensity vs uplift",
@@ -1677,8 +1818,8 @@ export const QNA_BANK = {
     ],
   },
   "mediation": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why decompose the total effect (motivation)",
@@ -1753,8 +1894,8 @@ export const QNA_BANK = {
     ],
   },
   "sensitivity_analysis": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The unconfoundedness problem — why sensitivity analysis is needed",
@@ -1833,8 +1974,8 @@ export const QNA_BANK = {
     ],
   },
   "linear_regression": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The linear model setup — predicting a number as a weighted sum of features",
@@ -1850,7 +1991,7 @@ export const QNA_BANK = {
           { id: "qna-loss-function-01", level: 0, q: "What's a residual, and how is it different from the single number you actually use as your loss?", difficulty: "easy" },
           { id: "qna-loss-function-02", level: 1, q: "Why can't you just average the raw, signed residuals to score how good a fit is?", difficulty: "easy" },
           { id: "qna-loss-function-03", level: 1, q: "Walk me through why squaring the residuals, rather than taking absolute values, is what actually makes OLS solvable in one shot.", difficulty: "medium" },
-          { id: "qna-loss-function-04", level: 2, q: "MAE and MSE won't always agree on which of two candidate models is 'better.' Why do they diverge, and when would you deliberately pick one over the other during training?", difficulty: "hard" }
+          { id: "qna-loss-function-04", level: 2, q: "MAE and MSE won't always agree on which of two candidate models is 'better.' Why do they diverge, and when would you deliberately favor one over the other when reporting or comparing model performance?", difficulty: "hard" }
         ],
       },
       {
@@ -1868,7 +2009,6 @@ export const QNA_BANK = {
           { id: "qna-collinearity-01", level: 0, q: "What is collinearity, in your own words?", difficulty: "easy" },
           { id: "qna-collinearity-02", level: 1, q: "Why can two training runs on similar data produce very different, even opposite-signed, weights while both models predict almost the same thing?", difficulty: "medium" },
           { id: "qna-collinearity-03", level: 1, q: "Why is 'this coefficient is near zero, so I'll drop that feature' a risky move to make on its own?", difficulty: "medium" },
-          { id: "qna-collinearity-04", level: 2, q: "How does adding a penalty term address the collinearity problem, and what do you give up in exchange?", difficulty: "medium" }
         ],
       },
       {
@@ -1901,7 +2041,7 @@ export const QNA_BANK = {
       {
         name: "Practical concerns — numerical solving and picking an error metric",
         questions: [
-          { id: "qna-numerical-solve-01", level: 0, q: "Why don't production solvers compute the closed-form OLS solution by literally inverting the matrix from the textbook formula?", difficulty: "medium" },
+          { id: "qna-numerical-solve-01", level: 1, q: "Why don't production solvers compute the closed-form OLS solution by literally inverting the matrix from the textbook formula?", difficulty: "medium" },
           { id: "qna-error-metrics-01", level: 1, q: "Walk through the main error metrics you'd use to report a regression model's performance — what does each one actually tell you that the others don't?", difficulty: "medium" },
           { id: "qna-error-metrics-02", level: 2, q: "RMSE and MAE will sometimes tell two different stories about how 'good' the same model is. Why do they diverge, and when would you deliberately favor one over the other?", difficulty: "hard" }
         ],
@@ -1916,8 +2056,8 @@ export const QNA_BANK = {
     ],
   },
   "regularization": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The overfitting problem and the one-line fix",
@@ -1931,7 +2071,7 @@ export const QNA_BANK = {
       {
         name: "The mechanism: how the penalty actually shrinks weights",
         questions: [
-          { id: "qna-gradient-descent-mechanism-01", level: 0, q: "Concretely, what role does gradient descent play in turning a penalty term into smaller trained weights?", difficulty: "easy" },
+          { id: "qna-gradient-descent-mechanism-01", level: 1, q: "Concretely, what role does gradient descent play in turning a penalty term into smaller trained weights?", difficulty: "easy" },
           { id: "qna-weight-shrink-not-imposed-01", level: 1, q: "Someone says 'regularisation just forces the weights to be small.' Why is that framing a bit off, and what's the more accurate way to describe what's happening during training?", difficulty: "medium" },
           { id: "qna-expensive-weights-mechanism-01", level: 1, q: "Walk me through why a large weight becomes 'expensive' once you add a penalty term to the loss, and what the optimizer actually does in response to that.", difficulty: "medium" }
         ],
@@ -1948,7 +2088,7 @@ export const QNA_BANK = {
       {
         name: "Choosing L1 vs L2 in practice, and the standardisation trap",
         questions: [
-          { id: "qna-l1-l2-choice-01", level: 0, q: "As a default, when would you reach for Ridge versus Lasso versus elastic net?", difficulty: "easy" },
+          { id: "qna-l1-l2-choice-01", level: 2, q: "As a default, when would you reach for Ridge versus Lasso versus elastic net?", difficulty: "easy" },
           { id: "qna-standardization-need-01", level: 1, q: "Why do you need to standardise your features before fitting a regularised model, and what specifically goes wrong if you skip that step?", difficulty: "medium" },
           { id: "qna-standardization-scale-example-01", level: 1, q: "Say you have one feature measured in raw dollars and another that's a simple 0/1 flag. Without standardising first, which one does the penalty end up punishing unfairly, and why?", difficulty: "medium" },
           { id: "qna-elastic-net-purpose-01", level: 2, q: "What is elastic net trying to buy you that pure Ridge or pure Lasso individually can't?", difficulty: "medium" }
@@ -1998,8 +2138,8 @@ export const QNA_BANK = {
     ],
   },
   "generalization": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Bias vs variance: the core distinction",
@@ -2081,8 +2221,8 @@ export const QNA_BANK = {
     ],
   },
   "trees": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "What a decision tree is and when to use one",
@@ -2163,8 +2303,8 @@ export const QNA_BANK = {
     ],
   },
   "random_forest": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Wisdom of the crowd — why ensembling reduces variance",
@@ -2215,7 +2355,7 @@ export const QNA_BANK = {
         name: "Hyperparameters worth tuning",
         questions: [
           { id: "qna-forest-hparams-01", level: 0, q: "What are the main hyperparameters of a random forest, and what does each one control?", difficulty: "easy" },
-          { id: "qna-maxfeatures-vs-nestimators-01", level: 1, q: "Why is max_features generally considered the more important tuning lever than n_estimators for a random forest's accuracy?", difficulty: "medium" },
+          { id: "qna-maxfeatures-vs-nestimators-01", level: 2, q: "Why is max_features generally considered the more important tuning lever than n_estimators for a random forest's accuracy?", difficulty: "medium" },
           { id: "qna-bootstrap-off-01", level: 1, q: "What happens if you turn bootstrap sampling off, and what capability do you lose as a result?", difficulty: "medium" }
         ],
       },
@@ -2246,8 +2386,8 @@ export const QNA_BANK = {
     ],
   },
   "gradient_boosting": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Beat 1 — Why forests plateau: the bias ceiling that motivates boosting",
@@ -2331,8 +2471,8 @@ export const QNA_BANK = {
     ],
   },
   "ensembles": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why ensemble at all — combining independently-trained models",
@@ -2414,8 +2554,8 @@ export const QNA_BANK = {
     ],
   },
   "svm": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Maximum-margin boundary and support vectors",
@@ -2429,10 +2569,6 @@ export const QNA_BANK = {
       {
         name: "Why the margin generalizes: VC dimension and structural risk minimization",
         questions: [
-          { id: "qna-vc-dimension-01", level: 0, q: "What does it mean for a classifier to 'shatter' a set of points, and what is VC dimension measuring?", difficulty: "easy" },
-          { id: "qna-effective-vc-01", level: 1, q: "How does forcing a wider margin reduce a classifier's *effective* VC dimension, given that the raw VC dimension of a line doesn't change?", difficulty: "medium" },
-          { id: "qna-margin-generalization-chain-01", level: 1, q: "Can you walk me through the full causal chain this module builds from 'wider margin' to 'the model generalizes better' — what connects those two things step by step?", difficulty: "hard" },
-          { id: "qna-structural-risk-min-01", level: 2, q: "How is structural risk minimization different from just minimizing training error directly, and why does maximizing the margin implement it?", difficulty: "medium" }
         ],
       },
       {
@@ -2457,15 +2593,12 @@ export const QNA_BANK = {
         name: "What makes a valid kernel: Mercer's theorem",
         questions: [
           { id: "qna-valid-kernel-conditions-01", level: 0, q: "What two mathematical conditions does a similarity function have to satisfy to count as a valid kernel?", difficulty: "easy" },
-          { id: "qna-symmetric-psd-meaning-01", level: 1, q: "Why do those two conditions — symmetric and positive semi-definite — have to hold, given that a kernel is supposed to stand in for a dot product in some feature space?", difficulty: "medium" },
-          { id: "qna-mercers-theorem-01", level: 2, q: "What does Mercer's theorem actually prove about a candidate kernel function, and what does it deliberately stop short of telling you?", difficulty: "medium" }
         ],
       },
       {
         name: "SVM vs logistic regression",
         questions: [
           { id: "qna-svm-output-type-01", level: 0, q: "What does an SVM's raw output f(x) = w·x + b actually represent, and how is that different from what logistic regression outputs?", difficulty: "easy" },
-          { id: "qna-platt-scaling-01", level: 1, q: "If you want probability estimates out of an SVM, why do you need something like Platt scaling, and why does the result tend to be less trustworthy than logistic regression's native probabilities?", difficulty: "medium" },
           { id: "qna-svm-vs-lr-tradeoff-01", level: 2, q: "Given a new classification problem, what factors about the data would push you toward an SVM versus toward logistic regression?", difficulty: "medium" },
           { id: "qna-kernel-interpretability-01", level: 2, q: "Why is it harder to explain a kernel SVM's decision to a stakeholder than a logistic regression model's, in terms of what each model's parameters actually mean?", difficulty: "medium" }
         ],
@@ -2488,8 +2621,8 @@ export const QNA_BANK = {
     ],
   },
   "knn": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "kNN's core bet: no training, defer to query time",
@@ -2521,7 +2654,6 @@ export const QNA_BANK = {
         name: "The curse of dimensionality",
         questions: [
           { id: "qna-knn-curse-def-01", level: 0, q: "What is the 'curse of dimensionality,' specifically as it applies to kNN?", difficulty: "easy" },
-          { id: "qna-knn-curse-mechanism-01", level: 1, q: "Why does adding more dimensions make the distance between the nearest and the farthest point converge toward the same value? What's actually driving that, mathematically?", difficulty: "hard" },
           { id: "qna-knn-curse-consequence-01", level: 1, q: "If the nearest and farthest neighbors in a high-dimensional space end up within a few percent of each other's distance, what does that actually do to the meaning of a 'nearest neighbor' result?", difficulty: "medium" },
           { id: "qna-knn-curse-severity-01", level: 2, q: "Would you expect the curse of dimensionality to bite harder in a 2-feature dataset or a 256-dimension embedding, and why does raising the dimension count change how severe it is?", difficulty: "medium" }
         ],
@@ -2538,7 +2670,6 @@ export const QNA_BANK = {
         name: "Approximate nearest-neighbor indexes (HNSW, ef, recall@10)",
         questions: [
           { id: "qna-knn-recall-at-10-01", level: 0, q: "What does 'recall@10' actually measure for an approximate nearest-neighbor index?", difficulty: "easy" },
-          { id: "qna-knn-ann-real-cost-01", level: 1, q: "An ANN index like HNSW is described as O(d log n). Why does the real number of distance computations it does end up much higher than that formula alone suggests?", difficulty: "medium" },
           { id: "qna-knn-ef-param-01", level: 1, q: "What is the 'ef' parameter in an index like HNSW, and what tradeoff does turning it up or down actually control?", difficulty: "medium" },
           { id: "qna-knn-ann-tradeoff-01", level: 2, q: "Why does an approximate index deliberately trade away some accuracy instead of just always returning the exact brute-force answer? What's actually being traded for what?", difficulty: "hard" }
         ],
@@ -2564,14 +2695,14 @@ export const QNA_BANK = {
     cases: [
       { id: "qna-knn-case-latency-01", level: 3, q: "Your team's brute-force kNN 'similar songs' feature worked fine at 500K catalog songs, but the catalog has since grown to 10M and users are complaining about response time — though when you spot-check the actual recommendations, they still look musically sound. Walk through how you'd diagnose this and what you'd change.", difficulty: "medium" },
       { id: "qna-knn-case-scaling-bug-01", level: 3, q: "A 'similar songs' feature keeps surfacing tracks that share loudness but have wildly different tempos, and ignoring tracks with a near-identical tempo but different loudness. The features going into the distance calculation are raw, un-normalized values. Diagnose what's happening and what you'd fix.", difficulty: "easy" },
-      { id: "qna-knn-case-curse-diagnosis-01", level: 3, q: "After a team adds a few hundred extra engineding dimensions to the song embedding — hoping richer features means better recommendations — the 'similar songs' results actually get noticeably worse across the board, even though query latency hasn't changed. What's going on, and how would you confirm it?", difficulty: "hard" },
+      { id: "qna-knn-case-curse-diagnosis-01", level: 3, q: "After a team adds a few hundred extra engineered dimensions to the song embedding -- hoping richer features means better recommendations -- the 'similar songs' results actually get noticeably worse across the board, even though query latency hasn't changed. What's going on, and how would you confirm it?", difficulty: "hard" },
       { id: "qna-knn-case-wrong-fix-01", level: 3, q: "An engineer on your team says the recommendations 'look kind of random' and proposes fixing it by swapping in a faster, bigger ANN index. Before you agree, what would you want to check, and why might a faster index not be the right fix here?", difficulty: "hard" },
       { id: "qna-knn-case-online-catalog-01", level: 3, q: "Product wants brand-new song releases to show up in 'similar songs' results within minutes of upload, with no nightly retraining job. Explain how kNN's structure does or doesn't support this, and what would actually need to happen when a new song is added.", difficulty: "medium" }
     ],
   },
   "naive_bayes": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "How Naive Bayes classifies: Bayes' theorem applied per-feature, then argmax",
@@ -2645,8 +2776,8 @@ export const QNA_BANK = {
     ],
   },
   "data_quality_audit": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why the audit comes first",
@@ -2730,8 +2861,8 @@ export const QNA_BANK = {
     ],
   },
   "missing_value_handling": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Diagnosing the missingness mechanism (MCAR vs MAR vs MNAR)",
@@ -2811,8 +2942,8 @@ export const QNA_BANK = {
     ],
   },
   "feature_engineering": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why raw columns aren't enough",
@@ -2893,8 +3024,8 @@ export const QNA_BANK = {
     ],
   },
   "categorical_encoding": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "One-hot encoding and why it strains at high cardinality",
@@ -2975,8 +3106,8 @@ export const QNA_BANK = {
     ],
   },
   "feature_scaling": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why unscaled features distort distance- and gradient-based models",
@@ -3058,8 +3189,8 @@ export const QNA_BANK = {
     ],
   },
   "data_splits_and_leakage": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "What data leakage is and why it's dangerous",
@@ -3142,8 +3273,8 @@ export const QNA_BANK = {
     ],
   },
   "distribution_shift": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The Silent Failure — Why Shift Is Dangerous",
@@ -3222,8 +3353,8 @@ export const QNA_BANK = {
     ],
   },
   "data_augmentation": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why augment (motivation, where it fits)",
@@ -3304,8 +3435,8 @@ export const QNA_BANK = {
     ],
   },
   "data_versioning_and_pipelines": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Reproducibility fundamentals — code, data, hyperparameters",
@@ -3387,8 +3518,8 @@ export const QNA_BANK = {
     ],
   },
   "neural_nets": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Beat 1 — XOR and the linear separability limit",
@@ -3430,7 +3561,6 @@ export const QNA_BANK = {
         questions: [
           { id: "qna-vanishing-gradient-def-01", level: 0, q: "In one sentence, what is the vanishing-gradient problem?", difficulty: "easy" },
           { id: "qna-existence-vs-findability-01", level: 1, q: "The universal approximation theorem guarantees a good solution exists at depth — why doesn't that guarantee gradient descent will actually find it?", difficulty: "medium" },
-          { id: "qna-early-layer-starvation-01", level: 1, q: "Why do the early layers of a careless deep network end up starved of gradient specifically, rather than every layer being equally undertrained?", difficulty: "hard" },
           { id: "qna-trainability-toolkit-01", level: 2, q: "This module frames things like better activations, normalization, and residual connections as existing to make depth 'trainable' rather than more expressive — why is that distinction useful when you're diagnosing a broken model?", difficulty: "medium" }
         ],
       },
@@ -3461,8 +3591,8 @@ export const QNA_BANK = {
     ],
   },
   "backprop": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The cost problem: why naive gradient computation doesn't scale",
@@ -3542,8 +3672,8 @@ export const QNA_BANK = {
     ],
   },
   "activations": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "What an activation function is and why networks need one",
@@ -3624,8 +3754,8 @@ export const QNA_BANK = {
     ],
   },
   "batch_norm": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The moving-target problem (internal covariate shift)",
@@ -3696,8 +3826,8 @@ export const QNA_BANK = {
     ],
   },
   "optimizers": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why one fixed learning rate breaks down across weights",
@@ -3772,15 +3902,14 @@ export const QNA_BANK = {
     ],
     cases: [
       { id: "qna-case-val-loss-rise-01", level: 3, q: "You're training with Adam. Training loss keeps falling smoothly, but validation loss starts climbing partway through the run. Walk through how you'd figure out whether this is Adam settling into a sharp minimum versus plain overfitting, and what you'd actually do differently for each explanation.", difficulty: "hard" },
-      { id: "qna-case-finetune-rates-01", level: 3, q: "You're fine-tuning a large pretrained network with Adam using one learning rate for the whole model, and after a few epochs you notice the pretrained layers' features have visibly degraded even though the new output head is training fine. Walk through your diagnosis and what you'd change about the setup.", difficulty: "medium" },
       { id: "qna-case-transformer-spike-01", level: 3, q: "A Transformer training run using Adam spikes or diverges in the loss during the first few hundred steps, then trains normally afterward if it survives. Walk through what's most likely happening and how you'd fix it.", difficulty: "medium" },
       { id: "qna-case-weight-decay-not-working-01", level: 3, q: "You inherit a training script that passes weight_decay directly into a plain Adam optimiser, and the model keeps overfitting even after cranking that value up. Walk through why the weight decay isn't working the way its author probably expected, and what you'd change.", difficulty: "hard" },
       { id: "qna-case-optimizer-decision-01", level: 3, q: "You have a fixed compute budget for an image-classification model, and you already know the deployment data will likely drift somewhat from the training distribution. Walk through how you'd decide between Adam and SGD+momentum for this run, and what you'd watch for during training to confirm you made the right call.", difficulty: "hard" }
     ],
   },
   "cnns": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "MLPs are blind to spatial structure",
@@ -3861,8 +3990,8 @@ export const QNA_BANK = {
     ],
   },
   "rnns_lstms": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Vanilla RNN mechanics — hidden state recurrence",
@@ -3944,8 +4073,8 @@ export const QNA_BANK = {
     ],
   },
   "attention": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The RNN/LSTM ceiling and why attention is needed",
@@ -4025,8 +4154,8 @@ export const QNA_BANK = {
     ],
   },
   "transformers": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Attention's blind spot to word order",
@@ -4101,8 +4230,8 @@ export const QNA_BANK = {
     ],
   },
   "pretraining": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why pre-training matters (the transfer-learning problem)",
@@ -4184,8 +4313,8 @@ export const QNA_BANK = {
     ],
   },
   "finetune": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why full fine-tuning doesn't scale",
@@ -4267,8 +4396,8 @@ export const QNA_BANK = {
     ],
   },
   "quantization": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why quantize at all (the size/speed motivation)",
@@ -4348,8 +4477,8 @@ export const QNA_BANK = {
     ],
   },
   "dl_serving": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why one-request-at-a-time serving wastes the GPU",
@@ -4428,8 +4557,8 @@ export const QNA_BANK = {
     ],
   },
   "dl_debugging": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Debugging Mindset — Vital Signs Before Diagnosis",
@@ -4509,8 +4638,8 @@ export const QNA_BANK = {
     ],
   },
   "metrics_first_principles": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Confusion Matrix & Why Accuracy Fails",
@@ -4592,8 +4721,8 @@ export const QNA_BANK = {
     ],
   },
   "auc_roc": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why a single threshold isn't enough",
@@ -4674,8 +4803,8 @@ export const QNA_BANK = {
     ],
   },
   "ranking_metrics": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why ranking metrics exist: position is the whole game",
@@ -4754,8 +4883,8 @@ export const QNA_BANK = {
     ],
   },
   "offline_vs_online": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why offline and online disagree",
@@ -4837,8 +4966,8 @@ export const QNA_BANK = {
     ],
   },
   "validation_traps": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "What data leakage is and why standard splits don't catch it",
@@ -4922,8 +5051,8 @@ export const QNA_BANK = {
     ],
   },
   "cross_validation": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why One Split Fails — k-Fold Basics",
@@ -5005,8 +5134,8 @@ export const QNA_BANK = {
     ],
   },
   "error_analysis": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why a single metric isn't enough",
@@ -5081,8 +5210,8 @@ export const QNA_BANK = {
     ],
   },
   "ablation": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "What Ablation Measures",
@@ -5164,8 +5293,8 @@ export const QNA_BANK = {
     ],
   },
   "evaluation_in_prod": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Novelty effects & why controlled experiments are the source of truth",
@@ -5245,8 +5374,8 @@ export const QNA_BANK = {
     ],
   },
   "online_experimentation_ml": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why offline metrics can't launch a model — the case for live experimentation",
@@ -5313,8 +5442,8 @@ export const QNA_BANK = {
     ],
   },
   "graph_representations": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why graphs matter as an ML data structure (relational signal)",
@@ -5395,8 +5524,8 @@ export const QNA_BANK = {
     ],
   },
   "spectral_gcn": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why graph structure needs its own convolution",
@@ -5480,8 +5609,8 @@ export const QNA_BANK = {
     ],
   },
   "spatial_gcn": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why transductive graph learning breaks at scale",
@@ -5555,8 +5684,8 @@ export const QNA_BANK = {
     ],
   },
   "graph_attention": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why Learned Attention Instead of Fixed Aggregation",
@@ -5638,8 +5767,8 @@ export const QNA_BANK = {
     ],
   },
   "message_passing_framework": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why message passing at all (motivation for structure-aware models)",
@@ -5719,8 +5848,8 @@ export const QNA_BANK = {
     ],
   },
   "link_prediction": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Link Prediction & Knowledge Graph Completion (problem setup)",
@@ -5802,8 +5931,8 @@ export const QNA_BANK = {
     ],
   },
   "node_classification_at_scale": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Neighbor explosion: why full-batch training breaks at scale",
@@ -5883,8 +6012,8 @@ export const QNA_BANK = {
     ],
   },
   "heterogeneous_graphs": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why heterogeneity matters (motivation)",
@@ -5963,8 +6092,8 @@ export const QNA_BANK = {
     ],
   },
   "gnn_applications": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why GNNs beat hand-crafted features for structured data",
@@ -6046,8 +6175,8 @@ export const QNA_BANK = {
     ],
   },
   "probability_basics": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Priors and the naive-counting trap",
@@ -6126,8 +6255,8 @@ export const QNA_BANK = {
     ],
   },
   "random_variables": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Random variables as the bridge from outcomes to numbers",
@@ -6201,8 +6330,8 @@ export const QNA_BANK = {
     ],
   },
   "joint_distributions": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why joint distributions are needed (can't just multiply marginals)",
@@ -6219,7 +6348,6 @@ export const QNA_BANK = {
           { id: "qna-joint-distribution-def-01", level: 0, q: "How would you define a joint distribution, and how does that definition differ for discrete versus continuous variables?", difficulty: "easy" },
           { id: "qna-joint-distribution-def-02", level: 0, q: "What constraints does a valid joint PMF have to satisfy, and how does that compare to what a joint PDF has to satisfy?", difficulty: "easy" },
           { id: "qna-joint-distribution-def-03", level: 1, q: "Why do we need a joint density for continuous variables rather than just describing each variable's PDF on its own?", difficulty: "medium" },
-          { id: "qna-joint-distribution-def-04", level: 2, q: "In practice you usually don't have the joint distribution in closed form — how would you go about estimating it from data?", difficulty: "hard" }
         ],
       },
       {
@@ -6277,8 +6405,8 @@ export const QNA_BANK = {
     ],
   },
   "information_theory": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Information content & entropy (self-information, -log2(p), entropy as average bits/uncertainty)",
@@ -6346,15 +6474,15 @@ export const QNA_BANK = {
     ],
     cases: [
       { id: "qna-case-ce-mse-01", level: 3, q: "Your team swaps a classifier's loss function from cross-entropy to MSE computed on softmax outputs, and you notice training barely corrects confidently-wrong predictions anymore. Walk me through why that's happening, using what you know about how each loss penalizes error.", difficulty: "medium" },
-      { id: "qna-case-mode-collapse-01", level: 3, q: "You're training a generative model and it keeps producing nearly identical outputs even though the training data is diverse. Walk me through how you'd use the forward-KL/reverse-KL distinction to reason about what might be causing this and what you'd want to check to confirm it.", difficulty: "hard" },
+      { id: "qna-case-mode-collapse-01", level: 3, q: "You're training a VAE and its reconstructions keep coming out blurry and averaged-looking, showing little diversity across different latent codes, even though the training data is diverse. Walk me through how you'd use the forward-KL/reverse-KL distinction to reason about what might be causing this and what you'd want to check to confirm it.", difficulty: "hard" },
       { id: "qna-case-feature-selection-01", level: 3, q: "You're doing feature selection and a candidate feature has essentially zero Pearson correlation with the target, but a teammate insists it should stay in the model. How would you settle this using the tools from this module, and what would you actually go compute?", difficulty: "medium" },
       { id: "qna-case-calibration-claim-01", level: 3, q: "A colleague tells you their model's cross-entropy loss on the training set has dropped very close to zero and claims this means the model is 'perfectly calibrated.' How would you interpret that claim using entropy and cross-entropy, and what would you want to verify before accepting it?", difficulty: "medium" },
       { id: "qna-case-miscalibration-01", level: 3, q: "You inherit a classification pipeline where the model is very confident on its predictions but frequently wrong. Using the entropy, cross-entropy, and KL concepts from this module, how would you think about diagnosing what's going on?", difficulty: "hard" }
     ],
   },
   "linear_algebra_basics": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Data as matrices — why linear algebra underlies every ML operation",
@@ -6416,7 +6544,7 @@ export const QNA_BANK = {
           { id: "qna-condition-number-01", level: 0, q: "What does the condition number of a matrix like XᵀX tell you?", difficulty: "easy" },
           { id: "qna-condition-number-02", level: 1, q: "Why does a high condition number in XᵀX show up specifically when features are multicollinear or the data is rank-deficient?", difficulty: "medium" },
           { id: "qna-ridge-regularization-01-v2", level: 1, q: "Explain mechanically why adding λI to XᵀX before inverting fixes the singularity problem — why does that always make the matrix invertible for λ>0?", difficulty: "hard" },
-          { id: "qna-ridge-regularization-02", level: 2, q: "Why does the module insist that Ridge regression's λI term isn't 'an arbitrary regularizer' but specifically the minimum-norm solution to an ill-posed problem — what would go wrong if you just picked some arbitrary fix instead?", difficulty: "medium" }
+          { id: "qna-ridge-regularization-02", level: 2, q: "A colleague claims Ridge regression's (X^T X + lambda*I)^-1 X^T y computes the minimum-norm solution to the original normal equations. Why is that claim wrong, and what does Ridge's solution actually give you instead?", difficulty: "medium" }
         ],
       }
     ],
@@ -6429,8 +6557,8 @@ export const QNA_BANK = {
     ],
   },
   "eigendecomposition": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Motivation: redundant features and the case for eigenvectors",
@@ -6513,8 +6641,8 @@ export const QNA_BANK = {
     ],
   },
   "svd": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why SVD: the rectangular-matrix problem",
@@ -6588,8 +6716,8 @@ export const QNA_BANK = {
     ],
   },
   "pca_theory": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The problem PCA solves: redundant high-dimensional data",
@@ -6669,8 +6797,8 @@ export const QNA_BANK = {
     ],
   },
   "calculus_ml": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Derivatives and the Gradient",
@@ -6745,8 +6873,8 @@ export const QNA_BANK = {
     ],
   },
   "matrix_calculus": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why Matrix Calculus Matters — From Loss to Normal Equations",
@@ -6819,8 +6947,8 @@ export const QNA_BANK = {
     ],
   },
   "convex_optimization": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The convex vs non-convex gulf (motivation)",
@@ -6899,8 +7027,8 @@ export const QNA_BANK = {
     ],
   },
   "hypothesis_testing": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The core question: null hypothesis and what a p-value measures",
@@ -6982,8 +7110,8 @@ export const QNA_BANK = {
     ],
   },
   "mle_map": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "What MLE is and how you compute it",
@@ -7056,8 +7184,8 @@ export const QNA_BANK = {
     ],
   },
   "em_algorithm": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The chicken-and-egg problem (why EM is needed)",
@@ -7138,8 +7266,8 @@ export const QNA_BANK = {
     ],
   },
   "concentration_inequalities": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why concentration inequalities matter (motivation)",
@@ -7219,8 +7347,8 @@ export const QNA_BANK = {
     ],
   },
   "monte_carlo": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Beat 1 — What Monte Carlo estimation is and why you'd reach for it",
@@ -7272,7 +7400,7 @@ export const QNA_BANK = {
         questions: [
           { id: "qna-trace-plot-01", level: 0, q: "What does a healthy MCMC trace plot look like, and what does a problematic one look like?", difficulty: "easy" },
           { id: "qna-mixing-why-01", level: 1, q: "Why does poor mixing — slow drift or long autocorrelation in the chain — actually undermine the validity of your posterior samples?", difficulty: "medium" },
-          { id: "qna-rhat-mechanism-01", level: 1, q: "How is the R-hat statistic computed across multiple chains, and why does R-hat < 1.1 indicate convergence?", difficulty: "hard" },
+          { id: "qna-rhat-mechanism-01", level: 1, q: "What does the R-hat statistic tell you about multiple MCMC chains, and why does R-hat < 1.1 indicate convergence rather than the chains still exploring different regions?", difficulty: "hard" },
           { id: "qna-burnin-01", level: 2, q: "Why do you discard burn-in samples, and how would you decide how many samples to burn in versus keep?", difficulty: "medium" }
         ],
       },
@@ -7294,8 +7422,8 @@ export const QNA_BANK = {
     ],
   },
   "sampling_distributions": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "What a sampling distribution is and why it matters",
@@ -7370,8 +7498,8 @@ export const QNA_BANK = {
     ],
   },
   "monitoring_taxonomy": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why a taxonomy at all — one symptom, many possible causes",
@@ -7436,7 +7564,7 @@ export const QNA_BANK = {
       {
         name: "Differential diagnosis — reading the combination across layers",
         questions: [
-          { id: "qna-combination-diagnosis-cases-01", level: 1, q: "Walk me through what it means diagnostically when infrastructure is clean and data is drifting versus when infrastructure is clean and data is also clean, but performance is still degrading in both cases.", difficulty: "medium" },
+          { id: "qna-combination-diagnosis-cases-01", level: 2, q: "Walk me through what it means diagnostically when infrastructure is clean and data is drifting versus when infrastructure is clean and data is also clean, but performance is still degrading in both cases.", difficulty: "medium" },
           { id: "qna-infra-error-shortcut-01", level: 1, q: "If you see infrastructure errors alongside otherwise clean feature data, why does that combination let you stop investigating drift and go straight to an engineering fix?", difficulty: "medium" },
           { id: "qna-combination-vs-isolation-01", level: 2, q: "Why is looking at the combination of signals across all four layers a better diagnostic approach than checking each layer in isolation and reacting to the first one that fires?", difficulty: "hard" }
         ],
@@ -7451,8 +7579,8 @@ export const QNA_BANK = {
     ],
   },
   "data_drift_detection": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Silent decay & watching inputs instead of labels",
@@ -7467,7 +7595,6 @@ export const QNA_BANK = {
         name: "PSI as the core drift metric",
         questions: [
           { id: "qna-psi-definition-01", level: 0, q: "What does the Population Stability Index measure, and how is it computed at a high level?", difficulty: "easy" },
-          { id: "qna-psi-formula-rationale-01", level: 1, q: "PSI is built as a sum over bins of a difference in proportions times a log ratio. Why that particular construction rather than, say, just summing the absolute difference in bin proportions?", difficulty: "medium" },
           { id: "qna-psi-origin-bands-01", level: 1, q: "Why did the lending industry in particular standardize on PSI, and how are its stable/investigate/act bands actually meant to be used operationally?", difficulty: "medium" },
           { id: "qna-psi-limits-01", level: 2, q: "Where does PSI stop being a trustworthy signal — what conditions make a PSI score misleading or unreliable?", difficulty: "hard" }
         ],
@@ -7536,8 +7663,8 @@ export const QNA_BANK = {
     ],
   },
   "concept_drift": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "What concept drift is",
@@ -7611,8 +7738,8 @@ export const QNA_BANK = {
     ],
   },
   "prediction_monitoring": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why prediction monitoring exists (the label-lag problem)",
@@ -7687,8 +7814,8 @@ export const QNA_BANK = {
     ],
   },
   "feature_importance_drift": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "What feature importance drift is",
@@ -7771,8 +7898,8 @@ export const QNA_BANK = {
     ],
   },
   "calibration_monitoring": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "AUC vs. calibration — two different things being measured",
@@ -7852,8 +7979,8 @@ export const QNA_BANK = {
     ],
   },
   "silent_model_staleness": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "What Silent Staleness Is",
@@ -7937,8 +8064,8 @@ export const QNA_BANK = {
     ],
   },
   "alerting_runbooks": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Alert fatigue as a symptom",
@@ -8013,8 +8140,8 @@ export const QNA_BANK = {
     ],
   },
   "loss_landscape_intuition": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The loss landscape as a geometric object in parameter space",
@@ -8090,8 +8217,8 @@ export const QNA_BANK = {
     ],
   },
   "gradient_descent_fundamentals": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why gradient descent, and the update rule",
@@ -8171,8 +8298,8 @@ export const QNA_BANK = {
     ],
   },
   "sgd_and_minibatch": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The full-batch wall and the mini-batch SGD fix",
@@ -8254,8 +8381,8 @@ export const QNA_BANK = {
     ],
   },
   "momentum": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The ravine problem: why plain gradient descent zigzags",
@@ -8321,8 +8448,8 @@ export const QNA_BANK = {
     ],
   },
   "adagrad_rmsprop": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The problem: one learning rate can't fit parameters updating at different scales",
@@ -8365,7 +8492,7 @@ export const QNA_BANK = {
           { id: "qna-rmsprop-fix-01", level: 0, q: "What's the one change RMSProp makes to AdaGrad's accumulator?", difficulty: "easy" },
           { id: "qna-rmsprop-fix-02", level: 1, q: "Mechanically, why does switching from a cumulative sum to an exponential moving average stop the effective learning rate from decaying toward zero?", difficulty: "medium" },
           { id: "qna-rmsprop-fix-03", level: 1, q: "In an exponential moving average of squared gradients, how does the influence of an old gradient observation change as training continues, compared to AdaGrad's sum?", difficulty: "medium" },
-          { id: "qna-rmsprop-fix-04", level: 2, q: "By no longer keeping a full running history of every gradient seen, does RMSProp give up anything AdaGrad had? Is that trade worth it?", difficulty: "hard" }
+          { id: "qna-rmsprop-fix-04", level: 2, q: "By replacing AdaGrad's cumulative sum of squared gradients with a short exponential moving average, does RMSProp give up anything AdaGrad had? Is that trade worth it?", difficulty: "hard" }
         ],
       },
       {
@@ -8403,8 +8530,8 @@ export const QNA_BANK = {
     ],
   },
   "adam_adamw": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why one global learning rate fails on a heterogeneous model",
@@ -8484,8 +8611,8 @@ export const QNA_BANK = {
     ],
   },
   "learning_rate_schedules": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why no single fixed learning rate works across a full training run",
@@ -8560,8 +8687,8 @@ export const QNA_BANK = {
     ],
   },
   "gradient_flow": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The core mechanism — the backward signal as a multiplicative chain",
@@ -8636,8 +8763,8 @@ export const QNA_BANK = {
     ],
   },
   "weight_initialization": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Symmetry breaking: why zero-init is fatal",
@@ -8719,8 +8846,8 @@ export const QNA_BANK = {
     ],
   },
   "second_order_methods": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why gradient descent can't see curvature",
@@ -8795,8 +8922,8 @@ export const QNA_BANK = {
     ],
   },
   "loss_landscape_geometry": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Beat 1 — Why local minima are not the real obstacle in high dimensions",
@@ -8870,8 +8997,8 @@ export const QNA_BANK = {
     ],
   },
   "gradient_clipping_regularization": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why regularization exists (the memorization problem)",
@@ -8953,8 +9080,8 @@ export const QNA_BANK = {
     ],
   },
   "price_elasticity_of_demand": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Defining elasticity as the master pricing parameter",
@@ -9018,8 +9145,8 @@ export const QNA_BANK = {
     ],
   },
   "revenue_vs_margin_objective": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The objective question comes before the elasticity math",
@@ -9054,7 +9181,7 @@ export const QNA_BANK = {
           { id: "qna-contribution-margin-definition-01", level: 0, q: "How is contribution margin defined in terms of price, unit cost, and quantity sold?", difficulty: "easy" },
           { id: "qna-price-cut-margin-collapse-mechanism-01", level: 1, q: "Walk me through the mechanism by which a price cut can raise total revenue while total contribution falls. What has to be true about the shape of the demand response for that to happen?", difficulty: "hard" },
           { id: "qna-revenue-vanity-target-01", level: 1, q: "Why does this module call revenue a 'vanity target' whenever unit cost is meaningful? What exactly goes wrong if you optimize for revenue alone in that setting?", difficulty: "medium" },
-          { id: "qna-revenue-only-blind-spot-01", level: 2, q: "If a team only tracked revenue and never computed contribution, what kind of pricing decision could look like a clear win on paper while actually eroding the business?", difficulty: "medium" }
+          { id: "qna-revenue-only-blind-spot-01", level: 1, q: "If a team only tracked revenue and never computed contribution, what kind of pricing decision could look like a clear win on paper while actually eroding the business?", difficulty: "medium" }
         ],
       },
       {
@@ -9085,8 +9212,8 @@ export const QNA_BANK = {
     ],
   },
   "price_optimization_under_constraints": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The unconstrained profit-maximization problem",
@@ -9159,8 +9286,8 @@ export const QNA_BANK = {
     ],
   },
   "dynamic_and_surge_pricing": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Surge as a market-clearing controller (not extraction)",
@@ -9240,8 +9367,8 @@ export const QNA_BANK = {
     ],
   },
   "causal_price_experiments": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why price needs a causal experiment at all",
@@ -9320,8 +9447,8 @@ export const QNA_BANK = {
     ],
   },
   "promotion_and_discount_uplift": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Uplift as a Causal Quantity",
@@ -9394,8 +9521,8 @@ export const QNA_BANK = {
     ],
   },
   "willingness_to_pay_and_competition": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "What willingness-to-pay actually is",
@@ -9469,8 +9596,8 @@ export const QNA_BANK = {
     ],
   },
   "gaussian_processes": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why GPs: uncertainty as a first-class output",
@@ -9553,8 +9680,8 @@ export const QNA_BANK = {
     ],
   },
   "variational_inference": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why exact posteriors are intractable and VI reframes inference as optimization",
@@ -9635,8 +9762,8 @@ export const QNA_BANK = {
     ],
   },
   "vae_foundations": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why plain autoencoders aren't generative models",
@@ -9716,8 +9843,8 @@ export const QNA_BANK = {
     ],
   },
   "approximate_inference": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The approximation ladder — why exact posteriors are intractable",
@@ -9801,8 +9928,8 @@ export const QNA_BANK = {
     ],
   },
   "bayesian_neural_networks": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Motivation: why point-estimate networks fail at honest uncertainty, and what putting distributions over weights buys you",
@@ -9883,8 +10010,8 @@ export const QNA_BANK = {
     ],
   },
   "information_geometry": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The ravine problem: why Euclidean parameter space is the wrong metric",
@@ -9968,8 +10095,8 @@ export const QNA_BANK = {
     ],
   },
   "probabilistic_graphical_models": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why PGMs: The Joint Distribution Problem",
@@ -10048,8 +10175,8 @@ export const QNA_BANK = {
     ],
   },
   "training_serving_skew": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Definition and symptom profile",
@@ -10128,8 +10255,8 @@ export const QNA_BANK = {
     ],
   },
   "feature_engineering_prod": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Online vs Offline Feature Skew (the core problem)",
@@ -10208,8 +10335,8 @@ export const QNA_BANK = {
     ],
   },
   "feature_store": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The consistency problem — why feature stores exist",
@@ -10275,8 +10402,8 @@ export const QNA_BANK = {
     ],
   },
   "feature_store_traps": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Cold start — new entities with no feature history",
@@ -10335,10 +10462,6 @@ export const QNA_BANK = {
       {
         name: "Serving-latency-driven feature fallback",
         questions: [
-          { id: "qna-latency-fallback-01", level: 0, q: "What happens to the features a model actually receives when feature-retrieval latency spikes past its serving SLA?", difficulty: "easy" },
-          { id: "qna-latency-fallback-02", level: 1, q: "Walk me through the full failure chain from a backing store having a bad moment to the model quietly producing degraded predictions.", difficulty: "medium" },
-          { id: "qna-latency-avg-blindspot-01", level: 1, q: "Why might average or mean feature-value distributions look completely normal even while this kind of latency-driven fallback is actively happening?", difficulty: "hard" },
-          { id: "qna-circuit-breaker-01", level: 2, q: "How would you think about designing a circuit breaker for feature retrieval, and what tradeoff does adding one force you to accept?", difficulty: "medium" }
         ],
       }
     ],
@@ -10347,12 +10470,11 @@ export const QNA_BANK = {
       { id: "qna-case-drift-diagnosis-01", level: 3, q: "A few weeks after a routine change to a feature pipeline, you notice a model's prediction distribution has drifted upward, but there's nothing in the error logs. Walk me through how you'd figure out what's going on and confirm your hypothesis.", difficulty: "hard" },
       { id: "qna-case-backfill-process-01", level: 3, q: "You've just added a new feature to the store and need to backfill years of historical values so you can train on it. Walk me through the process you'd use to make sure the backfill doesn't quietly leak future information into your training set.", difficulty: "medium" },
       { id: "qna-case-nullrate-trust-01", level: 3, q: "Your monitoring shows a feature's null rate has jumped noticeably higher in production than it ever was during training, but your downstream accuracy metrics haven't moved yet. Walk me through what you'd investigate, and why you'd act on this signal before waiting for the accuracy metrics to confirm anything.", difficulty: "medium" },
-      { id: "qna-case-latency-pushback-01", level: 3, q: "A model's serving latency spiked briefly and then recovered. A teammate looks at the average feature values from that window and says 'nothing looks unusual, so nothing happened.' Walk me through how you'd push back on that conclusion and what you'd check instead.", difficulty: "hard" }
     ],
   },
   "late_arriving_data": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Label delay: the core problem",
@@ -10427,8 +10549,8 @@ export const QNA_BANK = {
     ],
   },
   "data_quality": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The silent-failure asymmetry — bad data doesn't raise exceptions",
@@ -10444,7 +10566,7 @@ export const QNA_BANK = {
         questions: [
           { id: "qna-check-stage-01", level: 0, q: "What are the different stages of an ML pipeline where you'd want to insert a data quality check?", difficulty: "easy" },
           { id: "qna-check-stage-02", level: 1, q: "Why isn't it enough to check data quality once, say at ingestion? What's different about the concerns at feature computation versus at serving time?", difficulty: "medium" },
-          { id: "qna-check-stage-03", level: 1, q: "If you could only add a data quality check at one stage of the pipeline, which would you argue is highest leverage, and why?", difficulty: "medium" },
+          { id: "qna-check-stage-03", level: 2, q: "If you could only add a data quality check at one stage of the pipeline, which would you argue is highest leverage, and why?", difficulty: "medium" },
           { id: "qna-check-stage-04", level: 2, q: "How do the checks you'd run at training time differ from the checks you'd run at serving time, and why do those differences exist given what each stage is actually responsible for?", difficulty: "hard" }
         ],
       },
@@ -10479,7 +10601,7 @@ export const QNA_BANK = {
         questions: [
           { id: "qna-per-slice-01", level: 0, q: "What does it mean to monitor data quality 'per-slice' as opposed to in aggregate?", difficulty: "easy" },
           { id: "qna-per-slice-02", level: 1, q: "Why can an aggregate metric like an overall null rate look completely healthy while a specific segment of the data is severely broken?", difficulty: "medium" },
-          { id: "qna-per-slice-03", level: 1, q: "How would you decide which slices or dimensions are worth monitoring separately, given you can't realistically stratify by everything?", difficulty: "medium" },
+          { id: "qna-per-slice-03", level: 2, q: "How would you decide which slices or dimensions are worth monitoring separately, given you can't realistically stratify by everything?", difficulty: "medium" },
           { id: "qna-per-slice-04", level: 2, q: "What's the cost of stratified per-slice monitoring versus aggregate-only monitoring, and is there a case where aggregate-only is actually the right call?", difficulty: "hard" }
         ],
       },
@@ -10509,8 +10631,8 @@ export const QNA_BANK = {
     ],
   },
   "label_generation": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why Labels Are the Bottleneck",
@@ -10582,8 +10704,8 @@ export const QNA_BANK = {
     ],
   },
   "pipelines": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "What makes something a real pipeline, not a pile of scripts",
@@ -10662,8 +10784,8 @@ export const QNA_BANK = {
     ],
   },
   "model_registry": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "What a model registry actually is",
@@ -10744,8 +10866,8 @@ export const QNA_BANK = {
     ],
   },
   "ab_infra": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Experiment interference and why A/B bugs hide behind real statistics",
@@ -10820,8 +10942,8 @@ export const QNA_BANK = {
     ],
   },
   "online_learning": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why online learning exists (retraining lag)",
@@ -10895,8 +11017,8 @@ export const QNA_BANK = {
     ],
   },
   "two_stage_architecture": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The naive single-stage approach and why it fails",
@@ -10970,8 +11092,8 @@ export const QNA_BANK = {
     ],
   },
   "candidate_generation": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why joint scoring fails at retrieval scale",
@@ -11046,8 +11168,8 @@ export const QNA_BANK = {
     ],
   },
   "learning_to_rank": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The ranking objective — order vs. absolute score",
@@ -11080,7 +11202,7 @@ export const QNA_BANK = {
         name: "Listwise LTR",
         questions: [
           { id: "qna-listwise-ltr-01", level: 0, q: "What does it mean for a listwise method to optimize the whole ordered list at once, rather than individual items or pairs?", difficulty: "easy" },
-          { id: "qna-listwise-ltr-02", level: 1, q: "Why is listwise LTR considered the most aligned approach with position-discounted metrics like NDCG@k — what does it capture that pairwise methods don't?", difficulty: "hard" },
+          { id: "qna-listwise-ltr-02", level: 2, q: "Why is listwise LTR considered the most aligned approach with position-discounted metrics like NDCG@k — what does it capture that pairwise methods don't?", difficulty: "hard" },
           { id: "qna-listwise-ltr-03", level: 1, q: "What makes listwise optimization harder to train in practice, and why is it more sensitive to how the candidate list is constructed?", difficulty: "medium" },
           { id: "qna-listwise-ltr-04", level: 2, q: "Listwise is described as the most metric-aligned option of the three — so why wouldn't a team just default to it instead of pairwise?", difficulty: "medium" }
         ],
@@ -11089,7 +11211,7 @@ export const QNA_BANK = {
         name: "Choosing among pointwise, pairwise, and listwise",
         questions: [
           { id: "qna-ltr-tradeoffs-01", level: 2, q: "Walk through the tradeoff as you move from pointwise to pairwise to listwise — what do you gain, and what does each step cost you?", difficulty: "medium" },
-          { id: "qna-ltr-tradeoffs-02", level: 1, q: "Why might a strong pairwise method still be preferred over a listwise one in practice, even though listwise is theoretically more aligned with the end metric?", difficulty: "medium" },
+          { id: "qna-ltr-tradeoffs-02", level: 2, q: "Why might a strong pairwise method still be preferred over a listwise one in practice, even though listwise is theoretically more aligned with the end metric?", difficulty: "medium" },
           { id: "qna-ltr-tradeoffs-03", level: 2, q: "What's the practical rule for deciding which loss family to reach for on a given ranking problem, and what product signal tells you which one you actually need?", difficulty: "medium" },
           { id: "qna-ltr-tradeoffs-04", level: 0, q: "What are the three broad families of learning-to-rank losses, and how are they ordered by how directly they optimize the ranking objective?", difficulty: "easy" }
         ],
@@ -11113,8 +11235,8 @@ export const QNA_BANK = {
     ],
   },
   "features_and_freshness": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Batch vs real-time features — the two speeds",
@@ -11164,7 +11286,7 @@ export const QNA_BANK = {
         questions: [
           { id: "qna-label-leakage-01-v2", level: 1, q: "How exactly does a non-point-in-time join let 'the future leak' into a model's training data?", difficulty: "medium" },
           { id: "qna-label-leakage-02", level: 2, q: "Why does this kind of leakage make offline metrics look better rather than worse?", difficulty: "medium" },
-          { id: "qna-label-leakage-03", level: 0, q: "Are train/serve skew and point-in-time leakage the same underlying failure, or genuinely different ones? What distinguishes them?", difficulty: "medium" }
+          { id: "qna-label-leakage-03", level: 2, q: "Are train/serve skew and point-in-time leakage the same underlying failure, or genuinely different ones? What distinguishes them?", difficulty: "medium" }
         ],
       },
       {
@@ -11172,7 +11294,7 @@ export const QNA_BANK = {
         questions: [
           { id: "qna-diagnostic-signature-01", level: 1, q: "Why do both train/serve skew and point-in-time leakage look completely fine on offline metrics?", difficulty: "medium" },
           { id: "qna-diagnostic-signature-02", level: 2, q: "If you see a large gap between offline metrics and live performance, why would you check features and joins before suspecting the model architecture itself?", difficulty: "medium" },
-          { id: "qna-diagnostic-signature-03", level: 1, q: "What would you actually go look at, systematically, to tell whether an offline/online gap is caused by skew, by leakage, or by something else entirely?", difficulty: "hard" }
+          { id: "qna-diagnostic-signature-03", level: 2, q: "What would you actually go look at, systematically, to tell whether an offline/online gap is caused by skew, by leakage, or by something else entirely?", difficulty: "hard" }
         ],
       }
     ],
@@ -11185,8 +11307,8 @@ export const QNA_BANK = {
     ],
   },
   "feedback_loops_bias": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The Closed-Loop Training Problem",
@@ -11246,9 +11368,7 @@ export const QNA_BANK = {
         name: "The Debiasing Family (Doubly-Robust, Counterfactual LTR)",
         questions: [
           { id: "qna-debiasing-family-01", level: 0, q: "What other named techniques does this module group in the same family as IPS, and what do they have in common with it?", difficulty: "easy" },
-          { id: "qna-debiasing-family-02", level: 1, q: "What is a doubly-robust estimator, at a conceptual level, and why might you reach for one instead of plain IPS?", difficulty: "medium" },
           { id: "qna-debiasing-family-03", level: 1, q: "What does 'counterfactual learning-to-rank' refer to, and how does it connect back to the causal framing of the position/popularity bias problem?", difficulty: "medium" },
-          { id: "qna-debiasing-family-04", level: 2, q: "If you had to choose between plain IPS and a doubly-robust estimator for a given system, what would you want to know about your propensity model's reliability to make that call?", difficulty: "hard" }
         ],
       }
     ],
@@ -11261,8 +11381,8 @@ export const QNA_BANK = {
     ],
   },
   "offline_online_eval": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The offline-online gap (framing)",
@@ -11336,8 +11456,8 @@ export const QNA_BANK = {
     ],
   },
   "multi_objective_tradeoffs": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "\"Maximize engagement\" is an abdication, not an objective",
@@ -11418,8 +11538,8 @@ export const QNA_BANK = {
     ],
   },
   "recsys_dl_architectures": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Embedding tables and feature crosses (the shared primitives)",
@@ -11485,7 +11605,7 @@ export const QNA_BANK = {
         questions: [
           { id: "qna-default-arch-01", level: 0, q: "What's the 'cheap strong default' ranker setup this module treats as the baseline before you reach for any of these deep architectures?", difficulty: "easy" },
           { id: "qna-default-arch-02", level: 1, q: "What's the actual justification for upgrading from a two-tower-plus-GBDT baseline to something like DeepFM or DLRM — what concrete signal in your data or model errors would tell you it's warranted?", difficulty: "medium" },
-          { id: "qna-default-arch-03", level: 1, q: "How would you decide between reaching for DIN versus a sequence model like SASRec when a use case involves a user's interaction history either way?", difficulty: "medium" },
+          { id: "qna-default-arch-03", level: 2, q: "How would you decide between reaching for DIN versus a sequence model like SASRec when a use case involves a user's interaction history either way?", difficulty: "medium" },
           { id: "qna-default-arch-04", level: 2, q: "What's the risk of adopting one of these heavier deep architectures without a specific reason tied to feature crosses, history-vs-candidate interaction, or sequential order?", difficulty: "medium" }
         ],
       }
@@ -11499,8 +11619,8 @@ export const QNA_BANK = {
     ],
   },
   "recsys_representation_learning": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Beat 1 — The two-tower objective is contrastive (sampled softmax / InfoNCE)",
@@ -11556,7 +11676,7 @@ export const QNA_BANK = {
       {
         name: "Beat 7 — Sampling scheme vs encoder architecture as the recall lever",
         questions: [
-          { id: "qna-sampling-vs-architecture-01", level: 2, q: "The module claims that changing the negative-sampling scheme can move recall by ten points while swapping in a deeper encoder might move it one or two. Why would the sampling scheme have that much more leverage than the model architecture itself?", difficulty: "hard" },
+          { id: "qna-sampling-vs-architecture-01", level: 2, q: "The module's thought experiment argues that changing the negative-sampling scheme moves recall by far more than swapping in a deeper encoder, which only buys \"a small recall bump.\" Why would the sampling scheme have that much more leverage than the model architecture itself?", difficulty: "hard" },
           { id: "qna-priority-order-01", level: 2, q: "If you were handed an underperforming two-tower retrieval system and had limited time, why does this module argue you should look at the negative-sampling setup before reaching for a bigger encoder?", difficulty: "medium" }
         ],
       }
@@ -11570,8 +11690,8 @@ export const QNA_BANK = {
     ],
   },
   "mdp_framework": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The RL problem loop: state, action, reward, episode",
@@ -11645,8 +11765,8 @@ export const QNA_BANK = {
     ],
   },
   "bellman_equations": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The circular value problem & Bellman expectation equation",
@@ -11719,8 +11839,8 @@ export const QNA_BANK = {
     ],
   },
   "temporal_difference": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why TD learning exists (online updates vs. waiting for episodes)",
@@ -11804,8 +11924,8 @@ export const QNA_BANK = {
     ],
   },
   "deep_q_networks": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "From tabular Q-learning to function approximation",
@@ -11884,8 +12004,8 @@ export const QNA_BANK = {
     ],
   },
   "policy_gradients": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why Policy-Based Methods Exist",
@@ -11965,8 +12085,8 @@ export const QNA_BANK = {
     ],
   },
   "actor_critic": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Beat 1 — Why REINFORCE breaks down and what actor-critic replaces",
@@ -12038,8 +12158,8 @@ export const QNA_BANK = {
     ],
   },
   "ppo_trpo": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why vanilla policy gradient collapses (the motivating problem)",
@@ -12122,8 +12242,8 @@ export const QNA_BANK = {
     ],
   },
   "rlhf_reward_modeling": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why RLHF exists — from next-token prediction to human preference signal",
@@ -12198,8 +12318,8 @@ export const QNA_BANK = {
     ],
   },
   "exploration_exploitation": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The exploration-exploitation dilemma",
@@ -12222,7 +12342,7 @@ export const QNA_BANK = {
       {
         name: "UCB — optimism in the face of uncertainty",
         questions: [
-          { id: "qna-ucb-01", level: 1, q: "How does UCB score and choose between actions, and what does each term in that score represent?", difficulty: "medium" },
+          { id: "qna-ucb-01", level: 0, q: "How does UCB score and choose between actions, and what does each term in that score represent?", difficulty: "medium" },
           { id: "qna-ucb-02", level: 1, q: "What does 'optimism in the face of uncertainty' mean, and how does UCB's formula actually implement that idea?", difficulty: "medium" },
           { id: "qna-ucb-03", level: 1, q: "Why does an action's exploration bonus under UCB shrink the more it gets visited?", difficulty: "easy" },
           { id: "qna-ucb-04", level: 2, q: "How is the way UCB directs exploration effort fundamentally different from how ε-greedy directs it?", difficulty: "medium" }
@@ -12281,8 +12401,8 @@ export const QNA_BANK = {
     ],
   },
   "rl_production": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why simulation success doesn't transfer to production",
@@ -12363,8 +12483,8 @@ export const QNA_BANK = {
     ],
   },
   "ssl_overview": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Closing the label-scarcity gap",
@@ -12389,7 +12509,6 @@ export const QNA_BANK = {
         questions: [
           { id: "qna-internet-scale-01", level: 0, q: "Why can self-supervised approaches make use of datasets that supervised approaches practically can't touch?", difficulty: "easy" },
           { id: "qna-internet-scale-02", level: 1, q: "Explain why raw, uncurated web-scale text becomes usable training data once you're in an SSL setting, when the same corpus would be a nonstarter for supervised training.", difficulty: "medium" },
-          { id: "qna-internet-scale-03", level: 2, q: "What do you give up, if anything, by training on massive raw unlabeled data via SSL instead of a smaller, carefully curated and labeled dataset?", difficulty: "hard" }
         ],
       },
       {
@@ -12435,8 +12554,8 @@ export const QNA_BANK = {
     ],
   },
   "contrastive_loss": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The NT-Xent / InfoNCE loss formulation",
@@ -12502,8 +12621,8 @@ export const QNA_BANK = {
     ],
   },
   "simclr": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The discard puzzle: encoder, projection head, and where the loss applies",
@@ -12537,7 +12656,7 @@ export const QNA_BANK = {
         questions: [
           { id: "qna-simclr-head-protect-01", level: 1, q: "Why does the contrastive loss push representations toward invariances that help the pretext task but can actively hurt downstream performance?", difficulty: "medium" },
           { id: "qna-simclr-head-protect-02", level: 1, q: "Explain the 'damage absorption' argument for why the projection head sits between the encoder and the loss instead of the loss applying directly to the encoder.", difficulty: "medium" },
-          { id: "qna-simclr-head-removed-01", level: 2, q: "If you removed the projection head entirely and applied the contrastive loss directly to the encoder's output, what would you expect to happen to downstream linear-probe performance, and why?", difficulty: "medium" },
+          { id: "qna-simclr-head-removed-01", level: 1, q: "If you removed the projection head entirely and applied the contrastive loss directly to the encoder's output, what would you expect to happen to downstream linear-probe performance, and why?", difficulty: "medium" },
           { id: "qna-simclr-finetune-swap-01", level: 0, q: "At fine-tuning time, what actually gets attached in place of the discarded projection head?", difficulty: "easy" }
         ],
       },
@@ -12576,8 +12695,8 @@ export const QNA_BANK = {
     ],
   },
   "moco": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "In-batch negatives and the batch-size dependency",
@@ -12657,8 +12776,8 @@ export const QNA_BANK = {
     ],
   },
   "byol_barlow": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why contrastive SSL needs negatives — and what breaks without them",
@@ -12737,8 +12856,8 @@ export const QNA_BANK = {
     ],
   },
   "masked_autoencoders": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Masked-patch reconstruction task setup",
@@ -12811,8 +12930,8 @@ export const QNA_BANK = {
     ],
   },
   "clip_alignment": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Zero-shot classification mechanism",
@@ -12892,8 +13011,8 @@ export const QNA_BANK = {
     ],
   },
   "ssl_for_tabular": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Motivation for tabular SSL",
@@ -12967,8 +13086,8 @@ export const QNA_BANK = {
     ],
   },
   "downstream_adaptation": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The evaluation paradox: linear probe vs. fine-tuning can disagree",
@@ -13047,8 +13166,8 @@ export const QNA_BANK = {
     ],
   },
   "design_framework": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why scoping failures happen (the problem this framework solves)",
@@ -13121,8 +13240,8 @@ export const QNA_BANK = {
     ],
   },
   "recsys_overview": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why a single ranking model breaks at scale",
@@ -13203,8 +13322,8 @@ export const QNA_BANK = {
     ],
   },
   "recsys_stack": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Prototype vs production system gap",
@@ -13276,8 +13395,8 @@ export const QNA_BANK = {
     ],
   },
   "two_tower": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why joint (cross-attention) scoring doesn't scale to real-time retrieval",
@@ -13352,8 +13471,8 @@ export const QNA_BANK = {
     ],
   },
   "semantic_search": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Vocabulary mismatch and the case for semantic search",
@@ -13361,7 +13480,6 @@ export const QNA_BANK = {
           { id: "qna-vocab-mismatch-01", level: 0, q: "What problem is semantic search trying to solve that a pure keyword/BM25 search engine can't?", difficulty: "easy" },
           { id: "qna-embedding-space-01", level: 0, q: "In the context of search, what is an embedding space, and what does 'closeness' in that space represent?", difficulty: "easy" },
           { id: "qna-token-overlap-fail-01", level: 1, q: "Mechanically, why does token-overlap-based retrieval fail when a query and a relevant document use different words for the same meaning?", difficulty: "medium" },
-          { id: "qna-keyword-vs-semantic-01", level: 2, q: "Are there situations where you'd still prefer keyword search over semantic search? What are they and why?", difficulty: "medium" }
         ],
       },
       {
@@ -13394,7 +13512,7 @@ export const QNA_BANK = {
       {
         name: "Pretraining objective and embedding quality",
         questions: [
-          { id: "qna-raw-bert-embeddings-01", level: 0, q: "Why don't embeddings from a raw, masked-language-model-pretrained encoder work well for semantic similarity out of the box?", difficulty: "medium" },
+          { id: "qna-raw-bert-embeddings-01", level: 1, q: "Why don't embeddings from a raw, masked-language-model-pretrained encoder work well for semantic similarity out of the box?", difficulty: "medium" },
           { id: "qna-contrastive-finetuning-01", level: 1, q: "What does contrastive fine-tuning do to an encoder that masked-language-modeling pretraining alone doesn't?", difficulty: "medium" },
           { id: "qna-hard-negatives-01-v2", level: 1, q: "What role do hard negatives play when training a retrieval encoder, and why do they push recall further than training with only random negatives?", difficulty: "hard" },
           { id: "qna-negative-mining-compare-01", level: 2, q: "Given two encoders identical except that one was fine-tuned with random negatives and the other with hard negatives, what difference would you expect in their retrieval quality, and why?", difficulty: "hard" }
@@ -13427,8 +13545,8 @@ export const QNA_BANK = {
     ],
   },
   "multitask_ranking": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why rank by a value model, not one metric",
@@ -13508,8 +13626,8 @@ export const QNA_BANK = {
     ],
   },
   "ml_platform": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The coordination problem: why platforms exist",
@@ -13584,8 +13702,8 @@ export const QNA_BANK = {
     ],
   },
   "ranking_systems": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Ranking is relative, not per-item accuracy (the classifier-vs-ranker trap)",
@@ -13651,8 +13769,8 @@ export const QNA_BANK = {
     ],
   },
   "ranking_calibration": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why order-only ranking breaks: the score becomes a number",
@@ -13677,7 +13795,6 @@ export const QNA_BANK = {
         questions: [
           { id: "qna-calibration-fix-01", level: 1, q: "How do the standard calibration-fixing techniques actually correct a miscalibrated score, at a mechanical level?", difficulty: "medium" },
           { id: "qna-heldout-calibration-01", level: 1, q: "Why must calibration be fit on a held-out set rather than the same data the model was trained or already scored on?", difficulty: "medium" },
-          { id: "qna-platt-vs-isotonic-01", level: 2, q: "When would you reach for a parametric calibration fix versus a non-parametric one, and what's the tradeoff between them?", difficulty: "hard" },
           { id: "qna-calibration-pipeline-01", level: 0, q: "Where in the serving pipeline does the calibration step typically sit, relative to the model producing its raw score?", difficulty: "easy" }
         ],
       },
@@ -13718,8 +13835,8 @@ export const QNA_BANK = {
     ],
   },
   "real_time_ml": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The real-time constraint (why real-time ML is a different problem than batch)",
@@ -13802,8 +13919,8 @@ export const QNA_BANK = {
     ],
   },
   "sequential_recsys": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why order matters: from bag-of-items to sequences",
@@ -13877,8 +13994,8 @@ export const QNA_BANK = {
     ],
   },
   "embeddings_ann": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why ANN exists: the scale problem",
@@ -13950,8 +14067,8 @@ export const QNA_BANK = {
     ],
   },
   "reranking_diversity": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The ranker's blind spot: item scoring vs. set-level diversity",
@@ -14016,8 +14133,8 @@ export const QNA_BANK = {
     ],
   },
   "recsys_feedback_loops": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "The recommender manufactures its own training data",
@@ -14090,8 +14207,8 @@ export const QNA_BANK = {
     ],
   },
   "stationarity": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Spurious regression — the motivating problem",
@@ -14170,8 +14287,8 @@ export const QNA_BANK = {
     ],
   },
   "arima_family": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "AR(p) and MA(q) — the two building blocks",
@@ -14251,8 +14368,8 @@ export const QNA_BANK = {
     ],
   },
   "seasonality_decomposition": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why decompose at all (trend + seasonality at two timescales)",
@@ -14331,8 +14448,8 @@ export const QNA_BANK = {
     ],
   },
   "prophet_framework": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Prophet's design philosophy & structural model",
@@ -14413,8 +14530,8 @@ export const QNA_BANK = {
     ],
   },
   "exponential_smoothing": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why exponential smoothing exists (motivation vs ARIMA order selection)",
@@ -14495,8 +14612,8 @@ export const QNA_BANK = {
     ],
   },
   "neural_forecasting": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why Transformer attention struggles with time series (permutation-equivariance)",
@@ -14571,8 +14688,8 @@ export const QNA_BANK = {
     ],
   },
   "forecast_evaluation": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "MAPE and why it fails",
@@ -14647,8 +14764,8 @@ export const QNA_BANK = {
     ],
   },
   "ts_anomaly_detection": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Decompose-first: thresholding residuals instead of raw values",
@@ -14732,8 +14849,8 @@ export const QNA_BANK = {
     ],
   },
   "causal_ts": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Granger causality — predictive vs. causal",
@@ -14817,8 +14934,8 @@ export const QNA_BANK = {
     ],
   },
   "clustering_overview": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Framing unsupervised segmentation (no labels, no accuracy)",
@@ -14842,7 +14959,7 @@ export const QNA_BANK = {
         questions: [
           { id: "qna-silhouette-def-01", level: 0, q: "What does the silhouette score actually measure, and what's the intuition behind comparing a point's distance to its own cluster against its distance to the nearest other cluster?", difficulty: "easy" },
           { id: "qna-silhouette-bias-01", level: 1, q: "Why is the silhouette score considered biased toward spherical clusters, and what's the risk of trusting a high silhouette score at face value?", difficulty: "medium" },
-          { id: "qna-db-ch-comparison-01", level: 1, q: "How do metrics like Davies-Bouldin and Calinski-Harabasz differ from silhouette score in what they measure, and why might you want to look at more than one internal metric?", difficulty: "medium" },
+          { id: "qna-db-ch-comparison-01", level: 2, q: "How do metrics like Davies-Bouldin and Calinski-Harabasz differ from silhouette score in what they measure, and why might you want to look at more than one internal metric?", difficulty: "medium" },
           { id: "qna-internal-metrics-limits-01", level: 2, q: "Suppose a clustering result scores well on every internal metric you check. What can you actually conclude from that, and what can't you conclude?", difficulty: "medium" }
         ],
       },
@@ -14899,8 +15016,8 @@ export const QNA_BANK = {
     ],
   },
   "kmeans": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Lloyd's Algorithm — Assignment and Update",
@@ -14979,8 +15096,8 @@ export const QNA_BANK = {
     ],
   },
   "hierarchical": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why hierarchy over flat clustering",
@@ -15055,8 +15172,8 @@ export const QNA_BANK = {
     ],
   },
   "dbscan": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why density-based clustering, not centroids",
@@ -15082,7 +15199,6 @@ export const QNA_BANK = {
           { id: "qna-density-reachability-01", level: 0, q: "What does it mean for a cluster to be a 'connected component' of core points?", difficulty: "easy" },
           { id: "qna-density-reachability-02", level: 1, q: "Explain density-reachability in your own words — how does one point 'inherit' cluster membership from another?", difficulty: "medium" },
           { id: "qna-density-reachability-03", level: 1, q: "Why does chaining density-reachable points together let DBSCAN trace out shapes like crescents or rings that centroid-based methods can't represent?", difficulty: "medium" },
-          { id: "qna-density-reachability-04", level: 2, q: "Is density-reachability a symmetric relationship between two points? Why does the answer matter for how border points get assigned to a cluster?", difficulty: "hard" }
         ],
       },
       {
@@ -15131,8 +15247,8 @@ export const QNA_BANK = {
     ],
   },
   "pca": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "What PCA actually does — directions of maximum spread",
@@ -15198,7 +15314,7 @@ export const QNA_BANK = {
         name: "Scaling to big/sparse data, and the limits of PCA visualization",
         questions: [
           { id: "qna-pca-scale-cost-01", level: 0, q: "Why does classic covariance-based PCA become expensive or even infeasible on very high-dimensional data?", difficulty: "easy" },
-          { id: "qna-pca-variants-01", level: 1, q: "What's the difference between randomized PCA and TruncatedSVD, and why does TruncatedSVD in particular suit sparse, high-dimensional data like TF-IDF text?", difficulty: "medium" },
+          { id: "qna-pca-variants-01", level: 2, q: "What's the difference between randomized PCA and TruncatedSVD, and why does TruncatedSVD in particular suit sparse, high-dimensional data like TF-IDF text?", difficulty: "medium" },
           { id: "qna-pca-plot-not-proof-01", level: 1, q: "Why isn't a 2D PC1-vs-PC2 scatterplot proof that two classes are or aren't separable in the underlying data?", difficulty: "medium" },
           { id: "qna-pca-alternatives-01", level: 2, q: "When would you reach for something other than PCA entirely — say, a nonlinear visualization or compression method — and what's driving that decision?", difficulty: "medium" }
         ],
@@ -15213,8 +15329,8 @@ export const QNA_BANK = {
     ],
   },
   "tsne_umap": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why reduce to 2D — the visualization problem",
@@ -15290,15 +15406,15 @@ export const QNA_BANK = {
     ],
   },
   "autoencoders_dim_reduction": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Autoencoder mechanics — encoder, bottleneck, decoder",
         questions: [
           { id: "qna-ae-mechanics-01", level: 0, q: "What is an autoencoder, and what are its two main halves?", difficulty: "easy" },
           { id: "qna-ae-bottleneck-01", level: 1, q: "Why does forcing everything through a narrow bottleneck stop the network from just copying the input straight to the output?", difficulty: "medium" },
-          { id: "qna-ae-vs-pca-01", level: 1, q: "How does an autoencoder's compression differ from PCA's, and why does that let it capture structure PCA can't?", difficulty: "medium" },
+          { id: "qna-ae-vs-pca-01", level: 2, q: "How does an autoencoder's compression differ from PCA's, and why does that let it capture structure PCA can't?", difficulty: "medium" },
           { id: "qna-ae-latent-code-01", level: 0, q: "What is the 'code' or latent representation in an autoencoder, and where in the network does it actually live?", difficulty: "easy" }
         ],
       },
@@ -15323,7 +15439,7 @@ export const QNA_BANK = {
       {
         name: "Matching reconstruction loss and architecture to the data",
         questions: [
-          { id: "qna-recon-loss-choice-01", level: 0, q: "What's the difference between MSE, binary cross-entropy, and perceptual loss as reconstruction losses, and when would you reach for each?", difficulty: "medium" },
+          { id: "qna-recon-loss-choice-01", level: 2, q: "What's the difference between MSE, binary cross-entropy, and perceptual loss as reconstruction losses, and when would you reach for each?", difficulty: "medium" },
           { id: "qna-recon-loss-choice-02", level: 1, q: "Why would using MSE loss on pixel intensities normalized to [0,1] be a questionable choice?", difficulty: "medium" },
           { id: "qna-ae-architecture-01", level: 1, q: "Why would a dense, fully-connected autoencoder be a weaker architectural choice for image data than a convolutional one?", difficulty: "medium" },
           { id: "qna-ae-regularization-01", level: 0, q: "Besides the bottleneck size itself, what techniques can you use to regularize an autoencoder?", difficulty: "easy" }
@@ -15373,8 +15489,8 @@ export const QNA_BANK = {
     ],
   },
   "gmm": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Why hard assignment breaks down (motivation for soft assignment)",
@@ -15415,7 +15531,7 @@ export const QNA_BANK = {
         name: "Covariance types and the K-means connection",
         questions: [
           { id: "qna-covariance-types-01", level: 0, q: "What are the different covariance types you can choose for a GMM, and what does each one assume about cluster shape?", difficulty: "easy" },
-          { id: "qna-covariance-types-02", level: 1, q: "Why does restricting the covariance type reduce the number of parameters the model has to learn, and when would you actually want that tradeoff?", difficulty: "medium" },
+          { id: "qna-covariance-types-02", level: 2, q: "Why does restricting the covariance type reduce the number of parameters the model has to learn, and when would you actually want that tradeoff?", difficulty: "medium" },
           { id: "qna-gmm-vs-kmeans-01", level: 2, q: "Someone on your team says 'GMM is basically just soft K-means.' Under what specific covariance and weight assumptions is that actually true, and when is it false?", difficulty: "hard" },
           { id: "qna-gmm-vs-kmeans-02", level: 2, q: "As the shared variance in a spherical, tied-covariance GMM shrinks toward zero, what does the model's behavior converge to, and why?", difficulty: "medium" }
         ],
@@ -15424,7 +15540,7 @@ export const QNA_BANK = {
         name: "Choosing K with BIC",
         questions: [
           { id: "qna-bic-01", level: 0, q: "What is BIC used for when fitting a GMM, and what does a lower BIC value mean?", difficulty: "easy" },
-          { id: "qna-bic-02", level: 1, q: "How does BIC's formula trade off how well the model fits against how complex the model is? What would happen if you dropped the complexity penalty term?", difficulty: "medium" },
+          { id: "qna-bic-02", level: 2, q: "How does BIC's formula trade off how well the model fits against how complex the model is? What would happen if you dropped the complexity penalty term?", difficulty: "medium" },
           { id: "qna-bic-03", level: 1, q: "What's the actual procedure for using BIC to choose the number of components — what do you fit across, and what do you look at afterward?", difficulty: "medium" },
           { id: "qna-bic-04", level: 2, q: "You fit GMMs across a whole range of K and BIC keeps decreasing the entire way with no minimum in sight. What does that suggest about your data, and what would you try next?", difficulty: "hard" }
         ],
@@ -15456,8 +15572,8 @@ export const QNA_BANK = {
     ],
   },
   "anomaly_detection": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "Framing the problem: why anomaly detection instead of classification",
@@ -15518,7 +15634,7 @@ export const QNA_BANK = {
         questions: [
           { id: "qna-ad-scaling-01", level: 0, q: "Why does feature scaling matter for some anomaly detection methods and barely matter for others?", difficulty: "easy" },
           { id: "qna-ad-scaling-02", level: 1, q: "Why is Isolation Forest comparatively less sensitive to feature scale than distance- or kernel-based methods?", difficulty: "medium" },
-          { id: "qna-ad-methodmap-01", level: 1, q: "Walk through the main factors you'd weigh when choosing between Isolation Forest, LOF, one-class SVM, and an autoencoder for a new dataset.", difficulty: "medium" },
+          { id: "qna-ad-methodmap-01", level: 2, q: "Walk through the main factors you'd weigh when choosing between Isolation Forest, LOF, one-class SVM, and an autoencoder for a new dataset.", difficulty: "medium" },
           { id: "qna-ad-scaling-03", level: 2, q: "Is it ever safe to skip standardizing your features before running anomaly detection? Under what conditions?", difficulty: "hard" }
         ],
       },
@@ -15541,8 +15657,8 @@ export const QNA_BANK = {
     ],
   },
   "topic_modeling": {
-    status: "draft", // draft | parked | answered
-    auditDate: "2026-07-11",
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
     beats: [
       {
         name: "What Topic Modeling Is For",
@@ -15584,7 +15700,6 @@ export const QNA_BANK = {
         questions: [
           { id: "qna-lda-alpha-beta-01", level: 0, q: "What do the α and β hyperparameters in LDA each control?", difficulty: "medium" },
           { id: "qna-vague-mixtures-diagnosis-01", level: 1, q: "If every document's topic mixture comes out vague and spread across many topics instead of concentrated, what would you look at first?", difficulty: "medium" },
-          { id: "qna-gibbs-vs-variational-01", level: 1, q: "What's the practical difference between fitting LDA with collapsed Gibbs sampling versus variational inference?", difficulty: "medium" },
           { id: "qna-preprocessing-importance-01", level: 2, q: "Why does preprocessing matter more for LDA than you might initially expect?", difficulty: "medium" }
         ],
       },
@@ -15621,6 +15736,748 @@ export const QNA_BANK = {
       { id: "qna-case-crank-up-k-01", level: 3, q: "A stakeholder wants you to just increase K because a couple of topics still look like they're blending unrelated themes. How do you evaluate whether that's actually the right fix before you do it?", difficulty: "medium" },
       { id: "qna-case-method-selection-01", level: 3, q: "You need to build a topic modeling solution for a stream of short, informal, user-generated text, and the output has to be interpretable to a non-technical team. Walk me through how you'd choose between the available methods and what you'd watch out for with your choice.", difficulty: "hard" },
       { id: "qna-case-model-going-stale-01", level: 3, q: "Months after a topic model launched, it starts feeling less useful — new documents don't map cleanly onto the existing topics anymore. How would you diagnose what's happening, and what would you put in place so this doesn't quietly happen again?", difficulty: "medium" }
+    ],
+  },
+
+  "calibration_eval": {
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
+    beats: [
+      {
+        name: "Calibration vs Ranking: Two Different Questions",
+        questions: [
+          { id: "qna-calibration-vs-ranking-definition-01", level: 0, q: "What does it mean for a model to be 'calibrated,' and how is that a different question from what AUC measures?", difficulty: "easy" },
+          { id: "qna-perfect-ranker-miscalibrated-01", level: 0, q: "Can a model have a perfect AUC of 1.0 and still be badly miscalibrated? What would that look like?", difficulty: "medium" },
+          { id: "qna-calibration-independent-mechanism-01", level: 1, q: "Why are ranking quality and calibration structurally independent — why doesn't ranking every case correctly automatically make the model's stated probabilities honest?", difficulty: "medium", trap: "\"A model that ranks perfectly must also be well-calibrated, since it clearly understands the relative risk of every case.\" Actually wrong: ranking only requires that riskier cases score higher than safer ones in relative order; it says nothing about whether the absolute number attached to any case matches the true rate, which is exactly why an AUC-1.0 model can still be badly overconfident.", followUp: "qna-calibration-relevance-decision-01" },
+          { id: "qna-calibration-relevance-decision-01", level: 2, q: "When does calibration matter more than ranking for a deployed model, and when is ranking alone enough?", difficulty: "medium" }
+        ],
+      },
+      {
+        name: "Seeing Miscalibration: the Reliability Diagram",
+        questions: [
+          { id: "qna-reliability-diagram-construction-01", level: 0, q: "How do you build a reliability diagram from a model's predictions and outcomes?", difficulty: "easy" },
+          { id: "qna-reliability-diagram-reading-01", level: 1, q: "How do you read overconfidence versus underconfidence off a reliability diagram?", difficulty: "medium", followUp: "qna-nn-overconfidence-cause-01" },
+          { id: "qna-nn-overconfidence-cause-01", level: 1, q: "Why do modern neural networks tend to sag below the diagonal on a reliability diagram, and where on the curve does that gap tend to be worst?", difficulty: "medium", trap: "\"Neural networks are overconfident because they're too large and simply memorize the training labels.\" Actually wrong: the module ties the pattern to the loss function, not model size — a loss that keeps rewarding more confident predictions even on noisy labels pushes probabilities toward the extremes regardless of how many parameters the model has." }
+        ],
+      },
+      {
+        name: "Putting a Number on It: ECE and Brier",
+        questions: [
+          { id: "qna-ece-metric-definition-01", level: 0, q: "What is ECE (expected calibration error), and what does an ECE of 0 mean?", difficulty: "easy" },
+          { id: "qna-brier-score-definition-01", level: 0, q: "What is the Brier score, and how is it computed from a model's predictions?", difficulty: "easy" },
+          { id: "qna-brier-auc-divergence-01", level: 1, q: "Why can a model with a lower AUC than another model still post a lower, better Brier score?", difficulty: "hard", trap: "\"That can't happen — Brier score and AUC always agree on which model is better, since both are just overall measures of model quality.\" Actually wrong: Brier score folds together discrimination and calibration into one number, so a model can lose on pure ranking ability (lower AUC) yet still win on Brier by being substantially better calibrated." },
+          { id: "qna-ece-single-number-blindspot-01", level: 1, q: "Why isn't a low ECE by itself proof that a model is well-calibrated across the board?", difficulty: "medium" },
+          { id: "qna-calibration-metric-selection-01", level: 2, q: "Given the reliability diagram, ECE, and the Brier score, what's the decision rule for when you reach for each one?", difficulty: "medium" }
+        ],
+      },
+      {
+        name: "Fixing It: Post-hoc Calibration Methods",
+        questions: [
+          { id: "qna-posthoc-calibration-overview-01", level: 0, q: "Name the three common post-hoc calibration methods and, in one phrase each, what kind of miscalibration each is suited to.", difficulty: "easy" },
+          { id: "qna-temperature-scaling-mechanism-01", level: 1, q: "How does temperature scaling work mechanically, and why does it never change which class a model predicts?", difficulty: "medium", followUp: "qna-temperature-scaling-first-choice-01" },
+          { id: "qna-temperature-scaling-first-choice-01", level: 1, q: "Why is temperature scaling usually the first calibration method you should try on a neural network?", difficulty: "medium" },
+          { id: "qna-calibration-set-separation-01", level: 1, q: "Why must a post-hoc calibration correction be fit on a separate held-out calibration set rather than the training or test set?", difficulty: "medium", trap: "\"It's fine to fit the correction on the test set as long as you only report accuracy, not the calibration metric, from that set.\" Actually wrong: fitting the correction on the test set means the calibration step has now touched your only honest evaluation data, so any metric you report afterward — calibration or otherwise — is no longer a trustworthy measure of held-out performance." },
+          { id: "qna-platt-vs-isotonic-decision-01", level: 2, q: "Platt scaling versus isotonic regression — what's the decision rule for picking one over the other?", difficulty: "hard" }
+        ],
+      },
+      {
+        name: "The Brier Decomposition",
+        questions: [
+          { id: "qna-brier-decomposition-terms-01", level: 0, q: "State the Murphy decomposition of the Brier score and name its three terms.", difficulty: "medium" },
+          { id: "qna-resolution-subtraction-mechanism-01", level: 1, q: "In the Brier decomposition, resolution is something you want high, yet it's subtracted. Why does the formula work that way?", difficulty: "medium" },
+          { id: "qna-brier-drop-fallacy-01", level: 1, q: "A model's Brier score drops after a change to the pipeline. Why doesn't that by itself prove the model's calibration improved?", difficulty: "hard", trap: "\"It has to mean calibration improved, since Brier score is fundamentally a calibration metric.\" Actually wrong: Brier score equals reliability minus resolution plus uncertainty, so a drop can come entirely from an increase in resolution (better discrimination) while the reliability term — the actual calibration error — stays flat or even worsens." }
+        ],
+      },
+      {
+        name: "ECE's Fine Print and Multiclass Calibration",
+        questions: [
+          { id: "qna-ece-binning-sensitivity-01", level: 1, q: "Why does the ECE value you compute change if you change the number of bins or how they're placed?", difficulty: "medium" },
+          { id: "qna-toplabel-vs-classwise-ece-01", level: 0, q: "In a multiclass setting, what's the difference between top-label ECE and classwise ECE?", difficulty: "medium" },
+          { id: "qna-multiclass-renormalization-01", level: 1, q: "Why does calibrating a multiclass model one-vs-rest, with one calibrator fit per class, force you to renormalize the probabilities afterward?", difficulty: "medium" },
+          { id: "qna-temperature-scaling-multiclass-advantage-01", level: 2, q: "Why does temperature scaling sidestep the renormalization problem that per-class Platt or isotonic calibration runs into?", difficulty: "medium" }
+        ],
+      },
+      {
+        name: "Model-Specific Miscalibration Patterns",
+        questions: [
+          { id: "qna-randomforest-miscalibration-direction-01", level: 0, q: "Which direction do random forests typically miscalibrate in, and what shape does their reliability curve tend to take?", difficulty: "easy" },
+          { id: "qna-randomforest-averaging-mechanism-01", level: 1, q: "Mechanically, why does averaging across trees push random forest probabilities away from 0 and 1?", difficulty: "medium" },
+          { id: "qna-nn-overconfidence-loss-mechanism-01", level: 1, q: "What is it about how neural networks are typically trained that tends to make them overconfident?", difficulty: "medium", trap: "\"Every neural network is overconfident — it's a universal property of the architecture.\" Actually wrong: this is a tendency tied to loss function, architecture, and regularization choices, not a universal law, so an individual model can deviate from the pattern." },
+          { id: "qna-miscalibration-pattern-diagnosis-01", level: 2, q: "You're shown a reliability curve that's under-confident at both the low and high ends. What kind of model would that curve shape make you suspect, and why?", difficulty: "medium" }
+        ],
+      },
+      {
+        name: "Calibration in Production: Monitoring and the Line Against Thresholding",
+        questions: [
+          { id: "qna-calibration-vs-thresholding-01", level: 0, q: "What's the difference between calibration and thresholding, and why are they kept as separate steps?", difficulty: "easy" },
+          { id: "qna-calibration-decay-production-01", level: 1, q: "Why can a model's calibration degrade in production even while its AUC stays exactly the same?", difficulty: "medium" },
+          { id: "qna-covariate-vs-baserate-shift-01", level: 1, q: "What's the difference between covariate shift and base-rate shift, and how does each break a model's calibration?", difficulty: "medium" },
+          { id: "qna-cohort-calibration-monitoring-01", level: 2, q: "Why isn't monitoring aggregate ECE over time enough, and what should you monitor instead?", difficulty: "medium" }
+        ],
+      }
+    ],
+    cases: [
+      { id: "qna-case-mortality-risk-miscalibration-01", level: 3, q: "A mortality-risk model has AUC = 1.0 — it always ranks sicker patients above healthier ones. But among the patients it stamps '90% risk,' only 60% actually die. Walk through how you'd diagnose what's going on and what you'd do about it.", difficulty: "medium" },
+      { id: "qna-case-brier-drop-diagnosis-01", level: 3, q: "After a model update, the Brier score improves from 0.14 to 0.10, and the team wants to ship it as a calibration win. Walk through how you'd verify whether that's actually true before signing off.", difficulty: "hard" },
+      { id: "qna-case-baserate-shift-diagnosis-01", level: 3, q: "A fraud model was well-calibrated at launch. Four months later, analysts complain the risk scores 'feel too high' even though the model still catches fraud cases in the right relative order. Walk through how you'd diagnose this and what monitoring should have caught it earlier.", difficulty: "medium" },
+      { id: "qna-case-multiclass-calibration-fix-01", level: 3, q: "You calibrate a 5-class model by fitting a separate Platt scaler per class, one-vs-rest. Downstream, someone notices the five calibrated probabilities for a given example sum to 1.14 instead of 1. Walk through why that happened and how you'd fix it.", difficulty: "hard" },
+      { id: "qna-case-calibration-method-choice-01", level: 3, q: "You have a gradient-boosted pricing model with smooth, one-directional miscalibration and only a few hundred labeled examples available for a calibration set. Walk through how you'd choose between temperature scaling, Platt scaling, and isotonic regression, and why.", difficulty: "medium" }
+    ],
+  },
+  "bayesian_inference_mathstats": {
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
+    beats: [
+      {
+        name: "Point Estimate vs Full Posterior",
+        questions: [
+          { id: "qna-map-vs-posterior-difference-01", level: 0, q: "What's the fundamental difference between what MLE/MAP output and what Bayesian inference outputs?", difficulty: "easy" },
+          { id: "qna-bayesian-inference-motivation-01", level: 0, q: "Why does throwing away parameter uncertainty matter, according to this module?", difficulty: "medium" },
+          { id: "qna-posterior-uncertainty-value-01", level: 1, q: "In what situations does maintaining a full posterior distribution over parameters actually pay off, rather than being extra bookkeeping?", difficulty: "medium" },
+          { id: "qna-map-vs-full-posterior-decision-01", level: 2, q: "When is a MAP point estimate good enough, and when do you actually need the full posterior instead?", difficulty: "medium" }
+        ],
+      },
+      {
+        name: "Bayes' Rule and the Intractable Normalizer",
+        questions: [
+          { id: "qna-bayes-rule-terms-01", level: 0, q: "Write down Bayes' rule for the posterior over parameters and name each term.", difficulty: "easy" },
+          { id: "qna-marginal-likelihood-definition-01", level: 0, q: "What is the marginal likelihood P(data), and why is that integral called 'marginal'?", difficulty: "medium" },
+          { id: "qna-marginal-likelihood-intractability-01", level: 1, q: "Why is the integral defining P(data) usually intractable, especially in high dimensions?", difficulty: "medium", followUp: "qna-unnormalized-posterior-usefulness-01" },
+          { id: "qna-unnormalized-posterior-usefulness-01", level: 1, q: "The posterior is usually only known up to a constant, P(theta|data) proportional to P(data|theta)P(theta). Why is that still useful rather than a dead end?", difficulty: "hard" }
+        ],
+      },
+      {
+        name: "Conjugate Priors",
+        questions: [
+          { id: "qna-conjugate-prior-definition-01", level: 0, q: "What is a conjugate prior?", difficulty: "easy" },
+          { id: "qna-conjugate-pairs-list-01", level: 0, q: "Name the conjugate prior-likelihood pairs this module lists.", difficulty: "medium" },
+          { id: "qna-beta-binomial-update-01", level: 1, q: "Walk through the Beta-Binomial conjugate update: if you observe k successes out of n trials, what happens to alpha and beta?", difficulty: "medium", followUp: "qna-pseudocount-interpretation-01" },
+          { id: "qna-pseudocount-interpretation-01", level: 1, q: "In what sense do alpha and beta act as 'pseudo-counts,' and what does that buy you when reasoning about how much data you've effectively seen?", difficulty: "medium" },
+          { id: "qna-conjugate-streaming-advantage-01", level: 2, q: "Why are conjugate updates specifically what scales to real-time streaming inference, compared to MCMC or variational inference?", difficulty: "medium" }
+        ],
+      },
+      {
+        name: "Posterior Predictive",
+        questions: [
+          { id: "qna-posterior-predictive-definition-01", level: 0, q: "What is the posterior predictive distribution, and how is its formula different from just plugging a point estimate into the likelihood?", difficulty: "medium" },
+          { id: "qna-posterior-predictive-uncertainty-01", level: 1, q: "Why does the posterior predictive give wider, more honest uncertainty than a MAP-based prediction?", difficulty: "medium" },
+          { id: "qna-posterior-predictive-intractability-01", level: 1, q: "Why is the posterior predictive integral itself typically hard to compute, and how does that relate to the intractability of P(data)?", difficulty: "medium" }
+        ],
+      },
+      {
+        name: "MCMC",
+        questions: [
+          { id: "qna-metropolis-hastings-overview-01", level: 0, q: "What does the Metropolis-Hastings algorithm actually do, at a high level?", difficulty: "medium" },
+          { id: "qna-mh-acceptance-ratio-cancellation-01", level: 1, q: "Walk through the Metropolis-Hastings acceptance ratio and explain exactly why the intractable normalizing constant cancels out of it.", difficulty: "hard", followUp: "qna-mcmc-convergence-diagnostics-01" },
+          { id: "qna-mcmc-convergence-diagnostics-01", level: 1, q: "What are the diagnostics used to tell whether an MCMC chain has actually converged?", difficulty: "medium" },
+          { id: "qna-rhat-interpretation-01", level: 2, q: "If your MCMC run shows R-hat well above 1 across chains, what does that actually tell you, and what would it not tell you?", difficulty: "hard" }
+        ],
+      },
+      {
+        name: "Variational Inference",
+        questions: [
+          { id: "qna-variational-inference-overview-01", level: 0, q: "What does variational inference do, at a high level, and what does it trade away to get there?", difficulty: "medium" },
+          { id: "qna-elbo-kl-relationship-01", level: 1, q: "What is the ELBO, and why does maximizing it correspond to minimizing KL(q||P(theta|data))?", difficulty: "hard", followUp: "qna-reverse-kl-mode-seeking-01" },
+          { id: "qna-reverse-kl-mode-seeking-01", level: 1, q: "Why does using reverse KL divergence make variational inference mode-seeking, and what happens when the true posterior is multimodal?", difficulty: "hard", trap: "\"Variational inference gives essentially the same posterior as MCMC, just computed faster.\" Actually wrong: minimizing reverse KL(q||P) biases q toward collapsing onto a single mode of the true posterior, so a multimodal posterior gets reported as confidently unimodal — a systematically different, not just faster-computed, answer." },
+          { id: "qna-vae-variational-connection-01", level: 1, q: "How do VAEs relate to variational inference — what role does the encoder play?", difficulty: "medium" },
+          { id: "qna-mcmc-vs-vi-decision-01", level: 2, q: "MCMC versus variational inference — what's the decision rule for which to reach for, and what do you give up either way?", difficulty: "medium" }
+        ],
+      }
+    ],
+    cases: [
+      { id: "qna-case-conjugate-streaming-update-01", level: 3, q: "You maintain a Beta(2,2) prior on a landing-page conversion rate and a new batch of production data comes in with 30 successes out of 100 trials. Walk through how you'd compute and interpret the updated posterior, and why a conjugate update is specifically the right tool for a streaming setting like this.", difficulty: "medium" },
+      { id: "qna-case-mcmc-nonconvergence-01", level: 3, q: "You run MCMC on a non-conjugate model with 4 chains and get R-hat = 1.4, with trace plots that look like each chain is stuck exploring a different region of parameter space. Walk through how you'd diagnose what's wrong and what you'd do about it.", difficulty: "hard" },
+      { id: "qna-case-vi-multimodal-blindspot-01", level: 3, q: "You fit a variational approximation to a posterior you suspect is bimodal — two genuinely different plausible parameter regimes — and your fitted q(theta) reports a single confident peak. Walk through how you'd diagnose whether VI is hiding a mode, and what you'd check or change.", difficulty: "hard" },
+      { id: "qna-case-map-vs-full-posterior-argument-01", level: 3, q: "A stakeholder asks why you don't just report the MAP estimate for a small-sample parameter you're estimating sequentially as an adaptive trial runs. Walk through the argument, grounded in this module, for why the full posterior is the better choice here.", difficulty: "medium" }
+    ],
+  },
+
+  "calibration_probabilistic": {
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
+    beats: [
+      {
+        name: "What calibration means — the loan-default audit",
+        questions: [
+          { id: "qna-calib-def-loan-01", level: 0, difficulty: "easy", q: "What does it mean for a model to be \"calibrated,\" in plain terms?" },
+          { id: "qna-calib-loan-audit-01", level: 0, difficulty: "easy", q: "In the loan-default audit, what did the random forest predict for loans it scored at 0.8, and what did the actual outcome turn out to be?" },
+          { id: "qna-calib-overconfidence-cost-01", level: 1, difficulty: "medium", q: "Why does the risk team's use of the model's raw 0.8 output as \"80% probability of default\" cause real financial damage once the audit reveals only 55% actually defaulted?", trap: "\"The model is still useful since 55% is way above the base default rate, so the ranking is fine and this is a minor issue.\" Actually wrong: the module frames this as a calibration failure that corrupts every downstream number built on the raw probabilities — loss reserves, expected portfolio losses, approval thresholds — not a ranking problem at all." },
+          { id: "qna-calib-accuracy-orthogonal-01", level: 1, difficulty: "medium", q: "Could this random forest still have decent overall discrimination (the ability to rank riskier loans above safer ones) despite being badly miscalibrated? Why doesn't good ranking rule out this failure?" }
+        ],
+      },
+      {
+        name: "The reliability diagram — how to build and read it",
+        questions: [
+          { id: "qna-reliability-diagram-def-msl-01", level: 0, difficulty: "easy", q: "What is a reliability diagram (calibration curve), and what two quantities does it plot against each other?" },
+          { id: "qna-reliability-diagram-bins-01", level: 0, difficulty: "easy", q: "How are predictions grouped before you can plot a reliability diagram?" },
+          { id: "qna-reliability-diagram-diagonal-01", level: 1, difficulty: "medium", q: "What does a perfectly calibrated model's reliability diagram look like, and what does it mean when the curve sags below that line?", followUp: "qna-fix-temp-scaling-def-01" },
+          { id: "qna-reliability-diagram-shape-01", level: 2, difficulty: "hard", q: "Why does the shape of the sag — uniformly below the diagonal versus non-uniform, overconfident at high predicted probabilities but underconfident at low ones — matter for which fix you'd reach for first?" }
+        ],
+      },
+      {
+        name: "Family-specific calibration behavior",
+        questions: [
+          { id: "qna-calib-family-lr-01", level: 0, difficulty: "easy", q: "Why is logistic regression well-calibrated \"by design,\" according to this module?" },
+          { id: "qna-calib-family-trees-01", level: 1, difficulty: "medium", q: "Why are random forests and gradient boosting trees routinely overconfident — mechanistically, what specifically produces probabilities that pile up near 0 and 1?", trap: "\"Tree ensembles are overconfident because they overfit the training data.\" Actually wrong: the module attributes it to leaf proportions in fully grown trees clustering near 0 and 1 because the leaves tend to be pure, a structural property of how the scores are produced, not a generalization/overfitting story." },
+          { id: "qna-calib-family-svm-01", level: 1, difficulty: "medium", q: "Why are raw SVM decision-function scores not usable as probabilities at all, and what has to happen before you can interpret them that way?" },
+          { id: "qna-calib-family-nn-01", level: 1, difficulty: "medium", q: "Why does standard cross-entropy training make neural networks systematically overconfident, and why does the problem get worse in larger models rather than better?", trap: "\"Bigger models are more overconfident because they overfit more.\" The module's actual mechanism is different: the cross-entropy optimizer has no incentive to stop pushing logits toward infinity once labels are correctly ranked, and this effect compounds with scale — it isn't framed as a generalization-gap story." },
+          { id: "qna-calib-label-smoothing-01", level: 2, difficulty: "hard", q: "Does label smoothing during training solve neural network overconfidence? What is the more precise claim this module actually makes about it?" }
+        ],
+      },
+      {
+        name: "AUC vs calibration — orthogonal properties",
+        questions: [
+          { id: "qna-auc-calib-def-01", level: 0, difficulty: "easy", q: "What does AUC measure about a model's outputs, and how is that different from what calibration measures?" },
+          { id: "qna-auc-calib-orthogonal-01", level: 1, difficulty: "medium", q: "How can a model have AUC = 0.95 and still predict 80% for cases that actually resolve positive only 55% of the time? What does that tell you about the relationship between discrimination and calibration?" },
+          { id: "qna-auc-calib-production-trap-01", level: 1, difficulty: "medium", q: "In the fraud-detection scenario where AUC = 0.92 and ECE = 0.14, what goes wrong operationally when a team sets a block threshold at 0.7 based on the model's raw scores?", followUp: "qna-workflow-first-step-01" },
+          { id: "qna-auc-calib-why-hidden-01", level: 2, difficulty: "hard", q: "Why is this AUC-versus-calibration gap typically invisible in standard model evaluation, even on a well-run team?" }
+        ],
+      },
+      {
+        name: "Fixing miscalibration: three methods",
+        questions: [
+          { id: "qna-fix-temp-scaling-def-01", level: 0, difficulty: "easy", q: "What does temperature scaling do to a model's outputs, mechanically?" },
+          { id: "qna-fix-platt-scaling-def-01", level: 0, difficulty: "easy", q: "What does Platt scaling fit, and on what kind of data does it need to be fit?" },
+          { id: "qna-fix-isotonic-def-01", level: 0, difficulty: "easy", q: "What does isotonic regression fit, and how does its flexibility compare to the other two calibration fixes?" },
+          { id: "qna-fix-temp-scaling-accuracy-01", level: 1, difficulty: "medium", q: "Why does temperature scaling leave the model's accuracy completely unchanged even though it changes every predicted probability?", trap: "\"Temperature scaling can hurt accuracy if T is chosen poorly on a bad held-out set.\" Actually wrong within this module's scope: dividing all logits by a single positive scalar T never changes which class has the highest logit, so argmax — and therefore accuracy — is structurally unchanged regardless of T's value." },
+          { id: "qna-fix-data-requirements-01", level: 1, difficulty: "medium", q: "Roughly how many calibration examples does each of the three methods need before you'd trust it, and what specifically happens to isotonic regression if you don't have enough?" }
+        ],
+      },
+      {
+        name: "Choosing a fix: the diagnostic workflow",
+        questions: [
+          { id: "qna-workflow-first-step-01", level: 0, difficulty: "easy", q: "According to this module, which calibration fix should you reach for first once you've confirmed miscalibration, and why that one before the others?" },
+          { id: "qna-workflow-escalation-01", level: 1, difficulty: "medium", q: "Walk through the decision path: you've built the reliability diagram and it sags uniformly below the diagonal. What do you do next, and roughly what should happen to ECE afterward?" },
+          { id: "qna-workflow-when-to-escalate-01", level: 2, difficulty: "hard", q: "Under what two conditions would you escalate past temperature scaling to Platt scaling or isotonic regression instead of stopping there?" }
+        ],
+      },
+      {
+        name: "Brier score and ECE — the two summary metrics",
+        questions: [
+          { id: "qna-brier-score-def-01", level: 0, difficulty: "easy", q: "What is the Brier score formula, and what two failure modes does it penalize jointly?" },
+          { id: "qna-ece-def-msl-01", level: 0, difficulty: "easy", q: "What does ECE isolate that the Brier score, on its own, doesn't separate out?" },
+          { id: "qna-brier-vs-ece-01", level: 1, difficulty: "medium", q: "If you could only report one number to a stakeholder about a risk model, why might the Brier score alone still hide the specific problem ECE would catch?" }
+        ],
+      }
+    ],
+    cases: [
+      { id: "qna-case-calib-fraud-threshold-01", level: 3, difficulty: "hard", q: "A fraud model's ranking metrics all look great after a recent retrain — AUC climbed to 0.92 — but complaints from legitimate users blocked at the team's 0.7 threshold have spiked. Using only what this module covers, walk through how you'd diagnose what's going on and what you'd check first." },
+      { id: "qna-case-calib-svm-deploy-01", level: 3, difficulty: "medium", q: "A team wants to show an SVM's raw decision-function output to end users directly as a \"confidence score\" in a medical-risk tool. Walk through why that's wrong per this module and exactly what would need to happen before that output is usable that way." },
+      { id: "qna-case-calib-rf-vs-lr-01", level: 3, difficulty: "medium", q: "Two candidate models for a loan-approval pipeline: a random forest with slightly higher AUC, and a logistic regression with slightly lower AUC. The team wants to ship the random forest purely because of the AUC gain. Walk through what you'd check before agreeing, and why the two models might not be as close as the AUC numbers suggest." },
+      { id: "qna-case-calib-small-sample-fix-01", level: 3, difficulty: "hard", q: "You need to calibrate a model but only have 300 held-out labeled examples per class, and the reliability diagram shows a non-uniform sag — overconfident at high predicted probabilities, underconfident at low ones. Walk through which of the three fixes is actually viable here and why the others aren't." },
+      { id: "qna-case-calib-nn-large-model-01", level: 3, difficulty: "medium", q: "A team upgrades from a smaller neural classifier to a much larger one. Accuracy improves, but complaints that \"the model feels overconfident\" get worse, not better. Walk through why that's consistent with what this module says, and what you'd put in place before shipping the larger model." }
+    ],
+  },
+  "bayesian_inference": {
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
+    beats: [
+      {
+        name: "Point estimates hide uncertainty — the coin-flip motivation",
+        questions: [
+          { id: "qna-bayes-coin-mle-01", level: 0, difficulty: "easy", q: "What does the frequentist MLE give you after flipping a coin 3 times and getting heads all three times, and why is that answer obviously wrong?" },
+          { id: "qna-bayes-point-estimate-problem-01", level: 0, difficulty: "easy", q: "In plain terms, what problem is Bayesian inference solving that a single point estimate like the MLE can't?" },
+          { id: "qna-bayes-posterior-update-rule-01", level: 1, difficulty: "medium", q: "What is the Bayesian update rule in words, and how does applying it to 3 coin flips (HHH) with a uniform Beta(1,1) prior change the estimate away from the degenerate MLE of 1.0?", followUp: "qna-conjugate-prior-mechanism-01" },
+          { id: "qna-bayes-prior-data-tradeoff-01", level: 1, difficulty: "medium", q: "Why does the prior's influence shrink as more data arrives, and what does the coin-flip example show happening between 3 flips and 300 flips?" }
+        ],
+      },
+      {
+        name: "Bayes' theorem's mechanics and the intractable normalizer",
+        questions: [
+          { id: "qna-bayes-theorem-formula-01", level: 0, difficulty: "easy", q: "What is Bayes' theorem as used here, and what do the likelihood and prior terms on the right-hand side represent?" },
+          { id: "qna-bayes-normalizer-def-01", level: 0, difficulty: "easy", q: "What is the marginal likelihood p(X) in Bayes' theorem, and what does computing it exactly require?" },
+          { id: "qna-bayes-normalizer-intractable-01", level: 1, difficulty: "medium", q: "Why is p(X) = ∫p(X|θ)p(θ)dθ intractable for most real models, and what workable form lets you sidestep needing it directly?" },
+          { id: "qna-bayes-intractability-scope-01", level: 2, difficulty: "hard", q: "Is it accurate to call Bayesian inference \"computationally intractable\" as a blanket statement? What's wrong with that framing, and what's the more precise version this module gives?", trap: "\"Bayesian inference is intractable in general, full stop — that's why practitioners default to frequentist methods at scale.\" Actually wrong: the module's point is that intractability applies specifically to the exact normalizing constant in non-conjugate settings, and conjugate pairs plus a full ecosystem of approximate methods (MCMC, VI, Laplace, MC Dropout) narrow that gap considerably." }
+        ],
+      },
+      {
+        name: "Likelihood vs probability — the core misconception",
+        questions: [
+          { id: "qna-likelihood-not-distribution-01", level: 0, difficulty: "easy", q: "What is the likelihood p(X|θ), and why is it not itself a probability distribution over θ?" },
+          { id: "qna-likelihood-mle-error-01", level: 1, difficulty: "medium", q: "What specific reasoning error happens when someone treats \"the θ that maximizes the likelihood\" as \"the most probable θ\"?", trap: "\"MLE and MAP are basically the same thing since both pick a single best θ.\" Actually wrong: MLE maximizes the likelihood alone and is valid on its own terms; calling its output \"most probable\" smuggles in Bayesian reasoning about θ without ever including a prior, which is a distinct and separate computation from MAP." },
+          { id: "qna-likelihood-integrate-01", level: 1, difficulty: "medium", q: "Concretely, why does it matter that the likelihood does not integrate to 1 over θ?" },
+          { id: "qna-mle-vs-map-scope-01", level: 2, difficulty: "hard", q: "Is MLE ever a valid thing to compute on its own? Where exactly does it stop being valid, and what does it silently turn into if you're not careful?" }
+        ],
+      },
+      {
+        name: "Conjugate priors — computational shortcut and its cost",
+        questions: [
+          { id: "qna-conjugate-prior-def-01", level: 0, difficulty: "easy", q: "What is a conjugate prior, in terms of what stays true about the posterior after you apply the update?" },
+          { id: "qna-conjugate-prior-examples-01", level: 0, difficulty: "easy", q: "Name two of the conjugate prior-likelihood pairs mentioned in this module and what each pairing's posterior looks like." },
+          { id: "qna-conjugate-prior-mechanism-01", level: 1, difficulty: "medium", q: "Walk through the specific update: Beta(1,1) prior, likelihood θ³ from observing HHH — how do you land on a Beta(4,1) posterior, and how does that generalize to Beta(α + successes, β + failures)?" },
+          { id: "qna-conjugate-prior-cost-01", level: 2, difficulty: "hard", q: "Conjugacy buys you closed-form updates with no integration. What's the tradeoff, and how can that convenience and correctness of belief pull apart?" }
+        ],
+      },
+      {
+        name: "MAP estimation — regularized MLE",
+        questions: [
+          { id: "qna-map-def-01", level: 0, difficulty: "easy", q: "What is the MAP estimate, and how does its formula differ from plain MLE?" },
+          { id: "qna-map-regularization-link-01", level: 1, difficulty: "medium", q: "Why is MAP described as \"regularized MLE,\" and what specific correspondence connects L2 regularization and L1 regularization to particular choices of prior?" },
+          { id: "qna-map-collapse-cost-01", level: 1, difficulty: "medium", q: "What information does MAP discard relative to the full posterior, and why does that matter specifically when you go to make predictions with the model?" },
+          { id: "qna-map-production-choice-01", level: 2, difficulty: "hard", q: "Given that MAP discards the shape of the posterior, when is it still the right production choice, and when isn't it?" }
+        ],
+      },
+      {
+        name: "The predictive distribution — why a point estimate underestimates uncertainty",
+        questions: [
+          { id: "qna-predictive-distribution-def-01", level: 0, difficulty: "easy", q: "What is the correct Bayesian predictive distribution formula, and what does it integrate over that a plug-in point estimate doesn't?" },
+          { id: "qna-predictive-map-plugin-01", level: 1, difficulty: "medium", q: "What happens if you plug the MAP estimate into p(x*|θ̂) instead of integrating over the full posterior, and in what situation does that shortcut cause the most damage?", followUp: "qna-predictive-uncertainty-regime-01" },
+          { id: "qna-predictive-uncertainty-regime-01", level: 2, difficulty: "hard", q: "Under what data regime does the gap between the MAP plug-in prediction and the true predictive distribution get large enough to cause a wrong decision, and why does that regime matter more than others?" }
+        ],
+      },
+      {
+        name: "Credible intervals vs confidence intervals",
+        questions: [
+          { id: "qna-credible-interval-def-01", level: 0, difficulty: "easy", q: "What does a 95% Bayesian credible interval [L, U] actually claim?" },
+          { id: "qna-confidence-interval-def-01", level: 0, difficulty: "easy", q: "What does a 95% frequentist confidence interval actually claim, in contrast to a credible interval?" },
+          { id: "qna-credible-vs-confidence-question-01", level: 1, difficulty: "medium", q: "Which of the two intervals actually answers the question stakeholders usually mean when they ask \"how likely is it that the true value is in this range?\" — and why doesn't the other one answer that question?", trap: "\"They're functionally interchangeable at the 95% level since both come out to roughly the same numeric range in practice.\" Actually wrong: even when the numeric bounds are close, the two make categorically different probabilistic claims — one about θ directly given the observed data, one about the long-run behavior of the procedure across repeated experiments." },
+          { id: "qna-credible-vs-confidence-single-interval-01", level: 2, difficulty: "hard", q: "For any single computed interval — credible or confidence — what can and can't you say about whether the true θ actually falls inside it?" }
+        ],
+      },
+      {
+        name: "Production Bayesian workflows: sequential updating, A/B testing, prior sensitivity",
+        questions: [
+          { id: "qna-sequential-updating-def-01", level: 0, difficulty: "easy", q: "What does it mean for a posterior to become tomorrow's prior in sequential Bayesian updating, and why does that suit streaming systems?" },
+          { id: "qna-sequential-updating-mechanism-01", level: 1, difficulty: "medium", q: "Walk through the Beta-Binomial sequential update across two days concretely: what do you have after day 1, and how does day 2's data turn it into a new posterior without reprocessing day 1?" },
+          { id: "qna-bayesian-ab-test-def-01", level: 0, difficulty: "easy", q: "What does Bayesian A/B testing with a Beta-Binomial model actually compute, and how is that different from a p-value?" },
+          { id: "qna-bayesian-ab-test-mechanism-01", level: 1, difficulty: "medium", q: "What is the formula for P(A beats B), and what two ways can you actually compute it?" },
+          { id: "qna-prior-sensitivity-check-01", level: 1, difficulty: "medium", q: "What is the prior-sensitivity sanity check described in this module, and what does it mean if re-running with a more diffuse prior substantially shifts the posterior?", followUp: "qna-uninformative-prior-illusion-01" },
+          { id: "qna-uninformative-prior-illusion-01", level: 2, difficulty: "hard", q: "Why can a uniform prior over θ ∈ [0,1] actually be a strong prior in disguise, and what should you check instead of just eyeballing the parameterization you happened to write down?" }
+        ],
+      }
+    ],
+    cases: [
+      { id: "qna-case-bayes-ab-lowdata-01", level: 3, difficulty: "hard", q: "An early-stage product has only 40 total conversions split across two onboarding flows, and stakeholders want a definitive readout from a Bayesian A/B test on which flow is better. Using only what this module covers, walk through how you'd assess whether the result is trustworthy or still largely prior-driven, and how you'd get to a decision." },
+      { id: "qna-case-bayes-credible-regulator-01", level: 3, difficulty: "medium", q: "A risk model reports a 95% credible interval for a default rate of [0.10, 0.14], and a regulator interprets it the same way they would a 95% frequentist confidence interval — \"if we reran this 100 times, 95 of the resulting intervals would contain the true rate.\" Walk through why that interpretation is wrong and what you'd actually tell them the interval means." },
+      { id: "qna-case-bayes-map-substitution-01", level: 3, difficulty: "medium", q: "A colleague wants to swap the full Bayesian predictive distribution for a MAP-plug-in prediction everywhere in a production system, arguing it's \"basically the same, just faster.\" Walk through when that substitution is safe and when it silently produces wrong downstream numbers, grounding your answer in the predictive distribution formula." },
+      { id: "qna-case-bayes-uninformative-ctr-01", level: 3, difficulty: "medium", q: "A colleague picks a Beta(1,1) \"uninformative\" prior to estimate a click-through rate, and is confused why the model's initial estimates look strange in a domain where CTR is known from experience to sit well below 5%. Walk through how you'd diagnose this and what you'd change." },
+      { id: "qna-case-bayes-nonconjugate-scale-01", level: 3, difficulty: "hard", q: "You need a Bayesian posterior for a non-conjugate model, and MCMC is too slow for your production latency budget. Using only what this module points to, walk through what alternative you'd reach for, what it costs you relative to MCMC, and why that's a reasonable trade here." }
+    ],
+  },
+  "class_imbalance": {
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
+    beats: [
+      {
+        name: "The Accuracy Trap and the Fraud-Detector Baseline",
+        questions: [
+          { id: "qna-imbalance-accuracy-trap-01", level: 0, q: "In a fraud dataset with 999 legitimate transactions for every 1 fraud, a model reports 99.9% accuracy. Why is not that a meaningful number, and what trivial model would match it exactly?", difficulty: "easy" },
+          { id: "qna-imbalance-rare-class-nature-01", level: 0, q: "Is class imbalance itself a flaw in the data? What is actually going wrong when ordinary training on an imbalanced dataset causes the model to ignore the rare class?", difficulty: "easy" },
+          { id: "qna-imbalance-loss-domination-01", level: 1, q: "Mechanistically, why does a loss that sums mistakes across all examples end up pointing the gradient almost entirely away from the minority class when the data is 999 to 1?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Three Places to Fix It, Starting With the Loss",
+        questions: [
+          { id: "qna-imbalance-three-fixes-01", level: 0, q: "The module names three points in the pipeline where you can address class imbalance. What are they, and which one should you reach for first?", difficulty: "easy" },
+          { id: "qna-class-weight-mechanism-01", level: 1, q: "What does setting class_weight to balanced (or scale_pos_weight in XGBoost) actually change during training, mechanically?", difficulty: "medium" },
+          { id: "qna-class-weight-first-move-01", level: 2, q: "When should cost-sensitive training with class weights be your default first move on an imbalanced tabular problem, and what property of the data would push you toward something else instead?", difficulty: "medium" },
+          { id: "qna-class-weight-vs-smote-01", level: 2, q: "Class weighting and SMOTE both try to make the minority class matter more during training, but they work in very different ways. What is the decision rule for choosing between them?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "SMOTE: Mechanics, Failure Mode, and the Split-Order Leak",
+        questions: [
+          { id: "qna-smote-interpolation-mechanism-01", level: 0, q: "What does SMOTE actually do to manufacture new minority-class training examples?", difficulty: "easy" },
+          { id: "qna-smote-overlap-failure-01", level: 1, q: "What is SMOTE's specific failure mode when the minority and majority classes heavily overlap in feature space?", difficulty: "medium" },
+          { id: "qna-smote-split-leak-01", level: 1, q: "Why does applying SMOTE to the full dataset before the train and test split invalidate the resulting evaluation, and where in the workflow should SMOTE actually run?", difficulty: "hard" },
+          { id: "qna-smote-sparse-minority-01", level: 2, q: "The module says SMOTE shines mainly when the minority class is genuinely sparse. What does that mean concretely, and what property of the data would tell you SMOTE is the wrong tool even though the class is still rare?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "The Threshold Is a Business-Cost Decision",
+        questions: [
+          { id: "qna-threshold-default-05-01", level: 0, q: "What does a classification threshold do, and why is the default of 0.5 almost never the right choice under class imbalance?", difficulty: "easy" },
+          { id: "qna-threshold-cost-formula-01", level: 1, q: "If a missed fraud costs 10000 dollars and a false alarm costs 50 dollars in review time, how would you use those numbers to choose a decision threshold, and roughly where does it land?", difficulty: "medium" },
+          { id: "qna-threshold-not-modeling-01", level: 1, q: "Why does the module treat the threshold choice as a business-cost decision rather than something the model itself should decide?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "The Metric Menu Beyond Accuracy",
+        questions: [
+          { id: "qna-metric-menu-precision-recall-01", level: 0, q: "Beyond accuracy, what do precision, recall, and PR-AUC each measure, and why do they surface what accuracy hides on imbalanced data?", difficulty: "easy" },
+          { id: "qna-roc-auc-imbalance-caveat-01", level: 1, q: "The module calls ROC-AUC misleading rather than useless under imbalance. What specifically makes it misleading, and how can it read as high as 0.97 while the model catches almost no fraud?", difficulty: "hard" },
+          { id: "qna-balanced-accuracy-mcc-01", level: 0, q: "What do balanced accuracy and MCC each do differently from plain accuracy, and why is MCC often described as the best single summary number under imbalance?", difficulty: "medium" },
+          { id: "qna-f1-variants-micro-macro-weighted-01", level: 2, q: "Macro, weighted, and micro F1 all average per-class F1 differently. What is the difference between them, and why does micro F1 collapse to plain accuracy in binary classification, the exact number this module says not to trust?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Resampling Breaks Calibration",
+        questions: [
+          { id: "qna-resampling-calibration-distortion-01", level: 1, q: "Why do class weighting and resampling distort a model's predicted probabilities, and in which direction does the minority class's probability get distorted?", difficulty: "hard" },
+          { id: "qna-recalibration-after-resampling-01", level: 1, q: "If you need genuine probabilities out of a model trained with class weights or SMOTE, say, to compute a cost-sensitive threshold, what should you do before trusting those probabilities, and how would you check whether it worked?", difficulty: "medium" },
+          { id: "qna-ranking-vs-calibration-01", level: 2, q: "A resampled model has excellent PR-AUC but its cost-based threshold decisions look off. How can ranking quality and probability calibration diverge like that in the same model, and which one would you fix first?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Validating Rare Events",
+        questions: [
+          { id: "qna-stratified-split-rare-events-01", level: 0, q: "Why does the module recommend stratified splits specifically for rare-event data, and what can go wrong with an ordinary random split?", difficulty: "easy" },
+          { id: "qna-temporal-split-fraud-01", level: 1, q: "Why does the module call for a temporal split rather than a random split when validating a fraud model?", difficulty: "medium" },
+          { id: "qna-confidence-interval-small-n-01", level: 1, q: "Why does the module insist on putting confidence intervals around recall and precision for a rare class, rather than reporting a single number like recall 0.8?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Sampling Alternatives, Specialized Losses, and Extreme-Imbalance Systems",
+        questions: [
+          { id: "qna-undersample-oversample-tradeoff-01", level: 0, q: "Beyond SMOTE and class weighting, what do plain random undersampling and random oversampling each trade off?", difficulty: "easy" },
+          { id: "qna-smote-hybrid-cleaning-01", level: 2, q: "What do the SMOTE-Tomek and SMOTE-ENN hybrids add on top of vanilla SMOTE, and when would you reach for a hybrid instead of plain SMOTE?", difficulty: "medium" },
+          { id: "qna-focal-loss-mechanism-01", level: 1, q: "What does focal loss do differently from a plain cross-entropy loss, and why does that help with imbalance?", difficulty: "medium" },
+          { id: "qna-extreme-imbalance-two-stage-01", level: 2, q: "At extreme imbalance of 1 in 10000 or worse, the module says to stop treating it as a single-classifier problem. What does the two-stage design look like, and why does a single classifier stop being the right frame at that ratio?", difficulty: "hard" },
+        ],
+      },
+    ],
+    cases: [
+      { id: "qna-case-smote-leak-diagnosis-01", level: 3, q: "A colleague's fraud model looks great in cross-validation with AUC 0.99 but performs far worse once deployed. You learn SMOTE was applied to the whole dataset before any train and test split. Walk me through how you would confirm that is the cause and what you would change.", difficulty: "hard" },
+      { id: "qna-case-threshold-cost-diagnosis-01", level: 3, q: "Your fraud model is deployed at the default 0.5 threshold and the team complains it never flags anything. Walk me through how you would use this module's cost framework to figure out whether the model or the threshold is the problem, and what you would do next.", difficulty: "medium" },
+      { id: "qna-case-resampled-calibration-diagnosis-01", level: 3, q: "After switching from an unweighted model to one trained with class_weight balanced, the team notices predicted probabilities look inflated for flagged transactions, even though PR-AUC improved. Walk me through your diagnosis and fix.", difficulty: "hard" },
+      { id: "qna-case-precision-drift-monitoring-01", level: 3, q: "Two months after launch, your fraud model's alert volume has tripled and the fraud team says the flags feel less accurate. Walk me through how you would figure out whether this is base-rate drift, precision drift, or something else, using only what this module gives you to monitor.", difficulty: "medium" },
+      { id: "qna-case-extreme-imbalance-design-01", level: 3, q: "You are asked to build a fraud system for a business with roughly a 1 in 50000 positive rate, a few hundred confirmed fraud cases across tens of millions of transactions, and single-classifier approaches keep failing to hit acceptable precision at any usable recall. Walk me through how you would redesign the system using this module's framing.", difficulty: "hard" },
+    ],
+  },
+
+  "feature_selection_data": {
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
+    beats: [
+      {
+        name: "Why Cut 500 Features to 50, and the Four Families",
+        questions: [
+          { id: "qna-feature-selection-motivation-01", level: 0, q: "A data warehouse hands you 500 features for a fraud model. Training takes four hours and inference crawls at 900ms per request. Why would cutting to a smaller feature set fix problems like these, beyond any accuracy concern?", difficulty: "easy" },
+          { id: "qna-feature-selection-four-families-01", level: 0, q: "What are the four families of feature-selection method this module lays out, and what is the one-line tradeoff between them?", difficulty: "easy" },
+          { id: "qna-feature-selection-bias-variance-01", level: 1, q: "The module frames feature selection as a bias-variance decision. What goes wrong at each extreme: keeping too many features, versus cutting too many?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Filter Methods",
+        questions: [
+          { id: "qna-filter-methods-mechanism-01", level: 0, q: "How do filter methods rank features, and why are they the fastest and most parallelizable of the four families?", difficulty: "easy" },
+          { id: "qna-filter-methods-interaction-blindspot-01", level: 1, q: "Why can a filter method discard two features that are each useless on their own but powerful together?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Wrapper Methods and Recursive Feature Elimination",
+        questions: [
+          { id: "qna-rfe-mechanism-01", level: 0, q: "How does recursive feature elimination, RFE, select features step by step to go from 500 features down to 50?", difficulty: "easy" },
+          { id: "qna-rfe-cost-01", level: 1, q: "RFE takes roughly 450 separate model fits to go from 500 features to 50. What does that cost buy you that a filter method's ranking cannot?", difficulty: "medium" },
+          { id: "qna-wrapper-vs-filter-01", level: 2, q: "When is it worth paying RFE's cost of hundreds of retrains instead of just using a filter ranking, and when is that cost not justified?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Embedded Selection: Why L1 Zeros Weights and L2 Does Not",
+        questions: [
+          { id: "qna-l1-embedded-selection-01", level: 0, q: "What does L1, Lasso, regularization do during training that gives you feature selection for free, without a separate selection step?", difficulty: "easy" },
+          { id: "qna-l1-l2-geometry-01", level: 1, q: "Why does L1 regularization drive coefficients to exactly zero while L2, Ridge, almost never does? What is the geometric reason?", difficulty: "hard" },
+          { id: "qna-embedded-tree-selection-01", level: 1, q: "Beyond Lasso, the module says a tree model's own hyperparameters act as a form of embedded selection. How does that work?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Permutation Importance and the Tree-Importance Trap",
+        questions: [
+          { id: "qna-permutation-importance-mechanism-01", level: 0, q: "How does permutation importance measure whether a feature actually matters, and why does the module call it the honest referee?", difficulty: "easy" },
+          { id: "qna-tree-importance-cardinality-bias-01", level: 1, q: "Why does a tree's built-in feature importance get fooled by a high-cardinality column like customer_id, and how does permutation importance expose the problem where the tree's own numbers do not?", difficulty: "hard" },
+          { id: "qna-permutation-vs-tree-importance-01", level: 2, q: "When would training-set tree importance and validation-set permutation importance disagree sharply, and which one should you trust for a production decision?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Correlation Is Not Importance, and Multicollinearity",
+        questions: [
+          { id: "qna-correlation-not-importance-01", level: 0, q: "Why is the instinct these two features are 95 percent correlated so drop one the wrong move, according to the module?", difficulty: "easy" },
+          { id: "qna-correlated-features-stability-01", level: 1, q: "How can keeping two correlated features actually make a model steadier at serving time, rather than just redundant?", difficulty: "medium" },
+          { id: "qna-multicollinearity-vif-01", level: 1, q: "What specifically goes wrong for a linear model, not a tree, when two features are correlated at 0.97, and how does VIF quantify that problem?", difficulty: "hard" },
+          { id: "qna-collinearity-vs-correlation-trap-01", level: 2, q: "The module treats correlation is not importance and multicollinearity as two separate concerns. How do they actually differ, and which model types does each one threaten?", difficulty: "medium" },
+          { id: "qna-removal-threshold-diagnostic-01", level: 2, q: "The module gives a diagnostic: drop the bottom half of features by importance and watch the validation AUC. What does a drop under 0.5 points tell you, what does a drop over 2 points tell you, and why does the large-drop case implicate collinearity specifically?", difficulty: "hard" },
+        ],
+      },
+      {
+        name: "Selection Leaks Like Any Other Preprocessing Step",
+        questions: [
+          { id: "qna-selection-cv-leak-01", level: 1, q: "Why does ranking features by correlation, mutual information, or importance on the full dataset before cross-validation produce an optimistic score?", difficulty: "hard" },
+          { id: "qna-selection-in-pipeline-01", level: 1, q: "What does it concretely mean to run feature selection inside each CV fold, and why does wrapping it in a Pipeline matter?", difficulty: "medium" },
+          { id: "qna-stability-selection-01", level: 0, q: "What is stability selection, and what problem with a single feature-selection run is it designed to catch?", difficulty: "medium" },
+          { id: "qna-lasso-correlated-flip-01", level: 1, q: "Why is Lasso specifically called out as prone to flipping which of two correlated features it keeps from one run to the next?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Tool Caveats, Selection vs. Reduction, and Operational Cost",
+        questions: [
+          { id: "qna-mutual-info-caveats-01", level: 1, q: "What does mutual information catch that plain correlation misses, and what two caveats does the module attach to using it?", difficulty: "medium" },
+          { id: "qna-shap-caveats-01", level: 1, q: "What two things does the module warn SHAP does not tell you, even though it attributes predictions well?", difficulty: "medium" },
+          { id: "qna-selection-vs-pca-01", level: 2, q: "Feature selection and PCA both shrink your feature set. What is the actual difference in what you end up with, and how would you decide between them?", difficulty: "medium" },
+          { id: "qna-operational-cost-selection-01", level: 1, q: "Beyond predictive accuracy, what other costs does the module say should factor into whether you keep a feature?", difficulty: "medium" },
+        ],
+      },
+    ],
+    cases: [
+      { id: "qna-case-filter-underperform-01", level: 3, q: "You filter 100 features down to the top 20 by Pearson correlation with the target, and the resulting model performs worse than the model trained on all 100. Walk me through how you would diagnose what went wrong and what you would try instead.", difficulty: "hard" },
+      { id: "qna-case-customer-id-importance-01", level: 3, q: "A gradient-boosted tree ranks customer_id as its second most important feature. Walk me through how you would confirm that is a problem rather than genuine signal, and what you would do about it.", difficulty: "hard" },
+      { id: "qna-case-selection-cv-leak-diagnosis-01", level: 3, q: "Your team ranked 500 features by mutual information on the full dataset, kept the top 50, then ran cross-validation and reported a strong score, but production performance is noticeably worse. Walk me through your diagnosis.", difficulty: "hard" },
+      { id: "qna-case-multicollinear-coefficients-01", level: 3, q: "A linear model's individual coefficients swing wildly between retrainings on resampled versions of the same data, even though its predictions stay stable. Walk me through how you would figure out whether multicollinearity is the cause and what you would check.", difficulty: "medium" },
+      { id: "qna-case-flaky-feature-tradeoff-01", level: 3, q: "A feature adds a measurable but tiny accuracy improvement, but computing it at serving time depends on a flaky third-party API call. A colleague insists on keeping it because it helps. Walk me through how you would frame that decision using this module's own criteria.", difficulty: "medium" },
+    ],
+  },
+
+  "calibration": {
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
+    beats: [
+      {
+        name: "Beat 1 — Two different questions: ranking vs calibration",
+        questions: [
+          { id: "qna-calibration-weather-forecaster-def-01", level: 0, q: "What does it mean for a model to be 'calibrated', in plain terms?", difficulty: "easy", followUp: "qna-ranking-question-vs-calibration-question-01" },
+          { id: "qna-ranking-question-vs-calibration-question-01", level: 0, q: "AUC and calibration each answer a different question about a model's scores. What is each one actually asking?", difficulty: "easy", followUp: "qna-credit-model-rank-lowball-mechanism-01" },
+          { id: "qna-credit-model-rank-lowball-mechanism-01", level: 1, q: "How can a credit model rank ten thousand applicants perfectly by risk while still being useless for estimating how much money you'll lose?", difficulty: "medium", trap: "\"If the ranking is perfect, the probabilities must be roughly right too, since the model clearly understands the risk ordering.\" Actually wrong: ranking only needs the relative order preserved; a model can systematically lowball or inflate every probability while never disturbing that order." },
+          { id: "qna-calibration-matters-when-number-used-01", level: 1, q: "Why does calibration only matter once a decision uses the actual probability value, rather than just the ordering it implies?", difficulty: "medium" },
+          { id: "qna-ranking-calibration-decision-rule-01", level: 2, q: "You're handed a new model and asked whether to bother checking its calibration. What decision rule tells you whether that check is necessary?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Beat 2 — Seeing it: the reliability diagram and model-specific shapes",
+        questions: [
+          { id: "qna-reliability-diagram-bucket-construction-01", level: 0, q: "Step by step, how do you construct a reliability diagram from a model's predictions?", difficulty: "easy", followUp: "qna-overconfident-underconfident-diagonal-01" },
+          { id: "qna-overconfident-underconfident-diagonal-01", level: 0, q: "On a reliability diagram, what does it mean for the curve to sag below the diagonal versus ride above it?", difficulty: "easy" },
+          { id: "qna-forest-sigmoid-curve-mechanism-01", level: 1, q: "Why does a random forest's reliability curve typically come out sigmoid-shaped — underconfident at the extremes, overconfident in the middle?", difficulty: "medium", trap: "\"Random forests are overconfident everywhere, same as neural networks, because both are complex models that overfit their training data.\" Actually wrong: averaging many trees specifically pulls extreme predictions back toward the middle, which is the opposite failure mode from a neural network's overconfidence." },
+          { id: "qna-nn-overconfidence-shape-01", level: 1, q: "Why are modern neural networks famously overconfident on the reliability diagram, saying 0.95 for things that happen 80% of the time?", difficulty: "medium" },
+          { id: "qna-reliability-curve-shape-correction-choice-01", level: 2, q: "Knowing whether your model's typical miscalibration is a random-forest-style sigmoid or a neural-network-style overconfident sag — how should that shape inform which correction you reach for?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Beat 3 — The fix, and the one rule you cannot break",
+        questions: [
+          { id: "qna-platt-scaling-sigmoid-fit-01", level: 0, q: "What does Platt scaling do, and in what situation is it a good fit?", difficulty: "easy", followUp: "qna-platt-vs-isotonic-data-size-choice-01" },
+          { id: "qna-isotonic-regression-staircase-01", level: 0, q: "What does isotonic regression do differently from Platt scaling, and what does it need to work well?", difficulty: "easy" },
+          { id: "qna-three-way-data-split-calibration-01", level: 1, q: "Why do you need three separate slices of data — train, calibrate, and test — rather than two?", difficulty: "medium", followUp: "qna-calibrate-on-training-data-mistake-01" },
+          { id: "qna-calibrate-on-training-data-mistake-01", level: 1, q: "You calibrate a model on the same data it was trained on, and the fit looks excellent. Why is that result untrustworthy?", difficulty: "medium", trap: "\"It's fine — the training set is the largest slice available, so it gives the most stable correcting function.\" Actually wrong: the model partly memorized the training rows, so its scores there are artificially aligned with the labels, and the correcting function is fit to that illusion rather than to genuine generalization error." },
+          { id: "qna-platt-vs-isotonic-data-size-choice-01", level: 2, q: "Given a calibration set and a suspected miscalibration shape, what's the decision rule for choosing Platt scaling over isotonic regression, or vice versa?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Beat 4 — ECE's blind spots",
+        questions: [
+          { id: "qna-ece-definition-diagonal-gap-01", level: 0, q: "What does expected calibration error (ECE) measure, and what does a value of zero mean?", difficulty: "easy", followUp: "qna-ece-binning-choice-sensitivity-01" },
+          { id: "qna-ece-binning-choice-sensitivity-01", level: 1, q: "Why does changing the number of bins, or switching between equal-width and equal-count binning, move the ECE number — sometimes a lot?", difficulty: "medium" },
+          { id: "qna-ece-region-cancellation-01", level: 1, q: "How can a model be badly overconfident in one region of its predictions and underconfident in another, yet still post a small overall ECE?", difficulty: "medium", trap: "\"A small ECE mathematically guarantees good calibration everywhere, so if that's happening, the ECE computation must be buggy.\" Actually wrong: ECE is an average gap across buckets, so opposite-signed local errors can cancel arithmetically and still average out small — no bug required." },
+          { id: "qna-ece-alone-vs-diagram-decision-01", level: 2, q: "A colleague reports a reassuringly low ECE for their model. What's the decision rule for whether you should treat that as sufficient evidence of good calibration?", difficulty: "medium", followUp: "qna-brier-vs-ece-richness-decision-01" },
+        ],
+      },
+      {
+        name: "Beat 5 — The Brier score and the Murphy decomposition",
+        questions: [
+          { id: "qna-brier-score-formula-01", level: 0, q: "What is the Brier score, and how is it computed from predicted probabilities and outcomes?", difficulty: "easy", followUp: "qna-murphy-decomposition-three-parts-01" },
+          { id: "qna-murphy-decomposition-three-parts-01", level: 1, q: "The Brier score splits into three parts under the Murphy decomposition. What does each part measure?", difficulty: "medium" },
+          { id: "qna-brier-catches-useless-baserate-model-01", level: 1, q: "A model that always predicts the base rate can be perfectly calibrated. Why does the Brier score expose it as useless where a bare ECE number might not?", difficulty: "medium" },
+          { id: "qna-brier-vs-ece-richness-decision-01", level: 2, q: "When should you reach for the Brier score instead of, or alongside, ECE as your headline calibration number?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Beat 6 — Temperature scaling, the neural-network default",
+        questions: [
+          { id: "qna-temperature-scaling-single-scalar-01", level: 0, q: "What does temperature scaling do to a neural network's logits?", difficulty: "easy", followUp: "qna-temperature-scaling-ranking-preserved-mechanism-01" },
+          { id: "qna-temperature-scaling-ranking-preserved-mechanism-01", level: 1, q: "Why does dividing every logit by a single learned scalar T leave the model's ranking and accuracy completely unchanged while still fixing its confidence?", difficulty: "medium", trap: "\"Temperature scaling retrains part of the network, so it can shift which class gets the highest score, not just how confident that score is.\" Actually wrong: T scales every logit by the same factor before the softmax, which changes the spread of the probabilities but never their relative order, since softmax is monotonic in each logit and the scaling is uniform." },
+          { id: "qna-temperature-scaling-nn-default-reason-01", level: 2, q: "Why is temperature scaling the go-to calibration fix for deep models specifically, rather than reaching for Platt scaling or isotonic regression?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Beat 7 — Calibrating more than two classes",
+        questions: [
+          { id: "qna-multiclass-calibration-harder-def-01", level: 0, q: "Why is multiclass calibration trickier than binary calibration?", difficulty: "easy", followUp: "qna-onevsrest-renormalize-mechanism-01" },
+          { id: "qna-onevsrest-renormalize-mechanism-01", level: 1, q: "If you calibrate a multiclass model one-vs-rest, one calibrator per class, why do the resulting per-class probabilities need renormalizing afterward?", difficulty: "medium" },
+          { id: "qna-toplabel-vs-classwise-calibration-choice-01", level: 2, q: "Top-label calibration and classwise calibration ask different questions about a multiclass model. What's the decision rule for which one you should report?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Beat 8 — Calibration is not thresholding, and it decays under drift",
+        questions: [
+          { id: "qna-calibration-not-thresholding-distinction-01", level: 0, q: "What's the difference between calibrating a model and choosing its decision threshold?", difficulty: "easy", followUp: "qna-covariate-concept-drift-calibration-decay-01" },
+          { id: "qna-covariate-concept-drift-calibration-decay-01", level: 1, q: "A model was well-calibrated when it launched. How do covariate shift and concept drift each break that calibration over time, even though nothing about the calibration procedure itself was wrong?", difficulty: "medium" },
+          { id: "qna-calibration-monitoring-production-decision-01", level: 2, q: "Given that calibration decays under drift, what's the decision rule for how you should treat calibration operationally — a one-time training step or something else?", difficulty: "medium" },
+        ],
+      },
+    ],
+    cases: [
+      { id: "qna-case-nn-090-confidence-060-actual-01", level: 3, q: "A production neural network stamps 0.9 on a large batch of cases, but a held-out audit shows only 60% of them are actually positive. Walk through how you'd confirm this is a calibration problem rather than a ranking problem, and what you'd do to fix it.", difficulty: "hard" },
+      { id: "qna-case-lowece-colleague-concern-01", level: 3, q: "Your model reports a reassuringly low overall ECE, but a colleague suspects it's still badly miscalibrated in specific regions. Walk through how you'd investigate whether both things can be true, and what you'd check.", difficulty: "hard" },
+      { id: "qna-case-traintest-calibration-set-reuse-01", level: 3, q: "A teammate calibrated their model on the training set, reported a near-perfect reliability diagram, and shipped it — but production probabilities are now visibly off. Walk through your diagnosis and the fix.", difficulty: "medium" },
+      { id: "qna-case-multiclass-toplabel-confidence-only-01", level: 3, q: "A 10-class model's top-1 confidence looks well-calibrated on your evaluation, but a downstream team using the full probability vector for every class reports it's unreliable. Walk through what's likely going on and how you'd fix it.", difficulty: "hard" },
+      { id: "qna-case-calibration-drift-after-6-months-01", level: 3, q: "A fraud-scoring model was verified well-calibrated at launch. Six months later, its reliability diagram has drifted noticeably off the diagonal even though nobody touched the model. Walk through how you'd diagnose the cause and what you'd change about how the team operates calibration going forward.", difficulty: "medium" },
+    ],
+  },
+
+  "class_imbalance_classical_ml": {
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
+    beats: [
+      {
+        name: "Beat 1 — The accuracy trap",
+        questions: [
+          { id: "qna-fraud-tie-950-50-def-01", level: 0, q: "What is the 'accuracy trap' in class imbalance, in one sentence?", difficulty: "easy", followUp: "qna-accuracy-tie-mechanism-01" },
+          { id: "qna-donothing-classifier-def-01", level: 0, q: "What is a 'do-nothing' baseline classifier, and why does it score deceptively well on an imbalanced dataset?", difficulty: "easy" },
+          { id: "qna-accuracy-tie-mechanism-01", level: 1, q: "On 950 legitimate / 50 fraud transactions, a do-nothing model and a real classifier that catches 35 of the 50 frauds both land on exactly 95.0% accuracy. Walk through why the numbers tie to the decimal point.", difficulty: "medium", trap: "\"That's just a coincidence of these particular numbers — on almost any other imbalanced dataset accuracy would separate the two models.\" Actually wrong: the tie is a structural consequence of weighing all rows equally, not a fluke of this dataset — any classifier whose extra false positives roughly offset its extra true positives will land near the majority-class baseline, which is the systemic reason accuracy fails on rare classes." },
+          { id: "qna-accuracy-safe-vs-misleading-01", level: 2, q: "What's the decision rule for when accuracy is still a safe headline metric versus when class imbalance makes it a trap?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Beat 2 — Metrics that actually see the rare class",
+        questions: [
+          { id: "qna-recall-sensitivity-def-01", level: 0, q: "What does recall measure, and how do you compute it from a confusion matrix?", difficulty: "easy" },
+          { id: "qna-precision-flag-def-01", level: 0, q: "What does precision measure, and how do you compute it from a confusion matrix?", difficulty: "easy" },
+          { id: "qna-f1-harmonic-mean-def-01", level: 0, q: "What is F1, and why does it use the harmonic mean of precision and recall rather than a plain average?", difficulty: "easy" },
+          { id: "qna-prauc-vs-rocauc-honesty-01", level: 1, q: "Why is PR-AUC considered more honest than ROC-AUC when the positive class is rare?", difficulty: "medium", trap: "\"ROC-AUC and PR-AUC always rank models in the same order, so the choice between them is just a matter of convention.\" Actually wrong: ROC-AUC gives a model easy credit for correctly ignoring the huge majority class, so a model can look strong on ROC-AUC while its precision-recall tradeoff on the rare class is genuinely weak — the two can rank models differently under severe imbalance." },
+          { id: "qna-precision-recall-tugofwar-01", level: 1, q: "Why is there usually a tug-of-war between precision and recall as you flag more aggressively?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Beat 3 — Making the model care: class weights vs resampling, and the real cost",
+        questions: [
+          { id: "qna-classweight-loss-reweight-def-01", level: 0, q: "What do class weights actually change during training?", difficulty: "easy", followUp: "qna-19to1-classweight-retrain-mechanism-01" },
+          { id: "qna-smote-oversample-undersample-def-01", level: 0, q: "At a definitional level, what do oversampling, undersampling, and SMOTE each do to the training data?", difficulty: "easy" },
+          { id: "qna-19to1-classweight-retrain-mechanism-01", level: 1, q: "On the 950/50 fraud data, reweighting fraud roughly 19x more heavily and retraining moves recall from 70% to 90%. Walk through what happens to precision, F1, and accuracy at the same time, and why.", difficulty: "medium" },
+          { id: "qna-classweight-lowers-f1-still-worth-it-01", level: 1, q: "A class-weighted retrain drops F1 from 58.3% to about 48.6%, yet it can still be the better model. How can a fix that lowers F1 be the right fix?", difficulty: "medium", trap: "\"F1 dropping proves class weighting is broken here and should be abandoned, since a valid imbalance fix must raise every aggregate metric together.\" Actually wrong: F1 has no notion of asymmetric costs — it doesn't know a missed fraud can cost far more than a false alarm — so a lower F1 only means the harmonic mean of precision and recall fell, not that the fix failed at the thing that actually matters, catching more real fraud cheaply." },
+          { id: "qna-classweight-vs-resample-by-family-01", level: 2, q: "What's the decision rule for choosing class weights over resampling (oversampling/SMOTE/undersampling), or vice versa?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Beat 4 — Choosing the threshold on purpose",
+        questions: [
+          { id: "qna-decision-threshold-cutoff-def-01", level: 0, q: "What is a decision threshold, and what does it convert a classifier's output into?", difficulty: "easy", followUp: "qna-default-05-threshold-wrong-mechanism-01" },
+          { id: "qna-default-05-threshold-wrong-mechanism-01", level: 1, q: "Why is the default threshold of 0.5 almost never right for an imbalanced, unequal-cost problem?", difficulty: "medium" },
+          { id: "qna-threshold-sweep-selection-mechanism-01", level: 1, q: "Mechanically, how do you go about choosing a threshold deliberately instead of leaving it at the default?", difficulty: "medium" },
+          { id: "qna-retrain-weights-vs-move-threshold-01", level: 2, q: "Retraining with class weights and simply lowering the threshold on the original classifier can both raise recall. What's the decision rule for when the cheaper option — just moving the threshold — gets you there without retraining?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Beat 5 — Precision@K, recall@K, and lift@K for capacity-limited action",
+        questions: [
+          { id: "qna-precisionatk-capacity-def-01", level: 0, q: "What is precision@K, and what real-world constraint does it address that a threshold doesn't?", difficulty: "easy", followUp: "qna-capacity-limit-changes-question-01" },
+          { id: "qna-recallatk-liftatk-def-01", level: 0, q: "What do recall@K and lift@K each measure, alongside precision@K?", difficulty: "easy" },
+          { id: "qna-capacity-limit-changes-question-01", level: 1, q: "Why does a hard review-capacity limit change the natural question from 'what's our recall?' to 'how good is the top K?'", difficulty: "medium" },
+          { id: "qna-precisionatk-vs-global-threshold-01", level: 2, q: "What's the decision rule for optimizing precision@K instead of picking a global threshold?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Beat 6 — The cost matrix, made explicit",
+        questions: [
+          { id: "qna-cost-matrix-dollar-cells-def-01", level: 0, q: "What is a cost matrix, and where do the numbers in it come from?", difficulty: "easy", followUp: "qna-fraud-cost-matrix-2000-5-mechanism-01" },
+          { id: "qna-fraud-cost-matrix-2000-5-mechanism-01", level: 1, q: "With a false negative costing $2,000 and a false positive costing $5, walk through how you'd compute and compare the total expected cost of the unweighted classifier (15 misses, 35 false alarms) against the class-weighted one (5 misses, 90 false alarms).", difficulty: "medium" },
+          { id: "qna-calibrated-probability-optimal-threshold-01", level: 1, q: "Why does a calibrated probability, combined with a cost matrix, give you an exact cost-minimizing decision threshold?", difficulty: "medium" },
+          { id: "qna-f1-disagrees-costmatrix-which-wins-01", level: 2, q: "F1 says one model is worse, but the cost matrix says it's cheaper. What's the decision rule for which number should actually drive the deployment decision?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Beat 7 — SMOTE's sharp edges, and resampling's effect on probabilities",
+        questions: [
+          { id: "qna-smote-synthetic-inbetween-def-01", level: 0, q: "What does SMOTE actually generate, as opposed to plain duplication of the minority class?", difficulty: "easy", followUp: "qna-smote-foldwise-cv-rule-01" },
+          { id: "qna-smote-foldwise-cv-rule-01", level: 1, q: "What is the cardinal rule for when SMOTE must be applied relative to your train/validation split, and what breaks if you violate it?", difficulty: "medium", trap: "\"Applying SMOTE to the whole dataset before cross-validation is fine as long as you don't touch the true holdout test set.\" Actually wrong: even within cross-validation, oversampling before the split lets synthetic points derived from what becomes validation-fold data leak into the training folds (and vice versa), inflating validation scores regardless of whether a separate final test set was kept clean." },
+          { id: "qna-smote-bad-regimes-01", level: 1, q: "Name two data regimes where SMOTE tends to fail, and explain why its 'in-between' synthetic points break down in each.", difficulty: "medium" },
+          { id: "qna-resampling-inflates-minority-probability-01", level: 1, q: "Why does oversampling or undersampling make a model's predicted probabilities no longer reflect the true base rate?", difficulty: "medium" },
+          { id: "qna-resample-then-recalibrate-decision-01", level: 2, q: "If you resample the training data and you need trustworthy probabilities afterward (for cost-based thresholds or downstream use), what's the decision rule for what you must do before trusting those probabilities?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Beat 8 — Matching the fix to the model, the fuller metric menu, and extreme imbalance",
+        questions: [
+          { id: "qna-imbalance-fix-tree-vs-linear-01", level: 1, q: "Why do tree ensembles and boosting usually do best with class weights and threshold tuning, while linear and distance-based models benefit more from resampling?", difficulty: "medium" },
+          { id: "qna-balanced-accuracy-plain-english-def-01", level: 0, q: "What is balanced accuracy, and when is it a useful single number to report?", difficulty: "easy" },
+          { id: "qna-mcc-four-cell-robustness-01", level: 1, q: "Why can't a model game the Matthews correlation coefficient (MCC) the same way it can game plain accuracy by ignoring the rare class?", difficulty: "medium" },
+          { id: "qna-extreme-imbalance-anomaly-reframe-01", level: 2, q: "At what point does two-class classification framing itself start to break down, and what's the decision rule for switching strategy toward anomaly detection?", difficulty: "medium" },
+        ],
+      },
+    ],
+    cases: [
+      { id: "qna-case-rocauc-good-false-alarms-fraud-01", level: 3, q: "Your fraud model has a great ROC-AUC, but the operations team is complaining about too many false alarms flooding their queue. Walk through how you'd diagnose whether this is a ranking problem or something else, and what you'd actually fix.", difficulty: "medium" },
+      { id: "qna-case-smote-wholeset-cv-leak-01", level: 3, q: "A teammate applied SMOTE to the whole training dataset and then ran cross-validation. Validation scores look excellent, but production performance is poor. Walk through your diagnosis and the fix.", difficulty: "medium" },
+      { id: "qna-case-500alerts-per-day-metric-01", level: 3, q: "Your fraud team can only investigate 500 alerts a day out of millions of transactions. Walk through which metric you'd optimize for, and why framing this as a global-threshold problem would be the wrong approach.", difficulty: "medium" },
+      { id: "qna-case-f1-drop-costmatrix-decision-01", level: 3, q: "After retraining with class weights, your model's F1 drops noticeably even though recall improves. Walk through how you'd decide whether to ship the reweighted model, using what you know about cost matrices.", difficulty: "hard" },
+      { id: "qna-case-onein100k-rarefraud-reframe-01", level: 3, q: "You're asked to build a detector for a novel fraud pattern that shows up in roughly 1 in 100,000 transactions. Walk through how your approach would differ from the 950/50 fraud problem, and what you'd design around instead of a standard classifier.", difficulty: "hard" },
+    ],
+  },
+
+  "feature_selection": {
+    status: "parked", // draft | parked | answered, // draft | parked | answered
+    auditDate: "2026-07-15",
+    beats: [
+      {
+        name: "Beat 1 — The curse of dimensionality",
+        questions: [
+          { id: "qna-curse-of-dimensionality-bellman-def-01", level: 0, q: "What is the curse of dimensionality, in plain terms?", difficulty: "easy", followUp: "qna-points-spread-1d2d3d-mechanism-01" },
+          { id: "qna-points-spread-1d2d3d-mechanism-01", level: 1, q: "Picture 100 data points on a line, then a square, then a cube. Walk through why the same 100 points end up feeling sparser as you add each dimension.", difficulty: "medium" },
+          { id: "qna-extra-dimension-overfitting-link-01", level: 1, q: "Why does every extra feature dimension make overfitting easier, even if that feature isn't pure noise?", difficulty: "medium" },
+          { id: "qna-when-more-features-stops-helping-01", level: 2, q: "Adding features initially improves a model. What's the decision rule for recognizing when you've crossed into the regime where more features start hurting instead?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Beat 2 — Three families: filter, wrapper, embedded",
+        questions: [
+          { id: "qna-filter-method-speed-blindness-def-01", level: 0, q: "What is a filter method for feature selection, and what makes it fast?", difficulty: "easy" },
+          { id: "qna-wrapper-method-brute-force-def-01", level: 0, q: "What is a wrapper method, and how does recursive feature elimination fit as an example of one?", difficulty: "easy" },
+          { id: "qna-embedded-method-train-time-def-01", level: 0, q: "What is an embedded method, and how does it differ from doing selection as a separate step before or after training?", difficulty: "easy" },
+          { id: "qna-filter-method-interaction-blindspot-mechanism-01", level: 1, q: "Why can a filter method discard two features that are individually useless but powerful together?", difficulty: "medium", trap: "\"A filter method just needs a smarter scoring function, like one based on a more powerful correlation measure, and it will catch those interaction effects too.\" Actually wrong: the blind spot isn't the scoring function's power, it's that filter methods score each feature in isolation by construction — no univariate score, however sophisticated, can see a relationship that only exists between two or more features taken together." },
+          { id: "qna-wrapper-method-retrain-cost-mechanism-01", level: 1, q: "Why does a wrapper method become impractical once you're dealing with thousands of candidate features?", difficulty: "medium" },
+          { id: "qna-lasso-zeroing-weights-mechanism-01", level: 1, q: "What does an L1 penalty do to an unhelpful feature's weight during training, and why does that make Lasso a feature-selection method as well as a regulariser?", difficulty: "medium" },
+          { id: "qna-gbm-importance-default-recipe-decision-01", level: 2, q: "For everyday tabular work, what's the decision rule that makes 'train one gradient-boosted model on everything, rank by importance, keep the top features' the reliable default over the other two families?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Beat 3 — Selection versus reduction, and PCA's fine print",
+        questions: [
+          { id: "qna-feature-selection-vs-pca-reduction-def-01", level: 0, q: "What's the real difference between feature selection and dimensionality reduction like PCA?", difficulty: "easy", followUp: "qna-explainability-selection-vs-reduction-decision-01" },
+          { id: "qna-pca-variance-direction-def-01", level: 0, q: "What directions does PCA actually keep, and what is it explicitly not optimizing for?", difficulty: "easy" },
+          { id: "qna-pca-highvariance-not-predictive-mechanism-01", level: 1, q: "Why can a high-variance feature that PCA keeps be pure noise, while a low-variance feature it discards actually mattered for the target?", difficulty: "medium" },
+          { id: "qna-pca-standardize-first-mechanism-01", level: 1, q: "Why must you standardize features before running PCA, and what happens to the components if you skip that step?", difficulty: "medium" },
+          { id: "qna-explainability-selection-vs-reduction-decision-01", level: 2, q: "Stakeholders need to explain individual predictions using named factors. What's the decision rule for choosing feature selection over PCA-style reduction here?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Beat 4 — The trap that fakes good results: selecting before splitting",
+        questions: [
+          { id: "qna-select-before-split-leak-def-01", level: 0, q: "What is the feature-selection leakage trap, in one sentence?", difficulty: "easy", followUp: "qna-wholeset-selection-inflation-mechanism-01" },
+          { id: "qna-wholeset-selection-inflation-mechanism-01", level: 1, q: "Mechanically, how does picking features by their relationship to the label across the entire dataset let the test set's answers leak into the model before you've even started cross-validation?", difficulty: "medium" },
+          { id: "qna-select-inside-cv-fold-mechanism-01", level: 1, q: "What does it actually look like to do feature selection correctly inside cross-validation?", difficulty: "medium" },
+          { id: "qna-colleague-fulldata-correlation-diagnosis-01", level: 2, q: "A colleague describes ranking features by correlation with the label across the whole dataset, then running cross-validation and reporting the resulting accuracy. What's the decision rule for spotting the flaw in that description alone, without seeing their code?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Beat 5 — SHAP: powerful but not gospel",
+        questions: [
+          { id: "qna-shap-fair-attribution-def-01", level: 0, q: "What does SHAP do, and what makes its attribution to each feature 'fair'?", difficulty: "easy", followUp: "qna-shap-correlated-twin-splitcredit-mechanism-01" },
+          { id: "qna-shap-correlated-twin-splitcredit-mechanism-01", level: 1, q: "Under correlated features, how can SHAP make a genuinely important feature look weak?", difficulty: "medium" },
+          { id: "qna-shap-model-used-not-cause-01", level: 1, q: "Why does a feature having high SHAP importance not mean that feature causes the outcome?", difficulty: "medium", trap: "\"SHAP is grounded in game theory with solid axioms, so high importance is about as close to mathematical proof of causation as you can get from observational data.\" Actually wrong: SHAP's guarantees are about fairly attributing a prediction across the features a specific trained model used — it is fundamentally associational, describing what the model leaned on, and has no mechanism for distinguishing correlation from causation." },
+          { id: "qna-shap-usage-scope-decision-01", level: 2, q: "What's the decision rule for what you can safely conclude from a SHAP ranking, versus what requires a different kind of analysis entirely?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Beat 6 — Permutation importance and mutual information",
+        questions: [
+          { id: "qna-permutation-importance-shuffle-def-01", level: 0, q: "What does permutation importance measure, and what's the appeal of it being model-agnostic?", difficulty: "easy" },
+          { id: "qna-mutual-information-nonlinear-def-01", level: 0, q: "What does mutual information measure that plain correlation misses?", difficulty: "easy" },
+          { id: "qna-permutation-importance-correlated-twin-blindspot-01", level: 1, q: "Why does shuffling one of two correlated features barely hurt accuracy, and what does that do to its permutation importance score?", difficulty: "medium" },
+          { id: "qna-mutual-information-univariate-binning-limits-01", level: 1, q: "Name the two practical limits the module attaches to using mutual information as a filter score.", difficulty: "medium" },
+          { id: "qna-importance-method-choice-correlated-features-01", level: 2, q: "You have a set of correlated candidate features and want to rank their importance. What's the decision rule for choosing among SHAP, permutation importance, and mutual information given that shared blind spot?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Beat 7 — RFE in practice: use RFECV",
+        questions: [
+          { id: "qna-rfecv-selects-count-def-01", level: 0, q: "What does RFECV add on top of plain recursive feature elimination?", difficulty: "easy" },
+          { id: "qna-rfe-estimator-dependent-instability-mechanism-01", level: 1, q: "Why does RFE's feature ranking change depending on which model it wraps, and why does it become unstable under correlated features?", difficulty: "medium" },
+          { id: "qna-rfe-vs-filter-cost-benefit-decision-01", level: 2, q: "What's the decision rule for when RFE's computational expense is worth paying over a cheap filter method?", difficulty: "medium" },
+        ],
+      },
+      {
+        name: "Beat 8 — Is the selection stable, and does the recipe fit the data regime?",
+        questions: [
+          { id: "qna-stability-selection-bootstrap-consistency-def-01", level: 0, q: "What is stability selection, and what problem with a single feature-selection run does it address?", difficulty: "easy", followUp: "qna-stability-selection-90percent-rule-mechanism-01" },
+          { id: "qna-stability-selection-90percent-rule-mechanism-01", level: 1, q: "Mechanically, how does rerunning selection across bootstrap resamples let you tell a real feature from noise dressed up as signal?", difficulty: "medium" },
+          { id: "qna-feature-selection-regime-text-genomics-embeddings-decision-01", level: 2, q: "What's the decision rule for how the right feature-selection recipe shifts across sparse text/one-hot data, genomics (p much greater than n), and dense learned embeddings?", difficulty: "medium" },
+        ],
+      },
+    ],
+    cases: [
+      { id: "qna-case-500to50-feature-reduction-plan-01", level: 3, q: "You have 500 candidate features and need to get down to roughly 50 before tuning a model. Walk through the approach you'd actually take, and why a single filter pass alone would be insufficient.", difficulty: "medium" },
+      { id: "qna-case-fulldataset-correlation-cv-mirage-01", level: 3, q: "A colleague ranked features by their correlation with the label across the full dataset, then ran cross-validation and reported a strong accuracy number. Walk through how you'd explain why that number is misleading and what you'd redo.", difficulty: "medium" },
+      { id: "qna-case-loan-explainability-selection-choice-01", level: 3, q: "Stakeholders need to be able to say 'we flagged this loan because of income and debt' for every prediction. Walk through how you'd decide between feature selection and PCA-style dimensionality reduction here, and why.", difficulty: "medium" },
+      { id: "qna-case-shap-causal-intervention-claim-01", level: 3, q: "A stakeholder points to a feature's high SHAP importance and wants the business to intervene on it directly, treating the importance score as proof it drives the outcome. Walk through how you'd push back and what you'd check instead.", difficulty: "hard" },
+      { id: "qna-case-onerun-selection-fluke-check-01", level: 3, q: "Your team is worried that the feature set you selected is just an artifact of one particular training sample rather than a genuinely stable signal. Walk through how you'd check that, and what mutual information alone would have missed.", difficulty: "medium" },
     ],
   },
 
