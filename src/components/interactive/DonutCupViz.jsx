@@ -2,78 +2,100 @@ import React, { useRef, useEffect, useState, useCallback, useImperativeHandle, f
 
 // A torus and a "mug" sampled on the SAME (u,v) grid, so every torus vertex has
 // exactly one corresponding mug vertex -- per-vertex linear interpolation between
-// the two therefore can never tear the surface, only bend it. u = position along
-// the tube's closed centerline (0..2*PI), v = angle around the tube's small
-// circular cross-section (0..2*PI). This is the classic "donut = coffee mug"
-// picture: the torus's one hole becomes the mug's handle hole; nothing is cut or
-// glued along the way -- it just sits next to the XOR grid-warp viz as a second,
-// 3-D example of the same idea: a continuous function reshaping space.
+// the two therefore can never tear the surface, only bend it.
+//
+// REVISED after visual review caught the first version looking like two blobby
+// pipe segments, not a mug -- a uniform-radius tube swept along any bent
+// centerline can only ever look like a bent pipe, never a cup wall, no matter
+// how the centerline is bent. Fixed by using v as genuine AZIMUTH around the
+// cup's vertical axis for the body (a true surface of revolution: down the
+// outside wall, across the base, up the inside wall -- the "C" profile below),
+// and reserving the tube-around-a-centerline construction (which DOES look
+// right) for just the handle, blended onto the body only near the rim gap
+// where the handle attaches. Verified by rendering the exact math (matplotlib,
+// same projection formula) and inspecting the image before shipping -- not by
+// syntax-check alone, which is what let the broken version through the first
+// time.
 const TWO_PI = Math.PI * 2;
-const U_STEPS = 40;
-const V_STEPS = 14;
-
-// --- Torus (t=0): standard tube-around-a-circle formula. ---
-const R_TORUS = 2.2;   // centerline circle radius
-const R_TUBE = 0.7;    // tube (cross-section) radius, constant everywhere
-
-// --- Mug (t=1): u still sweeps one closed loop, but for most of it (the "body"
-// arc) the centerline stops moving azimuthally and instead traces a vertical
-// down-the-outside / across-the-base / up-the-inside profile -- a "C" living in
-// a single, slightly fanned angular wedge (fanned just enough to read as 3-D).
-// The remaining short arc keeps sweeping azimuthally near the torus's own
-// radius, offset outward, reading as a small handle stuck on the side. Both
-// arcs are built so their two shared endpoints (u=0 and u=HANDLE_END) produce
-// IDENTICAL (x,y,z) whichever formula evaluates them -- verified algebraically
-// below -- which is what keeps the loop closed with no seam at u=0/2*PI. ---
-const HANDLE_END = (50 * Math.PI) / 180; // 50 degrees, in radians
-const CUP_H = 3.0;          // cup wall height (top rim down to base and back up)
-const RHO_OUTER = 1.7;      // outer wall radius from the cup's vertical axis
-const RHO_INNER = 0.9;      // inner wall radius (wall thickness = OUTER - INNER)
-const BODY_TUBE = R_TUBE;   // body keeps the torus's own tube radius
-const HANDLE_TUBE = 0.35;   // handle tapers thinner at its midpoint
-const HANDLE_BULGE = 1.0;   // how far the handle's middle sticks out past the wall
-const HANDLE_DIP = 0.3;     // slight vertical sag at the handle's middle
+const U_STEPS = 56;
+const V_STEPS = 18;
 
 function smoothstep(e0, e1, x) {
   const tt = Math.min(1, Math.max(0, (x - e0) / (e1 - e0)));
   return tt * tt * (3 - 2 * tt);
 }
+function easeBetween(s, s0, s1, a0, a1) {
+  const t = smoothstep(s0, s1, s);
+  return a0 + (a1 - a0) * t;
+}
 
+// --- Torus (t=0): standard tube-around-a-circle formula. ---
+const R_TORUS = 2.2;
+const R_TUBE = 0.7;
 function torusPoint(u, v) {
   const rho = R_TORUS + R_TUBE * Math.cos(v);
   return [rho * Math.cos(u), rho * Math.sin(u), R_TUBE * Math.sin(v)];
 }
 
-function mugPoint(u, v) {
-  let theta, rho0, z0, tube;
-  if (u <= HANDLE_END) {
-    // Handle arc, u in [0, HANDLE_END]. p=0 is the join with the body's END
-    // (u -> 2*PI, wrapping to u=0); p=1 is the join with the body's START
-    // (u=HANDLE_END). Bulges outward and dips slightly in the middle.
-    const p = u / HANDLE_END;
-    theta = u; // same azimuth as the torus -- "keeps close to the torus position"
-    rho0 = RHO_INNER + (RHO_OUTER - RHO_INNER) * p + HANDLE_BULGE * Math.sin(Math.PI * p);
-    z0 = CUP_H / 2 - HANDLE_DIP * Math.sin(Math.PI * p);
-    tube = BODY_TUBE + (HANDLE_TUBE - BODY_TUBE) * Math.sin(Math.PI * p);
-  } else {
-    // Body arc, u in [HANDLE_END, 2*PI]. s=0 is the rim next to the handle's
-    // p=1 end (top-outer); s=1 is the rim next to the handle's p=0 end
-    // (top-inner), which is also exactly the u=0 point once u wraps.
-    const s = (u - HANDLE_END) / (TWO_PI - HANDLE_END);
-    theta = HANDLE_END * (1 - smoothstep(0, 1, s));                          // fans HANDLE_END -> 0
-    z0 = (CUP_H / 2) * Math.cos(TWO_PI * s);                                 // top -> base -> top
-    rho0 = RHO_OUTER + (RHO_INNER - RHO_OUTER) * smoothstep(0.30, 0.70, s);  // outer wall -> base -> inner wall
-    tube = BODY_TUBE;
-  }
-  const rho = rho0 + tube * Math.cos(v);
-  return [rho * Math.cos(theta), rho * Math.sin(theta), z0 + tube * Math.sin(v)];
+// --- Mug (t=1): body is a true surface of revolution -- u traces the wall's
+// cross-section profile (down the outside, across the base, up the inside,
+// then the "rim gap" that closes the loop back to the outside start), v is
+// the full azimuthal sweep around the vertical axis. ---
+const RHO_OUTER = 1.7;
+const RHO_INNER = 1.05;
+const CUP_H = 2.6;
+
+function wallProfile(s) {
+  // s in [0,1), one full lap of u. Returns [rho0, z0] of the wall centerline.
+  if (s < 0.40) return [RHO_OUTER, easeBetween(s, 0.0, 0.40, CUP_H / 2, -CUP_H / 2)];
+  if (s < 0.50) return [easeBetween(s, 0.40, 0.50, RHO_OUTER, RHO_INNER), -CUP_H / 2];
+  if (s < 0.90) return [RHO_INNER, easeBetween(s, 0.50, 0.90, -CUP_H / 2, CUP_H / 2)];
+  return [easeBetween(s, 0.90, 1.00, RHO_INNER, RHO_OUTER), CUP_H / 2];
 }
-// Junction check (by construction, not runtime-asserted): at u=0, the handle
-// formula (p=0) gives theta=0, rho0=RHO_INNER, z0=CUP_H/2, tube=BODY_TUBE --
-// exactly what the body formula gives at s=1 (theta=0, rho0=RHO_INNER,
-// z0=CUP_H/2, tube=BODY_TUBE). At u=HANDLE_END, the handle formula (p=1) gives
-// theta=HANDLE_END, rho0=RHO_OUTER, z0=CUP_H/2, tube=BODY_TUBE -- exactly what
-// the body formula gives at s=0. Both seams match exactly, so the loop closes.
+function bodyPoint(u, v) {
+  const s = (((u % TWO_PI) + TWO_PI) % TWO_PI) / TWO_PI;
+  const [rho0, z0] = wallProfile(s);
+  return [rho0 * Math.cos(v), rho0 * Math.sin(v), z0];
+}
+
+// --- Handle: a genuine small tube-loop (this DOES want the tube-around-a-
+// centerline construction, since a real handle is round and has its own
+// hole) -- built for u wrapped near 0, then blended onto the body only in
+// that neighbourhood so it reads as attached at the rim gap. ---
+const HANDLE_HALF = (30 * Math.PI) / 180;
+const HANDLE_LOOP_R = 0.85;   // how far the loop's centerline bulges out
+const HANDLE_BASE_RHO = RHO_OUTER + 0.15;
+const HANDLE_Z = CUP_H / 2 - 0.15;
+const HANDLE_TUBE = 0.22;
+const HANDLE_THETA_SPAN = (26 * Math.PI) / 180;
+
+function handleCenterline(p) {
+  const bulge = Math.sin(Math.PI * p);
+  return [
+    HANDLE_BASE_RHO + HANDLE_LOOP_R * bulge, // rho_c
+    (p - 0.5) * HANDLE_THETA_SPAN,           // theta_c
+    HANDLE_Z - 0.55 * bulge,                 // z_c (dips like a real handle's curve)
+  ];
+}
+function handlePoint(u, v) {
+  const d = (((u + Math.PI) % TWO_PI) + TWO_PI) % TWO_PI - Math.PI; // wrap to [-PI,PI]
+  const p = smoothstep(-HANDLE_HALF, HANDLE_HALF, d);
+  const [rhoC, thetaC, zC] = handleCenterline(p);
+  const rho = rhoC + HANDLE_TUBE * Math.cos(v);
+  const z = zC + HANDLE_TUBE * Math.sin(v);
+  return [rho * Math.cos(thetaC), rho * Math.sin(thetaC), z];
+}
+function blendWeight(u) {
+  const d = Math.abs((((u + Math.PI) % TWO_PI) + TWO_PI) % TWO_PI - Math.PI);
+  return 1 - smoothstep(HANDLE_HALF * 0.5, HANDLE_HALF, d);
+}
+function mugPoint(u, v) {
+  const w = blendWeight(u);
+  const [bx, by, bz] = bodyPoint(u, v);
+  if (w <= 0) return [bx, by, bz];
+  const [hx, hy, hz] = handlePoint(u, v);
+  return [bx + (hx - bx) * w, by + (hy - by) * w, bz + (hz - bz) * w];
+}
 
 // u/v sample parameters, precomputed once (shared by every t).
 const U_VALS = Array.from({ length: U_STEPS }, (_, i) => (i / U_STEPS) * TWO_PI);
@@ -92,8 +114,12 @@ function worldPoint(ui, vi, t) {
 
 // Fixed oblique 3-D -> 2-D projection (same style as SVMViz's "Kernel lift"
 // mode: a static elevation + azimuth "camera," no rotation needed over time).
-const CAM_AZ = -0.7;
-const CAM_EL = 0.5;
+// This az/el pair was picked by rendering the torus AND the mug endpoints
+// (plus t=0.5) through several candidate cameras and eyeballing which one
+// keeps the torus readable as a donut while keeping the mug's handle from
+// visually tangling with the body -- see the session's BACKLOG entry.
+const CAM_AZ = -0.35;
+const CAM_EL = 0.35;
 function project(x, y, z) {
   const x1 = x * Math.cos(CAM_AZ) - y * Math.sin(CAM_AZ);
   const y1 = x * Math.sin(CAM_AZ) + y * Math.cos(CAM_AZ);
@@ -101,7 +127,7 @@ function project(x, y, z) {
   return [x1, yProj];
 }
 
-const WORLD_RANGE = 3.3; // half-extent that comfortably fits both endpoint shapes
+const WORLD_RANGE = 3.4; // half-extent that comfortably fits both endpoint shapes
 
 export const DonutCupViz = forwardRef(function DonutCupViz(props, ref) {
   const canvasRef = useRef(null);
@@ -252,7 +278,7 @@ export const DonutCupViz = forwardRef(function DonutCupViz(props, ref) {
         <span>t = <strong style={{ color: "var(--prime, #F0A500)" }}>{t.toFixed(2)}</strong></span>
       </div>
       <p style={{ marginTop: 10, fontSize: 11, color: "var(--ink-low, #888)", lineHeight: 1.5 }}>
-        Every point on the mug corresponds to exactly one point on the torus -- same (u,v) grid, just linearly interpolated in x, y, z as t goes from 0 to 1. Drag the slider (or press play) to watch the donut's single big loop unroll into the cup's wall (down the outside, across the base, up the inside) while a short stretch of that same loop stays put and reads as the handle. Nothing is cut and nothing is glued: that's what "continuous" means for a deforming shape -- a small change in (u, v, t) only ever produces a small change in the output point, so the surface can bend arbitrarily far without ever tearing. The XOR grid above warps a flat 2-D input space; this one warps a closed 3-D surface -- same idea, one more dimension.
+        Every point on the mug corresponds to exactly one point on the torus -- same (u,v) grid, just linearly interpolated in x, y, z as t goes from 0 to 1. Drag the slider (or press play) to watch the donut's ring re-route into the cup's wall (down the outside, across the base, up the inside) while a short stretch near the seam curls outward into a small loop that reads as the handle. Nothing is cut and nothing is glued: that's what "continuous" means for a deforming shape -- a small change in (u, v, t) only ever produces a small change in the output point, so the surface can bend arbitrarily far without ever tearing. The XOR grid above warps a flat 2-D input space; this one warps a closed 3-D surface -- same idea, one more dimension.
       </p>
     </div>
   );

@@ -2478,3 +2478,40 @@ session would repeat the exact shallow-fix pattern this audit was run to catch. 
 run the standard's own prescribed writer+adversarial-auditor loop (capped at 3 iterations) one module at a
 time, starting with `transformers` (most severe) and `rnns_lstms` (most systemic — zero metaphors used
 anywhere in the module).
+
+## Session 2026-07-15 11:29 IST (Wednesday) — DonutCupViz.jsx: rebuilt the geometry, this time actually looked at it first
+
+User shared a screenshot of the first DonutCupViz.jsx (built by a subagent, syntax-checked but never
+visually verified — flagged as a known gap in the 09:15 IST entry) and asked, correctly, "how does this
+look like a mug to you?" It didn't — two disconnected blobby pipe segments, no recognizable body, no
+handle. Root cause: the original approach swept a constant-radius tube along a bent centerline (down the
+outside, across the base, up the inside) — that construction can only ever look like a bent pipe, never a
+cup wall, no matter how the centerline is shaped, because it never gives v (the tube's cross-section
+angle) a chance to sweep a genuine azimuth around the cup's vertical axis.
+
+This time, verified with an actual render before shipping: replicated the exact projection math in Python
+(matplotlib), rendered candidates to PNG, and used the Read tool's image support to look at them —
+iterated 3 times (v1: fattened-torus-with-thin-arc, still read as a blob with a spike; v2: true surface-
+of-revolution body + a bump-based handle, body looked like a real cup but the handle was a spike with no
+hole since a pure displacement can't create one; v3: surface-of-revolution body + a genuine small tube-
+loop for the handle, blended onto the body only near the rim gap) before landing on one that reads
+clearly as a cylindrical cup with a curved handle from a reasonable camera angle. Also swept 3 candidate
+camera azimuth/elevation pairs against t=0/0.5/1 to find one where the torus stays a readable donut AND
+the mug doesn't have the handle visually tangling with the body (`CAM_AZ=-0.35, CAM_EL=0.35`, versus the
+original `-0.7/0.5`).
+
+Ported the verified Python math to `DonutCupViz.jsx` line-for-line, then cross-checked with a Node
+one-liner evaluating the actual shipped file's math against the same 5 sample (u,v) points the Python
+reference produced — outputs matched to 5 decimal places, confirming the port didn't drift. This is a
+stronger verification than the esbuild-only check used everywhere else in today's sessions: esbuild
+proves the file parses, this additionally proves the geometry is what was actually looked at.
+
+Also rewrote the component's own caption, which described the OLD (wrong) mental model ("a short stretch
+of that same loop stays put and reads as the handle") — now accurately describes the handle as a separate
+small tube-loop blended onto the body near the seam, not a stationary stretch of the main loop.
+
+grep confirms the new geometry constants and camera landed on-device: 1 (both patterns matched).
+
+**Still not done:** this is a visual/numeric self-check (my own Python render + a Node cross-check), not
+the same as the user or anyone else seeing it live in the running app — that confirmation is still
+pending, same caveat as everything else pushed today.
