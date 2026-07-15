@@ -276,7 +276,9 @@ export function DeepLearningFoundationTab({ onNavigate, openModuleId, navOrigin 
             </div>
           )}
 
-          {selected.interactiveId && <InteractivePanel interactiveId={selected.interactiveId} />}
+          {Array.isArray(selected.interactiveIds)
+            ? selected.interactiveIds.map(id => <InteractivePanel key={id} interactiveId={id} />)
+            : (selected.interactiveId && <InteractivePanel interactiveId={selected.interactiveId} />)}
 
           <GoDeeperPanel key={selected.id} deeperMath={selected.deeperMath} figures={selected.figures} />
 

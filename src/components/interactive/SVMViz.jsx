@@ -41,8 +41,10 @@ const SUPPORT_VECTORS = new Set([
   POS_SORTED[0], POS_SORTED[1],
 ]);
 
-// Precompute RBF grid (20x20)
-function computeRBFGrid() {
+// RBF grid (20x20) -- gamma is a parameter, not baked in, so the boundary can
+// actually animate/redraw as gamma changes (a fixed gamma made "play" a no-op
+// in this mode, since nothing else here responds to time).
+function computeRBFGrid(gamma) {
   const N = 20;
   const grid = [];
   // RBF centered around class +1 cluster (0.75, 0.5)
@@ -57,7 +59,6 @@ function computeRBFGrid() {
         const dx = nx - p.x;
         const dy = ny - p.y;
         const d2 = dx * dx + dy * dy;
-        const gamma = 18;
         score += p.cls * Math.exp(-gamma * d2);
       }
       row.push(score > 0 ? 1 : -1);
@@ -66,8 +67,6 @@ function computeRBFGrid() {
   }
   return grid;
 }
-
-const RBF_GRID = computeRBFGrid();
 
 // Concentric-circle data for the "kernel lift" mode -- not separable by ANY straight
 // line in raw (x,y), which is the whole point of this mode: the kernel trick's
@@ -252,13 +251,17 @@ export const SVMViz = forwardRef(function SVMViz(props, ref) {
       }
 
     } else if (mode === "RBF kernel") {
-      // RBF mode: paint grid
+      // RBF mode: paint grid. gamma is live (driven by liftT, shared with the
+      // other modes' progress control) so the boundary actually redraws as it
+      // changes -- low gamma = smooth boundary, high gamma = tight bubbles.
+      const gamma = 2 + liftT * 38;
+      const grid = computeRBFGrid(gamma);
       const N = 20;
       const cellW = plotW / N;
       const cellH = plotH / N;
       for (let gy = 0; gy < N; gy++) {
         for (let gx = 0; gx < N; gx++) {
-          const pred = RBF_GRID[gy][gx];
+          const pred = grid[gy][gx];
           ctx.fillStyle = pred === 1
             ? "rgba(240,165,0,0.09)"
             : "rgba(80,130,220,0.09)";
@@ -272,13 +275,13 @@ export const SVMViz = forwardRef(function SVMViz(props, ref) {
       ctx.lineWidth = 2;
       for (let gy = 0; gy < N - 1; gy++) {
         for (let gx = 0; gx < N - 1; gx++) {
-          if (RBF_GRID[gy][gx] !== RBF_GRID[gy][gx + 1]) {
+          if (grid[gy][gx] !== grid[gy][gx + 1]) {
             const x = PAD + (gx + 1) * cellW;
             const y1c = PAD + gy * cellH;
             const y2c = PAD + (gy + 1) * cellH;
             ctx.beginPath(); ctx.moveTo(x, y1c); ctx.lineTo(x, y2c); ctx.stroke();
           }
-          if (RBF_GRID[gy][gx] !== RBF_GRID[gy + 1][gx]) {
+          if (grid[gy][gx] !== grid[gy + 1][gx]) {
             const y = PAD + (gy + 1) * cellH;
             const x1c = PAD + gx * cellW;
             const x2c = PAD + (gx + 1) * cellW;
@@ -301,6 +304,10 @@ export const SVMViz = forwardRef(function SVMViz(props, ref) {
         ctx.stroke();
       }
 
+      ctx.fillStyle = "rgba(230,230,230,0.55)";
+      ctx.font = "10px var(--font-sans, sans-serif)";
+      ctx.fillText(`gamma = ${gamma.toFixed(1)}`, PAD, 16);
+
     } else {
       // "Kernel lift (3D)" mode -- phi(x,y) = (x, y, r^2). liftT=0 is a flat
       // top-down view (two rings, no straight line separates them); as liftT
@@ -319,22 +326,42 @@ export const SVMViz = forwardRef(function SVMViz(props, ref) {
         return [cx0 + X, cy0 - Y2];
       }
 
-      // separating plane at height PLANE_Z, drawn as a translucent parallelogram,
-      // fading in once the lift makes it meaningful.
-      if (liftT > 0.15) {
+      // separating plane at height PLANE_Z, drawn as a translucent sheet that
+      // grows outward from the center and fades in continuously as liftT rises
+      // (both size AND opacity track t, not just opacity) -- so dragging back
+      // toward t=0 visibly shrinks and lowers it rather than just cross-fading
+      // a fixed, canvas-filling rectangle in and out.
+      if (liftT > 0.1) {
+        const progress = Math.min(1, (liftT - 0.1) / 0.9);
+        const half = 0.06 + progress * 0.34; // grows from a small square to a modest sheet
         const corners = [
-          [0.02, 0.02], [0.98, 0.02], [0.98, 0.98], [0.02, 0.98],
+          [0.5 - half, 0.5 - half], [0.5 + half, 0.5 - half],
+          [0.5 + half, 0.5 + half], [0.5 - half, 0.5 + half],
         ].map(([x, y]) => project(x, y, PLANE_Z * liftT));
         ctx.save();
-        ctx.globalAlpha = Math.min(1, (liftT - 0.15) / 0.5) * 0.35;
+        ctx.globalAlpha = progress * 0.14;
         ctx.fillStyle = "#F0A500";
         ctx.beginPath();
         corners.forEach(([px, py], i) => (i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py)));
         ctx.closePath();
         ctx.fill();
+        // a light 3x3 grid inside the sheet so it reads as a plane, not a color block
         ctx.strokeStyle = "#F0A500";
         ctx.lineWidth = 1;
-        ctx.globalAlpha = Math.min(1, (liftT - 0.15) / 0.5) * 0.8;
+        ctx.globalAlpha = progress * 0.6;
+        for (let i = 1; i <= 2; i++) {
+          const f = i / 3;
+          const a = project(0.5 - half + f * half * 2, 0.5 - half, PLANE_Z * liftT);
+          const b = project(0.5 - half + f * half * 2, 0.5 + half, PLANE_Z * liftT);
+          ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+          const c = project(0.5 - half, 0.5 - half + f * half * 2, PLANE_Z * liftT);
+          const d = project(0.5 + half, 0.5 - half + f * half * 2, PLANE_Z * liftT);
+          ctx.beginPath(); ctx.moveTo(c[0], c[1]); ctx.lineTo(d[0], d[1]); ctx.stroke();
+        }
+        ctx.globalAlpha = progress * 0.8;
+        ctx.beginPath();
+        corners.forEach(([px, py], i) => (i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py)));
+        ctx.closePath();
         ctx.stroke();
         ctx.restore();
       }
@@ -426,6 +453,16 @@ export const SVMViz = forwardRef(function SVMViz(props, ref) {
               type="range" min={0.1} max={10} step={0.1} value={cValue}
               onChange={e => setCValue(Number(e.target.value))}
               style={{ marginLeft: 8, accentColor: "var(--prime, #F0A500)", verticalAlign: "middle" }}
+            />
+          </label>
+        )}
+        {mode === "RBF kernel" && (
+          <label style={{ fontSize: 13, color: "var(--ink-mid, #aaa)", flex: 1, minWidth: 180 }}>
+            gamma = {(2 + liftT * 38).toFixed(1)} (low = smooth boundary, high = tight bubbles)
+            <input
+              type="range" min={0} max={1} step={0.01} value={liftT}
+              onChange={e => { pause(); setLiftT(Number(e.target.value)); }}
+              style={{ width: "100%", marginTop: 4, accentColor: "var(--prime, #F0A500)", cursor: "pointer" }}
             />
           </label>
         )}

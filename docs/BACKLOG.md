@@ -2354,3 +2354,68 @@ User reviewed the `neural_nets` prototype live and flagged two real content issu
 
 **Verification:** all `.jsx` syntax-checked via `esbuild --jsx=automatic` in the cloud workspace (clean); `deepLearningModules.js` and `mathStatsModules.js` `node --check`ed on-device (clean). Not yet visually confirmed in a running dev server by anyone.
 
+
+## Session 2026-07-15 09:00 IST (Wednesday) — Successive-building audit fixes + donut-cup topology viz + multi-interactive schema
+
+Follow-up to the 08:05/08:20 IST entries earlier today. User asked three questions about the Deep
+Learning module family (does `neural_nets` start from the ground up, does it conclude with everything
+successors need, do all modules do the 3B1B-spec "successive building") and requested investigation
+before execution. Findings + fixes, all applied this session:
+
+**Content fixes to `deepLearningModules.js` (verified `node --check` clean, both cloud and on-device):**
+- `neural_nets` subtitle said "Perceptron" but the module never defines/uses that term — changed to
+  "Hidden layers, universal approximation, depth vs width, XOR" (matches what's actually covered).
+- `backprop`: the worked example's `δ₂ = ... × 2` factor was unexplained (MSE formula never stated in
+  prose). Added `L = (prediction − target)²` explicitly with the numeric check (0.516−1.0)²≈0.234,
+  naming the ×2 as the MSE derivative.
+- `backprop`: ReLU was used in the worked example with no formal definition anywhere before it. Added a
+  bracket-reminder `[ReLU(z) = max(0, z) — pass positive inputs through unchanged, zero out negative
+  ones]` at first use, per 3B1B-STANDARD.md voice rule 9.
+- Cross-module continuity (voice rule 11 — opening names the specific point the prior module left off):
+  `batch_norm`, `optimizers`, `cnns`, `rnns_lstms`, `finetune`, `quantization`, `dl_serving` all cold-opened
+  with no callback to the previous module, unlike `activations`/`attention`/`transformers`/`pretraining`
+  which already did this well. Rewrote each opening with a 1-2 sentence callback (checked against the
+  actual prior module's real closing content, not assumed).
+- `dl_debugging` had a real internal contradiction: its opening claimed "Model Serving assumed you
+  already had a correctly trained model — this is what happens before that assumption is even true,"
+  but it's positioned LAST in the array, after `dl_serving`. Considered physically reordering it earlier
+  (before `finetune`) but that would break the `pretraining`→`finetune` transition, which is one of the
+  strongest existing links (pretraining's own closing is literally about the fine-tuning risk that
+  `finetune` then solves) — reordering also requires bumping its `difficulty` tier for `sortByDifficulty`
+  to actually respect the new position, which is separately risky. Chose the lower-risk fix: rewrote
+  `dl_debugging`'s opening to honestly frame it as a capstone pulling together the diagnostic thread
+  already running through Backprop/Activations/Batch Norm, rather than falsely claiming to chronologically
+  precede Model Serving.
+- Render order double-checked by grepping every module's `difficulty` field directly (not assumed): all of
+  `backprop`→`pretraining` are `intermediate`, `finetune`/`quantization`/`dl_serving`/`dl_debugging` are
+  `advanced` — `sortByDifficulty`'s stable sort means array order = display order within each tier, so no
+  second hidden sequencing bug like the `activations` one found earlier today.
+
+**New: donut-to-mug topology viz + multi-interactive schema (built by a parallel subagent, spot-checked,
+esbuild-verified both in the cloud container and this device's `node --check`):**
+- `src/components/interactive/DonutCupViz.jsx` (new) — a torus and a "mug" sampled on the same (u,v) grid
+  so vertices correspond 1:1; linearly interpolates per-vertex between the two as t:0→1, rendered as a UV
+  wireframe via an oblique 3D projection (same visual family as SVMViz's kernel-lift mode). Small,
+  deliberately simple illustration of "a continuous function can deform one shape into a topologically
+  equivalent one without tearing" — same play/pause/reset/step + slider pattern as the other vizzes.
+- `src/tabs/foundations/DeepLearningFoundationTab.jsx` — rendering extended to check for a module-level
+  `interactiveIds` array (renders one `<InteractivePanel>` per entry) and fall back to the existing single
+  `interactiveId` for every other module — purely additive, confirmed via `grep -c interactiveIds` → 2
+  occurrences on-device (the array check + the `.map()`).
+- `src/components/interactive/InteractivePanel.jsx` — registered `donut_cup_viz` in the lazy-loaded
+  registry, same pattern as `neural_net_geometry_viz`/`eigen_geometry_viz`.
+- `neural_nets` module entry now has `interactiveIds: ['neural_net_geometry_viz', 'donut_cup_viz']`
+  (kept the old singular `interactiveId` field too, unused by the new render path but harmless) — added
+  directly to `deepLearningModules.js` by me, not the subagent, to avoid two writers on one file.
+
+**SVMViz.jsx round 2 (RBF live-gamma + kernel-lift plane resize/opacity, drafted earlier today) — now
+actually pushed to device**, confirmed via `grep -c "gamma = 2 + liftT"` → 1 on-device. This was blocked
+all of today by a device-bridge tool outage; bridge reconnected, push completed this session.
+
+**Not yet done / explicitly flagged, not silently dropped:**
+- None of this has been visually confirmed in a running dev server — same verification-method limitation
+  noted in the 08:05 IST entry (esbuild syntax-check only, no dev server available in this sandbox).
+- The donut-cup viz's exact mug geometry is a simplified illustration, not a rigorous parametrization —
+  documented deviations are in the subagent's own handback, not re-litigated here.
+- No `contentStatus.js` entries were touched this session — these are narrative-prose and schema fixes,
+  not narrative-verification-pipeline passes, so `clean` status is not implicated either way.

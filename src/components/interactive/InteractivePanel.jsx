@@ -23,6 +23,7 @@ const registry = {
   backprop_viz:               lazy(() => import('./BackpropViz').then(m => ({ default: m.BackpropViz }))),
   neural_net_geometry_viz:    lazy(() => import('./NeuralNetGeometryViz').then(m => ({ default: m.NeuralNetGeometryViz }))),
   eigen_geometry_viz:         lazy(() => import('./EigenGeometryViz').then(m => ({ default: m.EigenGeometryViz }))),
+  donut_cup_viz:               lazy(() => import('./DonutCupViz').then(m => ({ default: m.DonutCupViz }))),
   ensemble_viz:               lazy(() => import('./EnsembleViz').then(m => ({ default: m.EnsembleViz }))),
   hypothesis_testing_viz:     lazy(() => import('./HypothesisTestingViz').then(m => ({ default: m.HypothesisTestingViz }))),
   calibration_curve_viz:      lazy(() => import('./CalibrationCurveViz').then(m => ({ default: m.CalibrationCurveViz }))),
