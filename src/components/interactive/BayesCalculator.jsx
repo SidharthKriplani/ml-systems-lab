@@ -8,8 +8,8 @@ const PRESETS = [
     pEnotH: 0.05,
   },
   {
-    label: `Spam filter (20% spam)`,
-    pH: 0.20,
+    label: `Spam filter (30% spam)`,
+    pH: 0.30,
     pEH: 0.95,
     pEnotH: 0.10,
   },
@@ -17,7 +17,7 @@ const PRESETS = [
     label: `Rare event (0.1%)`,
     pH: 0.001,
     pEH: 0.99,
-    pEnotH: 0.05,
+    pEnotH: 0.01,
   },
 ];
 

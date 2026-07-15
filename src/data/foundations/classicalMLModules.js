@@ -1229,7 +1229,7 @@ Recall the debt/income tree from last module: it is twitchy precisely because it
 
 Here is the crucial catch. The ox crowd worked because people guessed *independently* — their errors were unrelated. If everyone had copied their neighbour, the "crowd" would be one guess repeated eight hundred times, and averaging would do nothing. The same holds for trees: if income is the strongest predictor of default, every tree handed the full dataset will split on income first and come out nearly identical — all making the same mistakes.
 
-Make that precise. Suppose each tree's prediction carries some error with variance σ² = 100 (in squared-price units — think an individual tree's typical miss is about √100 = 10k on a house-price task), and any two trees' errors share correlation ρ, because they overlap: bootstrap resampling and shared features mean two trees trained on the same dataset agree more than two trees trained on unrelated problems would. For n trees averaged together, each with variance σ² and pairwise correlation ρ, the variance of their average is:
+Make that precise. Suppose each tree's prediction carries some error with variance σ² = 100 (in squared-price units — think an individual tree's typical miss is about √100 = 10k on a house-price task), and any two trees' errors share correlation ρ, because they overlap: training on overlapping resamples of the same rows, and on the same features, means two trees trained on the same dataset agree more than two trees trained on unrelated problems would. For n trees averaged together, each with variance σ² and pairwise correlation ρ, the variance of their average is:
 
 Var(average) = σ²/n + ((n−1)/n)·ρσ²
 
@@ -1249,7 +1249,7 @@ Second: at each split, do not let the tree look at all the features — show it 
 
 **A free validation set, for nothing.**
 
-That same row-resampling step that decorrelates the trees also hands you a bonus, and it has an exact source. A bootstrap resample of n rows drawn with replacement from n rows leaves some rows out entirely — the probability any single row is *never* drawn across n draws is (1−1/n)ⁿ, which converges to 1/e ≈ **0.368** as n grows. So roughly 36.8% of rows — "about a third" — never appear in a given tree's training set, and are that tree's **out-of-bag** rows. For each row you can ask only the trees that did *not* train on it to predict it, and check them against the truth. That gives an honest estimate of test performance — the **out-of-bag (OOB) error** — for free, with no separate validation set set aside. If the OOB error and your real test error disagree badly, that is a red flag for a distribution shift or a data leak.
+That same row-resampling step that decorrelates the trees also hands you a bonus, and it has an exact source. A bootstrap resample of n rows drawn with replacement from n rows leaves some rows out entirely — the probability any single row is *never* drawn across n draws is (1−1/n)ⁿ, which converges to 1/e ≈ **0.368** as n grows. So roughly 36.8% of rows — "about a third" — never appear in a given tree's training set, and are that tree's **out-of-bag** rows. For each row you can ask only the trees that did *not* train on it to predict it, and check them against the truth. That gives an honest estimate of test performance — the **out-of-bag (OOB) error** — for free, with no separate validation set aside. If the OOB error and your real test error disagree badly, that is a red flag for a distribution shift or a data leak.
 
 ---
 
