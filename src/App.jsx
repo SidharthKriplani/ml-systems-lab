@@ -1489,7 +1489,8 @@ export default function App() {
 
       {/* Bottom nav removed — mobile navigation now uses the drawer (hamburger in topbar). */}
 
-      {/* ── Footer ── */}
+      {/* ── Footer ── (hidden on the tracks workspace: fixed two-pane layout, no page scroll) */}
+      {activeTab !== 'my_tracks' && (
       <footer style={{ borderTop: '1px solid var(--rim)', padding: '14px 20px', textAlign: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px', marginBottom: '8px', opacity: 0.85 }}>
           <BrandMark variant='wordmark' size={13} />
@@ -1507,6 +1508,7 @@ export default function App() {
           <a href="https://programming-lab.vercel.app" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--ink-ghost)', textDecoration: 'underline', textUnderlineOffset: '3px' }}>Programming Lab</a>
         </p>
       </footer>
+      )}
 
       </div>{/* end desktop-main-wrapper */}
 
