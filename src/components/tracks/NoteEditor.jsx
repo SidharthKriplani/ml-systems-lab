@@ -394,6 +394,7 @@ function EditableBlock({
     if (block.type === 'todo') return (
       <input
         type="checkbox"
+        className="nb-check"
         checked={!!block.checked}
         onChange={e => onPatch({ checked: e.target.checked })}
         onMouseDown={e => e.stopPropagation()}
@@ -461,7 +462,7 @@ function CodeBlock({ block, onPatch, onRemoveEmptyBackspace, onFocusBlock, focus
   useEffect(() => { autosize(ref.current) }, [block.content])
 
   return (
-    <div style={{ border: `1px solid ${T.border}`, borderRadius: 8, background: T.codeBg, overflow: 'hidden' }}>
+    <div className="nb-card" style={{ border: `1px solid ${T.border}`, borderRadius: 8, background: T.codeBg, overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.3rem 0.7rem', borderBottom: `1px solid ${T.border}` }}>
         <input
           value={block.lang || ''}
@@ -511,7 +512,7 @@ function ToggleBlock({ block, onPatch, onFocusBlock, focusReq }) {
   const showRenderedBody = !bodyFocused && (block.body || '').trim() !== ''
 
   return (
-    <div style={{ border: `1px solid ${T.border}`, borderRadius: 8, background: T.surface, padding: '0.5rem 0.75rem' }}>
+    <div className="nb-card" style={{ border: `1px solid ${T.border}`, borderRadius: 8, background: T.surface, padding: '0.5rem 0.75rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
         <button
           onClick={() => setOpen(o => !o)}
@@ -527,7 +528,7 @@ function ToggleBlock({ block, onPatch, onFocusBlock, focusReq }) {
         />
       </div>
       {open && (
-        <div style={{ paddingLeft: '1.5rem', paddingTop: '0.35rem' }}>
+        <div className="nb-togglebody" style={{ paddingLeft: '1.5rem', paddingTop: '0.35rem' }}>
           {showRenderedBody ? (
             <div
               onClick={() => { setBodyFocused(true); requestAnimationFrame(() => { bodyRef.current?.focus(); autosize(bodyRef.current) }) }}
@@ -558,15 +559,15 @@ function VideoBlock({ block, onPatch }) {
   const thumb = videoThumb(block.platform, block.videoId)
   const embedUrl = videoEmbedUrl(block.platform, block.videoId)
   return (
-    <div style={{ border: `1px solid ${T.border}`, borderRadius: 8, overflow: 'hidden', background: T.surface }}>
+    <div className="nb-card" style={{ border: `1px solid ${T.border}`, borderRadius: 8, overflow: 'hidden', background: T.surface }}>
       {playing && embedUrl ? (
         <iframe src={embedUrl} style={{ width: '100%', aspectRatio: '16/9', border: 'none', display: 'block' }} allow="autoplay; fullscreen" allowFullScreen />
       ) : (
-        <div onClick={() => setPlaying(true)} style={{ position: 'relative', cursor: 'pointer', background: '#000', aspectRatio: '16/9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="nb-video" onClick={() => setPlaying(true)} style={{ position: 'relative', cursor: 'pointer', background: '#000', aspectRatio: '16/9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {thumb
             ? <img src={thumb} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.85 }} />
             : <span style={{ color: T.low, fontSize: '0.8rem' }}>{block.platform}</span>}
-          <div style={{ position: 'absolute', width: 52, height: 52, borderRadius: '50%', background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="nb-playcircle" style={{ position: 'absolute', width: 52, height: 52, borderRadius: '50%', background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ color: '#fff', fontSize: '1.3rem', marginLeft: 3 }}>▶</span>
           </div>
         </div>
@@ -588,7 +589,7 @@ function VideoBlock({ block, onPatch }) {
 function LinkBlock({ block, onPatch, pending }) {
   const favicon = `https://www.google.com/s2/favicons?domain=${block.domain}&sz=32`
   return (
-    <div style={{ border: `1px solid ${T.border}`, borderRadius: 8, background: T.surface, padding: '0.7rem 0.9rem', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+    <div className="nb-card" style={{ border: `1px solid ${T.border}`, borderRadius: 8, background: T.surface, padding: '0.7rem 0.9rem', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         <img src={favicon} alt="" width={14} height={14} style={{ borderRadius: 2, flexShrink: 0 }} />
         <span style={{ fontSize: '0.72rem', color: T.ghost }}>{block.domain}</span>
@@ -621,7 +622,7 @@ function SlashMenu({ query, index, onPick }) {
   ))
   if (!items.length) return null
   return (
-    <div style={{
+    <div className="nb-pop" style={{
       position: 'absolute', zIndex: 40, top: '100%', left: '2rem', marginTop: 4,
       width: 280, maxHeight: 320, overflowY: 'auto',
       background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10,
@@ -631,6 +632,7 @@ function SlashMenu({ query, index, onPick }) {
       {items.map((d, i) => (
         <div
           key={d.type}
+          className="nb-slashitem"
           onMouseDown={e => { e.preventDefault(); onPick(d.type) }}
           style={{
             display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.4rem 0.6rem',
@@ -677,7 +679,7 @@ function BlockMenu({ onTurnInto, onDuplicate, onMoveUp, onMoveDown, onDelete, on
     color: T.mid, fontSize: '0.78rem', padding: '0.32rem 0.6rem', borderRadius: 6, fontFamily: T.sans,
   }
   return (
-    <div ref={ref} style={{
+    <div ref={ref} className="nb-pop" style={{
       position: 'absolute', zIndex: 50, top: 22, left: 0, width: 210,
       background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10,
       boxShadow: '0 12px 32px rgba(0,0,0,0.45)', padding: '0.35rem',
@@ -685,7 +687,7 @@ function BlockMenu({ onTurnInto, onDuplicate, onMoveUp, onMoveDown, onDelete, on
       <div style={{ fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: T.ghost, padding: '0.25rem 0.6rem' }}>Turn into</div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3, padding: '0 0.4rem 0.35rem' }}>
         {BLOCK_DEFS.filter(d => TEXTISH.has(d.type) || ['code', 'toggle'].includes(d.type)).map(d => (
-          <button key={d.type} title={d.label}
+          <button key={d.type} title={d.label} className="nb-turnbtn"
             onMouseDown={e => e.preventDefault()}
             onClick={() => { onTurnInto(d.type); onClose() }}
             style={{
@@ -697,13 +699,49 @@ function BlockMenu({ onTurnInto, onDuplicate, onMoveUp, onMoveDown, onDelete, on
         ))}
       </div>
       <div style={{ borderTop: `1px solid ${T.border}`, margin: '0.15rem 0' }} />
-      <button style={btn} onClick={() => { onDuplicate(); onClose() }}>⧉ Duplicate</button>
-      <button style={btn} onClick={() => { onMoveUp(); onClose() }}>↑ Move up</button>
-      <button style={btn} onClick={() => { onMoveDown(); onClose() }}>↓ Move down</button>
-      <button style={{ ...btn, color: T.danger }} onClick={() => { onDelete(); onClose() }}>✕ Delete</button>
+      <button className="nb-menubtn" style={btn} onClick={() => { onDuplicate(); onClose() }}>⧉ Duplicate</button>
+      <button className="nb-menubtn" style={btn} onClick={() => { onMoveUp(); onClose() }}>↑ Move up</button>
+      <button className="nb-menubtn" style={btn} onClick={() => { onMoveDown(); onClose() }}>↓ Move down</button>
+      <button className="nb-menubtn" style={{ ...btn, color: T.danger }} onClick={() => { onDelete(); onClose() }}>✕ Delete</button>
     </div>
   )
 }
+
+
+// ── Motion layer (product-feel micro-animations; namespaced, reduced-motion safe) ──
+const ANIM_CSS = `
+@keyframes nbRowIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes nbPop { from { opacity: 0; transform: translateY(5px) scale(0.97); } to { opacity: 1; transform: none; } }
+@keyframes nbFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes nbCheckPop { 0% { transform: scale(1); } 45% { transform: scale(1.3); } 100% { transform: scale(1); } }
+@keyframes nbSavePulse { 0% { box-shadow: 0 0 0 0 rgba(52,211,153,0.55); } 100% { box-shadow: 0 0 0 7px rgba(52,211,153,0); } }
+.nb-editor { animation: nbFadeIn 0.25s ease both; }
+.nb-editor .nb-row { animation: nbRowIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.nb-editor .nb-pop { animation: nbPop 0.18s cubic-bezier(0.16, 1, 0.3, 1) both; transform-origin: top left; }
+.nb-editor .nb-togglebody { animation: nbRowIn 0.24s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.nb-editor button { transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease, transform 0.12s ease, opacity 0.15s ease, box-shadow 0.15s ease; }
+.nb-editor button:active { transform: scale(0.94); }
+.nb-editor .nb-check { transition: transform 0.12s ease; }
+.nb-editor .nb-check:active { transform: scale(0.82); }
+.nb-editor .nb-check:checked { animation: nbCheckPop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.nb-editor .nb-tbbtn:hover { background: var(--prime-faint) !important; }
+.nb-editor .nb-slashitem { transition: background 0.12s ease; }
+.nb-editor .nb-slashitem:hover { background: var(--prime-faint); }
+.nb-editor .nb-menubtn:hover { background: var(--prime-faint); }
+.nb-editor .nb-turnbtn:hover { border-color: var(--prime) !important; transform: translateY(-1px); }
+.nb-editor .nb-card { transition: border-color 0.18s ease, box-shadow 0.18s ease; }
+.nb-editor .nb-card:hover { border-color: var(--prime) !important; }
+.nb-editor .nb-playcircle { transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.18s ease; }
+.nb-editor .nb-video:hover .nb-playcircle { transform: scale(1.12); background: rgba(0,0,0,0.85); }
+.nb-editor .nb-outline-item { transition: color 0.15s ease, transform 0.15s ease, border-color 0.15s ease; }
+.nb-editor .nb-outline-item:hover { transform: translateX(3px); border-color: var(--prime) !important; }
+.nb-editor .nb-savedot { animation: nbSavePulse 0.9s ease-out 1; }
+.nb-editor .nb-gutter button:hover, .nb-editor .nb-gutter span:hover { transform: scale(1.15); }
+.nb-editor .nb-gutter button, .nb-editor .nb-gutter span { transition: color 0.15s ease, transform 0.12s ease; }
+@media (prefers-reduced-motion: reduce) {
+  .nb-editor, .nb-editor * { animation: none !important; transition: none !important; }
+}
+`
 
 // ── Main NoteEditor ───────────────────────────────────────────────────────────
 
@@ -1012,11 +1050,13 @@ export function NoteEditor({ trackId, note, onBack }) {
 
   return (
     <div
+      className="nb-editor"
       style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', fontFamily: T.sans }}
       onKeyDownCapture={e => {
         if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') { e.preventDefault(); saveNow() }
       }}
     >
+      <style>{ANIM_CSS}</style>
       {/* ── Top bar ── */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', padding: '0.6rem 1.25rem', borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
         <button onClick={() => { saveNow(); onBack() }} title="Back to track"
@@ -1038,16 +1078,16 @@ export function NoteEditor({ trackId, note, onBack }) {
 
       {/* ── Format toolbar ── */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 2, padding: '0.35rem 1.25rem', borderBottom: `1px solid ${T.border}`, flexShrink: 0, overflowX: 'auto' }}>
-        <button style={tbBtn(false)} title="Bold (⌘B)" onMouseDown={e => e.preventDefault()} onClick={() => toolbarMark('**')}><b>B</b></button>
-        <button style={tbBtn(false)} title="Italic (⌘I)" onMouseDown={e => e.preventDefault()} onClick={() => toolbarMark('*')}><i>I</i></button>
-        <button style={tbBtn(false)} title="Strikethrough (⌘⇧S)" onMouseDown={e => e.preventDefault()} onClick={() => toolbarMark('~~')}><s>S</s></button>
-        <button style={{ ...tbBtn(false), fontFamily: T.mono }} title="Inline code (⌘E)" onMouseDown={e => e.preventDefault()} onClick={() => toolbarMark('`')}>{'<>'}</button>
-        <button style={tbBtn(false)} title="Highlight (⌘⇧H)" onMouseDown={e => e.preventDefault()} onClick={() => toolbarMark('==')}>
+        <button className="nb-tbbtn" style={tbBtn(false)} title="Bold (⌘B)" onMouseDown={e => e.preventDefault()} onClick={() => toolbarMark('**')}><b>B</b></button>
+        <button className="nb-tbbtn" style={tbBtn(false)} title="Italic (⌘I)" onMouseDown={e => e.preventDefault()} onClick={() => toolbarMark('*')}><i>I</i></button>
+        <button className="nb-tbbtn" style={tbBtn(false)} title="Strikethrough (⌘⇧S)" onMouseDown={e => e.preventDefault()} onClick={() => toolbarMark('~~')}><s>S</s></button>
+        <button className="nb-tbbtn" style={{ ...tbBtn(false), fontFamily: T.mono }} title="Inline code (⌘E)" onMouseDown={e => e.preventDefault()} onClick={() => toolbarMark('`')}>{'<>'}</button>
+        <button className="nb-tbbtn" style={tbBtn(false)} title="Highlight (⌘⇧H)" onMouseDown={e => e.preventDefault()} onClick={() => toolbarMark('==')}>
           <span style={{ background: T.highlightBg, borderRadius: 3, padding: '0 3px' }}>H</span>
         </button>
         <span style={{ width: 1, height: 16, background: T.border, margin: '0 6px', flexShrink: 0 }} />
         {[['h1', 'H1'], ['h2', 'H2'], ['h3', 'H3'], ['bullet', '•'], ['numbered', '1.'], ['todo', '☑'], ['quote', '❝'], ['callout', '💡'], ['code', '</>']].map(([type, label]) => (
-          <button key={type} style={{ ...tbBtn(focusedBlock?.type === type), fontFamily: type === 'code' ? T.mono : T.sans }}
+          <button key={type} className="nb-tbbtn" style={{ ...tbBtn(focusedBlock?.type === type), fontFamily: type === 'code' ? T.mono : T.sans }}
             title={BLOCK_DEFS.find(d => d.type === type)?.label}
             onMouseDown={e => e.preventDefault()} onClick={() => toolbarType(type)}>{label}</button>
         ))}
@@ -1088,6 +1128,7 @@ export function NoteEditor({ trackId, note, onBack }) {
                     onDrop={e => { e.preventDefault(); if (dragIdx != null) moveBlock(dragIdx, i); setDragIdx(null); setOverIdx(null) }}
                     style={{
                       position: 'relative', display: 'flex', alignItems: 'flex-start', gap: 4,
+                      animationDelay: `${Math.min(i, 10) * 22}ms`,
                       padding: '0.14rem 0', borderTop: overIdx === i && dragIdx !== null && dragIdx !== i ? `2px solid ${T.accent}` : '2px solid transparent',
                       opacity: dragIdx === i ? 0.45 : 1,
                     }}
@@ -1200,6 +1241,7 @@ export function NoteEditor({ trackId, note, onBack }) {
             {headings.map(h => (
               <div
                 key={h.id}
+                className="nb-outline-item"
                 onClick={() => document.getElementById(`nb-${h.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
                 style={{
                   fontSize: '0.72rem', color: T.low, cursor: 'pointer', padding: '0.18rem 0',
