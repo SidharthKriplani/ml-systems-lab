@@ -36,11 +36,17 @@ export function LockIcon({ size = 11, color = 'currentColor' }) {
   )
 }
 
+// Level-chip hover tooltips (2026-07-16): each L0-L3 chip's title is the level's real
+// definition from QNA-INTERVIEW-STANDARD.md's level taxonomy -- not invented copy.
 const LEVEL_META = {
-  0: { label: 'L0', desc: 'definition', color: 'var(--ink-low)' },
-  1: { label: 'L1', desc: 'mechanism', color: 'var(--prime)' },
-  2: { label: 'L2', desc: 'tradeoff', color: '#b45309' },
-  3: { label: 'L3', desc: 'case', color: '#e05050' },
+  0: { label: 'L0', desc: 'definition', color: 'var(--ink-low)',
+       title: "L0 — definition/recall: what it is, where it lives, what it's for." },
+  1: { label: 'L1', desc: 'mechanism', color: 'var(--prime)',
+       title: "L1 — mechanism/why: how it works, why it's built this way, what breaks without it." },
+  2: { label: 'L2', desc: 'tradeoff', color: '#b45309',
+       title: "L2 — comparison/tradeoff: X vs Y, when to use which, where X stops holding." },
+  3: { label: 'L3', desc: 'case', color: '#e05050',
+       title: "L3 — case: an applied production/diagnostic scenario you walk through step by step." },
 }
 
 const DIFFICULTY_META = {
@@ -54,7 +60,7 @@ const DIFFICULTY_ORDER = ['easy', 'medium', 'hard']
 function LevelChip({ level }) {
   const m = LEVEL_META[level] || LEVEL_META[0]
   return (
-    <span style={{
+    <span title={m.title} style={{
       flexShrink: 0, fontSize: '0.58rem', fontWeight: 800, fontFamily: 'var(--font-mono, monospace)',
       color: m.color, border: `1px solid ${m.color}`, borderRadius: '3px',
       padding: '0.05rem 0.3rem', lineHeight: 1.4, opacity: 0.9, marginTop: '2px',
@@ -65,9 +71,9 @@ function LevelChip({ level }) {
 }
 
 // Shared chip button for the Level / Difficulty / All filter rows.
-function FilterChip({ active, color, onClick, children }) {
+function FilterChip({ active, color, onClick, title, children }) {
   return (
-    <button onClick={onClick} style={{
+    <button onClick={onClick} title={title} style={{
       fontSize: '0.62rem', fontWeight: 800, fontFamily: 'var(--font-mono, monospace)',
       color: active ? '#000' : color, background: active ? color : 'transparent',
       border: `1px solid ${color}`, borderRadius: '4px', padding: '0.12rem 0.45rem',
@@ -290,7 +296,7 @@ export function QnAPanel({ moduleId, unlocked }) {
         <span style={{ fontSize: '0.62rem', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono, monospace)', marginRight: '0.15rem' }}>level:</span>
         <FilterChip active={!hasActiveFilter} color="var(--ink-low)" onClick={clearFilters}>All</FilterChip>
         {levelsPresent.map(l => (
-          <FilterChip key={l} active={levelFilter === l} color={LEVEL_META[l].color} onClick={() => toggleLevel(l)}>
+          <FilterChip key={l} active={levelFilter === l} color={LEVEL_META[l].color} title={LEVEL_META[l].title} onClick={() => toggleLevel(l)}>
             {LEVEL_META[l].label} · {LEVEL_META[l].desc}
           </FilterChip>
         ))}

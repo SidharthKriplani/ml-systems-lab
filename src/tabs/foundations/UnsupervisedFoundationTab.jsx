@@ -127,7 +127,7 @@ export function UnsupervisedFoundationTab({ onNavigate, openModuleId, navOrigin 
               <div style={{ minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><div style={{ fontSize: '0.83rem', fontWeight: 600, color: done ? 'var(--ink-mid)' : 'var(--ink-hi)', lineHeight: 1.3, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.title}</div>{(() => { const _s = TIER_STYLE[tierOf(m.id)]; return (<span title={tierOf(m.id) + ' tier — interview frequency'} style={{ fontSize: '0.58rem', fontWeight: 800, fontFamily: 'var(--font-mono, monospace)', color: _s.color, background: _s.bg, border: `1px solid ${_s.border}`, borderRadius: '3px', padding: '0.02rem 0.28rem', flexShrink: 0, lineHeight: 1.2 }}>{_s.label}</span>); })()}</div>
                 <div style={{ fontSize: '0.72rem', color: 'var(--ink-low)', marginTop: '0.15rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {m.estimatedMin} min · {m.difficulty}
+                  {m.difficulty}
                 </div>
               </div>
             </div>
@@ -151,7 +151,6 @@ export function UnsupervisedFoundationTab({ onNavigate, openModuleId, navOrigin 
           <div style={{ marginBottom: '1.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.6rem', flexWrap: 'wrap' }}>
               {difficultyBadge(selected.difficulty)}
-              <span style={{ fontSize: '0.72rem', color: 'var(--ink-ghost)', fontWeight: 500 }}>~{selected.estimatedMin} min</span>
               {selected.tags?.map(t => (
                 <span key={t} style={{ fontSize: '0.65rem', color: 'var(--ink-ghost)', background: 'var(--surface)',
                   border: '1px solid var(--rim)', borderRadius: '4px', padding: '0.1rem 0.35rem' }}>{t}</span>

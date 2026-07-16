@@ -106,7 +106,7 @@ function TrackList({ tracks, selectedId, onSelect, onCreate, onDelete, onMoveIte
       {onBuildTiers && (
         <button
           onClick={onBuildTiers}
-          title="Create the S / A / B tier tracks from every Foundation module, ranked by interview frequency"
+          title="S = always asked, A = shows up often, B = the depth that makes you unbreakable (default) -- builds one track per tier from every Foundation module, ranked by interview frequency"
           style={{
             margin: '0 0.5rem 0.75rem', padding: '0.4rem 0.5rem', borderRadius: '7px',
             fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer',
