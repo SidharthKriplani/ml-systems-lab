@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { computeReadiness, readinessLabel, readinessColor } from '../utils/readiness.js'
 import ReadinessWidget from '../components/shared/ReadinessWidget.jsx'
+import DailyDrill from '../components/DailyDrill.jsx'
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -410,6 +411,11 @@ export function ProgressTab({ user, onNavigate }) {
           {grandDone} of {grandTotal} modules completed across all rooms
         </p>
       </div>
+
+      {/* Daily Drill — Progress is the signed-in landing tab (home redirects here),
+          so the daily loop must live HERE to be seen. HomeTab keeps its copy for
+          signed-out visitors; the card is idempotent (same storage key). */}
+      <div style={{ marginBottom: '1rem' }}><DailyDrill onTrain={() => onNavigate && onNavigate('judge_browser')} /></div>
 
       {/* Readiness widget — score + target-interview countdown + weakest-area CTA */}
       <ReadinessWidget onNavigate={onNavigate} />
