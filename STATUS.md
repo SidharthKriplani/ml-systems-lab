@@ -4,6 +4,19 @@ Read this at session open alongside NEXT.md + CLAUDE.md. One screen of truth.
 
 ---
 
+## Where we are (16 Jul 2026 — session close)
+
+**The notes/tracks UX wave (uncommitted → commit command handed to Sidharth, approve-first):**
+- **NoteEditor (family file, see BreakLabs/CLAUDE.md rule):** whisper placeholder (0.18 opacity, focused/lone-only) · docs-style block-range selection (Shift+↑/↓, Cmd+A escalates, Cmd+C/X as markdown, Backspace deletes with focus-after) · range-aware toolbar formatting · **full undo/redo** (commit-level snapshots, 800ms typing coalesce, structural boundaries, Cmd+Z / Cmd+Shift+Z work inside textareas) · paste always splits multi-line (settled, do-not-relitigate) · **sub-bullets** (indent 0–2, Tab/Shift+Tab + ⇤⇥ toolbar buttons, • ◦ ▪ markers, 1./a./i. per-level numbering, bullets no longer reset numbered runs, md round-trip preserves indent) · **per-block edit timestamps** (editedAt stamped on substance change, hover shows "Jul 16, 11:49 PM") · header "Created … · Edited …".
+- **In-place highlights:** `utils/localHighlights.js` + reworked `HighlightPopover.jsx` — swatch click = instant marker-pen highlight (text+nth-occurrence anchor, localStorage `msl_page_highlights_v1`, click mark → Remove); Save = separate save-to-track (gold default). Both ignore selections inside TEXTAREA/INPUT.
+- **Tracks workspace:** dead-space ROOT CAUSE was `index.css` `.main-content { max-width: 860px }` clamping the inline-styled tracks branch → fixed with inline `maxWidth: 'none'`. Footer hidden on my_tracks; phantom scrollbar gone.
+- **Tracks sync:** pull+merge now on INITIAL_SESSION too (phone fix); `msl-review-v1` + `msl_done_*` added to progress sync; **SyncStatusRow** in My Tracks ("✓ synced HH:MM" / "⚠ sync failed — msg" / "local only") + manual Sync now — sync failures no longer die silently.
+- **Topbar duplicate "Ask / Search" removed** (sidebar entry + ⌘K remain).
+
+**Verify next session (needs deploy):** dead space gone at full width · SyncStatusRow visible and green on BOTH MacBook and phone (this names the tracks-sync culprit) · Daily Rep/Review visible · highlights paint/remove/persist.
+
+---
+
 ## Where we are (15 Jul 2026)
 
 **Vercel:** live at `ml-systems-lab.vercel.app` (not re-confirmed live by direct fetch this refresh — see Active blockers)  

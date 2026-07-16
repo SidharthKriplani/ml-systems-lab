@@ -2,6 +2,16 @@
 
 ---
 
+## ⚠ FIRST — verify the 16 Jul UI wave deployed (before anything else)
+
+1. Sidharth pushes the handed MSL commit (App.jsx, NoteEditor.jsx, HighlightPopover.jsx, localHighlights.js, MyTracksTab.jsx, tracksSync.js, index.css) if not already pushed.
+2. On the live site: My Tracks fills the window (no dead right region) · **SyncStatusRow** under MY TRACKS shows "✓ synced" on the MacBook **and on the phone** (if it shows an error, THAT message is the tracks-sync answer) · notes editor has ⇤⇥ buttons + hover timestamps · highlights work on foundation tabs.
+3. If the deploy looks stale: Vercel dashboard → red builds? correct production domain (v9xe)?
+
+---
+
+---
+
 ## ✅ DONE (25 Jun 2026) — Icon system migration
 
 Full HQ canonical `Icon.jsx` (84 icons) deployed; `CompanyLogo.jsx` + `companyDomains.js` added. All replaceable emoji in 16 source files converted to `<Icon>` components. Commit prepared (approve-first) — run git commands from session. **No content changes; freeze remains in effect.**

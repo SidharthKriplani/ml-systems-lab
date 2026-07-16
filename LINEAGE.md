@@ -2864,3 +2864,10 @@ Every Gradient post now has a shareable URL: `?post={slug}#gradient`. Added `use
 
 ---
 
+
+
+---
+
+### Notes/tracks UX wave — cross-lab family patch (16 Jul 2026)
+
+Owner-driven UX session over My Tracks + the block NoteEditor (MSL is the family lead; GSL/PAL/PL received the same editor patch — see BreakLabs/CLAUDE.md "four files" rule). Shipped: whisper placeholder; docs-style block-range selection with range formatting, copy/cut-as-md, delete-with-undo; full document undo/redo (commit-level snapshots, typing coalesced 800ms, Cmd+Z/Cmd+Shift+Z everywhere); paste always splits (final, after three iterations); nested sub-bullets (Tab/Shift+Tab + ⇤⇥ toolbar, • ◦ ▪ / 1. a. i., md round-trip); per-block editedAt hover timestamps + Created·Edited header; in-place marker-pen highlights (localHighlights.js — swatch = instant paint, click mark = remove; save-to-track now a separate always-enabled button); tracks workspace width unclamped (root cause: `.main-content` max-width 860 class beating the inline tracks branch — RULE: a surface opting out of the reading column must override EVERY column property inline); topbar duplicate search removed; tracks sync made VISIBLE (status ledger in tracksSync.js + SyncStatusRow + manual Sync now) after a second "tracks don't sync on my phone" report — the sync code itself verified correct, instrumentation will name the environmental culprit.
