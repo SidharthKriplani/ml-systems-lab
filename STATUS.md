@@ -4,6 +4,25 @@ Read this at session open alongside NEXT.md + CLAUDE.md. One screen of truth.
 
 ---
 
+## FINAL CLOSE (17 Jul 2026, late night)
+
+**The staleness villain of the whole session was SERVICE WORKERS** — hard refresh bypasses
+the HTTP cache, not a controlling SW's Cache Storage. MSL sw.js is now v3 (never intercepts
+navigations, MIME-guarded asset cache, activate-time SELF-HEAL: purge → claim → re-navigate
+every open tab). Every future deploy reaches users automatically.
+
+Shipped after the earlier close, all esbuild-verified, committed + pushed as handed:
+SlashMenu v3 (opaque portal, scroll-follow, Sub-bullet entry, ⇥⇤ beside list buttons) ·
+one-press arrow navigation (visual-line aware; ←/→ cross blocks) · mobile pass (gutter
+hidden ≤700, swipe toolbar, compact header, Export hidden) · mobile outline ☰ + slide-in
+drawer (repositioned bottom:136 z:450 — first version hid UNDER the Rate chip z:400) ·
+tracks sync CONFIRMED working cross-device (TEXT-column stringify fix; phone receipt).
+
+**Open on Sidharth:** Vercel status filter 6/7 → check GSL red builds (MSL is fine) ·
+JSS cherry-pick chain · delete PAL-broken · move BreakLabs out of iCloud.
+
+---
+
 ## Where we are (16 Jul 2026 — session close)
 
 **The notes/tracks UX wave (uncommitted → commit command handed to Sidharth, approve-first):**
@@ -13,7 +32,9 @@ Read this at session open alongside NEXT.md + CLAUDE.md. One screen of truth.
 - **Tracks sync:** pull+merge now on INITIAL_SESSION too (phone fix); `msl-review-v1` + `msl_done_*` added to progress sync; **SyncStatusRow** in My Tracks ("✓ synced HH:MM" / "⚠ sync failed — msg" / "local only") + manual Sync now — sync failures no longer die silently.
 - **Topbar duplicate "Ask / Search" removed** (sidebar entry + ⌘K remain).
 
-**Verify next session (needs deploy):** dead space gone at full width · SyncStatusRow visible and green on BOTH MacBook and phone (this names the tracks-sync culprit) · Daily Rep/Review visible · highlights paint/remove/persist.
+**RESOLVED same night (17 Jul):** tracks sync CONFIRMED working cross-device (phone shows the MacBook's note, edited on the phone) — root cause was `user_progress.value` being TEXT while the code pushed a raw object (stringify/parse fix in tracksSync.js). Editor wave 2 also shipped: SlashMenu v3 (opaque portal, scroll-follow, sub-bullet entry), one-press arrow navigation, mobile pass (gutter hidden ≤700px, swipe toolbar, compact header).
+
+**Still verify on deploy:** dead space gone at full width · Daily Rep/Review visible · highlights paint/remove/persist · GSL-style slash ghost gone after Vercel rebuilds each lab (code is pushed; ghosts in screenshots = stale bundles).
 
 ---
 

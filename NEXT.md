@@ -1,5 +1,7 @@
 # NEXT.md — Session Queue
 
+> **17 Jul FINAL:** all editor waves + SW v3 self-heal pushed. Verify on any device: slash menu has 'Sub-bullet ↳' = fresh bundle. Remaining queue lives in STATUS.md + BreakLabs/CLAUDE.md SESSION CLOSE v3.
+
 ---
 
 ## ⚠ FIRST — verify the 16 Jul UI wave deployed (before anything else)
