@@ -3139,3 +3139,22 @@ all 200 questions confirmed non-empty.
 
 MSL running total: 46/206 modules answered, 160 parked. First batch of MSL Tier A (12-batch plan
 established this session).
+
+## Session 2026-07-16 (Thursday) — MSL QnA batch 34: Evaluation & Calibration (Tier A batch 2 of 12)
+
+**calibration_eval (37q), error_analysis (33q), ablation (35q), evaluation_in_prod (33q),
+online_experimentation_ml (30q), calibration_probabilistic (33q) -- 201 questions total, from
+src/data/foundations/evalModules.js and probabilisticMLModules.js.** 6 parallel writer agents, one per
+module, uniquely-named scratch/validator filenames (no collisions). Independently re-validated via
+validate_batch34.py across all 201 questions -- 5 flagged: 1 real fix in evaluation_in_prod (a Mechanism
+bullet opening with the banned "So" filler word, rewritten), 4 accepted as legitimate spec-sanctioned
+exceptions (calibration_eval's 3-method and 3-term questions both match the "N discrete items -> N
+Mechanism bullets" pattern, error_analysis's FP/FN tradeoff question has all sub-bands satisfied below its
+total band, online_experimentation_ml's offline-vs-online question lands at the top of the next band with
+all sub-bands satisfied).
+
+Applied via apply_batch34.py, all 201 applied cleanly on the first pass. qnaStatus.js updated via
+update_qnastatus34.py, node --check clean on both files, 0 duplicate keys across all 69 src/data/ files,
+all 201 questions confirmed non-empty.
+
+MSL running total: 52/206 modules answered, 154 parked.
