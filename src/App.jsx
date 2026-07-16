@@ -1482,12 +1482,17 @@ export default function App() {
       {/* ── Content ── */}
       <main
         className="fade-in main-content"
-        style={{
-          maxWidth: '1080px', width: '100%',
-          margin: '0 auto',
-          padding: '32px 20px 80px',
-          boxSizing: 'border-box',
-        }}>
+        style={activeTab === 'my_tracks'
+          /* Tracks is a fixed two-pane workspace: no page padding/max-width, or the
+             calc(100vh-48px) split overflows by exactly that padding (the phantom
+             right-edge scrollbar, 2026-07-17). */
+          ? { width: '100%', margin: 0, padding: 0, boxSizing: 'border-box' }
+          : {
+              maxWidth: '1080px', width: '100%',
+              margin: '0 auto',
+              padding: '32px 20px 80px',
+              boxSizing: 'border-box',
+            }}>
         <ErrorBoundary resetKey={activeTab}>
           {renderContent()}
         </ErrorBoundary>
