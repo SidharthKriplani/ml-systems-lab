@@ -1453,13 +1453,6 @@ export default function App() {
               GitHub
             </a>
           )}
-          <button
-            onClick={() => setSearchOpen(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 10px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--rim)', borderRadius: '7px', cursor: 'pointer', color: 'var(--ink-low)', fontSize: '12px', fontFamily: "var(--font-sans)" }}>
-            <span style={{ fontSize: '13px' }}>⌕</span>
-            <span style={{ display: 'inline' }}>Ask / Search</span>
-            <kbd style={{ fontFamily: "var(--font-mono)", fontSize: '10px', background: 'var(--surface)', padding: '1px 5px', borderRadius: '4px', color: 'var(--ink-ghost)' }} className="hide-mobile">⌘K</kbd>
-          </button>
           {authEnabled && (
             user ? (
               <button onClick={() => goTo('profile')} title="Profile"
@@ -1486,7 +1479,7 @@ export default function App() {
           /* Tracks is a fixed two-pane workspace: no page padding/max-width, or the
              calc(100vh-48px) split overflows by exactly that padding (the phantom
              right-edge scrollbar, 2026-07-17). */
-          ? { width: '100%', margin: 0, padding: 0, boxSizing: 'border-box' }
+          ? { width: '100%', maxWidth: 'none', margin: 0, padding: 0, boxSizing: 'border-box' }
           : {
               maxWidth: '1080px', width: '100%',
               margin: '0 auto',
