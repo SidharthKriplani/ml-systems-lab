@@ -3210,3 +3210,20 @@ update_qnastatus37.py, node --check clean on both files, 0 duplicate keys across
 all 194 questions confirmed non-empty.
 
 MSL running total: 73/206 modules answered, 133 parked.
+
+## Session 2026-07-16 (Thursday) — MSL QnA batch 38: Deep Learning Components (Tier A batch 6 of 12)
+
+**activations (34q), batch_norm (29q), optimizers (34q), cnns (34q), rnns_lstms (35q) -- 166 questions
+total, from src/data/foundations/deepLearningModules.js.** 5 parallel writer agents, one per module,
+uniquely-named scratch/validator filenames (no collisions). One agent (rnns_lstms) hit a transient API
+stream error mid-run with no output file written; retried cleanly on the second attempt with no data
+loss. Independently re-validated via validate_batch38.py across all 166 questions -- 1 flagged, accepted
+as the legitimate spec-sanctioned thin-content exception in optimizers (a bias-correction-fade question
+lands at 6 total bullets vs L2's 7-9 band, with all sub-band counts individually satisfying L2's own
+bands). 0 real gaps, 0 hand-patches needed.
+
+Applied via apply_batch38.py, all 166 applied cleanly on the first pass. qnaStatus.js updated via
+update_qnastatus38.py, node --check clean on both files, 0 duplicate keys across all 69 src/data/ files,
+all 166 questions confirmed non-empty.
+
+MSL running total: 78/206 modules answered, 128 parked.
