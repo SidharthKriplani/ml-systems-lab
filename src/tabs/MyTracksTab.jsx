@@ -51,18 +51,25 @@ function DiffBadge({ d }) {
 
 // ── Note preview helpers ──────────────────────────────────────────────────────
 
+// Block types whose `content` is prose (kept in sync with NoteEditor.jsx).
+const NOTE_TEXTISH = ['text', 'h1', 'h2', 'h3', 'bullet', 'numbered', 'todo', 'quote', 'callout']
+
 function notePreview(note) {
-  const textBlock = (note.blocks || []).find(b => b.type === 'text' && b.content?.trim())
-  return textBlock ? textBlock.content.slice(0, 80) : ''
+  const textBlock = (note.blocks || []).find(b => NOTE_TEXTISH.includes(b.type) && b.content?.trim())
+  return textBlock ? textBlock.content.replace(/[*~=`#>]/g, '').slice(0, 80) : ''
 }
 
 function noteBlockSummary(note) {
   const blocks = note.blocks || []
   const videos = blocks.filter(b => b.type === 'video').length
   const links = blocks.filter(b => b.type === 'link').length
-  const texts = blocks.filter(b => b.type === 'text' && b.content?.trim()).length
+  const todos = blocks.filter(b => b.type === 'todo').length
+  const todosDone = blocks.filter(b => b.type === 'todo' && b.checked).length
+  const texts = blocks.filter(b => NOTE_TEXTISH.includes(b.type) && b.type !== 'todo' && b.content?.trim()).length
+    + blocks.filter(b => ['code', 'toggle'].includes(b.type) && (b.content?.trim() || b.body?.trim())).length
   const parts = []
-  if (texts) parts.push(`${texts} text`)
+  if (texts) parts.push(`${texts} block${texts > 1 ? 's' : ''}`)
+  if (todos) parts.push(`${todosDone}/${todos} todos`)
   if (videos) parts.push(`${videos} video${videos > 1 ? 's' : ''}`)
   if (links) parts.push(`${links} link${links > 1 ? 's' : ''}`)
   return parts.join(' · ') || 'empty'
