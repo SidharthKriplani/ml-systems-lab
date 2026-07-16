@@ -1374,22 +1374,23 @@ export function NoteEditor({ trackId, note, onBack }) {
         <button onClick={() => { saveNow(); onBack() }} title="Back to track"
           style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.low, fontSize: '1rem', padding: 0, lineHeight: 1 }}>←</button>
         <div style={{ flex: 1, minWidth: 0 }} />
-        <span style={{ fontSize: '0.7rem', color: T.ghost, flexShrink: 0, whiteSpace: 'nowrap' }}>
+        <span className="nb-meta-full" style={{ fontSize: '0.7rem', color: T.ghost, flexShrink: 0, whiteSpace: 'nowrap' }}>
           {stats.words} words · {stats.minutes} min read
           {stats.todos > 0 ? ` · ${stats.todosDone}/${stats.todos} done` : ''}{createdLabel ? ` · ${createdLabel}` : ''} · {savedLabel}
         </span>
+        <span className="nb-meta-compact" style={{ fontSize: '0.7rem', color: T.ghost, flexShrink: 0, whiteSpace: 'nowrap' }}>{savedLabel}</span>
         <button onClick={copyMarkdown} title="Copy note as Markdown"
           style={{ background: 'none', border: `1px solid ${T.border}`, borderRadius: 6, cursor: 'pointer', color: copiedMd ? T.accentText : T.low, fontSize: '0.7rem', padding: '0.22rem 0.55rem', whiteSpace: 'nowrap', fontFamily: T.sans }}>
           {copiedMd ? 'Copied ✓' : 'Copy MD'}
         </button>
-        <button onClick={downloadMarkdown} title="Download as .md"
+        <button onClick={downloadMarkdown} title="Download as .md" className="nb-export"
           style={{ background: 'none', border: `1px solid ${T.border}`, borderRadius: 6, cursor: 'pointer', color: T.low, fontSize: '0.7rem', padding: '0.22rem 0.55rem', whiteSpace: 'nowrap', fontFamily: T.sans }}>
           Export ↓
         </button>
       </div>
 
       {/* ── Format toolbar ── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 2, padding: '0.35rem 1.25rem', borderBottom: `1px solid ${T.border}`, flexShrink: 0, overflowX: 'auto' }}>
+      <div className="nb-toolbar" style={{ display: 'flex', alignItems: 'center', gap: 2, padding: '0.35rem 1.25rem', borderBottom: `1px solid ${T.border}`, flexShrink: 0, overflowX: 'auto' }}>
         <button className="nb-tbbtn" style={tbBtn(false)} title="Bold (⌘B)" onMouseDown={e => e.preventDefault()} onClick={() => toolbarMark('**')}><b>B</b></button>
         <button className="nb-tbbtn" style={tbBtn(false)} title="Italic (⌘I)" onMouseDown={e => e.preventDefault()} onClick={() => toolbarMark('*')}><i>I</i></button>
         <button className="nb-tbbtn" style={tbBtn(false)} title="Strikethrough (⌘⇧S)" onMouseDown={e => e.preventDefault()} onClick={() => toolbarMark('~~')}><s>S</s></button>
@@ -1417,7 +1418,7 @@ export function NoteEditor({ trackId, note, onBack }) {
 
       {/* ── Body ── */}
       <div style={{ flex: 1, overflowY: 'auto', display: 'flex' }}>
-        <div style={{ flex: 1, minWidth: 0, padding: '1.75rem 2rem 40vh' }}>
+        <div className="nb-body-pad" style={{ flex: 1, minWidth: 0, padding: '1.75rem 2rem 40vh' }}>
           <div style={{ maxWidth: 720, margin: '0 auto' }}>
             {/* Title */}
             <textarea
