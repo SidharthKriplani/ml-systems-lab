@@ -3121,3 +3121,21 @@ all 69 src/data/ files, all 265 questions confirmed non-empty.
 moduleTiers.js's TIER_S array directly (not just the batch count). MSL running total: 40/206 modules
 answered, 166 parked. Attention now shifts to planning MSL Tier A (80 modules, ~2,624 questions),
 mirroring GSL's approach of drafting the next tier's batch plan once the current tier is fully closed.
+
+## Session 2026-07-16 (Thursday) — MSL QnA batch 33: Classical ML Extended (Tier A batch 1 of 12)
+
+**ensembles (35q), svm (24q), knn (32q), naive_bayes (32q), calibration (37q), feature_selection (40q)
+-- 200 questions total, from src/data/foundations/classicalMLModules.js.** 6 parallel writer agents, one
+per module, uniquely-named scratch/validator filenames (no collisions). Independently re-validated via
+validate_batch33.py across all 200 questions -- 6 flagged: 2 real fixes in calibration (two L0 answers
+missing the mandatory Grounding bullet, each given a source-grounded Grounding bullet), 1 real fix in knn
+(a 14-word Boundary bullet expanded to fit the 15-30 cap without adding new claims), 3 accepted as
+legitimate spec-sanctioned exceptions (ensembles' cost-naming question, svm's linear-alternative question,
+naive_bayes' three-variant question).
+
+Applied via apply_batch33.py, all 200 applied cleanly on the first pass. qnaStatus.js updated via
+update_qnastatus33.py, node --check clean on both files, 0 duplicate keys across all 69 src/data/ files,
+all 200 questions confirmed non-empty.
+
+MSL running total: 46/206 modules answered, 160 parked. First batch of MSL Tier A (12-batch plan
+established this session).
