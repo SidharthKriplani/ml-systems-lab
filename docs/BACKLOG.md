@@ -3048,3 +3048,19 @@ first pass, no second-pass fix needed. qnaStatus.js updated via update_qnastatus
 on both files, 0 duplicate keys across all 69 src/data/ files, all 208 questions confirmed non-empty.
 
 MSL running total: 14/206 modules answered, 192 parked.
+
+## Session 2026-07-16 (Thursday) — MSL QnA batch 29: Recommender Systems (Tier S batch 3 of 6)
+
+**candidate_generation (33q), cold_start (31q), feedback_loops_bias (31q), learning_to_rank (29q),
+offline_online_eval (32q), two_stage_architecture (32q) -- 188 questions total, all from
+src/data/foundations/recsysModules.js.** 6 parallel writer agents, one per module, uniquely-named
+scratch/validator filenames (no collisions). Independently re-validated via validate_batch29.py across all
+188 questions -- 2 flagged, both reviewed by hand and accepted as legitimate thin-content exceptions
+(candidate_generation's hard-negative-mining question, offline_online_eval's counterfactual-blindness
+question, both sub-bands individually satisfied). 0 real gaps, 0 hand-patches needed.
+
+Applied via apply_batch29.py (using the corrected trailing-field-safe regex), all 188 applied cleanly on
+the first pass. qnaStatus.js updated via update_qnastatus29.py, node --check clean on both files, 0
+duplicate keys across all 69 src/data/ files, all 188 questions confirmed non-empty.
+
+MSL running total: 20/206 modules answered, 186 parked.
