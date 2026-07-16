@@ -3194,3 +3194,19 @@ update_qnastatus36.py, node --check clean on both files, 0 duplicate keys across
 all 263 questions confirmed non-empty.
 
 MSL running total: 67/206 modules answered, 139 parked.
+
+## Session 2026-07-16 (Thursday) — MSL QnA batch 37: Causal Inference (Tier A batch 5 of 12)
+
+**dag_confounding (33q), observational_ci (35q), iv (28q), did (31q), rdd (31q), uplift_modeling (36q)
+-- 194 questions total, from src/data/foundations/causalModules.js.** 6 parallel writer agents, one per
+module, uniquely-named scratch/validator filenames (no collisions). Independently re-validated via
+validate_batch37.py across all 194 questions -- 2 flagged: 1 real fix in uplift_modeling (an L3 case
+answer with 5 Mechanism bullets over the band, two closely related overlap bullets merged into one), 1
+accepted as the legitimate spec-sanctioned "N discrete items -> N Mechanism bullets" exception in iv (the
+three-conditions-for-a-valid-instrument question).
+
+Applied via apply_batch37.py, all 194 applied cleanly on the first pass. qnaStatus.js updated via
+update_qnastatus37.py, node --check clean on both files, 0 duplicate keys across all 69 src/data/ files,
+all 194 questions confirmed non-empty.
+
+MSL running total: 73/206 modules answered, 133 parked.
