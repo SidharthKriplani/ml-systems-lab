@@ -3227,3 +3227,35 @@ update_qnastatus38.py, node --check clean on both files, 0 duplicate keys across
 all 166 questions confirmed non-empty.
 
 MSL running total: 78/206 modules answered, 128 parked.
+
+
+## Session 2026-07-16 (Thursday) — MSL QnA batch 39: Recsys DL & Architecture (Tier A batch 7 of 12)
+
+**features_and_freshness (29q), multi_objective_tradeoffs (34q), recsys_dl_architectures (33q),
+recsys_representation_learning (28q), two_tower (33q), semantic_search (31q) -- 188 questions total, from
+src/data/foundations/recsysModules.js and systemDesignModules.js.** 6 parallel writer agents, one per
+module, uniquely-named scratch/validator filenames (no collisions), all completed cleanly on first
+attempt. Independently re-validated via validate_batch39.py across all 188 questions -- 0 flags, a fully
+clean first-pass batch. 0 real gaps, 0 hand-patches needed, 0 fabricated facts found.
+
+Applied via apply_batch39.py, all 188 applied cleanly on the first pass. qnaStatus.js updated via
+update_qnastatus39.py, node --check clean on both files, 0 duplicate keys across all 69 src/data/ files,
+all 188 questions confirmed non-empty.
+
+MSL running total: 84/206 modules answered, 122 parked.
+
+
+## Session 2026-07-16 (Thursday) — MSL QnA batch 40: Recsys Systems & Serving (Tier A batch 8 of 12)
+
+**multitask_ranking (33q), ml_platform (33q), ranking_systems (29q), real_time_ml (36q),
+sequential_recsys (32q), embeddings_ann (30q), reranking_diversity (28q), recsys_feedback_loops (31q) --
+252 questions total, from src/data/foundations/systemDesignModules.js.** 8 parallel writer agents, one
+per module, uniquely-named scratch/validator filenames (no collisions), all completed cleanly on first
+attempt. Independently re-validated via validate_batch40.py across all 252 questions -- 0 flags, a fully
+clean first-pass batch. 0 real gaps, 0 hand-patches needed, 0 fabricated facts found.
+
+Applied via apply_batch40.py, all 252 applied cleanly on the first pass. qnaStatus.js updated via
+update_qnastatus40.py, node --check clean on both files, 0 duplicate keys across all 69 src/data/ files,
+all 252 questions confirmed non-empty.
+
+MSL running total: 92/206 modules answered, 114 parked.
