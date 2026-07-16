@@ -29,6 +29,7 @@ const STATIC_PROGRESS_KEYS = [
   'msl_projectlab_loan_data',
   'msl_projectlab_fraud_data',
   'msl_spot_the_flaw',
+  'msl-review-v1',            // spaced-repetition schedule (ReviewTab) - was device-only
   'msl_landscape_region',
   'msl_difficulty_filter',
 ]
@@ -39,7 +40,7 @@ function collectAllKeys() {
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i)
       if (!k) continue
-      if ((k.startsWith('msl_score:') || k.startsWith('msl_activity_')) && !keys.includes(k)) {
+      if ((k.startsWith('msl_score:') || k.startsWith('msl_activity_') || k.startsWith('msl_done_')) && !keys.includes(k)) {
         keys.push(k)
       }
       // Foundation family completion keys (e.g. msl-classical-ml-foundation-v1) — these
