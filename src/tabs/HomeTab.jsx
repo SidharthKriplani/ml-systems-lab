@@ -178,7 +178,7 @@ export default function HomeTab({ onNavigate }) {
           )}
         </div>
         <Next30Card recommendation={recommendation} onNavigate={onNavigate} onSeeEverything={handleSeeEverything} />
-        <div style={{ marginTop: '20px' }}><DailyDrill /></div>
+        <div style={{ marginTop: '20px' }}><DailyDrill onTrain={() => onNavigate('judge_browser')} /></div>
       </div>
     )
   }
@@ -220,7 +220,7 @@ export default function HomeTab({ onNavigate }) {
 
       {/* ── Daily Drill ──────────────────────────────────────────────────── */}
       <div style={{ marginBottom: '28px' }}>
-        <DailyDrill />
+        <DailyDrill onTrain={() => onNavigate('judge_browser')} />
       </div>
 
       {/* ── Readiness hero ───────────────────────────────────────────────── */}
