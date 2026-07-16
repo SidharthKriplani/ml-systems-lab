@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import FidelityBadge from '../components/FidelityBadge.jsx'
 import { AddTrackBtn } from '../components/tracks/AddToTrackPopover.jsx'
+import { SILENT_DATA_BUGS } from '../data/silentDataBugs.js'
 
 const LS_KEY = 'msl_score:codebugs'
 
@@ -801,6 +802,8 @@ print(result)  # What does this output?`,
     impact: 'Silent all-zero encoding for new categories means the model treats all smart_tv users as if device_type was missing. Depending on model architecture, this can systematically mis-score an entire user segment. The failure is invisible — no exception, no monitoring alert, just degraded predictions for a growing user cohort.',
     fix: "Three approaches in order of preference: (1) Add an \"other\" category to the encoder by including a representative \"other\" sample during training and mapping unseen values to it at serving time. (2) Add a schema validation step before encoding that alerts when a new category appears — treat new categories as a data quality event requiring a model update. (3) Monitor the distribution of each categorical feature's encoded zero-vector rate — a spike indicates unseen categories are arriving.",
   },
+  // Silent-failure batch (2026-07-16) — runs clean, numbers wrong. Proof-verified.
+  ...SILENT_DATA_BUGS,
 ]
 
 const DOMAINS = ['All', 'Spark', 'Feature Engineering', 'Model Training', 'SQL', 'MLOps', 'DistTraining', 'SilentData']
