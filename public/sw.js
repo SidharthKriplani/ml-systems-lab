@@ -1,4 +1,4 @@
-// ML Systems Lab — Service Worker (v2, 2026-07-16)
+// ML Systems Lab — Service Worker (v3, 2026-07-17: v2 + activate-time self-heal reload)
 //
 // v1 ('msl-v1') caused the recurring "Something went wrong" card and made it
 // survive hard refresh:
@@ -24,7 +24,7 @@
 //     for — an HTML body under a .js/.css URL is never cached.
 //   - Everything else: network-first with same-type-checked opportunistic cache.
 
-const CACHE = 'msl-v2'
+const CACHE = 'msl-v3'
 
 self.addEventListener('install', () => {
   self.skipWaiting()
@@ -35,6 +35,11 @@ self.addEventListener('activate', e => {
     caches.keys()
       .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
+      // SELF-HEAL (v3): re-navigate every controlled window once so any tab
+      // still displaying a bundle served by a poisoned older cache reloads
+      // into the fresh one automatically — no manual hard-refresh needed.
+      .then(() => self.clients.matchAll({ type: 'window' }))
+      .then(clients => Promise.all(clients.map(c => c.navigate(c.url).catch(() => {}))))
   )
 })
 
