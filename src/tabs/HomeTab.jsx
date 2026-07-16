@@ -9,6 +9,7 @@ import { track } from '../analytics.js'
 import { computeReadiness, readinessLabel, readinessColor } from '../utils/readiness.js'
 import Next30Card from '../components/Next30Card.jsx'
 import ReadinessWidget from '../components/shared/ReadinessWidget.jsx'
+import DailyDrill from '../components/DailyDrill.jsx'
 
 // ── The five frames of the current app ───────────────────────────────────────
 // Each maps to its representative launch tab. This is the ground truth for Home —
@@ -177,6 +178,7 @@ export default function HomeTab({ onNavigate }) {
           )}
         </div>
         <Next30Card recommendation={recommendation} onNavigate={onNavigate} onSeeEverything={handleSeeEverything} />
+        <div style={{ marginTop: '20px' }}><DailyDrill /></div>
       </div>
     )
   }
@@ -214,6 +216,11 @@ export default function HomeTab({ onNavigate }) {
         <p style={{ fontSize: '14px', color: 'var(--ink-mid)', lineHeight: 1.7, maxWidth: '500px' }}>
           Five frames — know it, do it, build it, judge it, and prep for the room. Pick where to work.
         </p>
+      </div>
+
+      {/* ── Daily Drill ──────────────────────────────────────────────────── */}
+      <div style={{ marginBottom: '28px' }}>
+        <DailyDrill />
       </div>
 
       {/* ── Readiness hero ───────────────────────────────────────────────── */}
