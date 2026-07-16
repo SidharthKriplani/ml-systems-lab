@@ -1116,12 +1116,18 @@ export default function App() {
           // My Tracks uses its own item-level merge (not whole-value overwrite —
           // see tracksSync.js) so track items added on another device since the
           // last sync aren't silently discarded.
-          try { await pullAndMergeTracks(session.user) } catch (err) { console.error('tracks merge failed:', err) }
           setIsUnlocked(checkUnlocked()) // re-check after pull
           // upsertLeaderboardRow was never actually called anywhere in the app —
           // signed-in users with real progress never got a leaderboard row written,
           // so they'd never appear on the board no matter how much they'd done.
           upsertLeaderboardRow(session.user)
+        }
+        // Tracks pull runs on RESTORED sessions too (INITIAL_SESSION) — a phone
+        // that signed in weeks ago otherwise NEVER pulls (found 2026-07-17: tracks
+        // existed on the MacBook + in Supabase, phone showed none). Safe on every
+        // load: item-level merge with tombstones, never whole-value overwrite.
+        if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+          try { await pullAndMergeTracks(session.user); setIsUnlocked(checkUnlocked()) } catch (err) { console.error('tracks merge failed:', err) }
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null)
