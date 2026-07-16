@@ -3176,3 +3176,21 @@ update_qnastatus35.py, node --check clean on both files, 0 duplicate keys across
 all 238 questions confirmed non-empty.
 
 MSL running total: 59/206 modules answered, 147 parked.
+
+## Session 2026-07-16 (Thursday) — MSL QnA batch 36: Math, Linear Algebra & Convex Optimization Theory (Tier A batch 4 of 12)
+
+**random_variables (32q), joint_distributions (32q), information_theory (33q), linear_algebra_basics
+(33q), eigendecomposition (36q), svd (32q), pca_theory (33q), convex_optimization (32q) -- 263 questions
+total, from src/data/foundations/mathStatsModules.js.** 8 parallel writer agents, one per module,
+uniquely-named scratch/validator filenames (no collisions). Independently re-validated via
+validate_batch36.py across all 263 questions -- 7 flagged: 4 real fixes in convex_optimization (three
+Answer bullets over the 30-word cap trimmed without adding new claims, one L1 answer with 2 Grounding
+bullets reduced to 1 by dropping a redundant bullet), 3 accepted as the legitimate spec-sanctioned
+thin-content exception in pca_theory (each landing at 6 total bullets vs L2's 7-9 band, with all sub-band
+counts individually satisfying L2's own bands).
+
+Applied via apply_batch36.py, all 263 applied cleanly on the first pass. qnaStatus.js updated via
+update_qnastatus36.py, node --check clean on both files, 0 duplicate keys across all 69 src/data/ files,
+all 263 questions confirmed non-empty.
+
+MSL running total: 67/206 modules answered, 139 parked.
