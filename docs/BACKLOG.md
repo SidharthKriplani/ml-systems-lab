@@ -2985,3 +2985,37 @@ None from this session's original punch list. Both repos' git working trees are 
 **For anyone currently broken:** once deployed, one normal page load heals them — getTracks() salvages locally, and the next sign-in pull no longer rewrites the key. No manual steps.
 
 **Standing lesson for the spine:** two sync systems sharing one table need ownership boundaries at BOTH ends (write keys AND pull filters). `pullProgressFromSupabase`'s "write everything you find" was safe only while it was the table's sole writer — adding the tracks row yesterday silently broke that invariant.
+
+## Session 2026-07-16 (Thursday) — MSL QnA answer-writing rollout begins: Batch 27 (Classical ML, Tier S)
+
+Starting MSL's QnA answer-writing rollout (mirrors GSL's now-complete rollout, same QNA-ANSWER-SPEC v1
+AMGB atomic-bullet format per QNA-INTERVIEW-STANDARD.md's 2026-07-16 supersession -- no MSL-specific
+format needed). Full plan (tier order, batch groupings, starting-state numbers) lives in the root
+`QNA-ANSWER-ROLLOUT-PLAN.md`'s new MSL section.
+
+**Batch 27 (Classical ML, Tier S, first batch): class_imbalance_classical_ml (40q), generalization (35q),
+gradient_boosting (37q), linear_regression (34q), random_forest (35q), regularization (34q), trees (34q)
+-- 249 questions total, all from src/data/foundations/classicalMLModules.js.** 7 parallel writer agents,
+one per module, each grounded strictly in that module's own source content (title/subtitle/summary/
+keyPoints/interactivePrompt/checkQuestions/takeaway/recap/figures -- MSL's schema differs from GSL's
+groundUp/scenario/explanation split, single `summary` field carries the full narrative instead). Each
+instructed to use uniquely-named scratch/validator filenames (no collisions). Independently re-validated
+via validate_batch27.py against full spec checklist across all 249 questions -- 7 flagged, all reviewed by
+hand and accepted as legitimate spec-sanctioned exceptions: 4 "N parallel components -> N Mechanism
+bullets" (generalization's train/val/test split-roles, linear_regression's four-error-metric question,
+random_forest's five-hyperparameter question, trees' pre/post-pruning question), 2 thin-content
+allowances (linear_regression), 1 rich-content top-of-next-tier. 0 real gaps, 0 hand-patches needed.
+
+**Process note (MSL-specific quirk found this batch, now fixed):** MSL's qnaBank.js question objects don't
+always end immediately after `difficulty: "..."` -- some have trailing `followUp`/`trap` fields before the
+closing brace, unlike GSL's more uniform layout. The first apply pass (regex requiring `difficulty: "..."
+}` immediately) missed 10 of class_imbalance_classical_ml's 40 questions for this reason. Fixed via a
+second-pass script matching `difficulty: "..."` directly (not requiring the immediate closing brace) and
+inserting `answer` right after it regardless of trailing fields -- recovered all 10, re-verified 0 empty
+answers across all 249. This corrected regex is now the standard for all future MSL batches (GSL's original
+regex is retained for GSL, since GSL's layout doesn't have this trailing-field quirk).
+
+Applied via centralized apply_batch27.py + fix_missing_batch27.py, qnaStatus.js updated via
+update_qnastatus27.py, node --check clean on both files, 0 duplicate keys across all 69 src/data/ files,
+all 249 questions confirmed non-empty. MSL running total: 8/206 modules answered (7 new + the
+logistic_regression pilot), 198 parked.
