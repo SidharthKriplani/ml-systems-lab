@@ -3158,3 +3158,21 @@ update_qnastatus34.py, node --check clean on both files, 0 duplicate keys across
 all 201 questions confirmed non-empty.
 
 MSL running total: 52/206 modules answered, 154 parked.
+
+## Session 2026-07-16 (Thursday) — MSL QnA batch 35: Data Quality & Preparation (Tier A batch 3 of 12)
+
+**feature_selection_data (32q), data_quality_audit (37q), missing_value_handling (33q),
+categorical_encoding (34q), feature_scaling (35q), distribution_shift (32q),
+data_versioning_and_pipelines (35q) -- 238 questions total, from src/data/foundations/dataModules.js.**
+7 parallel writer agents, one per module, uniquely-named scratch/validator filenames (no collisions).
+Independently re-validated via validate_batch35.py across all 238 questions -- 7 flagged, all in
+missing_value_handling/feature_scaling/distribution_shift, all reviewed by hand and accepted as the
+legitimate spec-sanctioned exception (each L0 answer's own Mechanism/Grounding/Boundary sub-counts
+individually satisfy L0's band even where the 5-bullet total lands above L0's own total range). 0 real
+gaps, 0 hand-patches needed.
+
+Applied via apply_batch35.py, all 238 applied cleanly on the first pass. qnaStatus.js updated via
+update_qnastatus35.py, node --check clean on both files, 0 duplicate keys across all 69 src/data/ files,
+all 238 questions confirmed non-empty.
+
+MSL running total: 59/206 modules answered, 147 parked.
