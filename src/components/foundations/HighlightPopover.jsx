@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { AddToTrackPopover } from '../tracks/AddToTrackPopover.jsx'
 import { quickAddItem, getQuickAdd } from '../../utils/tracks.js'
+import { addHighlight, removeHighlight, occurrenceOfSelection, applyAll, unpaint } from '../../utils/localHighlights.js'
 
 // 4 fixed swatches, mapped to MSL's existing theme vars — no arbitrary hex.
 const COLORS = [
@@ -26,11 +27,12 @@ function truncate(raw, n) {
  * selection inside the container it shows a small floating color-swatch +
  * Save toolbar above the selection.
  *
- * v1 scope: saves a SNAPSHOT of the highlighted passage (text + color + a
- * link back to the source module) as a generic 'highlight' item in the
- * existing Tracks system. It does NOT repaint the highlight back onto the
- * page on revisit — anchoring arbitrary selections across re-renders is a
- * separate, harder problem and is explicitly out of scope for this pass.
+ * Two actions, two meanings (2026-07-17):
+ * - SWATCH CLICK = instant in-place marker-pen highlight. Persisted locally
+ *   (localHighlights.js), repainted on revisit, click the mark to remove.
+ *   No track is involved.
+ * - SAVE = snapshot the passage into the Tracks system (existing flow),
+ *   color defaults to gold.
  *
  * Save re-uses the exact quick-add/picker/portal mechanism AddTrackBtn
  * already uses elsewhere: quick-add on + a last track present saves straight
@@ -42,9 +44,34 @@ export function HighlightPopover({ containerRef, sourceTabId, sourceModuleId, so
   const [color, setColor] = useState(null)
   const [pending, setPending] = useState(null) // { id, label, meta, pos } — picker mode
   const [flash, setFlash] = useState(null) // { name, top, left }
+  const [removePop, setRemovePop] = useState(null) // { id, top, left } — click a painted mark
+  const pageKey = `${sourceTabId}::${sourceModuleId || ''}`
   const flashTimer = useRef(null)
 
   useEffect(() => () => { if (flashTimer.current) clearTimeout(flashTimer.current) }, [])
+
+  // In-place highlights: repaint saved marks after the content settles, and
+  // open a small Remove popover when a painted mark is clicked. Two delayed
+  // applyAll passes cover async content (applyAll is idempotent).
+  useEffect(() => {
+    const el = containerRef?.current
+    if (!el) return
+    const t1 = setTimeout(() => applyAll(el, pageKey), 0)
+    const t2 = setTimeout(() => applyAll(el, pageKey), 450)
+    function onDocClick(e) {
+      const sel = window.getSelection()
+      if (sel && !sel.isCollapsed) return // a drag-selection, not a mark click
+      const mark = e.target && e.target.closest && e.target.closest('mark[data-hl-id]')
+      if (mark && el.contains(mark)) {
+        const r = mark.getBoundingClientRect()
+        setRemovePop({ id: mark.getAttribute('data-hl-id'), top: r.bottom + 6, left: r.left + r.width / 2 })
+      } else {
+        setRemovePop(null)
+      }
+    }
+    document.addEventListener('click', onDocClick)
+    return () => { clearTimeout(t1); clearTimeout(t2); document.removeEventListener('click', onDocClick) }
+  }, [containerRef, pageKey])
 
   const updateFromSelection = useCallback(() => {
     const sel = window.getSelection()
@@ -92,13 +119,26 @@ export function HighlightPopover({ containerRef, sourceTabId, sourceModuleId, so
     try { window.getSelection()?.removeAllRanges() } catch { /* ignore */ }
   }
 
+  // Swatch click = instant in-place highlight (no track involved): anchor the
+  // selection as (text, nth-occurrence), persist locally, repaint, done.
+  function handlePaint(cid) {
+    if (!toolbar || !containerRef?.current) return
+    const el = containerRef.current
+    const text = toolbar.text
+    if (!(el.textContent || '').includes(text)) { reset(); return } // cross-boundary selection we can't anchor — skip, never guess
+    const n = occurrenceOfSelection(el, text)
+    addHighlight(pageKey, { id: genId(), text, n, color: cid })
+    applyAll(el, pageKey)
+    reset()
+  }
+
   function handleSave(e) {
-    if (!toolbar || !color) return
+    if (!toolbar) return
     const id = genId()
     const label = truncate(toolbar.text, 80)
     const meta = {
       text: toolbar.text.trim(),
-      color,
+      color: color || 'gold',
       note: '',
       sourceLabel: sourceLabel || '',
       sourceTabId,
@@ -135,7 +175,7 @@ export function HighlightPopover({ containerRef, sourceTabId, sourceModuleId, so
           {COLORS.map(c => (
             <button
               key={c.id}
-              onClick={() => setColor(c.id)}
+              onClick={() => handlePaint(c.id)}
               title={c.id}
               style={{
                 width: 36, height: 36, borderRadius: '50%', cursor: 'pointer', padding: 0,
@@ -153,13 +193,11 @@ export function HighlightPopover({ containerRef, sourceTabId, sourceModuleId, so
           ))}
           <button
             onClick={handleSave}
-            disabled={!color}
-            title={getQuickAdd() ? 'Save · Alt/Cmd-click to choose a track' : 'Save'}
+            title={getQuickAdd() ? 'Save to track · Alt/Cmd-click to choose a track' : 'Save to track'}
             style={{
               marginLeft: '0.15rem', fontSize: '0.75rem', fontWeight: 700, fontFamily: 'var(--font-sans)',
               padding: '0.5rem 0.75rem', minHeight: 36, borderRadius: '7px', border: 'none',
-              cursor: color ? 'pointer' : 'default', opacity: color ? 1 : 0.55,
-              background: color ? 'var(--prime)' : 'var(--rim)', color: color ? '#000' : 'var(--ink-ghost)',
+              cursor: 'pointer', background: 'var(--prime)', color: '#000',
             }}
           >Save</button>
         </div>,
@@ -174,6 +212,29 @@ export function HighlightPopover({ containerRef, sourceTabId, sourceModuleId, so
           color: 'var(--ink-hi)', whiteSpace: 'nowrap', pointerEvents: 'none',
         }}>
           ✓ Saved to <strong>{flash.name}</strong>
+        </div>,
+        document.body
+      )}
+
+      {removePop && createPortal(
+        <div style={{
+          position: 'fixed', top: removePop.top, left: removePop.left, transform: 'translateX(-50%)', zIndex: 9999,
+          background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '8px',
+          boxShadow: '0 8px 20px rgba(0,0,0,0.35)', padding: '0.3rem',
+        }}>
+          <button
+            onClick={() => {
+              const el = containerRef?.current
+              if (el) unpaint(el, removePop.id)
+              removeHighlight(pageKey, removePop.id)
+              setRemovePop(null)
+            }}
+            style={{
+              fontSize: '0.75rem', fontWeight: 700, fontFamily: 'var(--font-sans)',
+              padding: '0.4rem 0.7rem', borderRadius: '6px', border: 'none', cursor: 'pointer',
+              background: 'var(--rim)', color: 'var(--ink-hi)',
+            }}
+          >Remove highlight</button>
         </div>,
         document.body
       )}
