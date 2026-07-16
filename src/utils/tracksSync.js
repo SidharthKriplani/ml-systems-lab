@@ -117,7 +117,13 @@ export function scheduleTracksPush(user) {
 
 export async function pushTracksNow(user) {
   if (!user || !supabase) { noteSyncStatus('offline', !user ? 'not signed in' : 'no backend'); return { error: null } }
-  const value = { tracks: getTracks(), tombstones: getTombstones() }
+  // THE 2026-07-16 SYNC BUG: MSL's user_progress.value column is TEXT
+  // (docs/SETUP_AUTH.md) — GSL's is jsonb. Pushing the raw {tracks, tombstones}
+  // OBJECT was rejected by Postgres on EVERY push (error swallowed pre-status-row),
+  // so nothing ever reached Supabase and other devices pulled nothing. Stringify
+  // on push + parse on pull works under text today and under jsonb if the schema
+  // ever migrates (a JSON string stored in jsonb still comes back as a string).
+  const value = JSON.stringify({ tracks: getTracks(), tombstones: getTombstones() })
   const res = await supabase.from('user_progress').upsert(
     [{ user_id: user.id, key: KEY, value, updated_at: new Date().toISOString() }],
     { onConflict: 'user_id,key' }
@@ -135,7 +141,11 @@ export async function pullAndMergeTracks(user) {
   const { data, error } = await supabase
     .from('user_progress').select('value').eq('user_id', user.id).eq('key', KEY).maybeSingle()
   if (error) { noteSyncStatus('error', error.message); return { error } }
-  const remote = data?.value || { tracks: [], tombstones: {} }
+  let remote = data?.value || { tracks: [], tombstones: {} }
+  if (typeof remote === 'string') {
+    try { remote = JSON.parse(remote) || { tracks: [], tombstones: {} } }
+    catch { remote = { tracks: [], tombstones: {} } }
+  }
   const local = { tracks: getTracks(), tombstones: getTombstones() }
   const merged = mergeTracks(local, remote)
   applyMergedState(merged)

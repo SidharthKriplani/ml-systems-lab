@@ -6,6 +6,7 @@
 
 1. Sidharth pushes the handed MSL commit (App.jsx, NoteEditor.jsx, HighlightPopover.jsx, localHighlights.js, MyTracksTab.jsx, tracksSync.js, index.css) if not already pushed.
 2. On the live site: My Tracks fills the window (no dead right region) · **SyncStatusRow** under MY TRACKS shows "✓ synced" on the MacBook **and on the phone** (if it shows an error, THAT message is the tracks-sync answer) · notes editor has ⇤⇥ buttons + hover timestamps · highlights work on foundation tabs.
+   **UPDATE (same day):** sync culprit FOUND without waiting — user_progress.value is TEXT in MSL's Supabase (jsonb in GSL's); the raw object push failed every time. Fixed in tracksSync.js (stringify/parse). After deploy: edit a track on the MacBook → status row goes "✓ synced" → open phone (hard-refresh once) → tracks appear.
 3. If the deploy looks stale: Vercel dashboard → red builds? correct production domain (v9xe)?
 
 ---
