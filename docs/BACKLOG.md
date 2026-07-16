@@ -3019,3 +3019,32 @@ Applied via centralized apply_batch27.py + fix_missing_batch27.py, qnaStatus.js 
 update_qnastatus27.py, node --check clean on both files, 0 duplicate keys across all 69 src/data/ files,
 all 249 questions confirmed non-empty. MSL running total: 8/206 modules answered (7 new + the
 logistic_regression pilot), 198 parked.
+
+---
+
+## 2026-07-16 20:22 IST (Thursday) — Daily Drill mounted on ProgressTab (the signed-in landing)
+
+Cross-lab fix from the PL skeleton session (full context: root CLAUDE.md, same-date entry). HomeTab is
+signed-out-only (App.jsx redirects signed-in 'home' -> 'progress'), so DailyDrill on HomeTab was
+invisible to signed-in users — the exact users with streaks. Change: src/tabs/ProgressTab.jsx now
+imports DailyDrill and mounts it above ReadinessWidget (onTrain -> judge_browser). HomeTab copy kept
+for signed-out visitors; card is idempotent (same storage key, no double-count). esbuild-verified.
+One-file change; commit handed to Sidharth in-session.
+
+## Session 2026-07-16 (Thursday) — MSL QnA batch 28: Evaluation (Tier S batch 2 of 6)
+
+**auc_roc (34q), cross_validation (35q), metrics_first_principles (35q), offline_vs_online (35q),
+ranking_metrics (32q), validation_traps (37q) -- 208 questions total, all from
+src/data/foundations/evalModules.js.** 6 parallel writer agents, one per module, each grounded strictly
+in that module's own source content, uniquely-named scratch/validator filenames (no collisions).
+Independently re-validated via validate_batch28.py across all 208 questions -- 9 flagged, all reviewed by
+hand and accepted as legitimate thin-content exceptions (mostly cross_validation, where several narrow
+sub-topics like purge-gap sizing and fold-spread usage are covered in only a short source paragraph each,
+every category sub-band still individually satisfied). 0 real gaps, 0 hand-patches needed.
+
+Applied the corrected apply-script regex from batch 27's fix (insert `answer` right after `difficulty`
+regardless of trailing followUp/trap fields) from the start this time -- all 208 applied cleanly on the
+first pass, no second-pass fix needed. qnaStatus.js updated via update_qnastatus28.py, node --check clean
+on both files, 0 duplicate keys across all 69 src/data/ files, all 208 questions confirmed non-empty.
+
+MSL running total: 14/206 modules answered, 192 parked.
