@@ -3259,3 +3259,21 @@ update_qnastatus40.py, node --check clean on both files, 0 duplicate keys across
 all 252 questions confirmed non-empty.
 
 MSL running total: 92/206 modules answered, 114 parked.
+
+
+## Session 2026-07-16 (Thursday) — MSL QnA batch 41: Production Feature & Pipeline Infra (Tier A batch 9 of 12)
+
+**feature_engineering_prod (32q), feature_store (29q), feature_store_traps (28q), late_arriving_data (33q),
+data_quality (34q), label_generation (30q), pipelines (32q), model_registry (34q), online_learning (32q)
+-- 284 questions total, from src/data/foundations/productionModules.js.** 9 parallel writer agents, one
+per module. One agent (feature_store_traps) hit a transient API timeout mid-run with no output file
+written; retried cleanly on the second attempt with no data loss. Independently re-validated via
+validate_batch41.py across all 284 questions -- 1 flagged: a real hand-patch in online_learning (an L1
+answer with 2 Grounding bullets against the 1-bullet band despite a within-band total of 6; merged into
+one Grounding bullet). 0 legitimate spec exceptions, 0 fabricated facts found.
+
+Applied via apply_batch41.py, all 284 applied cleanly on the first pass. qnaStatus.js updated via
+update_qnastatus41.py, node --check clean on both files, 0 duplicate keys across all 69 src/data/ files,
+all 284 questions confirmed non-empty.
+
+MSL running total: 101/206 modules answered, 105 parked.
