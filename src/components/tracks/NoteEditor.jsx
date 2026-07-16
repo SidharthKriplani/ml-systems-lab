@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { updateNote } from '../../utils/tracks.js'
+import { Md, FormatToolbar } from '../RichText.jsx'
 
 // ── URL helpers ───────────────────────────────────────────────────────────────
 
@@ -96,13 +97,25 @@ async function fetchMeta(url) {
 
 function TextBlock({ block, onChange, onPaste, onDelete, autoFocus }) {
   const ref = useRef(null)
+  const [focused, setFocused] = useState(!!autoFocus)
 
   useEffect(() => {
     if (autoFocus && ref.current) ref.current.focus()
   }, [autoFocus])
 
+  // Re-run autosize whenever the (previously display:none) textarea becomes
+  // visible again, since its height was frozen while hidden.
+  useEffect(() => {
+    if (focused && ref.current) {
+      ref.current.style.height = 'auto'
+      ref.current.style.height = ref.current.scrollHeight + 'px'
+    }
+  }, [focused])
+
   function handleInput(e) {
     onChange({ ...block, content: e.target.value })
+    e.target.style.height = 'auto'
+    e.target.style.height = e.target.scrollHeight + 'px'
   }
 
   function handleKeyDown(e) {
@@ -112,14 +125,40 @@ function TextBlock({ block, onChange, onPaste, onDelete, autoFocus }) {
     }
   }
 
+  // Read-only rendered view when the block isn't focused and has content — click
+  // it to drop back into the raw-markdown textarea for editing.
+  const showRendered = !focused && block.content.trim()
+
   return (
     <div style={{ position: 'relative' }}>
+      {focused && (
+        <FormatToolbar
+          textareaRef={ref}
+          value={block.content}
+          onChange={next => onChange({ ...block, content: next })}
+          style={{ marginBottom: '0.35rem' }}
+        />
+      )}
+      {showRendered && (
+        <div
+          onClick={() => setFocused(true)}
+          style={{
+            fontSize: '0.92rem', lineHeight: 1.7, color: 'var(--ink-hi)',
+            whiteSpace: 'pre-wrap', cursor: 'text', padding: '0.1rem 0',
+            fontFamily: 'var(--font-sans)',
+          }}
+        >
+          <Md text={block.content} />
+        </div>
+      )}
       <textarea
         ref={ref}
         value={block.content}
         onChange={handleInput}
         onPaste={onPaste}
         onKeyDown={handleKeyDown}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
         placeholder="Write something… or paste a YouTube / Vimeo / Loom URL to embed a video, any other URL to save a page."
         rows={1}
         style={{
@@ -127,6 +166,7 @@ function TextBlock({ block, onChange, onPaste, onDelete, autoFocus }) {
           background: 'transparent', border: 'none', outline: 'none',
           color: 'var(--ink-hi)', fontSize: '0.92rem', lineHeight: 1.7,
           fontFamily: 'var(--font-sans)', padding: '0.1rem 0',
+          display: showRendered ? 'none' : 'block',
         }}
         onInput={e => { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px' }}
       />

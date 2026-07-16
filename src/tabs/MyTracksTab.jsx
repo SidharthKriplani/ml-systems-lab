@@ -5,6 +5,7 @@ import {
   updateItemMeta,
 } from '../utils/tracks.js'
 import { NoteEditor } from '../components/tracks/NoteEditor.jsx'
+import { Md, FormatToolbar } from '../components/RichText.jsx'
 
 const TAB_LABELS = {
   math_stats_foundation:       'Math & Stats',
@@ -273,29 +274,32 @@ function HighlightItemRow({ item, onNoteChange }) {
       </div>
 
       {editingNote ? (
-        <form onSubmit={submitNote} style={{ display: 'flex', gap: '0.4rem', alignItems: 'flex-start' }} onClick={e => e.stopPropagation()}>
-          <textarea
-            ref={noteInputRef}
-            value={draftNote}
-            onChange={e => setDraftNote(e.target.value)}
-            onBlur={() => submitNote()}
-            onKeyDown={e => { if (e.key === 'Escape') { setDraftNote(item.meta?.note || ''); setEditingNote(false) } }}
-            rows={2}
-            placeholder="Add a note…"
-            style={{
-              flex: 1, fontSize: '0.8rem', padding: '0.35rem 0.5rem', resize: 'vertical',
-              background: 'var(--depth)', border: '1px solid var(--prime)', borderRadius: '6px',
-              color: 'var(--ink-hi)', outline: 'none', fontFamily: 'var(--font-sans)',
-            }}
-          />
-          <button type="submit" style={{ background: 'var(--prime)', color: '#000', border: 'none', borderRadius: '5px', padding: '0.3rem 0.6rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700, flexShrink: 0 }}>Save</button>
+        <form onSubmit={submitNote} style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }} onClick={e => e.stopPropagation()}>
+          <FormatToolbar textareaRef={noteInputRef} value={draftNote} onChange={setDraftNote} />
+          <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'flex-start' }}>
+            <textarea
+              ref={noteInputRef}
+              value={draftNote}
+              onChange={e => setDraftNote(e.target.value)}
+              onBlur={() => submitNote()}
+              onKeyDown={e => { if (e.key === 'Escape') { setDraftNote(item.meta?.note || ''); setEditingNote(false) } }}
+              rows={2}
+              placeholder="Add a note…"
+              style={{
+                flex: 1, fontSize: '0.8rem', padding: '0.35rem 0.5rem', resize: 'vertical',
+                background: 'var(--depth)', border: '1px solid var(--prime)', borderRadius: '6px',
+                color: 'var(--ink-hi)', outline: 'none', fontFamily: 'var(--font-sans)',
+              }}
+            />
+            <button type="submit" style={{ background: 'var(--prime)', color: '#000', border: 'none', borderRadius: '5px', padding: '0.3rem 0.6rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700, flexShrink: 0 }}>Save</button>
+          </div>
         </form>
       ) : item.meta?.note ? (
         <div
           onClick={e => { e.stopPropagation(); setEditingNote(true) }}
           style={{ display: 'flex', alignItems: 'flex-start', gap: '0.35rem', cursor: 'pointer' }}
         >
-          <span style={{ fontSize: '0.78rem', color: 'var(--ink-low)', lineHeight: 1.4 }}>{item.meta.note}</span>
+          <span style={{ fontSize: '0.78rem', color: 'var(--ink-low)', lineHeight: 1.4 }}><Md text={item.meta.note} /></span>
           <span style={{ color: 'var(--ink-ghost)', fontSize: '0.72rem', flexShrink: 0 }}>✎</span>
         </div>
       ) : (
