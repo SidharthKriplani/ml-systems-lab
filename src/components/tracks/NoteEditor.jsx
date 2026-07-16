@@ -1572,7 +1572,7 @@ export function NoteEditor({ trackId, note, onBack }) {
               aria-label="Outline"
               title="Outline"
               style={{
-                position: 'fixed', right: 14, bottom: 84, zIndex: 60,
+                position: 'fixed', right: 14, bottom: 136, zIndex: 450,
                 width: 42, height: 42, borderRadius: '50%', cursor: 'pointer',
                 background: T.surface, border: `1px solid ${T.border}`,
                 color: T.mid, fontSize: '1.05rem', lineHeight: 1,
