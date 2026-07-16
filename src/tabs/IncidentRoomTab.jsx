@@ -5,6 +5,7 @@ import HowToStrip from '../components/HowToStrip.jsx'
 import { markActivity } from '../utils/activity.js'
 import { CompanyLogoRow } from '../components/CompanyLogoRow.jsx'
 import { companiesForIncident } from '../data/questionCompanies.js'
+import LiveIncidentSection from '../components/LiveIncident.jsx'
 
 const LS_KEY = 'msl_score:incidentroom'
 
@@ -923,6 +924,9 @@ export default function IncidentRoomTab({ onNavigate }) {
           </div>
         </div>
       )}
+
+      {/* Live incidents — timed, stateful sev-1 simulations (2026-07-16) */}
+      <LiveIncidentSection />
 
       {/* Incidents */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
