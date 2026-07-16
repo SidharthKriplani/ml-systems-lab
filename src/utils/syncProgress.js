@@ -72,10 +72,24 @@ export async function pushProgressToSupabase(user) {
   return supabase.from('user_progress').upsert(rows, { onConflict: 'user_id,key' })
 }
 
+// Is this a key THIS module owns? The user_progress table is shared with other
+// sync systems (tracksSync.js's 'msl-tracks-v1' row stores a {tracks, tombstones}
+// envelope with its own item-level merge). Blindly writing every pulled row into
+// localStorage overwrote 'msl-tracks-v1' with that envelope — an object where
+// tracks.js expects an array — crashing every tracks consumer with
+// "TypeError: e is not iterable" for every signed-in user (2026-07-16 bug).
+function keyIsOwned(k) {
+  return STATIC_PROGRESS_KEYS.includes(k)
+    || k.startsWith('msl_score:')
+    || k.startsWith('msl_activity_')
+    || (k.startsWith('msl-') && k.includes('-foundation-v'))
+}
+
 /**
  * Pull progress from Supabase and write to localStorage.
  * Call after sign-in to restore progress from another device.
  * Remote values win over local on conflict (most recent device sync wins).
+ * Only keys this module owns are applied — see keyIsOwned().
  */
 export async function pullProgressFromSupabase(user) {
   if (!supabase || !user) return { error: null }
@@ -86,6 +100,8 @@ export async function pullProgressFromSupabase(user) {
   if (error || !data) return { error }
   try {
     for (const { key, value } of data) {
+      if (!keyIsOwned(key)) continue
+      if (typeof value !== 'string') continue
       localStorage.setItem(key, value)
     }
   } catch {}

@@ -69,10 +69,10 @@ export function mergeTracks(local, remote) {
   for (const t of [...(local.tracks || []), ...(remote.tracks || [])]) {
     if (deletedTrackIds.has(t.id)) continue
     const existing = byId.get(t.id)
-    if (!existing) { byId.set(t.id, { ...t, items: [...t.items] }); continue }
+    if (!existing) { byId.set(t.id, { ...t, items: [...(t.items || [])] }); continue }
     const merged = trackLastTouched(t) > trackLastTouched(existing) ? { ...t } : { ...existing }
     const itemMap = new Map()
-    for (const it of [...existing.items, ...t.items]) {
+    for (const it of [...(existing.items || []), ...(t.items || [])]) {
       const key = itemIdentity(it)
       if (deletedItemKeys.has(`${merged.id}::${key}`)) continue
       const prev = itemMap.get(key)

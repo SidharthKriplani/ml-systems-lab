@@ -2958,3 +2958,30 @@ None from this session's original punch list. Both repos' git working trees are 
 **Known trade-off:** v2 drops offline app-shell support (v1's stated purpose) — navigations always hit the network. Correctness for every online user beat a broken offline nicety; revisit properly (workbox-style versioned precache) only if offline ever actually matters.
 
 **Side finding, NOT fixed here:** `src/App.jsx` has duplicate object keys `gradient` + `cheatsheet` (~lines 242/264, second wins) — same bug class as the 2026-07-15 duplicate-`interactiveId` sweep, but `scripts/check-duplicate-keys.mjs` only scans `src/data/`. Consider widening its glob.
+
+## Session 2026-07-16 11:52 IST (Thursday) — SECOND root cause behind the "Something went wrong" card: sync-key collision poisons My Tracks state for every signed-in user
+
+2026-07-16 11:52 IST (Thursday)
+
+**The SW v2 + lazyReload fix (11:30 entry above) deployed and verified live, but the user still hit the card on `#recsys_foundation` AFTER DevTools → Clear site data + re-sign-in.** That killed the caching theory for his case and exposed a second, independent bug that FOLLOWS THE ACCOUNT — shipped with yesterday's cross-device Tracks sync (`13d6a17`, 2026-07-15 20:13 entry).
+
+**Mechanism (each link verified, not inferred):**
+1. `user_progress.value` is `text` (docs/SETUP_AUTH.md line 32) → `pushTracksNow()`'s `{tracks, tombstones}` object is serialized to JSON text in the row.
+2. On sign-in, `pullProgressFromSupabase()` selected ALL of the user's rows and wrote every one into localStorage verbatim — including `msl-tracks-v1`, which belongs to tracksSync.js, not it. Result: the {tracks, tombstones} ENVELOPE lands under a key whose readers expect a bare ARRAY.
+3. `getTracks()` parsed it fine (valid JSON), then `for (const t of tracks)` over an object → `TypeError: e is not iterable` (reproduced verbatim in Playwright: `tracks-*.js` → MyTracksTab). 
+4. The very next line of the sign-in flow, `pullAndMergeTracks()`, calls `getTracks()` first → throws → the item-level merge that would have healed the key NEVER RAN, and the un-caught await also killed the rest of the sign-in callback. Poison persists across reloads; Clear site data doesn't help because re-sign-in re-pulls the row. Matches both reporters (owner + friend Hrushikesh, different accounts, both signed in).
+
+**Fix (4 files, defense in depth):**
+- `src/utils/syncProgress.js`: pull now applies ONLY keys this module owns (`keyIsOwned()`: STATIC_PROGRESS_KEYS + `msl_score:*` + `msl_activity_*` + `msl-*-foundation-v*`) and only string values — it can never again stomp another sync system's row.
+- `src/utils/tracks.js`: `getTracks()` shape-guards — non-array parse result is salvaged if it's the sync envelope (`.tracks` array extracted → user's real data recovered, written back) else reset to `[]`; `getTombstones()` enforces its shape too.
+- `src/utils/tracksSync.js`: `mergeTracks()` no longer assumes `.items` exists on a remote track (`[...(t.items || [])]` × 2).
+- `src/App.jsx`: the three sign-in pulls are individually try/caught — one failure can no longer abort the others (that abort is exactly what kept the poison alive).
+
+**Receipts (Playwright vs `npm run build` at this commit):**
+- Repro before fix: envelope-shaped `msl-tracks-v1` → `#my_tracks` shows the card, console `TypeError: e is not iterable at tracks-*.js`.
+- After fix: same poisoned state → my_tracks / recsys_foundation / production_foundation / monitoring_foundation all render, 0 errors; localStorage self-heals to a bare array with the inner track + item PRESERVED (`S Tier` / `Candidate Generation` visible in the UI — no data loss); `"[object Object]"` garbage variant also safe (resets to []).
+- `npm run build` passes.
+
+**For anyone currently broken:** once deployed, one normal page load heals them — getTracks() salvages locally, and the next sign-in pull no longer rewrites the key. No manual steps.
+
+**Standing lesson for the spine:** two sync systems sharing one table need ownership boundaries at BOTH ends (write keys AND pull filters). `pullProgressFromSupabase`'s "write everything you find" was safe only while it was the table's sole writer — adding the tracks row yesterday silently broke that invariant.

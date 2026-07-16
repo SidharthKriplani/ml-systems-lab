@@ -21,8 +21,13 @@ function uid() {
 }
 
 export function getTombstones() {
-  try { return JSON.parse(localStorage.getItem(TOMBSTONE_KEY)) || { trackDeletes: [], itemDeletes: [] } }
-  catch { return { trackDeletes: [], itemDeletes: [] } }
+  try {
+    const t = JSON.parse(localStorage.getItem(TOMBSTONE_KEY))
+    return {
+      trackDeletes: Array.isArray(t?.trackDeletes) ? t.trackDeletes : [],
+      itemDeletes: Array.isArray(t?.itemDeletes) ? t.itemDeletes : [],
+    }
+  } catch { return { trackDeletes: [], itemDeletes: [] } }
 }
 
 function saveTombstones(tombstones) {
@@ -46,6 +51,14 @@ export function getTracks() {
   let tracks
   try { tracks = JSON.parse(localStorage.getItem(KEY)) || [] }
   catch { return [] }
+  // Shape guard + self-heal (2026-07-16): a sync bug wrote the whole
+  // {tracks, tombstones} sync envelope under this key. If that's what's here,
+  // salvage the inner array (the user's real tracks — no data loss); any other
+  // non-array shape resets to []. Never assume this key holds an array.
+  if (!Array.isArray(tracks)) {
+    tracks = (tracks && Array.isArray(tracks.tracks)) ? tracks.tracks : []
+    try { localStorage.setItem(KEY, JSON.stringify(tracks)) } catch { /* ignore */ }
+  }
   let migrated = false
   for (const t of tracks) {
     for (const item of t.items || []) {

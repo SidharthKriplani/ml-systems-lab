@@ -1108,12 +1108,15 @@ export default function App() {
         setUser(session.user)
         setShowAuth(false)
         if (event === 'SIGNED_IN') {
+          // Each pull individually guarded (2026-07-16): an exception in one
+          // used to abort the whole sign-in callback — the tracks merge never
+          // ran, leaving corrupted local state in place instead of healing it.
           // Pull remote progress on fresh sign-in (may overwrite local — intentional)
-          await pullProgressFromSupabase(session.user)
+          try { await pullProgressFromSupabase(session.user) } catch (err) { console.error('progress pull failed:', err) }
           // My Tracks uses its own item-level merge (not whole-value overwrite —
           // see tracksSync.js) so track items added on another device since the
           // last sync aren't silently discarded.
-          await pullAndMergeTracks(session.user)
+          try { await pullAndMergeTracks(session.user) } catch (err) { console.error('tracks merge failed:', err) }
           setIsUnlocked(checkUnlocked()) // re-check after pull
           // upsertLeaderboardRow was never actually called anywhere in the app —
           // signed-in users with real progress never got a leaderboard row written,
