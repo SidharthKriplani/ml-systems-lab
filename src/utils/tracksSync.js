@@ -93,6 +93,18 @@ export function mergeTracks(local, remote) {
   return { tracks, tombstones }
 }
 
+// Sync status ledger (2026-07-16): every push/pull outcome lands in
+// localStorage + an event, so My Tracks can SHOW sync health instead of
+// failures dying silently in a debounced setTimeout.
+const STATUS_KEY = 'msl-tracks-sync-status'
+function noteSyncStatus(status, message) {
+  try { localStorage.setItem(STATUS_KEY, JSON.stringify({ status, message: message || '', at: Date.now() })) } catch { /* ignore */ }
+  try { window.dispatchEvent(new CustomEvent('msl_tracks_sync')) } catch { /* ignore */ }
+}
+export function getSyncStatus() {
+  try { return JSON.parse(localStorage.getItem(STATUS_KEY)) } catch { return null }
+}
+
 let pushTimer = null
 
 // Debounced auto-push, called after every local track mutation (wired in App.jsx
@@ -104,22 +116,25 @@ export function scheduleTracksPush(user) {
 }
 
 export async function pushTracksNow(user) {
-  if (!user || !supabase) return { error: null }
+  if (!user || !supabase) { noteSyncStatus('offline', !user ? 'not signed in' : 'no backend'); return { error: null } }
   const value = { tracks: getTracks(), tombstones: getTombstones() }
-  return supabase.from('user_progress').upsert(
+  const res = await supabase.from('user_progress').upsert(
     [{ user_id: user.id, key: KEY, value, updated_at: new Date().toISOString() }],
     { onConflict: 'user_id,key' }
   )
+  if (res.error) noteSyncStatus('error', res.error.message)
+  else noteSyncStatus('ok')
+  return res
 }
 
 // Pull remote, merge with local, write merged result back locally, then push
 // the merged result so both sides converge immediately. Call on sign-in and
 // from the manual "Sync now" button.
 export async function pullAndMergeTracks(user) {
-  if (!user || !supabase) return { error: null }
+  if (!user || !supabase) { noteSyncStatus('offline', !user ? 'not signed in' : 'no backend'); return { error: null } }
   const { data, error } = await supabase
     .from('user_progress').select('value').eq('user_id', user.id).eq('key', KEY).maybeSingle()
-  if (error) return { error }
+  if (error) { noteSyncStatus('error', error.message); return { error } }
   const remote = data?.value || { tracks: [], tombstones: {} }
   const local = { tracks: getTracks(), tombstones: getTombstones() }
   const merged = mergeTracks(local, remote)

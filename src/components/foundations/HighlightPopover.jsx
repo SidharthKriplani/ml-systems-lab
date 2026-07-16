@@ -74,6 +74,11 @@ export function HighlightPopover({ containerRef, sourceTabId, sourceModuleId, so
   }, [containerRef, pageKey])
 
   const updateFromSelection = useCallback(() => {
+    // Never react to selections inside editable fields (note editor textareas,
+    // inputs) — the toolbar over half-selected textarea text was noise, and
+    // textarea content isn't in the DOM text stream anyway (can't be painted).
+    const ae = document.activeElement
+    if (ae && (ae.tagName === 'TEXTAREA' || ae.tagName === 'INPUT' || ae.isContentEditable)) { setToolbar(null); return }
     const sel = window.getSelection()
     if (!sel || sel.isCollapsed || sel.rangeCount === 0) { setToolbar(null); return }
     const text = sel.toString()

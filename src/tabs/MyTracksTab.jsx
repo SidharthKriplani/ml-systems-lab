@@ -5,6 +5,8 @@ import {
   updateItemMeta,
 } from '../utils/tracks.js'
 import { NoteEditor } from '../components/tracks/NoteEditor.jsx'
+import { getSyncStatus, pullAndMergeTracks } from '../utils/tracksSync.js'
+import { supabase } from '../utils/supabase.js'
 import { Md, FormatToolbar } from '../components/RichText.jsx'
 
 const TAB_LABELS = {
@@ -77,6 +79,49 @@ function noteBlockSummary(note) {
 
 // ── TrackList sidebar ─────────────────────────────────────────────────────────
 
+// Sync health for tracks (2026-07-16): tracks sync failures used to die
+// silently inside a debounced push — "my tracks don't show up on my phone"
+// with zero signal on either device. This row shows the last outcome and
+// gives a manual pull+merge+push.
+function SyncStatusRow() {
+  const [st, setSt] = useState(() => getSyncStatus())
+  const [busy, setBusy] = useState(false)
+  useEffect(() => {
+    const h = () => setSt(getSyncStatus())
+    window.addEventListener('msl_tracks_sync', h)
+    return () => window.removeEventListener('msl_tracks_sync', h)
+  }, [])
+  async function syncNow() {
+    if (busy) return
+    setBusy(true)
+    try {
+      const { data } = await supabase.auth.getUser()
+      await pullAndMergeTracks(data?.user || null)
+    } catch { /* status row reflects the outcome */ }
+    setBusy(false)
+  }
+  const time = st?.at ? new Date(st.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null
+  const label = busy ? 'syncing…'
+    : !st ? 'not synced yet'
+    : st.status === 'ok' ? `synced ${time}`
+    : st.status === 'offline' ? `local only — ${st.message}`
+    : `sync failed — ${st.message}`
+  const color = busy ? 'var(--ink-low)'
+    : st?.status === 'ok' ? 'var(--ink-ghost)'
+    : st?.status === 'error' ? '#e05050'
+    : 'var(--ink-low)'
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0 0.5rem', marginBottom: '0.6rem' }}>
+      <span title={st?.message || ''} style={{ fontSize: '0.62rem', fontFamily: 'var(--font-mono)', color, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+        {st?.status === 'ok' ? '✓ ' : st?.status === 'error' ? '⚠ ' : ''}{label}
+      </span>
+      <button onClick={syncNow} disabled={busy} title="Pull from your other devices, merge, push back"
+        style={{ background: 'none', border: '1px solid var(--rim)', borderRadius: '5px', cursor: busy ? 'default' : 'pointer', color: 'var(--ink-low)', fontSize: '0.6rem', fontFamily: 'var(--font-mono)', padding: '0.15rem 0.4rem', flexShrink: 0, opacity: busy ? 0.5 : 1 }}
+      >Sync now</button>
+    </div>
+  )
+}
+
 function TrackList({ tracks, selectedId, onSelect, onCreate, onDelete, onMoveItem, onBuildTiers }) {
   const [hoverId, setHoverId] = useState(null)
   const [dropId, setDropId] = useState(null)
@@ -110,6 +155,8 @@ function TrackList({ tracks, selectedId, onSelect, onCreate, onDelete, onMoveIte
           style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--prime)', fontSize: '1.1rem', lineHeight: 1, padding: '0 0.2rem' }}
         >+</button>
       </div>
+
+      <SyncStatusRow />
 
       {onBuildTiers && (
         <button
