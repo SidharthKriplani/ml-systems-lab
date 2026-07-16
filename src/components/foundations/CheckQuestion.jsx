@@ -69,14 +69,22 @@ export function CheckQuestion({ q, options, answer, onSubmit }) {
             border = '1px solid var(--prime-glow)'
             color = 'var(--prime)'
           }
+          // Motion (Wave 1): on reveal, options lock in with a 45ms stagger;
+          // the chosen-correct one settles with an overshoot pop, a chosen-wrong
+          // one shakes. Classes live in index.css's motion system (mo-*).
+          const moCls = revealed
+            ? (isChosen && isCorrect ? 'mo-correct' : isChosen && !isCorrect ? 'mo-shake' : 'mo-lock')
+            : ''
           return (
             <div
               key={letter}
+              className={moCls}
               onClick={() => toggle(letter)}
               style={{
                 padding: '0.5rem 0.75rem', borderRadius: '7px', cursor: revealed ? 'default' : 'pointer',
                 background: bg, border, color, fontSize: '0.85rem', lineHeight: 1.5, transition: 'all 0.15s',
                 display: 'flex', gap: '0.5rem', alignItems: 'flex-start',
+                animationDelay: revealed && moCls === 'mo-lock' ? `${i * 45}ms` : undefined,
               }}
               onMouseEnter={e => { if (!revealed) e.currentTarget.style.background = 'var(--surface)' }}
               onMouseLeave={e => { if (!revealed && !isChosen) e.currentTarget.style.background = 'transparent' }}
