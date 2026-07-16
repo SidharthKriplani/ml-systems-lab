@@ -437,7 +437,8 @@ function EditableBlock({
           onPaste={onPaste}
           onFocus={() => { setFocused(true); onFocusBlock(); requestAnimationFrame(() => autosize(ref.current)) }}
           onBlur={() => { setFocused(false); onSlash(null) }}
-          placeholder={block.type === 'text' ? "Type '/' for blocks, or just write…" : ''}
+          className="nb-block-input"
+          placeholder={block.type === 'text' && focused ? "Type '/' for blocks, or just write…" : ''}
           style={{ ...taBase, ...typo, display: showRendered ? 'none' : 'block',
             fontStyle: block.type === 'quote' ? 'italic' : 'normal' }}
           onInput={e => autosize(e.target)}
