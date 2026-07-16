@@ -2929,3 +2929,32 @@ All 205 promoted modules' `qnaStatus.js` entries updated from the earlier mechan
 
 ### Still open
 None from this session's original punch list. Both repos' git working trees are clean except this new uncommitted diff (below) and the harmless untracked `_to_delete/` folder.
+
+## Session 2026-07-16 11:30 IST (Thursday) — ROOT-CAUSED + FIXED the recurring "Something went wrong" error card (user + friend reports, survived hard refresh)
+
+2026-07-16 11:30 IST (Thursday)
+
+**Symptom (user report + friend Hrushikesh's screenshots):** ErrorBoundary card on `#monitoring_foundation`, `#production_foundation`, My Tracks — recurring for weeks, and for Hrushikesh it survived Ctrl+Shift+R / Ctrl+F5 ("No changes").
+
+**Root cause — `public/sw.js` (v1), reproduced deterministically in headless Chromium against a real `npm run build`, not guessed:**
+1. v1 served EVERYTHING same-origin cache-first from a never-versioned `msl-v1` cache — including `index.html`. Every `git push` auto-deploy renames all hashed chunks, so returning users ran a stale shell requesting dead chunk URLs → `Failed to fetch dynamically imported module` → the card. All 76 tabs in App.jsx (plus 87 interactives in InteractivePanel.jsx) are `React.lazy` chunks, which is why it hit "random" sections.
+2. The poisoning half: a dead chunk URL gets Vercel's SPA fallback = **200 + text/html**. v1 checked only `res.ok` → cached that HTML **permanently under the .js URL**. Every later visit fails the module MIME check. Hard refresh bypasses the HTTP cache, NOT a controlling SW's Cache Storage — exactly why Hrushikesh's hard reset did nothing.
+
+**Fix (4 files):**
+- `public/sw.js` v2: cache renamed → activate() purges every v1 cache, so ALL currently-poisoned users self-heal on their next visit, no manual steps. Navigations no longer intercepted at all (index.html always fresh via Vercel's must-revalidate). `/assets/*` stay cache-first but a `cacheable()` guard refuses to cache HTML bodies under code/asset URLs (poisoning now structurally impossible). All cache writes wrapped in `e.waitUntil()`.
+- `src/utils/lazyReload.js` (NEW): wraps `React.lazy`; on chunk-import failure performs ONE guarded auto-reload (sessionStorage timestamp, 30s window — no reload loops), so a deploy landing mid-session heals invisibly instead of showing the card.
+- `src/App.jsx` + `src/components/interactive/InteractivePanel.jsx`: all 163 `lazy(` call sites → `lazyReload(` (76 + 87, mechanical replace; imports adjusted).
+- `index.html`: SW registered with `{ updateViaCache: 'none' }` so sw.js fixes propagate immediately.
+
+**Receipts (all runnable in the session's cloud clone at commit 498ac05 + these edits; Playwright + `vite preview`, chunk deleted/restored on disk to simulate deploys):**
+- Baseline: fresh build, `#monitoring_foundation` / `#production_foundation` / My Tracks → 0 errors (code itself clean).
+- Repro: delete `MonitoringFoundationTab-*.js` mid-session → exact card + `MSL ErrorBoundary caught: TypeError: Failed to fetch dynamically imported module`.
+- v1 poisoning: after assets restored, tab still broken (card shown) — friend's persistent state reproduced.
+- v2 upgrade: v1-poisoned context + v2 sw.js shipped + one reload → cache purged, tab renders. 
+- lazyReload: missing chunk → exactly 1 auto-reload (docLoads=2), no card, no loop; CacheStorage query confirms NO entry under the chunk URL afterward (poisoning prevented); with valid assets → Monitoring renders ("Data Drift" visible).
+- `npm run build` passes with all changes.
+- Caveat honestly noted: the sandbox's headless Chromium hangs ANY `location.reload()` at readyState 'loading' even with SW fully blocked (control test) — an environment artifact, so post-auto-reload rendering was verified via equivalent fresh navigation instead.
+
+**Known trade-off:** v2 drops offline app-shell support (v1's stated purpose) — navigations always hit the network. Correctness for every online user beat a broken offline nicety; revisit properly (workbox-style versioned precache) only if offline ever actually matters.
+
+**Side finding, NOT fixed here:** `src/App.jsx` has duplicate object keys `gradient` + `cheatsheet` (~lines 242/264, second wins) — same bug class as the 2026-07-15 duplicate-`interactiveId` sweep, but `scripts/check-duplicate-keys.mjs` only scans `src/data/`. Consider widening its glob.

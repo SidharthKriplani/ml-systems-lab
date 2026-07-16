@@ -45,7 +45,10 @@
   <body>
     <script>
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'))
+        // updateViaCache:'none' → the browser always checks for a new sw.js on
+        // navigation instead of trusting the HTTP cache, so SW fixes roll out
+        // immediately after a deploy.
+        window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }))
       }
     </script>
     <div id="root"></div>
