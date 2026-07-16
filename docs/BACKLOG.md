@@ -3064,3 +3064,38 @@ the first pass. qnaStatus.js updated via update_qnastatus29.py, node --check cle
 duplicate keys across all 69 src/data/ files, all 188 questions confirmed non-empty.
 
 MSL running total: 20/206 modules answered, 186 parked.
+
+## Session 2026-07-16 (Thursday) — MSL QnA batch 30: System Design + Production (Tier S batch 4 of 6)
+
+**cold_start_system_design (30q), design_framework (31q), recsys_overview (34q), recsys_stack (30q),
+ab_infra (33q), training_serving_skew (32q) -- 190 questions total, from
+src/data/foundations/systemDesignModules.js and src/data/foundations/productionModules.js.** 6 parallel
+writer agents, one per module, uniquely-named scratch/validator filenames (no collisions). Independently
+re-validated via validate_batch30.py across all 190 questions -- 2 flagged: 1 real fix (a Boundary bullet
+in recsys_overview's collaborative-filtering question opened with the banned hedge phrase "it depends,"
+hand-rewritten to a direct sentence with the same meaning), 1 accepted as a legitimate spec-sanctioned
+exception (recsys_overview's funnel-stages question names 3 parallel pipeline stages, landing at 5 bullets
+under the "N parallel components -> N Mechanism bullets" rule).
+
+Applied via apply_batch30.py (corrected trailing-field-safe regex), all 190 applied cleanly on the first
+pass. qnaStatus.js updated via update_qnastatus30.py, node --check clean on both files, 0 duplicate keys
+across all 69 src/data/ files, all 190 questions confirmed non-empty.
+
+MSL running total: 26/206 modules answered, 180 parked.
+
+## Session 2026-07-16 (Thursday) — MSL QnA batch 31: Math & Stats + Causal (Tier S batch 5 of 6)
+
+**hypothesis_testing (35q), mle_map (31q), probability_basics (32q), sampling_distributions (33q),
+pot_outcomes (32q), rct_design (33q) -- 196 questions total, from
+src/data/foundations/mathStatsModules.js and src/data/foundations/causalModules.js.** 6 parallel writer
+agents, one per module, uniquely-named scratch/validator filenames (no collisions). Independently
+re-validated via validate_batch31.py across all 196 questions -- 2 flagged, both in pot_outcomes, both
+reviewed by hand and accepted as the legitimate "N discrete items -> N Mechanism bullets, landing at top
+of next band" exception (counterfactual-definition and ATE/ATT/CATE estimand-types questions, all
+sub-bands individually satisfied). 0 real gaps, 0 hand-patches needed.
+
+Applied via apply_batch31.py (trailing-field-safe regex), all 196 applied cleanly on the first pass.
+qnaStatus.js updated via update_qnastatus31.py, node --check clean on both files, 0 duplicate keys across
+all 69 src/data/ files, all 196 questions confirmed non-empty.
+
+MSL running total: 32/206 modules answered, 174 parked.
