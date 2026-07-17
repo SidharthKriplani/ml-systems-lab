@@ -3386,3 +3386,21 @@ update_qnastatus47.py, node --check clean on both files, 0 duplicate keys across
 all 171 questions confirmed non-empty.
 
 MSL running total: 135/206 modules answered, 71 parked.
+
+
+## Session 2026-07-16 (Thursday) — MSL QnA batch 48: Graph ML part 2 (Tier B batch 4 of 17)
+
+**link_prediction (35q), node_classification_at_scale (33q), heterogeneous_graphs (32q), gnn_applications
+(35q) -- 135 questions total, from src/data/foundations/graphMLModules.js.** 4 parallel writer agents, one
+per module, all completed cleanly on first attempt. Independently re-validated via validate_batch48.py
+across all 135 questions -- 1 flagged, confirmed as a legitimate spec-sanctioned exception on hand
+review: gnn_applications' PinSage curriculum-training question lands at 6 total bullets against L2's 7-9
+band, thin content with all sub-band counts individually satisfied. 0 real gaps, 0 hand-patches needed, 0
+fabricated facts found.
+
+Applied via apply_batch48.py, all 135 applied cleanly on the first pass. qnaStatus.js updated via
+update_qnastatus48.py, node --check clean on both files, 0 duplicate keys across all 69 src/data/ files,
+all 135 questions confirmed non-empty.
+
+This completes graphMLModules.js (both GraphML batches). MSL running total: 139/206 modules answered, 67
+parked.
