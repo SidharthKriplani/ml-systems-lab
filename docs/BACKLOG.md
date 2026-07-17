@@ -3436,3 +3436,21 @@ it).
    clean up scratch to `_to_delete/` → append closure entries to this doc and the root rollout-plan doc →
    give exact git commands (always prefixed `rm -f .git/index.lock`, explicit `cd` to the correct repo).
 4. Continue the standing "next"/"proceed" cadence — the user authorizes each batch one at a time.
+
+---
+
+## 2026-07-17 11:10 IST (Friday) — Design Studio skeletons (MSL half)
+
+New open-ended system-design/flaw training surface — SKELETONS ONLY, commit c284e99. Two files:
+- `src/data/silentDataBugs-chains.js` (`SILENT_DATA_BUG_CHAINS`, 3 seeds) EXTENDS silentDataBugs.js with the flaw-diagnosis
+  dial: `level` (F2 complex / F3 dependent-chain) + `flawGraph` [{flawId,root,dependsOn,symptom}]. Seeds: SDC01 (F2
+  target-encode leak), SDC02 (F3 recsys eval, 1 root + 2 masked), SDC03 (F3 forecast backtest, 1 root + 2 masked). F3 grades
+  on causal ordering (find root before symptom). Consider the LiveIncident graph engine for a stateful F3 reveal.
+- `src/data/mlSystemDesignBriefs.js` (`ML_SYSTEM_DESIGN_BRIEFS`, 6 seeds) is a NEW MSL surface (MSL had no open-ended
+  design/notebook brief bank — interviewExtra* are Q&A) mirroring the GSL SD_SCENARIOS schema + `modality`
+  (system-design | notebook-build). Seeds: recsys (design S2, worked-planned), pricing (design S3), drift/retrain (design S2),
+  experiment-trust (design S2, worked-planned), demand-forecast (notebook S2), fraud (notebook S1, worked-planned). Wiring TODO:
+  build an MSL SystemDesignTrainer twin (or reuse GSL's component in MSL amber theme).
+Scoped-not-vague: identity/dials/flawGraph/stage-asks/rubric PINNED; code/prose DEFERRED with `_flesh` notes. Unwired, NOT
+pushed-to-deploy. Root authority DESIGN-STUDIO-SPEC.md. Flesh proof cell first: mlsd-recsys-feed + the rubric-critic.
+SEPARATE workstream from the QnA answer rollout (batch 49 Time Series is still the next QnA batch).

@@ -99,3 +99,17 @@ Read NEXT.md. Short answer: distribution-only — GSC verification → email cap
 - 3 modules finished (recsys_dl_architectures, recsys_representation_learning, online_experimentation_ml) + 3 interactives (dl_recsys_arch_viz, negative_sampling_viz, experiment_power_viz) registered in InteractivePanel + 14 TRAINER_QUESTIONS (ids 121-134).
 - Difficulty ordering: NEW utils/foundations/sortByDifficulty.js wraps all 19 family tabs + coding drills. Mobile: MyTracksTab + Cheatsheet grids (index.css). Wave 3: Profile 5-card + company logos (28) + Progress reorder.
 - Push via `git add src/`. **NEXT = SEO → ../../HANDOFF-SEO.md** (MSL has generate-rss but NO prerender yet — port GSL's scripts/prerender-gt.js pattern).
+
+---
+
+## 2026-07-17 11:10 IST — spine reconciliation (post session-close-v3)
+
+Session-close-v3 (spine commit 99a3e42) is stale — a large amount shipped after it. Current state, verified against git log:
+- **QnA answer rollout: Tier A COMPLETE — 80/80 modules** (final batch 44, bandits, commit 47fe688). Tier B underway:
+  batches 45-48 done — RL part1/2 (23b1a37 / 8d45597), GraphML part1/2 (c3dccdd / 749862b), pause-logged (f358dfc).
+  **NEXT QnA batch = 49 (Time Series part 1, 5 modules, 165q)** — see docs/BACKLOG.md tail + root QNA-ANSWER-ROLLOUT-PLAN.md.
+- **Design Studio skeletons added** (commit c284e99): silentDataBugs-chains.js (F2/F3 flaw dial) + mlSystemDesignBriefs.js
+  (NEW open-ended design/notebook brief surface). Skeletons only, unwired. See docs/BACKLOG.md same-date entry + root DESIGN-STUDIO-SPEC.md.
+- Also shipped 17 Jul (per LINEAGE): notes family waves, page highlights, SlashMenu v3, mobile pass, SW v3 self-heal,
+  tracks-sync TEXT-column fix (confirmed cross-device).
+(The top-of-file snapshot block predates all the above; this dated entry is the current-state reconciliation.)

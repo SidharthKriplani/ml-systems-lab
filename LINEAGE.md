@@ -2910,3 +2910,8 @@ villain (hard refresh bypasses HTTP cache, not SW Cache Storage; the tell: live 
 menu missing the Sub-bullet entry present in a Ready deploy).
 MSL: sw.js v2→v3 with activate-time
 self-heal (purge → claim → re-navigate every controlled window once).
+
+### Design Studio skeletons (17 Jul 2026, 11:10 IST)
+New system-design/flaw training surface, skeletons only (commit c284e99). silentDataBugs-chains.js extends silentDataBugs
+with the F2/F3 flaw-diagnosis dial (flawGraph); mlSystemDesignBriefs.js is a NEW MSL design/notebook brief surface (mirrors
+GSL SD schema). 9 seeds, scoped-not-vague, unwired. Authority: DESIGN-STUDIO-SPEC.md (root).
