@@ -3559,3 +3559,36 @@ Remaining Tier B queued: batch 56 (Optimization remainder, 6mod, 197q), batch 57
 6mod, 197q), batch 58 (Math/Stats remainder, 6mod, 192q), batch 59 (Deep Learning remainder, 5mod, 168q),
 batch 60 (Monitoring + Bandits remainder, 7mod, 239q), batch 61 (Causal + Data + SystemDesign remainder,
 4mod, 127q).
+
+### 2026-07-17 IST (Friday) -- design_framework module fleshed out (content-depth pass, writer + adversarial)
+User-reported: the flagship "6-Step ML System Design Framework" module was thin relative to its scope
+(210-word summary, 3 keyPoints, 3 checkQuestions -- the shortest of its peer group despite being the
+module every other system-design module presupposes). Investigation found the companion blog post
+(public/post/ml-system-design-6-step-framework.html, 1,514 words, 7 sections incl. a full worked example)
+already had the depth the module lacked.
+Applied the writer + adversarial two-pass process (3B1B-STANDARD.md's applicable content rules -- voice
+rule 4 precision, numeric self-check, rule 7 mechanical labeling, rule 8 one worked illustration, rule 12
+unexplained origins -- scene rules and groundUp/explanation/scenario-specific rules excluded, this module
+has no interactive scene component) plus a full CONTENT-AUDIT-RUBRIC.md 10-smell pass, both independently
+against the blog post as source material:
+- Writer pass: summary expanded 210 -> ~1,390 words (dedicated paragraphs per step covering label-strategy
+  specifics per domain, feature leakage/serving-skew checks with handoffs to Data Splits and Leakage /
+  Training-Serving Skew, the model-choice-to-constraint mapping, the staged shadow/canary/champion-challenger
+  rollout with a handoff to Offline vs Online Evaluation, and one full worked example: news-feed ranking).
+  keyPoints 3->5, checkQuestions 3->4, recap 4->6.
+- Adversarial round 1 (separate agent, draft-only, no writer reasoning shown): 7 violations found --
+  fabricated 30-second dwell figure contradicting the worked example's 10s figure, an ungrounded sub-50ms
+  latency claim, scope-inflation beyond the source ("most failed ML projects" vs the blog's interview-scoped
+  claim), a self-contradictory "step 3 fails most, not step 5" header conflicting with the module's own
+  step-4/5 framing, step 2 visibly under-developed vs its siblings (one clause vs full paragraphs), QPS and
+  NDCG@10 used without expansion. All 7 fixed as targeted edits.
+- Adversarial round 2 (fresh separate agent, re-audit): 1 required fix (GBM acronym used unexpanded in
+  keyPoints/recap despite "gradient-boosted tree (LightGBM, XGBoost)" being spelled out in the source
+  paragraph) + 1 confirmed-intentional note (the step-3-failure-locus language was deliberately removed in
+  round 1 to resolve the round-1 contradiction) + 1 optional/minor polish item (step 1 has no dedicated
+  paragraph, coverage is otherwise present) not applied. GBM fix applied, verified clean.
+Verified: node --check clean, live Node import confirms module structure (5 keyPoints, 4 checkQuestions,
+6 recap bullets, figures intact), sibling modules (recsys_overview etc.) unaffected, 15 modules still
+present in systemDesignModules.js, 0 duplicate keys repo-wide. esbuild's local binary is platform-mismatched
+in this device_bash sandbox (darwin-arm64 installed, linux-arm64 needed, no network to reinstall) --
+substituted a direct Node ESM import check as the functional verification instead.
