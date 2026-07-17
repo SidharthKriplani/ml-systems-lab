@@ -3334,3 +3334,19 @@ all 202 questions confirmed non-empty.
 (33-44).** MSL running total: 120/206 modules answered, 86 parked. Tier B (86 modules, 2,841 questions)
 is next -- plan to be drafted per the standing pattern of planning the next tier once the current one is
 in flight.
+
+
+## Session 2026-07-16 (Thursday) — MSL QnA batch 45: Reinforcement Learning part 1 (Tier B batch 1 of 17)
+
+**mdp_framework (32q), bellman_equations (31q), temporal_difference (37q), deep_q_networks (32q),
+policy_gradients (33q) -- 165 questions total, from src/data/foundations/rlModules.js.** 5 parallel
+writer agents, one per module, all completed cleanly on first attempt. Independently re-validated via
+validate_batch45.py across all 165 questions -- 0 flags, a fully clean first-pass batch. 0 real gaps, 0
+hand-patches needed, 0 fabricated facts found.
+
+Applied via apply_batch45.py, all 165 applied cleanly on the first pass. qnaStatus.js updated via
+update_qnastatus45.py, node --check clean on both files, 0 duplicate keys across all 69 src/data/ files,
+all 165 questions confirmed non-empty.
+
+This is the first batch of MSL's Tier B rollout (86 modules, 2,841 questions, 17-batch plan documented in
+the root rollout-plan doc). MSL running total: 125/206 modules answered, 81 parked.
