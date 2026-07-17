@@ -3511,3 +3511,16 @@ Remaining Tier B queued: batch 52 (Probabilistic ML part 2, 4mod, 140q), batch 5
 (Optimization remainder, 6mod, 197q), batch 57 (Unsupervised remainder, 6mod, 197q), batch 58 (Math/Stats
 remainder, 6mod, 192q), batch 59 (Deep Learning remainder, 5mod, 168q), batch 60 (Monitoring + Bandits
 remainder, 7mod, 239q), batch 61 (Causal + Data + SystemDesign remainder, 4mod, 127q).
+
+### 2026-07-17 IST (Friday) -- MSL batch 52 closed (Probabilistic ML part 2, Tier B batch 8 of 17)
+approximate_inference, bayesian_neural_networks, information_geometry, probabilistic_graphical_models --
+140 questions, 2 flags on independent validation, both confirmed legitimate spec-sanctioned exceptions:
+approximate_inference's inference-ladder question (3 discrete rungs named in Answer -> 3 Mechanism bullets)
+and ladder-selection question (5 discrete menu items named in Answer -> 5 Mechanism bullets, total in L2
+band). 0 real gaps, 0 hand-patches. MSL cumulative: 156/206 modules answered, 50 parked, 0 draft.
+probabilisticMLModules.js is now fully answered (both Probabilistic ML batches complete).
+Remaining Tier B queued: batch 53 (Self-Supervised part 1, 5mod, 153q), batch 54 (Self-Supervised part 2,
+4mod, 128q), batch 55 (Pricing, 7mod, 215q), batch 56 (Optimization remainder, 6mod, 197q), batch 57
+(Unsupervised remainder, 6mod, 197q), batch 58 (Math/Stats remainder, 6mod, 192q), batch 59 (Deep Learning
+remainder, 5mod, 168q), batch 60 (Monitoring + Bandits remainder, 7mod, 239q), batch 61 (Causal + Data +
+SystemDesign remainder, 4mod, 127q).
