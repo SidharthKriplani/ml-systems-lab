@@ -3313,3 +3313,24 @@ update_qnastatus43.py, node --check clean on both files, 0 duplicate keys across
 all 164 questions confirmed non-empty.
 
 MSL running total: 114/206 modules answered, 92 parked.
+
+
+## Session 2026-07-16 (Thursday) — MSL QnA batch 44: Multi-Armed & Contextual Bandits (Tier A batch 12 of 12 — FINAL)
+
+**mab_problem (32q), epsilon_greedy (33q), ucb_algorithms (35q), thompson_sampling (33q),
+contextual_bandits (35q), bandits_in_recsys (34q) -- 202 questions total, from
+src/data/foundations/banditsModules.js.** 6 parallel writer agents, one per module, all completed
+cleanly on first attempt. Independently re-validated via validate_batch44.py across all 202 questions --
+1 flagged, confirmed as a legitimate spec-sanctioned exception on hand review: mab_problem's
+regret-decomposition question names 2 discrete formula components (Delta_a, N_a(T)) in its Answer,
+landing 2 Mechanism bullets with all L0 sub-bands still satisfied. 0 real gaps, 0 hand-patches needed, 0
+fabricated facts found.
+
+Applied via apply_batch44.py, all 202 applied cleanly on the first pass. qnaStatus.js updated via
+update_qnastatus44.py, node --check clean on both files, 0 duplicate keys across all 69 src/data/ files,
+all 202 questions confirmed non-empty.
+
+**MSL Tier A rollout is now complete: 80/80 modules answered, 2,624 questions, across 12 batches
+(33-44).** MSL running total: 120/206 modules answered, 86 parked. Tier B (86 modules, 2,841 questions)
+is next -- plan to be drafted per the standing pattern of planning the next tier once the current one is
+in flight.
