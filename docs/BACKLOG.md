@@ -3468,3 +3468,17 @@ New src/tabs/DesignStudioTab.jsx (read-only browser: DESIGN_STUDIO_MSL design/no
 
 ## 2026-07-17 12:29 IST (Friday) — Design Studio SHIPPED (live, read-only)
 Deployed under the JUDGE frame (HEAD 7c133c8). `src/tabs/DesignStudioTab.jsx` renders `DESIGN_STUDIO_MSL` (11 design/notebook briefs: recsys/search/pricing/mlops/causal/anomaly design S2-S3 + churn/fraud/forecast/uplift notebook-builds) **plus** `DESIGN_STUDIO_FLAWS` (7 flaw-diagnosis briefs, F2/F3). Mechanic = **produce artifact/diagnosis -> reveal reference/flaw-graph -> self-critique** against an anchored rubric. NO LLM (MSL simulates the real no-LLM condition). Read-only viewer for now; briefs are skeletons (reference/rubric prose deferred via `_flesh`). Old MCQ/tick files (`silentDataBugs-chains.js`, `mlSystemDesignBriefs.js`) superseded -> `_to_delete/`. Commit arc: c284e99 -> 5ab1aa1 -> 44bc582 -> a429627 -> 7c133c8. Wired via `ALL_TABS` lookup + a new "DESIGN STUDIO" group in the JUDGE frame (mirrors incidentroom). NEXT: (1) flesh proof cell `mlsd-recsys-feed` + rubric-critic at N=1; (2) interactive workspace (notebook = bring-your-own-env + self-check harness); (3) F3 stateful reveal via LiveIncident. NOTE: uncommitted `public/modules/*.html` prerender diff in tree is pre-existing SEO prerender, not Design Studio.
+
+### 2026-07-17 IST (Friday) -- MSL batch 49 closed (Time Series part 1, Tier B batch 5 of 17)
+stationarity, arima_family, seasonality_decomposition, prophet_framework, exponential_smoothing -- 165
+questions, 3 flags on independent validation, all confirmed legitimate spec-sanctioned exceptions (thin
+content below L2 band with all sub-bands individually satisfied): seasonality_decomposition's
+log-transform-alternative question, prophet_framework's harmonics-tradeoff and multiplicative-mode-limit
+questions. 0 real gaps, 0 hand-patches needed. MSL cumulative: 144/206 modules answered, 62 parked, 0
+draft.
+Remaining Tier B queued: batch 50 (Time Series part 2, 4mod, 140q), batch 51 (Probabilistic ML part 1,
+4mod, 141q), batch 52 (Probabilistic ML part 2, 4mod, 140q), batch 53 (Self-Supervised part 1, 5mod, 153q),
+batch 54 (Self-Supervised part 2, 4mod, 128q), batch 55 (Pricing, 7mod, 215q), batch 56 (Optimization
+remainder, 6mod, 197q), batch 57 (Unsupervised remainder, 6mod, 197q), batch 58 (Math/Stats remainder,
+6mod, 192q), batch 59 (Deep Learning remainder, 5mod, 168q), batch 60 (Monitoring + Bandits remainder,
+7mod, 239q), batch 61 (Causal + Data + SystemDesign remainder, 4mod, 127q).
