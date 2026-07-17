@@ -3404,3 +3404,35 @@ all 135 questions confirmed non-empty.
 
 This completes graphMLModules.js (both GraphML batches). MSL running total: 139/206 modules answered, 67
 parked.
+
+
+## ⏸ PAUSED 2026-07-17 (Friday) — MSL Tier B rollout paused for weekly token budget
+
+Pausing the MSL Tier B QnA answer-writing rollout at the close of **batch 48** (user at ~70% of weekly
+token usage, wants headroom to resume cleanly Tuesday on limit reset). No work is in-flight — batch 48
+is fully closed, committed, and pushed; batch 49 has not been started (no scratch/answer files exist for
+it).
+
+**State at pause:**
+- MSL cumulative: **139/206 modules answered, 67 parked, 0 draft** (6,792 total questions across all
+  modules).
+- Tier S: 40/40 complete. Tier A: 80/80 complete. Tier B: 12/86 modules done (batches 45-48), 74
+  remaining.
+- Last commit: `749862b MSL Tier B batch 48 (4/17): GraphML part 2 answers (135q, 4 modules, 0 real
+  gaps)` — confirmed pushed.
+
+**Resume instructions for the next session (Tuesday or later):**
+1. Read this entry and the matching entry in the root `QNA-ANSWER-ROLLOUT-PLAN.md` for full batch
+   history and the remaining 13-batch list.
+2. Next batch to run: **batch 49 (Time Series part 1, 5 modules, 165q)** — stationarity, arima_family,
+   seasonality_decomposition, prophet_framework, exponential_smoothing, from
+   `src/data/foundations/timeSeriesModules.js`.
+3. Pipeline is unchanged: extract source+questions via a small `.mjs` script → stage to cloud workspace →
+   dispatch one parallel writer agent per module (AMGB atomic-bullet format per `QNA-ANSWER-SPEC v1`,
+   copy of the spec is carried forward batch-to-batch as `SPEC.md`) → independently re-validate
+   programmatically → hand-review any flags (distinguish real defects from the two legitimate
+   spec-sanctioned exceptions) → apply via centralized script → update `qnaStatus.js` → full-repo verify
+   (`node --check`, `node scripts/check-duplicate-keys.mjs`, non-empty-answers sweep, cumulative count) →
+   clean up scratch to `_to_delete/` → append closure entries to this doc and the root rollout-plan doc →
+   give exact git commands (always prefixed `rm -f .git/index.lock`, explicit `cd` to the correct repo).
+4. Continue the standing "next"/"proceed" cadence — the user authorizes each batch one at a time.
