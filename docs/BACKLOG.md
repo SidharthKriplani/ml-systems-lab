@@ -3296,3 +3296,20 @@ update_qnastatus42.py, node --check clean on both files, 0 duplicate keys across
 all 272 questions confirmed non-empty.
 
 MSL running total: 109/206 modules answered, 97 parked.
+
+
+## Session 2026-07-16 (Thursday) — MSL QnA batch 43: Optimization Algorithms (Tier A batch 11 of 12)
+
+**sgd_and_minibatch (35q), momentum (29q), adagrad_rmsprop (34q), adam_adamw (33q),
+learning_rate_schedules (33q) -- 164 questions total, from src/data/foundations/optimizationModules.js.**
+5 parallel writer agents, one per module, all completed cleanly on first attempt. Independently
+re-validated via validate_batch43.py across all 164 questions -- 1 flagged: a real hand-patch in
+sgd_and_minibatch (an L0 item with 5 total bullets against the 3-4 band, with no discrete-item
+enumeration in its Answer and no thin-content justification for either sanctioned exception; two
+related bullets were merged to bring it to 4). 0 legitimate spec exceptions, 0 fabricated facts found.
+
+Applied via apply_batch43.py, all 164 applied cleanly on the first pass. qnaStatus.js updated via
+update_qnastatus43.py, node --check clean on both files, 0 duplicate keys across all 69 src/data/ files,
+all 164 questions confirmed non-empty.
+
+MSL running total: 114/206 modules answered, 92 parked.
