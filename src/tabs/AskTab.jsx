@@ -8,7 +8,7 @@ function NavStrip({ nav, onNavigate }) {
       <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--ink-ghost)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Jump to in the app</span>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
         {nav.map((it, i) => (
-          <button key={it.id + '-' + i} onClick={() => onNavigate(it.tab)}
+          <button key={it.id + '-' + i} onClick={() => onNavigate(it.tab, it.id !== it.tab ? it.id : null)}
             style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px', borderRadius: 7, cursor: 'pointer',
               background: 'rgba(212,175,55,0.08)', border: '1px solid var(--rim)', color: 'var(--ink-mid)', fontSize: 12, fontFamily: 'var(--font-sans)' }}>
             <span>{it.icon}</span><span style={{ color: 'var(--prime)', fontWeight: 500 }}>{it.title}</span>

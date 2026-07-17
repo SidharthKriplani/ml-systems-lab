@@ -3592,3 +3592,48 @@ Verified: node --check clean, live Node import confirms module structure (5 keyP
 present in systemDesignModules.js, 0 duplicate keys repo-wide. esbuild's local binary is platform-mismatched
 in this device_bash sandbox (darwin-arm64 installed, linux-arm64 needed, no network to reinstall) --
 substituted a direct Node ESM import check as the functional verification instead.
+
+## MSL search-routing bug fix (2026-07-17)
+
+User report: clicking a search result for a Foundations content module (e.g. "stationarity",
+"6-step" / design_framework) opened the correct Foundation tab but not the specific module --
+landed on the tab's default/first module instead. Also asked to check GSL/PAL/PL for the same
+pattern and fix if present.
+
+Root cause (two compounding issues in MSL, both in ml-systems-lab):
+1. `SEARCH_INDEX` (src/data/searchIndex.js) had zero entries referencing any `*_foundation` tab id.
+   Its ~78 pre-existing "module kind" entries all pointed at a separate, unrelated family of
+   practice/simulator tabs (ts, classical, design, spark...) with `id === tab` -- the entire
+   206-module Foundations catalog (19 domains) was completely unsearchable/unaddressable by id.
+2. Even for entries that did carry a distinguishing id (tool/bug/scenario/post kind), NavStrip's
+   click handler in src/tabs/AskTab.jsx dropped it: `onClick={() => onNavigate(it.tab)}` --
+   never passed `it.id` through to `goTo`, so `pendingOpen`/`openModuleId` was always null.
+
+Fix (both additive/minimal, no destructive changes):
+- Regenerated 206 real per-module search entries programmatically from all 19
+  `src/data/foundations/*.js` domain files, each carrying its correct `*_foundation` tab id and
+  real per-module id. Spliced additively into SEARCH_INDEX (196 -> 402 total entries); all 196
+  original entries left untouched.
+- src/tabs/AskTab.jsx: `onClick={() => onNavigate(it.tab, it.id !== it.tab ? it.id : null)}` --
+  now passes the item id through when it's a real per-item id (distinct from the tab id).
+- No new navigation infrastructure needed: Foundation tab components (TimeSeriesFoundationTab,
+  ClassicalMLFoundationTab, SystemDesignFoundationTab, etc.) already consume `openModuleId` via
+  the same mechanism used by My Tracks deep links -- confirmed pre-existing and correct.
+
+Verified: node --check clean on both files; live Node import confirms `searchContent('stationarity')`
+and `searchContent('6-step')` now return correctly-tagged new entries (time_series_foundation/
+stationarity, system_design_foundation/design_framework) that resolve to real onNavigate(tab, id)
+calls the existing openModuleId consumers act on correctly. 284 total module-kind entries, up
+from 78.
+
+Cross-lab check (per user request, "see if this is happening with gsl pal pl too"): investigated
+genai-systems-lab, product-analytics-lab, production-systems-lab for the same pattern.
+- GSL: bug does not exist -- already fixed by a 2026-07-09 commit (one day after LAB-STANDARDS.md's
+  audit had flagged it open; that audit note is now stale). Route objects `{tab, gymId, moduleId}`
+  fully passed through by `navigateTo`, consumed correctly by Concepts.jsx. No changes made.
+- PAL: no bug -- route objects `{openFn, id}` call item-level opener functions that set specific
+  state before switching pages, turned into true `#/page/id` deep links by hashRouting.js (PAL is
+  the org's reference nav implementation). No changes made.
+- PL: no global cross-content search feature exists at all (no SEARCH_INDEX/SearchModal/command
+  palette anywhere) -- the only two search inputs are page-local in-memory filters with no
+  cross-tab navigation, so this bug pattern is structurally impossible there. No changes made.
