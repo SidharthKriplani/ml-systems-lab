@@ -3350,3 +3350,20 @@ all 165 questions confirmed non-empty.
 
 This is the first batch of MSL's Tier B rollout (86 modules, 2,841 questions, 17-batch plan documented in
 the root rollout-plan doc). MSL running total: 125/206 modules answered, 81 parked.
+
+
+## Session 2026-07-16 (Thursday) — MSL QnA batch 46: Reinforcement Learning part 2 (Tier B batch 2 of 17)
+
+**actor_critic (30q), ppo_trpo (36q), rlhf_reward_modeling (33q), exploration_exploitation (35q),
+rl_production (34q) -- 168 questions total, from src/data/foundations/rlModules.js.** 5 parallel writer
+agents, one per module, all completed cleanly on first attempt. Independently re-validated via
+validate_batch46.py across all 168 questions -- 1 flagged, confirmed as a legitimate spec-sanctioned
+exception on hand review: rlhf_reward_modeling's pipeline-stages question names 3 discrete pipeline
+stages in its Answer, landing 3 Mechanism bullets with all L0 sub-bands still satisfied. 0 real gaps, 0
+hand-patches needed, 0 fabricated facts found.
+
+Applied via apply_batch46.py, all 168 applied cleanly on the first pass. qnaStatus.js updated via
+update_qnastatus46.py, node --check clean on both files, 0 duplicate keys across all 69 src/data/ files,
+all 168 questions confirmed non-empty.
+
+This completes rlModules.js (both RL batches). MSL running total: 130/206 modules answered, 76 parked.
