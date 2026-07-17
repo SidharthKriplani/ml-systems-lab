@@ -63,4 +63,46 @@ export const SILENT_DATA_BUG_CHAINS = [
     _flesh: "F3 reveal order f1 -> f2 -> f3. Same causal-ordering lesson as SDC02 in the forecasting domain. Fix chain: split-then-scale (fit scaler on train only) -> rolling-origin/expanding-window backtest with an embargo -> align target horizon strictly after the feature window. Ship buggy-vs-fixed MAPE proof per stage.",
     status: "skeleton",
   },
+
+  // ---- expansion batch (2026-07-17, frozen schema) ----
+
+  { id: "SDC04", level: "F2", domain: "SilentData",
+    title: "The model that aced CV because the same customer was in every fold",
+    description: "A per-transaction model on grouped data (many rows per customer). Random-fold CV is strong; prod on brand-new customers is weak. No error.",
+    flawGraph: [{ flawId: "f1", root: true, dependsOn: [], symptom: "random KFold splits ROWS, not customers — the same customer's rows land in train AND validation, so the model memorizes customer identity; GroupKFold on customer_id is required" }],
+    code: "", options: null, correct: null, impact: "", fix: "",
+    _flesh: "F2 complex: cross_val on transaction rows keyed by many-per-customer; correct = group leakage; fix = GroupKFold/GroupShuffleSplit on the entity id. Ship buggy-vs-fixed proof (random-fold AUC vs grouped-fold AUC).",
+    status: "skeleton" },
+
+  { id: "SDC05", level: "F3", domain: "SilentData",
+    title: "The fraud model that looks great until the labels catch up",
+    description: "A fraud classifier with excellent offline metrics; live it is far worse. Three coupled flaws; the root hides the others.",
+    flawGraph: [
+      { flawId: "f1", root: true, dependsOn: [], symptom: "label defined using data that only exists AFTER fraud is confirmed (e.g. chargeback flag) which at scoring time is not yet available -> label leakage inflates everything and hides the rest" },
+      { flawId: "f2", root: false, dependsOn: ["f1"], symptom: "decision threshold tuned on the test set -> optimistic operating point; only matters once f1's inflation is removed" },
+      { flawId: "f3", root: false, dependsOn: ["f1", "f2"], symptom: "class weights set to make accuracy look good rather than to the cost ratio -> wrong precision/recall balance; invisible while f1+f2 dominate" },
+    ],
+    code: "", options: null, correct: null, impact: "", fix: "",
+    _flesh: "F3 reveal f1 -> f2 -> f3. Root = label leakage (post-hoc label field). Fixing the threshold (f2) first shows no gain while the leaked label (f1) still dominates. Ship buggy-vs-fixed proof per stage.",
+    status: "skeleton" },
+
+  { id: "SDC06", level: "F3", domain: "SilentData",
+    title: "The text classifier that memorized the test set three ways",
+    description: "A text classifier whose macro-F1 climbs every sprint but never helps in prod. Three coupled flaws.",
+    flawGraph: [
+      { flawId: "f1", root: true, dependsOn: [], symptom: "TF-IDF/vectorizer fit on the FULL corpus before the split -> vocabulary+IDF leak test docs into train features; inflates everything" },
+      { flawId: "f2", root: false, dependsOn: ["f1"], symptom: "near-duplicate documents span train/test (no dedup) -> memorization rewarded; only visible once f1's leak is closed" },
+      { flawId: "f3", root: false, dependsOn: ["f1", "f2"], symptom: "reports accuracy on an imbalanced label instead of macro-F1/per-class -> hides minority-class failure; matters only after f1+f2" },
+    ],
+    code: "", options: null, correct: null, impact: "", fix: "",
+    _flesh: "F3 reveal f1 -> f2 -> f3. Root = vectorizer-fit-on-full-corpus. Fix chain: fit vectorizer train-only inside CV -> dedup across split by source id -> per-class metrics. Ship buggy-vs-fixed proof per stage.",
+    status: "skeleton" },
+
+  { id: "SDC07", level: "F2", domain: "SilentData",
+    title: "The ranker whose offline NDCG was inflated by tie order",
+    description: "An offline ranking eval shows a big NDCG lift; online it is flat. The scores have many ties. No error.",
+    flawGraph: [{ flawId: "f1", root: true, dependsOn: [], symptom: "tied scores are broken by the original row order, which happens to be sorted by label/relevance -> NDCG credits ordering the eval harness itself injected, not the model" }],
+    code: "", options: null, correct: null, impact: "", fix: "",
+    _flesh: "F2 complex: subtle eval bug — sort stability + input pre-sorted by relevance leaks order into tied predictions. Fix = shuffle before sort / random tie-break / tie-aware metric. Ship buggy-vs-fixed NDCG proof.",
+    status: "skeleton" },
 ];
