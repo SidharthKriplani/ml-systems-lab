@@ -16,6 +16,7 @@ import { pullAndMergeTracks, scheduleTracksPush } from './utils/tracksSync.js'
 import { upsertLeaderboardRow } from './utils/leaderboard.js'
 import StudyRoom from './study/StudyRoom.jsx'
 import { BUILD_PROJECTS } from './tabs/BuildHubTab.jsx'
+import DesignStudioTab from './tabs/DesignStudioTab.jsx'
 
 
 const HomeTab           = lazyReload(() => import('./tabs/HomeTab.jsx'))
@@ -138,6 +139,7 @@ const ALL_TABS = [
   { id: 'verbal',      component: VerbatimTab },
   { id: 'spottheflaw',   component: SpotTheFlawTab },
   { id: 'incidentroom',  component: IncidentRoomTab },
+  { id: 'designstudio',  component: DesignStudioTab },
   { id: 'mlcoding',      component: MLCodingTab },
   { id: 'projectlab',    component: ProjectLabTab },
   { id: 'loan_default', component: LoanDefaultTab },
@@ -246,6 +248,7 @@ const TAB_TO_ZONE = {
   defense: 'interview', verbal: 'interview',
   spottheflaw: 'interview',
   incidentroom: 'interview',
+  designstudio: 'interview',
   mlcoding: 'interview',
   ask: 'ask',
   // Foundation runners — all map to 'know' zone (FOUNDATIONS live under KNOW)
@@ -462,6 +465,13 @@ const NAV_SECTIONS = [
         flattenWhenSingle: true,
         items: [
           { id: 'incidentroom', label: 'Cross-Domain Challenges',  desc: 'Cross-domain, multi-step incident diagnosis.' },
+        ],
+      },
+      {
+        label: 'DESIGN STUDIO',
+        flattenWhenSingle: true,
+        items: [
+          { id: 'designstudio', label: 'Design Studio', desc: 'Build the artifact yourself, then self-critique against a reference + rubric — design, notebook, and flaw-diagnosis briefs.' },
         ],
       },
     ],
