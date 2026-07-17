@@ -3482,3 +3482,20 @@ batch 54 (Self-Supervised part 2, 4mod, 128q), batch 55 (Pricing, 7mod, 215q), b
 remainder, 6mod, 197q), batch 57 (Unsupervised remainder, 6mod, 197q), batch 58 (Math/Stats remainder,
 6mod, 192q), batch 59 (Deep Learning remainder, 5mod, 168q), batch 60 (Monitoring + Bandits remainder,
 7mod, 239q), batch 61 (Causal + Data + SystemDesign remainder, 4mod, 127q).
+
+### 2026-07-17 IST (Friday) -- MSL batch 50 closed (Time Series part 2, Tier B batch 6 of 17)
+neural_forecasting, forecast_evaluation, ts_anomaly_detection, causal_ts -- 140 questions, 3 flags on
+independent validation, all confirmed legitimate spec-sanctioned exceptions: ts_anomaly_detection's
+anomaly-types question (3 discrete types named in Answer -> 3 Mechanism bullets, top of next band) and
+scarce-labels case (5 discrete techniques named in Answer -> 5 Mechanism bullets), causal_ts's MSM/IPTW
+question (thin single-sentence source, all sub-bands individually satisfied). 0 real gaps, 0 hand-patches.
+One formatting fix (not a content defect): causal_ts's writer agent prefixed all 219 bullets with a stray
+"- " before "**Category.**" -- stripped programmatically before validation/apply. MSL cumulative: 148/206
+modules answered, 58 parked, 0 draft. timeSeriesModules.js is now fully answered (both Time Series batches
+complete).
+Remaining Tier B queued: batch 51 (Probabilistic ML part 1, 4mod, 141q), batch 52 (Probabilistic ML part 2,
+4mod, 140q), batch 53 (Self-Supervised part 1, 5mod, 153q), batch 54 (Self-Supervised part 2, 4mod, 128q),
+batch 55 (Pricing, 7mod, 215q), batch 56 (Optimization remainder, 6mod, 197q), batch 57 (Unsupervised
+remainder, 6mod, 197q), batch 58 (Math/Stats remainder, 6mod, 192q), batch 59 (Deep Learning remainder,
+5mod, 168q), batch 60 (Monitoring + Bandits remainder, 7mod, 239q), batch 61 (Causal + Data + SystemDesign
+remainder, 4mod, 127q).
