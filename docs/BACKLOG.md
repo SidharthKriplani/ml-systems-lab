@@ -3499,3 +3499,15 @@ batch 55 (Pricing, 7mod, 215q), batch 56 (Optimization remainder, 6mod, 197q), b
 remainder, 6mod, 197q), batch 58 (Math/Stats remainder, 6mod, 192q), batch 59 (Deep Learning remainder,
 5mod, 168q), batch 60 (Monitoring + Bandits remainder, 7mod, 239q), batch 61 (Causal + Data + SystemDesign
 remainder, 4mod, 127q).
+
+### 2026-07-17 IST (Friday) -- MSL batch 51 closed (Probabilistic ML part 1, Tier B batch 7 of 17)
+bayesian_inference, gaussian_processes, variational_inference, vae_foundations -- 141 questions, 1 flag on
+independent validation, hand-patched: variational_inference's VI-vs-MCMC L0 question was missing its
+required Grounding bullet (0 vs band's exact 1) -- fixed by converting one Mechanism bullet into a
+Grounding bullet citing the module's named example domains (scientific inference, clinical decision
+support). 0 fabricated facts. MSL cumulative: 152/206 modules answered, 54 parked, 0 draft.
+Remaining Tier B queued: batch 52 (Probabilistic ML part 2, 4mod, 140q), batch 53 (Self-Supervised part 1,
+5mod, 153q), batch 54 (Self-Supervised part 2, 4mod, 128q), batch 55 (Pricing, 7mod, 215q), batch 56
+(Optimization remainder, 6mod, 197q), batch 57 (Unsupervised remainder, 6mod, 197q), batch 58 (Math/Stats
+remainder, 6mod, 192q), batch 59 (Deep Learning remainder, 5mod, 168q), batch 60 (Monitoring + Bandits
+remainder, 7mod, 239q), batch 61 (Causal + Data + SystemDesign remainder, 4mod, 127q).
