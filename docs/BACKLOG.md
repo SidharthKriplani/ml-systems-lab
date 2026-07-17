@@ -3367,3 +3367,22 @@ update_qnastatus46.py, node --check clean on both files, 0 duplicate keys across
 all 168 questions confirmed non-empty.
 
 This completes rlModules.js (both RL batches). MSL running total: 130/206 modules answered, 76 parked.
+
+
+## Session 2026-07-16 (Thursday) — MSL QnA batch 47: Graph ML part 1 (Tier B batch 3 of 17)
+
+**graph_representations (34q), spectral_gcn (37q), spatial_gcn (32q), graph_attention (35q),
+message_passing_framework (33q) -- 171 questions total, from src/data/foundations/graphMLModules.js.** 5
+parallel writer agents, one per module, all completed cleanly on first attempt. Independently
+re-validated via validate_batch47.py across all 171 questions -- 6 flagged: 1 real hand-patch in
+message_passing_framework (qna-injectivity-01 had 2 Grounding bullets against L1's 1-bullet band despite
+a within-band total of 6; merged into one), 5 confirmed as legitimate spec-sanctioned exceptions (4 items
+across both modules name discrete parallel items/categories in their Answer with matching Mechanism
+bullets and satisfied sub-bands; 1 item is thin content landing below L2's band with all sub-bands
+satisfied). 0 fabricated facts found.
+
+Applied via apply_batch47.py, all 171 applied cleanly on the first pass. qnaStatus.js updated via
+update_qnastatus47.py, node --check clean on both files, 0 duplicate keys across all 69 src/data/ files,
+all 171 questions confirmed non-empty.
+
+MSL running total: 135/206 modules answered, 71 parked.
