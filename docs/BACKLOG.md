@@ -3637,3 +3637,26 @@ genai-systems-lab, product-analytics-lab, production-systems-lab for the same pa
 - PL: no global cross-content search feature exists at all (no SEARCH_INDEX/SearchModal/command
   palette anywhere) -- the only two search inputs are page-local in-memory filters with no
   cross-tab navigation, so this bug pattern is structurally impossible there. No changes made.
+
+## MSL Tier B batch 56 closed (Optimization remainder, Tier B batch 12 of 17) -- 2026-07-17
+
+loss_landscape_intuition, gradient_flow, weight_initialization, second_order_methods,
+loss_landscape_geometry, gradient_clipping_regularization -- 197 questions, 1 flag on independent
+validation (gradient_clipping_regularization's norm-vs-component-clip question had 2 Grounding
+bullets against its L1 band's exactly-1 limit -- a real defect, not a named-items exception, since
+both bullets were two halves of one comparative numeric illustration rather than N discrete named
+items). Hand-patched by merging the two Grounding bullets into one that preserves both the
+value-clip and norm-clip computations; re-validated clean (0 flags) after the patch.
+
+Applied via centralized single-writer script, node --check clean on both qnaBank.js and
+qnaStatus.js, 0 duplicate keys across 71 src/data/ files, all 197 questions confirmed to have
+non-empty answer arrays via live Node import. optimizationModules.js's remaining unanswered
+modules are now complete.
+
+MSL cumulative: 178/206 modules answered, 28 parked, 0 draft.
+
+This closes out this session's MSL Tier B QnA answer-writing run (12 of 17 planned batches
+completed: 45-56). Remaining queued: batch 57 (Unsupervised remainder, 6mod, 197q), batch 58
+(Math/Stats remainder, 6mod, 192q), batch 59 (Deep Learning remainder, 5mod, 168q), batch 60
+(Monitoring + Bandits remainder, 7mod, 239q), batch 61 (Causal + Data + SystemDesign remainder,
+4mod, 127q) -- picking back up per user instruction.
