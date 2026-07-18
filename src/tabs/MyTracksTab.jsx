@@ -674,7 +674,17 @@ export function MyTracksTab({ onNavigate, openTrackId }) {
   useEffect(() => {
     const h = () => setTracks(getTracks())
     window.addEventListener('msl_tracks', h)
-    return () => window.removeEventListener('msl_tracks', h)
+    // Cross-tab reconciliation: the 'msl_tracks' CustomEvent is same-tab only.
+    // localStorage 'storage' events fire in OTHER tabs when any tab writes the
+    // tracks key, so this keeps a second tab's list from going stale (and from
+    // clobbering the first tab's writes on its next save). Fires on key match,
+    // or key === null (a localStorage .clear()).
+    const onStorage = (e) => { if (e.key === 'msl-tracks-v1' || e.key === null) h() }
+    window.addEventListener('storage', onStorage)
+    return () => {
+      window.removeEventListener('msl_tracks', h)
+      window.removeEventListener('storage', onStorage)
+    }
   }, [])
 
   // Explicit "open this track" request (e.g. a module's "← Back to My Tracks")
@@ -762,6 +772,7 @@ export function MyTracksTab({ onNavigate, openTrackId }) {
         {/* Note editor — full pane */}
         {openNote && liveNote ? (
           <NoteEditor
+            key={liveNote.id}
             trackId={openNote.trackId}
             note={liveNote}
             onBack={handleNoteBack}
