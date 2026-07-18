@@ -4,6 +4,17 @@ Read this at session open alongside NEXT.md + CLAUDE.md. One screen of truth.
 
 ---
 
+## TRACKER NOTE PERSISTENCE HARDENED (18 Jul 2026)
+
+My Tracks notes are now stateful across close/refresh and across tabs. Three fixes, esbuild-verified, **LOCAL/uncommitted** (push on Mac, approve-first):
+- **Close-flush** — `NoteEditor` flushes the 500ms autosave buffer on `visibilitychange`(hidden)+`pagehide` (unmount cleanup never ran on real page close). Type → Cmd-W → saved.
+- **Cross-tab reconcile** — `MyTracksTab` now listens to `window 'storage'` (key `msl-tracks-v1`), so a 2nd tab no longer holds stale state and clobbers the 1st tab's writes. `msl_tracks` CustomEvent was same-tab only.
+- **Editor keyed** — added `key={liveNote.id}` on `<NoteEditor>` (was missing in MSL only; GSL/PAL/PL already had it).
+
+Files: `src/components/tracks/NoteEditor.jsx`, `src/tabs/MyTracksTab.jsx`. Additive only — existing saved notes untouched. **Residual:** same note in two editors at once = note-level last-writer-wins (no live block-merge, deliberate). **Still open:** PAL tracks never sync to Supabase (`pal-tracks-v1` not in `syncProgress.PROGRESS_KEYS`); PL tracks local-only. GSL got the same close-flush + cross-tab fix this pass.
+
+---
+
 ## FINAL CLOSE (17 Jul 2026, late night)
 
 **The staleness villain of the whole session was SERVICE WORKERS** — hard refresh bypasses

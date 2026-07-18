@@ -1,7 +1,23 @@
 # Lineage & Ideas
 
 Design history, inspiration, and future directions for ML Systems Lab.
-Last updated: July 2026
+Last updated: 18 Jul 2026
+
+---
+
+### My Tracks note persistence hardening — close-flush + cross-tab reconcile + editor key (18 Jul 2026)
+
+Owner-reported: tracker notes "don't get saved" + "multiple tabs conflict." Root-caused three bugs in the My Tracks block-note stack, all confirmed from source (not runtime repro).
+
+**(1) Debounced autosave lost on tab close/refresh.** `NoteEditor` persists via `setTimeout(…, 500)`; the only flush was the React unmount cleanup, which does NOT run on a real page close/hard-refresh. Fix: added a `visibilitychange`(hidden) + `pagehide` effect in `NoteEditor` that flushes `latest.current` via `updateNote` immediately. Type → Cmd-W → saved.
+
+**(2) Cross-tab clobber / stale list.** `save()` in `utils/tracks.js` writes localStorage then dispatches the **same-tab-only** `msl_tracks` CustomEvent. No `storage` listener refreshed tracks (App.jsx's lone `storage` handler only repaints progress rings), so a 2nd tab held a stale in-memory copy and its open editor overwrote the whole note body on next autosave → last-writer-wins, other tab's edits vanished. Fix: `MyTracksTab` now also listens to `window 'storage'` (`e.key === 'msl-tracks-v1' || e.key === null`) and re-reads tracks.
+
+**(3) MSL-only: `<NoteEditor>` was not keyed.** MyTracksTab rendered `<NoteEditor>` with no `key` (GSL/PAL/PL all key by `liveNote.id`), leaving stale `blocks` state + a stale unmount-flush closure when the note identity changed. Fix: added `key={liveNote.id}`.
+
+**Residual (deliberate):** same note open in TWO editors at once still resolves note-level last-writer-wins on the body — no live block-merge into an open editor (would cause text jump/revert while typing). Existing saved notes untouched: all changes additive, no storage-format change.
+
+**Files changed:** `src/components/tracks/NoteEditor.jsx` (close-flush effect), `src/tabs/MyTracksTab.jsx` (`storage` listener + `key={liveNote.id}`). esbuild-verified. **All LOCAL/uncommitted** — push on Mac (approve-first). Service-worker v3 self-heal already in place, but hard-clear SW after deploy to see the change. **Not in this pass:** PAL (`pal-tracks-v1` absent from `syncProgress.PROGRESS_KEYS`, no `tracksSync.js` → tracks never reach Supabase) and PL/programming (tracks local-only by design) still carry the close-flush + cross-tab gaps.
 
 ---
 
