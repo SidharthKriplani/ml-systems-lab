@@ -5,6 +5,7 @@
 import { useState } from 'react'
 import { DESIGN_STUDIO_MSL } from '../data/designStudioBriefs.js'
 import { DESIGN_STUDIO_FLAWS } from '../data/designStudioFlaws.js'
+import GradePack from '../components/GradePack.jsx'
 
 const PRIME = 'var(--prime, #f59e0b)'
 const SPEC = { S1: 'S1 · full brief', S2: 'S2 · derive half', S3: 'S3 · derive most', S4: 'S4 · own it' }
@@ -81,8 +82,9 @@ export default function DesignStudioTab() {
                 </div>
               ))}
             </Sec>
+            <GradePack brief={sel} />
             <div style={{ fontSize: '0.7rem', color: '#52525b', borderTop: '1px solid #18181b', paddingTop: 10 }}>
-              Skeleton — reference solution + rubric detail still being authored. The full produce -&gt; reveal -&gt; self-critique workspace is a later build.
+              Reference prose is still being authored for some briefs — the grade pack anchors on the checklist, which is the bar.
             </div>
           </div>
         )}
