@@ -342,4 +342,154 @@ Tradeoffs: recall vs customer friction; model complexity vs the <100ms budget; r
     ],
     status: "authored" },
 
+  // ── Authored ROOT + variations: Drift / monitoring (2026-07-21).
+  { id: "mlsd-drift-root", roleTrack: "MLE", domain: "monitoring", modality: "system-design",
+    specLevel: "S1", withheld: [], flawMode: null, difficulty: "senior", companies: ["Any"], isRoot: true,
+    tags: ["monitoring", "drift", "delayed-labels", "retraining", "root"],
+    prompt: "Design monitoring for a deployed ML model that catches silent degradation — data drift, concept drift, and delayed-label performance loss — before the business notices.",
+    context: "Model in production. Labels arrive with delay (or rarely). Inputs shift over time. A silent 10% AUC drop can cost money for weeks before anyone sees it.",
+    produce: { artifact: "the monitoring design (label-free + label-based) + the drift taxonomy + alerting + retrain triggers + validation-before-promote + tradeoffs", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution", worked: `A strong answer monitors BEFORE labels arrive and distinguishes the failure modes.
+
+1. Three different failures, three different detectors. Data drift (input distribution P(x) shifts), concept drift (P(y|x) changes — the world changed), and train-serve skew (offline != online). Each needs a different detector and a different fix; 'monitor drift' generically fixes the wrong thing.
+
+2. Monitor without labels. Because labels are delayed, watch PSI/KL on features, prediction-distribution shift, and proxy metrics day-to-day — these move before the delayed truth arrives.
+
+3. Delayed labels. When outcomes (chargebacks, conversions) land late, backfill the true performance metric and alert on the lag-adjusted metric, not just the proxies.
+
+4. Alerts that get acted on. Use alert bands tied to business impact, not point thresholds — too tight causes fatigue, too loose misses the drop.
+
+5. Retraining triggers + a promote gate. Drift and performance decay trigger retraining, but validate the challenger against the champion before promoting — retraining on drifted/biased data can make it worse.
+
+Tradeoffs: detector sensitivity vs false alarms; retrain frequency vs cost and stability.` },
+    rubric: [
+      { dim: "drift-taxonomy", anchor: "do you distinguish data drift vs concept drift vs train-serve skew (different detectors/fixes)?", cost: "you 'monitor drift' generically and fix the wrong thing" },
+      { dim: "label-free-monitoring", anchor: "what catches degradation WITHOUT labels (PSI/KL, prediction-shift, proxies)?", cost: "you are blind until delayed labels arrive weeks later" },
+      { dim: "delayed-label-metric", anchor: "how do you compute true performance once late labels land (backfill, lag-adjusted)?", cost: "you trust proxies and miss a real accuracy collapse" },
+      { dim: "alert-design", anchor: "alert bands tied to business impact, not point thresholds that cause fatigue?", cost: "alerts ignored (fatigue) or missed (too loose)" },
+      { dim: "retrain-trigger", anchor: "what triggers retrain, and how is the challenger validated before promote?", cost: "you retrain into a worse model, or never retrain at all" },
+      { dim: "tradeoff", anchor: "sensitivity vs false alarms (or retrain frequency vs cost) stated?", cost: "reads as no real decision" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-drift-var-nolabels", roleTrack: "MLE", domain: "monitoring", modality: "system-design",
+    specLevel: "S2", withheld: ["reference-prose"], flawMode: null, difficulty: "senior", companies: ["Any"], parentRoot: "mlsd-drift-root",
+    tags: ["monitoring", "no-labels", "proxy-metrics", "variation"],
+    prompt: "Variation of the drift root: labels arrive 30 days late. How do you know TODAY whether the model degraded? (Scaffold: feature-drift monitoring is given.)",
+    context: "You cannot wait a month to find out the model broke.",
+    produce: { artifact: "the label-free early-warning design (prediction shift, proxies, calibration) + when you escalate + tradeoffs", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "prediction-shift", anchor: "do you monitor the prediction/score distribution shift, not just inputs?", cost: "input drift alone misses concept drift the model already reflects" },
+      { dim: "proxies", anchor: "what business/behavioral proxy correlates with performance before labels arrive?", cost: "no early signal; you wait 30 days to learn it broke" },
+      { dim: "calibration", anchor: "do you watch calibration drift as a label-light signal?", cost: "miscalibration slips through score-only monitoring" },
+      { dim: "escalation", anchor: "what threshold moves you from watch to action pre-labels?", cost: "you see the signal but have no trigger to act" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-drift-var-silent", roleTrack: "MLE", domain: "monitoring", modality: "system-design",
+    specLevel: "S3", withheld: ["reference-prose", "stage-skeleton"], flawMode: "silent", difficulty: "senior", companies: ["Any"], parentRoot: "mlsd-drift-root",
+    tags: ["monitoring", "silent-degradation", "variation"],
+    prompt: "Variation of the drift root: AUC quietly dropped 12% three weeks ago and nobody noticed. Design the monitor that would have caught it the same day. (Minimal scaffold.)",
+    context: "Only a monthly offline report existed. No live monitors. The drop coincided with an upstream data-schema change.",
+    produce: { artifact: "the root cause path + the same-day monitor (feature + prediction + proxy) + the alert + who gets paged", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "upstream-data-check", anchor: "do you catch the upstream schema/data change (null spikes, range shifts) that caused it?", cost: "silent data breakage flows straight into predictions" },
+      { dim: "same-day-signal", anchor: "what live signal fires the SAME day, not a monthly report?", cost: "weeks of degraded decisions before the report" },
+      { dim: "actionable-alert", anchor: "does the alert page a specific owner with context, not a dashboard nobody watches?", cost: "the signal exists but no one acts" },
+      { dim: "anti-pattern", anchor: "do you reject 'a monthly offline eval' as sufficient?", cost: "monthly cadence guarantees weeks of blindness" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-drift-var-retrain-loop", roleTrack: "MLE", domain: "monitoring", modality: "system-design",
+    specLevel: "S4", withheld: ["reference-prose", "stage-skeleton", "hints"], flawMode: null, difficulty: "staff", companies: ["Any"], parentRoot: "mlsd-drift-root",
+    tags: ["monitoring", "retraining", "champion-challenger", "variation"],
+    prompt: "Variation of the drift root (own it — no scaffold): your automatic retraining made the model WORSE — it retrained on drifted, biased data. Fix the retrain loop.",
+    context: "You get the incident only. Bring your own validation and promotion design.",
+    produce: { artifact: "why auto-retrain degraded + the validation/promote gate (champion-challenger, holdout) + the data-quality guard + tradeoffs", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "promote-gate", anchor: "do you require a challenger to beat the champion on a trusted holdout BEFORE promotion?", cost: "auto-promotion ships a worse model" },
+      { dim: "data-quality-guard", anchor: "how do you stop retraining on drifted/poisoned/biased data?", cost: "the model learns the drift and degrades further" },
+      { dim: "shadow-eval", anchor: "shadow/canary the challenger on live traffic before full promote?", cost: "you find out it is worse only after it ships" },
+      { dim: "tradeoff", anchor: "retrain freshness vs stability/validation cost stated?", cost: "reads as no real decision" },
+    ],
+    status: "authored" },
+
+  // ── Authored ROOT + variations: Feature pipeline & train-serve skew (2026-07-21).
+  { id: "mlsd-feature-root", roleTrack: "MLE", domain: "production", modality: "system-design",
+    specLevel: "S1", withheld: [], flawMode: null, difficulty: "senior", companies: ["Any"], isRoot: true,
+    tags: ["feature-pipeline", "train-serve-skew", "point-in-time", "leakage", "root"],
+    prompt: "Design the feature pipeline for a real-time ML model so features are correct, point-in-time, and identical offline and online.",
+    context: "Batch training + real-time serving. Features come from streams and batch tables. The classic failure: strong offline, broken live.",
+    produce: { artifact: "the feature architecture (offline + online store) + point-in-time correctness + skew prevention + versioning/backfill + monitoring + tradeoffs", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution", worked: `A strong answer makes offline and online features provably identical and point-in-time.
+
+1. Point-in-time correctness. Training features must reflect ONLY what was known at prediction time. A naive join to current tables leaks the future and inflates offline metrics.
+
+2. No train-serve skew — the number-one killer. The same feature definition and code compute features offline (training) and online (serving), via a feature store or a shared library — never two separate implementations that quietly diverge.
+
+3. Online + offline store. A low-latency online store for serving and an offline store for training, with a consistency guarantee between them and an explicit freshness SLA per feature.
+
+4. Versioning and backfill. Features are versioned; changing one is a versioned migration; backfills are point-in-time so history is not silently rewritten.
+
+5. Monitoring. Watch feature drift, null rates, and the training-vs-serving distribution gap so skew surfaces as an alert, not a mystery.
+
+Tradeoffs: freshness vs cost; precompute vs on-demand; store complexity vs consistency guarantees.` },
+    rubric: [
+      { dim: "point-in-time", anchor: "are training features point-in-time (only what was known at prediction time), with no future leakage in the join?", cost: "leakage: brilliant offline, useless live" },
+      { dim: "no-skew", anchor: "same feature definition/code offline and online (store or shared lib), not two implementations?", cost: "train-serve skew — the classic silent live failure" },
+      { dim: "online-offline-store", anchor: "an online (low-latency) + offline (training) store with a consistency guarantee and freshness SLA?", cost: "serving features stale or inconsistent with training" },
+      { dim: "versioning-backfill", anchor: "are features versioned and backfills point-in-time?", cost: "a feature change silently corrupts historical training data" },
+      { dim: "skew-monitoring", anchor: "do you monitor the training-vs-serving feature distribution and null rates?", cost: "skew appears silently and you never see it" },
+      { dim: "tradeoff", anchor: "freshness vs cost (or precompute vs on-demand) stated?", cost: "reads as no real decision" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-feature-var-skew", roleTrack: "MLE", domain: "production", modality: "system-design",
+    specLevel: "S2", withheld: ["reference-prose"], flawMode: "silent", difficulty: "senior", companies: ["Any"], parentRoot: "mlsd-feature-root",
+    tags: ["feature-pipeline", "skew", "variation"],
+    prompt: "Variation of the feature root: the model scores 0.92 offline but 0.71 live. The feature code differs between the training notebook and the serving service. Fix it. (Scaffold: skew is diagnosed for you; design the fix.)",
+    context: "Two feature implementations drifted apart over months.",
+    produce: { artifact: "the unified-feature design (store or shared lib) + how you migrate off the two-implementation setup + how you prove parity", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "single-definition", anchor: "do you collapse to ONE feature definition used by both paths?", cost: "the two implementations keep diverging" },
+      { dim: "parity-test", anchor: "how do you prove offline == online for the same input (parity test)?", cost: "you assume parity and skew silently returns" },
+      { dim: "migration", anchor: "a safe migration off the dual-implementation setup?", cost: "a big-bang swap breaks serving" },
+      { dim: "monitoring", anchor: "ongoing skew monitoring so it cannot silently recur?", cost: "skew creeps back unnoticed" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-feature-var-leakage", roleTrack: "MLE", domain: "production", modality: "system-design",
+    specLevel: "S3", withheld: ["reference-prose", "stage-skeleton"], flawMode: "silent", difficulty: "senior", companies: ["Any"], parentRoot: "mlsd-feature-root",
+    tags: ["feature-pipeline", "leakage", "point-in-time", "variation"],
+    prompt: "Variation of the feature root: a feature secretly encodes the label (e.g., 'account_closed' for a churn model). Offline is near-perfect. Find and fix the leak. (Minimal scaffold.)",
+    context: "The feature is populated only after the outcome is known.",
+    produce: { artifact: "how you detect the leak + the point-in-time fix + how you audit the rest of the feature set for the same problem", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "leak-detected", anchor: "do you identify that the feature is set only AFTER the label event (future info)?", cost: "the 0.99 offline is a mirage; live collapses" },
+      { dim: "point-in-time-fix", anchor: "the fix — compute the feature as of prediction time, or drop it?", cost: "the leak persists under a new name" },
+      { dim: "audit", anchor: "how do you audit ALL features for the same as-of-outcome leakage?", cost: "you fix one leak and miss three others" },
+      { dim: "proof", anchor: "a temporal backtest proving live-like performance?", cost: "you re-trust the leaked offline number" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-feature-var-realtime", roleTrack: "MLE", domain: "production", modality: "system-design",
+    specLevel: "S4", withheld: ["reference-prose", "stage-skeleton", "hints"], flawMode: null, difficulty: "staff", companies: ["Any"], parentRoot: "mlsd-feature-root",
+    tags: ["feature-pipeline", "streaming", "real-time", "variation"],
+    prompt: "Variation of the feature root (own it — no scaffold): design a point-in-time-correct feature pipeline mixing streaming and batch features for a model that must respond in under 50ms.",
+    context: "You get the requirement only. Bring your own architecture and tradeoffs.",
+    produce: { artifact: "the streaming+batch feature architecture + point-in-time correctness under streaming + the <50ms serving path + tradeoffs", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "streaming-pit", anchor: "how do streaming features stay point-in-time correct (event-time, no future leakage)?", cost: "streaming introduces subtle future leakage" },
+      { dim: "latency", anchor: "does the online feature fetch + score fit under 50ms (precompute vs on-demand)?", cost: "feature fetch blows the latency budget" },
+      { dim: "consistency", anchor: "how are streaming + batch features made consistent at training and serving?", cost: "mixed sources reintroduce skew" },
+      { dim: "tradeoff", anchor: "freshness vs latency vs cost stated with the deciding factor?", cost: "reads as no real decision" },
+    ],
+    status: "authored" },
+
 ];
