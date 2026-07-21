@@ -1,7 +1,6 @@
-// DesignStudioTab.jsx — Design Studio (MSL). Read-only browser for the produce -> reference ->
-// self-critique briefs (design + notebook) plus the flaw-diagnosis briefs. No LLM: you produce the
-// artifact yourself, then grade it against a reference + rubric. Skeletons (reference prose being
-// authored); the full produce -> reveal -> self-critique workspace is a later build.
+// DesignStudioTab.jsx — Design Studio (MSL). Produce -> reveal reference -> self-critique.
+// Renders authored roots + variations (and flaw briefs) with a readable name, a reveal-able
+// worked reference, and the GradePack attempt/self-score/BYO-LLM-grade workspace.
 import { useState } from 'react'
 import { DESIGN_STUDIO_MSL } from '../data/designStudioBriefs.js'
 import { DESIGN_STUDIO_FLAWS } from '../data/designStudioFlaws.js'
@@ -15,6 +14,13 @@ const ALL = [
   ...(DESIGN_STUDIO_FLAWS || []).map(b => ({ ...b, _kind: 'flaw' })),
 ]
 
+function nameOf(b) {
+  if (b.title) return b.title
+  let s = b.id.replace(/^ds-/, '').replace(/^mlsd-/, '').replace(/-root$/, '').replace(/-var-/, ' — ').replace(/-/g, ' ')
+  s = s.replace(/\b\w/g, c => c.toUpperCase())
+  return b.isRoot ? s + '  (root)' : s
+}
+
 function Sec({ title, children }) {
   return (
     <div>
@@ -26,24 +32,26 @@ function Sec({ title, children }) {
 
 export default function DesignStudioTab() {
   const [selId, setSelId] = useState(ALL[0]?.id || null)
+  const [showRef, setShowRef] = useState(false)
   const sel = ALL.find(b => b.id === selId) || ALL[0]
+  const pick = (id) => { setSelId(id); setShowRef(false) }
   return (
     <div style={{ maxWidth: 1000, margin: '0 auto', padding: '1.5rem 1rem', color: '#d4d4d8' }}>
       <h1 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#fafafa', marginBottom: 2 }}>
         Design Studio <span style={{ color: PRIME, fontSize: '0.85rem', fontWeight: 400 }}>· build it yourself, then self-critique</span>
       </h1>
-      <p style={{ fontSize: '0.8rem', color: '#71717a', marginBottom: '1.25rem' }}>No LLM — you produce the artifact, then grade it against a reference + rubric.</p>
-      <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: '1.5rem' }}>
-        <div>
+      <p style={{ fontSize: '0.8rem', color: '#71717a', marginBottom: '1.25rem' }}>Produce the artifact, self-score the anchors, then export a grade pack to any LLM.</p>
+      <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '1.5rem' }}>
+        <div style={{ maxHeight: '80vh', overflow: 'auto', paddingRight: 4 }}>
           {ALL.map(b => {
             const active = b.id === sel?.id
             return (
-              <button key={b.id} onClick={() => setSelId(b.id)} style={{
+              <button key={b.id} onClick={() => pick(b.id)} style={{
                 display: 'block', width: '100%', textAlign: 'left', padding: '0.5rem 0.7rem', marginBottom: 4,
                 borderRadius: 8, border: `1px solid ${active ? PRIME : '#27272a'}`,
                 background: active ? 'rgba(245,158,11,0.10)' : 'transparent', color: active ? '#fafafa' : '#d4d4d8', cursor: 'pointer',
               }}>
-                <div style={{ fontSize: '0.85rem', fontWeight: 500 }}>{b.title}</div>
+                <div style={{ fontSize: '0.85rem', fontWeight: 500, color: b.isRoot ? PRIME : undefined }}>{nameOf(b)}</div>
                 <div style={{ fontSize: '0.68rem', color: '#71717a', marginTop: 2 }}>
                   {b.domain} · {b._kind === 'flaw' ? `flaw ${b.flawMode}` : (SPEC[b.specLevel] || b.specLevel)} · {b.modality}
                 </div>
@@ -54,7 +62,12 @@ export default function DesignStudioTab() {
         {sel && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div>
-              <h2 style={{ fontSize: '1.05rem', fontWeight: 600, color: '#fafafa' }}>{sel.title}</h2>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 6, fontSize: '0.68rem' }}>
+                <span style={{ padding: '2px 8px', borderRadius: 5, background: '#27272a', color: '#a1a1aa' }}>{sel.domain}</span>
+                <span style={{ padding: '2px 8px', borderRadius: 5, background: '#27272a', color: PRIME }}>{SPEC[sel.specLevel] || sel.specLevel}</span>
+                {sel.isRoot && <span style={{ padding: '2px 8px', borderRadius: 5, background: 'rgba(245,158,11,0.15)', color: PRIME }}>root</span>}
+              </div>
+              <h2 style={{ fontSize: '1.05rem', fontWeight: 600, color: '#fafafa' }}>{nameOf(sel)}</h2>
               <p style={{ color: '#d4d4d8', marginTop: 4 }}>{sel.prompt}</p>
             </div>
             <Sec title="Context">{sel.context}</Sec>
@@ -82,10 +95,27 @@ export default function DesignStudioTab() {
                 </div>
               ))}
             </Sec>
+            {sel.reference?.worked && (
+              <div>
+                <button onClick={() => setShowRef(!showRef)} style={{
+                  fontSize: '0.8rem', padding: '6px 12px', borderRadius: 8, cursor: 'pointer',
+                  border: '1px solid rgba(245,158,11,0.5)', background: 'transparent', color: PRIME,
+                }}>
+                  {showRef ? 'Hide worked reference' : 'Reveal worked reference (attempt first)'}
+                </button>
+                {showRef && (
+                  <div style={{ marginTop: 8, border: '1px solid #27272a', borderRadius: 8, padding: '0.7rem', whiteSpace: 'pre-wrap', fontSize: '0.82rem', color: '#d4d4d8', lineHeight: 1.5 }}>
+                    {sel.reference.worked}
+                  </div>
+                )}
+              </div>
+            )}
             <GradePack brief={sel} />
-            <div style={{ fontSize: '0.7rem', color: '#52525b', borderTop: '1px solid #18181b', paddingTop: 10 }}>
-              Reference prose is still being authored for some briefs — the grade pack anchors on the checklist, which is the bar.
-            </div>
+            {sel.status === 'skeleton' && (
+              <div style={{ fontSize: '0.7rem', color: '#52525b', borderTop: '1px solid #18181b', paddingTop: 10 }}>
+                Reference prose is still being authored for some briefs — the grade pack anchors on the checklist, which is the bar.
+              </div>
+            )}
           </div>
         )}
       </div>
