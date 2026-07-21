@@ -54,7 +54,9 @@ const StaffLayerTab  = lazyReload(() => import('./tabs/StaffLayerTab.jsx'))
 const DefenseDocTab  = lazyReload(() => import('./tabs/DefenseDocTab.jsx'))
 const VerbatimTab    = lazyReload(() => import('./tabs/VerbatimTab.jsx'))
 const SpotTheFlawTab    = lazyReload(() => import('./tabs/SpotTheFlawTab.jsx'))
+const DefectHuntTab     = lazyReload(() => import('./tabs/DefectHuntTab.jsx'))
 const IncidentRoomTab   = lazyReload(() => import('./tabs/IncidentRoomTab.jsx'))
+const CaseRoomTab       = lazyReload(() => import('./tabs/CaseRoomTab.jsx'))
 const MLCodingTab       = lazyReload(() => import('./tabs/MLCodingTab.jsx'))
 const ProjectLabTab     = lazyReload(() => import('./tabs/ProjectLabTab.jsx'))
 const LoanDefaultTab = lazyReload(() => import('./tabs/LoanDefaultTab.jsx'))
@@ -138,7 +140,9 @@ const ALL_TABS = [
   { id: 'defense',     component: DefenseDocTab },
   { id: 'verbal',      component: VerbatimTab },
   { id: 'spottheflaw',   component: SpotTheFlawTab },
+  { id: 'defecthunt',    component: DefectHuntTab },
   { id: 'incidentroom',  component: IncidentRoomTab },
+  { id: 'caseroom',      component: CaseRoomTab },
   { id: 'designstudio',  component: DesignStudioTab },
   { id: 'mlcoding',      component: MLCodingTab },
   { id: 'projectlab',    component: ProjectLabTab },
@@ -326,9 +330,8 @@ const PRACTICE_DOMAINS = [
   {
     id: 'iprep', label: 'Drills', accent: 'var(--prime)', bg: 'var(--prime-faint)',
     tabs: [
-      { id: 'trainer',     label: 'Trainer',      desc: 'Flashcard MCQ drill + weakness heatmap' },
-      { id: 'codebugs',    label: 'Code Bugs',    desc: '20 Python/SQL production bugs to spot' },
-      { id: 'casestudies', label: 'Case Studies', desc: 'Netflix, Uber, Airbnb, DoorDash, Spotify' },
+      { id: 'drill',       label: 'Drill',        desc: 'Self-test the MCQ bank — untimed spaced-rep practice or a timed mock exam.' },
+      { id: 'defecthunt',  label: 'Defect Hunt', desc: 'Find the buried defect — a bug in code or a flaw in an ML analysis.' },
       { id: 'stafflayer',  label: 'Staff Layer',  desc: 'IC3 → IC5 → Staff perspective reveals' },
     ],
   },
@@ -342,13 +345,9 @@ const INTERVIEW_TOOLS = [
     svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> },
   { id: 'defense',    label: 'Defense Plan',     desc: 'Paste your JD, self-rate your gaps, get a day-by-day study plan with round-by-round coverage. The strategic core of your prep.', step: '01', accent: 'var(--prime)',
     svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> },
-  { id: 'combinator', label: 'Combinator',       desc: 'Full mock exam. 30, 45, or 60 minutes. Answers locked until you finish. Debrief shows your weakest domains.', step: '02', accent: 'var(--prime)',
-    svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
   { id: 'verbal',     label: 'Verbal Practice',  desc: 'Record yourself answering out loud. Playback and compare. Closes the gap between knowing the answer and saying it clearly.', step: '03', accent: 'var(--prime)',
     svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> },
-  { id: 'spottheflaw', label: 'Spot the Flaw', desc: '12 real ML analyses each containing exactly one buried methodological flaw. Find it before the interviewer does.', step: null, accent: 'var(--prime)',
-    svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg> },
-  { id: 'incidentroom', label: 'Cross-Domain Challenges', desc: '3 cross-domain production incidents. Each requires reasoning across Feature Eng, Monitoring, Serving, and Experimentation — multi-step diagnosis with branching findings.', step: null, accent: 'var(--prime)',
+  { id: 'caseroom', label: 'Case Room', desc: 'Multi-step incident diagnosis + company case studies — reason a scenario down to its root.', step: null, accent: 'var(--prime)',
     svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3.05h16.94a2 2 0 0 0 1.71-3.05L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> },
   { id: 'mlcoding', label: 'ML Coding', desc: '3 ML-specific Python problems that appear in real senior/staff interviews — custom loss, vectorised features, k-fold from scratch. Live execution via Pyodide.', step: null, accent: 'var(--prime)',
     svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> },
@@ -416,7 +415,7 @@ const NAV_SECTIONS = [
         label: 'CODE',
         items: [
           { id: 'mlcoding', label: 'ML Coding',            desc: 'ML-specific Python problems — implement/debug/optimise/design, live Pyodide.' },
-          { id: 'codebugs', label: 'Bug Hunt',             desc: 'Read code, find the buried bug — ML/DL/pipeline debugging.' },
+          { id: 'defecthunt', label: 'Defect Hunt',       desc: 'Find the buried defect — a bug in code or a flaw in an ML analysis.' },
           { id: 'ext_python', label: 'Python fluency → PL ↗', external: true, href: 'https://programming-lab.vercel.app/#/pylab', desc: 'General Python & DSA fluency lives in Programming Lab (sibling lab).' },
           { id: 'ext_sql',    label: 'SQL fluency → PAL ↗', external: true, href: 'https://product-analytics-lab.vercel.app/#/sql-lab', desc: 'The canonical SQL problem bank lives in Product Analytics Lab (sibling lab).' },
         ],
@@ -464,7 +463,7 @@ const NAV_SECTIONS = [
         label: 'INCIDENTS',
         flattenWhenSingle: true,
         items: [
-          { id: 'incidentroom', label: 'Cross-Domain Challenges',  desc: 'Cross-domain, multi-step incident diagnosis.' },
+          { id: 'caseroom', label: 'Case Room', desc: 'Multi-step incident diagnosis + company case studies — reason a scenario down to its root.' },
         ],
       },
       {
