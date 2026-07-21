@@ -567,4 +567,79 @@ Tradeoffs: experiment duration/power vs decision speed; randomization granularit
     ],
     status: "authored" },
 
+  // ── Authored ROOT + variations: Search / relevance ranking (2026-07-21).
+  { id: "mlsd-search-root", roleTrack: "MLE", domain: "search", modality: "system-design",
+    specLevel: "S1", withheld: [], flawMode: null, difficulty: "senior", companies: ["Any"], isRoot: true,
+    tags: ["search", "relevance", "learning-to-rank", "hybrid-retrieval", "root"],
+    prompt: "Design a search / relevance ranking system — query understanding, retrieval, and learning-to-rank — that returns relevant results fast across head and tail queries.",
+    context: "Large catalog. Free-text queries with typos, synonyms, and intent. Head queries are frequent; the long tail is huge. Relevance is judged mostly by clicks (position-biased). Tight latency budget.",
+    produce: { artifact: "the search architecture (query understanding -> retrieval -> LTR) + how you handle click bias + the eval + tradeoffs", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution", worked: `A strong answer treats search as understand -> retrieve -> rank, with click bias handled from the start.
+
+1. Query understanding. Normalize, spell-correct, expand synonyms/intent, recognize entities. Head and tail queries need different handling — the tail has no behavioral signal, so it leans on content.
+
+2. Hybrid retrieval. Lexical (BM25) for exact matches and rare tokens (SKUs, codes) PLUS semantic (dense) for intent — neither alone covers both. Retrieve a candidate set, then rank it.
+
+3. Learning-to-rank. A LTR stage (pointwise/pairwise/listwise) over features: relevance, popularity, freshness, personalization. This is where behavioral signal is learned.
+
+4. Click / position bias. Clicks are confounded by rank — train naively and the model learns position, not relevance (rich-get-richer). Correct with inverse-propensity weighting or randomization, and validate offline NDCG against online outcomes.
+
+5. Eval. Human-judged or click-model relevance, plus latency, zero-result rate, and tail-query coverage — because aggregate NDCG hides the tail.
+
+Tradeoffs: lexical vs semantic recall; personalization vs privacy/latency; rerank depth vs latency.` },
+    rubric: [
+      { dim: "query-understanding", anchor: "do you handle query understanding (spell/synonym/intent) and treat head vs tail differently?", cost: "typo/intent queries return nothing; the long tail fails" },
+      { dim: "hybrid-retrieval", anchor: "lexical (BM25) + semantic (dense) hybrid, not one alone?", cost: "pure-dense misses exact/SKU matches; pure-lexical misses intent" },
+      { dim: "learning-to-rank", anchor: "a LTR stage over retrieval with the right features (relevance/popularity/freshness)?", cost: "static ranking that never learns from behavior" },
+      { dim: "click-bias", anchor: "do you correct position/click bias in the training signal (IPS/randomization)?", cost: "rich-get-richer; the ranker learns position, not relevance" },
+      { dim: "eval", anchor: "relevance validated online + zero-result / tail coverage tracked, not just aggregate NDCG?", cost: "you optimize offline NDCG while users get bad tail results" },
+      { dim: "tradeoff", anchor: "lexical vs semantic recall, or rerank depth vs latency, stated?", cost: "reads as no real decision" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-search-var-tail", roleTrack: "MLE", domain: "search", modality: "system-design",
+    specLevel: "S2", withheld: ["reference-prose"], flawMode: null, difficulty: "senior", companies: ["Any"], parentRoot: "mlsd-search-root",
+    tags: ["search", "tail-queries", "query-understanding", "variation"],
+    prompt: "Variation of the search root: head queries are great, but tail / rare queries return junk or nothing. Fix tail relevance. (Scaffold: hybrid retrieval is given; design query understanding + tail handling.)",
+    context: "The tail has little to no click history to learn from.",
+    produce: { artifact: "the tail strategy (query understanding, content features, semantic fallback) + how you measure tail quality + tradeoffs", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "no-behavioral-signal", anchor: "do you recognize the tail lacks click signal and must lean on content/semantic features?", cost: "you apply head-query methods and the tail stays broken" },
+      { dim: "query-understanding", anchor: "spell-correction / synonym / intent expansion for rare queries?", cost: "small variations return zero results" },
+      { dim: "semantic-fallback", anchor: "a semantic retrieval fallback when lexical returns nothing?", cost: "zero-result rate stays high on the tail" },
+      { dim: "tail-metric", anchor: "do you measure tail quality separately (not hidden in aggregate NDCG)?", cost: "the tail failure is invisible in the headline metric" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-search-var-clickbias", roleTrack: "MLE", domain: "search", modality: "system-design",
+    specLevel: "S3", withheld: ["reference-prose", "stage-skeleton"], flawMode: "silent", difficulty: "senior", companies: ["Any"], parentRoot: "mlsd-search-root",
+    tags: ["search", "click-bias", "position-bias", "variation"],
+    prompt: "Variation of the search root: your LTR model learned to rank by position, not relevance — a rich-get-richer loop. Diagnose and fix. (Minimal scaffold.)",
+    context: "Training labels are raw clicks. Top-ranked items get more clicks purely because they're on top.",
+    produce: { artifact: "why the model learned position + the debiasing fix (IPS / randomization / position feature) + how you prove relevance improved", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "bias-diagnosis", anchor: "do you name position/click bias (clicks confounded by rank) as the cause?", cost: "you retrain on the same biased clicks and reinforce the loop" },
+      { dim: "debias-method", anchor: "IPS / randomization / a train-only position feature to break the confound?", cost: "the rich-get-richer loop continues" },
+      { dim: "proof", anchor: "how do you prove relevance (not position) improved (interleaving / human judgment)?", cost: "you can't tell if the fix worked" },
+      { dim: "anti-pattern", anchor: "do you reject 'just add more click data'?", cost: "more biased data deepens the bias" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-search-var-semantic-exact", roleTrack: "MLE", domain: "search", modality: "system-design",
+    specLevel: "S4", withheld: ["reference-prose", "stage-skeleton", "hints"], flawMode: null, difficulty: "staff", companies: ["Any"], parentRoot: "mlsd-search-root",
+    tags: ["search", "hybrid", "exact-match", "variation"],
+    prompt: "Variation of the search root (own it — no scaffold): semantic search returns 'relevant' results but misses exact product-code / SKU matches users type verbatim. Fix it without losing semantic recall.",
+    context: "You get the failure only. Bring your own hybrid/fusion design and tradeoffs.",
+    produce: { artifact: "the hybrid design that guarantees exact matches surface AND semantic intent works + the fusion/ranking + tradeoffs", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "exact-guaranteed", anchor: "do you guarantee lexical/exact-match retrieval for codes/SKUs alongside dense?", cost: "verbatim searches fail — the most frustrating miss" },
+      { dim: "fusion", anchor: "how do you fuse lexical + semantic candidates (e.g. reciprocal rank fusion) without one drowning the other?", cost: "one channel dominates and you lose the other's strength" },
+      { dim: "intent-preserved", anchor: "does semantic intent still work for natural-language queries?", cost: "over-indexing on exact match breaks intent search" },
+      { dim: "tradeoff", anchor: "lexical vs semantic weighting stated with the deciding factor?", cost: "reads as no real decision" },
+    ],
+    status: "authored" },
+
 ];
