@@ -642,4 +642,448 @@ Tradeoffs: lexical vs semantic recall; personalization vs privacy/latency; reran
     ],
     status: "authored" },
 
+  { id: "mlsd-forecast-root", roleTrack: "MLE", domain: "timeseries", modality: "system-design",
+    specLevel: "S1", withheld: [], flawMode: null, difficulty: "senior", companies: ["Any"], isRoot: true,
+    tags: ["forecasting", "time-series", "backtesting", "seasonality", "root"],
+    prompt: "Design a demand-forecasting system — many series, seasonality, promotions/holidays, and an honest backtest — that a business can actually plan on.",
+    context: "Thousands of item/location series. Strong seasonality + holidays + promo spikes. Some series are short/new (cold start). The forecast drives inventory/staffing, so errors cost money asymmetrically.",
+    produce: { artifact: "the forecasting design (features, model choice, hierarchy) + the honest backtest (walk-forward) + intervals + cold start + tradeoffs", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution", worked: `A strong answer backtests honestly, respects seasonality/hierarchy, and forecasts uncertainty — not just a point.
+
+1. Honest evaluation = walk-forward. Never use random k-fold on time series (it leaks the future). Backtest with rolling-origin / walk-forward splits that mimic how you'll actually forecast.
+
+2. Features and calendar. Encode seasonality, holidays, and promotions explicitly; many 'model' failures are missing calendar/promo features. Classical (ARIMA/ETS) vs tree/GBDT vs neural (N-BEATS/TFT) — pick by data volume and structure; GBDT with lag features is a strong, cheap baseline.
+
+3. Hierarchy and reconciliation. Item/store/region forecasts must reconcile (sum-consistent); forecast at the right level and reconcile across the hierarchy.
+
+4. Forecast intervals, not just points. Inventory/staffing decisions need uncertainty; produce prediction intervals and use the asymmetric cost (a stockout vs overstock) to set the operating quantile.
+
+5. Cold start. New/short series fall back to hierarchy/pooling or similar-item priors.
+
+Tradeoffs: model complexity vs interpretability/cost; point accuracy vs calibrated intervals; global (pooled) vs per-series models.` },
+    rubric: [
+      { dim: "walk-forward", anchor: "do you backtest with walk-forward / rolling-origin, never random k-fold on time?", cost: "random CV leaks the future; your backtest lies and prod underperforms" },
+      { dim: "calendar-promo", anchor: "are seasonality, holidays, and promotions explicit features?", cost: "the model misses the biggest, most predictable spikes" },
+      { dim: "hierarchy", anchor: "do forecasts reconcile across the item/store hierarchy (sum-consistent)?", cost: "levels disagree; the plan is internally inconsistent" },
+      { dim: "intervals", anchor: "do you produce prediction intervals and set the quantile from the asymmetric cost?", cost: "a point forecast ignores that stockout != overstock cost" },
+      { dim: "cold-start", anchor: "how do new/short series forecast (pooling / hierarchy / priors)?", cost: "new items get garbage forecasts" },
+      { dim: "tradeoff", anchor: "model complexity vs interpretability/cost stated?", cost: "reads as no real decision" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-forecast-var-leaky-cv", roleTrack: "MLE", domain: "timeseries", modality: "system-design",
+    specLevel: "S2", withheld: ["reference-prose"], flawMode: "silent", difficulty: "senior", companies: ["Any"], parentRoot: "mlsd-forecast-root",
+    tags: ["forecasting", "backtesting", "leakage", "variation"],
+    prompt: "Variation of the forecast root: your model looks great in cross-validation but fails in production. The CV used random k-fold. Fix the evaluation. (Scaffold: the data is time-indexed.)",
+    context: "Random splits let the model see future points when predicting past ones.",
+    produce: { artifact: "why random CV leaks + the walk-forward backtest + how you re-estimate honest accuracy", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "leakage-named", anchor: "do you identify random k-fold as leaking future into past?", cost: "the rosy CV number is fiction" },
+      { dim: "walk-forward-fix", anchor: "rolling-origin / walk-forward that mimics real forecasting?", cost: "any non-temporal split keeps lying" },
+      { dim: "gap", anchor: "a purge/gap where features and target windows would overlap?", cost: "subtle leakage through overlapping windows" },
+      { dim: "honest-metric", anchor: "do you re-report accuracy on the honest backtest?", cost: "you keep trusting the leaked number" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-forecast-var-intervals", roleTrack: "MLE", domain: "timeseries", modality: "system-design",
+    specLevel: "S3", withheld: ["reference-prose", "stage-skeleton"], flawMode: null, difficulty: "senior", companies: ["Any"], parentRoot: "mlsd-forecast-root",
+    tags: ["forecasting", "uncertainty", "intervals", "variation"],
+    prompt: "Variation of the forecast root: you ship point forecasts, but inventory decisions need uncertainty and the cost of over- vs under-stock is very different. Add calibrated intervals and the right operating point. (Minimal scaffold.)",
+    context: "A stockout costs 5x an overstock. Only a point forecast exists.",
+    produce: { artifact: "the interval/quantile design + how the asymmetric cost sets the operating quantile + how you check calibration", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "intervals", anchor: "do you produce prediction intervals / quantiles, not just a point?", cost: "decisions ignore uncertainty" },
+      { dim: "asymmetric-quantile", anchor: "is the operating quantile set from the 5:1 cost, not the median?", cost: "you optimize the mean and eat stockouts" },
+      { dim: "calibration", anchor: "how do you verify the intervals are calibrated (coverage)?", cost: "miscalibrated intervals mislead planning" },
+      { dim: "anti-pattern", anchor: "do you reject 'just forecast the mean'?", cost: "the mean is the wrong target under asymmetric cost" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-forecast-var-hierarchy", roleTrack: "MLE", domain: "timeseries", modality: "system-design",
+    specLevel: "S4", withheld: ["reference-prose", "stage-skeleton", "hints"], flawMode: null, difficulty: "staff", companies: ["Any"], parentRoot: "mlsd-forecast-root",
+    tags: ["forecasting", "hierarchical", "reconciliation", "variation"],
+    prompt: "Variation of the forecast root (own it — no scaffold): item-level, store-level, and region-level forecasts don't add up, and planners don't trust the numbers. Design hierarchical forecasting that reconciles.",
+    context: "You get the inconsistency only. Bring your own reconciliation approach and tradeoffs.",
+    produce: { artifact: "the hierarchical forecasting + reconciliation design + which level you forecast at and why + tradeoffs", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "reconciliation", anchor: "do you reconcile so levels are sum-consistent (top-down / bottom-up / optimal)?", cost: "levels disagree; nobody trusts the plan" },
+      { dim: "forecast-level", anchor: "do you justify which level(s) you forecast at (signal vs noise)?", cost: "forecasting only at a noisy level wastes signal" },
+      { dim: "coherence", anchor: "is coherence guaranteed after reconciliation?", cost: "incoherent forecasts drive contradictory decisions" },
+      { dim: "tradeoff", anchor: "reconciliation method complexity vs accuracy stated?", cost: "reads as no real decision" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-churn-root", roleTrack: "MLE", domain: "recsys", modality: "system-design",
+    specLevel: "S1", withheld: [], flawMode: null, difficulty: "senior", companies: ["Any"], isRoot: true,
+    tags: ["churn", "propensity", "uplift", "imbalance", "root"],
+    prompt: "Design a churn / propensity system that not only predicts who will leave, but drives action that actually reduces churn — and is measured honestly.",
+    context: "Subscription product. Churn is rare-ish and delayed. The goal isn't a churn score, it's retained customers. A naive 'predict churn, message the top-K' often wastes budget on people who'd stay anyway.",
+    produce: { artifact: "the design (label/horizon, features, model) + why UPLIFT not raw propensity + honest measurement + tradeoffs", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution", worked: `A strong answer optimizes the ACTION (uplift), not just a churn score, and measures with a holdout.
+
+1. Define the label and horizon carefully. What is 'churn' (voluntary vs involuntary) and over what window? A fuzzy label makes everything downstream noise.
+
+2. Propensity is not the goal — uplift is. Targeting the highest-churn users wastes spend on the 'lost causes' and 'sure things'. Model UPLIFT (treatment effect): who is persuadable by the intervention. This is a causal, not a predictive, target.
+
+3. Leakage and point-in-time. Churn features love to leak (e.g. 'cancellation_page_visited'); features must be as-of the prediction time, not post-outcome.
+
+4. Imbalance and calibration. Optimize a cost/recall metric, calibrate probabilities, and set the intervention threshold from the economics (offer cost vs retained value), not 0.5.
+
+5. Measure with a holdout. Prove the program reduces churn via a randomized control (treated vs untreated), not a before/after — otherwise you can't tell if the model or seasonality drove the change.
+
+Tradeoffs: propensity simplicity vs uplift correctness; intervention cost vs retained value; recall vs wasted spend.` },
+    rubric: [
+      { dim: "uplift-not-propensity", anchor: "do you target UPLIFT/persuadable users, not just highest churn propensity?", cost: "you spend retention budget on lost-causes and sure-things; no net effect" },
+      { dim: "label-horizon", anchor: "is churn defined (voluntary vs involuntary) over a clear horizon?", cost: "a fuzzy label makes the whole model noise" },
+      { dim: "leakage-pit", anchor: "are features point-in-time (no post-outcome leak like 'visited cancel page')?", cost: "leakage: perfect offline, useless for early intervention" },
+      { dim: "calibration-threshold", anchor: "calibrated probabilities + an intervention threshold from offer-cost vs retained-value?", cost: "you message the wrong people at 0.5 and burn budget" },
+      { dim: "holdout-measure", anchor: "do you prove churn reduction with a randomized holdout, not before/after?", cost: "you can't tell if the program or seasonality moved churn" },
+      { dim: "tradeoff", anchor: "intervention cost vs retained value stated?", cost: "reads as no real decision" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-churn-var-uplift", roleTrack: "MLE", domain: "recsys", modality: "system-design",
+    specLevel: "S2", withheld: ["reference-prose"], flawMode: "silent", difficulty: "senior", companies: ["Any"], parentRoot: "mlsd-churn-root",
+    tags: ["churn", "uplift", "targeting", "variation"],
+    prompt: "Variation of the churn root: you message the top-K highest-churn users with a retention offer and it barely moves churn. Explain and fix the targeting. (Scaffold: you have a propensity model.)",
+    context: "Many high-churn users were leaving no matter what; some were never going to leave.",
+    produce: { artifact: "why propensity-targeting fails + the uplift/persuadable-targeting fix + how you measure incremental impact", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "propensity-vs-uplift", anchor: "do you explain propensity targets churners, uplift targets the PERSUADABLE?", cost: "you keep spending on lost-causes/sure-things" },
+      { dim: "uplift-model", anchor: "an uplift/treatment-effect model (T-learner / meta-learner) rather than raw churn?", cost: "no way to find who the offer actually moves" },
+      { dim: "incremental-measure", anchor: "do you measure INCREMENTAL churn reduction vs a control?", cost: "you can't tell if the offer did anything" },
+      { dim: "budget", anchor: "do you allocate budget by uplift, not propensity rank?", cost: "budget wasted on the unpersuadable" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-churn-var-leakage", roleTrack: "MLE", domain: "recsys", modality: "system-design",
+    specLevel: "S3", withheld: ["reference-prose", "stage-skeleton"], flawMode: "silent", difficulty: "senior", companies: ["Any"], parentRoot: "mlsd-churn-root",
+    tags: ["churn", "leakage", "point-in-time", "variation"],
+    prompt: "Variation of the churn root: your churn model is 0.97 AUC offline but useless for early intervention. A feature encodes the outcome. Find and fix. (Minimal scaffold.)",
+    context: "A feature like 'days_since_cancellation_request' is populated only for churners.",
+    produce: { artifact: "how you detect the leak + the point-in-time fix + how early the model can honestly predict", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "leak-detected", anchor: "do you find the post-outcome feature (set only after churn intent)?", cost: "0.97 is a mirage; useless for early action" },
+      { dim: "horizon-honest", anchor: "do you fix features to be as-of an early prediction time?", cost: "you can only 'predict' churn once it's too late to act" },
+      { dim: "audit", anchor: "do you audit all features for as-of-outcome leakage?", cost: "one leak fixed, others remain" },
+      { dim: "usefulness", anchor: "can the fixed model predict early enough to intervene?", cost: "a leak-free but too-late model is worthless" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-churn-var-measure", roleTrack: "MLE", domain: "recsys", modality: "system-design",
+    specLevel: "S4", withheld: ["reference-prose", "stage-skeleton", "hints"], flawMode: null, difficulty: "staff", companies: ["Any"], parentRoot: "mlsd-churn-root",
+    tags: ["churn", "causal-measurement", "holdout", "variation"],
+    prompt: "Variation of the churn root (own it — no scaffold): leadership says churn dropped after you launched the model, but you can't prove the model caused it. Design the measurement that would.",
+    context: "You get the claim only. Bring your own experiment/measurement design.",
+    produce: { artifact: "the randomized-holdout / measurement design that isolates the program's causal effect + guardrails + tradeoffs", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "randomized-holdout", anchor: "do you hold out a randomized control (untreated) to isolate causal effect?", cost: "before/after confounds the model with seasonality/other changes" },
+      { dim: "confounders", anchor: "do you name the confounders a before/after would miss?", cost: "you credit the model for a seasonal dip" },
+      { dim: "incrementality", anchor: "is the metric incremental retained customers, not raw churn rate?", cost: "you measure the wrong thing" },
+      { dim: "tradeoff", anchor: "holdout cost (untreated churners) vs measurement rigor stated?", cost: "reads as no real decision" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-pricing-root", roleTrack: "MLE", domain: "pricing", modality: "system-design",
+    specLevel: "S1", withheld: [], flawMode: null, difficulty: "senior", companies: ["Any"], isRoot: true,
+    tags: ["pricing", "elasticity", "causal", "experimentation", "root"],
+    prompt: "Design a dynamic-pricing system that sets prices to a business objective (revenue/margin) using price elasticity — measured causally, not from correlational history.",
+    context: "Marketplace/retail. You control price; you want to optimize revenue or margin. The trap: historical price-vs-demand is confounded (you already priced high when demand was high). Also cold-start items and fairness/guardrail constraints.",
+    produce: { artifact: "the pricing design (elasticity estimation, optimization, guardrails) + why history is confounded + how you estimate elasticity causally + tradeoffs", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution", worked: `A strong answer estimates elasticity CAUSALLY and optimizes within guardrails — it never trusts raw historical price-demand.
+
+1. History is confounded. Observed price-vs-demand reflects your past pricing decisions (you raised price when demand was high). Fitting demand on historical price learns the confound, not elasticity, and will price exactly wrong.
+
+2. Estimate elasticity causally. Use price experiments (randomized/geo tests), or quasi-experiments / instrumental variables when you can't randomize; that's the only way to get the true demand response to price.
+
+3. Optimize to the objective. Given elasticity, optimize revenue or margin (not units), respecting inventory/competition and business constraints.
+
+4. Guardrails and fairness. Min/max price bounds, no discriminatory pricing, and stability limits so prices don't oscillate wildly or exploit customers.
+
+5. Cold start and exploration. New items have no elasticity estimate; use category priors and controlled exploration to learn without tanking revenue.
+
+Tradeoffs: exploration (learning elasticity) vs short-term revenue; model complexity vs interpretability; personalization vs fairness/regulation.` },
+    rubric: [
+      { dim: "confounded-history", anchor: "do you recognize historical price-demand is confounded by your own past pricing (not causal elasticity)?", cost: "you fit the confound and price exactly wrong" },
+      { dim: "causal-elasticity", anchor: "do you estimate elasticity causally (price experiments / geo tests / IV)?", cost: "correlational elasticity gives backwards price moves" },
+      { dim: "optimize-objective", anchor: "do you optimize revenue/margin (the objective), not units, within constraints?", cost: "you maximize the wrong quantity" },
+      { dim: "guardrails-fairness", anchor: "price bounds, stability, and no discriminatory pricing?", cost: "wild oscillation, customer exploitation, or regulatory/fairness breach" },
+      { dim: "cold-start-explore", anchor: "priors + controlled exploration for items with no elasticity estimate?", cost: "new items priced blind; or exploration tanks revenue" },
+      { dim: "tradeoff", anchor: "exploration vs short-term revenue stated?", cost: "reads as no real decision" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-pricing-var-confounded", roleTrack: "MLE", domain: "pricing", modality: "system-design",
+    specLevel: "S2", withheld: ["reference-prose"], flawMode: "silent", difficulty: "senior", companies: ["Any"], parentRoot: "mlsd-pricing-root",
+    tags: ["pricing", "confounding", "elasticity", "variation"],
+    prompt: "Variation of the pricing root: your model learned from historical sales that higher price => higher demand (because you priced up in peak season). It's about to raise prices and kill demand. Fix the elasticity estimation. (Scaffold: you have historical logs.)",
+    context: "Price and demand are both driven by season; the naive fit is backwards.",
+    produce: { artifact: "why the naive fit is backwards + the causal elasticity fix + how you validate it before trusting", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "confounder-named", anchor: "do you name season (or demand) as the confounder driving both price and sales?", cost: "you deploy a backwards price rule" },
+      { dim: "causal-fix", anchor: "price experiment / geo test / IV to get true elasticity?", cost: "correlation stays backwards" },
+      { dim: "validate", anchor: "how do you validate the elasticity before letting it set prices?", cost: "an untested elasticity risks real revenue" },
+      { dim: "anti-pattern", anchor: "do you reject 'fit demand on historical price'?", cost: "that's exactly what learns the confound" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-pricing-var-guardrails", roleTrack: "MLE", domain: "pricing", modality: "system-design",
+    specLevel: "S3", withheld: ["reference-prose", "stage-skeleton"], flawMode: null, difficulty: "senior", companies: ["Any"], parentRoot: "mlsd-pricing-root",
+    tags: ["pricing", "guardrails", "fairness", "variation"],
+    prompt: "Variation of the pricing root: your optimizer set an absurd price (or oscillates) and PR/legal are worried about exploitation. Add guardrails. (Minimal scaffold.)",
+    context: "The optimizer maximizes revenue with no bounds or fairness constraints.",
+    produce: { artifact: "the guardrail design (bounds, stability, fairness/no-discrimination) + how you keep optimization useful within them", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "bounds", anchor: "min/max price bounds and rate-of-change limits?", cost: "absurd prices / wild oscillation" },
+      { dim: "fairness", anchor: "no discriminatory/exploitative pricing (protected attributes, vulnerable moments)?", cost: "reputational and legal exposure" },
+      { dim: "stability", anchor: "stability so prices don't thrash?", cost: "customers see erratic prices and lose trust" },
+      { dim: "still-useful", anchor: "does optimization still work within the guardrails?", cost: "guardrails that neuter the system entirely" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-pricing-var-coldstart", roleTrack: "MLE", domain: "pricing", modality: "system-design",
+    specLevel: "S4", withheld: ["reference-prose", "stage-skeleton", "hints"], flawMode: null, difficulty: "staff", companies: ["Any"], parentRoot: "mlsd-pricing-root",
+    tags: ["pricing", "cold-start", "exploration", "variation"],
+    prompt: "Variation of the pricing root (own it — no scaffold): brand-new products have no price-elasticity data. Design how you price and learn without tanking revenue.",
+    context: "You get the situation only. Bring your own priors + exploration design.",
+    produce: { artifact: "the cold-start pricing (category priors, controlled exploration/bandit) + how you learn elasticity safely + tradeoffs", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "priors", anchor: "do you start from category/similar-item elasticity priors?", cost: "new items priced blind" },
+      { dim: "controlled-exploration", anchor: "controlled exploration / bandit to learn elasticity without big revenue risk?", cost: "either you never learn, or exploration tanks revenue" },
+      { dim: "safe-learning", anchor: "bounds on how much you explore per item?", cost: "unbounded exploration burns money" },
+      { dim: "tradeoff", anchor: "learning speed vs revenue risk stated?", cost: "reads as no real decision" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-classical-root", roleTrack: "MLE", domain: "classical", modality: "system-design",
+    specLevel: "S1", withheld: [], flawMode: null, difficulty: "senior", companies: ["Any"], isRoot: true,
+    tags: ["classical-ml", "gbdt", "model-selection", "tabular", "root"],
+    prompt: "Given a tabular production problem, choose the model — and defend why gradient-boosted trees (XGBoost/LightGBM) are often the right answer over deep learning, or when they are not.",
+    context: "A tabular prediction task (ranking/fraud/risk/conversion) at a company where a team wants to use deep learning because it's modern. Data is mostly structured/tabular, moderate scale, with a real latency/maintenance budget.",
+    produce: { artifact: "the model-selection decision + why GBDT vs DL for THIS problem + when DL wins + how you'd validate + tradeoffs", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution", worked: `A strong answer defaults to GBDT for tabular and justifies deep learning only when the data structure demands it.
+
+1. On tabular data, GBDT usually wins. XGBoost/LightGBM handle heterogeneous features, missing values, and non-linear interactions with little preprocessing, train fast, and are cheap to serve — still the production baseline across Uber/Stripe/DoorDash-style stacks.
+
+2. When DL actually wins. High-cardinality embeddings, sequences/text/images, or where you need representation learning / transfer — or when you're fusing tabular with unstructured signals. Not 'because it's modern'.
+
+3. Baseline first. Always establish the GBDT baseline before a DL project; most DL-on-tabular efforts don't beat a well-tuned GBDT and cost far more to build and maintain.
+
+4. Features still dominate. On tabular, feature engineering + a GBDT beats a fancy architecture on raw columns. Spend effort there.
+
+5. Validate honestly. Proper CV (temporal if time-based), the same metric as production, and a cost/latency comparison — the 'better' model must beat the baseline on the metric AND the budget.
+
+Tradeoffs: GBDT simplicity/serving-cost/interpretability vs DL representation power; build+maintenance cost; interpretability needs (regulated domains favor trees + SHAP).` },
+    rubric: [
+      { dim: "gbdt-default-tabular", anchor: "do you default to GBDT for tabular and justify it (heterogeneous features, speed, serving cost)?", cost: "you burn months on DL that a tuned GBDT beats" },
+      { dim: "when-dl-wins", anchor: "do you name where DL genuinely wins (embeddings, sequences/text/images, fusion), not 'it's modern'?", cost: "wrong tool either way — DL where trees win, or trees where DL is needed" },
+      { dim: "baseline-first", anchor: "do you establish the GBDT baseline before any DL project?", cost: "no baseline; you can't prove DL was worth it" },
+      { dim: "features-dominate", anchor: "do you prioritize feature engineering over architecture on tabular?", cost: "you tune architecture while features are the real lever" },
+      { dim: "honest-validation", anchor: "proper (temporal) CV + same metric + a cost/latency comparison?", cost: "you pick the 'better' model that's worse on the budget" },
+      { dim: "interpretability", anchor: "do you weigh interpretability (trees + SHAP) where the domain is regulated?", cost: "an unexplainable model fails a regulated use case" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-classical-var-dl-reflex", roleTrack: "MLE", domain: "classical", modality: "system-design",
+    specLevel: "S2", withheld: ["reference-prose"], flawMode: null, difficulty: "senior", companies: ["Any"], parentRoot: "mlsd-classical-root",
+    tags: ["classical-ml", "gbdt-vs-dl", "variation"],
+    prompt: "Variation of the classical root: a team wants a deep net for a tabular fraud/conversion problem because it's 'more advanced.' Make the call. (Scaffold: the data is mostly tabular.)",
+    context: "Moderate tabular data, tight latency and maintenance budget, some interpretability need.",
+    produce: { artifact: "the recommendation + why GBDT fits here + when you'd revisit DL + how you'd prove it", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "gbdt-case", anchor: "do you make the concrete case for GBDT on this tabular problem?", cost: "you green-light an expensive DL project that likely underperforms" },
+      { dim: "when-revisit-dl", anchor: "do you state the conditions that would justify DL later?", cost: "a dogmatic 'never DL' answer, equally wrong" },
+      { dim: "baseline-proof", anchor: "do you require the GBDT baseline as the bar DL must beat?", cost: "no baseline; the debate is vibes" },
+      { dim: "budget", anchor: "do you weigh latency/maintenance/interpretability, not just accuracy?", cost: "you pick on accuracy and lose on the budget that matters" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-classical-var-dl-needed", roleTrack: "MLE", domain: "classical", modality: "system-design",
+    specLevel: "S3", withheld: ["reference-prose", "stage-skeleton"], flawMode: null, difficulty: "senior", companies: ["Any"], parentRoot: "mlsd-classical-root",
+    tags: ["classical-ml", "when-dl", "embeddings", "variation"],
+    prompt: "Variation of the classical root: your GBDT plateaued and the signal is in high-cardinality IDs and text you're not using. Decide what to change. (Minimal scaffold.)",
+    context: "Millions of sparse IDs + free-text fields; GBDT can't represent them well.",
+    produce: { artifact: "why GBDT plateaus here + what DL/embeddings buy + a hybrid path (embeddings + GBDT, or DLRM) + how you validate the gain", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "diagnose-limit", anchor: "do you identify high-cardinality/text as where GBDT struggles (representation)?", cost: "you keep tuning GBDT past its ceiling" },
+      { dim: "embeddings", anchor: "embeddings / DL for the sparse/text signal (possibly fused with GBDT)?", cost: "the real signal stays unused" },
+      { dim: "hybrid", anchor: "do you consider a hybrid (embeddings as features into GBDT, or DLRM)?", cost: "an all-or-nothing swap ignores GBDT's remaining value" },
+      { dim: "prove-gain", anchor: "do you validate the DL/embedding gain beats the GBDT baseline on metric AND cost?", cost: "you adopt DL without proving it earns its cost" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-classical-var-interpretability", roleTrack: "MLE", domain: "classical", modality: "system-design",
+    specLevel: "S4", withheld: ["reference-prose", "stage-skeleton", "hints"], flawMode: null, difficulty: "staff", companies: ["Any"], parentRoot: "mlsd-classical-root",
+    tags: ["classical-ml", "interpretability", "regulated", "variation"],
+    prompt: "Variation of the classical root (own it — no scaffold): the use case is credit/lending (regulated) — you must explain every decision. Choose and justify the model and the explanation approach.",
+    context: "You get the constraint only. Bring your own model + interpretability design.",
+    produce: { artifact: "the model choice for a regulated decision + the explanation approach (SHAP/reason codes/monotonic constraints) + how you satisfy the regulator + tradeoffs", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "explainable-choice", anchor: "do you choose a model you can explain per-decision (GBDT+SHAP / monotonic / GLM), not a black box?", cost: "an unexplainable model fails compliance (ECOA/reason codes)" },
+      { dim: "reason-codes", anchor: "can you produce adverse-action reason codes per decision?", cost: "you can't legally deny credit without them" },
+      { dim: "monotonic", anchor: "do you use monotonic constraints where the direction is required (e.g. more debt -> higher risk)?", cost: "counter-intuitive, indefensible decisions" },
+      { dim: "tradeoff", anchor: "accuracy vs interpretability stated for the regulated context?", cost: "reads as no real decision" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-imbalance-root", roleTrack: "MLE", domain: "eval", modality: "system-design",
+    specLevel: "S1", withheld: [], flawMode: null, difficulty: "senior", companies: ["Any"], isRoot: true,
+    tags: ["imbalance", "calibration", "threshold", "metrics", "root"],
+    prompt: "Design the modeling + evaluation approach for a rare-positive classification problem so the model is useful, calibrated, and set at the right operating point.",
+    context: "A binary problem with ~1% positives (rare event: fault, default, rare disease, abuse). The action taken depends on a threshold, and false positives and false negatives have very different costs.",
+    produce: { artifact: "the approach (handling imbalance, metric, calibration, threshold) + why accuracy is wrong + how you set the operating point + tradeoffs", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution", worked: `A strong answer chooses a cost-aware metric, calibrates, and sets the threshold from economics — not 0.5, not accuracy.
+
+1. Accuracy is meaningless at 1% positives. A model predicting 'never' scores 99%. Use PR-AUC or recall-at-fixed-precision; ROC-AUC can look great while precision is unusable at the operating point.
+
+2. Handle imbalance in TRAINING, not the metric. Class weights / focal loss / resampling help the model learn the minority — but they change the score distribution, so you must recalibrate afterward. They do not change which metric is the truth.
+
+3. Calibrate. If you threshold or price on the probability, it must mean what it says (Platt/isotonic). Resampling in particular breaks calibration.
+
+4. Set the threshold from cost. The operating point comes from the FP vs FN cost matrix, not 0.5. Often you pick recall at a precision the business can tolerate.
+
+5. Watch the tail and drift. Rare-event models degrade quietly; monitor precision at the operating point and recalibrate as base rates shift.
+
+Tradeoffs: precision vs recall at the operating point; resampling (recall) vs calibration; threshold strictness vs review capacity.` },
+    rubric: [
+      { dim: "not-accuracy", anchor: "do you reject accuracy and use PR-AUC / recall-at-precision for the 1% positive rate?", cost: "a 99%-accurate model that catches nothing looks great and is useless" },
+      { dim: "imbalance-in-training", anchor: "class weights / focal / resampling to learn the minority — while knowing it doesn't change the metric truth?", cost: "the model ignores the rare class, or you fool yourself with a rebalanced metric" },
+      { dim: "calibration", anchor: "do you calibrate probabilities (esp. after resampling) if you threshold/price on them?", cost: "the threshold means nothing; decisions are miscalibrated" },
+      { dim: "threshold-from-cost", anchor: "is the operating threshold set from the FP/FN cost matrix, not 0.5?", cost: "an arbitrary cutoff misaligned with the real costs" },
+      { dim: "monitor-tail", anchor: "do you monitor precision at the operating point as base rates drift?", cost: "the rare-event model degrades silently" },
+      { dim: "tradeoff", anchor: "precision vs recall at the operating point stated?", cost: "reads as no real decision" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-imbalance-var-accuracy-trap", roleTrack: "MLE", domain: "eval", modality: "system-design",
+    specLevel: "S2", withheld: ["reference-prose"], flawMode: "silent", difficulty: "senior", companies: ["Any"], parentRoot: "mlsd-imbalance-root",
+    tags: ["imbalance", "metric", "variation"],
+    prompt: "Variation of the imbalance root: your rare-disease classifier reports 99% accuracy and management is thrilled — but it catches almost no positives. Explain and fix. (Scaffold: the metric layer is yours to redesign.)",
+    context: "1% prevalence, threshold 0.5, accuracy reported.",
+    produce: { artifact: "why accuracy misleads + the metric/threshold you use instead + how you set the operating point", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "accuracy-trap", anchor: "do you explain 'predict negative' scores 99% under 1% prevalence?", cost: "you celebrate a useless model" },
+      { dim: "right-metric", anchor: "PR-AUC / recall-at-precision instead?", cost: "you keep optimizing the wrong number" },
+      { dim: "threshold", anchor: "operating threshold from cost, not 0.5?", cost: "arbitrary cutoff" },
+      { dim: "anti-pattern", anchor: "do you reject 'accuracy is high, ship it'?", cost: "the model never catches the thing it's for" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-imbalance-var-calibration", roleTrack: "MLE", domain: "eval", modality: "system-design",
+    specLevel: "S3", withheld: ["reference-prose", "stage-skeleton"], flawMode: "silent", difficulty: "senior", companies: ["Any"], parentRoot: "mlsd-imbalance-root",
+    tags: ["imbalance", "calibration", "resampling", "variation"],
+    prompt: "Variation of the imbalance root: you oversampled to fix imbalance, and now the model's predicted probabilities are way off (it says 40% when the true rate is 4%). Fix calibration. (Minimal scaffold.)",
+    context: "Downstream decisions threshold and price on the probability, so miscalibration is costly.",
+    produce: { artifact: "why resampling broke calibration + the recalibration fix (Platt/isotonic, prior-correction) + how you verify calibration", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "resampling-breaks-cal", anchor: "do you explain oversampling shifts the base rate and miscalibrates outputs?", cost: "probabilities are inflated; every threshold/price is wrong" },
+      { dim: "recalibrate", anchor: "Platt/isotonic or prior-correction back to the true base rate?", cost: "outputs stay uncalibrated" },
+      { dim: "verify", anchor: "do you check calibration (reliability curve / ECE)?", cost: "you assume it's fixed" },
+      { dim: "when-not-resample", anchor: "do you consider class weights (which preserve calibration better) as an alternative?", cost: "you reach for resampling reflexively" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-imbalance-var-threshold", roleTrack: "MLE", domain: "eval", modality: "system-design",
+    specLevel: "S4", withheld: ["reference-prose", "stage-skeleton", "hints"], flawMode: null, difficulty: "staff", companies: ["Any"], parentRoot: "mlsd-imbalance-root",
+    tags: ["imbalance", "threshold", "cost-matrix", "variation"],
+    prompt: "Variation of the imbalance root (own it — no scaffold): a false negative costs 20x a false positive, and you have limited human review capacity. Set the operating point and design the workflow.",
+    context: "You get the costs + capacity only. Bring your own threshold + workflow design.",
+    produce: { artifact: "the operating-point choice from the 20:1 cost + capacity + the tiered workflow (auto/review/pass) + tradeoffs", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "cost-driven-threshold", anchor: "is the threshold derived from the 20:1 FN:FP cost, not a default?", cost: "you optimize the wrong balance and eat expensive false negatives" },
+      { dim: "capacity-aware", anchor: "does the operating point respect the finite review capacity?", cost: "you flag more than humans can review; the queue collapses" },
+      { dim: "tiered-workflow", anchor: "a tiered auto/review/pass workflow rather than a single hard cutoff?", cost: "binary decisions waste the cost asymmetry and capacity" },
+      { dim: "tradeoff", anchor: "recall (catch FNs) vs review load stated?", cost: "reads as no real decision" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-moderation-root", roleTrack: "MLE", domain: "risk", modality: "system-design",
+    specLevel: "S1", withheld: [], flawMode: null, difficulty: "senior", companies: ["Any"], isRoot: true,
+    tags: ["content-moderation", "abuse", "adversarial", "scale", "root"],
+    prompt: "Design a content-moderation system at scale — detect abusive/harmful content across millions of items, adversarial evasion, ambiguous policy, and a human-review loop.",
+    context: "A UGC platform. Millions of posts/day. Harmful categories (spam, hate, CSAM-adjacent, fraud). Adversaries actively evade. Policy is nuanced and context-dependent. Both false negatives (harm reaches users) and false positives (wrongful removal) are costly, asymmetrically by category.",
+    produce: { artifact: "the moderation design (tiered detection, human review, adversarial robustness, appeals) + per-category cost handling + eval + tradeoffs", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution", worked: `A strong answer tiers automation by risk, plans for adversaries, and closes the human + appeals loop.
+
+1. Tier by risk and confidence. High-confidence severe content -> auto-action; ambiguous/mid-confidence -> human review; low -> allow. The cost asymmetry differs by category (CSAM-adjacent errs toward removal; satire errs toward review), so thresholds are per-category.
+
+2. Adversaries adapt. Evasion (leetspeak, image-in-image, coded language) means static rules/keywords decay. Combine ML with signals adversaries can't easily fake (account/behavioral/graph), monitor for evasion, and retrain on fresh adversarial examples.
+
+3. Context matters. The same words can be hate or a quote reporting hate. Use context (thread, user, intent) — pure keyword matching over-removes and under-catches.
+
+4. Human-in-the-loop + appeals. A review queue for ambiguity generates labels; an appeals path corrects false positives and feeds training. Wrongful removal is a real harm.
+
+5. Eval per category with the right metric. Recall on severe harm, precision on high-false-positive-cost categories, plus reviewer agreement and prevalence tracking.
+
+Tradeoffs: automation speed vs review accuracy; recall (catch harm) vs precision (wrongful removal); latency of review vs harm exposure time.` },
+    rubric: [
+      { dim: "tiered-by-risk", anchor: "do you tier auto-action / review / allow by confidence AND per-category cost, not one global threshold?", cost: "you over-remove satire or under-catch severe harm" },
+      { dim: "adversarial", anchor: "do you plan for evasion (hard-to-fake signals, retraining on fresh adversarial examples)?", cost: "keyword/static rules decay; adversaries route around you" },
+      { dim: "context", anchor: "do you use context (thread/user/intent), not pure keyword matching?", cost: "quotes/satire wrongly removed; coded harm missed" },
+      { dim: "human-appeals", anchor: "a review queue + appeals path that also generates labels and corrects false positives?", cost: "wrongful removals stand; no label flywheel" },
+      { dim: "per-category-eval", anchor: "recall on severe harm, precision where wrongful-removal cost is high, + reviewer agreement?", cost: "one aggregate metric hides category-specific failures" },
+      { dim: "tradeoff", anchor: "automation speed vs review accuracy (or recall vs precision) stated?", cost: "reads as no real decision" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-moderation-var-adversarial", roleTrack: "MLE", domain: "risk", modality: "system-design",
+    specLevel: "S2", withheld: ["reference-prose"], flawMode: "silent", difficulty: "senior", companies: ["Any"], parentRoot: "mlsd-moderation-root",
+    tags: ["content-moderation", "adversarial", "evasion", "variation"],
+    prompt: "Variation of the moderation root: your keyword/classifier setup worked, then abusers started using leetspeak, images, and coded language to evade it. Make it robust. (Scaffold: you have a text classifier.)",
+    context: "Detection rate dropped as evasion spread; the classifier only sees literal text.",
+    produce: { artifact: "why static detection decays + the robustness fix (multimodal, behavioral/graph signals, adversarial retraining) + how you monitor evasion", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "evasion-diagnosis", anchor: "do you name adversarial evasion of literal-text detection as the cause?", cost: "you keep patching keywords and lose the race" },
+      { dim: "hard-to-fake-signals", anchor: "behavioral/account/graph signals adversaries can't easily fake?", cost: "content-only signals are trivially evaded" },
+      { dim: "multimodal", anchor: "do you cover image/coded content, not just text?", cost: "harm moves to the modality you don't inspect" },
+      { dim: "retrain-loop", anchor: "retraining on fresh evasion examples + evasion monitoring?", cost: "the model decays as tactics evolve" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-moderation-var-false-positive", roleTrack: "MLE", domain: "risk", modality: "system-design",
+    specLevel: "S3", withheld: ["reference-prose", "stage-skeleton"], flawMode: null, difficulty: "senior", companies: ["Any"], parentRoot: "mlsd-moderation-root",
+    tags: ["content-moderation", "false-positive", "context", "variation"],
+    prompt: "Variation of the moderation root: the system wrongly removes legitimate posts (quotes, satire, reclaimed language) and users are angry. Cut false positives without letting harm through. (Minimal scaffold.)",
+    context: "Pure keyword/classifier matching ignores context and intent.",
+    produce: { artifact: "why context-blind matching over-removes + the fix (context features, review for ambiguity, appeals) + how you balance the two error types", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "context-cause", anchor: "do you identify context-blindness (same words, different intent) as the cause?", cost: "quotes/satire keep getting removed" },
+      { dim: "context-features", anchor: "context/intent signals (thread, speaker, quoting) added?", cost: "over-removal persists" },
+      { dim: "review-ambiguous", anchor: "route ambiguous cases to human review instead of auto-removing?", cost: "borderline cases wrongly actioned at scale" },
+      { dim: "balance", anchor: "do you hold severe-harm recall while cutting false positives (not just loosen everything)?", cost: "you fix false positives and let real harm through" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-moderation-var-severity", roleTrack: "MLE", domain: "risk", modality: "system-design",
+    specLevel: "S4", withheld: ["reference-prose", "stage-skeleton", "hints"], flawMode: null, difficulty: "staff", companies: ["Any"], parentRoot: "mlsd-moderation-root",
+    tags: ["content-moderation", "severity", "policy", "variation"],
+    prompt: "Variation of the moderation root (own it — no scaffold): different harm categories have wildly different costs — a wrong call on severe harm vs a wrong call on mild spam. Design the per-category severity and action policy.",
+    context: "You get the categories only. Bring your own severity model + action/threshold policy.",
+    produce: { artifact: "the per-category severity + action policy (auto/review/allow thresholds by category) + how you tune each + tradeoffs", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "per-category-cost", anchor: "do you set thresholds/actions per category from its specific error costs?", cost: "a single policy over- or under-actions every category" },
+      { dim: "severe-recall", anchor: "does severe harm err toward recall/removal (high FN cost)?", cost: "severe harm slips through on a balanced threshold" },
+      { dim: "mild-precision", anchor: "does low-severity err toward precision/allow (avoid over-removal)?", cost: "you over-remove trivial content and anger users" },
+      { dim: "tradeoff", anchor: "per-category recall vs precision, tied to harm cost, stated?", cost: "reads as no real decision" },
+    ],
+    status: "authored" },
+
 ];
