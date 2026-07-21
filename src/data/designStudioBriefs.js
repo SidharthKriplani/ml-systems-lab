@@ -189,4 +189,82 @@ export const DESIGN_STUDIO_MSL = [
     ],
     _flesh: "Reference = worked notebook + harness.",
     status: "skeleton" },
+  // ── Authored ROOT + variations: Ranking / Recommendation (2026-07-21). First fully-authored
+  //    MSL root: sharp anchored checklist + worked reference; scaffold fades S1 -> S2 -> S3 -> S4.
+  { id: "mlsd-recsys-ranking-root", roleTrack: "MLE", domain: "recsys", modality: "system-design",
+    specLevel: "S1", withheld: [], flawMode: null, difficulty: "senior", companies: ["Any"], isRoot: true,
+    tags: ["recsys", "ranking", "two-stage", "position-bias", "eval", "root"],
+    prompt: "Design a large-scale ranking / recommendation system for a personalized feed — tens of millions of items, hundreds of millions of interactions a day — that optimizes engagement without eating its own tail.",
+    context: "Implicit feedback only (clicks/watches, no explicit ratings). Ranking latency budget ~100ms. New items arrive hourly. Logs carry position bias. New users and new items have no history. The business metric is long-run engagement, not offline AUC.",
+    produce: { artifact: "two-stage architecture (candidate generation -> ranking -> re-rank/policy) + feature & label design (point-in-time, no leakage) + an eval plan whose offline metric predicts online + bias/feedback-loop handling + tradeoffs", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution", worked: `A strong answer is a two-stage funnel with the eval and the feedback loop designed in from the start — not a single model.
+
+1. Two stages, not a monolith. You cannot score 10M+ items in 100ms. Candidate generation (two-tower retrieval / ANN) narrows millions -> hundreds; a heavier ranker (GBDT or DLRM) scores only the shortlist. Recall lives in stage 1, precision in stage 2.
+
+2. Labels and leakage. Implicit feedback is biased and delayed. Use point-in-time feature joins (never features computed with future information), define the label window deliberately, and run the SAME feature code offline and online — train-serve skew is the classic silent killer (great offline, broken in prod).
+
+3. Position / exposure bias. Clicks are confounded by where an item was shown. Train naively and you get a rich-get-richer loop: the model recommends what it already showed. Correct with inverse-propensity weighting, randomization in logging, or a position feature that is present in training and dropped at serving.
+
+4. Offline must predict online. Offline NDCG/AUC frequently does NOT move the business metric. Validate the offline-online correlation, use counterfactual / replay evaluation, and gate every launch on an A/B test, not on offline gain.
+
+5. Cold start and exploration. New users/items have no interactions — fall back to content features, popularity priors, and explicit exploration (bandits) so the system works exactly where growth comes from, and so discovery does not starve.
+
+6. Feedback loop and drift. The model shapes the data it is next trained on. Monitor for degenerate concentration (diversity collapse), keep exploration alive, and trigger retraining on drift.
+
+Tradeoffs to state: candidate-gen recall vs ranking latency; exploration vs short-term engagement; DLRM expressiveness vs GBDT maintainability and cost.` },
+    rubric: [
+      { dim: "two-stage-not-monolith", anchor: "point to candidate generation as a separate stage — do you retrieve hundreds from millions BEFORE ranking, not score the whole catalog?", cost: "cannot meet latency; ranking 10M items in 100ms is impossible" },
+      { dim: "leakage-and-skew", anchor: "are features point-in-time (no future info) AND computed by the same code offline and online?", cost: "train-serve skew / leakage: strong offline, broken in production" },
+      { dim: "position-bias", anchor: "how do you stop click position bias from creating a rich-get-richer loop (IPS / randomization / a train-only position feature)?", cost: "self-reinforcing feedback loop; the model recommends only what it already showed" },
+      { dim: "offline-predicts-online", anchor: "is your offline metric validated to track the online goal, and do you gate launch on an A/B test, not offline gain?", cost: "you optimize NDCG while the business metric does not move" },
+      { dim: "cold-start-exploration", anchor: "how do brand-new users and items get served, and where is exploration in the loop?", cost: "the system fails where growth comes from; no exploration starves discovery" },
+      { dim: "tradeoff", anchor: "state one place you traded candidate recall vs ranking latency (or exploration vs engagement) and why", cost: "reads as no real engineering decision" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-recsys-var-scale-latency", roleTrack: "MLE", domain: "recsys", modality: "system-design",
+    specLevel: "S2", withheld: ["reference-prose"], flawMode: null, difficulty: "senior", companies: ["Any"], parentRoot: "mlsd-recsys-ranking-root",
+    tags: ["recsys", "scale", "latency", "freshness", "variation"],
+    prompt: "Variation of the ranking root: 300M DAU, p99 ranking < 80ms, catalog of 50M items, new items every few minutes. Design it.",
+    context: "Scaffold (S2 — candidate generation is given as a two-tower ANN retriever): you design the ranking stage, near-real-time freshness for minutes-old items, and the serving path that holds p99 < 80ms.",
+    produce: { artifact: "ranking-stage design + freshness path for minutes-old items + a serving/latency budget that holds p99 < 80ms + tradeoffs", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "latency-budget-math", anchor: "show the per-request budget (retrieve + feature fetch + score + rerank) landing under 80ms at p99", cost: "hand-waved latency; the p99 SLA is unmet and unprovable" },
+      { dim: "freshness-path", anchor: "how does a minutes-old item get candidate-eligible and scored without a full reindex/retrain?", cost: "new items are invisible for hours; freshness SLA broken" },
+      { dim: "two-stage-not-monolith", anchor: "is ranking still over a shortlist, not the 50M catalog?", cost: "impossible latency" },
+      { dim: "feature-freshness-skew", anchor: "are near-real-time features consistent between training and serving?", cost: "train-serve skew reappears under streaming features" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-recsys-var-feedback-loop", roleTrack: "MLE", domain: "recsys", modality: "system-design",
+    specLevel: "S3", withheld: ["reference-prose", "stage-skeleton"], flawMode: "silent", difficulty: "senior", companies: ["Any"], parentRoot: "mlsd-recsys-ranking-root",
+    tags: ["recsys", "feedback-loop", "diversity", "exploration", "variation"],
+    prompt: "Variation of the ranking root: engagement rose then plateaued; recommendations are collapsing to a narrow set — popular items dominate, diversity dropped, new items never surface. Diagnose and fix. (Minimal scaffold.)",
+    context: "The ranker trains on its own click logs each day. No exploration in the loop. Position of an item strongly predicts its click in the training data.",
+    produce: { artifact: "the root cause (why a well-performing ranker degenerates over time) + the fix + the metric that would have caught it early + what you would NOT do", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "loop-diagnosis", anchor: "do you name the feedback loop + position bias (the model trains on data it shaped) as the cause, not 'the model got worse'?", cost: "misdiagnosis -> you retrain harder and it degenerates faster" },
+      { dim: "bias-correction", anchor: "point to IPS / randomization / a train-only position feature to break the loop", cost: "the rich-get-richer collapse continues" },
+      { dim: "exploration", anchor: "where do you add exploration (bandit / epsilon) so new items get impressions?", cost: "discovery starves; new items never surface" },
+      { dim: "diversity-metric", anchor: "what metric detects concentration/diversity collapse before engagement plateaus?", cost: "the collapse is invisible until growth stalls" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-recsys-var-offline-online-gap", roleTrack: "MLE", domain: "recsys", modality: "system-design",
+    specLevel: "S4", withheld: ["reference-prose", "stage-skeleton", "hints"], flawMode: null, difficulty: "staff", companies: ["Any"], parentRoot: "mlsd-recsys-ranking-root",
+    tags: ["recsys", "offline-online-gap", "counterfactual-eval", "variation"],
+    prompt: "Variation of the ranking root (own it — no scaffold): your new ranker beats the incumbent by +4% NDCG offline but LOSES the online A/B test. Explain why, and design the fix.",
+    context: "You get the result only. Bring your own explanation, evaluation redesign, and tradeoffs.",
+    produce: { artifact: "why offline gain did not transfer + how you would evaluate so offline predicts online + the launch-gate policy + tradeoffs", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "gap-root-cause", anchor: "do you attribute the gap to biased offline eval (position/exposure bias in logged data, distribution shift), not 'noise' or 'bad luck'?", cost: "you re-launch the same losing model expecting a different result" },
+      { dim: "counterfactual-eval", anchor: "point to counterfactual / IPS / replay evaluation on unbiased or reweighted logs instead of naive NDCG on biased logs", cost: "offline keeps lying; you never trust it" },
+      { dim: "metric-alignment", anchor: "is the offline metric re-chosen to correlate with the online business goal, and validated against past A/B tests?", cost: "you optimize a number decoupled from the business" },
+      { dim: "launch-gate", anchor: "what is the launch policy — A/B as the gate, with offline as a filter not the decision?", cost: "offline-only launches keep shipping regressions" },
+    ],
+    status: "authored" },
+
 ];
