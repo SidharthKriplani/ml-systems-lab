@@ -492,4 +492,79 @@ Tradeoffs: freshness vs cost; precompute vs on-demand; store complexity vs consi
     ],
     status: "authored" },
 
+  // ── Authored ROOT + variations: Experiment / causal inference (2026-07-21).
+  { id: "mlsd-causal-root", roleTrack: "MLE", domain: "causal", modality: "system-design",
+    specLevel: "S1", withheld: [], flawMode: null, difficulty: "senior", companies: ["Any"], isRoot: true,
+    tags: ["causal", "ab-test", "experimentation", "confounding", "root"],
+    prompt: "Design the experimentation and causal-inference approach to prove a change actually CAUSED an outcome — A/B design, the validity threats, and what to do when you cannot randomize.",
+    context: "A product change. You must establish causal impact, not correlation. There are network effects, SRM risk, novelty effects, and cases where a clean randomized test is not possible.",
+    produce: { artifact: "the A/B design (unit, power, metrics) + the validity checks + the quasi-experiment fallback + how you separate causation from correlation + tradeoffs", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution", worked: `A strong answer randomizes properly, checks validity, and has a principled fallback when it cannot randomize.
+
+1. Randomize when you can. A/B with the right randomization unit, a power analysis for sample size / minimum detectable effect BEFORE running, one pre-registered primary metric, and guardrails.
+
+2. Guard the validity threats. Sample Ratio Mismatch (a 51/49 split when you expected 50/50 means the experiment is broken — stop and debug). Novelty/primacy effects. Interference / network effects (randomize by cluster, not user). Peeking / multiple testing.
+
+3. Metric design. One primary + guardrails; watch Simpson's paradox and segment heterogeneity; use CUPED to cut variance and reach power faster.
+
+4. When you cannot randomize. Quasi-experiments: difference-in-differences (state the parallel-trends assumption), regression discontinuity, synthetic control, instrumental variables — always name the identifying assumption.
+
+5. Causation != correlation. Name the confounders; a raw before/after or an observational correlation is not a causal claim.
+
+Tradeoffs: experiment duration/power vs decision speed; randomization granularity vs interference; quasi-experiment assumptions vs feasibility.` },
+    rubric: [
+      { dim: "randomization-and-power", anchor: "proper randomization unit + a power analysis (sample size / MDE) BEFORE running?", cost: "underpowered or mis-randomized: the result is noise you over-interpret" },
+      { dim: "validity-threats", anchor: "do you check SRM, novelty, and interference/network effects?", cost: "SRM alone silently invalidates the entire test" },
+      { dim: "metric-heterogeneity", anchor: "one primary + guardrails, and do you watch Simpson's paradox / segment effects?", cost: "an aggregate 'win' that is a loss in every segment (or vice versa)" },
+      { dim: "cant-randomize", anchor: "when randomization is impossible, do you use a quasi-experiment (DiD/RDD/synthetic control) with its identifying assumption stated?", cost: "you fall back to naive before/after and call correlation causation" },
+      { dim: "confounding-named", anchor: "do you name the confounders that make raw correlation non-causal?", cost: "you ship a 'causal' claim that is actually confounded" },
+      { dim: "tradeoff", anchor: "duration/power vs speed, or randomization granularity vs interference, stated?", cost: "reads as no real decision" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-causal-var-srm", roleTrack: "MLE", domain: "causal", modality: "system-design",
+    specLevel: "S2", withheld: ["reference-prose"], flawMode: "silent", difficulty: "senior", companies: ["Any"], parentRoot: "mlsd-causal-root",
+    tags: ["causal", "srm", "ab-test", "variation"],
+    prompt: "Variation of the causal root: your A/B shows a big lift, but the traffic split is 51/49 when you configured 50/50. What is wrong, and what do you do? (Scaffold: SRM is the concept in play.)",
+    context: "The lift looks great. The assignment counts are 51/49 with a tiny p-value on the ratio.",
+    produce: { artifact: "why the 51/49 invalidates the result + how you debug the cause + why you should NOT trust the lift yet", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "srm-invalidates", anchor: "do you state SRM means the randomization is broken, so the lift is untrustworthy — not a real win?", cost: "you ship a 'win' from a broken experiment" },
+      { dim: "debug-cause", anchor: "do you hunt the cause (logging bug, bot filtering, redirect, assignment leak)?", cost: "the same bias recurs on the next test" },
+      { dim: "stop-not-ship", anchor: "do you stop and fix rather than interpret the biased result?", cost: "biased assignment makes any effect estimate meaningless" },
+      { dim: "anti-pattern", anchor: "do you reject 'the split is close enough'?", cost: "a significant SRM is never 'close enough'" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-causal-var-cant-randomize", roleTrack: "MLE", domain: "causal", modality: "system-design",
+    specLevel: "S3", withheld: ["reference-prose", "stage-skeleton"], flawMode: null, difficulty: "senior", companies: ["Any"], parentRoot: "mlsd-causal-root",
+    tags: ["causal", "quasi-experiment", "diff-in-diff", "variation"],
+    prompt: "Variation of the causal root: you cannot randomize — the change is org-wide / has strong network effects. Prove causal impact anyway. (Minimal scaffold.)",
+    context: "No control group is possible via user-level randomization.",
+    produce: { artifact: "the quasi-experimental design (DiD / synthetic control / RDD) + the identifying assumption + how you test that assumption + tradeoffs", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "method-choice", anchor: "do you pick an appropriate quasi-experiment (DiD, synthetic control, RDD) for the situation?", cost: "you default to naive before/after = correlation, not causation" },
+      { dim: "identifying-assumption", anchor: "do you state the identifying assumption (e.g., parallel trends) explicitly?", cost: "an unstated assumption makes the causal claim unfalsifiable" },
+      { dim: "assumption-test", anchor: "how do you check the assumption (pre-period trends, placebo tests)?", cost: "you assume rather than verify; the estimate may be biased" },
+      { dim: "interference", anchor: "do you address the network effect (cluster-level analysis)?", cost: "spillover contaminates any user-level comparison" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-causal-var-simpson", roleTrack: "MLE", domain: "causal", modality: "system-design",
+    specLevel: "S4", withheld: ["reference-prose", "stage-skeleton", "hints"], flawMode: null, difficulty: "staff", companies: ["Any"], parentRoot: "mlsd-causal-root",
+    tags: ["causal", "simpsons-paradox", "heterogeneity", "variation"],
+    prompt: "Variation of the causal root (own it — no scaffold): the feature wins OVERALL but loses in every individual user segment. Explain how that is possible and decide whether to ship.",
+    context: "You get the paradox only. Bring your own analysis and decision.",
+    produce: { artifact: "the explanation (Simpson's paradox / mix shift) + how you'd determine the true effect + the ship/no-ship decision and why", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "simpson-named", anchor: "do you identify Simpson's paradox / segment-mix shift as the cause?", cost: "you trust the aggregate and ship a per-segment loss" },
+      { dim: "mix-mechanism", anchor: "do you explain HOW the mix of segments flips the aggregate sign?", cost: "you cannot tell if the overall number is real or an artifact" },
+      { dim: "true-effect", anchor: "how do you estimate the real effect (stratified / covariate-adjusted)?", cost: "you decide on a misleading aggregate" },
+      { dim: "decision", anchor: "do you make a defensible ship/no-ship call given the heterogeneity?", cost: "you ship on the headline and hurt every segment" },
+    ],
+    status: "authored" },
+
 ];
