@@ -9,6 +9,12 @@
 //   selfCheck: for notebook-build, what the downloadable harness asserts (prose deferred)
 // Scoped-not-vague: identity/dials/brief/produce/rubric-anchors PINNED; reference + harness prose DEFERRED (_flesh).
 
+//
+// [RECONCILED 2026-07-22 03:49 IST -- T1 doc reconciliation, EXECUTION-RUNBOOK] The "SKELETONS ONLY (2026-07-17)"
+// line above is stale for the 12 root briefs. Enumerated this pass: 59 total briefs, 12 with authored `worked`
+// reference prose (the 12 roots; unchanged since the 2026-07-21 brainstorm snapshot). designStudioFlaws.js (7
+// entries, separate file) is UNCHANGED -- every `code` field is still "" -- the flaw wing is still unauthored.
+// See STATUS.md 2026-07-22 03:49 IST entry for the full reconciliation; this comment is a pointer, not the full record.
 export const DESIGN_STUDIO_MSL = [
   { id: "mlsd-recsys-feed", roleTrack: "MLE", domain: "recsys", modality: "system-design",
     specLevel: "S2", withheld: ["end-to-end-flow", "design-requirements"], flawMode: null, difficulty: "senior", companies: ["Any"],
