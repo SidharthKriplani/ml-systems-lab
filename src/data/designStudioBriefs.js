@@ -267,4 +267,79 @@ Tradeoffs to state: candidate-gen recall vs ranking latency; exploration vs shor
     ],
     status: "authored" },
 
+  // ── Authored ROOT + variations: Fraud / anomaly detection (2026-07-21).
+  { id: "mlsd-fraud-root", roleTrack: "MLE", domain: "fraud", modality: "system-design",
+    specLevel: "S1", withheld: [], flawMode: null, difficulty: "senior", companies: ["Any"], isRoot: true,
+    tags: ["fraud", "imbalance", "leakage", "drift", "eval", "root"],
+    prompt: "Design a production fraud / anomaly detection system under extreme class imbalance, delayed and partial labels, and an adversary who adapts — deciding in real time at authorization.",
+    context: "Positive rate <0.5%. Labels (chargebacks) arrive days later and you never see labels for transactions you BLOCKED. Asymmetric cost: a missed fraud vs a blocked good customer. The adversary adapts to your rules. Decision budget <100ms at auth.",
+    produce: { artifact: "architecture + the metric & threshold policy + label/leakage handling + adversary/drift response + the tiered action policy + eval plan + tradeoffs", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution", worked: `A strong answer designs for the metric, the labels, and the adversary first — the model is the easy part.
+
+1. Imbalance and metric. Accuracy is useless at <0.5% positives. Optimize a cost-weighted objective: PR-AUC / recall at a fixed precision, calibrate probabilities, and pick the threshold from the cost matrix, not 0.5. Resampling / class weights help training but do not change which metric is the truth.
+
+2. Labels are delayed AND partial. Chargebacks arrive late, and blocked transactions never get labeled — a selection-bias feedback loop. Use delayed-label-aware training, handle the blocked/reject cases (counterfactual or review-queue labels), and define the label window deliberately.
+
+3. The adversary adapts. Static rules/features decay; fraud evolves. Monitor for drift, retrain on fresh fraud, and pair a fast rules/GBDT layer with velocity and graph features (fraud rings) — trees remain the production baseline.
+
+4. Leakage and train-serve skew. Features must be point-in-time (never 'was later charged back'), computed by the SAME code offline and online, and cheap enough to fetch inside the auth budget. This is the classic fraud leak: spectacular offline, useless live.
+
+5. Asymmetric action, not a single auto-block. Tier it: high-confidence block, mid-confidence step-up/manual review, low pass — because a wrong block is expensive too, and the review queue also generates labels.
+
+Tradeoffs: recall vs customer friction; model complexity vs the <100ms budget; rules interpretability vs ML coverage.` },
+    rubric: [
+      { dim: "cost-aware-metric", anchor: "do you optimize a cost-weighted / PR metric at a threshold from the cost matrix, not accuracy at 0.5?", cost: "a 99.5%-accurate model that catches no fraud, or one that blocks good customers" },
+      { dim: "delayed-partial-labels", anchor: "do you handle late chargeback labels AND that blocked transactions never get labeled (selection bias)?", cost: "you train on a censored, biased sample and overfit to yesterday's fraud" },
+      { dim: "leakage-point-in-time", anchor: "are features point-in-time (no 'was later charged back') and skew-free offline/online?", cost: "spectacular offline, useless live — the classic fraud leak" },
+      { dim: "adversary-drift", anchor: "how do you detect adaptation, retrain, and combine velocity/graph (rings) with a fast model?", cost: "the model decays as fraud adapts; rings slip past single-transaction features" },
+      { dim: "asymmetric-action", anchor: "is the action tiered (block / step-up / pass) rather than a single auto-block?", cost: "you auto-block good customers or wave fraud through" },
+      { dim: "latency", anchor: "does the auth-time decision + feature fetch fit under 100ms?", cost: "misses the auth SLA; unusable at the point of decision" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-fraud-var-imbalance", roleTrack: "MLE", domain: "fraud", modality: "system-design",
+    specLevel: "S2", withheld: ["reference-prose"], flawMode: "silent", difficulty: "senior", companies: ["Any"], parentRoot: "mlsd-fraud-root",
+    tags: ["fraud", "imbalance", "metric", "threshold", "variation"],
+    prompt: "Variation of the fraud root: 0.3% positive rate, your model reports 99.7% accuracy and catches almost no fraud. Fix the framing. (Scaffold: the metric layer is given for you to redesign.)",
+    context: "The team is celebrating accuracy. Threshold is 0.5. No cost matrix in the pipeline.",
+    produce: { artifact: "why accuracy misleads + the metric & threshold you optimize instead + how you set the operating point from cost + what you would NOT do", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "metric-diagnosis", anchor: "do you name accuracy-under-imbalance as the problem and move to PR-AUC / recall-at-precision?", cost: "you keep shipping a model that catches no fraud" },
+      { dim: "threshold-from-cost", anchor: "is the operating threshold derived from the cost matrix, not 0.5?", cost: "the decision point is arbitrary and misaligned with money" },
+      { dim: "calibration", anchor: "are probabilities calibrated so the threshold means what you think?", cost: "miscalibrated scores make the threshold meaningless" },
+      { dim: "anti-pattern", anchor: "do you note that resampling alone does not fix the metric truth?", cost: "you rebalance and still report the wrong number" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-fraud-var-leakage", roleTrack: "MLE", domain: "fraud", modality: "system-design",
+    specLevel: "S3", withheld: ["reference-prose", "stage-skeleton"], flawMode: "silent", difficulty: "senior", companies: ["Any"], parentRoot: "mlsd-fraud-root",
+    tags: ["fraud", "leakage", "selection-bias", "skew", "variation"],
+    prompt: "Variation of the fraud root: offline AUC is 0.98, but live catch-rate collapses. Diagnose and fix. (Minimal scaffold.)",
+    context: "The training set was built by joining transactions to their eventual chargeback outcome. Blocked transactions were dropped from training. Feature code differs between the training notebook and the serving path.",
+    produce: { artifact: "the root cause(s) + the fix (point-in-time features, selection-bias handling, unified feature code) + how you prove the fix", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "leakage-named", anchor: "do you identify post-hoc / future-information leakage (joining to the eventual outcome) as a cause?", cost: "the 0.98 is a mirage; live keeps collapsing" },
+      { dim: "selection-bias", anchor: "do you address that dropping blocked transactions censors the training distribution?", cost: "the model never learns the fraud it already blocks; biased sample" },
+      { dim: "train-serve-skew", anchor: "do you unify feature code across training and serving?", cost: "different features offline vs online; silent live failure" },
+      { dim: "proof", anchor: "how do you prove the fix (temporal backtest, live shadow) rather than trust offline AUC again?", cost: "you re-ship the same leak" },
+    ],
+    status: "authored" },
+
+  { id: "mlsd-fraud-var-rings", roleTrack: "MLE", domain: "fraud", modality: "system-design",
+    specLevel: "S4", withheld: ["reference-prose", "stage-skeleton", "hints"], flawMode: null, difficulty: "staff", companies: ["Any"], parentRoot: "mlsd-fraud-root",
+    tags: ["fraud", "graph", "rings", "velocity", "variation"],
+    prompt: "Variation of the fraud root (own it — no scaffold): single-transaction features miss coordinated fraud RINGS (many accounts/cards acting together). Design detection for the ring, not just the transaction.",
+    context: "You get the problem only. Bring your own features, model, and serving tradeoffs.",
+    produce: { artifact: "how you represent and detect rings (graph / velocity / entity linkage) + how it serves within the latency budget + tradeoffs vs the per-transaction model", format: "design-doc", workspace: "in-app-text" },
+    reference: { type: "solution" }, selfCheck: null,
+    rubric: [
+      { dim: "ring-representation", anchor: "do you model relationships (shared device/card/IP, velocity, graph/entity linkage), not just per-transaction features?", cost: "coordinated rings stay invisible to a transaction-level model" },
+      { dim: "graph-or-velocity", anchor: "point to the concrete signal (graph embeddings, connected components, velocity aggregates) that surfaces the ring", cost: "no mechanism actually catches coordination" },
+      { dim: "serving-latency", anchor: "how does ring detection fit the real-time budget (precompute graph features vs inline)?", cost: "graph compute blows the auth SLA" },
+      { dim: "tradeoff", anchor: "combine ring signals with the fast per-transaction model — stated with the cost?", cost: "either miss rings or miss the latency budget" },
+    ],
+    status: "authored" },
+
 ];
