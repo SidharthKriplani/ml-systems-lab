@@ -4,6 +4,29 @@ Read this at session open alongside NEXT.md + CLAUDE.md. One screen of truth.
 
 ---
 
+> **23 Jul 2026 — QnA Tier B nearly closed + study-loop parity (Fable orchestration; MAJOR).**
+> (1) **QnA answer rollout, batches 45–58 (Sonnet, disk-bridge protocol)**: MSL Tier B now
+> **190/206 modules answered, 16 parked, 0 draft** in qnaBank.js/qnaStatus.js — batch 57
+> (Prob-ML remainder 197q, unsupervised 6/6) and batch 58 (Math/Stats remainder, 6 mod/192q,
+> incl. anchor-miss-and-fix on 5 bayesian ids, recorded in receipts) both supervisor-audited
+> PASS with block-isolated recounts. Batch 59 (DL remainder: pretraining, finetune,
+> quantization, dl_serving, dl_debugging — 168q) dispatched (D8) with T5 content WOs; in
+> flight. (2) **Cross-device sync**: syncProgress.js ANNOT_PAIRS (stickies, msl_page_highlights_v1,
+> msl-review-cards-v1, msl-takeaway-v1) + App.jsx live-sync v2 (4s debounce push, pagehide
+> flush, 20s pull, 45s heartbeat, push-back after merge). (3) **Stickies v2.1** hashless keys
+> + migration + delete-confirm; StickyScope in all 19 FoundationTabs. (4) **Review cards**:
+> reviewCards.js cloze from "+ Add to review" on the mark popover → existing ReviewTab SM-2
+> queue. (5) **Takeaway box** in all 19 tabs inside recap card (post-hotfix placement; worker
+> B3 JSX incident ledgered). (6) **Glossary G0** shipped; nav threading (renderMd 19 call
+> sites) still queued as G0-MSL-b. (7) **Topbar fixes**: overflow-x clip (sticky restored) +
+> width calc. (8) **Marker mode + Note button** on highlight popover (msl-marker-mode-v1).
+> (9) **DS briefs 59→63 MLE** (Gemini harvest, mechanics-only screen). (10) **Doctrine**
+> (user ruling): module QnA defines the interview bar and main text must rise to it —
+> [verify:] tags in answered QnA are now the first-priority expansion targets (WO-1
+> cold_start_system_design + WO-2 two_stage_architecture in D8 apply this). THIN-MODULE-LIST
+> + WORK-ORDERS live at BreakLabs root. **Next**: audit D8, batches 60–61, T6/T8 exemplar
+> ports (gradient_boosting first), academic/20:80 tab UI port from GSL.
+
 ## TRACKER NOTE PERSISTENCE HARDENED (18 Jul 2026)
 
 My Tracks notes are now stateful across close/refresh and across tabs. Three fixes, esbuild-verified, **LOCAL/uncommitted** (push on Mac, approve-first):
