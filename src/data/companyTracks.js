@@ -77,7 +77,6 @@ export const COMPANY_TRACK_ITEMS = {
     { tabId: 'casestudies', target: null, label: 'Case Studies — Netflix, Uber, Spotify recommenders', kind: 'case' },
     { tabId: 'ranking_project', target: null, label: 'Project Lab — build a ranking model end-to-end', kind: 'project' },
     { tabId: 'interview', target: null, label: 'Interview Q&A — system design, ML fundamentals', kind: 'question' },
-    { tabId: 'mock_interview', target: null, label: 'Mock Interview — full timed simulation', kind: 'mock' },
   ],
 }
 

@@ -71,7 +71,6 @@ const ProfilePage       = lazyReload(() => import('./tabs/ProfilePage.jsx'))
 const ResourcesTab      = lazyReload(() => import('./tabs/ResourcesTab.jsx'))
 const CheatsheetTab     = lazyReload(() => import('./tabs/CheatsheetTab.jsx'))
 const AskTab            = lazyReload(() => import('./tabs/AskTab.jsx'))
-const MockInterviewTab  = lazyReload(() => import('./tabs/MockInterviewTab.jsx'))
 const SignedOutHome     = lazyReload(() => import('./tabs/SignedOutHome.jsx'))
 // Leaderboard + Progress (named exports → wrap for lazy)
 const LeaderboardTab    = lazyReload(() => import('./tabs/LeaderboardTab.jsx').then(m => ({ default: m.LeaderboardTab })))
@@ -153,7 +152,6 @@ const ALL_TABS = [
   { id: 'resources',   component: ResourcesTab },
   { id: 'cheatsheet', component: CheatsheetTab },
   { id: 'ask',        component: AskTab },
-  { id: 'mock_interview', component: MockInterviewTab },
   // Leaderboard + Progress
   { id: 'leaderboard',             component: LeaderboardTab },
   { id: 'progress',                component: ProgressTab },
@@ -242,7 +240,6 @@ const TAB_TO_ZONE = {
   home: 'today', landscape: 'today', plans: 'today', profile: 'today', resources: 'today',
   leaderboard: 'today', progress: 'today',
   gradient: 'read', cheatsheet: 'read',
-  mock_interview: 'interview',
   interview: 'interview',
   takehome: 'interview', combinator: 'interview',
   defense: 'interview', verbal: 'interview',
@@ -442,7 +439,11 @@ const NAV_SECTIONS = [
     // getTabSection / getNavLabel keep resolving each project to the BUILD frame,
     // but they are NOT rendered as a sidebar accordion (see DesktopSidebar).
     landing: 'build',
-    items: BUILD_PROJECTS,
+    // DS-1b (2026-07-22): Design Studio nav-frame entry moved here from JUDGE, joining
+    // Project Labs. Frame-resolution only (getTabSection/getNavLabel) -- BuildHubTab's own
+    // visual project grid (BUILD_PROJECTS) is untouched per the ticket's "no other frame
+    // reshaping" scope.
+    items: [...BUILD_PROJECTS, { id: 'designstudio', label: 'Design Studio', desc: 'Produce design work yourself, then self-critique — artifact briefs, flaw diagnosis, and 5-stage system-design scenarios.' }],
   },
   {
     id: 'judge',
@@ -465,13 +466,6 @@ const NAV_SECTIONS = [
         flattenWhenSingle: true,
         items: [
           { id: 'incidentroom', label: 'Cross-Domain Challenges',  desc: 'Cross-domain, multi-step incident diagnosis.' },
-        ],
-      },
-      {
-        label: 'DESIGN STUDIO',
-        flattenWhenSingle: true,
-        items: [
-          { id: 'designstudio', label: 'Design Studio', desc: 'Produce design work yourself, then self-critique — artifact briefs, flaw diagnosis, and 5-stage system-design scenarios.' },
         ],
       },
     ],

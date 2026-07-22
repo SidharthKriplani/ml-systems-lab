@@ -592,6 +592,7 @@ Posts 20, 26, 27, 31–34 are Leakage & Contamination content (validation set le
 - [ ] "NEW" badge on tabs updated within last 30 days
 - [ ] Dark/light mode toggle (currently dark-only — see DECISIONS.md for why this is excluded for now)
 - [ ] **PWA manifest + service worker** — add `manifest.json` to `public/` (name, icons, theme color, display: standalone) and a minimal service worker that caches the app shell. Makes the app installable on mobile from Chrome/Safari. ~30 min. (Source: GenAI Systems Lab, May 2026)
+- [ ] **"JD → prep-route" concept (DS-1b, 2026-07-22)** — surfaced while retiring the orphaned `mock_interview` component (built, but wired into zero nav surface as of DS-1's IA audit; archived rather than deleted, see `src/tabs/_archive/`). The underlying idea has real merit as a future Company-Tracks-archetype feature: paste a JD, auto-route the candidate into the matching mock-interview flow/archetype instead of a flat mock-interview tab with no entry point. Do not rebuild the orphaned component as-is — redesign it as a JD-driven router once Company Tracks archetype work (BRAINSTORM 8g) lands, so it has somewhere real to route into.
 
 ---
 

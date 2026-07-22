@@ -5,7 +5,7 @@ export const RECSYS_MODULES = [
     title: 'The Two-Stage Architecture',
     subtitle: 'Why candidate generation → ranking exists — latency forces a cheap recall stage before an expensive precision stage',
     difficulty: 'foundational',
-    estimatedMin: 22,
+    estimatedMin: 30,
     tags: ['RecSys', 'candidate generation', 'ranking', 'latency budget'],
     summary: `Every serious recommender answers one question: "of the millions of things I could show this user, which handful do I show *now*?" The naive answer — score every item with your best model and take the top-k — is arithmetically impossible, and understanding *why* is the whole foundation of RecSys design.
 
@@ -21,15 +21,25 @@ export const RECSYS_MODULES = [
 
 ---
 
-**The consequence that trips up juniors: the two stages have different metrics because they have different jobs.** Retrieval is judged on recall@k (did the relevant items make the shortlist?), ranking on NDCG/precision (are they ordered well?). And retrieval's recall is a *ceiling* — an item retrieval drops is gone forever; no ranker can order an item it never received. A brilliant ranker on top of a mediocre retriever is capped by the retriever. This is why "great model, mediocre recommendations" almost always means: audit retrieval recall first.`,
+**The consequence that trips up juniors: the two stages have different metrics because they have different jobs.** Retrieval is judged on recall@k (did the relevant items make the shortlist?), ranking on NDCG/precision (are they ordered well?). And retrieval's recall is a *ceiling* — an item retrieval drops is gone forever; no ranker can order an item it never received. A brilliant ranker on top of a mediocre retriever is capped by the retriever. This is why "great model, mediocre recommendations" almost always means: audit retrieval recall first.
+
+---
+
+**That answers *which stage broke* — it doesn't answer *how many candidates stage 1 should even keep*.** Keep too few and precision-optimized ranking never sees the items that mattered; keep too many and the ranking stage — the expensive one — blows its own slice of the 100ms budget. The split point is a real design decision, and the same arithmetic that motivated the two stages in the first place answers it.
+
+**Say the team picks 500 candidates to pass forward** — the number this module's own check questions already assume. The ranking stage gets roughly 20ms of the 100ms total (retrieval takes ~2ms; the rest goes to serialization, logging, and network). 20ms ÷ 500 candidates = **0.04ms per candidate** — about 25× cheaper, per item, than the naive 1ms-per-pair full ranker from the latency wall above. That's the actual constraint on the ranking model: it has to be far cheaper than the heaviest model you could build, because it still runs 500 times inside one request. This is why production rankers are feature-rich but *bounded* — a few hundred features, not deep cross-attention over raw text — the per-item cost has to clear 0.04ms, not 1ms.
+
+**Now the second half of the split-point decision: what does retrieval's recall actually cost you downstream?** Assume, for a given request, the truly relevant items a perfect system would show in the top-10 number 10. If retrieval's recall@500 is 0.90, only 10 × 0.90 = **9** of those 10 ideal items survive into the 500 candidates the ranker ever sees — the ranker, however good, can place at most 9 of the true top-10 correctly, a 90% ceiling on top-10 precision that no ranking sophistication can lift. Push recall@500 to 0.98, and 10 × 0.98 = **9.8 ≈ 10** of the ideal items survive — the ceiling moves to essentially 98-100%. The gap between a "good" retriever (0.90) and a "great" one (0.98) is worth roughly 8-9 points of achievable top-10 precision, bought entirely by retrieval and unrecoverable by ranking — which is exactly the earlier claim, "retrieval recall is a ceiling," made numeric.`,
     interactivePrompt: `Before you touch the controls: the funnel narrows 10M → a few hundred → top-k. If you make the retrieval stage narrower to save latency, which metric can you never recover downstream, and why?`,
     keyPoints: [
       `**The two-stage split is forced by arithmetic, not taste.** 10M items × ~1ms/item = 10,000s per request against a ~100ms budget — a 100,000× gap. You cannot run the precise model over the full catalog, so a cheap recall stage must run first and an expensive precision stage second.`,
       `**Retrieval optimizes recall; ranking optimizes precision — different jobs, different metrics.** Retrieval's only sin is dropping a good item (unrecoverable); ranking's job is ordering the survivors. Judge retrieval on recall@k, ranking on NDCG/precision@k. Conflating the two is a classic interview tell.`,
       `**Retrieval recall is a hard ceiling on final quality.** If recall@500 = 0.7, then 30% of items the user would have loved never reach the ranker, and no ranking sophistication recovers them. Diagnose a "good ranker, bad results" system by measuring retrieval recall before touching the ranker.`,
       `**The stage counts are a budget allocation.** A typical split: retrieval 10M→a few hundred in ~2ms, ranking a few hundred→~100 in ~20ms. Each stage gets a hard millisecond allocation; one overrunning stage steals from the next.`,
+      `**The split point is a latency-budget decision, not a guess.** At 500 candidates and a ~20ms ranking-stage budget, the per-item cost ceiling is 20ms ÷ 500 = 0.04ms — roughly 25× cheaper than the naive 1ms-per-pair full ranker from the latency wall. That's why production rankers use bounded feature sets, not the heaviest model imaginable.`,
+      `**Retrieval recall sets a numeric ceiling on top-10 precision.** If the true top-10 has 10 relevant items, recall@500 = 0.90 means only 9 survive into the ranker's candidate set (10 × 0.90 = 9) — a 90% ceiling no ranking sophistication can lift. Push recall@500 to 0.98 (9.8 ≈ 10 survive) and the ceiling moves to ~98-100%: an 8-9 point swing bought entirely by retrieval, not ranking.`,
     ],
-    takeaway: `A recommender is a recall-then-precision funnel forced by a ~100,000× latency gap: cheap candidate generation maximizes recall over millions (setting an unraiseable ceiling on final quality), then an expensive ranker maximizes precision over the few hundred survivors. One model cannot occupy both ends of the funnel.`,
+    takeaway: `A recommender is a recall-then-precision funnel forced by a ~100,000× latency gap: cheap candidate generation maximizes recall over millions (setting an unraiseable ceiling on final quality), then an expensive ranker maximizes precision over the few hundred survivors. The split point itself is arithmetic, not guesswork: candidate count sets the ranking stage's per-item cost ceiling, and retrieval's recall sets the top-10 precision ceiling — one model cannot occupy both ends of the funnel, and no ranking improvement buys back recall retrieval already lost.`,
     checkQuestions: [
       {
         q: `An interviewer asks you to "design YouTube recommendations." You have a strong ranking model. What is the correct *first* architectural move?`,
@@ -61,6 +71,16 @@ export const RECSYS_MODULES = [
         ],
         answer: ['A', 'B'],
       },
+      {
+        q: `Team A improves retrieval recall@500 from 0.90 to 0.98 and changes nothing about the ranker. Team B leaves recall@500 at 0.90 and ships a much better ranking model. Assuming a true top-10 of 10 relevant items per request, which team's change can actually raise achievable top-10 precision, and by roughly how much?`,
+        options: [
+          `A) Team A — 10 × 0.90 = 9 vs 10 × 0.98 ≈ 10 ideal items now reach the ranker, raising the achievable ceiling by roughly 8-9 points; Team B's ranker still can't rank items retrieval never delivered.`,
+          `B) Team B — a better ranking model always increases NDCG regardless of what retrieval delivers, since ranking quality and retrieval recall are independent, orthogonal metrics.`,
+          `C) Both equally — recall and ranking quality are two ways of expressing the same underlying precision number, so either improvement moves top-10 precision by the same amount.`,
+          `D) Neither — top-10 precision is capped by the catalog size (10M), not by recall@500 or ranking quality, so neither team's change matters at request time.`,
+        ],
+        answer: `A`,
+      },
     ],
     recap: [
       `**The two-stage split is forced by a latency wall, not preference:** 10M items × ~1ms each ≈ 10,000s per request vs a ~100ms budget = a 100,000× gap. You cannot score the full catalog with the precise model at request time.`,
@@ -79,8 +99,7 @@ export const RECSYS_MODULES = [
   <text x="10" y="90" fill="var(--ink-low)" font-size="7">1ms/item over 10M = 10,000s vs a 100ms budget → 100,000× gap</text>
 </svg>`,
     },
-  },
-  {
+  },  {
     id: 'candidate_generation',
     interactiveId: 'retrieval_funnel_viz',
     title: 'Candidate Generation & Retrieval',
