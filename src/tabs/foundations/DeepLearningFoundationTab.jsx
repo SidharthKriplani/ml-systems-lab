@@ -6,6 +6,7 @@ import { getTracksForModule } from '../../utils/tracks.js'
 import { renderMd } from '../../utils/renderMd'
 import { CheckQuestion, CheckQuestionsBlock } from '../../components/foundations/CheckQuestion'
 import { HighlightPopover } from '../../components/foundations/HighlightPopover.jsx'
+import { StickyScope } from '../../components/StickyNotes.jsx'
 import { QnAPanel } from '../../components/foundations/QnAPanel.jsx'
 import { FoundationViewTabs } from '../../components/foundations/FoundationViewTabs.jsx'
 import { GoDeeperPanel } from '../../components/foundations/GoDeeperPanel.jsx'
@@ -187,6 +188,7 @@ export function DeepLearningFoundationTab({ onNavigate, openModuleId, navOrigin 
       {/* RIGHT: Module content */}
       {selected && (
         <div ref={contentRef} data-own-highlighter="1" style={{ flex: 1, overflowY: 'auto', padding: '1.75rem 2rem', background: 'var(--depth)', minWidth: 0 }}>
+          <StickyScope id={'m:' + selected.id} />
           <HighlightPopover containerRef={contentRef} sourceTabId={TAB_ID} sourceModuleId={selected.id} sourceLabel={selected.title} />
           <button onClick={() => (navOrigin?.tab === 'my_tracks' && openModuleId && selectedId === openModuleId) ? onNavigate('my_tracks', navOrigin.trackId || null) : (setSelectedId(null), syncModuleHash(null))}
             style={{ fontSize: '0.78rem', color: 'var(--ink-low)', background: 'none', border: 'none', cursor: 'pointer',
