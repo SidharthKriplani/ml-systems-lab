@@ -30,6 +30,7 @@ const STATIC_PROGRESS_KEYS = [
   'msl_projectlab_fraud_data',
   'msl_spot_the_flaw',
   'msl-review-v1',            // spaced-repetition schedule (ReviewTab) - was device-only
+  'msl-last-touched-v1',      // Continue-strip: last foundations module opened
   'msl_landscape_region',
   'msl_difficulty_filter',
 ]

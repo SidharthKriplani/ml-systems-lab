@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { writeLastTouched } from '../../utils/lastTouched.js'
 import { tierOf, TIER_STYLE } from '../../data/moduleTiers.js'
 import { AddToTrackPopover } from '../../components/tracks/AddToTrackPopover.jsx'
 import { getTracksForModule } from '../../utils/tracks.js'
@@ -57,6 +58,15 @@ export function OptimizationFoundationTab({ onNavigate, openModuleId, navOrigin 
 
   // Close track popover when module selection changes
   useEffect(() => { setTrackPopoverOpen(false); setRecapMode(false); setQnaMode(false) }, [selectedId])
+
+  // Continue-strip: remember this module as "last touched" for
+  // ProgressTab's resume card (see utils/lastTouched.js).
+  useEffect(() => {
+    if (selectedId) {
+      const m = MODULES.find(x => x.id === selectedId)
+      if (m) writeLastTouched({ tabId: TAB_ID, moduleId: selectedId, title: m.title })
+    }
+  }, [selectedId])
 
   const doneCount = getDoneCount(MODULES)
   const selected = MODULES.find(m => m.id === selectedId)
