@@ -2,7 +2,8 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { AddToTrackPopover } from '../tracks/AddToTrackPopover.jsx'
 import { quickAddItem, getQuickAdd } from '../../utils/tracks.js'
-import { addHighlight, removeHighlight, occurrenceOfSelection, applyAll, unpaint } from '../../utils/localHighlights.js'
+import { addHighlight, removeHighlight, listHighlights, occurrenceOfSelection, applyAll, unpaint } from '../../utils/localHighlights.js'
+import { addCard } from '../../utils/reviewCards.js'
 
 // 4 fixed swatches, mapped to MSL's existing theme vars — no arbitrary hex.
 const COLORS = [
@@ -38,6 +39,16 @@ function truncate(raw, n) {
  * already uses elsewhere: quick-add on + a last track present saves straight
  * through with a flash toast; otherwise (or with Alt/Cmd/Ctrl/Shift held)
  * it opens the same AddToTrackPopover used everywhere else in the app.
+ *
+ * Q3 Wave A item 1 (2026-07-22): clicking an already-painted mark opens a
+ * small popover with "Remove highlight" — that popover now also has
+ * "+ Add to review". It reads the mark's own text as the cloze answer, walks
+ * up to the nearest block ancestor for surrounding context (prefix/suffix),
+ * and stores a card via reviewCards.js — same pageKey the highlight itself
+ * lives under, so it rides the same sync bucket. ReviewTab.jsx renders these
+ * cards inline in its existing due/later queue, term hidden until "Show
+ * answer" is clicked. See reviewCards.js's header for the storage-shape
+ * rationale (mirrors localHighlights.js on purpose).
  */
 export function HighlightPopover({ containerRef, sourceTabId, sourceModuleId, sourceLabel }) {
   const [toolbar, setToolbar] = useState(null) // { top, left, right, text }
@@ -159,6 +170,50 @@ export function HighlightPopover({ containerRef, sourceTabId, sourceModuleId, so
     reset()
   }
 
+  // "+ Add to review" on a painted mark's popover — build a cloze card from
+  // the mark's own text (the answer) + its surrounding block text (context),
+  // and hand it to reviewCards.js. Never guesses: if the mark isn't findable
+  // in the live DOM anymore (repainted away, content changed underneath it),
+  // it bails without creating a broken card.
+  function handleAddToReview() {
+    if (!removePop || !containerRef?.current) return
+    const el = containerRef.current
+    const markEl = el.querySelector(`mark[data-hl-id="${removePop.id}"]`)
+    if (!markEl) { setRemovePop(null); return }
+    const term = (markEl.textContent || '').trim()
+    if (!term) { setRemovePop(null); return }
+
+    const hl = listHighlights(pageKey).find(h => h.id === removePop.id)
+    const block = markEl.closest('p, li, blockquote, dd, dt, td, th, div') || markEl.parentElement
+    const blockText = (block && block.textContent) || term
+    const idx = blockText.indexOf(term)
+    let prefix = '', suffix = ''
+    if (idx !== -1) {
+      const rawPrefix = blockText.slice(Math.max(0, idx - 90), idx)
+      const rawSuffix = blockText.slice(idx + term.length, idx + term.length + 90)
+      // Trim to a clean word boundary so the card doesn't open mid-word.
+      prefix = idx - 90 > 0 ? rawPrefix.replace(/^\S*\s/, '') : rawPrefix
+      suffix = idx + term.length + 90 < blockText.length ? rawSuffix.replace(/\s\S*$/, '') : rawSuffix
+    }
+
+    addCard(pageKey, {
+      id: `card_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+      term,
+      prefix: prefix.trim(),
+      suffix: suffix.trim(),
+      color: (hl && hl.color) || 'gold',
+      tabId: sourceTabId,
+      moduleId: sourceModuleId,
+      moduleTitle: sourceLabel || '',
+      reviews: 0,
+      lastReviewed: null,
+    })
+
+    const r = markEl.getBoundingClientRect()
+    showFlash('review queue', { top: Math.max(8, r.top - 46), left: r.left + r.width / 2 })
+    setRemovePop(null)
+  }
+
   function handleSave(e) {
     if (!toolbar) return
     const id = genId()
@@ -278,7 +333,16 @@ export function HighlightPopover({ containerRef, sourceTabId, sourceModuleId, so
           position: 'fixed', top: removePop.top, left: removePop.left, transform: 'translateX(-50%)', zIndex: 9999,
           background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '8px',
           boxShadow: '0 8px 20px rgba(0,0,0,0.35)', padding: '0.3rem',
+          display: 'flex', alignItems: 'center', gap: '0.3rem',
         }}>
+          <button
+            onClick={handleAddToReview}
+            style={{
+              fontSize: '0.75rem', fontWeight: 700, fontFamily: 'var(--font-sans)',
+              padding: '0.4rem 0.7rem', borderRadius: '6px', border: 'none', cursor: 'pointer',
+              background: 'var(--prime)', color: '#000', whiteSpace: 'nowrap',
+            }}
+          >+ Add to review</button>
           <button
             onClick={() => {
               const el = containerRef?.current
@@ -289,7 +353,7 @@ export function HighlightPopover({ containerRef, sourceTabId, sourceModuleId, so
             style={{
               fontSize: '0.75rem', fontWeight: 700, fontFamily: 'var(--font-sans)',
               padding: '0.4rem 0.7rem', borderRadius: '6px', border: 'none', cursor: 'pointer',
-              background: 'var(--rim)', color: 'var(--ink-hi)',
+              background: 'var(--rim)', color: 'var(--ink-hi)', whiteSpace: 'nowrap',
             }}
           >Remove highlight</button>
         </div>,

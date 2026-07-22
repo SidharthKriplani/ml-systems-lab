@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { computeReadiness } from '../utils/readiness.js'
+import { listAllCards, markCardReviewed, removeCard } from '../utils/reviewCards.js'
 
 // Module title arrays — imported light, only for resolving a moduleId → title.
 import { MATH_STATS_MODULES }     from '../data/foundations/mathStatsModules.js'
@@ -126,6 +127,38 @@ function collectCandidates() {
       })
     }
   }
+
+  // Cloze cards created via "Add to review" on a painted highlight (Q3 Wave
+  // A item 1, 2026-07-22) — same due/later queue as modules, same SM-2-lite
+  // interval table, just anchored off the card's own createdAt/lastReviewed
+  // instead of a module's completedAt. MSL's SR queue had no card-level
+  // data model before this — this is the minimal extension that reuses the
+  // existing schedule math and existing due/later rendering rather than
+  // building a second, parallel review surface.
+  for (const c of listAllCards()) {
+    const learnedMs = c.ts || 0
+    if (!learnedMs) continue
+    const reviews = c.reviews || 0
+    const anchorMs = c.lastReviewed ? new Date(c.lastReviewed).getTime() : learnedMs
+    const dueAt = anchorMs + intervalForReviews(reviews) * DAY_MS
+    const domain = DOMAINS.find(d => d.tabId === c.tabId)
+    items.push({
+      key: `card:${c.pageKey}:${c.id}`,
+      type: 'card',
+      cardId: c.id,
+      pageKey: c.pageKey,
+      tabId: c.tabId,
+      moduleId: c.moduleId,
+      room: (domain && domain.label) || c.tabId || 'Highlights',
+      title: c.moduleTitle || (domain ? titleFor(domain.modules, c.moduleId) : c.moduleId) || 'Untitled',
+      cloze: { prefix: c.prefix || '', term: c.term || '', suffix: c.suffix || '' },
+      learnedMs,
+      reviews,
+      dueAt,
+      due: dueAt <= now,
+    })
+  }
+
   return items
 }
 
@@ -152,7 +185,11 @@ function dueLabel(dueAt) {
 }
 
 // ── Sub-components ───────────────────────────────────────────────────────────
-function ReviewRow({ item, onOpen, onMarkReviewed }) {
+function ReviewRow({ item, onOpen, onMarkReviewed, onRemoveCard }) {
+  const isCard = item.type === 'card'
+  // Cloze cards manage their own reveal state locally — "bold term hidden"
+  // until the user asks to see it, per-row, resets naturally on remount.
+  const [revealed, setRevealed] = useState(false)
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: '0.75rem',
@@ -167,7 +204,7 @@ function ReviewRow({ item, onOpen, onMarkReviewed }) {
           fontSize: '0.66rem', fontWeight: 700, textTransform: 'uppercase',
           letterSpacing: '0.07em', color: 'var(--prime)', marginBottom: '0.2rem',
         }}>
-          {item.room}
+          {item.room}{isCard ? ' · card' : ''}
         </div>
         <div style={{
           fontSize: '0.9rem', fontWeight: 600, color: 'var(--ink-hi)', lineHeight: 1.4,
@@ -175,23 +212,54 @@ function ReviewRow({ item, onOpen, onMarkReviewed }) {
         }}>
           {item.title}
         </div>
-        <div style={{ fontSize: '0.72rem', color: 'var(--ink-low)', marginTop: '0.2rem' }}>
-          learned {agoLabel(item.learnedMs)}
-          {item.reviews > 0 ? ` · reviewed ${item.reviews}×` : ''}
-        </div>
+        {isCard ? (
+          <div style={{ fontSize: '0.82rem', color: 'var(--ink-mid)', lineHeight: 1.5, marginTop: '0.35rem' }}>
+            {item.cloze.prefix ? item.cloze.prefix + ' ' : ''}
+            {revealed ? (
+              <strong style={{ color: 'var(--prime)' }}>{item.cloze.term}</strong>
+            ) : (
+              <span style={{
+                display: 'inline-block', minWidth: '3.5em', borderBottom: '2px solid var(--rim)',
+                color: 'transparent', userSelect: 'none',
+              }}>
+                {' '.repeat(Math.max(6, item.cloze.term.length))}
+              </span>
+            )}
+            {item.cloze.suffix ? ' ' + item.cloze.suffix : ''}
+          </div>
+        ) : (
+          <div style={{ fontSize: '0.72rem', color: 'var(--ink-low)', marginTop: '0.2rem' }}>
+            learned {agoLabel(item.learnedMs)}
+            {item.reviews > 0 ? ` · reviewed ${item.reviews}×` : ''}
+          </div>
+        )}
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flexShrink: 0 }}>
-        <button
-          onClick={() => onOpen(item)}
-          style={{
-            background: 'var(--prime)', color: '#111',
-            border: 'none', borderRadius: '6px',
-            padding: '0.35rem 0.85rem', fontSize: '0.78rem', fontWeight: 700,
-            cursor: 'pointer', fontFamily: 'var(--font-sans)', whiteSpace: 'nowrap',
-          }}
-        >
-          Review →
-        </button>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flexShrink: 0, alignItems: 'stretch' }}>
+        {isCard ? (
+          <button
+            onClick={() => setRevealed(r => !r)}
+            style={{
+              background: 'var(--prime)', color: '#111',
+              border: 'none', borderRadius: '6px',
+              padding: '0.35rem 0.85rem', fontSize: '0.78rem', fontWeight: 700,
+              cursor: 'pointer', fontFamily: 'var(--font-sans)', whiteSpace: 'nowrap',
+            }}
+          >
+            {revealed ? 'Hide' : 'Show answer'}
+          </button>
+        ) : (
+          <button
+            onClick={() => onOpen(item)}
+            style={{
+              background: 'var(--prime)', color: '#111',
+              border: 'none', borderRadius: '6px',
+              padding: '0.35rem 0.85rem', fontSize: '0.78rem', fontWeight: 700,
+              cursor: 'pointer', fontFamily: 'var(--font-sans)', whiteSpace: 'nowrap',
+            }}
+          >
+            Review →
+          </button>
+        )}
         <button
           onClick={() => onMarkReviewed(item)}
           style={{
@@ -203,6 +271,18 @@ function ReviewRow({ item, onOpen, onMarkReviewed }) {
         >
           ✓ Mark reviewed
         </button>
+        {isCard && (
+          <button
+            onClick={() => onRemoveCard(item)}
+            style={{
+              background: 'none', color: 'var(--ink-low)',
+              border: 'none', padding: '0.1rem 0.3rem', fontSize: '0.68rem', fontWeight: 600,
+              cursor: 'pointer', fontFamily: 'var(--font-sans)', whiteSpace: 'nowrap', textAlign: 'center',
+            }}
+          >
+            ✕ remove card
+          </button>
+        )}
       </div>
     </div>
   )
@@ -262,6 +342,11 @@ export default function ReviewTab({ onNavigate }) {
   }
 
   function handleMarkReviewed(item) {
+    if (item.type === 'card') {
+      markCardReviewed(item.pageKey, item.cardId)
+      refresh()
+      return
+    }
     const state = readReviewState()
     const prev = state[item.key] || { reviews: 0, lastReviewed: null }
     state[item.key] = {
@@ -269,6 +354,11 @@ export default function ReviewTab({ onNavigate }) {
       lastReviewed: new Date().toISOString(),
     }
     writeReviewState(state)
+    refresh()
+  }
+
+  function handleRemoveCard(item) {
+    removeCard(item.pageKey, item.cardId)
     refresh()
   }
 
@@ -328,6 +418,7 @@ export default function ReviewTab({ onNavigate }) {
               item={item}
               onOpen={handleOpen}
               onMarkReviewed={handleMarkReviewed}
+              onRemoveCard={handleRemoveCard}
             />
           ))}
         </div>
