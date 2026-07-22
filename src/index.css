@@ -121,7 +121,11 @@
   *, *::before, *::after { box-sizing: border-box; }
 
   html, body {
-    overflow-x: hidden;   /* prevent horizontal scroll from any overflowing child */
+    /* v-fix 2026-07-22: was overflow-x: hidden, which makes body a scroll
+       container and silently KILLS every position:sticky descendant (the
+       topbar). clip prevents horizontal scroll without creating a scroll
+       container -- sticky works again. */
+    overflow-x: clip;
     max-width: 100vw;
   }
 

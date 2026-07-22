@@ -45,6 +45,10 @@ export function HighlightPopover({ containerRef, sourceTabId, sourceModuleId, so
   const [pending, setPending] = useState(null) // { id, label, meta, pos } — picker mode
   const [flash, setFlash] = useState(null) // { name, top, left }
   const [removePop, setRemovePop] = useState(null) // { id, top, left } — click a painted mark
+  // Marker mode (2026-07-22): pick a color once, every subsequent selection
+  // paints instantly. Persisted across modules/tabs; exit via chip or Esc.
+  const [marker, setMarker] = useState(() => { try { return localStorage.getItem('msl-marker-mode-v1') || '' } catch { return '' } })
+  const setMarkerMode = (cid) => { setMarker(cid); try { cid ? localStorage.setItem('msl-marker-mode-v1', cid) : localStorage.removeItem('msl-marker-mode-v1') } catch {} }
   const pageKey = `${sourceTabId}::${sourceModuleId || ''}`
   const flashTimer = useRef(null)
 
@@ -87,9 +91,20 @@ export function HighlightPopover({ containerRef, sourceTabId, sourceModuleId, so
     if (!containerRef?.current || !node || !containerRef.current.contains(node)) { setToolbar(null); return }
     const rect = sel.getRangeAt(0).getBoundingClientRect()
     if (!rect || (rect.width === 0 && rect.height === 0)) { setToolbar(null); return }
+    if (marker) {
+      const el = containerRef.current
+      if (el && (el.textContent || '').includes(text)) {
+        const n = occurrenceOfSelection(el, text)
+        addHighlight(pageKey, { id: genId(), text, n, color: marker })
+        applyAll(el, pageKey)
+      }
+      try { sel.removeAllRanges() } catch { /* ignore */ }
+      setToolbar(null)
+      return
+    }
     setColor(null)
     setToolbar({ top: rect.top, left: rect.left + rect.width / 2, right: window.innerWidth - rect.right, text })
-  }, [containerRef])
+  }, [containerRef, marker, pageKey])
 
   useEffect(() => {
     function onMouseUp() { setTimeout(updateFromSelection, 0) }
@@ -111,6 +126,13 @@ export function HighlightPopover({ containerRef, sourceTabId, sourceModuleId, so
       document.removeEventListener('selectionchange', onSelectionChange)
     }
   }, [updateFromSelection])
+
+  useEffect(() => {
+    if (!marker) return
+    const onKey = (e) => { if (e.key === 'Escape') setMarkerMode('') }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [marker])
 
   function showFlash(name, pos) {
     setFlash({ name, ...pos })
@@ -197,6 +219,23 @@ export function HighlightPopover({ containerRef, sourceTabId, sourceModuleId, so
             </button>
           ))}
           <button
+            onClick={() => { setMarkerMode(color || 'gold'); reset() }}
+            title="Marker mode: keep highlighting with this color on every selection (Esc to exit)"
+            style={{ fontSize: '0.68rem', fontWeight: 700, fontFamily: 'var(--font-sans)', padding: '0.45rem 0.5rem', minHeight: 36,
+              borderRadius: '7px', border: '1px solid var(--rim)', cursor: 'pointer', background: 'transparent', color: 'var(--ink-mid)', flexShrink: 0 }}
+          >Marker</button>
+          <button
+            onClick={() => {
+              if (!toolbar) return
+              const q = toolbar.text.length > 140 ? toolbar.text.slice(0, 140).trim() + '…' : toolbar.text.trim()
+              window.dispatchEvent(new CustomEvent('sticky-create-at', { detail: { x: toolbar.left, y: toolbar.top + 12, text: '"' + q + '"\n' } }))
+              reset()
+            }}
+            title="Drop a sticky note anchored to this text"
+            style={{ fontSize: '0.68rem', fontWeight: 700, fontFamily: 'var(--font-sans)', padding: '0.45rem 0.5rem', minHeight: 36,
+              borderRadius: '7px', border: '1px solid var(--rim)', cursor: 'pointer', background: 'transparent', color: 'var(--ink-mid)', flexShrink: 0 }}
+          >Note</button>
+          <button
             onClick={handleSave}
             title={getQuickAdd() ? 'Save to track · Alt/Cmd-click to choose a track' : 'Save to track'}
             style={{
@@ -208,6 +247,19 @@ export function HighlightPopover({ containerRef, sourceTabId, sourceModuleId, so
         </div>,
         document.body
       )}
+
+      {marker && createPortal(
+        <button
+          onClick={() => setMarkerMode('')}
+          title="Marker mode is on: every selection highlights instantly. Click (or press Esc) to exit."
+          style={{ position: 'fixed', bottom: 18, left: '50%', transform: 'translateX(-50%)', zIndex: 250,
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            background: 'var(--surface)', color: 'var(--ink-hi)', border: '1px solid var(--rim)',
+            borderRadius: 20, padding: '6px 14px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer',
+            boxShadow: '0 6px 18px rgba(0,0,0,0.45)' }}>
+          <span style={{ width: 10, height: 10, borderRadius: '50%', background: (COLORS.find(c => c.id === marker) || COLORS[0]).value, flexShrink: 0 }} />
+          Marker on — click to exit
+        </button>, document.body)}
 
       {flash && createPortal(
         <div style={{

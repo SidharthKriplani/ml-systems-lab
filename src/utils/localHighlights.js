@@ -13,10 +13,10 @@
 const KEY = 'msl_page_highlights_v1'
 
 const FAINT = {
-  gold:  'rgba(232,160,48,0.28)',
-  teal:  'rgba(64,190,190,0.26)',
-  green: 'rgba(52,211,153,0.24)',
-  red:   'rgba(224,80,80,0.26)',
+  gold:  'rgba(232,160,48,0.44)',
+  teal:  'rgba(64,190,190,0.42)',
+  green: 'rgba(52,211,153,0.40)',
+  red:   'rgba(224,80,80,0.42)',
 }
 
 function readAll() {
@@ -36,7 +36,13 @@ export function addHighlight(pageKey, hl) {
 }
 export function removeHighlight(pageKey, id) {
   const all = readAll()
-  all[pageKey] = (all[pageKey] || []).filter(h => h.id !== id)
+  const arr = all[pageKey] || []
+  // 2026-07-22 fix: repeated swatch clicks used to accrete DUPLICATE entries
+  // for the same (text, n) -- only one ever painted, so "Remove" killed the
+  // painted one and a hidden twin resurrected it on the next repaint. Removing
+  // by id now also removes every entry anchored to the same (text, n).
+  const target = arr.find(h => h.id === id)
+  all[pageKey] = arr.filter(h => h.id !== id && !(target && h.text === target.text && h.n === target.n))
   if (!all[pageKey].length) delete all[pageKey]
   writeAll(all)
 }
@@ -115,6 +121,18 @@ function paintOne(container, hl) {
 // Idempotent full repaint for a page's container.
 export function applyAll(container, pageKey) {
   if (!container) return
+  // 2026-07-22 dedupe migration: collapse (text, n) duplicates accreted by the
+  // old add-per-swatch-click behavior -- LAST one wins (newest color pick),
+  // and the cleanup is persisted so old debris can never resurrect a deleted
+  // highlight again. Idempotent.
+  const arr = listHighlights(pageKey)
+  const seen = new Map()
+  for (const h of arr) seen.set(h.text + '\u0000' + h.n, h)
+  if (seen.size !== arr.length) {
+    const all = readAll()
+    all[pageKey] = [...seen.values()]
+    writeAll(all)
+  }
   clearPainted(container)
   for (const hl of listHighlights(pageKey)) paintOne(container, hl)
 }
