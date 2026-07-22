@@ -1,3 +1,4 @@
+import { applyAnnotationMerge } from './annotationsSync.js'
 // ── Progress sync — push/pull all msl_* keys to Supabase ─────────────────────
 //
 // Table: user_progress (user_id, key, value, updated_at)
@@ -33,6 +34,13 @@ const STATIC_PROGRESS_KEYS = [
   'msl-last-touched-v1',      // Continue-strip: last foundations module opened
   'msl_landscape_region',
   'msl_difficulty_filter',
+  // Annotations (2026-07-22): stickies + highlights + delete-tombstones.
+  // Pull side merges these per-item (see annotationsSync.js) instead of the
+  // remote-overwrite rule used for plain progress keys.
+  'lab-stickies-v1',
+  'lab-stickies-tomb-v1',
+  'msl_page_highlights_v1',
+  'msl_page_highlights_v1-tomb-v1',
 ]
 
 function collectAllKeys() {
@@ -101,8 +109,15 @@ export async function pullProgressFromSupabase(user) {
     .eq('user_id', user.id)
   if (error || !data) return { error }
   try {
+    const ANNOT_PAIRS = {
+      'lab-stickies-v1': 'lab-stickies-tomb-v1',
+      'msl_page_highlights_v1': 'msl_page_highlights_v1-tomb-v1',
+    }
+    const TOMB_TO_STORE = Object.fromEntries(Object.entries(ANNOT_PAIRS).map(([st, t]) => [t, st]))
     for (const { key, value } of data) {
       if (!keyIsOwned(key)) continue
+      if (ANNOT_PAIRS[key]) { applyAnnotationMerge(key, ANNOT_PAIRS[key], value, null); continue }
+      if (TOMB_TO_STORE[key]) { applyAnnotationMerge(TOMB_TO_STORE[key], key, null, value); continue }
       if (typeof value !== 'string') continue
       localStorage.setItem(key, value)
     }
