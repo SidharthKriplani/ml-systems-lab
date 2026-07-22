@@ -15096,79 +15096,278 @@ export const QNA_BANK = {
     ],
   },
   "hierarchical": {
-    status: "parked", // draft | parked | answered, // draft | parked | answered
+    status: "answered", // draft | parked | answered, // draft | parked | answered
     auditDate: "2026-07-15",
     beats: [
       {
         name: "Why hierarchy over flat clustering",
         questions: [
-          { id: "qna-hier-motivation-01", level: 0, q: "What problem does hierarchical clustering solve that a flat method like k-means doesn't?", difficulty: "easy" },
-          { id: "qna-k-commitment-01", level: 1, q: "Why does k-means force you to commit to a number of clusters before you've seen any results, and how does hierarchical clustering sidestep that?", difficulty: "medium" },
-          { id: "qna-dendrogram-def-01", level: 0, q: "In plain terms, what is a dendrogram and what does it represent?", difficulty: "easy" },
-          { id: "qna-hier-vs-flat-tradeoff-01", level: 2, q: "When would choosing hierarchical clustering over k-means actually be the wrong call?", difficulty: "medium" }
+          { id: "qna-hier-motivation-01", level: 0, q: "What problem does hierarchical clustering solve that a flat method like k-means doesn't?", difficulty: "easy", answer: [
+            "**Answer.** Hierarchical clustering gives every possible number of clusters from one run, instead of forcing a commitment to K before any results exist.",
+            "**Mechanism.** It builds a full merge tree, the dendrogram, so you cut it at any height afterward to get coarser or finer groupings on demand.",
+            "**Grounding.** The module's 500-ticket example reads off broad themes like Product Bug and Billing, then finer sub-themes like Product Bug: Login, from one dendrogram."
+          ] },
+          { id: "qna-k-commitment-01", level: 1, q: "Why does k-means force you to commit to a number of clusters before you've seen any results, and how does hierarchical clustering sidestep that?", difficulty: "medium", answer: [
+            "**Answer.** K-means needs K as an input to its centroid update, so you must guess cluster count before the data has been clustered at all.",
+            "**Mechanism.** K-means partitions points into exactly K centroids from its first iteration, leaving the algorithm undefined without that count fixed upfront.",
+            "**Mechanism.** Hierarchical clustering instead merges points bottom-up into one tree, deferring the how-many-clusters decision until after the full structure is already built.",
+            "**Grounding.** The module states you can read off 3 clusters, 7 clusters, or 20 clusters from the same dendrogram without refitting anything.",
+            "**Boundary.** This defers the choice rather than removing it \u2014 you still decide where to cut the tree once it exists."
+          ] },
+          { id: "qna-dendrogram-def-01", level: 0, q: "In plain terms, what is a dendrogram and what does it represent?", difficulty: "easy", answer: [
+            "**Answer.** A dendrogram is the merge tree hierarchical clustering produces, recording which clusters combined and how far apart they were at each step.",
+            "**Mechanism.** Each merge becomes a branch point, and the y-axis height at that branch records the distance between the two clusters when they joined.",
+            "**Grounding.** In the module's ticket example, cutting the dendrogram high yields broad themes like Billing, cutting lower yields sub-themes like Checkout."
+          ] },
+          { id: "qna-hier-vs-flat-tradeoff-01", level: 2, q: "When would choosing hierarchical clustering over k-means actually be the wrong call?", difficulty: "medium", answer: [
+            "**Answer.** Hierarchical clustering is the wrong call once the dataset is too large for it to run at all, or when only one flat partition is needed.",
+            "**Mechanism.** Naive hierarchical clustering costs O(n\u00b2) space for the distance matrix and O(n\u00b3) time for the merge sequence.",
+            "**Mechanism.** The module marks that cost infeasible past roughly n > 10,000 points, well below common production dataset sizes.",
+            "**Mechanism.** If K is already known and no other granularity is needed, building a full tree buys nothing k-means doesn't already give faster.",
+            "**Mechanism.** Ward linkage, the module's recommended default, still assumes compact, roughly equal-variance clusters \u2014 the same shape assumption k-means makes.",
+            "**Grounding.** For large datasets the module directs you to HDBSCAN or approximate methods rather than naive hierarchical clustering.",
+            "**Grounding.** The 100,000-point scenario in the module's check questions needs roughly 40GB and months of O(n\u00b3) compute if run naively.",
+            "**Boundary.** This is a practicality-at-scale argument, not a correctness one \u2014 hierarchical clustering isn't structurally wrong for large data, just too costly to run naively."
+          ] }
         ],
       },
       {
         name: "Agglomerative merge mechanics",
         questions: [
-          { id: "qna-agglomerative-algo-01", level: 0, q: "Walk me through the agglomerative clustering algorithm from start to finish.", difficulty: "easy" },
-          { id: "qna-dendrogram-yaxis-01", level: 1, q: "What does the y-axis of a dendrogram actually measure, and why does that matter when you're comparing two different merges?", difficulty: "medium" },
-          { id: "qna-cluster-distance-def-01", level: 1, q: "Why does agglomerative clustering need an explicit definition of 'distance between clusters,' rather than just relying on distance between individual points?", difficulty: "medium" },
-          { id: "qna-agglomerative-vs-kmeans-01", level: 2, q: "How does what agglomerative clustering commits to at each step differ fundamentally from what k-means commits to on each iteration?", difficulty: "hard" }
+          { id: "qna-agglomerative-algo-01", level: 0, q: "Walk me through the agglomerative clustering algorithm from start to finish.", difficulty: "easy", answer: [
+            "**Answer.** Agglomerative clustering starts each point as its own cluster, repeatedly merges the two closest clusters, and stops when everything is in one cluster.",
+            "**Mechanism.** Every merge step records the distance at which the two clusters joined, and that merge history is exactly what forms the dendrogram.",
+            "**Grounding.** The module frames this as bottom-up: each point its own cluster, merge closest, repeat, per its own recap summary."
+          ] },
+          { id: "qna-dendrogram-yaxis-01", level: 1, q: "What does the y-axis of a dendrogram actually measure, and why does that matter when you're comparing two different merges?", difficulty: "medium", answer: [
+            "**Answer.** The dendrogram's y-axis measures merge distance \u2014 how far apart two clusters were according to the chosen linkage when they were joined.",
+            "**Mechanism.** A merge at a low y-value joined clusters that were already close together, while a merge at a high y-value joined clusters that were far apart.",
+            "**Mechanism.** Comparing two merges' y-values tells you which merge combined more genuinely dissimilar groups, since height is exactly that distance.",
+            "**Grounding.** The module's dendrogram figure marks its final, tallest merge as the 'long jump' where two genuinely far-apart groups are joined.",
+            "**Boundary.** The y-axis is only comparable within one linkage choice \u2014 a height under single linkage isn't directly comparable to one under Ward."
+          ] },
+          { id: "qna-cluster-distance-def-01", level: 1, q: "Why does agglomerative clustering need an explicit definition of 'distance between clusters,' rather than just relying on distance between individual points?", difficulty: "medium", answer: [
+            "**Answer.** Agglomerative clustering needs a cluster-to-cluster distance definition because, past the very first step, it is merging groups of points, not individual points.",
+            "**Mechanism.** Once two points merge into a cluster, 'distance to that cluster' is ambiguous unless a rule says whether to use the closest pair, farthest pair, or an average.",
+            "**Mechanism.** The linkage criterion is exactly that rule, and single, complete, average, and Ward linkage each answer the ambiguity differently.",
+            "**Grounding.** The module defines single linkage as closest-pair distance and complete linkage as farthest-pair distance between two clusters.",
+            "**Boundary.** Point-to-point distance is still the base measurement \u2014 linkage only decides how to aggregate it once clusters contain more than one point."
+          ] },
+          { id: "qna-agglomerative-vs-kmeans-01", level: 2, q: "How does what agglomerative clustering commits to at each step differ fundamentally from what k-means commits to on each iteration?", difficulty: "hard", answer: [
+            "**Answer.** Agglomerative clustering commits to one irreversible merge per step, while k-means recomputes all cluster assignments and centroids fresh on every iteration.",
+            "**Mechanism.** Each agglomerative merge is permanent \u2014 once two clusters combine, the algorithm never re-splits them or reconsiders that decision later in the run.",
+            "**Mechanism.** K-means instead reassigns every point to its nearest centroid each iteration, so an earlier bad assignment can still be corrected on a later pass.",
+            "**Mechanism.** This makes agglomerative clustering deterministic given a linkage and distance metric, while k-means depends on centroid initialization and can converge to different local optima.",
+            "**Grounding.** The module describes agglomerative clustering as 'start with each point as its own cluster, merge the two closest, repeat' with no reassignment step mentioned.",
+            "**Boundary.** Determinism here is about the merge sequence, not about which cut is 'correct' \u2014 that still depends on where you draw the line."
+          ] }
         ],
       },
       {
         name: "Linkage criteria",
         questions: [
-          { id: "qna-linkage-types-01", level: 0, q: "What is a linkage criterion, and what are the main types this approach offers?", difficulty: "easy" },
-          { id: "qna-single-linkage-chaining-01", level: 1, q: "Why does single linkage tend to produce those long, chained-out clusters?", difficulty: "medium" },
-          { id: "qna-ward-default-01", level: 1, q: "Why is Ward linkage typically recommended as the near-universal default?", difficulty: "medium" },
-          { id: "qna-linkage-tradeoff-01", level: 2, q: "If your data has distinct blobs connected only by thin bridges of points, how would single linkage and Ward linkage disagree on the result, and which one is actually right?", difficulty: "hard" }
+          { id: "qna-linkage-types-01", level: 0, q: "What is a linkage criterion, and what are the main types this approach offers?", difficulty: "easy", answer: [
+            "**Answer.** A linkage criterion defines what 'distance between clusters' means, and the module covers four types: single, complete, average, and Ward linkage.",
+            "**Mechanism.** Single linkage uses the closest pair of points across two clusters, complete linkage uses the farthest pair, average linkage averages all pairwise distances, and Ward minimizes resulting within-cluster variance.",
+            "**Grounding.** The module states Ward linkage is 'almost always the best default' among these four."
+          ] },
+          { id: "qna-single-linkage-chaining-01", level: 1, q: "Why does single linkage tend to produce those long, chained-out clusters?", difficulty: "medium", answer: [
+            "**Answer.** Single linkage chains because it only needs one close pair of points to justify a merge, so it can string together a long, thin sequence of clusters.",
+            "**Mechanism.** It measures cluster distance as the closest pair of points across the two clusters, ignoring how far apart the rest of the points are.",
+            "**Mechanism.** A single near point can bridge two otherwise distant groups, so the merge chains outward point by point instead of forming a compact blob.",
+            "**Grounding.** The module directly labels single linkage's output as 'elongated chaining clusters,' in contrast with complete linkage's compact clusters.",
+            "**Boundary.** Chaining is a defect in most business use cases, but the module also notes it can be structurally correct for genuinely filamentary data."
+          ] },
+          { id: "qna-ward-default-01", level: 1, q: "Why is Ward linkage typically recommended as the near-universal default?", difficulty: "medium", answer: [
+            "**Answer.** Ward linkage is the recommended default because it produces compact, roughly equal-variance clusters that match how most real cluster structure actually looks.",
+            "**Mechanism.** Ward merges whichever pair of clusters minimizes the total within-cluster variance after merging, rather than only looking at one closest or farthest pair.",
+            "**Mechanism.** By optimizing variance directly, Ward avoids single linkage's chaining and complete linkage's sensitivity to individual far-apart points.",
+            "**Grounding.** The module calls Ward linkage 'almost always the best default,' and its gene-expression example credits Ward with giving 'compact co-expression groups.'",
+            "**Boundary.** 'Near-universal default' is not universal \u2014 the module's own blobs-and-bridges example shows Ward is not the right choice for every data shape."
+          ] },
+          { id: "qna-linkage-tradeoff-01", level: 2, q: "If your data has distinct blobs connected only by thin bridges of points, how would single linkage and Ward linkage disagree on the result, and which one is actually right?", difficulty: "hard", answer: [
+            "**Answer.** For blobs connected by thin bridges, single linkage would chain them into one cluster while Ward linkage would split them into balanced blobs \u2014 and Ward is the structurally correct one here.",
+            "**Mechanism.** Single linkage only needs the thin bridge points to be close to each other, so it merges straight across the bridge into one elongated cluster.",
+            "**Mechanism.** Ward linkage instead minimizes within-cluster variance across the whole merge, so it favors keeping the two dense blobs separate rather than joining them over a sparse bridge.",
+            "**Grounding.** The module's own check question confirms this exact case: 'if the data is really five distinct blobs joined only by thin bridges, Ward linkage balanced clusters can be correct.'",
+            "**Grounding.** The same question also confirms the opposite case is real: filamentary, chain-shaped data can make single linkage's one-large-cluster result the structurally correct answer.",
+            "**Boundary.** Which linkage is 'right' depends entirely on whether the true data shape is filamentary or blob-like \u2014 neither linkage is universally correct."
+          ] }
         ],
       },
       {
         name: "Reading the dendrogram",
         questions: [
-          { id: "qna-dendrogram-cut-01", level: 0, q: "How do you actually read a number of clusters off of a dendrogram?", difficulty: "easy" },
-          { id: "qna-long-segment-meaning-01", level: 1, q: "What does a long vertical segment in a dendrogram tell you about the two groups being merged at that point?", difficulty: "medium" },
-          { id: "qna-no-segments-meaning-01", level: 1, q: "What does it mean if a dendrogram has no long vertical segments anywhere in it?", difficulty: "medium" },
-          { id: "qna-cut-height-choice-01", level: 2, q: "If there's no obvious gap to cut at, how would you decide where to make the cut?", difficulty: "hard" }
+          { id: "qna-dendrogram-cut-01", level: 0, q: "How do you actually read a number of clusters off of a dendrogram?", difficulty: "easy", answer: [
+            "**Answer.** You read cluster count off a dendrogram by drawing one horizontal cut line and counting how many branches it crosses.",
+            "**Mechanism.** Each branch the horizontal line crosses represents one cluster at that cut height, so moving the line up or down changes the count.",
+            "**Grounding.** The module's figure shows a cut line producing exactly 2 clusters at one chosen height, labeled 'cut \u2192 2.'"
+          ] },
+          { id: "qna-long-segment-meaning-01", level: 1, q: "What does a long vertical segment in a dendrogram tell you about the two groups being merged at that point?", difficulty: "medium", answer: [
+            "**Answer.** A long vertical segment marks a natural cluster boundary \u2014 the two groups merging at that point were genuinely far apart.",
+            "**Mechanism.** Segment length directly encodes merge distance, so a large jump in that distance means the merge combined two dissimilar groups rather than two nearly identical ones.",
+            "**Grounding.** The module's dendrogram figure labels its tallest segment 'long jump = groups far apart' at the final merge.",
+            "**Boundary.** Segment length is only meaningful relative to the other segments in the same dendrogram, not as an absolute distance value."
+          ] },
+          { id: "qna-no-segments-meaning-01", level: 1, q: "What does it mean if a dendrogram has no long vertical segments anywhere in it?", difficulty: "medium", answer: [
+            "**Answer.** No long vertical segments anywhere means the data probably does not have discrete cluster structure under this algorithm.",
+            "**Mechanism.** Without any merge distance standing out as unusually large, every merge looks about as costly as the last, so there is no natural place to cut.",
+            "**Grounding.** The module states this outright: 'if there are no long segments, the data probably does not have discrete structure.'",
+            "**Boundary.** This is a signal about this algorithm and this feature space, not proof the data has no structure at all \u2014 a different representation might reveal one."
+          ] },
+          { id: "qna-cut-height-choice-01", level: 2, q: "If there's no obvious gap to cut at, how would you decide where to make the cut?", difficulty: "hard", answer: [
+            "**Answer.** With no obvious gap, you fall back to a combination of tools: an acceleration plot, silhouette scores across candidate cuts, domain knowledge, or a GMM BIC curve.",
+            "**Mechanism.** Each of these gives an indirect signal about cluster quality at a given cut, since none can read the 'true' cluster count directly off an ambiguous tree.",
+            "**Mechanism.** Domain knowledge matters here because a statistically ambiguous cut can still be the operationally right one if it matches how the business actually groups items.",
+            "**Grounding.** The module's own check question states directly that 'no method is authoritative here alone,' naming exactly these four approaches.",
+            "**Boundary.** The absence of a long gap does not itself prove the data lacks structure \u2014 it just means the cut choice needs outside evidence."
+          ] }
         ],
       },
       {
         name: "Complexity and scalability",
         questions: [
-          { id: "qna-hier-complexity-01", level: 0, q: "What's the time and space complexity of naive hierarchical clustering, and roughly where does that become impractical?", difficulty: "easy" },
-          { id: "qna-distance-matrix-space-01", level: 1, q: "Why does hierarchical clustering's space cost scale the way it does?", difficulty: "medium" },
-          { id: "qna-hier-cost-driver-01", level: 1, q: "Between building the distance matrix and running the merge sequence, which part actually drives the cubic time cost, and why?", difficulty: "medium" },
-          { id: "qna-hier-scale-alternative-01", level: 2, q: "What would you actually recommend to someone trying to get hierarchy-like structure out of a dataset with hundreds of thousands of points?", difficulty: "medium" }
+          { id: "qna-hier-complexity-01", level: 0, q: "What's the time and space complexity of naive hierarchical clustering, and roughly where does that become impractical?", difficulty: "easy", answer: [
+            "**Answer.** Naive hierarchical clustering costs O(n\u00b2) space for the distance matrix and O(n\u00b3) time for the merge sequence, becoming infeasible past roughly n > 10,000.",
+            "**Mechanism.** Both costs come from needing pairwise distances between all points, and repeatedly finding the closest pair across an ever-shrinking set of clusters.",
+            "**Grounding.** The module states this complexity directly and recommends HDBSCAN or approximate methods once a dataset exceeds that threshold."
+          ] },
+          { id: "qna-distance-matrix-space-01", level: 1, q: "Why does hierarchical clustering's space cost scale the way it does?", difficulty: "medium", answer: [
+            "**Answer.** Space cost scales as O(n\u00b2) because the algorithm stores a pairwise distance between every point and every other point at the start.",
+            "**Mechanism.** With n points there are on the order of n\u00b2 pairs, so the distance matrix itself grows quadratically even before any merging begins.",
+            "**Mechanism.** This matrix has to be kept in memory throughout the merge sequence to know which clusters are currently closest.",
+            "**Grounding.** The module states this cost as O(n\u00b2) space specifically 'for the distance matrix.'",
+            "**Boundary.** This is the naive full-matrix approach \u2014 approximate or subsampled methods avoid materializing the whole matrix, at the cost of exactness."
+          ] },
+          { id: "qna-hier-cost-driver-01", level: 1, q: "Between building the distance matrix and running the merge sequence, which part actually drives the cubic time cost, and why?", difficulty: "medium", answer: [
+            "**Answer.** The merge sequence drives the cubic O(n\u00b3) time cost, not the distance matrix construction, which is only O(n\u00b2).",
+            "**Mechanism.** Building the initial distance matrix is a one-time O(n\u00b2) pass, while the merge sequence repeats a closest-pair search across roughly n merge steps.",
+            "**Mechanism.** Each of those n merge steps can cost up to O(n) to find and update the closest remaining pair, multiplying out to O(n\u00b3) overall.",
+            "**Grounding.** The module lists these as two separate costs: O(n\u00b2) space for the distance matrix, O(n\u00b3) time for the naive merge sequence.",
+            "**Boundary.** Smarter implementations reduce this \u2014 the check questions mention SLINK-style single-linkage algorithms running faster, though the module doesn't detail their mechanics."
+          ] },
+          { id: "qna-hier-scale-alternative-01", level: 2, q: "What would you actually recommend to someone trying to get hierarchy-like structure out of a dataset with hundreds of thousands of points?", difficulty: "medium", answer: [
+            "**Answer.** For hundreds of thousands of points, don't run naive hierarchical clustering at all \u2014 use HDBSCAN, a BIRCH-plus-agglomerative pipeline, or subsample first.",
+            "**Mechanism.** Naive hierarchical clustering's O(n\u00b3) time cost makes hundreds of thousands of points require roughly 40GB of memory and months of compute, per the module's own scale example.",
+            "**Mechanism.** HDBSCAN and BIRCH avoid building or repeatedly scanning a full O(n\u00b2) distance matrix, which is what makes naive hierarchical clustering intractable at this scale.",
+            "**Grounding.** The module's check question confirms this exact recommendation for 100,000 points: 'use HDBSCAN, BIRCH+agglomerative, or subsample.'",
+            "**Boundary.** Subsampling trades completeness for feasibility \u2014 points outside the subsample only get assigned after the fact, by nearest centroid or similar, not clustered directly."
+          ] }
         ],
       },
       {
         name: "High-dimensional preprocessing pitfall",
         questions: [
-          { id: "qna-highdim-preprocessing-01", level: 0, q: "What preprocessing step does this approach recommend before clustering high-dimensional data, and why?", difficulty: "easy" },
-          { id: "qna-highdim-distance-collapse-01", level: 1, q: "Mechanistically, why do pairwise distances stop being informative in a very high-dimensional raw feature space?", difficulty: "hard" },
-          { id: "qna-skipped-preprocessing-symptom-01", level: 1, q: "What would you look for in the resulting dendrogram to suspect that this preprocessing step got skipped?", difficulty: "medium" },
-          { id: "qna-pca-dims-choice-01", level: 2, q: "How would you decide how aggressively to reduce dimensionality before clustering, versus just clustering on the raw features?", difficulty: "medium" }
+          { id: "qna-highdim-preprocessing-01", level: 0, q: "What preprocessing step does this approach recommend before clustering high-dimensional data, and why?", difficulty: "easy", answer: [
+            "**Answer.** The module recommends reducing to 20\u201350 PCA components before clustering high-dimensional data, because raw high-dimensional distances measure noise rather than structure.",
+            "**Mechanism.** Pairwise distance computation in something like 1000 raw dimensions is dominated by noise, so every pair of points ends up looking roughly equidistant.",
+            "**Grounding.** The module states this trap and fix directly: 'reduce to 20\u201350 PCA components first,' without which 'distances driving the dendrogram are measuring noise, not structure.'"
+          ] },
+          { id: "qna-highdim-distance-collapse-01", level: 1, q: "Mechanistically, why do pairwise distances stop being informative in a very high-dimensional raw feature space?", difficulty: "hard", answer: [
+            "**Answer.** In very high raw-dimensional space, pairwise distances collapse toward similar values because each added dimension contributes its own independent noise to the total distance.",
+            "**Mechanism.** As dimensions accumulate, the sum of many small, largely uncorrelated noise contributions grows to dominate whatever true signal separates genuinely different points.",
+            "**Mechanism.** Once noise dominates, the variance between the closest and farthest pairwise distances shrinks relative to their average, so ranking points by distance stops being meaningful.",
+            "**Grounding.** The module states this outcome directly: in high dimensions 'every pair looks roughly equidistant,' which is why it recommends dimensionality reduction first.",
+            "**Boundary.** [verify: the module does not spell out the per-dimension noise-accumulation mechanics in detail] \u2014 the summary above follows from its stated 1000-dimension example but the underlying math isn't walked through in the source text."
+          ] },
+          { id: "qna-skipped-preprocessing-symptom-01", level: 1, q: "What would you look for in the resulting dendrogram to suspect that this preprocessing step got skipped?", difficulty: "medium", answer: [
+            "**Answer.** A dendrogram with no long vertical segments, or a smooth staircase of similarly-sized merges, is what to look for as a sign this preprocessing step got skipped.",
+            "**Mechanism.** If distances are dominated by noise, no merge distance stands out as unusually large, so the tree lacks the natural boundaries that real structure would produce.",
+            "**Grounding.** The module ties this same visual signal \u2014 'no long segments' \u2014 to an absence of discrete structure generally, which is exactly what noise-dominated distances would produce.",
+            "**Boundary.** A flat-looking dendrogram isn't proof the preprocessing step was skipped specifically \u2014 it only means the current distances aren't revealing structure, for whatever reason."
+          ] },
+          { id: "qna-pca-dims-choice-01", level: 2, q: "How would you decide how aggressively to reduce dimensionality before clustering, versus just clustering on the raw features?", difficulty: "medium", answer: [
+            "**Answer.** Decide dimensionality reduction aggressiveness by staying within the module's 20\u201350 PCA component range rather than clustering on raw high-dimensional features.",
+            "**Mechanism.** Too few components risks discarding real structure along with the noise, while too many keeps enough dimensions that pairwise distances start collapsing toward noise again.",
+            "**Mechanism.** The 20\u201350 range is presented as a practical band that retains enough signal to separate genuine clusters without reintroducing the high-dimensional noise problem.",
+            "**Grounding.** The module states this range directly as its fix for the raw-high-dimensional-features trap.",
+            "**Boundary.** [verify: the module gives 20\u201350 as its stated range but does not describe a method for tuning within that range, such as an explained-variance cutoff]."
+          ] }
         ],
       },
       {
         name: "Diagnosing a dominant cluster and outliers",
         questions: [
-          { id: "qna-dominant-cluster-signal-01", level: 0, q: "What does it mean if a dendrogram shows one large cluster absorbing everything else right at the very last merge step?", difficulty: "easy" },
-          { id: "qna-outlier-warning-01", level: 1, q: "Why is that 'one giant cluster forms at the very end' pattern treated as a warning sign about outliers rather than as genuine structure?", difficulty: "medium" },
-          { id: "qna-alternative-for-outliers-01", level: 1, q: "What does this approach suggest doing instead when your data looks like one dominant cluster plus outliers, and why not just force hierarchical clustering to work anyway?", difficulty: "medium" },
-          { id: "qna-genuine-vs-outlier-cluster-01", level: 2, q: "Just from the shape of a dendrogram, how would you tell the difference between 'this data genuinely has one cluster' and 'there are outliers getting merged in late'?", difficulty: "hard" }
+          { id: "qna-dominant-cluster-signal-01", level: 0, q: "What does it mean if a dendrogram shows one large cluster absorbing everything else right at the very last merge step?", difficulty: "easy", answer: [
+            "**Answer.** One large cluster absorbing everything else at the very last merge step signals that the data has one dominant cluster with outliers, not genuine multi-cluster structure.",
+            "**Mechanism.** Everything merging together right before the final step means most points were already close, and only a few outlying points held out until the last, high-distance merge.",
+            "**Grounding.** The module states this diagnostic directly: this pattern means 'your data has one dominant cluster with outliers.'"
+          ] },
+          { id: "qna-outlier-warning-01", level: 1, q: "Why is that 'one giant cluster forms at the very end' pattern treated as a warning sign about outliers rather than as genuine structure?", difficulty: "medium", answer: [
+            "**Answer.** This pattern reads as an outlier warning, not genuine structure, because the merges happen at very different scales rather than at a consistent, meaningful distance.",
+            "**Mechanism.** If the data genuinely had several real clusters, you'd expect a few large merge distances marking real boundaries between them, not one dominant blob plus scattered small mergers.",
+            "**Mechanism.** A few points merging in only at the very end, at unusually large distances, look like they don't belong to the main body rather than forming their own real cluster.",
+            "**Grounding.** The module pairs this diagnostic directly with a remedy \u2014 using DBSCAN to explicitly model noise points rather than forcing them into clusters.",
+            "**Boundary.** The module doesn't claim this pattern always means outliers \u2014 it's a diagnostic to check, not a guaranteed conclusion, and domain context still matters."
+          ] },
+          { id: "qna-alternative-for-outliers-01", level: 1, q: "What does this approach suggest doing instead when your data looks like one dominant cluster plus outliers, and why not just force hierarchical clustering to work anyway?", difficulty: "medium", answer: [
+            "**Answer.** The module suggests switching to DBSCAN to explicitly model noise points, rather than forcing hierarchical clustering to assign every point to some cluster.",
+            "**Mechanism.** Hierarchical clustering has no concept of 'noise' \u2014 every point ends up merged into the tree eventually, so outliers get folded into a cluster whether they belong or not.",
+            "**Mechanism.** DBSCAN instead can label sparse, isolated points as noise directly, rather than forcing them into whichever cluster their eventual merge happens to land in.",
+            "**Grounding.** The module states this recommendation directly: 'use DBSCAN to explicitly model noise points rather than forcing them into clusters.'",
+            "**Boundary.** [verify: the module does not detail DBSCAN's own hyperparameter tradeoffs here] \u2014 that mechanism is covered in DBSCAN's own module, not this one."
+          ] },
+          { id: "qna-genuine-vs-outlier-cluster-01", level: 2, q: "Just from the shape of a dendrogram, how would you tell the difference between 'this data genuinely has one cluster' and 'there are outliers getting merged in late'?", difficulty: "hard", answer: [
+            "**Answer.** Look at where the long segments sit in the tree: a genuine single cluster shows no long segments anywhere, while outliers show one long segment right at the very end.",
+            "**Mechanism.** True single-cluster data merges at roughly consistent, small distances throughout, since no subgroup boundary exists to produce a large jump anywhere in the tree.",
+            "**Mechanism.** Late-merging outliers instead show most of the tree merging at small, consistent distances, then one or a few high-distance merges right at the top joining the outliers in.",
+            "**Grounding.** The module ties 'no long segments anywhere' to an absence of discrete structure, and separately ties 'one large cluster absorbing all others at the last step' to outliers.",
+            "**Grounding.** These are two distinct dendrogram shapes in the module's own diagnostics \u2014 a flat, gap-free tree versus a tree with one dominant terminal merge.",
+            "**Boundary.** Both diagnostics are read from shape alone, so genuinely ambiguous cases still benefit from checking the actual points involved in that final merge."
+          ] }
         ],
       }
     ],
     cases: [
-      { id: "qna-case-multi-granularity-01", level: 3, q: "Product wants a single clustering run that can produce both broad categories and fine sub-categories without rerunning anything. Walk through how you'd set this up with hierarchical clustering, and what starts to break as the dataset grows large.", difficulty: "medium" },
-      { id: "qna-case-flat-dendrogram-01", level: 3, q: "You run Ward-linkage agglomerative clustering on raw high-dimensional embeddings and the resulting dendrogram looks like a smooth staircase with no clear long jumps anywhere. Walk through how you'd diagnose what's going on and what you'd change.", difficulty: "hard" },
-      { id: "qna-case-dominant-outliers-01", level: 3, q: "A teammate's dendrogram shows almost all the data merging into one cluster at the very last step, with just a few tiny clusters splitting off separately. Walk through what you'd tell them this means and what you'd do next.", difficulty: "medium" },
-      { id: "qna-case-multi-team-taxonomy-01", level: 3, q: "Three different teams want three different levels of granularity out of the same customer segmentation — a handful of top-level segments, a mid-size set, and a fine-grained set. Walk through why hierarchical clustering lets you serve all three from a single run, and where that approach starts to strain as the customer base scales up.", difficulty: "medium" },
-      { id: "qna-case-inherited-pipeline-01-v2", level: 3, q: "You inherit a clustering pipeline that runs hierarchical clustering directly on hundreds of raw features with no dimensionality reduction step, and the resulting cluster cuts don't match anyone's business intuition. Walk through how you'd figure out whether this is a linkage-choice problem or a preprocessing problem.", difficulty: "hard" }
+      { id: "qna-case-multi-granularity-01", level: 3, q: "Product wants a single clustering run that can produce both broad categories and fine sub-categories without rerunning anything. Walk through how you'd set this up with hierarchical clustering, and what starts to break as the dataset grows large.", difficulty: "medium", answer: [
+            "**Answer.** Run agglomerative clustering with Ward linkage once, keep the full dendrogram, then cut it at different heights to serve broad categories and fine sub-categories from the same tree.",
+            "**Mechanism.** Because the dendrogram encodes every possible cluster count in one structure, a high cut gives broad categories and a lower cut gives finer sub-categories without rerunning anything.",
+            "**Mechanism.** Ward linkage is the right default here since it produces compact, equal-variance clusters, matching what a category taxonomy usually looks like.",
+            "**Mechanism.** As the dataset grows, the O(n\u00b2) distance matrix and O(n\u00b3) merge sequence both become the bottleneck, well before category quality does.",
+            "**Grounding.** The module marks this exact use case \u2014 'you can read off 3 clusters, 7 clusters, or 20 clusters without refitting' \u2014 as the main advantage over K-means.",
+            "**Grounding.** The module's own scale limit puts this infeasible past roughly n > 10,000 points, at which point HDBSCAN or approximate methods are recommended instead.",
+            "**Boundary.** This setup breaks down on cost, not on correctness \u2014 the multi-granularity idea itself doesn't stop working, the naive algorithm just stops being runnable.",
+            "**Boundary.** If the category set needs to keep growing past that scale, a rerun-per-granularity or approximate approach would need to replace the single-tree setup."
+          ] },
+      { id: "qna-case-flat-dendrogram-01", level: 3, q: "You run Ward-linkage agglomerative clustering on raw high-dimensional embeddings and the resulting dendrogram looks like a smooth staircase with no clear long jumps anywhere. Walk through how you'd diagnose what's going on and what you'd change.", difficulty: "hard", answer: [
+            "**Answer.** A smooth staircase with no long jumps on raw high-dimensional embeddings points to the raw-high-dimensional-features trap \u2014 distances there are measuring noise, not structure.",
+            "**Mechanism.** In high raw dimensions, pairwise distance is dominated by noise, so every pair looks roughly equidistant, and every merge in the tree costs about the same.",
+            "**Mechanism.** With no merge standing out as unusually costly, the dendrogram forms a smooth staircase instead of showing the long segments that mark genuine boundaries.",
+            "**Mechanism.** Ward linkage itself isn't the problem here \u2014 it's still minimizing variance correctly, it's just minimizing variance over a distance measure that's mostly noise.",
+            "**Grounding.** The module's fix for exactly this trap is to reduce to 20\u201350 PCA components before clustering, since the raw features were driving the dendrogram with noise.",
+            "**Grounding.** The module separately confirms 'no long segments' means the data probably does not have discrete structure under the current setup.",
+            "**Boundary.** Reducing dimensions first might reveal real structure that was masked, or it might confirm the data genuinely lacks discrete clusters \u2014 the staircase alone doesn't distinguish those.",
+            "**Boundary.** [verify: the module does not state how many PCA components to try first if the initial reduction still shows no long segments]."
+          ] },
+      { id: "qna-case-dominant-outliers-01", level: 3, q: "A teammate's dendrogram shows almost all the data merging into one cluster at the very last step, with just a few tiny clusters splitting off separately. Walk through what you'd tell them this means and what you'd do next.", difficulty: "medium", answer: [
+            "**Answer.** Tell the teammate this pattern means the data has one dominant cluster with outliers, not genuine multi-cluster structure \u2014 the small late splits are the outliers, not real groups.",
+            "**Mechanism.** Almost everything merging together well before the last step means those points were already close, while the last-step merges at large distance are points that didn't fit anywhere.",
+            "**Mechanism.** The module ties this exact shape \u2014 one cluster absorbing everything at the very last merge \u2014 directly to an outlier diagnosis rather than to true substructure.",
+            "**Grounding.** The module states this diagnostic and its fix together: this pattern means one dominant cluster with outliers, and the recommended next step is DBSCAN to model noise explicitly.",
+            "**Grounding.** DBSCAN can label those outlying points as noise directly, instead of hierarchical clustering forcing them into a cluster because every point must eventually merge into the tree.",
+            "**Boundary.** This diagnosis follows from shape, so it's worth confirming by looking at what points those tiny clusters actually contain before committing to switching algorithms.",
+            "**Boundary.** [verify: the module doesn't specify how many points count as 'tiny' versus a legitimate small cluster] \u2014 that threshold is a judgment call, not stated in the source."
+          ] },
+      { id: "qna-case-multi-team-taxonomy-01", level: 3, q: "Three different teams want three different levels of granularity out of the same customer segmentation — a handful of top-level segments, a mid-size set, and a fine-grained set. Walk through why hierarchical clustering lets you serve all three from a single run, and where that approach starts to strain as the customer base scales up.", difficulty: "medium", answer: [
+            "**Answer.** One hierarchical clustering run serves all three teams because the dendrogram encodes every granularity simultaneously, and each team just cuts it at a different height.",
+            "**Mechanism.** A high cut on the same tree yields the handful of top-level segments, a mid-height cut yields the mid-size set, and a low cut yields the fine-grained set.",
+            "**Mechanism.** No team's cut choice affects another's, since cutting a tree at one height doesn't alter the tree itself or any other height's grouping.",
+            "**Mechanism.** Ward linkage is again the right default here, since it produces the compact, roughly equal-sized clusters that a segment taxonomy usually needs.",
+            "**Grounding.** The module states this is the 'main advantage over K-means' \u2014 one run giving every granularity level, illustrated with 3, 7, or 20 clusters from the same dendrogram.",
+            "**Grounding.** The module's scale limit again applies here: naive hierarchical clustering becomes infeasible past roughly n > 10,000 customers.",
+            "**Boundary.** This approach strains as the customer base scales up, since the O(n\u00b2) space and O(n\u00b3) time costs make the single-tree approach impractical well before 100,000 customers.",
+            "**Boundary.** Past that scale the module points to HDBSCAN, BIRCH-plus-agglomerative, or subsampling instead \u2014 the multi-granularity idea would need to be rebuilt on top of one of those."
+          ] },
+      { id: "qna-case-inherited-pipeline-01-v2", level: 3, q: "You inherit a clustering pipeline that runs hierarchical clustering directly on hundreds of raw features with no dimensionality reduction step, and the resulting cluster cuts don't match anyone's business intuition. Walk through how you'd figure out whether this is a linkage-choice problem or a preprocessing problem.", difficulty: "hard", answer: [
+            "**Answer.** Diagnose this by checking whether the dendrogram itself shows long segments \u2014 if it's a smooth staircase, it's the missing preprocessing step, not the linkage choice.",
+            "**Mechanism.** Running hierarchical clustering directly on hundreds of raw features hits the module's raw-high-dimensional-features trap, where pairwise distances are dominated by noise rather than real structure.",
+            "**Mechanism.** If the distances feeding the dendrogram are mostly noise, no linkage criterion can recover meaningful cuts, since Ward, single, complete, and average linkage all operate on that same noisy distance.",
+            "**Mechanism.** A genuine linkage-choice problem instead would show real long segments in the tree, just at cut points that don't match business intuition \u2014 a different failure signature.",
+            "**Grounding.** The module's fix for the raw-feature trap is explicit: reduce to 20\u201350 PCA components first, since without that step 'the distances driving the dendrogram are measuring noise, not structure.'",
+            "**Grounding.** The module separately states 'no long segments' as the general signal that discrete structure is missing under the current setup, which is the exact symptom to check for first.",
+            "**Boundary.** If the dendrogram does show long segments but at the wrong places, that instead points to a linkage or granularity issue, not a preprocessing one \u2014 the two failures look different.",
+            "**Boundary.** [verify: the module doesn't give a worked example of a linkage-choice failure to contrast against, so this distinction is inferred from the trap description rather than stated as a side-by-side comparison]."
+          ] }
     ],
   },
   "dbscan": {
