@@ -105,6 +105,35 @@ function keyIsOwned(k) {
  * Remote values win over local on conflict (most recent device sync wins).
  * Only keys this module owns are applied — see keyIsOwned().
  */
+// Annotation stores + tombstones — module scope, shared by the full pull and
+// the annotations-only pull (single definition, no drift).
+const ANNOT_PAIRS = {
+  'lab-stickies-v1': 'lab-stickies-tomb-v1',
+  'msl_page_highlights_v1': 'msl_page_highlights_v1-tomb-v1',
+  'msl-review-cards-v1': 'msl-review-cards-v1-tomb-v1',
+}
+const TOMB_TO_STORE = Object.fromEntries(Object.entries(ANNOT_PAIRS).map(([st, t]) => [t, st]))
+
+// Annotations-only pull: per-item merge, idempotent, safe on every tab-visible
+// (unlike the full pull, whose remote-overwrite rule for progress keys makes
+// it sign-in-only by design).
+export async function pullAnnotationsOnly(user) {
+  if (!supabase || !user) return
+  try {
+    const keys = [...Object.keys(ANNOT_PAIRS), ...Object.keys(TOMB_TO_STORE)]
+    const { data, error } = await supabase
+      .from('user_progress')
+      .select('key, value')
+      .eq('user_id', user.id)
+      .in('key', keys)
+    if (error || !data) return
+    for (const { key, value } of data) {
+      if (ANNOT_PAIRS[key]) applyAnnotationMerge(key, ANNOT_PAIRS[key], value, null)
+      else if (TOMB_TO_STORE[key]) applyAnnotationMerge(TOMB_TO_STORE[key], key, null, value)
+    }
+  } catch { /* best effort */ }
+}
+
 export async function pullProgressFromSupabase(user) {
   if (!supabase || !user) return { error: null }
   const { data, error } = await supabase
@@ -113,12 +142,6 @@ export async function pullProgressFromSupabase(user) {
     .eq('user_id', user.id)
   if (error || !data) return { error }
   try {
-    const ANNOT_PAIRS = {
-      'lab-stickies-v1': 'lab-stickies-tomb-v1',
-      'msl_page_highlights_v1': 'msl_page_highlights_v1-tomb-v1',
-      'msl-review-cards-v1': 'msl-review-cards-v1-tomb-v1',
-    }
-    const TOMB_TO_STORE = Object.fromEntries(Object.entries(ANNOT_PAIRS).map(([st, t]) => [t, st]))
     for (const { key, value } of data) {
       if (!keyIsOwned(key)) continue
       if (ANNOT_PAIRS[key]) { applyAnnotationMerge(key, ANNOT_PAIRS[key], value, null); continue }

@@ -41,6 +41,7 @@ function writeAll(all) {
   // progress-affecting write (see writeReviewState in ReviewTab.jsx) — reuse
   // it rather than inventing a second event for the same purpose.
   try { window.dispatchEvent(new CustomEvent('msl_progress')) } catch { /* ignore */ }
+  try { window.dispatchEvent(new CustomEvent('annotations-changed')) } catch { /* SSR */ }
 }
 
 export function listCards(pageKey) {

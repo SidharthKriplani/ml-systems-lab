@@ -13,7 +13,7 @@ import { StickyNotes, StickyBarButton } from './components/StickyNotes.jsx'
 import AuthModal    from './components/auth/AuthModal.jsx'
 import { ACCESS_CODE, STORAGE_KEY, isUnlocked as checkUnlocked } from './utils/unlock.js'
 import { authEnabled, onAuthStateChange } from './utils/supabase.js'
-import { pullProgressFromSupabase } from './utils/syncProgress.js'
+import { pullProgressFromSupabase, pushProgressToSupabase, pullAnnotationsOnly } from './utils/syncProgress.js'
 import { pullAndMergeTracks, scheduleTracksPush } from './utils/tracksSync.js'
 import { upsertLeaderboardRow } from './utils/leaderboard.js'
 import StudyRoom from './study/StudyRoom.jsx'
@@ -1066,6 +1066,30 @@ export default function App() {
   })
   // ── Auth state ───────────────────────────────────────────────────────────────
   const [user,      setUser]      = useState(null)
+
+  // Annotations live-sync (2026-07-23): local sticky/highlight writes push to
+  // the cloud after a 4s debounce; returning to the tab (e.g. unlocking your
+  // phone) pulls the annotation keys and per-item-merges them — the fix for
+  // 'highlighted on my Mac, phone shows nothing' (pull used to run ONLY at
+  // sign-in, push only on nav changes).
+  useEffect(() => {
+    if (!user) return;
+    let t = null;
+    let lastPull = 0;
+    const onChanged = () => { clearTimeout(t); t = setTimeout(() => pushProgressToSupabase(user), 4000); };
+    const onVis = () => {
+      if (document.visibilityState !== 'visible') return;
+      const now = Date.now();
+      if (now - lastPull < 20000) return; // throttle
+      lastPull = now;
+      pullAnnotationsOnly(user);
+    };
+    onVis(); // also pull once on mount-with-user
+    window.addEventListener('annotations-changed', onChanged);
+    document.addEventListener('visibilitychange', onVis);
+    return () => { clearTimeout(t); window.removeEventListener('annotations-changed', onChanged); document.removeEventListener('visibilitychange', onVis); };
+  }, [user]);
+
   const [showAuth,  setShowAuth]  = useState(false)
   const [studyOpen, setStudyOpen] = useState(false)
 
