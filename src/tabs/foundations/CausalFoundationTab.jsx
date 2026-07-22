@@ -149,7 +149,7 @@ export function CausalFoundationTab({ onNavigate, openModuleId, navOrigin }) {
       {/* RIGHT: Module content */}
       {selected && (
         <div ref={contentRef} data-own-highlighter="1" style={{ flex: 1, overflowY: 'auto', padding: '1.75rem 2rem', background: 'var(--depth)', minWidth: 0 }}>
-          <StickyScope id={'m:' + selected.id} />
+          <StickyScope id={'m:' + selected.id + (qnaMode ? ':qna' : recapMode ? ':recap' : '')} />
           <HighlightPopover containerRef={contentRef} sourceTabId={TAB_ID} sourceModuleId={selected.id} sourceLabel={selected.title} />
           <button
             onClick={() => (navOrigin?.tab === 'my_tracks' && openModuleId && selectedId === openModuleId) ? onNavigate('my_tracks', navOrigin.trackId || null) : setSelectedId(null)}
