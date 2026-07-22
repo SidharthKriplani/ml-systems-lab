@@ -7,6 +7,7 @@ import { renderMd } from '../../utils/renderMd'
 import { CheckQuestion, CheckQuestionsBlock } from '../../components/foundations/CheckQuestion'
 import { HighlightPopover } from '../../components/foundations/HighlightPopover.jsx'
 import { StickyScope } from '../../components/StickyNotes.jsx'
+import { TakeawayBox } from '../../components/foundations/TakeawayBox.jsx'
 import { QnAPanel } from '../../components/foundations/QnAPanel.jsx'
 import { FoundationViewTabs } from '../../components/foundations/FoundationViewTabs.jsx'
 import { GoDeeperPanel } from '../../components/foundations/GoDeeperPanel.jsx'
@@ -208,6 +209,7 @@ export function EvalFoundationTab({ onNavigate, openModuleId, navOrigin }) {
           {!qnaMode && recapMode && selected.recap && (
             <div style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '10px',
               padding: '1.25rem 1.4rem', marginBottom: '1.5rem' }}>
+              <TakeawayBox key={selected.id} pageKey={`${TAB_ID}::${selected.id}`} />
               <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--prime)', textTransform: 'uppercase',
                 letterSpacing: '0.08em', marginBottom: '0.9rem' }}>Quick Recap · {selected.title}</div>
               {selected.recap.map((pt, i) => (
