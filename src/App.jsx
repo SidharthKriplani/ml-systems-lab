@@ -8,6 +8,7 @@ import { BrandMark } from './components/BrandMark.jsx'
 import FeedbackChip from './components/FeedbackChip.jsx'
 import LoadingSpinner from './components/LoadingSpinner.jsx'
 import { ErrorBoundary } from './components/ErrorBoundary.jsx'
+import { PageHighlighter } from './components/PageHighlighter.jsx'
 import AuthModal    from './components/auth/AuthModal.jsx'
 import { ACCESS_CODE, STORAGE_KEY, isUnlocked as checkUnlocked } from './utils/unlock.js'
 import { authEnabled, onAuthStateChange } from './utils/supabase.js'
@@ -1477,7 +1478,10 @@ export default function App() {
       </header>
 
       {/* ── Content ── */}
+      {/* In-place marker-pen highlights over the whole content surface (2026-07-22, GSL parity) */}
+      <PageHighlighter getContainer={() => document.getElementById('msl-main-content')} pageKey={'v:' + activeTab} />
       <main
+        id="msl-main-content"
         className="fade-in main-content"
         style={activeTab === 'my_tracks'
           /* Tracks is a fixed two-pane workspace: no page padding/max-width, or the

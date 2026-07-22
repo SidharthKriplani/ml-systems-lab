@@ -675,7 +675,7 @@ export const SYSTEM_DESIGN_MODULES = [
     title: 'Cold-Start Strategies',
     subtitle: 'New user, new item, new platform — bootstrapping without interaction history',
     difficulty: 'intermediate',
-    estimatedMin: 22,
+    estimatedMin: 30,
     tags: ['cold start', 'RecSys', 'exploration', 'content-based'],
     summary: `Collaborative filtering learns from interactions — so it has nothing to say about a user who just signed up or an item posted a minute ago. Cold start is the systematic failure mode of every recommender, and interviewers probe it because the naive design silently serves garbage to exactly the users and creators you most want to keep.
 
@@ -687,11 +687,18 @@ export const SYSTEM_DESIGN_MODULES = [
 
 ---
 
-**Exploration is the engine that ends cold start.** A pure-exploitation system never shows the new item enough to learn whether it's good — so you must deliberately allocate impressions to under-explored items (ε-greedy, UCB, or Thompson sampling on the value estimate). The cost is real: exploration spends some engagement now to buy the signal that makes future ranking possible. Framed as a bandit, cold start *is* the exploration-exploitation tradeoff.`,
+**Trace one new item through the pipeline to see why exploration is the expensive part, not the model.** A video posted at t=0 has zero interactions, so the two-tower item model embeds it from title, thumbnail, and creator features alone — that's what makes it retrievable at all, not what makes it good. Say this feed slot serves 1,000,000 impressions a day and established items there average a 7% click-through rate. The platform reserves 2% of that traffic — 20,000 impressions a day — as an exploration bucket split across every currently-cold item, and on day one this item draws 1,000 of those impressions. It records 28 clicks: a 2.8% CTR, far under the 7% baseline. Those 1,000 impressions, had they gone to an established 7%-CTR item instead, would have produced about 70 clicks — so this one item alone cost roughly 42 foregone clicks on day one, spent to learn it's probably not a hit. Multiply across the whole 20,000-impression bucket at a similar ~3% bucket-wide CTR and the platform is paying about 800 clicks a day, system-wide, just to keep the door open for every cold item to prove itself.
+
+---
+
+**That foregone-click number is the actual price of cold start, and it buys a decision rule.** Once an item has accumulated enough exploration impressions to pin down its real CTR — a few thousand, not a handful — items clearing something near the established baseline graduate into standard ranking, where they now compete on measured performance instead of a content-based guess; items sitting well below it get starved back down to a token allocation. Framed as a bandit, this is exactly the exploration-exploitation tradeoff: a pure-exploitation system would never spend those 800 clicks a day, would never learn anything about a cold item, and would leave every new item invisible forever.`,
     keyPoints: [
-      `**"Cold start" is three problems — new user, new item, new platform — with different fixes.** New user → context + onboarding + popularity prior, fast embedding update. New item → content features so it embeds without interactions. New platform → content-based until the flywheel ignites.`,
-      `**Content-based models are the bridge because they embed from features, not interactions.** A two-tower item tower fed text/image/creator features can place a never-seen item in embedding space immediately — the single most important architectural choice for item cold start.`,
-      `**Exploration is mandatory, and it's a measurable cost.** Under-explored items never accumulate signal under pure exploitation. Allocate impressions via ε-greedy/UCB/Thompson; budget the short-term engagement you spend to gain long-term catalog coverage.`,
+      `**Cold start is three problems — new user, new item, new platform — all caused by the same missing thing: interaction history.** New user → context + onboarding + popularity prior, fast embedding update. New item → content features so it embeds without interactions. New platform → content-based for everyone until the flywheel ignites.`,
+      `**Content-based models are the bridge because they embed from features, not interactions.** A two-tower item tower fed text/image/creator features can place a never-seen item in embedding space immediately — the architectural choice that makes item cold start retrievable at all.`,
+      `**Retrievable isn't the same as good — exploration is what tells you which.** A content-based embedding gets a new item into the candidate pool; only real impressions and clicks tell you whether it deserves to stay there.`,
+      `**One new item's numbers show the tradeoff at unit scale.** 1,000 exploration-bucket impressions at a 2.8% CTR (28 clicks) vs. the ~70 clicks a 7%-CTR established item would have earned on those same impressions — a ~42-click cost to learn this one item is probably not a hit.`,
+      `**The same tradeoff at bucket scale is a computed price, not an assumed one.** Reserve 2% of a 1,000,000-impression slot (20,000/day) for cold items: at a ~3% bucket CTR against the 7% established baseline, that's ~800 clicks/day foregone system-wide — the cost of letting every cold item prove itself.`,
+      `**The foregone-click number drives the promote/demote decision, and framed as a bandit this is just explore/exploit.** Items clearing near the established baseline after enough exploration impressions graduate into standard ranking; items well below it get starved back to a token allocation — a pure-exploitation system would never spend those 800 clicks a day and would never learn anything about a cold item.`,
     ],
     takeaway: `Cold start is three separate problems (new user / new item / new platform) unified by one cause — no interaction history — and solved by two levers: content-based embeddings that represent entities from features alone, and deliberate exploration that spends present engagement to buy the signal collaborative filtering needs.`,
     checkQuestions: [
@@ -724,6 +731,16 @@ export const SYSTEM_DESIGN_MODULES = [
           `D) Train a fresh per-user model online completely from scratch during the very first session, with no priors.`,
         ],
         answer: `B`,
+      },
+      {
+        q: `An exploration bucket reserves 2% of a 1,000,000-impression daily feed slot for cold items (20,000 impressions/day). The bucket runs at a 3% CTR against a 7% established-item baseline. What is the daily cost of running this bucket, in foregone clicks?`,
+        options: [
+          `A) 800 clicks/day — the gap between what a 7%-CTR item and the 3%-CTR bucket would each earn on those same 20,000 impressions.`,
+          `B) 600 clicks/day — that's just the total clicks the exploration bucket itself generates, not a cost.`,
+          `C) 1,400 clicks/day — that's the gross clicks an all-established-item slot would generate, not the marginal cost of exploring.`,
+          `D) 0 — the impressions were going to be shown to someone regardless, so reserving them for cold items has no cost.`,
+        ],
+        answer: `A`,
       },
     ],
     recap: [

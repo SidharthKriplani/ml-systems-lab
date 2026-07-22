@@ -440,3 +440,15 @@ New scenarios should populate the canonical `whatsTested`/`antiPattern`/`staffFr
 
 **6. "Unwired" ≠ "redundant" — compare content before archiving (R4).** A component being unreachable (not in `ALL_TABS`) is a *reachability* fact, not a *value* fact. Before archiving anything, run a content comparison (item-level dedup) against the live surfaces. If its content is unique, the verdict is merge/borrow/restore — not archive. The Existence Gate's Content axis must be **measured, not assumed.** (Learned the hard way: DataScienceTab, AskTab, and GlobalSearch were each archived on the unwired assumption and each turned out to hold unique content.)
 
+
+## DEC-2026-07-22-A — Freeze DEC-2026-06-21-A superseded (scoped lift)
+
+The 2026-06-21 content freeze served its purpose (stopping unplanned surface
+sprawl) and was already overtaken by deliberate post-freeze work (Design Studio,
+drill rebuild, company-tracks scaffold). Superseded as follows: content work is
+PERMITTED when it executes a ticket in BreakLabs/EXECUTION-RUNBOOK-2026-07-21.md
+or a track in labs/_plan/THE-Plan.md (as amended by
+labs/_plan/AMENDMENTS-2026-07-22.md), through the standard worker → mechanical
+checks → Fable Pass-2 gate. Anything outside those two queues remains frozen —
+no ad-hoc new tabs or content. Decision by Sidharth, recorded via supervisor
+session, 2026-07-22.
