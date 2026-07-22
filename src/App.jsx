@@ -9,6 +9,7 @@ import FeedbackChip from './components/FeedbackChip.jsx'
 import LoadingSpinner from './components/LoadingSpinner.jsx'
 import { ErrorBoundary } from './components/ErrorBoundary.jsx'
 import { PageHighlighter } from './components/PageHighlighter.jsx'
+import { StickyNotes, StickyBarButton } from './components/StickyNotes.jsx'
 import AuthModal    from './components/auth/AuthModal.jsx'
 import { ACCESS_CODE, STORAGE_KEY, isUnlocked as checkUnlocked } from './utils/unlock.js'
 import { authEnabled, onAuthStateChange } from './utils/supabase.js'
@@ -1433,6 +1434,8 @@ export default function App() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {/* Sticky-note drag source: drag onto the page to drop a note (2026-07-22, GSL parity) */}
+          <StickyBarButton />
           <button
             onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')}
             title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
@@ -1480,6 +1483,7 @@ export default function App() {
       {/* ── Content ── */}
       {/* In-place marker-pen highlights over the whole content surface (2026-07-22, GSL parity) */}
       <PageHighlighter getContainer={() => document.getElementById('msl-main-content')} pageKey={'v:' + activeTab} />
+      <StickyNotes getContainer={() => document.getElementById('msl-main-content')} pageKey={'v:' + activeTab} />
       <main
         id="msl-main-content"
         className="fade-in main-content"
