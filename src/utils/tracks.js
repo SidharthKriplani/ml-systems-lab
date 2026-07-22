@@ -137,6 +137,26 @@ export function addModule(trackId, tabId, moduleId, label, difficulty) {
   setLastTrackId(trackId)
 }
 
+// ── Plan layer (2026-07-22): tracks double as living study checklists ────────
+// item.done = { checked, ts } (absent = derive from msl progress state where
+// possible). Toggling bumps updatedAt so it rides item-level sync merge.
+export function toggleItemDone(trackId, itemUid, checked) {
+  save(getTracks().map(t => {
+    if (t.id !== trackId) return t
+    return { ...t, items: t.items.map(it => it.uid === itemUid
+      ? { ...it, done: { checked: !!checked, ts: Date.now() }, updatedAt: Date.now() }
+      : it) }
+  }))
+}
+
+export function addTask(trackId, title) {
+  const text = String(title || '').trim()
+  if (!text) return
+  save(getTracks().map(t => t.id !== trackId ? t : {
+    ...t, items: [...t.items, { type: 'task', title: text, label: text, addedAt: Date.now(), updatedAt: Date.now(), uid: uid() }]
+  }))
+}
+
 // ── Note CRUD ─────────────────────────────────────────────────────────────────
 
 export function createNote(trackId, title = 'Untitled note') {

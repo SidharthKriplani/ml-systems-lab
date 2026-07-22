@@ -2,8 +2,9 @@ import { useState, useEffect, useRef } from 'react'
 import {
   getTracks, createTrack, renameTrack, deleteTrack,
   createNote, deleteNote, removeItem, reorderItems, moveItem, seedTierTracks,
-  updateItemMeta,
+  updateItemMeta, toggleItemDone, addTask,
 } from '../utils/tracks.js'
+import { isDone } from '../utils/progress.js'
 import { NoteEditor } from '../components/tracks/NoteEditor.jsx'
 import { getSyncStatus, pullAndMergeTracks } from '../utils/tracksSync.js'
 import { supabase } from '../utils/supabase.js'
@@ -282,6 +283,16 @@ const TYPE_TAB = {
 
 // ── Item grouping helper ──────────────────────────────────────────────────────
 
+// ── Plan layer (2026-07-22): checkable items ────────────────────────────────
+// Auto-done: a module item the lab already marks done (msl_done_<tab>_<module>)
+// counts without a manual tick. An explicit item.done ALWAYS overrides.
+function itemAutoDone(item) {
+  return item.type === 'module' ? !!isDone(item.tabId, item.moduleId) : false
+}
+function itemEffectiveDone(item) {
+  return item.done != null ? !!item.done.checked : itemAutoDone(item)
+}
+
 function itemGroup(item) {
   if (item.type === 'module') {
     return { key: `module:${item.tabId}`, label: TAB_LABELS[item.tabId] || item.tabId }
@@ -289,6 +300,7 @@ function itemGroup(item) {
   if (item.type === 'note') {
     return { key: 'note', label: 'Notes' }
   }
+  if (item.type === 'task') return { key: 'task', label: 'Tasks' }
   return { key: item.type, label: ITEM_TYPE_LABEL[item.type] || item.type }
 }
 
@@ -389,6 +401,19 @@ function TrackItemRow({ item, idx, trackId, onNavigate, onRemoveItem, onOpenNote
         cursor: 'grab', transition: 'all 0.1s',
       }}
     >
+      {(() => {
+        const eff = itemEffectiveDone(item)
+        return (
+          <button
+            onClick={(e) => { e.stopPropagation(); toggleItemDone(trackId, item.uid, !eff) }}
+            title={eff ? 'Mark not done' : 'Mark done'}
+            style={{ width: 16, height: 16, borderRadius: 4, cursor: 'pointer', padding: 0, marginTop: '3px', flexShrink: 0,
+              border: eff ? '1px solid var(--green, #34d399)' : '1px solid var(--rim-hi, #555)',
+              background: eff ? 'rgba(52,211,153,0.22)' : 'transparent',
+              color: 'var(--green, #34d399)', fontSize: 11, lineHeight: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+          >{eff ? '✓' : ''}</button>
+        )
+      })()}
       <span style={{ color: 'var(--ink-ghost)', fontSize: '0.7rem', marginTop: '3px', userSelect: 'none', flexShrink: 0 }}>⠿</span>
 
       {item.type === 'module' && (
@@ -417,6 +442,13 @@ function TrackItemRow({ item, idx, trackId, onNavigate, onRemoveItem, onOpenNote
             onMouseLeave={e => { e.currentTarget.style.color = 'var(--ink-ghost)' }}
           >✕</button>
         </>
+      )}
+
+      {item.type === 'task' && (
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <span style={{ fontSize: '0.85rem', color: itemEffectiveDone(item) ? 'var(--ink-low)' : 'var(--ink-hi)',
+            textDecoration: itemEffectiveDone(item) ? 'line-through' : 'none' }}>{item.title || item.label}</span>
+        </div>
       )}
 
       {item.type === 'note' && (
@@ -585,9 +617,30 @@ function TrackDetail({ track, onNavigate, onRename, onNewNote, onOpenNote, onDel
           </>
         )}
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ fontSize: '0.75rem', color: 'var(--ink-ghost)' }}>
-            {track.items.length} item{track.items.length !== 1 ? 's' : ''}
-          </span>
+          {(() => {
+            const doneCount = track.items.filter(itemEffectiveDone).length
+            const nextUp = track.items.find(it => !itemEffectiveDone(it) && it.type === 'module')
+            return (
+              <>
+                <span style={{ fontSize: '0.75rem', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono, monospace)' }}>
+                  {doneCount}/{track.items.length}
+                </span>
+                {track.items.length > 0 && (
+                  <span style={{ width: 64, height: 4, borderRadius: 2, background: 'var(--rim)', overflow: 'hidden', display: 'inline-block' }}>
+                    <span style={{ display: 'block', height: '100%', width: `${Math.round(100 * doneCount / track.items.length)}%`, background: 'var(--green, #34d399)', transition: 'width 0.2s' }} />
+                  </span>
+                )}
+                {nextUp && (
+                  <button
+                    onClick={() => onNavigate(nextUp.tabId, nextUp.moduleId)}
+                    title={`Next up: ${nextUp.label || nextUp.moduleId}`}
+                    style={{ background: 'none', border: '1px solid var(--green, #34d399)', color: 'var(--green, #34d399)',
+                      borderRadius: '6px', padding: '0.25rem 0.6rem', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                  >Resume →</button>
+                )}
+              </>
+            )
+          })()}
           <button
             onClick={onNewNote}
             style={{
@@ -597,6 +650,17 @@ function TrackDetail({ track, onNavigate, onRename, onNewNote, onOpenNote, onDel
           >+ New Note</button>
         </div>
       </div>
+
+      {/* Plan layer: add a free-text task */}
+      <form
+        onSubmit={(e) => { e.preventDefault(); const v = e.target.elements.newtask.value; if (v.trim()) { addTask(track.id, v); e.target.reset() } }}
+        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0 0 0.9rem' }}
+      >
+        <input name="newtask" placeholder="+ Add a task (press Enter)" autoComplete="off"
+          style={{ flex: 1, fontSize: '0.85rem', padding: '0.5rem 0.75rem', borderRadius: '8px',
+            background: 'var(--surface)', border: '1px solid var(--rim)', color: 'var(--ink-hi)', outline: 'none' }}
+        />
+      </form>
 
       {/* Items */}
       {track.items.length === 0 ? (
