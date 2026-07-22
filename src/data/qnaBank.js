@@ -15371,160 +15371,514 @@ export const QNA_BANK = {
     ],
   },
   "dbscan": {
-    status: "parked", // draft | parked | answered, // draft | parked | answered
+    status: "answered", // draft | parked | answered, // draft | parked | answered
     auditDate: "2026-07-15",
     beats: [
       {
         name: "Why density-based clustering, not centroids",
         questions: [
-          { id: "qna-dbscan-motivation-01", level: 0, q: "In plain terms, what problem is DBSCAN designed to solve that centroid-based clustering methods like k-means aren't good at?", difficulty: "easy" },
-          { id: "qna-dbscan-motivation-02", level: 0, q: "If DBSCAN doesn't take K as an input, where does the eventual number of clusters actually come from?", difficulty: "easy" },
-          { id: "qna-dbscan-motivation-03", level: 1, q: "Why does k-means tend to fail on clusters that aren't roughly circular, and how does a density-based approach avoid that failure?", difficulty: "medium" },
-          { id: "qna-dbscan-motivation-04", level: 1, q: "Why does DBSCAN treat 'this point belongs to no cluster' as a legitimate output rather than forcing every point into some cluster?", difficulty: "medium" }
+          { id: "qna-dbscan-motivation-01", level: 0, q: "In plain terms, what problem is DBSCAN designed to solve that centroid-based clustering methods like k-means aren't good at?", difficulty: "easy", answer: [
+            "**Answer.** DBSCAN finds clusters of any shape by following chains of dense points, instead of forcing every cluster to be a roughly circular blob around a centroid like k-means does.",
+            "**Mechanism.** K-means assigns points to whichever centroid is nearest, which only produces convex, circle-like regions \u2014 real clusters like city shapes or crescents don't fit that mold.",
+            "**Grounding.** The module's own example is geographic customer addresses: K-means would fit circles, but cities are not circles, so DBSCAN finds density-connected regions of arbitrary shape instead."
+          ] },
+          { id: "qna-dbscan-motivation-02", level: 0, q: "If DBSCAN doesn't take K as an input, where does the eventual number of clusters actually come from?", difficulty: "easy", answer: [
+            "**Answer.** The number of clusters emerges directly from the data's own density structure, not from a number you choose upfront.",
+            "**Mechanism.** DBSCAN grows a cluster by chaining together points that are density-reachable from one another, and however many separate chains of dense points exist in the data is how many clusters come out.",
+            "**Grounding.** The module states this directly \u2014 'No K to specify \u2014 the number of clusters emerges from the data's density structure.'"
+          ] },
+          { id: "qna-dbscan-motivation-03", level: 1, q: "Why does k-means tend to fail on clusters that aren't roughly circular, and how does a density-based approach avoid that failure?", difficulty: "medium", answer: [
+            "**Answer.** K-means fails on non-circular clusters because it assigns every point to its nearest centroid, which can only carve up space into convex regions around single points.",
+            "**Mechanism.** A crescent- or ring-shaped cluster has points that are far from any single centroid that would represent it well, so k-means splits or merges such shapes incorrectly.",
+            "**Mechanism.** DBSCAN instead builds clusters by chaining density-reachable points together, so a cluster can bend and curve however the actual dense region does.",
+            "**Grounding.** The module names crescents, rings, and L-shapes as exactly the shapes this chain-following lets DBSCAN trace out.",
+            "**Boundary.** This advantage is about cluster shape, not about DBSCAN being unconditionally better \u2014 it still needs its own two hyperparameters tuned correctly."
+          ] },
+          { id: "qna-dbscan-motivation-04", level: 1, q: "Why does DBSCAN treat 'this point belongs to no cluster' as a legitimate output rather than forcing every point into some cluster?", difficulty: "medium", answer: [
+            "**Answer.** DBSCAN treats unclustered points as noise because its whole clustering rule is built around density, and a genuinely isolated point simply has no dense neighborhood to belong to.",
+            "**Mechanism.** A point becomes part of a cluster only by being a core point or by being within \u03b5 of one; a point far from every dense region satisfies neither condition and is labeled noise (-1) instead.",
+            "**Grounding.** The module frames this as operationally valuable \u2014 the explicit noise label lets you route ambiguous points to human review rather than forcing overconfident cluster assignments.",
+            "**Boundary.** This only works if noise really is rare in the data \u2014 the diagnostics section notes too small an \u03b5 can turn most points into noise even when real structure exists."
+          ] }
         ],
       },
       {
         name: "Core, border, and noise points",
         questions: [
-          { id: "qna-core-border-noise-01", level: 0, q: "How is a core point defined in DBSCAN?", difficulty: "easy" },
-          { id: "qna-core-border-noise-02", level: 0, q: "What's the difference between a border point and a core point?", difficulty: "easy" },
-          { id: "qna-core-border-noise-03", level: 1, q: "Why does DBSCAN need three separate categories of points — core, border, and noise — instead of just labeling points 'in a cluster' or 'not'?", difficulty: "medium" },
-          { id: "qna-core-border-noise-04", level: 1, q: "How do eps and minPts together determine whether a given point ends up classified as core, border, or noise?", difficulty: "medium" }
+          { id: "qna-core-border-noise-01", level: 0, q: "How is a core point defined in DBSCAN?", difficulty: "easy", answer: [
+            "**Answer.** A core point is any point that has at least minPts other points within distance \u03b5 of it.",
+            "**Mechanism.** This threshold is what makes a point count as sitting inside a genuinely dense region rather than a sparse one.",
+            "**Grounding.** The module defines it exactly this way: 'has \u2265 minPts points within distance \u03b5.'"
+          ] },
+          { id: "qna-core-border-noise-02", level: 0, q: "What's the difference between a border point and a core point?", difficulty: "easy", answer: [
+            "**Answer.** A border point is within \u03b5 of a core point but doesn't itself have enough neighbors to be a core point, while a core point meets the minPts threshold on its own.",
+            "**Mechanism.** Border points get pulled into a cluster because they're adjacent to a dense region, even though the border point's own immediate neighborhood is too sparse to qualify it as core.",
+            "**Grounding.** The module states this directly: 'Border point: within \u03b5 of a core point but not itself a core point.'"
+          ] },
+          { id: "qna-core-border-noise-03", level: 1, q: "Why does DBSCAN need three separate categories of points — core, border, and noise — instead of just labeling points 'in a cluster' or 'not'?", difficulty: "medium", answer: [
+            "**Answer.** DBSCAN needs three categories because a two-way in/out label can't distinguish the points that anchor a cluster's density from the points that only ride along its edge.",
+            "**Mechanism.** Core points are what drive cluster growth \u2014 a cluster only extends by chaining from one core point to the next \u2014 while border points are near a core point but unable to extend the cluster further themselves.",
+            "**Mechanism.** Noise points need their own category too, since they aren't merely 'not in a cluster' \u2014 they're explicitly points near no core point at all, distinct from border points that are near one.",
+            "**Grounding.** The module's own figure separates exactly these three roles: core (\u2265minPts in \u03b5), border (near a core, sparse itself), and noise (near no core).",
+            "**Boundary.** This three-way split is what makes the -1 noise label meaningful and separately trustworthy \u2014 collapsing border and noise together would lose that distinction."
+          ] },
+          { id: "qna-core-border-noise-04", level: 1, q: "How do eps and minPts together determine whether a given point ends up classified as core, border, or noise?", difficulty: "medium", answer: [
+            "**Answer.** A point becomes core if at least minPts other points fall within \u03b5 of it; it becomes border if it falls within \u03b5 of a core point without meeting that count itself; otherwise it's noise.",
+            "**Mechanism.** Both parameters have to be set together \u2014 \u03b5 controls how far the neighborhood search reaches, and minPts controls how many neighbors within that reach counts as dense.",
+            "**Mechanism.** Changing either parameter can flip a point's classification: raising \u03b5 can pull previously-noise points into range of a core point, and lowering minPts can turn previously-border points into core points.",
+            "**Grounding.** The module's own definitions chain directly off these two parameters \u2014 core, border, and noise are all defined purely in terms of counting neighbors within \u03b5 against the minPts threshold."
+          ] }
         ],
       },
       {
         name: "Density reachability and how clusters form",
         questions: [
-          { id: "qna-density-reachability-01", level: 0, q: "What does it mean for a cluster to be a 'connected component' of core points?", difficulty: "easy" },
-          { id: "qna-density-reachability-02", level: 1, q: "Explain density-reachability in your own words — how does one point 'inherit' cluster membership from another?", difficulty: "medium" },
-          { id: "qna-density-reachability-03", level: 1, q: "Why does chaining density-reachable points together let DBSCAN trace out shapes like crescents or rings that centroid-based methods can't represent?", difficulty: "medium" },
+          { id: "qna-density-reachability-01", level: 0, q: "What does it mean for a cluster to be a 'connected component' of core points?", difficulty: "easy", answer: [
+            "**Answer.** It means a cluster is the full set of core points that are linked together through a chain of \u03b5-neighborhoods, plus the border points attached to them.",
+            "**Mechanism.** Two core points belong to the same connected component if you can trace a path between them where each step lands within \u03b5 of the previous core point.",
+            "**Grounding.** The module defines a cluster exactly this way: 'the connected component of core points plus their border points.'"
+          ] },
+          { id: "qna-density-reachability-02", level: 1, q: "Explain density-reachability in your own words — how does one point 'inherit' cluster membership from another?", difficulty: "medium", answer: [
+            "**Answer.** A point inherits cluster membership by being directly density-reachable from a core point already in the cluster \u2014 meaning it falls within that core point's \u03b5-neighborhood.",
+            "**Mechanism.** Membership then propagates by chaining: if point A is density-reachable from core point B, and B is already in a cluster, A joins that same cluster too.",
+            "**Mechanism.** This chaining is why a single cluster can stretch across a long, winding shape \u2014 each new point only has to be reachable from the most recent core point in the chain, not from every point in the cluster.",
+            "**Grounding.** The module states this precisely: 'point A is directly density-reachable from core point B if A is in B's \u03b5-neighborhood.'"
+          ] },
+          { id: "qna-density-reachability-03", level: 1, q: "Why does chaining density-reachable points together let DBSCAN trace out shapes like crescents or rings that centroid-based methods can't represent?", difficulty: "medium", answer: [
+            "**Answer.** Chaining lets DBSCAN follow the actual curve of a dense region step by step, rather than representing a cluster with one fixed central point the way k-means does.",
+            "**Mechanism.** Each link in the chain only needs to be within \u03b5 of the previous core point, so the cluster can bend arbitrarily as long as density stays continuous along the path.",
+            "**Mechanism.** A single centroid, by contrast, can only represent points that are close to it in Euclidean distance, which forces k-means into roughly circular regions no matter how the true data is shaped.",
+            "**Grounding.** The module names crescents, rings, and L-shapes directly as the kinds of shapes this chain-following produces."
+          ] },
         ],
       },
       {
         name: "Choosing eps and minPts",
         questions: [
-          { id: "qna-parameter-selection-01", level: 0, q: "What's the rule of thumb for picking minPts based on the dimensionality of your data?", difficulty: "easy" },
-          { id: "qna-parameter-selection-02", level: 1, q: "Walk me through the process of using a k-distance plot to choose a value for eps.", difficulty: "medium" },
-          { id: "qna-parameter-selection-03", level: 1, q: "Why does the 'knee' or elbow in the k-distance plot correspond to a good eps value, conceptually?", difficulty: "medium" },
-          { id: "qna-parameter-selection-04", level: 2, q: "What would it mean, and what would you do, if the k-distance plot for your dataset had no clear knee at all?", difficulty: "hard" }
+          { id: "qna-parameter-selection-01", level: 0, q: "What's the rule of thumb for picking minPts based on the dimensionality of your data?", difficulty: "easy", answer: [
+            "**Answer.** The module's rule of thumb is minPts = 2 times the number of dimensions in your data.",
+            "**Mechanism.** More dimensions generally need a higher minPts because points naturally spread out more as dimensionality grows, so a higher density threshold helps avoid false core points.",
+            "**Grounding.** The module states this directly: 'minPts = 2 \u00d7 dimensions (rule of thumb).'"
+          ] },
+          { id: "qna-parameter-selection-02", level: 1, q: "Walk me through the process of using a k-distance plot to choose a value for eps.", difficulty: "medium", answer: [
+            "**Answer.** Sort every point's distance to its k-th nearest neighbor (with k set to minPts), plot those sorted distances, and pick eps at the knee where the curve suddenly jumps upward.",
+            "**Mechanism.** Sorting the k-th nearest-neighbor distances puts points in dense regions near the low end of the curve and points near sparse regions near the high end.",
+            "**Mechanism.** The knee marks the transition between typical neighbor distances inside dense regions and the much larger distances needed to reach into sparser space.",
+            "**Grounding.** The module states this exactly: 'sort all pairwise distances to the k-th nearest neighbor (k = minPts), plot the k-distance graph, pick \u03b5 at the knee where distances jump.'"
+          ] },
+          { id: "qna-parameter-selection-03", level: 1, q: "Why does the 'knee' or elbow in the k-distance plot correspond to a good eps value, conceptually?", difficulty: "medium", answer: [
+            "**Answer.** The knee marks the boundary between distances typical inside dense regions and distances that only appear once you're reaching into sparse space, which is exactly the threshold eps needs to capture.",
+            "**Mechanism.** Points inside a dense cluster have small, similar k-th-nearest-neighbor distances, so that part of the sorted curve stays low and flat.",
+            "**Mechanism.** Once the curve exhausts genuinely dense neighborhoods, k-th-nearest-neighbor distances jump sharply, since the next-closest points are now in a different, sparser region entirely.",
+            "**Grounding.** The module's diagnostic guidance ties this directly to eps selection: 'plot the k-distance graph for k=minPts and pick the elbow \u2014 this is the systematic way to set \u03b5.'"
+          ] },
+          { id: "qna-parameter-selection-04", level: 2, q: "What would it mean, and what would you do, if the k-distance plot for your dataset had no clear knee at all?", difficulty: "hard", answer: [
+            "**Answer.** No clear knee means the data probably doesn't have a single, well-separated density threshold that density-based clustering can find, and forcing an eps choice anyway is unlikely to produce meaningful clusters.",
+            "**Mechanism.** A sharp knee only appears when there's a real gap between typical within-cluster distances and cross-cluster distances; a smooth curve means those two regimes blend into each other continuously.",
+            "**Mechanism.** This can happen when clusters have meaningfully different densities, since a single global eps can't simultaneously suit both a dense region and a sparse one.",
+            "**Grounding.** The module states this directly: 'No clear elbow means density-based clustering may not match the structure of your data.'",
+            "**Grounding.** The module's own diagnostic also notes DBSCAN 'does not handle clusters of varying density well,' which is one concrete cause of a missing knee.",
+            "**Boundary.** A missing knee doesn't necessarily mean no structure exists \u2014 it may mean this particular algorithm and parameterization can't see it, and HDBSCAN's variable-density handling is the module's suggested next step."
+          ] }
         ],
       },
       {
         name: "Reading DBSCAN's failure modes",
         questions: [
-          { id: "qna-failure-modes-01-v2", level: 0, q: "What does a label of -1 actually mean in DBSCAN's output?", difficulty: "easy" },
-          { id: "qna-failure-modes-02", level: 1, q: "If DBSCAN collapses almost your entire dataset into a single cluster, what does that tell you, and which parameter would you adjust, in which direction?", difficulty: "medium" },
-          { id: "qna-failure-modes-03", level: 1, q: "If DBSCAN instead produces a very large number of small clusters, what's the likely cause?", difficulty: "medium" },
-          { id: "qna-failure-modes-04", level: 2, q: "Why can't a single, dataset-wide eps value work well when your data contains clusters of meaningfully different densities?", difficulty: "hard" }
+          { id: "qna-failure-modes-01-v2", level: 0, q: "What does a label of -1 actually mean in DBSCAN's output?", difficulty: "easy", answer: [
+            "**Answer.** A label of -1 means DBSCAN classified that point as noise \u2014 it wasn't within \u03b5 of any core point.",
+            "**Mechanism.** Every point gets either a cluster id or the special -1 noise label; -1 isn't an error state, it's DBSCAN's explicit way of saying 'this point isn't part of any dense region.'",
+            "**Grounding.** The module defines this directly: 'Noise point: not within \u03b5 of any core point \u2014 explicitly labeled -1.'"
+          ] },
+          { id: "qna-failure-modes-02", level: 1, q: "If DBSCAN collapses almost your entire dataset into a single cluster, what does that tell you, and which parameter would you adjust, in which direction?", difficulty: "medium", answer: [
+            "**Answer.** One giant cluster absorbing nearly everything means eps is set too large, so you should reduce it.",
+            "**Mechanism.** A large eps lets each core point's neighborhood stretch far enough to bridge what should be separate dense regions, chaining them together into one connected component.",
+            "**Grounding.** The module's diagnostic states this directly: 'if DBSCAN produces one giant cluster containing 90% of points, \u03b5 is too large.'",
+            "**Grounding.** The fix is systematic, not guesswork: reduce eps toward the elbow of the k-distance plot rather than an arbitrary smaller value."
+          ] },
+          { id: "qna-failure-modes-03", level: 1, q: "If DBSCAN instead produces a very large number of small clusters, what's the likely cause?", difficulty: "medium", answer: [
+            "**Answer.** Many small clusters usually mean eps is set too small, so points that should chain together into one cluster instead fall just outside each other's neighborhoods.",
+            "**Mechanism.** A small eps shrinks each core point's reach, breaking what should be one continuous dense region into several disconnected fragments, each becoming its own tiny cluster.",
+            "**Grounding.** The module's diagnostic states this directly: 'If it produces hundreds of tiny clusters, \u03b5 is too small.'"
+          ] },
+          { id: "qna-failure-modes-04", level: 2, q: "Why can't a single, dataset-wide eps value work well when your data contains clusters of meaningfully different densities?", difficulty: "hard", answer: [
+            "**Answer.** A single eps can't work because the eps that correctly captures a dense cluster is too small for a sparse one, and the eps that correctly captures a sparse cluster is too large for a dense one.",
+            "**Mechanism.** In the dense cluster, a small eps already finds plenty of neighbors per point, so a larger eps just risks bridging it to nearby clusters.",
+            "**Mechanism.** In the sparse cluster, that same small eps finds too few neighbors per point to clear the minPts threshold, so those points get mislabeled as noise instead of forming their own cluster.",
+            "**Grounding.** The module states this directly: 'DBSCAN does not handle clusters of varying density well \u2014 dense and sparse clusters need different \u03b5 values.'",
+            "**Grounding.** The module's fix for this exact failure is HDBSCAN, described as handling variable density and 'almost always better than vanilla DBSCAN in practice.'",
+            "**Boundary.** This isn't a bug in the eps concept itself \u2014 it's a structural limit of using one global threshold for a dataset whose true density genuinely varies by region."
+          ] }
         ],
       },
       {
         name: "Scaling and high-dimensional data",
         questions: [
-          { id: "qna-scaling-highdim-01", level: 0, q: "Why is naive DBSCAN described as roughly O(n squared), and what does that mean practically for large datasets?", difficulty: "easy" },
-          { id: "qna-scaling-highdim-02", level: 1, q: "What's the standard fix for DBSCAN's runtime on large, low-dimensional datasets, and why does it work?", difficulty: "medium" },
-          { id: "qna-scaling-highdim-03", level: 1, q: "Why do spatial indexing structures like KD-trees stop helping once your data has many dimensions?", difficulty: "medium" },
-          { id: "qna-scaling-highdim-04", level: 2, q: "In a very high-dimensional feature space, what typically happens to DBSCAN's core-point counts, and why does that happen even when the underlying data still has real cluster structure?", difficulty: "hard" }
+          { id: "qna-scaling-highdim-01", level: 0, q: "Why is naive DBSCAN described as roughly O(n squared), and what does that mean practically for large datasets?", difficulty: "easy", answer: [
+            "**Answer.** Naive DBSCAN is O(n\u00b2) because, without any index, finding each point's \u03b5-neighborhood means comparing it against every other point in the dataset.",
+            "**Mechanism.** With n points, that's roughly n comparisons per point and n points total, so total work scales with n squared as the dataset grows.",
+            "**Grounding.** The module states this directly, calling out that on 1M+ points you should build a spatial index first rather than run this comparison naively."
+          ] },
+          { id: "qna-scaling-highdim-02", level: 1, q: "What's the standard fix for DBSCAN's runtime on large, low-dimensional datasets, and why does it work?", difficulty: "medium", answer: [
+            "**Answer.** The standard fix is building a spatial index \u2014 a KD-tree or ball tree \u2014 before running DBSCAN, which sklearn's implementation does automatically in low dimensions.",
+            "**Mechanism.** A spatial index lets a neighborhood query skip most of the dataset by organizing points geometrically, so finding a point's \u03b5-neighborhood no longer requires comparing against every other point.",
+            "**Grounding.** The module states this directly: 'sklearn's DBSCAN does this automatically with algorithm='auto' for low dimensions.'",
+            "**Boundary.** This fix specifically targets low-dimensional data \u2014 the module notes these same spatial indices stop helping once dimensionality gets high."
+          ] },
+          { id: "qna-scaling-highdim-03", level: 1, q: "Why do spatial indexing structures like KD-trees stop helping once your data has many dimensions?", difficulty: "medium", answer: [
+            "**Answer.** Spatial indices like KD-trees rely on being able to prune large regions of space quickly, and that pruning advantage breaks down once there are too many dimensions to organize efficiently.",
+            "**Mechanism.** In high dimensions, the geometric structure these indices depend on to skip comparisons stops providing a meaningful shortcut, so queries degrade back toward comparing against most of the dataset anyway.",
+            "**Grounding.** The module states this directly: 'Above 20 dimensions, spatial indices degrade back to O(n\u00b2) anyway.'",
+            "**Boundary.** [verify: the module states this threshold and outcome directly but doesn't walk through the geometric reason spatial indices lose their pruning power in high dimensions]."
+          ] },
+          { id: "qna-scaling-highdim-04", level: 2, q: "In a very high-dimensional feature space, what typically happens to DBSCAN's core-point counts, and why does that happen even when the underlying data still has real cluster structure?", difficulty: "hard", answer: [
+            "**Answer.** In very high dimensions, most points stop qualifying as core points because pairwise distances converge toward similar values, so eps can no longer reliably discriminate near neighbors from far ones.",
+            "**Mechanism.** As dimensionality grows, distance calculations sum contributions across many dimensions, and this tends to compress the range between typical near and far distances, making a fixed eps either too loose or too tight for most points.",
+            "**Mechanism.** With that discrimination lost, few points end up with enough genuinely close neighbors within eps to clear minPts, so most points fall to noise regardless of whether real, lower-dimensional cluster structure still exists underneath.",
+            "**Grounding.** The module's check question states this outcome directly for 128-dimensional embeddings: 'In 128 dims, Euclidean distances converge so eps cannot discriminate neighbours.'",
+            "**Grounding.** The module's fix for this exact scenario is to apply PCA or UMAP down to roughly 10-20 dimensions before running DBSCAN.",
+            "**Boundary.** This is a distance-metric problem, not a sign that the data genuinely lacks structure \u2014 reducing dimensionality first is what lets DBSCAN see the structure that was already there."
+          ] }
         ],
       },
       {
         name: "When to reach for DBSCAN vs alternatives",
         questions: [
-          { id: "qna-when-to-use-01", level: 0, q: "What kinds of problems or datasets make DBSCAN a natural first choice over k-means?", difficulty: "easy" },
-          { id: "qna-when-to-use-02", level: 1, q: "Why is DBSCAN's explicit noise label operationally useful beyond just 'more accurate clustering' — what can you actually do with it in a pipeline?", difficulty: "medium" },
-          { id: "qna-when-to-use-03", level: 2, q: "How does DBSCAN's notion of noise differ conceptually from how a model like Isolation Forest defines an outlier, and how would that difference influence which one you pick?", difficulty: "hard" },
-          { id: "qna-when-to-use-04", level: 2, q: "What specific limitation of vanilla DBSCAN does HDBSCAN address, and why can't a single eps handle that case?", difficulty: "medium" }
+          { id: "qna-when-to-use-01", level: 0, q: "What kinds of problems or datasets make DBSCAN a natural first choice over k-means?", difficulty: "easy", answer: [
+            "**Answer.** DBSCAN is a natural choice when clusters are non-spherical or vary in size, when noise or outlier detection matters, and when you don't know K in advance.",
+            "**Mechanism.** Its density-chaining approach handles irregular shapes k-means can't, and its explicit noise label gives you outlier detection as a built-in side effect of clustering.",
+            "**Grounding.** The module names geospatial and graph neighborhood data specifically as ideal use cases for this reason."
+          ] },
+          { id: "qna-when-to-use-02", level: 1, q: "Why is DBSCAN's explicit noise label operationally useful beyond just 'more accurate clustering' — what can you actually do with it in a pipeline?", difficulty: "medium", answer: [
+            "**Answer.** The noise label gives you a built-in flag for ambiguous points, which you can route to a separate process \u2014 like human review \u2014 instead of silently forcing them into a cluster they don't really belong to.",
+            "**Mechanism.** Because every point is core, border, or explicitly noise, a downstream system can branch on that label directly, treating -1 points differently from confidently-clustered ones.",
+            "**Grounding.** The module states this directly: 'route ambiguous points to human review rather than forcing overconfident cluster assignments.'",
+            "**Boundary.** This value depends on noise actually being a small, meaningful minority \u2014 if eps is misconfigured, most points end up noise and the label loses its signal."
+          ] },
+          { id: "qna-when-to-use-03", level: 2, q: "How does DBSCAN's notion of noise differ conceptually from how a model like Isolation Forest defines an outlier, and how would that difference influence which one you pick?", difficulty: "hard", answer: [
+            "**Answer.** DBSCAN's noise is a density-local judgment based on eps and minPts, while Isolation Forest instead produces a global anomaly score \u2014 so the choice comes down to whether outlierness in your data is a local or global property.",
+            "**Mechanism.** DBSCAN only checks whether a point has enough neighbors within a fixed local radius, so it's naturally sensitive to local density variation but blind to global structure.",
+            "**Mechanism.** Isolation Forest instead measures how easily a point is isolated by random splits across the whole feature space, which captures global rarity without needing an explicit neighborhood radius.",
+            "**Grounding.** The module's check question states this distinction directly: 'DBSCAN noise is density-local (sparse vs eps/minPts); Isolation Forest gives a global score \u2014 pick by dimensionality.'",
+            "**Boundary.** The module ties this choice partly to dimensionality \u2014 DBSCAN's local distance-based notion degrades in high dimensions the same way its core-point counting does, which can push the choice toward Isolation Forest there."
+          ] },
+          { id: "qna-when-to-use-04", level: 2, q: "What specific limitation of vanilla DBSCAN does HDBSCAN address, and why can't a single eps handle that case?", difficulty: "medium", answer: [
+            "**Answer.** HDBSCAN addresses DBSCAN's failure on clusters of varying density, which a single global eps can't handle because no one radius is simultaneously right for both a dense cluster and a sparse one.",
+            "**Mechanism.** A dense cluster needs a small eps to avoid bridging into neighboring clusters, while a sparse cluster needs a larger eps just to have enough neighbors clear the minPts threshold \u2014 those two needs directly conflict under one shared eps.",
+            "**Mechanism.** HDBSCAN instead builds a hierarchy across a range of density thresholds, letting different regions of the data effectively use different effective density requirements.",
+            "**Grounding.** The module states this directly: 'DBSCAN does not handle clusters of varying density well \u2014 dense and sparse clusters need different \u03b5 values. HDBSCAN ... handles variable density and is almost always better than vanilla DBSCAN in practice.'"
+          ] }
         ],
       }
     ],
     cases: [
-      { id: "qna-case-giant-cluster-01", level: 3, q: "You run DBSCAN on geographic data expecting it to separate distinct city clusters, but it returns one enormous cluster covering nearly everything plus a small amount of noise. Walk through how you'd diagnose what's wrong and what you'd try next.", difficulty: "hard" },
-      { id: "qna-case-highdim-noise-01", level: 3, q: "You cluster high-dimensional embeddings with DBSCAN and almost every point comes back labeled as noise, even though you have reason to believe there are real dense groups in the data. How do you reason through what's happening and what would you change?", difficulty: "hard" },
-      { id: "qna-case-varying-density-01", level: 3, q: "Your dataset has one very dense region and one much sparser region that you still want recognized as its own cluster. Whatever single eps value you pick, you either merge parts of the dense region together or lose the sparse region entirely to noise. Walk through this tradeoff and what you'd actually do about it.", difficulty: "hard" },
-      { id: "qna-case-anomaly-choice-01", level: 3, q: "You're building a pipeline to flag unusual transactions and are deciding between using DBSCAN's noise label and a dedicated anomaly-detection approach. Walk through how you'd decide, and if you went with DBSCAN, how you'd operationalize the noise label.", difficulty: "medium" },
-      { id: "qna-case-pushback-01", level: 3, q: "A teammate proposes defaulting to DBSCAN for every clustering task since it doesn't require choosing K upfront. How would you push back on that, using what you know about DBSCAN's hyperparameters and failure modes?", difficulty: "medium" }
+      { id: "qna-case-giant-cluster-01", level: 3, q: "You run DBSCAN on geographic data expecting it to separate distinct city clusters, but it returns one enormous cluster covering nearly everything plus a small amount of noise. Walk through how you'd diagnose what's wrong and what you'd try next.", difficulty: "hard", answer: [
+            "**Answer.** One enormous cluster plus a little noise is the module's classic signature of eps set too large, so the fix is to reduce eps systematically rather than guess.",
+            "**Mechanism.** A too-large eps lets each core point's neighborhood reach far enough to bridge across what should be separate dense city regions, chaining them into a single connected component.",
+            "**Mechanism.** Because minPts stays fixed, nearly every point still clears the density threshold under this oversized eps, which is why noise stays low even though the clustering itself is wrong.",
+            "**Grounding.** The module's diagnostic states this exact pattern directly: 'if DBSCAN produces one giant cluster containing 90% of points, \u03b5 is too large.'",
+            "**Grounding.** The systematic fix is to replot the k-distance graph for k=minPts and pick eps at the elbow rather than shrinking eps arbitrarily.",
+            "**Boundary.** If reducing eps toward the elbow still doesn't separate the cities, the module's fallback is to check for a missing or unclear knee, which would suggest the data's density structure doesn't cleanly support a single global eps.",
+            "**Boundary.** [verify: the module doesn't specify how many step-downs in eps to try before concluding the knee is genuinely absent \u2014 that iteration process is a judgment call, not stated explicitly]."
+          ] },
+      { id: "qna-case-highdim-noise-01", level: 3, q: "You cluster high-dimensional embeddings with DBSCAN and almost every point comes back labeled as noise, even though you have reason to believe there are real dense groups in the data. How do you reason through what's happening and what would you change?", difficulty: "hard", answer: [
+            "**Answer.** Almost-all-noise on high-dimensional embeddings points to distance convergence, not an absence of real structure \u2014 apply PCA or UMAP to reduce to a lower-dimensional space before re-running DBSCAN.",
+            "**Mechanism.** In high-dimensional space, pairwise distances converge toward similar values, so a fixed eps can no longer discriminate close neighbors from far ones, and few points clear the minPts threshold as a result.",
+            "**Mechanism.** This same effect is why spatial indices like KD-trees stop helping above roughly 20 dimensions \u2014 the geometric structure they exploit degrades along with the distance discrimination itself.",
+            "**Grounding.** The module's check question describes this exact scenario for 128-dimensional embeddings and gives this exact fix: 'apply PCA/UMAP to 10-20 dims first.'",
+            "**Grounding.** The module separately recommends HDBSCAN with UMAP preprocessing specifically for high-dimensional data, to first reduce to a meaningful low-dimensional space.",
+            "**Boundary.** Reducing dimensions can also destroy real structure if done too aggressively, so it's worth checking cluster quality at a few different target dimensionalities rather than picking one number blindly.",
+            "**Boundary.** [verify: the module states the PCA/UMAP fix and a 10-20 dimension target but doesn't specify how to choose between PCA and UMAP for this step \u2014 that choice isn't covered in this module]."
+          ] },
+      { id: "qna-case-varying-density-01", level: 3, q: "Your dataset has one very dense region and one much sparser region that you still want recognized as its own cluster. Whatever single eps value you pick, you either merge parts of the dense region together or lose the sparse region entirely to noise. Walk through this tradeoff and what you'd actually do about it.", difficulty: "hard", answer: [
+            "**Answer.** This tradeoff is exactly the varying-density failure mode the module flags \u2014 a single eps can't be simultaneously right for both regions, and the fix is to switch to HDBSCAN rather than keep tuning eps.",
+            "**Mechanism.** A small enough eps to keep the dense region correctly separated is too small for the sparse region, where points don't have enough neighbors within that radius to clear minPts, so they fall to noise.",
+            "**Mechanism.** A large enough eps to give the sparse region real neighbors is too large for the dense region, letting it bridge into whatever else sits within that expanded radius.",
+            "**Grounding.** The module states this limitation and its fix directly: 'DBSCAN does not handle clusters of varying density well ... HDBSCAN (hierarchical DBSCAN) handles variable density and is almost always better than vanilla DBSCAN in practice.'",
+            "**Grounding.** This same tension would also show up as a missing or unclear knee in a single k-distance plot, since the plot implicitly assumes one shared density threshold across the whole dataset.",
+            "**Boundary.** Switching to HDBSCAN doesn't eliminate parameter choices entirely \u2014 it trades a single eps for a hierarchy of density thresholds, which needs its own validation against what you know about the two regions."
+          ] },
+      { id: "qna-case-anomaly-choice-01", level: 3, q: "You're building a pipeline to flag unusual transactions and are deciding between using DBSCAN's noise label and a dedicated anomaly-detection approach. Walk through how you'd decide, and if you went with DBSCAN, how you'd operationalize the noise label.", difficulty: "medium", answer: [
+            "**Answer.** The decision comes down to whether unusualness in your transaction data is a local, density-based property or a global one \u2014 DBSCAN noise fits the former, something like Isolation Forest fits the latter.",
+            "**Mechanism.** DBSCAN's noise label only reflects whether a transaction has enough neighbors within a fixed radius, so it's well suited to flagging transactions that sit apart from any locally dense pattern of normal behavior.",
+            "**Mechanism.** If instead the anomaly signal is more about a transaction being globally unusual across many dimensions rather than locally isolated, a global scoring method captures that better than a fixed local radius can.",
+            "**Grounding.** The module draws exactly this distinction: 'DBSCAN noise is density-local (sparse vs eps/minPts); Isolation Forest gives a global score \u2014 pick by dimensionality.'",
+            "**Grounding.** If DBSCAN is chosen, the module's own operational suggestion for the noise label applies directly here: route flagged (-1) transactions to human review rather than auto-deciding on them.",
+            "**Boundary.** The module also notes DBSCAN's distance-based approach degrades in high dimensions, so if the transaction feature space is large, that pushes the decision toward Isolation Forest instead.",
+            "**Boundary.** [verify: the module doesn't give transaction-specific guidance \u2014 this reasoning applies its general DBSCAN-vs-Isolation-Forest comparison to the transaction scenario, not a case the module itself covers]."
+          ] },
+      { id: "qna-case-pushback-01", level: 3, q: "A teammate proposes defaulting to DBSCAN for every clustering task since it doesn't require choosing K upfront. How would you push back on that, using what you know about DBSCAN's hyperparameters and failure modes?", difficulty: "medium", answer: [
+            "**Answer.** Push back by pointing out DBSCAN trades away K for two equally tricky hyperparameters, eps and minPts, which fail in their own specific ways rather than being an unconditional upgrade over k-means.",
+            "**Mechanism.** Too small an eps turns most points to noise; too large an eps merges everything into one cluster \u2014 both are named failure modes with no default-safe setting that works across datasets.",
+            "**Mechanism.** DBSCAN also doesn't handle clusters of varying density well, since dense and sparse regions genuinely need different eps values, which a single global parameter can't provide.",
+            "**Mechanism.** In high-dimensional data, DBSCAN's core-point counting itself breaks down as distances converge, which is a failure mode k-means doesn't share in the same way.",
+            "**Grounding.** The module states this directly as its own 'NOT-this': '\"DBSCAN does not require K, so it is always better than K-means.\" DBSCAN has two equally tricky hyperparameters: \u03b5 and minPts.'",
+            "**Grounding.** The module also notes HDBSCAN is 'almost always better than vanilla DBSCAN in practice,' which itself argues against defaulting to vanilla DBSCAN even within the density-based family.",
+            "**Boundary.** This isn't an argument for k-means instead \u2014 it's an argument that the right default depends on the data's shape, density uniformity, and dimensionality, not on avoiding the choice of K alone."
+          ] }
     ],
   },
   "pca": {
-    status: "parked", // draft | parked | answered, // draft | parked | answered
+    status: "answered", // draft | parked | answered, // draft | parked | answered
     auditDate: "2026-07-15",
     beats: [
       {
         name: "What PCA actually does — directions of maximum spread",
         questions: [
-          { id: "qna-pca-goal-01", level: 0, q: "In plain terms, what is PCA actually optimizing for when it picks a new direction to describe your data?", difficulty: "easy" },
-          { id: "qna-pca-components-01", level: 0, q: "What is a principal component, and what's the relationship between the first, second, and third components — why are they ordered and why are they at right angles to each other?", difficulty: "easy" },
-          { id: "qna-pca-eigen-svd-01", level: 1, q: "How do principal components relate to the covariance matrix of your data, and why do most real implementations compute them via SVD rather than by eigendecomposing the covariance matrix directly?", difficulty: "medium" },
-          { id: "qna-pca-reconstruction-01", level: 2, q: "PCA can also run in reverse to approximately reconstruct your original features from a handful of components. In what precise sense is PCA the 'best possible' linear method for this, and best compared to what alternative?", difficulty: "hard" }
+          { id: "qna-pca-goal-01", level: 0, q: "In plain terms, what is PCA actually optimizing for when it picks a new direction to describe your data?", difficulty: "easy", answer: [
+            "**Answer.** PCA picks each new direction to capture as much of the data's spread (variance) as possible, choosing the viewpoint that keeps the most information when you flatten the data down.",
+            "**Mechanism.** It finds the direction of maximum spread first, then the next-most-spread direction that's at a right angle to the first, and so on.",
+            "**Grounding.** The module's own framing is the chair-photograph analogy: you'd pick the angle that shows the most at once, rather than one that collapses the chair into a flat rectangle."
+          ] },
+          { id: "qna-pca-components-01", level: 0, q: "What is a principal component, and what's the relationship between the first, second, and third components — why are they ordered and why are they at right angles to each other?", difficulty: "easy", answer: [
+            "**Answer.** A principal component is one of these maximum-spread directions; they're ordered by how much variance each one captures, and each new one is constrained to be orthogonal to all the earlier ones.",
+            "**Mechanism.** The first component is the single direction of most spread in the whole dataset; the second is the direction of most remaining spread once you require it to sit at a right angle to the first, and so on for each further component.",
+            "**Grounding.** The module states this directly: 'PCA finds the direction of maximum spread \u2014 that is the first principal component. Then the next direction of most spread that sits at a right angle to the first \u2014 the second component.'"
+          ] },
+          { id: "qna-pca-eigen-svd-01", level: 1, q: "How do principal components relate to the covariance matrix of your data, and why do most real implementations compute them via SVD rather than by eigendecomposing the covariance matrix directly?", difficulty: "medium", answer: [
+            "**Answer.** Principal components are the eigenvectors of the data's covariance matrix, with each component's explained variance equal to its corresponding eigenvalue \u2014 but libraries compute them via SVD instead, because SVD is more numerically stable.",
+            "**Mechanism.** Explicitly forming the covariance matrix and eigendecomposing it involves squaring the data first, which can amplify numerical error before the eigendecomposition even starts.",
+            "**Mechanism.** SVD instead works directly on the original data matrix and recovers the same directions and variance information without that squaring step, which is why it's the standard computational route.",
+            "**Grounding.** The module states this directly: 'these directions are the eigenvectors of the data's covariance matrix, and their explained-variance numbers are the eigenvalues; libraries compute them with the SVD, which is more numerically stable.'",
+            "**Boundary.** The module notes you don't need this machinery to use PCA well \u2014 it's useful background for understanding what's happening under the hood, not a prerequisite for applying it."
+          ] },
+          { id: "qna-pca-reconstruction-01", level: 2, q: "PCA can also run in reverse to approximately reconstruct your original features from a handful of components. In what precise sense is PCA the 'best possible' linear method for this, and best compared to what alternative?", difficulty: "hard", answer: [
+            "**Answer.** PCA is provably the best possible straight-line, or linear, method for this compress-and-reconstruct task \u2014 no other linear method loses less information for the same number of components, and the comparison is specifically against other linear compression methods.",
+            "**Mechanism.** Because PCA's components are chosen to capture maximum variance at each step, reconstructing from those top components mathematically minimizes the squared reconstruction error achievable by any linear projection to that many dimensions.",
+            "**Grounding.** The module states this directly: 'PCA is, provably, the best possible straight-line way to compress and rebuild \u2014 no linear method loses less information for the same number of components.'",
+            "**Boundary.** This optimality claim is specifically about linear methods \u2014 the module separately notes nonlinear methods like kernel PCA or autoencoders can capture curved structure that PCA's straight-line optimality can't reach at all.",
+            "**Boundary.** [verify: the module doesn't spell out the precise error metric this optimality claim is measured against \u2014 it states the claim itself but not its formal proof or exact metric]."
+          ] }
         ],
       },
       {
         name: "The trap — PCA keeps variance, not signal",
         questions: [
-          { id: "qna-variance-not-signal-01", level: 0, q: "What's the common misconception people have about what PCA removes from a dataset, and why is it wrong?", difficulty: "easy" },
-          { id: "qna-variance-not-signal-02", level: 1, q: "Mechanically, why does PCA have no way of telling the difference between a high-variance direction that's pure noise and one that's real signal?", difficulty: "medium" },
-          { id: "qna-batch-effect-01", level: 1, q: "Give an example of the kind of real-world nuisance variation that can end up dominating a dataset's top principal components, and explain why PCA would happily preserve it while discarding something more important.", difficulty: "medium" },
-          { id: "qna-verify-signal-kept-01", level: 2, q: "Before you trust a PCA-reduced feature set for a downstream model, what would you actually go check to make sure PCA kept what mattered?", difficulty: "medium" }
+          { id: "qna-variance-not-signal-01", level: 0, q: "What's the common misconception people have about what PCA removes from a dataset, and why is it wrong?", difficulty: "easy", answer: [
+            "**Answer.** The common misconception is that 'PCA removes noise' \u2014 it's wrong because PCA only keeps high-variance directions and discards low-variance ones, with no notion of which is actually noise and which is signal.",
+            "**Mechanism.** PCA's whole selection rule is based purely on variance, so a high-variance direction gets kept whether it's meaningful structure or pure noise, and a low-variance direction gets discarded whether it's negligible or genuinely important.",
+            "**Grounding.** The module states this directly: 'PCA removes noise. It does not. PCA keeps the highest-variance directions and throws away the low-variance ones \u2014 and it has no idea which of those is signal and which is noise.'"
+          ] },
+          { id: "qna-variance-not-signal-02", level: 1, q: "Mechanically, why does PCA have no way of telling the difference between a high-variance direction that's pure noise and one that's real signal?", difficulty: "medium", answer: [
+            "**Answer.** PCA's selection rule only looks at how much a direction spreads the data out \u2014 it has no separate mechanism for checking whether that spread reflects meaningful structure or just noise.",
+            "**Mechanism.** The algorithm ranks and keeps directions purely by their variance value, a single number computed from the data's own spread, with no external label or ground truth telling it which directions matter.",
+            "**Mechanism.** Because noise can spread points out just as effectively as real structure can \u2014 sometimes more so \u2014 a noisy direction can easily out-rank a genuinely important but subtler one on variance alone.",
+            "**Grounding.** The module's own genomics example makes this concrete: a batch effect, pure noise about which day a sample was processed, can be the biggest source of variation and get preserved for exactly this reason."
+          ] },
+          { id: "qna-batch-effect-01", level: 1, q: "Give an example of the kind of real-world nuisance variation that can end up dominating a dataset's top principal components, and explain why PCA would happily preserve it while discarding something more important.", difficulty: "medium", answer: [
+            "**Answer.** A classic example is a batch effect in genomics data \u2014 which day a sample was processed \u2014 which can be the single largest source of variance in the dataset despite being pure noise.",
+            "**Mechanism.** If processing day introduces more variation across samples than the biological signal researchers actually care about, PCA's top components will be dominated by that processing-day pattern rather than by the biology.",
+            "**Mechanism.** Meanwhile a rare but important biological pattern that only produces a small amount of spread ends up in a low-variance component, which is exactly the kind of component PCA is likely to discard when you keep only the top few.",
+            "**Grounding.** The module states this directly: 'Sometimes the biggest source of variation in genomics data is a batch effect ... pure noise that PCA will lovingly preserve. And sometimes the thing you actually care about ... has low variance, so PCA quietly deletes it.'"
+          ] },
+          { id: "qna-verify-signal-kept-01", level: 2, q: "Before you trust a PCA-reduced feature set for a downstream model, what would you actually go check to make sure PCA kept what mattered?", difficulty: "medium", answer: [
+            "**Answer.** Compare a model trained on the PCA-reduced features against one trained on the full feature set, on the real downstream task, rather than trusting the explained-variance percentage alone.",
+            "**Mechanism.** Explained variance only tells you how much of the data's overall spread was kept \u2014 it says nothing about whether the specific signal your downstream task depends on happened to live in a kept or discarded direction.",
+            "**Mechanism.** If the PCA-reduced model performs clearly worse, that's a direct signal that some task-relevant information was in a component that got dropped, regardless of how high the cumulative explained variance number looked.",
+            "**Grounding.** The module states this rule directly: 'never assume PCA kept what matters: always compare a PCA-reduced model against the full-feature model on the real downstream task before you trust it.'",
+            "**Grounding.** The module's own diagnostic guidance builds on exactly this check \u2014 a clear performance gap between the two models is the signal that something task-relevant was discarded.",
+            "**Boundary.** This check tells you whether something was lost, but not automatically why \u2014 a follow-up step is figuring out whether more components would recover it or whether the structure is fundamentally nonlinear."
+          ] }
         ],
       },
       {
         name: "Standardize before you run PCA",
         questions: [
-          { id: "qna-standardize-01", level: 0, q: "Why do you need to standardize your features before running PCA?", difficulty: "easy" },
-          { id: "qna-standardize-mechanism-01", level: 1, q: "Mechanically, what happens to the resulting components if you skip standardization on a dataset where features live on very different scales?", difficulty: "medium" },
-          { id: "qna-standardize-exception-01", level: 2, q: "Is there ever a legitimate case where you would deliberately choose not to standardize before PCA?", difficulty: "medium" }
+          { id: "qna-standardize-01", level: 0, q: "Why do you need to standardize your features before running PCA?", difficulty: "easy", answer: [
+            "**Answer.** You need to standardize first because PCA chases variance, and features on a much larger numeric scale would dominate every component for no meaningful reason.",
+            "**Mechanism.** A feature like income measured in dollars naturally has enormous variance compared to a 0/1 flag, so without standardizing, PCA would treat income as by far the most important direction purely because of its units.",
+            "**Grounding.** The module states this directly: 'if income is measured in dollars (variance in the billions) and another feature is a 0/1 flag, income will dominate every component for no good reason.'"
+          ] },
+          { id: "qna-standardize-mechanism-01", level: 1, q: "Mechanically, what happens to the resulting components if you skip standardization on a dataset where features live on very different scales?", difficulty: "medium", answer: [
+            "**Answer.** The components end up dominated by whichever features have the largest raw numeric scale, regardless of how informative those features actually are.",
+            "**Mechanism.** PCA computes variance directly from the raw feature values, so a feature with naturally larger units contributes disproportionately more variance and pulls the top components toward itself.",
+            "**Mechanism.** Lower-scale features, even if highly informative, get compressed into the later, lower-variance components that are the first to be discarded when you keep only the top few.",
+            "**Grounding.** The module's check question states this concretely: 'Income dominates every component since its variance dwarfs age and flags \u2014 that information gets compressed into later discarded components.'"
+          ] },
+          { id: "qna-standardize-exception-01", level: 2, q: "Is there ever a legitimate case where you would deliberately choose not to standardize before PCA?", difficulty: "medium", answer: [
+            "**Answer.** Yes \u2014 when your features are already on one comparable scale and you genuinely want the naturally larger-variance features to dominate the components.",
+            "**Mechanism.** Standardization exists specifically to prevent scale differences from artificially driving which features dominate; if there's no meaningful scale difference to begin with, or scale itself carries genuine importance you want preserved, forcing equal variance would distort that intentionally.",
+            "**Grounding.** The module states this exception directly: 'Put everything on the same scale before running PCA, every single time' is the default rule, with the stated exception being when features are already on one scale and you genuinely want the big ones to dominate.",
+            "**Boundary.** [verify: the module states this exception exists but doesn't give a concrete worked example of when you'd genuinely want raw-scale features to dominate \u2014 that judgment call is left general]."
+          ] }
         ],
       },
       {
         name: "PCA leaks — fit it only on the training fold",
         questions: [
-          { id: "qna-pca-leakage-01", level: 0, q: "PCA is unsupervised — so why is fitting it on your entire dataset before splitting into train and test still considered a form of leakage?", difficulty: "easy" },
-          { id: "qna-pca-leakage-02", level: 1, q: "Specifically, what information leaks into your training features when PCA is fit on the whole dataset before the split?", difficulty: "medium" },
-          { id: "qna-pca-pipeline-01", level: 1, q: "How do you correctly wire PCA into a cross-validation workflow so this leakage can't happen?", difficulty: "medium" },
-          { id: "qna-pca-leakage-compare-01", level: 2, q: "How does this leakage risk with PCA compare to the leakage risk you'd worry about with a feature scaler or an imputer — same failure mode, or different?", difficulty: "medium" }
+          { id: "qna-pca-leakage-01", level: 0, q: "PCA is unsupervised — so why is fitting it on your entire dataset before splitting into train and test still considered a form of leakage?", difficulty: "easy", answer: [
+            "**Answer.** PCA still leaks because it learns its components from the covariance of whatever data you fit it on, so fitting on the whole dataset lets the training rows 'know' directions that were partly defined by the test rows.",
+            "**Mechanism.** The components aren't just a fixed transformation \u2014 they're computed from the specific data fed in, so if test rows are part of that computation, information about the test set has already influenced the features the model will train on.",
+            "**Grounding.** The module states this directly: 'PCA looks unsupervised and therefore safe, but it learns from the data ... Fit PCA on all your data before splitting and the training rows already \"know\" the directions defined partly by the test rows \u2014 a genuine leak that inflates your score.'"
+          ] },
+          { id: "qna-pca-leakage-02", level: 1, q: "Specifically, what information leaks into your training features when PCA is fit on the whole dataset before the split?", difficulty: "medium", answer: [
+            "**Answer.** The specific directions PCA picks as its components leak test-set information, since those directions are computed from the covariance of the combined training-plus-test data rather than from training data alone.",
+            "**Mechanism.** Each principal component is shaped by every row used to fit it; if test rows are included, the resulting component directions are partly optimized around patterns that only exist because of those test rows.",
+            "**Mechanism.** When you then transform the training data using those components, the training features are already shaped by information the model shouldn't have had access to, inflating apparent performance during validation.",
+            "**Grounding.** The module ties this to the same failure mode as scalers and imputers: 'The rule is the same as for scalers and imputers: fit PCA on the training fold, then transform validation/test with those fixed components.'"
+          ] },
+          { id: "qna-pca-pipeline-01", level: 1, q: "How do you correctly wire PCA into a cross-validation workflow so this leakage can't happen?", difficulty: "medium", answer: [
+            "**Answer.** Wrap PCA (and any scaler) inside a scikit-learn Pipeline, so cross-validation re-fits PCA fresh on only the training portion of each fold.",
+            "**Mechanism.** A Pipeline ties the PCA-fitting step to the same fold boundaries as the model-fitting step, so PCA never sees the fold's held-out validation rows when it computes its components.",
+            "**Grounding.** The module states this directly: 'Wrap it in a scikit-learn Pipeline so cross-validation re-fits it inside every fold. And remember standardisation is part of this \u2014 fit the scaler on train too, not the full set.'"
+          ] },
+          { id: "qna-pca-leakage-compare-01", level: 2, q: "How does this leakage risk with PCA compare to the leakage risk you'd worry about with a feature scaler or an imputer — same failure mode, or different?", difficulty: "medium", answer: [
+            "**Answer.** It's the same underlying failure mode \u2014 any preprocessing step that learns parameters from the data (mean and variance for a scaler, fill values for an imputer, component directions for PCA) leaks if it's fit on more than the training fold.",
+            "**Mechanism.** In every one of these cases, fitting on the full dataset lets information from validation or test rows shape the parameters that get applied back to the training data, inflating validation performance in a way that won't hold in production.",
+            "**Grounding.** The module states this equivalence directly: 'The rule is the same as for scalers and imputers: fit PCA on the training fold, then transform validation/test with those fixed components.'",
+            "**Grounding.** The fix is also identical across all three: wrap every such step in a Pipeline so cross-validation refits it fold by fold, which the module states applies to the scaler the same way it applies to PCA.",
+            "**Boundary.** The specific parameters being learned differ (component directions vs. mean/variance vs. fill values), but the leakage mechanism and the fix are structurally the same across all of them."
+          ] }
         ],
       },
       {
         name: "Whitening — decorrelate and equalize",
         questions: [
-          { id: "qna-whitening-def-01", level: 0, q: "What does whitening add on top of standard PCA — what's different about the output?", difficulty: "easy" },
-          { id: "qna-whitening-noise-01", level: 1, q: "Why does whitening tend to amplify noise, specifically in the lower-variance components?", difficulty: "medium" },
-          { id: "qna-whitening-when-01", level: 2, q: "Under what circumstances would you actually choose to turn whitening on, versus leaving it off?", difficulty: "medium" }
+          { id: "qna-whitening-def-01", level: 0, q: "What does whitening add on top of standard PCA — what's different about the output?", difficulty: "easy", answer: [
+            "**Answer.** Whitening additionally rescales every component to unit variance, on top of PCA's usual decorrelation, so the output ends up fully decorrelated and isotropic rather than just decorrelated.",
+            "**Mechanism.** Standard PCA already gives you decorrelated components with PC1 carrying the most variance and later components carrying progressively less; whitening then equalizes all of those variances to 1.",
+            "**Grounding.** The module states this directly: 'By default PCA gives you decorrelated components with different variances (PC1 has the most). Whitening additionally rescales every component to unit variance, so the output is fully decorrelated and isotropic.'"
+          ] },
+          { id: "qna-whitening-noise-01", level: 1, q: "Why does whitening tend to amplify noise, specifically in the lower-variance components?", difficulty: "medium", answer: [
+            "**Answer.** Whitening amplifies noise because it rescales every component to the same unit variance, and the lower-variance components \u2014 which are often mostly noise to begin with \u2014 get blown up to match the high-variance, signal-carrying ones.",
+            "**Mechanism.** A low-variance component started out small precisely because it carried little real spread; forcing it up to unit variance multiplies its values by a large factor, and that factor amplifies whatever noise made up most of that component's content.",
+            "**Grounding.** The module states this directly: 'whitening blows the low-variance components (which are often mostly noise) up to the same scale as the high-variance ones, so it can amplify noise.'"
+          ] },
+          { id: "qna-whitening-when-01", level: 2, q: "Under what circumstances would you actually choose to turn whitening on, versus leaving it off?", difficulty: "medium", answer: [
+            "**Answer.** Turn whitening on when your downstream method assumes equal-variance inputs; leave it off when your low-variance directions are mostly junk you'd rather keep small rather than amplify.",
+            "**Mechanism.** Some downstream algorithms perform better or make cleaner assumptions when their inputs are isotropic (equal variance in every direction), which is exactly what whitening provides on top of PCA's decorrelation.",
+            "**Mechanism.** But since whitening can't distinguish a genuinely useful low-variance direction from a noisy one, turning it on when your low-variance components are mostly noise actively amplifies that noise rather than helping.",
+            "**Grounding.** The module states this decision rule directly: 'Use it when the downstream method assumes equal-variance inputs; skip it when the low-variance directions are junk you'd rather keep small.'"
+          ] }
         ],
       },
       {
         name: "PCA's assumptions and where they break",
         questions: [
-          { id: "qna-pca-assumptions-01", level: 0, q: "What are the core assumptions PCA is making about your data?", difficulty: "easy" },
-          { id: "qna-pca-linearity-01", level: 1, q: "Why is PCA blind to curved or nonlinear structure in the data — what specifically about how it finds components makes that true?", difficulty: "medium" },
-          { id: "qna-pca-outliers-01", level: 1, q: "Why is PCA especially sensitive to outliers, mechanically — what is it about how variance is computed that causes this?", difficulty: "medium" },
-          { id: "qna-pca-diagnose-underperform-01", level: 2, q: "If a model trained on PCA-reduced features performs clearly worse than one trained on the full feature set, what does that tell you about where to look next, and in what order would you investigate?", difficulty: "medium" }
+          { id: "qna-pca-assumptions-01", level: 0, q: "What are the core assumptions PCA is making about your data?", difficulty: "easy", answer: [
+            "**Answer.** PCA assumes your structure is linear, that high variance equals importance, and it's sensitive to outliers.",
+            "**Mechanism.** Each of these is a direct consequence of how PCA is built: it only ever draws straight-line directions, it ranks those directions purely by spread, and spread itself is measured by variance, which squares distances and so reacts strongly to extreme points.",
+            "**Grounding.** The module states this directly: 'it's linear ... it's variance-based ... and it's sensitive to outliers (a few extreme points can swing a component, since variance squares distances).'"
+          ] },
+          { id: "qna-pca-linearity-01", level: 1, q: "Why is PCA blind to curved or nonlinear structure in the data — what specifically about how it finds components makes that true?", difficulty: "medium", answer: [
+            "**Answer.** PCA is blind to curved structure because every component it finds is a straight-line direction through the data \u2014 it has no mechanism for representing a direction that bends.",
+            "**Mechanism.** Each principal component is defined as a single fixed linear direction (a vector), and a point's position along that component is just its straight-line projection onto that vector.",
+            "**Mechanism.** A curved or nonlinear pattern \u2014 where the 'direction of most spread' genuinely bends through the feature space \u2014 can't be captured by any single straight-line vector, no matter how many components you add.",
+            "**Grounding.** The module states this directly: 'it's linear (it can only find straight-line directions \u2014 curved structure is invisible to it).'",
+            "**Boundary.** The module points to kernel PCA or autoencoders as the nonlinear alternatives when this assumption is the actual problem."
+          ] },
+          { id: "qna-pca-outliers-01", level: 1, q: "Why is PCA especially sensitive to outliers, mechanically — what is it about how variance is computed that causes this?", difficulty: "medium", answer: [
+            "**Answer.** PCA is outlier-sensitive because variance is computed by squaring distances from the mean, so a few extreme points contribute disproportionately more to the total variance than their small number would suggest.",
+            "**Mechanism.** Since PCA's components are chosen specifically to maximize captured variance, and squaring amplifies large deviations far more than small ones, a handful of outliers can pull an entire principal component's direction toward themselves.",
+            "**Grounding.** The module states this directly: 'it's sensitive to outliers (a few extreme points can swing a component, since variance squares distances).'"
+          ] },
+          { id: "qna-pca-diagnose-underperform-01", level: 2, q: "If a model trained on PCA-reduced features performs clearly worse than one trained on the full feature set, what does that tell you about where to look next, and in what order would you investigate?", difficulty: "medium", answer: [
+            "**Answer.** It tells you the signal was probably either in a low-variance direction PCA discarded, or the structure isn't linear at all \u2014 first try keeping more components, and if that doesn't help, move to a nonlinear method.",
+            "**Mechanism.** Keeping more components is the cheap first check, since it directly tests whether the missing signal was simply in a component below your original cutoff.",
+            "**Mechanism.** If adding components doesn't close the gap, the module's next hypothesis is that PCA's linear, straight-line assumption itself is the limiting factor, since curved structure is invisible to any number of linear components.",
+            "**Grounding.** The module states this diagnostic order directly: 'First try keeping more components. If that does not help, PCA's straight-line assumption may be the problem ... reach for a nonlinear method \u2014 UMAP for visualising, or kernel PCA for preprocessing.'",
+            "**Grounding.** The module frames the underlying logic plainly: 'A drop in performance after PCA is telling you something real about where your signal lives.'",
+            "**Boundary.** This diagnostic order is a starting heuristic, not a guarantee \u2014 a persistent performance gap after both steps would point to investigating the feature engineering or model itself rather than continuing to blame PCA."
+          ] }
         ],
       },
       {
         name: "Interpretability — loadings vs. feature selection",
         questions: [
-          { id: "qna-loadings-01", level: 0, q: "What is a 'loading' in the context of a principal component?", difficulty: "easy" },
-          { id: "qna-loadings-explain-01", level: 1, q: "Even though you can inspect a component's loadings, why does a principal component usually fail to be something you can explain in plain terms to a business stakeholder?", difficulty: "medium" },
-          { id: "qna-select-vs-reduce-01", level: 2, q: "When would you choose feature selection over PCA specifically because of interpretability, and what kind of setting makes that the deciding factor?", difficulty: "medium" }
+          { id: "qna-loadings-01", level: 0, q: "What is a 'loading' in the context of a principal component?", difficulty: "easy", answer: [
+            "**Answer.** A loading is the weight a given original feature contributes to a principal component, since each component is a linear mixture of all your original features.",
+            "**Mechanism.** Every component can be written as a weighted sum of the original features, and the loadings are exactly those weights \u2014 a large loading means that feature contributes strongly to that component.",
+            "**Grounding.** The module states this directly: 'Each component is a linear mixture of all your original features (its loadings are the weights).'"
+          ] },
+          { id: "qna-loadings-explain-01", level: 1, q: "Even though you can inspect a component's loadings, why does a principal component usually fail to be something you can explain in plain terms to a business stakeholder?", difficulty: "medium", answer: [
+            "**Answer.** A component fails to be plainly explainable because it's a weighted mixture of every original feature at once, not a single recognizable concept \u2014 the loadings tell you the math, but not a story a stakeholder can follow.",
+            "**Mechanism.** You can say 'PC1 is mostly income and home value,' which is a rough gist, but the actual component is a specific weighted combination of many features simultaneously, which doesn't map cleanly to one plain-language idea.",
+            "**Grounding.** The module gives this exact example: 'a component like \"0.4\u00b7income \u2212 0.2\u00b7age + 0.31\u00b7tenure \u2212 \u2026\" rarely maps to something you can explain to a stakeholder.'",
+            "**Boundary.** This is specifically about component-level interpretability \u2014 you can still describe rough tendencies (which features load heavily), just not a single clean explanation of what the component 'is.'"
+          ] },
+          { id: "qna-select-vs-reduce-01", level: 2, q: "When would you choose feature selection over PCA specifically because of interpretability, and what kind of setting makes that the deciding factor?", difficulty: "medium", answer: [
+            "**Answer.** Choose feature selection over PCA whenever you need to explain the model's inputs in plain terms to a non-technical audience or a regulator, since selection keeps original, individually meaningful features rather than mixing them into components.",
+            "**Mechanism.** Feature selection keeps a subset of your original variables untouched, so each remaining input still means exactly what it always meant, while PCA replaces all inputs with mixtures that resist plain-language explanation.",
+            "**Grounding.** The module names the exact settings where this matters: 'When explanations matter (regulated lending, medicine), prefer selection over reduction.'",
+            "**Boundary.** This tradeoff is specifically about explainability \u2014 PCA can still be the better technical choice for compression or decorrelation in these same domains; the interpretability requirement is what tips the decision toward selection instead."
+          ] }
         ],
       },
       {
         name: "Scaling to big/sparse data, and the limits of PCA visualization",
         questions: [
-          { id: "qna-pca-scale-cost-01", level: 0, q: "Why does classic covariance-based PCA become expensive or even infeasible on very high-dimensional data?", difficulty: "easy" },
-          { id: "qna-pca-variants-01", level: 2, q: "What's the difference between randomized PCA and TruncatedSVD, and why does TruncatedSVD in particular suit sparse, high-dimensional data like TF-IDF text?", difficulty: "medium" },
-          { id: "qna-pca-plot-not-proof-01", level: 1, q: "Why isn't a 2D PC1-vs-PC2 scatterplot proof that two classes are or aren't separable in the underlying data?", difficulty: "medium" },
-          { id: "qna-pca-alternatives-01", level: 2, q: "When would you reach for something other than PCA entirely — say, a nonlinear visualization or compression method — and what's driving that decision?", difficulty: "medium" }
+          { id: "qna-pca-scale-cost-01", level: 0, q: "Why does classic covariance-based PCA become expensive or even infeasible on very high-dimensional data?", difficulty: "easy", answer: [
+            "**Answer.** Classic PCA becomes expensive because it has to form the full covariance matrix, which grows very large and costly to compute as the number of features grows into the tens of thousands.",
+            "**Mechanism.** The covariance matrix has a size proportional to the square of the number of features, so with a very large number of features, both the memory needed to store it and the compute needed to work with it balloon quickly.",
+            "**Grounding.** The module states this directly: 'Classic PCA forms the full covariance matrix, which is expensive or impossible for very high-dimensional data (text with tens of thousands of terms).'"
+          ] },
+          { id: "qna-pca-variants-01", level: 2, q: "What's the difference between randomized PCA and TruncatedSVD, and why does TruncatedSVD in particular suit sparse, high-dimensional data like TF-IDF text?", difficulty: "medium", answer: [
+            "**Answer.** Randomized PCA approximates the top components faster than classic PCA, while TruncatedSVD works directly on sparse matrices without centering the data first \u2014 and that no-centering property is exactly what makes it suit sparse TF-IDF text.",
+            "**Mechanism.** Centering data (subtracting the mean) turns a sparse matrix, which is mostly zeros, into a dense one, since every zero entry becomes some nonzero offset \u2014 this destroys the sparsity that makes large TF-IDF matrices computationally manageable in the first place.",
+            "**Mechanism.** TruncatedSVD skips that centering step entirely, so it can operate directly on the sparse matrix without ever blowing it up into a dense one, keeping both memory and compute manageable.",
+            "**Grounding.** The module states this directly: 'TruncatedSVD works directly on sparse matrices without centering (so it doesn't destroy sparsity) \u2014 this is the standard \"LSA\" move for TF-IDF text.'",
+            "**Grounding.** Randomized PCA is described separately as approximating the top components 'far faster' than classic covariance PCA, which is a speed fix rather than a sparsity fix.",
+            "**Boundary.** These solve different problems \u2014 randomized PCA is about speed on dense high-dimensional data, TruncatedSVD is specifically about preserving sparsity, so the right choice depends on which constraint is actually binding."
+          ] },
+          { id: "qna-pca-plot-not-proof-01", level: 1, q: "Why isn't a 2D PC1-vs-PC2 scatterplot proof that two classes are or aren't separable in the underlying data?", difficulty: "medium", answer: [
+            "**Answer.** A 2D PC1-vs-PC2 plot only shows the top two directions of variance, so classes that overlap there can still separate cleanly using information captured in a third, fourth, or later component you can't see in that plot.",
+            "**Mechanism.** PCA ranks components by variance, not by how well they separate any particular pair of classes, so the class-discriminating information isn't guaranteed to live in exactly the first two components.",
+            "**Mechanism.** Apparent clusters or apparent overlap in the 2D projection can also be artifacts of collapsing many dimensions down to two, rather than a faithful picture of the full-dimensional relationships.",
+            "**Grounding.** The module states this directly: 'it captures only the top two directions, so it is not proof of separability or cluster quality: classes that overlap in the PCA plot may separate cleanly in the full space, and apparent clusters may be artefacts.'"
+          ] },
+          { id: "qna-pca-alternatives-01", level: 2, q: "When would you reach for something other than PCA entirely — say, a nonlinear visualization or compression method — and what's driving that decision?", difficulty: "medium", answer: [
+            "**Answer.** Reach for a nonlinear alternative when the structure you care about is genuinely curved, or when you specifically need to preserve local neighborhood relationships for visualization \u2014 cases where PCA's linear, global-variance approach is the wrong tool.",
+            "**Mechanism.** For visualization of nonlinear structure, t-SNE or UMAP preserve local neighborhoods far better than PCA's two fixed linear axes can, since they're built to capture nearby-point relationships rather than global variance direction.",
+            "**Mechanism.** For nonlinear compression rather than visualization, kernel PCA or an autoencoder can represent curved structure that no number of straight-line PCA components could capture.",
+            "**Grounding.** The module lays out this exact mapping: 'For visualisation of nonlinear structure, t-SNE or UMAP ... For nonlinear preprocessing, kernel PCA or an autoencoder ... For keeping explainable original variables, feature selection instead of PCA.'",
+            "**Boundary.** The module still frames PCA as 'the fast, stable default for linear compression and decorrelation' \u2014 the guidance is to not force it onto jobs its assumptions don't fit, not to avoid it generally."
+          ] }
         ],
       }
     ],
     cases: [
-      { id: "qna-case-highdim-lowsample-01", level: 3, q: "You're handed a dataset with vastly more features than examples (think tens of thousands of features, a few hundred rows) and a colleague suggests running PCA to 'clean up the noise' before modeling. Walk through what you'd actually verify before trusting that approach.", difficulty: "medium" },
-      { id: "qna-case-leakage-diagnosis-01-v2", level: 3, q: "A team fit PCA on their entire dataset before splitting into train and test, then cross-validated a classifier on the resulting components. Their cross-val scores look great, but the model underperforms once it's in production. Walk through how you'd diagnose this and what you'd change in their pipeline.", difficulty: "medium" },
-      { id: "qna-case-plot-conclusion-01", level: 3, q: "A colleague shows you a PCA scatterplot where two classes overlap heavily and concludes the classes simply aren't separable, so they want to abandon the modeling effort. How do you respond, and what would you check before agreeing or disagreeing with that conclusion?", difficulty: "easy" },
-      { id: "qna-case-sparse-text-01", level: 3, q: "You need to reduce a very high-dimensional, sparse text-embedding matrix (think TF-IDF-style features) down to a few hundred dimensions. Walk through why plain covariance-based PCA is a poor fit here and what you'd use instead.", difficulty: "medium" },
-      { id: "qna-case-underperform-walkthrough-01", level: 3, q: "A classifier trained on PCA-reduced features performs noticeably worse than one trained on the full feature set. Walk me through your full diagnostic process, in order, from first checks to the alternatives you'd try if the simple fixes don't help.", difficulty: "hard" }
+      { id: "qna-case-highdim-lowsample-01", level: 3, q: "You're handed a dataset with vastly more features than examples (think tens of thousands of features, a few hundred rows) and a colleague suggests running PCA to 'clean up the noise' before modeling. Walk through what you'd actually verify before trusting that approach.", difficulty: "medium", answer: [
+            "**Answer.** Push back on the 'clean up the noise' framing first, since PCA keeps high-variance directions regardless of whether they're noise or signal, then verify by comparing a PCA-reduced model against the full-feature model on the actual downstream task.",
+            "**Mechanism.** With tens of thousands of features and only a few hundred rows, this looks exactly like the module's gene-expression scenario \u2014 too many knobs, heavily overlapping features, and a case where squeezing down to a smaller set that still captures most variance can genuinely help computationally.",
+            "**Mechanism.** But 'cleaning up noise' is a mischaracterization \u2014 PCA has no way to tell a noisy high-variance direction from a genuinely important one, so the reduction could just as easily discard a rare but important low-variance signal.",
+            "**Grounding.** The module's own framing for this exact scale of problem states the target directly: 'PCA squeezes those 20,000 down to maybe 20-50 new features that still capture over 90% of the variation.'",
+            "**Grounding.** Before trusting the reduced features, the module's rule applies directly: 'always compare a PCA-reduced model against the full-feature model on the real downstream task before you trust it.'",
+            "**Boundary.** Standardization and correct train/test fold handling also both need checking here \u2014 features that vastly outnumber rows are exactly the setting where leakage from fitting PCA on the whole dataset would be easiest to miss and most damaging.",
+            "**Boundary.** [verify: the module doesn't give a specific guideline for how few rows is 'too few' relative to feature count for PCA to be reliable \u2014 that judgment call isn't addressed directly in the source]."
+          ] },
+      { id: "qna-case-leakage-diagnosis-01-v2", level: 3, q: "A team fit PCA on their entire dataset before splitting into train and test, then cross-validated a classifier on the resulting components. Their cross-val scores look great, but the model underperforms once it's in production. Walk through how you'd diagnose this and what you'd change in their pipeline.", difficulty: "medium", answer: [
+            "**Answer.** Diagnose this as the module's PCA-leakage failure mode directly \u2014 fitting PCA on the whole dataset before splitting let the training features 'know' directions partly defined by the test rows, inflating cross-val scores that don't hold in production.",
+            "**Mechanism.** Because PCA learns its component directions from the covariance of whatever data it's fit on, including the eventual test rows in that fit means the resulting components are shaped in part by information the model shouldn't have had.",
+            "**Mechanism.** Cross-validating a classifier on top of those already-leaked components measures performance on a feature space that's subtly tuned to data the model will never see again in production, which is exactly why the gap shows up post-deployment.",
+            "**Grounding.** The module states this exact failure and fix: 'fit PCA on all your data before splitting and the training rows already \"know\" the directions defined partly by the test rows \u2014 a genuine leak that inflates your score.'",
+            "**Grounding.** The concrete fix is also stated directly: 'fit PCA on the training fold, then transform validation/test with those fixed components,' wrapped in a scikit-learn Pipeline so cross-validation re-fits it inside every fold.",
+            "**Boundary.** The fix needs to cover the scaler too, not just PCA \u2014 the module notes standardization is part of the same leak, so the scaler must also be fit inside the training fold only, not on the full pre-split dataset."
+          ] },
+      { id: "qna-case-plot-conclusion-01", level: 3, q: "A colleague shows you a PCA scatterplot where two classes overlap heavily and concludes the classes simply aren't separable, so they want to abandon the modeling effort. How do you respond, and what would you check before agreeing or disagreeing with that conclusion?", difficulty: "easy", answer: [
+            "**Answer.** Push back on the conclusion \u2014 a PCA scatterplot only shows the top two components, so overlap there doesn't prove the classes are inseparable in the full feature space.",
+            "**Mechanism.** PCA ranks its components by overall variance, not by how well they separate these particular two classes, so the actual class-discriminating signal could easily live in a third or later component that never appears in a 2D plot.",
+            "**Mechanism.** What looks like heavy overlap in the flattened 2D projection can also be an artifact of collapsing many dimensions down to two, rather than a faithful picture of how separable the classes really are.",
+            "**Grounding.** The module states this directly: 'it is not proof of separability or cluster quality: classes that overlap in the PCA plot may separate cleanly in the full space, and apparent clusters may be artefacts.'",
+            "**Grounding.** The module's own guidance for what to do instead is explicit: 'Use the plot to generate hypotheses, then validate on the real task \u2014 never conclude \"the classes aren't separable\" from a PCA picture.'",
+            "**Boundary.** A concrete next step is training a real classifier on the full feature set (or on more PCA components) and checking its actual accuracy, rather than eyeballing a 2D projection to make the separability call."
+          ] },
+      { id: "qna-case-sparse-text-01", level: 3, q: "You need to reduce a very high-dimensional, sparse text-embedding matrix (think TF-IDF-style features) down to a few hundred dimensions. Walk through why plain covariance-based PCA is a poor fit here and what you'd use instead.", difficulty: "medium", answer: [
+            "**Answer.** Plain covariance-based PCA is a poor fit because it mean-centers the data, which turns a sparse matrix dense and blows up memory and compute \u2014 use TruncatedSVD instead, which works directly on sparse matrices without centering.",
+            "**Mechanism.** A TF-IDF matrix is mostly zeros; subtracting the mean from every entry as part of standard PCA's centering step replaces almost all of those zeros with small nonzero values, destroying the sparsity that made the matrix manageable in the first place.",
+            "**Mechanism.** TruncatedSVD skips that centering step and operates directly on the sparse matrix, so it never pays the memory and compute cost of densifying tens of thousands of mostly-zero features.",
+            "**Grounding.** The module states this directly, calling it 'the standard \"LSA\" move for TF-IDF text': 'TruncatedSVD works directly on sparse matrices without centering (so it doesn't destroy sparsity).'",
+            "**Grounding.** The module separately confirms plain PCA's cost problem at this scale: 'Classic PCA forms the full covariance matrix, which is expensive or impossible for very high-dimensional data (text with tens of thousands of terms).'",
+            "**Boundary.** If TruncatedSVD's dropped centering step turns out to matter for your downstream task, randomized PCA is the module's other named option \u2014 though it approximates dense computation for speed rather than solving the sparsity problem TruncatedSVD addresses."
+          ] },
+      { id: "qna-case-underperform-walkthrough-01", level: 3, q: "A classifier trained on PCA-reduced features performs noticeably worse than one trained on the full feature set. Walk me through your full diagnostic process, in order, from first checks to the alternatives you'd try if the simple fixes don't help.", difficulty: "hard", answer: [
+            "**Answer.** Start by keeping more components; if that doesn't close the gap, suspect PCA's linear assumption itself and move to a nonlinear method like kernel PCA or UMAP.",
+            "**Mechanism.** Keeping more components is the cheapest first check, since it directly tests whether the missing signal was simply sitting in a lower-variance component below your original cutoff.",
+            "**Mechanism.** If more components don't help, the module's next hypothesis is that the important structure is curved rather than linear, since PCA's straight-line directions are fundamentally blind to nonlinear structure no matter how many you keep.",
+            "**Mechanism.** Before blaming PCA's math entirely, it's also worth confirming standardization and the training-fold-only fit were both done correctly, since either mistake alone \u2014 dominant-scale features or leaked test information \u2014 could independently explain a performance gap.",
+            "**Grounding.** The module states this diagnostic order directly: 'First try keeping more components. If that does not help, PCA's straight-line assumption may be the problem ... reach for a nonlinear method \u2014 UMAP for visualising, or kernel PCA for preprocessing.'",
+            "**Grounding.** The module frames the underlying principle plainly: 'A drop in performance after PCA is telling you something real about where your signal lives.'",
+            "**Boundary.** This is a starting heuristic ordered from cheap to expensive checks, not a guaranteed sequence \u2014 a persistent gap after both steps would point toward investigating the feature engineering or model choice rather than continuing to iterate on PCA variants."
+          ] }
     ],
   },
   "tsne_umap": {
