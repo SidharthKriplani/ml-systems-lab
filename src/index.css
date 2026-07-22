@@ -659,10 +659,12 @@
     max-width: 860px;
   }
 
-  /* Topbar also offset for sidebar */
+  /* Topbar spans the full main column. The wrapper is ALREADY offset by the
+     220px sidebar margin, so the old left/width pair double-subtracted 220px
+     once the bar actually stuck (sticky resolves width against the wrapper,
+     not the viewport) -- leaving a 220px dead gap on the right end. */
   header {
-    left: 220px;
-    width: calc(100% - 220px);
+    width: 100%;
   }
 }
 
