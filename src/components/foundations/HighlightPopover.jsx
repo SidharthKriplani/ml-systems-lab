@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { AddToTrackPopover } from '../tracks/AddToTrackPopover.jsx'
 import { quickAddItem, getQuickAdd } from '../../utils/tracks.js'
-import { addHighlight, removeHighlight, listHighlights, occurrenceOfSelection, applyAll, unpaint } from '../../utils/localHighlights.js'
+import { addHighlight, removeHighlight, listHighlights, occurrenceOfSelection, applyAll, unpaint, hitHighlight, getPaintedRange } from '../../utils/localHighlights.js'
 import { addCard } from '../../utils/reviewCards.js'
 
 // 4 fixed swatches, mapped to MSL's existing theme vars — no arbitrary hex.
@@ -81,10 +81,11 @@ export function HighlightPopover({ containerRef, sourceTabId, sourceModuleId, so
     function onDocClick(e) {
       const sel = window.getSelection()
       if (sel && !sel.isCollapsed) return // a drag-selection, not a mark click
-      const mark = e.target && e.target.closest && e.target.closest('mark[data-hl-id]')
-      if (mark && el.contains(mark)) {
-        const r = mark.getBoundingClientRect()
-        setRemovePop({ id: mark.getAttribute('data-hl-id'), top: r.bottom + 6, left: r.left + r.width / 2 })
+      // F4 (2026-07-23): native ::highlight() ranges -- hit-test the painted
+      // ranges' client rects instead of closest('mark').
+      const hit = hitHighlight(el, e.clientX, e.clientY)
+      if (hit) {
+        setRemovePop({ id: hit.id, top: hit.rect.bottom + 6, left: hit.rect.left + hit.rect.width / 2 })
       } else {
         setRemovePop(null)
       }
@@ -183,13 +184,16 @@ export function HighlightPopover({ containerRef, sourceTabId, sourceModuleId, so
   function handleAddToReview() {
     if (!removePop || !containerRef?.current) return
     const el = containerRef.current
-    const markEl = el.querySelector(`mark[data-hl-id="${removePop.id}"]`)
-    if (!markEl) { setRemovePop(null); return }
-    const term = (markEl.textContent || '').trim()
+    // F4 (2026-07-23): no <mark> nodes anymore -- resolve via stored entry +
+    // painted native range. Still never guesses: bails if the range is gone.
+    const hl = listHighlights(pageKey).find(h => h.id === removePop.id)
+    const range = getPaintedRange(el, removePop.id)
+    if (!hl || !range) { setRemovePop(null); return }
+    const term = (hl.text || '').trim()
     if (!term) { setRemovePop(null); return }
 
-    const hl = listHighlights(pageKey).find(h => h.id === removePop.id)
-    const block = markEl.closest('p, li, blockquote, dd, dt, td, th, div') || markEl.parentElement
+    const startEl = range.startContainer && range.startContainer.nodeType === 3 ? range.startContainer.parentElement : range.startContainer
+    const block = (startEl && startEl.closest && startEl.closest('p, li, blockquote, dd, dt, td, th, div')) || startEl
     const blockText = (block && block.textContent) || term
     const idx = blockText.indexOf(term)
     let prefix = '', suffix = ''
@@ -214,7 +218,7 @@ export function HighlightPopover({ containerRef, sourceTabId, sourceModuleId, so
       lastReviewed: null,
     })
 
-    const r = markEl.getBoundingClientRect()
+    const r = range.getBoundingClientRect()
     showFlash('review queue', { top: Math.max(8, r.top - 46), left: r.left + r.width / 2 })
     setRemovePop(null)
   }
