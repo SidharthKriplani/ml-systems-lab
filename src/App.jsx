@@ -10,7 +10,9 @@ import LoadingSpinner from './components/LoadingSpinner.jsx'
 import { ErrorBoundary } from './components/ErrorBoundary.jsx'
 import { PageHighlighter } from './components/PageHighlighter.jsx'
 import { StickyNotes, StickyBarButton } from './components/StickyNotes.jsx'
+import BreaklabsChrome from './components/BreaklabsChrome.jsx'
 import AuthModal    from './components/auth/AuthModal.jsx'
+import { signOut } from './utils/auth.js'
 import { ACCESS_CODE, STORAGE_KEY, isUnlocked as checkUnlocked } from './utils/unlock.js'
 import { supabase, authEnabled, onAuthStateChange } from './utils/supabase.js'
 import { pullProgressFromSupabase, pushProgressToSupabase, pullAnnotationsOnly } from './utils/syncProgress.js'
@@ -928,16 +930,42 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked, 
             doesn't make sense once you're already using the product). Signed
             in, this row and "My Progress" below it point at the exact same
             page — a duplicate, dead-click nav item. Only show it signed out. */}
+        {/* D21 Part B (FLAG-1 policy, GSL D19 parity) — CORRECTED for MSL's architecture:
+            unlike GSL (separate MobileFrameNav + desktop-only BreaklabsChrome dropdown),
+            MSL's DesktopSidebar IS the mobile off-canvas drawer too (see .desktop-sidebar
+            in index.css — off-canvas <769px, fixed >=769px, same JSX both ways). A plain
+            `!user` gate here would strand signed-in MOBILE users, who have no
+            ProfileChip dropdown to fall back on (that dropdown is desktop-only). So:
+            personal items (profile/progress/review/my_tracks/leaderboard) stay reachable
+            on mobile in both auth states, hidden only at the >=769px breakpoint via
+            .sidebar-desktop-hide (desktop's copy lives in the chrome dropdown instead).
+            Public items (start_here/plans/resources/about) stay reachable on mobile
+            always; on desktop they hide only when signed in (dropdown covers them then;
+            signed out on desktop there's no dropdown at all, so they must stay visible
+            there too — hence the user ? hidden-below-lg : always-visible split below). */}
+        <div className="sidebar-desktop-hide">
+          <SidebarNavItem id="profile" label="Profile" {...navProps} />
+          <SidebarNavItem id="progress" label="My Progress" {...navProps} />
+          <SidebarNavItem id="review" label="Review" {...navProps} />
+          <SidebarNavItem id="my_tracks" label="My Tracks" {...navProps} />
+          <SidebarNavItem id="leaderboard" label="Leaderboard" {...navProps} />
+        </div>
         {!user && <SidebarNavItem id="home" label="Home" {...navProps} />}
-        <SidebarNavItem id="profile" label="Profile" {...navProps} />
-        <SidebarNavItem id="progress" label="My Progress" {...navProps} />
-        <SidebarNavItem id="review" label="Review" {...navProps} />
-        <SidebarNavItem id="my_tracks" label="My Tracks" {...navProps} />
-        <SidebarNavItem id="leaderboard" label="Leaderboard" {...navProps} />
-        <SidebarNavItem id="start_here" label="Start Here" {...navProps} />
-        <SidebarNavItem id="plans" label="Plans & Access" {...navProps} />
-        <SidebarNavItem id="resources" label="Resources" {...navProps} />
-        <SidebarNavItem id="about" label="About" {...navProps} />
+        {user ? (
+          <div className="sidebar-desktop-hide">
+            <SidebarNavItem id="start_here" label="Start Here" {...navProps} />
+            <SidebarNavItem id="plans" label="Plans & Access" {...navProps} />
+            <SidebarNavItem id="resources" label="Resources" {...navProps} />
+            <SidebarNavItem id="about" label="About" {...navProps} />
+          </div>
+        ) : (
+          <>
+            <SidebarNavItem id="start_here" label="Start Here" {...navProps} />
+            <SidebarNavItem id="plans" label="Plans & Access" {...navProps} />
+            <SidebarNavItem id="resources" label="Resources" {...navProps} />
+            <SidebarNavItem id="about" label="About" {...navProps} />
+          </>
+        )}
 
         {NAV_SECTIONS.map(section => {
           // Landing frames (BUILD): the header navigates to a right-pane landing
@@ -1027,26 +1055,26 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked, 
         })}
       </nav>
 
-      {/* Search */}
-      <div style={{ padding: '9px 10px', borderTop: '1px solid var(--rim)', flexShrink: 0 }}>
-        <button
-          onClick={onSearch}
-          style={{
-            width: '100%', padding: '7px 11px',
-            display: 'flex', alignItems: 'center', gap: '7px',
-            background: 'var(--surface)', border: '1px solid var(--rim)',
-            borderRadius: 'var(--r-sm)', cursor: 'pointer', color: 'var(--ink-low)',
-            fontSize: '13px', fontFamily: 'var(--font-sans)', letterSpacing: '-0.005em',
-            transition: 'border-color var(--t-fast), color var(--t-fast)',
-          }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--rim-hi)'; e.currentTarget.style.color = 'var(--ink-mid)' }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--rim)'; e.currentTarget.style.color = 'var(--ink-low)' }}
-        >
-          <span style={{ fontSize: '13px' }}>&#9906;</span>
-          <span style={{ flex: 1, textAlign: 'left' }}>Ask / Search</span>
-          <kbd style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', background: 'var(--depth)', padding: '1px 5px', borderRadius: '4px', color: 'var(--ink-ghost)', border: '1px solid var(--rim)' }}>&#8984;K</kbd>
-        </button>
-      </div>
+      {/* Search promoted into BreaklabsChrome top bar (D21, GSL D17 parity) — box killed here. */}
+      {user && (
+        <div style={{ padding: '9px 10px', borderTop: '1px solid var(--rim)', flexShrink: 0 }}>
+          <button
+            onClick={() => { signOut(); if (onClose) onClose() }}
+            style={{
+              width: '100%', padding: '7px 11px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px',
+              background: 'none', border: '1px solid var(--rim)',
+              borderRadius: 'var(--r-sm)', cursor: 'pointer', color: 'var(--ink-low)',
+              fontSize: '11px', fontFamily: 'var(--font-mono)', letterSpacing: '0.02em',
+              transition: 'border-color var(--t-fast), color var(--t-fast)',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--rim-hi)'; e.currentTarget.style.color = 'var(--ink-mid)' }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--rim)'; e.currentTarget.style.color = 'var(--ink-low)' }}
+          >
+            Sign out
+          </button>
+        </div>
+      )}
 
     </aside>
   )
@@ -1446,8 +1474,12 @@ export default function App() {
         WebkitBackdropFilter: 'blur(20px)',
         borderBottom: '1px solid var(--rim)',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, overflow: 'hidden', flex: 1 }}>
-          {/* Hamburger — opens the nav drawer (mobile only, hidden on desktop via CSS) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, overflow: 'hidden', flexShrink: 1 }}>
+          {/* Hamburger — opens the nav drawer (mobile only, hidden on desktop via CSS).
+              D21: dropped flex:1 (was 1 of only 2 header children pre-D21, so it safely
+              claimed all free space via space-between) now that BreaklabsChrome is the
+              sibling and itself declares flex-1 — two flex:1 siblings would 50/50-split
+              the row instead of giving the breadcrumb its natural width. */}
           <button
             className="ml-hamburger"
             onClick={() => setSidebarOpen(true)}
@@ -1482,51 +1514,32 @@ export default function App() {
           )}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {/* Sticky-note drag source: drag onto the page to drop a note (2026-07-22, GSL parity) */}
-          <StickyBarButton />
-          <button
-            onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')}
-            title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '30px', height: '30px', background: 'none', border: '1px solid var(--rim)', borderRadius: '7px', cursor: 'pointer', color: 'var(--ink-low)', transition: 'border-color 0.15s, color 0.15s' }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--rim-hi)'; e.currentTarget.style.color = 'var(--ink-hi)' }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--rim)'; e.currentTarget.style.color = 'var(--ink-low)' }}
-          >
-            {theme === 'light' ? (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-              </svg>
-            ) : (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-              </svg>
-            )}
-          </button>
-          {!showBackBtn && (
-            <a href="https://github.com/SidharthKriplani/ml-systems-lab" target="_blank" rel="noopener noreferrer"
-              className="hide-mobile"
-              style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '4px 10px', background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '6px', color: 'var(--ink-low)', fontSize: '11px', fontFamily: "var(--font-mono)", textDecoration: 'none', transition: 'border-color 0.15s', letterSpacing: '0.02em' }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.38.6.1.82-.26.82-.57v-2.02c-3.34.72-4.04-1.61-4.04-1.61-.54-1.38-1.33-1.74-1.33-1.74-1.09-.74.08-.73.08-.73 1.2.09 1.84 1.24 1.84 1.24 1.07 1.83 2.8 1.3 3.48 1 .1-.78.42-1.3.76-1.6-2.66-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 3-.4c1.02 0 2.04.13 3 .4 2.28-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.63-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.22.68.83.57C20.57 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
-              GitHub
-            </a>
-          )}
-          {authEnabled && (
-            user ? (
-              <button onClick={() => goTo('profile')} title="Profile"
-                style={{ width: '28px', height: '28px', borderRadius: '50%', border: '2px solid var(--rim-hi)', background: user.user_metadata?.avatar_url ? 'none' : 'var(--prime)', overflow: 'hidden', cursor: 'pointer', padding: 0, flexShrink: 0 }}>
-                {user.user_metadata?.avatar_url
-                  ? <img src={user.user_metadata.avatar_url} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '9px', color: 'var(--depth)' }}>{(user.user_metadata?.full_name || user.email || 'U')[0].toUpperCase()}</span>
-                }
-              </button>
-            ) : (
-              <button onClick={() => setShowAuth(true)}
-                style={{ padding: '5px 12px', background: 'var(--prime)', border: 'none', borderRadius: '7px', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '11px', color: 'var(--depth)', letterSpacing: '0.03em' }}>
-                Sign in
-              </button>
-            )
-          )}
-        </div>
+        {/* D21: right-side utilities replaced with the shared BreaklabsChrome (GSL D17 master
+            copy, extended with the optional onShowAuth prop for modal-style auth labs). Left
+            side keeps MSL's own breadcrumb/logo block above (richer than chrome's bare
+            showBack icon — chrome's showBack/onBack are deliberately left unwired here so the
+            existing "← / <tab label>" breadcrumb keeps working unchanged). GitHub self-link and
+            profile-avatar/sign-in button killed — ProfileChip + the new onShowAuth sign-in
+            button replace them (grep receipts in the D21 report). */}
+        <BreaklabsChrome
+            onSearchOpen={() => setSearchOpen(true)}
+            searchPlaceholder="Ask / Search…"
+            theme={theme}
+            onToggleTheme={() => setTheme(t => t === 'light' ? 'dark' : 'light')}
+            user={user}
+            supabaseEnabled={authEnabled}
+            onShowAuth={() => setShowAuth(true)}
+            onNavigateProfile={() => goTo('profile')}
+            onNavigateProgress={() => goTo('progress')}
+            onNavigateReview={() => goTo('review')}
+            onNavigateMyTracks={() => goTo('my_tracks')}
+            onNavigateLeaderboard={() => goTo('leaderboard')}
+            onNavigateStartHere={() => goTo('start_here')}
+            onNavigateResources={() => goTo('resources')}
+            onNavigateAbout={() => goTo('about')}
+            onNavigatePlans={() => goTo('plans')}
+            stickyTrayButton={<StickyBarButton />}
+          />
       </header>
 
       {/* ── Content ── */}
@@ -1557,10 +1570,11 @@ export default function App() {
       {/* ── Footer ── (hidden on the tracks workspace: fixed two-pane layout, no page scroll) */}
       {activeTab !== 'my_tracks' && (
       <footer style={{ borderTop: '1px solid var(--rim)', padding: '14px 20px', textAlign: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px', marginBottom: '8px', opacity: 0.85 }}>
-          <BrandMark variant='wordmark' size={13} />
-          <span style={{ fontSize: '10px', color: 'var(--ink-ghost)', fontFamily: 'var(--font-mono)', letterSpacing: '0.04em' }}>· ML Systems · part of BreakLabs</span>
-        </div>
+        {/* D21: "part of BreakLabs" wordmark/tagline row killed (GSL D17/D19 parity — GSL's
+            current footer carries no self-brand row either). Sibling-lab links below kept
+            as-is per the granular reading: only the self-brand line is redundant now that
+            BreaklabsChrome carries brand identity in the header; cross-lab discovery links
+            are not. */}
         <p style={{ margin: '0 0 8px', fontSize: '11px' }}>
           <a href="https://chat.whatsapp.com/JbIaqV87fwh8Ym3ufH5CFx?mode=gi_t" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--prime)', textDecoration: 'underline', textUnderlineOffset: '3px', fontWeight: 600 }}>Join the community →</a>
         </p>

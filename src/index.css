@@ -647,6 +647,11 @@
   .ml-hamburger    { display: none !important; }
   .sidebar-overlay { display: none !important; }
 
+  /* D21: TRACK-cluster items superseded by the BreaklabsChrome ProfileChip dropdown
+     on desktop only — that dropdown doesn't exist below this breakpoint, so these
+     items stay in the mobile drawer (see App.jsx DesktopSidebar TRACK cluster). */
+  .sidebar-desktop-hide { display: none; }
+
   /* Main wrapper shifts right to clear the 220px sidebar */
   .desktop-main-wrapper {
     display: block;
