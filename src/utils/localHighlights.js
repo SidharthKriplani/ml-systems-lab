@@ -27,6 +27,10 @@ function writeHlTombstones(pageKey, ids) {
 }
 
 const FAINT = {
+  sky:     'rgba(56,189,248,0.38)',
+  pink:    'rgba(244,114,182,0.38)',
+  lime:    'rgba(163,230,53,0.36)',
+  orange:  'rgba(251,146,60,0.40)',
   gold:  'rgba(232,160,48,0.44)',
   teal:  'rgba(64,190,190,0.42)',
   green: 'rgba(52,211,153,0.40)',

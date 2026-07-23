@@ -11,6 +11,10 @@ const COLORS = [
   { id: 'teal',  value: 'var(--teal)' },
   { id: 'green', value: 'var(--green)' },
   { id: 'red',   value: '#e05050' }, // matches the "advanced" difficulty accent used across foundation tabs
+  { id: 'sky',    value: '#38bdf8' },
+  { id: 'pink',   value: '#f472b6' },
+  { id: 'lime',   value: '#a3e635' },
+  { id: 'orange', value: '#fb923c' },
 ]
 
 function genId() {
@@ -59,6 +63,7 @@ export function HighlightPopover({ containerRef, sourceTabId, sourceModuleId, so
   // Marker mode (2026-07-22): pick a color once, every subsequent selection
   // paints instantly. Persisted across modules/tabs; exit via chip or Esc.
   const [marker, setMarker] = useState(() => { try { return localStorage.getItem('msl-marker-mode-v1') || '' } catch { return '' } })
+  const [markerPalette, setMarkerPalette] = useState(false) // marker chip's bloomed color picker
   const setMarkerMode = (cid) => { setMarker(cid); try { cid ? localStorage.setItem('msl-marker-mode-v1', cid) : localStorage.removeItem('msl-marker-mode-v1') } catch {} }
   const pageKey = `${sourceTabId}::${sourceModuleId || ''}`
   const flashTimer = useRef(null)
@@ -304,17 +309,29 @@ export function HighlightPopover({ containerRef, sourceTabId, sourceModuleId, so
       )}
 
       {marker && createPortal(
-        <button
-          onClick={() => setMarkerMode('')}
-          title="Marker mode is on: every selection highlights instantly. Click (or press Esc) to exit."
+        <div
           style={{ position: 'fixed', bottom: 18, left: '50%', transform: 'translateX(-50%)', zIndex: 250,
-            display: 'inline-flex', alignItems: 'center', gap: 8,
+            display: 'inline-flex', alignItems: 'center', gap: 10,
             background: 'var(--surface)', color: 'var(--ink-hi)', border: '1px solid var(--rim)',
-            borderRadius: 20, padding: '6px 14px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer',
+            borderRadius: 20, padding: '6px 14px', fontSize: '0.75rem', fontWeight: 600,
             boxShadow: '0 6px 18px rgba(0,0,0,0.45)' }}>
-          <span style={{ width: 10, height: 10, borderRadius: '50%', background: (COLORS.find(c => c.id === marker) || COLORS[0]).value, flexShrink: 0 }} />
-          Marker on — click to exit
-        </button>, document.body)}
+          {markerPalette ? (
+            <span style={{ display: 'inline-flex', gap: 7, alignItems: 'center' }}>
+              {COLORS.map(c => (
+                <span key={c.id} onClick={() => { setMarkerMode(c.id); setMarkerPalette(false) }}
+                  style={{ width: 11, height: 11, borderRadius: '50%', background: c.value, cursor: 'pointer', opacity: c.id === marker ? 1 : 0.85 }} />
+              ))}
+            </span>
+          ) : (
+            <span title="Change marker color" onClick={() => setMarkerPalette(true)}
+              style={{ display: 'inline-flex', alignItems: 'center', padding: '7px 4px', margin: '-7px -4px', cursor: 'pointer' }}>
+              <span style={{ width: 22, height: 3, borderRadius: 2, background: (COLORS.find(c => c.id === marker) || COLORS[0]).value, pointerEvents: 'none' }} />
+            </span>
+          )}
+          <span onClick={() => { setMarkerMode(''); setMarkerPalette(false) }} title="Exit marker mode (or press Esc)" style={{ cursor: 'pointer' }}>
+            Marker on — click to exit
+          </span>
+        </div>, document.body)}
 
       {flash && createPortal(
         <div style={{
