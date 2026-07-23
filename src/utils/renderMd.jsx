@@ -198,6 +198,26 @@ function renderTextBlock(block, i, usedGlossaryTerms, figures) {
     )
   }
 
+  // ── Bullet-list block (H0 typography, 2026-07-23): a paragraph whose every
+  //    line starts with "- " renders as a real <ul> instead of run-on prose.
+  //    Authoring rule: numbered/pointer sequences NEVER live inline in prose —
+  //    see labs/_plan/TYPOGRAPHY-RULES-2026-07.md.
+  {
+    const lines = trimmed.split('\n').map(l => l.trim()).filter(Boolean)
+    if (lines.length > 1 && lines.every(l => l.startsWith('- '))) {
+      return (
+        <ul key={i} style={{ margin: '0 0 1rem 0', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          {lines.map((l, j) => (
+            <li key={j} style={{ display: 'flex', gap: '0.6rem', lineHeight: 1.65 }}>
+              <span style={{ color: 'var(--prime)', flexShrink: 0, marginTop: '0.1rem' }}>{'\u25b8'}</span>
+              <span>{renderInline(l.slice(2), usedGlossaryTerms)}</span>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+  }
+
   // ── NOT-this paragraph → amber misconception callout
   if (trimmed.startsWith('**NOT this.') || trimmed.startsWith('**NOT this:')) {
     return (
