@@ -21,6 +21,27 @@ export class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, info) {
     console.error('MSL ErrorBoundary caught:', error, info)
+    // 2026-07-23 auto-heal (ported from GSL): the in-place highlighter wraps text
+    // nodes in <mark> elements — DOM React didn't author. When React later
+    // reconciles that subtree structurally it can throw insertBefore/removeChild
+    // "not a child" errors (seen live on GSL seq-parallel and MSL). The boundary
+    // catch already unmounts the subtree, so an automatic retry mounts a FRESH
+    // tree and recovers — same as the manual reset, minus the user seeing it.
+    // Capped at 2 heals / 15s so genuinely broken renders still surface.
+    const msg = String(error && error.message || '')
+    if (/insertBefore|removeChild|not a child of this node|NotFoundError/i.test(msg) && (this._heals || 0) < 2) {
+      this._heals = (this._heals || 0) + 1
+      try {
+        document.querySelectorAll('mark[data-hl-id]').forEach(m => {
+          const parent = m.parentNode; if (!parent) return
+          while (m.firstChild) parent.insertBefore(m.firstChild, m)
+          parent.removeChild(m)
+          parent.normalize()
+        })
+      } catch { /* best-effort */ }
+      setTimeout(() => this.setState({ hasError: false }), 0)
+      setTimeout(() => { this._heals = 0 }, 15000)
+    }
   }
 
   // Reset whenever resetKey changes (App.jsx passes resetKey={activeTab}) so
