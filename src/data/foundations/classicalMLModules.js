@@ -554,7 +554,15 @@ And one trap falls straight out of "we penalise weight size": a feature measured
 
 **Correlated features made concrete: the duplicate-column trap.**
 
-Watch the "features clearly work together" case turn into hard numbers too. Suppose the five-house data gets a duplicate column by accident — someone adds size again, unchanged, as a second feature. Now the model is weight₁×size + weight₂×size = (weight₁+weight₂)×size: only the *sum* of the two weights affects any prediction, so plain OLS has infinitely many equally good answers — weight₁=7.6,weight₂=0, or weight₁=3.8,weight₂=3.8, or weight₁=−100,weight₂=107.6 all fit the five houses identically. Least squares has no preference among them; whichever numerical solver you run will simply return one of the infinitely many ties, and a slightly different solver, or a slightly different batch of houses, can return a wildly different split — exactly the "weights wobble but predictions stay fine" warning from the collinearity section of the linear regression module.
+Watch the "features clearly work together" case turn into hard numbers too. Suppose the five-house data gets a duplicate column by accident — someone adds size again, unchanged, as a second feature. Now the model is
+
+$weight₁×size + weight₂×size = (weight₁+weight₂)×size$
+
+Only the *sum* of the two weights affects any prediction, so plain OLS has infinitely many equally good answers:
+
+$weight₁=7.6, weight₂=0   or   weight₁=3.8, weight₂=3.8   or   weight₁=−100, weight₂=107.6$
+
+all fit the five houses identically. Least squares has no preference among them; whichever numerical solver you run will simply return one of the infinitely many ties, and a slightly different solver, or a slightly different batch of houses, can return a wildly different split — exactly the "weights wobble but predictions stay fine" warning from the collinearity section of the linear regression module.
 
 Ridge breaks the tie in a specific, checkable way: among every (weight₁, weight₂) pair summing to 7.6, it additionally picks the one that minimises weight₁²+weight₂² — and by symmetry that is the even split, weight₁=weight₂=3.8. (Write weight₁=3.8+d, weight₂=3.8−d: the sum of squares is 2×(3.8²+d²), minimised exactly at d=0.) As λ→0⁺, Ridge doesn't merely shrink the duplicated weight — it deterministically lands on the *minimum-norm* solution among all the tied OLS answers, and for two identical columns that minimum-norm answer is always the even split.
 

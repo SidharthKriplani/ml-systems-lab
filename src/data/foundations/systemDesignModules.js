@@ -12,7 +12,16 @@ export const SYSTEM_DESIGN_MODULES = [
 
 ---
 
-**The framework forces constraints to surface before any architectural decision.** (1) Clarify the objective — the business metric and the north star are rarely the same thing: optimizing for click-through rate alone rewards clickbait, so state explicitly what "success" and "failure" mean, plus the QPS (queries per second), the latency SLA (service-level agreement), and the cost of a false positive versus a false negative. (2) Frame as an ML problem — ranking, classification, regression, or retrieval, and whether the answer needs a single model or a pipeline of models. (3) Define labels — where they come from, how fresh, how biased, and whether they even exist yet. (4) Feature design — which signals exist at serving time, whether they're point-in-time correct, and where leakage risk hides. (5) Model choice — read off the constraints already fixed, not picked first from preference. (6) Serving and monitoring — how the model reaches production safely and how its decay gets caught. The single most common interview failure is skipping to step 4 or 5 before any of the first three are answered.
+**The framework forces constraints to surface before any architectural decision.**
+
+- **Clarify the objective** — the business metric and the north star are rarely the same thing: optimizing for click-through rate alone rewards clickbait, so state explicitly what "success" and "failure" mean, plus the QPS (queries per second), the latency SLA (service-level agreement), and the cost of a false positive versus a false negative.
+- **Frame as an ML problem** — ranking, classification, regression, or retrieval, and whether the answer needs a single model or a pipeline of models.
+- **Define labels** — where they come from, how fresh, how biased, and whether they even exist yet.
+- **Feature design** — which signals exist at serving time, whether they're point-in-time correct, and where leakage risk hides.
+- **Model choice** — read off the constraints already fixed, not picked first from preference.
+- **Serving and monitoring** — how the model reaches production safely and how its decay gets caught.
+
+The single most common interview failure is skipping to step 4 or 5 before any of the first three are answered.
 
 ---
 

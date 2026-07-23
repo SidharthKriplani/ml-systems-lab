@@ -763,7 +763,13 @@ What a response model is not: an uplift model. A response model predicts P(purch
 
 Definitions. Total Effect (TE) = Direct Effect (DE) + Indirect Effect (IE). Natural Direct Effect (NDE) = Y(t, M(t′)) − Y(t′, M(t′)): the effect of treatment holding the mediator at the value it would take under control. Natural Indirect Effect (NIE) = Y(t, M(t)) − Y(t, M(t′)): the effect of the mediator shifting from its control-level to its treatment-level value while holding treatment fixed.
 
-Baron-Kenny (classical approach): (1) regress outcome on treatment; (2) regress mediator on treatment; (3) regress outcome on both treatment and mediator. The indirect effect equals the coefficient of treatment on mediator multiplied by the coefficient of mediator on outcome. Widely used and intuitive — but requires no unmeasured confounding of the mediator-outcome relationship, a strong assumption that an RCT does not guarantee. The RCT randomizes treatment, not the mediator.
+Baron-Kenny (classical approach):
+
+- Regress outcome on treatment.
+- Regress mediator on treatment.
+- Regress outcome on both treatment and mediator.
+
+The indirect effect equals the coefficient of treatment on mediator multiplied by the coefficient of mediator on outcome. Widely used and intuitive — but requires no unmeasured confounding of the mediator-outcome relationship, a strong assumption that an RCT does not guarantee. The RCT randomizes treatment, not the mediator.
 
 Counterfactual approach (Imai, Keele, Tingley): estimates the Average Causal Mediation Effect (ACME) under sequential ignorability — treatment is as-good-as-randomized given pre-treatment confounders (as in Baron-Kenny), and the mediator is additionally as-good-as-randomized given treatment and those same confounders (the assumption Baron-Kenny simply asserts without naming). Because that second piece is rarely guaranteed even in a clean RCT, the approach pairs its ACME estimate with a sensitivity analysis to assess robustness to unmeasured mediator-outcome confounding. More rigorous than Baron-Kenny because it names and stress-tests the assumption Baron-Kenny leaves implicit.
 

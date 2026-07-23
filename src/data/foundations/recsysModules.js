@@ -362,7 +362,12 @@ export const RECSYS_MODULES = [
 
 ---
 
-**User cold start: a brand-new user has no history to collaborate on.** You can't retrieve "items similar to what they liked" because they've liked nothing. The fixes ladder from cheap to smart: (1) fall back to **popularity / trending** (globally or by segment) as a floor; (2) use whatever **context** you do have — device, language, location, time of day, referral source; (3) run a lightweight **onboarding** (pick a few interests) to seed a profile; (4) update a **real-time user embedding** aggressively from the first few interactions, so the system personalizes within the session rather than waiting for a nightly retrain. TikTok's fast first-session personalization is this last move done well.
+**User cold start: a brand-new user has no history to collaborate on.** You can't retrieve "items similar to what they liked" because they've liked nothing. The fixes ladder from cheap to smart:
+
+- Fall back to **popularity / trending** (globally or by segment) as a floor.
+- Use whatever **context** you do have — device, language, location, time of day, referral source.
+- Run a lightweight **onboarding** (pick a few interests) to seed a profile.
+- Update a **real-time user embedding** aggressively from the first few interactions, so the system personalizes within the session rather than waiting for a nightly retrain. TikTok's fast first-session personalization is this last move done well.
 
 ---
 
@@ -530,7 +535,12 @@ export const RECSYS_MODULES = [
 
 ---
 
-**Why offline and online diverge — four structural reasons.** (1) **Logs are biased**: offline "relevance" is what the *old* model exposed, so a new model that surfaces different-but-good items is *penalized* offline for disagreeing with the old model's choices. (2) **Counterfactual blindness**: offline metrics can only score items that were logged; a genuinely better item the old system never showed has no label, so its win is invisible. (3) **Metric ≠ objective**: NDCG on clicks rewards clickbait; the business cares about dwell, retention, revenue, and harm — offline click-NDCG can rise while long-term value falls. (4) **No system effects**: offline eval can't see diversity, freshness, feedback loops, or how the recommendation changes future behavior.
+**Why offline and online diverge — four structural reasons.**
+
+- **Logs are biased**: offline "relevance" is what the *old* model exposed, so a new model that surfaces different-but-good items is *penalized* offline for disagreeing with the old model's choices.
+- **Counterfactual blindness**: offline metrics can only score items that were logged; a genuinely better item the old system never showed has no label, so its win is invisible.
+- **Metric ≠ objective**: NDCG on clicks rewards clickbait; the business cares about dwell, retention, revenue, and harm — offline click-NDCG can rise while long-term value falls.
+- **No system effects**: offline eval can't see diversity, freshness, feedback loops, or how the recommendation changes future behavior.
 
 ---
 
@@ -824,7 +834,11 @@ export const RECSYS_MODULES = [
 
 ---
 
-**The three negative-sampling schemes, and their tradeoffs.** (1) **In-batch negatives** — the cheap default: within a batch of B (user, item) pairs, use every *other* user's positive as a negative, giving B×(B−1) negatives for free with no extra lookups. The problem: batches are sampled from the *interaction* distribution, so **popular items appear as negatives far more often** than rare ones. (2) **Hard negatives** — mined items that score *high but weren't clicked* (near-misses). Random in-batch negatives are usually trivially easy (a cooking video vs a random car part → near-zero gradient, nothing learned); hard negatives sit right on the decision boundary and produce the gradient that actually sharpens fine distinctions, which is what lifts recall. (3) **Popularity / logQ correction** — because in-batch sampling over-represents popular items as negatives, they get systematically *over-penalised*; the fix is to subtract each item's **log sampling probability** from its logit (u·vⱼ − log Q(j)), the sampled-softmax correction, restoring an unbiased objective.
+**The three negative-sampling schemes, and their tradeoffs.**
+
+- **In-batch negatives** — the cheap default: within a batch of B (user, item) pairs, use every *other* user's positive as a negative, giving B×(B−1) negatives for free with no extra lookups. The problem: batches are sampled from the *interaction* distribution, so **popular items appear as negatives far more often** than rare ones.
+- **Hard negatives** — mined items that score *high but weren't clicked* (near-misses). Random in-batch negatives are usually trivially easy (a cooking video vs a random car part → near-zero gradient, nothing learned); hard negatives sit right on the decision boundary and produce the gradient that actually sharpens fine distinctions, which is what lifts recall.
+- **Popularity / logQ correction** — because in-batch sampling over-represents popular items as negatives, they get systematically *over-penalised*; the fix is to subtract each item's **log sampling probability** from its logit (u·vⱼ − log Q(j)), the sampled-softmax correction, restoring an unbiased objective.
 
 ---
 

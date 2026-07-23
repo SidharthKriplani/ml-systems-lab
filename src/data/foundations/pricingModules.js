@@ -462,7 +462,13 @@ export const PRICING_MODULES = [
 
 ---
 
-**Three leakages inflate the naive number, and each needs a different correction.** (1) **Baseline sales** — buyers who would have purchased anyway; the discount is pure margin given away. (2) **Pull-forward** — you didn't create demand, you *borrowed it from next month*; sales spike then dip, and a window that ends at the spike books a phantom win. (3) **Cannibalization** — the discounted SKU steals sales from your own full-price products; category-level units are flat while you've traded margin for mix. Measuring only the promoted SKU over only the promo window hides all three.
+**Three leakages inflate the naive number, and each needs a different correction.**
+
+- **Baseline sales** — buyers who would have purchased anyway; the discount is pure margin given away.
+- **Pull-forward** — you didn't create demand, you *borrowed it from next month*; sales spike then dip, and a window that ends at the spike books a phantom win.
+- **Cannibalization** — the discounted SKU steals sales from your own full-price products; category-level units are flat while you've traded margin for mix.
+
+Measuring only the promoted SKU over only the promo window hides all three.
 
 ---
 

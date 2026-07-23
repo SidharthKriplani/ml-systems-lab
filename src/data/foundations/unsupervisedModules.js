@@ -1011,7 +1011,27 @@ The encoder/decoder shape should match the data. **Dense** (fully-connected) aut
     tags: ['GMM', 'EM algorithm', 'probabilistic clustering', 'soft assignment'],
     summary: `You have per-transaction purchase amounts x. Some transactions are 5 dollars (app purchases), some are 50 dollars (subscriptions), some are 500 dollars (enterprise). The distribution of purchase amounts is trimodal — three distinct subpopulations. K-means would split them by which of 3 centroids is nearest. But a single $26 transaction sits between the $5 and $50 clusters — does it belong to the 5-dollar cluster or the 50-dollar cluster? GMM computes a responsibility for each component, worked out below.
 
-Gaussian Mixture Model: P(x) = Σₖ πₖ N(x | μₖ, Σₖ) where πₖ is the mixing weight (Σπₖ = 1), N(x | μₖ, Σₖ) is the k-th Gaussian component evaluated at a single scalar transaction amount x — not an aggregate over a customer's several purchases. Responsibility for component k at a point x is r_k(x) = πₖN(x|μₖ,Σₖ) / Σⱼ πⱼN(x|μⱼ,Σⱼ). Worked example: take the $5 cluster as (π=0.45, μ=5, σ=8) and the $50 cluster as (π=0.35, μ=50, σ=12). At x=26: N(26|5,8)≈0.00159 and N(26|50,12)≈0.00450, so πₖN(x|μₖ,Σₖ) gives 0.45×0.00159≈0.00072 for the $5 cluster and 0.35×0.00450≈0.00157 for the $50 cluster. Normalizing those two — 0.00072/(0.00072+0.00157) and 0.00157/(0.00072+0.00157) — gives responsibilities of about 31% for the $5 cluster and 69% for the $50 cluster for that one $26 transaction. A customer with several transactions gets one responsibility vector per transaction, not a single blended number for the customer.
+Gaussian Mixture Model:
+
+$P(x) = Σₖ πₖ N(x | μₖ, Σₖ)$
+
+where πₖ is the mixing weight (Σπₖ = 1), N(x | μₖ, Σₖ) is the k-th Gaussian component evaluated at a single scalar transaction amount x — not an aggregate over a customer's several purchases. Responsibility for component k at a point x is:
+
+$r_k(x) = πₖN(x|μₖ,Σₖ) / Σⱼ πⱼN(x|μⱼ,Σⱼ)$
+
+Worked example: take the $5 cluster as (π=0.45, μ=5, σ=8) and the $50 cluster as (π=0.35, μ=50, σ=12). At x=26:
+
+$N(26|5,8) ≈ 0.00159   and   N(26|50,12) ≈ 0.00450$
+
+so πₖN(x|μₖ,Σₖ) gives:
+
+$0.45×0.00159 ≈ 0.00072 (the $5 cluster)   and   0.35×0.00450 ≈ 0.00157 (the $50 cluster)$
+
+Normalizing those two:
+
+$0.00072/(0.00072+0.00157) ≈ 31%   and   0.00157/(0.00072+0.00157) ≈ 69%$
+
+— gives responsibilities of about 31% for the $5 cluster and 69% for the $50 cluster for that one $26 transaction. A customer with several transactions gets one responsibility vector per transaction, not a single blended number for the customer.
 
 Fitted via EM, which alternates two steps until log-likelihood stops improving: the E-step computes every point's responsibility r_k(x) for every component using the formula above; the M-step then re-estimates πₖ, μₖ, Σₖ as the responsibility-weighted mixing fraction, mean, and covariance over all points. Each E/M pair provably does not decrease the log-likelihood, but the landscape is multimodal, so EM only hill-climbs to whichever local optimum is nearest its starting point.
 
