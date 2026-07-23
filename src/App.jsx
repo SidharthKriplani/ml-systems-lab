@@ -1055,7 +1055,28 @@ function DesktopSidebar({ activeTabId, goTo, onSearch, tabProgress, isUnlocked, 
         })}
       </nav>
 
-      {/* Search promoted into BreaklabsChrome top bar (D21, GSL D17 parity) — box killed here. */}
+      {/* D25 item 3 (GSL doctrine parity): search restored here for mobile — chrome's own
+          search trigger is desktop-only there too (see BreaklabsChrome.jsx), and this
+          sidebar IS the mobile drawer (see D21 Part B comment above), so this is the only
+          reachable mobile search entry. sidebar-desktop-hide keeps it out of the fixed
+          desktop rail, where chrome's trigger already covers search. onSearch was already
+          wired in as a prop (line ~865) but unused since the box was killed — purely
+          additive, no new prop plumbing. */}
+      <div className="sidebar-desktop-hide" style={{ padding: '9px 10px 0' }}>
+        <button
+          onClick={() => { onSearch(); if (onClose) onClose() }}
+          style={{
+            width: '100%', padding: '9px 11px',
+            display: 'flex', alignItems: 'center', gap: '8px',
+            background: 'var(--depth-2, rgba(24,24,27,0.8))', border: '1px solid var(--rim)',
+            borderRadius: 'var(--r-sm)', cursor: 'pointer', color: 'var(--ink-mid)',
+            fontSize: '12px', textAlign: 'left',
+          }}
+        >
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="5" cy="5" r="3.2" stroke="currentColor" strokeWidth="1.3"/><line x1="7.3" y1="7.3" x2="10.5" y2="10.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
+          Search modules…
+        </button>
+      </div>
       {user && (
         <div style={{ padding: '9px 10px', borderTop: '1px solid var(--rim)', flexShrink: 0 }}>
           <button
