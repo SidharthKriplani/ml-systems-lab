@@ -10,6 +10,7 @@ import { StickyScope } from '../../components/StickyNotes.jsx'
 import { TakeawayBox } from '../../components/foundations/TakeawayBox.jsx'
 import { QnAPanel } from '../../components/foundations/QnAPanel.jsx'
 import { FoundationViewTabs } from '../../components/foundations/FoundationViewTabs.jsx'
+import { AnnexPanel } from '../../components/foundations/AnnexBlocks.jsx'
 import { GoDeeperPanel } from '../../components/foundations/GoDeeperPanel.jsx'
 import { EVAL_MODULES } from '../../data/foundations/evalModules.js'
 import { InteractivePanel } from '../../components/interactive/InteractivePanel'
@@ -52,6 +53,7 @@ export function EvalFoundationTab({ onNavigate, openModuleId, navOrigin }) {
   const [recapMode, setRecapMode] = useState(false)
   const [allAnswered, setAllAnswered] = useState(false)
   const [qnaMode, setQnaMode] = useState(false)
+  const [annexMode, setAnnexMode] = useState(null) // 'academic' | 'cloud' | 'min' — annex-tab skeleton (2026-07-23)
   const trackBtnRef = useRef(null)
   const contentRef = useRef(null)
 
@@ -150,7 +152,7 @@ export function EvalFoundationTab({ onNavigate, openModuleId, navOrigin }) {
       {/* RIGHT: Module content */}
       {selected && (
         <div ref={contentRef} data-own-highlighter="1" style={{ flex: 1, overflowY: 'auto', padding: '1.75rem 2rem', background: 'var(--depth)', minWidth: 0 }}>
-          <StickyScope id={'m:' + selected.id + (qnaMode ? ':qna' : recapMode ? ':recap' : '')} />
+          <StickyScope id={'m:' + selected.id + (qnaMode ? ':qna' : annexMode ? ':' + annexMode : recapMode ? ':recap' : '')} />
           <HighlightPopover containerRef={contentRef} sourceTabId={TAB_ID} sourceModuleId={selected.id} sourceLabel={selected.title} />
           <button
             onClick={() => (navOrigin?.tab === 'my_tracks' && openModuleId && selectedId === openModuleId) ? onNavigate('my_tracks', navOrigin.trackId || null) : setSelectedId(null)}
@@ -204,9 +206,11 @@ export function EvalFoundationTab({ onNavigate, openModuleId, navOrigin }) {
             </p>
           </div>
 
-          <FoundationViewTabs hasRecap={!!selected.recap} recapMode={recapMode} setRecapMode={setRecapMode} qnaMode={qnaMode} setQnaMode={setQnaMode} unlocked={isModuleDone(selected.id)} />
+          <FoundationViewTabs hasRecap={!!selected.recap} recapMode={recapMode} setRecapMode={setRecapMode} qnaMode={qnaMode} setQnaMode={setQnaMode} unlocked={isModuleDone(selected.id)} annex={{ academic: selected.deeperMath, cloud: selected.cloudMap, min: selected.interviewMin }} annexMode={annexMode} setAnnexMode={setAnnexMode} />
 
-          {!qnaMode && recapMode && selected.recap && (
+          {!qnaMode && annexMode && <AnnexPanel mode={annexMode} module={selected} />}
+
+          {!qnaMode && !annexMode && recapMode && selected.recap && (
             <div style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '10px',
               padding: '1.25rem 1.4rem', marginBottom: '1.5rem' }}>
               <TakeawayBox key={selected.id} pageKey={`${TAB_ID}::${selected.id}`} />
@@ -221,7 +225,7 @@ export function EvalFoundationTab({ onNavigate, openModuleId, navOrigin }) {
             </div>
           )}
 
-          {!qnaMode && !recapMode && (<>
+          {!qnaMode && !recapMode && !annexMode && (<>
           {/* Summary */}
           <div style={{ background: 'var(--surface)', border: '1px solid var(--rim)', borderRadius: '10px',
             padding: '1.1rem 1.25rem', marginBottom: '1.25rem' }}>
