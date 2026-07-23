@@ -12,7 +12,7 @@ import { PageHighlighter } from './components/PageHighlighter.jsx'
 import { StickyNotes, StickyBarButton } from './components/StickyNotes.jsx'
 import AuthModal    from './components/auth/AuthModal.jsx'
 import { ACCESS_CODE, STORAGE_KEY, isUnlocked as checkUnlocked } from './utils/unlock.js'
-import { authEnabled, onAuthStateChange } from './utils/supabase.js'
+import { supabase, authEnabled, onAuthStateChange } from './utils/supabase.js'
 import { pullProgressFromSupabase, pushProgressToSupabase, pullAnnotationsOnly } from './utils/syncProgress.js'
 import { pullAndMergeTracks, scheduleTracksPush } from './utils/tracksSync.js'
 import { upsertLeaderboardRow } from './utils/leaderboard.js'
@@ -1077,7 +1077,8 @@ export default function App() {
     if (!user) return;
     let t = null;
     let lastPull = 0;
-    const doPush = () => { clearTimeout(t); t = null; pushProgressToSupabase(user); };
+    let lastPushAt = 0;
+    const doPush = () => { clearTimeout(t); t = null; lastPushAt = Date.now(); pushProgressToSupabase(user); };
     const schedulePush = () => { clearTimeout(t); t = setTimeout(doPush, 4000); };
     const doPull = (force) => {
       const now = Date.now();
@@ -1091,11 +1092,27 @@ export default function App() {
       else if (t) doPush();
     };
     doPull(true);
-    const hb = setInterval(() => { if (document.visibilityState === 'visible') doPull(true); }, 45000);
+    const hb = setInterval(() => { if (document.visibilityState === 'visible') doPull(true); }, 20000);
+    // Realtime bridge (2026-07-23): Supabase free-tier websocket — a change pushed
+    // from another device arrives within ~1s, replacing the heartbeat's worst-case
+    // wait with near-instant convergence. Requires user_progress to be in the
+    // supabase_realtime publication (one SQL line, free tier); if it isn't, this
+    // subscribes cleanly and simply never fires — the heartbeat below still covers.
+    // Own-push echo guard: skip realtime-triggered pulls within 5s of our own push
+    // (merge is idempotent, but the echo would otherwise ping-pong pull/push cycles).
+    let rtDeb = null;
+    const chan = supabase ? supabase
+      .channel('annot-rt-' + user.id)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_progress', filter: 'user_id=eq.' + user.id },
+        () => {
+          if (Date.now() - lastPushAt < 5000) return;
+          clearTimeout(rtDeb); rtDeb = setTimeout(() => doPull(true), 600);
+        })
+      .subscribe() : null;
     window.addEventListener('annotations-changed', onChanged);
     document.addEventListener('visibilitychange', onVis);
     window.addEventListener('pagehide', doPush);
-    return () => { clearTimeout(t); clearInterval(hb); window.removeEventListener('annotations-changed', onChanged); document.removeEventListener('visibilitychange', onVis); window.removeEventListener('pagehide', doPush); };
+    return () => { clearTimeout(t); clearInterval(hb); clearTimeout(rtDeb); if (chan) { try { supabase.removeChannel(chan); } catch { /* noop */ } } window.removeEventListener('annotations-changed', onChanged); document.removeEventListener('visibilitychange', onVis); window.removeEventListener('pagehide', doPush); };
   }, [user]);
 
   const [showAuth,  setShowAuth]  = useState(false)
