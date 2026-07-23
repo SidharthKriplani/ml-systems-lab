@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "prebuild": "node scripts/labcheck.mjs",
     "dev": "vite",
     "build": "node scripts/prerender-modules.cjs && node scripts/build-prerendered-posts.mjs && node scripts/build-sitemap.mjs && node scripts/generate-rss.cjs && vite build",
     "prerender": "node scripts/prerender-modules.cjs && node scripts/build-prerendered-posts.mjs && node scripts/build-sitemap.mjs && node scripts/generate-rss.cjs",
