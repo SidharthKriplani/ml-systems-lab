@@ -186,12 +186,14 @@ export default function BreaklabsChrome({
       {/* D25 item 3 (GSL parity): desktop-only — MSL's DesktopSidebar (App.jsx) now carries
           the mobile-reachable search entry again (sidebar-desktop-hide gated), so this
           trigger no longer needs to double as the mobile path below lg. */}
-      <button onClick={onSearchOpen} aria-label="Search"
-        className="hidden lg:flex lg:w-64 items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-all text-left min-w-0">
-        <svg width="11" height="11" viewBox="0 0 11 11" fill="none" className="text-zinc-500 shrink-0"><circle cx="4.5" cy="4.5" r="3" stroke="currentColor" strokeWidth="1.3" /><line x1="7" y1="7" x2="10" y2="10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>
-        <span className="text-xs text-zinc-500 flex-1 truncate">{searchPlaceholder}</span>
-        <kbd className="hidden sm:inline text-[9px] border border-zinc-700 rounded px-1 text-zinc-500 font-mono">⌘K</kbd>
-      </button>
+      <div className="hidden lg:flex flex-1 justify-center min-w-0">
+        <button onClick={onSearchOpen} aria-label="Search"
+          className="flex lg:w-64 items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-all text-left min-w-0">
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="none" className="text-zinc-500 shrink-0"><circle cx="4.5" cy="4.5" r="3" stroke="currentColor" strokeWidth="1.3" /><line x1="7" y1="7" x2="10" y2="10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>
+          <span className="text-xs text-zinc-500 flex-1 truncate">{searchPlaceholder}</span>
+          <kbd className="hidden sm:inline text-[9px] border border-zinc-700 rounded px-1 text-zinc-500 font-mono">⌘K</kbd>
+        </button>
+      </div>
 
       <div className="flex items-center gap-1.5 shrink-0 ml-auto">
         <StreakBadge days={streak} />
