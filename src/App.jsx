@@ -1204,6 +1204,18 @@ export default function App() {
   }, [])
 
   useEffect(() => {
+    // Restore session immediately from localStorage on load (no server round-trip) --
+    // belt-and-suspenders alongside the onAuthStateChange listener below. Relying on
+    // onAuthStateChange's INITIAL_SESSION event alone is a known Supabase v2 gotcha:
+    // it can fail to fire promptly on page load (e.g. tab opened/restored in the
+    // background), which left `user` stuck at null even though a valid session sat
+    // in localStorage -- read by the app as "signed out". GSL hit the same bug and
+    // fixes it the same way (see src/App.jsx there, "refresh logs user out").
+    if (supabase) {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user) setUser(session.user)
+      })
+    }
     const { data: { subscription } } = onAuthStateChange(async (event, session) => {
       if (
         (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED')
