@@ -176,7 +176,7 @@ export default function BreaklabsChrome({
                      // decoupled from any one app's sticky-notes module (portable across R2-R4).
 }) {
   return (
-    <div className="flex items-center gap-1.5 flex-1 min-w-0">
+    <div className="relative flex items-center gap-1.5 flex-1 min-w-0">
       {showBack && (
         <button onClick={onBack} aria-label="Back"
           className="hidden lg:flex items-center justify-center w-7 h-7 rounded border border-zinc-800 hover:border-zinc-700 transition-all text-zinc-500 hover:text-zinc-300 shrink-0">
@@ -186,7 +186,7 @@ export default function BreaklabsChrome({
       {/* D25 item 3 (GSL parity): desktop-only — MSL's DesktopSidebar (App.jsx) now carries
           the mobile-reachable search entry again (sidebar-desktop-hide gated), so this
           trigger no longer needs to double as the mobile path below lg. */}
-      <div className="hidden lg:flex flex-1 justify-center min-w-0">
+      <div className="hidden lg:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 min-w-0">
         <button onClick={onSearchOpen} aria-label="Search"
           className="flex lg:w-64 items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-all text-left min-w-0">
           <svg width="11" height="11" viewBox="0 0 11 11" fill="none" className="text-zinc-500 shrink-0"><circle cx="4.5" cy="4.5" r="3" stroke="currentColor" strokeWidth="1.3" /><line x1="7" y1="7" x2="10" y2="10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>
