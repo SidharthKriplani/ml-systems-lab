@@ -22,6 +22,8 @@ import StudyRoom from './study/StudyRoom.jsx'
 import { BUILD_PROJECTS } from './tabs/BuildHubTab.jsx'
 import DesignStudioHub from './tabs/DesignStudioHub.jsx'
 
+// GUEST_MODE TEMP: kill-switch for the Supabase auth integration.
+const GUEST_MODE = true  // TEMP 2026-08-03: Supabase org quota-restricted; auth calls hang. Flip to false to restore auth. See OP log.
 
 const HomeTab           = lazyReload(() => import('./tabs/HomeTab.jsx'))
 const SparkLabTab       = lazyReload(() => import('./tabs/SparkLabTab.jsx'))
@@ -1204,6 +1206,10 @@ export default function App() {
   }, [])
 
   useEffect(() => {
+    // GUEST_MODE TEMP: Supabase project is quota-restricted and getSession()/
+    // onAuthStateChange can hang indefinitely. Skip the whole auth-init effect
+    // so nothing here can block render or leave `user` stuck mid-await.
+    if (GUEST_MODE) return
     // Restore session immediately from localStorage on load (no server round-trip) --
     // belt-and-suspenders alongside the onAuthStateChange listener below. Relying on
     // onAuthStateChange's INITIAL_SESSION event alone is a known Supabase v2 gotcha:
@@ -1284,7 +1290,9 @@ export default function App() {
 
   // Reactive: if auth is enabled and user is null, show signed-out home
   const [guestMode, setGuestMode] = useState(false)
-  const showSignedOut = authEnabled && !user && !guestMode
+  // GUEST_MODE TEMP: never force the signed-out landing / sign-in gate — treat
+  // everyone as a full-access guest while Supabase is quota-restricted.
+  const showSignedOut = !GUEST_MODE && authEnabled && !user && !guestMode
 
   function handleUnlock(code) {
     if (code?.trim().toUpperCase() === ACCESS_CODE) {
@@ -1371,7 +1379,8 @@ export default function App() {
     }
     if (PREMIUM_TABS.has(activeTab)) {
       // Auth gate fires first — sign-in required for all premium content
-      if (authEnabled && !user) {
+      // GUEST_MODE TEMP: skip the sign-in requirement; only the access-code gate below still applies.
+      if (!GUEST_MODE && authEnabled && !user) {
         return (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', padding: '40px 20px' }}>
             <div style={{ maxWidth: '400px', textAlign: 'center' }}>
@@ -1476,7 +1485,8 @@ export default function App() {
             <SignedOutHome onShowAuth={() => setShowAuth(true)} onNavigate={goTo} onExplore={() => { setGuestMode(true); goTo('classical') }} />
           </Suspense>
         </ErrorBoundary>
-        <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
+        {/* GUEST_MODE TEMP: force-closed so the sign-in modal can never appear. */}
+        <AuthModal open={!GUEST_MODE && showAuth} onClose={() => setShowAuth(false)} />
       </>
     )
   }
@@ -1560,7 +1570,8 @@ export default function App() {
             theme={theme}
             onToggleTheme={() => setTheme(t => t === 'light' ? 'dark' : 'light')}
             user={user}
-            supabaseEnabled={authEnabled}
+            // GUEST_MODE TEMP: tell chrome auth is off so it hides the sign-in affordance.
+            supabaseEnabled={GUEST_MODE ? false : authEnabled}
             onShowAuth={() => setShowAuth(true)}
             onNavigateProfile={() => goTo('profile')}
             onNavigateProgress={() => goTo('progress')}
@@ -1643,7 +1654,8 @@ export default function App() {
       {studyOpen && <StudyRoom user={user} onClose={() => setStudyOpen(false)} />}
 
       {/* ── Auth modal — MUST be last in return, never inside a transformed panel ── */}
-      <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
+      {/* GUEST_MODE TEMP: force-closed so the sign-in modal can never appear. */}
+      <AuthModal open={!GUEST_MODE && showAuth} onClose={() => setShowAuth(false)} />
 
     </div>
   )
